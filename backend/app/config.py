@@ -1,0 +1,37 @@
+import os
+from pydantic_settings import BaseSettings
+from typing import List
+
+class Settings(BaseSettings):
+    PROJECT_NAME: str = "Hotel Sai Vasudev Residency API"
+    VERSION: str = "1.0.0"
+    API_V1_STR: str = "/api/v1"
+    
+    # Railway passes DATABASE_URL when PostgreSQL is attached
+    DATABASE_URL: str = os.getenv(
+        "DATABASE_URL", 
+        "sqlite:///./hotel_sai_vasudev.db"
+    )
+    
+    # Allowed origins for CORS (Cloudflare Pages, localhost)
+    ALLOWED_ORIGINS: str = os.getenv(
+        "ALLOWED_ORIGINS",
+        "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"
+    )
+
+    @property
+    def get_database_url(self) -> str:
+        # Railway sometimes provides postgres:// which SQLAlchemy 1.4+ requires postgresql://
+        url = self.DATABASE_URL
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql://", 1)
+        return url
+
+    @property
+    def parsed_allowed_origins(self) -> List[str]:
+        return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
+
+    class Config:
+        case_sensitive = True
+
+settings = Settings()

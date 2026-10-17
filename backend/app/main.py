@@ -1,0 +1,61 @@
+import datetime
+from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+from app.config import settings
+from app.database import engine, Base, get_db
+from app.routes import rooms, bookings, inquiries
+
+# Initialize DB tables
+Base.metadata.create_all(bind=engine)
+
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION,
+    description="FastAPI Backend for Hotel Sai Vasudev Residency connecting Cloudflare Pages to PostgreSQL on Railway",
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    docs_url=f"{settings.API_V1_STR}/docs"
+)
+
+# Allow CORS for Cloudflare Pages and local development
+# Cloudflare Pages default domains are *.pages.dev
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # Or specify settings.parsed_allowed_origins
+    allow_origin_regex=r"https://.*\.pages\.dev",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include API Routers
+app.include_router(rooms.router, prefix=settings.API_V1_STR)
+app.include_router(bookings.router, prefix=settings.API_V1_STR)
+app.include_router(inquiries.router, prefix=settings.API_V1_STR)
+
+@app.get("/", tags=["Root"])
+def root():
+    return {
+        "hotel": "Hotel Sai Vasudev Residency",
+        "system": "FastAPI + PostgreSQL (Railway) <-> Cloudflare Pages Frontend",
+        "status": "Operational",
+        "docs": f"{settings.API_V1_STR}/docs",
+        "api_v1": settings.API_V1_STR
+    }
+
+@app.get("/health", tags=["Health"])
+def health_check(db: Session = Depends(get_db)):
+    """Health check endpoint for Railway deployment monitoring"""
+    db_status = "connected"
+    try:
+        db.execute(text("SELECT 1"))
+    except Exception as e:
+        db_status = f"unhealthy: {str(e)}"
+
+    return {
+        "status": "healthy" if db_status == "connected" else "degraded",
+        "database": db_status,
+        "engine": "PostgreSQL" if "postgresql" in settings.get_database_url else "SQLite",
+        "timestamp": datetime.datetime.utcnow().isoformat()
+    }
