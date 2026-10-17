@@ -139,7 +139,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
     e.preventDefault();
 
     if (pendingKots.length > 0) {
-      alert("Cannot submit: Total Pending KOT is greater than 0! Please convert all pending KOTs to Food Bill before checkout (Click '⚡ Clear to Food Bill' on the Pending Kot card).");
+      alert("demo.datahouseerp.com says:\n\nCannot submit the form because Kot amount is greater than 0! Please convert all pending KOTs to Food Bill before checkout (Click '⚡ Clear to Food Bill' on the Pending Kot card).");
       return;
     }
 
@@ -197,17 +197,17 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
         style={{ maxWidth: showInvoicePreview ? 920 : 1150 }}
       >
         {!showInvoicePreview ? (
-          /* Master Checkout Folio Screen matching demo.datahouseerp.com/show_checkin/188 (Frame 0340) */
+          /* Master Checkout Folio Screen matching demo.datahouseerp.com/show_checkin/200 (Video 07 Frame 0080 & 0130) */
           <>
-            <div className="pms-form-banner banner-navy" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Room Checkout Settlement Folio &bull; Room {targetRoom.roomNo} ({targetRoom.roomType})</span>
-              <span style={{ fontSize: 11, background: '#38bdf8', color: '#0f172a', padding: '2px 8px', borderRadius: 2, fontWeight: 800 }}>
-                Inv: {activeInvoiceNo}
+            <div className="pms-form-banner" style={{ background: '#84cc16', color: '#000', fontWeight: 800, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>New Room Check Out Ente &bull; Room {targetRoom.roomNo} ({targetRoom.roomType})</span>
+              <span style={{ fontSize: 11, background: '#0f172a', color: '#fff', padding: '2px 8px', borderRadius: 2, fontWeight: 800 }}>
+                Inv: {activeInvoiceNo} &bull; demo.datahouseerp.com/show_checkin/200
               </span>
             </div>
 
             <form onSubmit={handleCheckoutSubmit} className="pms-form-body">
-              {/* Header Info matching Frame 0260 */}
+              {/* Header Info matching Video 07 Frame 0080 & 0130 */}
               <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -217,16 +217,17 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                 borderBottom: '1px solid #cbd5e1'
               }}>
                 <div>
-                  <span style={{ fontSize: 14, fontWeight: 800, color: '#0369a1' }}>
-                    Guest: {guest?.name || 'ALOK JAIN'}
+                  <div style={{ fontSize: 11, color: '#0369a1', fontWeight: 700, textTransform: 'uppercase' }}>Selected Checkin Detail</div>
+                  <span style={{ fontSize: 15, fontWeight: 800, color: '#0f172a' }}>
+                    {guest?.name || 'akash ji'} || {guest?.phone || '787846514'} || {targetRoom.roomNo}
                   </span>
                   <span style={{ marginLeft: 12, fontSize: 12, color: '#64748b' }}>
-                    Contact: {guest?.phone || '9407525111'} &bull; Stay Register: SR/193/24-25
+                    Stay Register: SR/193/24-25
                   </span>
                 </div>
 
-                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                  {/* My Checkout Button (Video 05 Frame 0260 / Spoken [08:15]) */}
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  {/* My Checkout Button (Video 07 Frame 0080 / Spoken [05:15]) */}
                   <button
                     type="button"
                     onClick={() => {
@@ -250,27 +251,52 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                       fontWeight: 800,
                       cursor: 'pointer'
                     }}
-                    title="Toggle Personal / Non-commercial stay (Frame 0260 / Spoken 08:15)"
+                    title="Toggle Personal / Non-commercial stay (Video 07 Frame 0080)"
                   >
                     {isMyCheckout ? '✓ My Checkout (Personal)' : 'My Checkout'}
                   </button>
 
-                  <label style={{ fontSize: 12, fontWeight: 700, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  {/* Calculate Bill (Tax Inclusive) Button (Video 07 Frame 0130 / Spoken [03:45]) */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const rawRent = perDayTariff * noOfDays;
+                      const taxVal = Number((rawRent / 1.12).toFixed(2));
+                      const gstVal = Number((rawRent - taxVal).toFixed(2));
+                      setIsTaxInclusive(true);
+                      alert(`demo.datahouseerp.com says\n\nTaxable Value: ${taxVal}\nGST /Tax value : ${gstVal}`);
+                    }}
+                    style={{
+                      background: '#0f172a',
+                      color: '#ffffff',
+                      border: 'none',
+                      padding: '4px 10px',
+                      borderRadius: 3,
+                      fontSize: 10,
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                    title="Calculate Tax Inclusive (Video 07 Frame 0130)"
+                  >
+                    Calculate Bill (Tax Inclusive)
+                  </button>
+
+                  <label style={{ fontSize: 11, fontWeight: 700, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 3 }}>
                     <input
                       type="checkbox"
                       checked={isTaxInclusive}
                       onChange={e => setIsTaxInclusive(e.target.checked)}
                     />
-                    Tax Inclusive
+                    Tax Inc
                   </label>
 
-                  <label style={{ fontSize: 12, fontWeight: 700, color: '#dc2626', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: '#dc2626', display: 'flex', alignItems: 'center', gap: 3 }}>
                     <input
                       type="checkbox"
                       checked={isComplimentary}
                       onChange={e => setIsComplimentary(e.target.checked)}
                     />
-                    Complimentary / Non-GST
+                    Complimentary
                   </label>
                 </div>
               </div>
@@ -653,63 +679,159 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
               </div>
             </div>
 
-            {/* Printable Tax Invoice Body matching Frame 0420 */}
+            {/* Printable Tax Invoice Body matching Frame 0420 & Video 07 Frame 0290 */}
             <div id="printable-tax-invoice" style={{ padding: 18, background: '#fff', fontSize: 12, color: '#0f172a' }}>
-              {/* Hotel Header */}
-              <div style={{ textAlign: 'center', borderBottom: '2px solid #0f172a', paddingBottom: 8, marginBottom: 10 }}>
-                <h2 style={{ margin: 0, fontSize: 20, fontWeight: 900, letterSpacing: 1 }}>
-                  HOTEL SAI VASUDEV RESIDENCY
-                </h2>
-                <div style={{ fontSize: 11, color: '#475569' }}>
-                  Opp. Gate No. 2, Pimpalwadi Road, Shirdi, Maharashtra - 423109 &bull; GSTIN: 27AABCS1429B1Z2
-                </div>
-                <div style={{ fontSize: 14, fontWeight: 800, textTransform: 'uppercase', marginTop: 4, letterSpacing: 1 }}>
-                  TAX INVOICE (GUEST CHECKOUT)
-                </div>
-              </div>
-
-              {/* Guest & Stay Details Grid (Frame 0420) */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 14, borderBottom: '1px solid #cbd5e1', paddingBottom: 8, marginBottom: 10 }}>
+              {invoiceFormat === 'Detailed' ? (
+                /* Video 07 Frame 0290 Detailed Yellow Header & Two-Column Split */
                 <div>
-                  <div><strong>Company:</strong> {companyName || 'N/A'}</div>
-                  <div><strong>Address:</strong> {companyAddress || 'Main Road'}</div>
-                  <div><strong>Guest Name:</strong> {guest?.name || 'sunil agrwal'}</div>
-                  <div><strong>Mobile:</strong> {guest?.phone || '7676767674'}</div>
-                  <div><strong>Party's GSTIN:</strong> {gstNumber || 'N/A'}</div>
-                </div>
+                  <div style={{ background: '#facc15', border: '1px solid #eab308', padding: '10px 14px', borderRadius: 4, marginBottom: 10, textAlign: 'center', position: 'relative' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#000' }}>GST NO: 27AABCS1429B1Z2</div>
+                    <div style={{ fontSize: 18, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1, margin: '2px 0' }}>INVOICE</div>
+                    <div style={{ fontSize: 17, fontWeight: 800, textTransform: 'uppercase' }}>HOTEL SAI VASUDEV RESIDENCY</div>
+                    <div style={{ fontSize: 10, fontWeight: 600 }}>Pimpalwadi Road, Shirdi - 423109 (Maharashtra)</div>
+                    <div style={{ fontSize: 10, fontWeight: 600 }}>India Email: stay@hotelsai-vasudev.com Phone Mobile 999663696</div>
+                    <div style={{ position: 'absolute', right: 14, top: 12, border: '1px solid #ca8a04', background: '#fef08a', padding: '4px 8px', fontSize: 9, fontWeight: 700 }}>
+                      [QR Code]
+                    </div>
+                  </div>
 
-                <div style={{ textAlign: 'right' }}>
-                  <div><strong>Invoice No:</strong> {invoiceNo}</div>
-                  <div><strong>Departure Date:</strong> {checkOutDate}</div>
-                  <div><strong>Departure Time:</strong> {checkOutTime}</div>
-                  <div><strong>Billing Officer:</strong> DEMO0004</div>
-                  <div><strong>Room No:</strong> {targetRoom.roomNo} ({targetRoom.roomType})</div>
-                </div>
-              </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+                    <div style={{ background: '#e0f2fe', border: '1px solid #7dd3fc', padding: 8, borderRadius: 3, fontSize: 11 }}>
+                      <div style={{ fontWeight: 800, borderBottom: '1px solid #7dd3fc', paddingBottom: 3, marginBottom: 4, color: '#0369a1' }}>Guest Detail</div>
+                      <div><strong>Guest Name:</strong> {guest?.name || 'akash ji'}</div>
+                      <div><strong>Add:</strong> {companyAddress || 'Shirdi'}</div>
+                      <div><strong>City:</strong> Shirdi</div>
+                      <div><strong>State:</strong> Maharashtra</div>
+                      <div><strong>Mob:</strong> {guest?.phone || '787846514'}</div>
+                      <div><strong>Email:</strong> {guest?.phone ? `${guest.phone}@guest.in` : '-'}</div>
+                      <div><strong>GST NO:</strong> {gstNumber || '-'}</div>
+                    </div>
 
-              {/* Invoice Particulars Table (Frame 0420) */}
-              <table className="pms-table-compact" style={{ marginBottom: 10 }}>
-                <thead>
-                  <tr>
-                    <th>S.No</th>
-                    <th>Particulars</th>
-                    <th>Days</th>
-                    <th>Rate (₹)</th>
-                    <th>GST</th>
-                    <th style={{ textAlign: 'right' }}>Amount (₹)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>1</td>
-                    <td style={{ fontWeight: 700 }}>{targetRoom.roomType} (Room {targetRoom.roomNo})</td>
-                    <td>{noOfDays}</td>
-                    <td>{(taxableRoomRent / noOfDays).toFixed(2)}</td>
-                    <td>{gstPercent.toFixed(2)}%</td>
-                    <td style={{ textAlign: 'right', fontWeight: 800 }}>{taxableRoomRent.toFixed(2)}</td>
-                  </tr>
-                </tbody>
-              </table>
+                    <div style={{ background: '#fef08a', border: '1px solid #fde047', padding: 8, borderRadius: 3, fontSize: 11 }}>
+                      <div style={{ fontWeight: 800, borderBottom: '1px solid #fde047', paddingBottom: 3, marginBottom: 4, color: '#854d0e' }}>Detail</div>
+                      <div><strong>Invoice No:</strong> {invoiceNo}</div>
+                      <div><strong>Check In Date:</strong> {checkInDate}</div>
+                      <div><strong>Check In Time:</strong> {checkInTime}</div>
+                      <div><strong>Check Out Date:</strong> {checkOutDate}</div>
+                      <div><strong>Check Out Time:</strong> {checkOutTime}</div>
+                      <div><strong>Total Day:</strong> {noOfDays}</div>
+                      <div><strong>Room No:</strong> {targetRoom.roomNo} ({targetRoom.roomType})</div>
+                    </div>
+                  </div>
+
+                  <table className="pms-table-compact" style={{ marginBottom: 12 }}>
+                    <thead>
+                      <tr style={{ background: '#f8fafc' }}>
+                        <th style={{ width: 45 }}>S.No</th>
+                        <th>Particulars</th>
+                        <th style={{ width: 60, textAlign: 'center' }}>Days</th>
+                        <th style={{ width: 120, textAlign: 'right' }}>Amount (₹)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>1</td>
+                        <td>Room Rent Per Day - {perDayTariff.toFixed(2)}</td>
+                        <td style={{ textAlign: 'center' }}>{noOfDays}</td>
+                        <td style={{ textAlign: 'right', fontWeight: 600 }}>{taxableRoomRent.toFixed(2)}</td>
+                      </tr>
+                      <tr>
+                        <td>2</td>
+                        <td>GST % ({gstPercent}%)</td>
+                        <td style={{ textAlign: 'center' }}>-</td>
+                        <td style={{ textAlign: 'right' }}>{gstAmount.toFixed(2)}</td>
+                      </tr>
+                      <tr style={{ background: '#f1f5f9', fontWeight: 700 }}>
+                        <td>3</td>
+                        <td>Total Room Tariff</td>
+                        <td style={{ textAlign: 'center' }}>-</td>
+                        <td style={{ textAlign: 'right' }}>{(taxableRoomRent + gstAmount).toFixed(2)}</td>
+                      </tr>
+                      <tr>
+                        <td>4</td>
+                        <td>Food Amount</td>
+                        <td style={{ textAlign: 'center' }}>-</td>
+                        <td style={{ textAlign: 'right' }}>{foodAmount.toFixed(2)}</td>
+                      </tr>
+                      <tr>
+                        <td>5</td>
+                        <td>Add Other Charge</td>
+                        <td style={{ textAlign: 'center' }}>-</td>
+                        <td style={{ textAlign: 'right' }}>{addOthers.toFixed(2)}</td>
+                      </tr>
+                      <tr>
+                        <td>6</td>
+                        <td>Less Discount</td>
+                        <td style={{ textAlign: 'center' }}>-</td>
+                        <td style={{ textAlign: 'right', color: '#dc2626' }}>{lessDiscount > 0 ? `-${lessDiscount.toFixed(2)}` : '0.00'}</td>
+                      </tr>
+                      <tr style={{ background: '#e0f2fe', fontWeight: 800, fontSize: 13 }}>
+                        <td colSpan={3} style={{ textAlign: 'right' }}>Net Bill Amount:</td>
+                        <td style={{ textAlign: 'right', color: '#0369a1' }}>₹{netBillAmount.toFixed(2)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                /* Standard & Half-Page Formats */
+                <>
+                  {/* Hotel Header */}
+                  <div style={{ textAlign: 'center', borderBottom: '2px solid #0f172a', paddingBottom: 8, marginBottom: 10 }}>
+                    <h2 style={{ margin: 0, fontSize: 20, fontWeight: 900, letterSpacing: 1 }}>
+                      HOTEL SAI VASUDEV RESIDENCY
+                    </h2>
+                    <div style={{ fontSize: 11, color: '#475569' }}>
+                      Opp. Gate No. 2, Pimpalwadi Road, Shirdi, Maharashtra - 423109 &bull; GSTIN: 27AABCS1429B1Z2
+                    </div>
+                    <div style={{ fontSize: 14, fontWeight: 800, textTransform: 'uppercase', marginTop: 4, letterSpacing: 1 }}>
+                      TAX INVOICE (GUEST CHECKOUT)
+                    </div>
+                  </div>
+
+                  {/* Guest & Stay Details Grid (Frame 0420) */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 14, borderBottom: '1px solid #cbd5e1', paddingBottom: 8, marginBottom: 10 }}>
+                    <div>
+                      <div><strong>Company:</strong> {companyName || 'N/A'}</div>
+                      <div><strong>Address:</strong> {companyAddress || 'Main Road'}</div>
+                      <div><strong>Guest Name:</strong> {guest?.name || 'sunil agrwal'}</div>
+                      <div><strong>Mobile:</strong> {guest?.phone || '7676767674'}</div>
+                      <div><strong>Party's GSTIN:</strong> {gstNumber || 'N/A'}</div>
+                    </div>
+
+                    <div style={{ textAlign: 'right' }}>
+                      <div><strong>Invoice No:</strong> {invoiceNo}</div>
+                      <div><strong>Departure Date:</strong> {checkOutDate}</div>
+                      <div><strong>Departure Time:</strong> {checkOutTime}</div>
+                      <div><strong>Billing Officer:</strong> DEMO0004</div>
+                      <div><strong>Room No:</strong> {targetRoom.roomNo} ({targetRoom.roomType})</div>
+                    </div>
+                  </div>
+
+                  {/* Invoice Particulars Table (Frame 0420) */}
+                  <table className="pms-table-compact" style={{ marginBottom: 10 }}>
+                    <thead>
+                      <tr>
+                        <th>S.No</th>
+                        <th>Particulars</th>
+                        <th>Days</th>
+                        <th>Rate (₹)</th>
+                        <th>GST</th>
+                        <th style={{ textAlign: 'right' }}>Amount (₹)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>1</td>
+                        <td style={{ fontWeight: 700 }}>{targetRoom.roomType} (Room {targetRoom.roomNo})</td>
+                        <td>{noOfDays}</td>
+                        <td>{(taxableRoomRent / noOfDays).toFixed(2)}</td>
+                        <td>{gstPercent.toFixed(2)}%</td>
+                        <td style={{ textAlign: 'right', fontWeight: 800 }}>{taxableRoomRent.toFixed(2)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </>
+              )}
 
               {/* Financial Sub-Calculations (Frame 0420) */}
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
