@@ -310,6 +310,8 @@ export interface MenuItem {
   unit?: string;
   gstPercent?: number;
   image?: string;
+  headGroup?: 'Restaurant_Item' | 'Raw_Material';
+  group?: string;
 }
 
 export interface PmsRoomType {
@@ -484,6 +486,105 @@ export interface PmsPaymentRecord {
   amount: number;               // e.g. 11000, 98717, 1000, 50000
   remark: string;               // e.g. "cash handover", "101 ka commision", "paymnet -4757344"
   createdAt: string;
+}
+
+// ==========================================
+// Video 19: Store Management & Stock Control Contracts
+// ==========================================
+export type ItemHeadGroup = 'Restaurant_Item' | 'Raw_Material';
+
+export interface PmsItemGroup {
+  id: string;
+  sNo: number;
+  name: string;               // e.g. "Genral", "Raw Material", "spices", "sabzi and paneer"
+  headGroup: ItemHeadGroup;   // "Restaurant_Item" vs "Raw_Material"
+  createdAt?: string;
+}
+
+export interface PmsGodown {
+  id: string;
+  sNo: number;
+  name: string;               // e.g. "Main Store", "Kitchen", "Consume", "STORE1"
+  address: string;            // e.g. "Main Store", "Kitchen", "Kitchen Consumption", "TOP FLOOR"
+  createdAt?: string;
+}
+
+export interface PmsPurchaseItem {
+  sNo: number;
+  itemId: string;
+  itemName: string;
+  barcode?: string;
+  qty: number;
+  rate: number;
+  amount: number;             // qty * rate
+  discountPercent: number;
+  discountAmt: number;
+  totalDiscount: number;
+  taxable: number;
+  gstPercent: number;
+  gstAmt: number;
+  netValue: number;
+}
+
+export interface PmsPurchaseBill {
+  id: string;
+  billNo: string;             // e.g. "6" or "PUR/6/24-25"
+  billDate: string;           // DD-MM-YYYY
+  godown: string;             // e.g. "Main Store"
+  terms: 'Credit' | 'Cash' | 'Online';
+  accountName: string;        // e.g. "GUPTA JII", "M/S KIRANA STORE"
+  items: PmsPurchaseItem[];
+  totalQty: number;
+  totalAmount: number;
+  totalDiscount: number;
+  totalTaxable: number;
+  totalGstAmt: number;
+  totalNetValue: number;
+  createdAt: string;
+}
+
+export interface PmsStockTransferItem {
+  sNo: number;
+  itemId: string;
+  itemName: string;
+  barcode?: string;
+  qty: number;
+  rate: number;
+  amount: number;
+  discountAmt?: number;
+  totalDiscount?: number;
+  gstPercent?: number;
+  gstAmt?: number;
+  netValue?: number;
+}
+
+export interface PmsStockTransfer {
+  id: string;
+  entryNo: string;            // e.g. "ST/1/24-25"
+  date: string;               // DD-MM-YYYY
+  fromGodown: string;         // e.g. "Main Store", "Kitchen"
+  toGodown: string;           // e.g. "Kitchen", "Consume"
+  billDate: string;           // DD-MM-YYYY
+  billNo: string;             // e.g. "1", "101"
+  items: PmsStockTransferItem[];
+  totalQty: number;
+  totalAmount: number;
+  totalDiscount?: number;
+  totalTaxable?: number;
+  totalGstAmt?: number;
+  totalNetValue?: number;
+  remark?: string;
+  createdAt: string;
+}
+
+export interface GodownStockRow {
+  sNo: number;
+  itemName: string;
+  barcode?: string;
+  unit?: string;
+  stockIn: number;
+  stockOut: number;
+  closingStock: number;
 }
 
 

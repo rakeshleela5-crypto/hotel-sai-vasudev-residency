@@ -23,7 +23,7 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
 
   const occupiedRooms = PmsStore.getRooms().filter(r => r.status === 'occupied');
   const tables = PmsStore.getTables();
-  const menuItems = PmsStore.getMenuItems();
+  const menuItems = PmsStore.getMenuItems().filter(m => m.headGroup !== 'Raw_Material');
 
   const initialRoom = occupiedRooms.find(r => r.roomNo === defaultRoomNo) || occupiedRooms[0] || {
     roomNo: '103',

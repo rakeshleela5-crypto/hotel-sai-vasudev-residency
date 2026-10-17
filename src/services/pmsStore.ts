@@ -18,7 +18,12 @@ import type {
   PmsTableShiftRecord,
   PmsReceiptRecord,
   PmsPartyAccount,
-  PmsPaymentRecord
+  PmsPaymentRecord,
+  PmsItemGroup,
+  PmsGodown,
+  PmsPurchaseBill,
+  PmsStockTransfer,
+  GodownStockRow
 } from '../types/pmsModels';
 
 export const DEFAULT_BUSINESS_SETTING: PmsBusinessSetting = {
@@ -190,17 +195,22 @@ export const INITIAL_VOUCHER_TYPES: PmsVoucherType[] = [
 ];
 
 export const INITIAL_MENU_ITEMS: MenuItem[] = [
-  { id: 'm-1', name: 'Paneer Rice', code: '11', barcode: '8901234001', company: 'In-House', rate: 140, saleRate: 140, mrp: 160, purchaseRate: 80, unit: 'Plate', gstPercent: 5, category: 'Rice' },
-  { id: 'm-2', name: 'PANEER TIKA', code: '10005', barcode: '8901234002', company: 'In-House', rate: 220, saleRate: 220, mrp: 250, purchaseRate: 120, unit: 'Portion', gstPercent: 5, category: 'Starters' },
-  { id: 'm-3', name: 'sahi paneer', code: '10028', barcode: '8901234003', company: 'In-House', rate: 240, saleRate: 240, mrp: 270, purchaseRate: 130, unit: 'Portion', gstPercent: 5, category: 'Main Course' },
-  { id: 'm-4', name: 'paneer bhurji', code: '10040', barcode: '8901234004', company: 'In-House', rate: 200, saleRate: 200, mrp: 220, purchaseRate: 110, unit: 'Portion', gstPercent: 5, category: 'Main Course' },
-  { id: 'm-5', name: 'Dal Tadka', code: '10012', barcode: '8901234005', company: 'In-House', rate: 160, saleRate: 160, mrp: 180, purchaseRate: 70, unit: 'Bowl', gstPercent: 5, category: 'Dal' },
-  { id: 'm-6', name: 'Butter Roti', code: '10001', barcode: '8901234006', company: 'In-House', rate: 25, saleRate: 25, mrp: 30, purchaseRate: 10, unit: 'Piece', gstPercent: 5, category: 'Breads' },
-  { id: 'm-7', name: 'Mineral Water 1L', code: '10002', barcode: '8901234007', company: 'Bisleri', rate: 20, saleRate: 20, mrp: 20, purchaseRate: 12, unit: 'Bottle', gstPercent: 12, category: 'Beverages' },
-  { id: 'm-8', name: 'Masala Tea', code: '10003', barcode: '8901234008', company: 'In-House', rate: 30, saleRate: 30, mrp: 35, purchaseRate: 10, unit: 'Cup', gstPercent: 5, category: 'Beverages' },
-  { id: 'm-9', name: 'Veg Thali Deluxe', code: '10050', barcode: '8901234009', company: 'In-House', rate: 180, saleRate: 180, mrp: 200, purchaseRate: 90, unit: 'Plate', gstPercent: 5, category: 'Thali' },
-  { id: 'm-10', name: 'Jeera Rice', code: '10015', barcode: '8901234010', company: 'In-House', rate: 110, saleRate: 110, mrp: 130, purchaseRate: 50, unit: 'Plate', gstPercent: 5, category: 'Rice' },
-  { id: 'm-11', name: 'KACHOOMER SALAD', code: '10060', barcode: '8901234011', company: 'In-House', rate: 90, saleRate: 90, mrp: 100, purchaseRate: 30, unit: 'Portion', gstPercent: 5, category: 'Salad' }
+  { id: 'm-1', name: 'Paneer Rice', code: '11', barcode: '8901234001', company: 'In-House', rate: 140, saleRate: 140, mrp: 160, purchaseRate: 80, unit: 'Plate', gstPercent: 5, category: 'Rice', headGroup: 'Restaurant_Item' },
+  { id: 'm-2', name: 'PANEER TIKA', code: '10005', barcode: '8901234002', company: 'In-House', rate: 220, saleRate: 220, mrp: 250, purchaseRate: 120, unit: 'Portion', gstPercent: 5, category: 'Starters', headGroup: 'Restaurant_Item' },
+  { id: 'm-3', name: 'sahi paneer', code: '10028', barcode: '8901234003', company: 'In-House', rate: 240, saleRate: 240, mrp: 270, purchaseRate: 130, unit: 'Portion', gstPercent: 5, category: 'Main Course', headGroup: 'Restaurant_Item' },
+  { id: 'm-4', name: 'paneer bhurji', code: '10040', barcode: '8901234004', company: 'In-House', rate: 200, saleRate: 200, mrp: 220, purchaseRate: 110, unit: 'Portion', gstPercent: 5, category: 'Main Course', headGroup: 'Restaurant_Item' },
+  { id: 'm-5', name: 'Dal Tadka', code: '10012', barcode: '8901234005', company: 'In-House', rate: 160, saleRate: 160, mrp: 180, purchaseRate: 70, unit: 'Bowl', gstPercent: 5, category: 'Dal', headGroup: 'Restaurant_Item' },
+  { id: 'm-6', name: 'Butter Roti', code: '10001', barcode: '8901234006', company: 'In-House', rate: 25, saleRate: 25, mrp: 30, purchaseRate: 10, unit: 'Piece', gstPercent: 5, category: 'Breads', headGroup: 'Restaurant_Item' },
+  { id: 'm-7', name: 'Mineral Water 1L', code: '10002', barcode: '8901234007', company: 'Bisleri', rate: 20, saleRate: 20, mrp: 20, purchaseRate: 12, unit: 'Bottle', gstPercent: 12, category: 'Beverages', headGroup: 'Restaurant_Item' },
+  { id: 'm-8', name: 'Masala Tea', code: '10003', barcode: '8901234008', company: 'In-House', rate: 30, saleRate: 30, mrp: 35, purchaseRate: 10, unit: 'Cup', gstPercent: 5, category: 'Beverages', headGroup: 'Restaurant_Item' },
+  { id: 'm-9', name: 'Veg Thali Deluxe', code: '10050', barcode: '8901234009', company: 'In-House', rate: 180, saleRate: 180, mrp: 200, purchaseRate: 90, unit: 'Plate', gstPercent: 5, category: 'Thali', headGroup: 'Restaurant_Item' },
+  { id: 'm-10', name: 'Jeera Rice', code: '10015', barcode: '8901234010', company: 'In-House', rate: 110, saleRate: 110, mrp: 130, purchaseRate: 50, unit: 'Plate', gstPercent: 5, category: 'Rice', headGroup: 'Restaurant_Item' },
+  { id: 'm-11', name: 'KACHOOMER SALAD', code: '10060', barcode: '8901234011', company: 'In-House', rate: 90, saleRate: 90, mrp: 100, purchaseRate: 30, unit: 'Portion', gstPercent: 5, category: 'Salad', headGroup: 'Restaurant_Item' },
+  // Video 19: Raw Material Store Items
+  { id: 'm-daal-rahar', name: 'Daal Rahar', code: '10058', barcode: '10058', company: 'Genral', rate: 175, saleRate: 175, mrp: 175, purchaseRate: 175, unit: 'KG', gstPercent: 5, category: 'Raw Material', headGroup: 'Raw_Material' },
+  { id: 'm-refine-oil', name: 'Refine Oil', code: '10069', barcode: '10069', company: 'Genral', rate: 150, saleRate: 150, mrp: 150, purchaseRate: 140, unit: 'Liter', gstPercent: 12, category: 'Raw Material', headGroup: 'Raw_Material' },
+  { id: 'm-sugar', name: 'Sugar / Sakkar', code: '10070', barcode: '10070', company: 'Genral', rate: 45, saleRate: 45, mrp: 45, purchaseRate: 42, unit: 'KG', gstPercent: 5, category: 'Raw Material', headGroup: 'Raw_Material' },
+  { id: 'm-milk', name: 'Milk / Doodh', code: '10071', barcode: '10071', company: 'Genral', rate: 60, saleRate: 60, mrp: 60, purchaseRate: 55, unit: 'Liter', gstPercent: 0, category: 'Raw Material', headGroup: 'Raw_Material' }
 ];
 
 // Video 15: Party Accounts & Receivables Seed Data (Frame 0130)
@@ -225,7 +235,8 @@ export const INITIAL_PARTY_ACCOUNTS: PmsPartyAccount[] = [
   { id: 'pa-18', name: 'AKASH YADAV', mobile: '9123456780', category: 'Customer', balance: 0.00, balanceType: 'Dr' },
   { id: 'pa-19', name: 'Guruprasad pol', mobile: '9876501234', category: 'Customer', balance: 0.00, balanceType: 'Dr' },
   { id: 'pa-20', name: 'shri sunder lal tiwari(owner)', mobile: '9822114455', category: 'Owner', balance: 0.00, balanceType: 'Dr' },
-  { id: 'pa-21', name: 'auto commision', mobile: '9876543210', category: 'Customer', balance: 0.00, balanceType: 'Dr' }
+  { id: 'pa-21', name: 'auto commision', mobile: '9876543210', category: 'Customer', balance: 0.00, balanceType: 'Dr' },
+  { id: 'pa-22', name: 'GUPTA JII', mobile: '9999663696', category: 'Corporate', balance: 24867.50, balanceType: 'Cr' }
 ];
 
 // Video 15: General Receipt Register Seed Data (Frames 0090, 0230, 0250)
@@ -428,6 +439,176 @@ export const INITIAL_PAYMENTS: PmsPaymentRecord[] = [
   }
 ];
 
+// Video 19: Store & Inventory Seed Data (Frames 0150, 0230, 0280, 0335)
+export const INITIAL_ITEM_GROUPS: PmsItemGroup[] = [
+  { id: 'ig-1', sNo: 1, name: 'Genral', headGroup: 'Restaurant_Item' },
+  { id: 'ig-2', sNo: 2, name: 'sabzi and paneer', headGroup: 'Restaurant_Item' },
+  { id: 'ig-3', sNo: 3, name: 'noodles', headGroup: 'Restaurant_Item' },
+  { id: 'ig-4', sNo: 4, name: 'south indian', headGroup: 'Restaurant_Item' },
+  { id: 'ig-5', sNo: 5, name: 'coldrink', headGroup: 'Restaurant_Item' },
+  { id: 'ig-6', sNo: 6, name: 'SPICES', headGroup: 'Restaurant_Item' },
+  { id: 'ig-7', sNo: 7, name: 'BAR', headGroup: 'Restaurant_Item' },
+  { id: 'ig-8', sNo: 8, name: 'dinner/lunch/breakfast', headGroup: 'Restaurant_Item' },
+  { id: 'ig-9', sNo: 9, name: 'hot cake', headGroup: 'Restaurant_Item' },
+  { id: 'ig-10', sNo: 10, name: 'Raw Material', headGroup: 'Raw_Material' }
+];
+
+export const INITIAL_GODOWNS: PmsGodown[] = [
+  { id: 'g-1', sNo: 1, name: 'Main Store', address: 'Main Store' },
+  { id: 'g-2', sNo: 2, name: 'Kitchen', address: 'Kitchen' },
+  { id: 'g-3', sNo: 3, name: 'Consume', address: 'Kitchen Consumption' },
+  { id: 'g-4', sNo: 4, name: 'STORE1', address: 'TOP FLOOR' }
+];
+
+export const INITIAL_PURCHASES: PmsPurchaseBill[] = [
+  {
+    id: 'pur-6',
+    billNo: '6',
+    billDate: '06-07-2025',
+    godown: 'Main Store',
+    terms: 'Credit',
+    accountName: 'GUPTA JII',
+    items: [
+      {
+        sNo: 1,
+        itemId: 'm-daal-rahar',
+        itemName: 'Daal Rahar',
+        barcode: '10058',
+        qty: 50,
+        rate: 175,
+        amount: 8750,
+        discountPercent: 0,
+        discountAmt: 0,
+        totalDiscount: 0,
+        taxable: 8750,
+        gstPercent: 5,
+        gstAmt: 437.5,
+        netValue: 9187.50
+      },
+      {
+        sNo: 2,
+        itemId: 'm-refine-oil',
+        itemName: 'Refine Oil',
+        barcode: '10069',
+        qty: 100,
+        rate: 140,
+        amount: 14000,
+        discountPercent: 0,
+        discountAmt: 0,
+        totalDiscount: 0,
+        taxable: 14000,
+        gstPercent: 12,
+        gstAmt: 1680,
+        netValue: 15680.00
+      }
+    ],
+    totalQty: 150,
+    totalAmount: 22750,
+    totalDiscount: 0,
+    totalTaxable: 22750,
+    totalGstAmt: 2117.5,
+    totalNetValue: 24867.50,
+    createdAt: '2025-07-06T10:00:00Z'
+  }
+];
+
+export const INITIAL_STOCK_TRANSFERS: PmsStockTransfer[] = [
+  {
+    id: 'st-1',
+    entryNo: 'ST/1/24-25',
+    date: '06-07-2025',
+    fromGodown: 'Main Store',
+    toGodown: 'Kitchen',
+    billDate: '06-07-2025',
+    billNo: '1',
+    items: [
+      {
+        sNo: 1,
+        itemId: 'm-daal-rahar',
+        itemName: 'Daal Rahar',
+        barcode: '10058',
+        qty: 5,
+        rate: 175,
+        amount: 875,
+        discountAmt: 0,
+        totalDiscount: 0,
+        gstPercent: 5,
+        gstAmt: 43.75,
+        netValue: 918.75
+      },
+      {
+        sNo: 2,
+        itemId: 'm-refine-oil',
+        itemName: 'Refine Oil',
+        barcode: '10069',
+        qty: 10,
+        rate: 140,
+        amount: 1400,
+        discountAmt: 0,
+        totalDiscount: 0,
+        gstPercent: 12,
+        gstAmt: 168,
+        netValue: 1568.00
+      }
+    ],
+    totalQty: 15,
+    totalAmount: 2275,
+    totalDiscount: 0,
+    totalTaxable: 2275,
+    totalGstAmt: 211.75,
+    totalNetValue: 2486.75,
+    remark: 'Issue to kitchen for morning cooking',
+    createdAt: '2025-07-06T11:00:00Z'
+  },
+  {
+    id: 'st-2',
+    entryNo: 'ST/2/24-25',
+    date: '06-07-2025',
+    fromGodown: 'Kitchen',
+    toGodown: 'Consume',
+    billDate: '06-07-2025',
+    billNo: '2',
+    items: [
+      {
+        sNo: 1,
+        itemId: 'm-daal-rahar',
+        itemName: 'Daal Rahar',
+        barcode: '10058',
+        qty: 4,
+        rate: 175,
+        amount: 700,
+        discountAmt: 0,
+        totalDiscount: 0,
+        gstPercent: 5,
+        gstAmt: 35,
+        netValue: 735.00
+      },
+      {
+        sNo: 2,
+        itemId: 'm-refine-oil',
+        itemName: 'Refine Oil',
+        barcode: '10069',
+        qty: 8,
+        rate: 140,
+        amount: 1120,
+        discountAmt: 0,
+        totalDiscount: 0,
+        gstPercent: 12,
+        gstAmt: 134.4,
+        netValue: 1254.40
+      }
+    ],
+    totalQty: 12,
+    totalAmount: 1820,
+    totalDiscount: 0,
+    totalTaxable: 1820,
+    totalGstAmt: 169.4,
+    totalNetValue: 1989.40,
+    remark: 'Daily kitchen consumption entry',
+    createdAt: '2025-07-06T18:00:00Z'
+  }
+];
+
 const STORAGE_KEYS = {
   ROOMS: 'svr_pms_rooms',
   ROOM_TYPES: 'svr_pms_room_types',
@@ -444,7 +625,11 @@ const STORAGE_KEYS = {
   ROOM_SHIFTS: 'svr_pms_room_shifts',
   RECEIPTS: 'svr_pms_receipts',
   PARTY_ACCOUNTS: 'svr_pms_party_accounts',
-  PAYMENTS: 'svr_pms_payments'
+  PAYMENTS: 'svr_pms_payments',
+  ITEM_GROUPS: 'svr_pms_item_groups',
+  GODOWNS: 'svr_pms_godowns',
+  PURCHASES: 'svr_pms_purchases',
+  STOCK_TRANSFERS: 'svr_pms_stock_transfers'
 };
 
 export class PmsStore {
@@ -2701,6 +2886,260 @@ export class PmsStore {
       item.sNo = index + 1;
     });
     localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(list));
+  }
+
+  // ==========================================
+  // Video 19: Store & Inventory Management Methods
+  // ==========================================
+
+  // 1. Item Groups Master (Frames 0140, 0150)
+  static getItemGroups(): PmsItemGroup[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.ITEM_GROUPS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.ITEM_GROUPS, JSON.stringify(INITIAL_ITEM_GROUPS));
+      return INITIAL_ITEM_GROUPS;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_ITEM_GROUPS;
+    }
+  }
+
+  static saveItemGroup(group: PmsItemGroup): void {
+    const list = this.getItemGroups();
+    const idx = list.findIndex(g => g.id === group.id || g.name.toLowerCase() === group.name.toLowerCase());
+    if (idx >= 0) {
+      list[idx] = group;
+    } else {
+      list.push(group);
+    }
+    list.forEach((item, index) => {
+      item.sNo = index + 1;
+    });
+    localStorage.setItem(STORAGE_KEYS.ITEM_GROUPS, JSON.stringify(list));
+  }
+
+  static deleteItemGroup(id: string): void {
+    const list = this.getItemGroups().filter(g => g.id !== id && g.name !== id);
+    list.forEach((item, index) => {
+      item.sNo = index + 1;
+    });
+    localStorage.setItem(STORAGE_KEYS.ITEM_GROUPS, JSON.stringify(list));
+  }
+
+  // 2. Godowns Master (Frame 0230)
+  static getGodowns(): PmsGodown[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.GODOWNS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.GODOWNS, JSON.stringify(INITIAL_GODOWNS));
+      return INITIAL_GODOWNS;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_GODOWNS;
+    }
+  }
+
+  static saveGodown(godown: PmsGodown): void {
+    const list = this.getGodowns();
+    const idx = list.findIndex(g => g.id === godown.id || g.name.toLowerCase() === godown.name.toLowerCase());
+    if (idx >= 0) {
+      list[idx] = godown;
+    } else {
+      list.push(godown);
+    }
+    list.forEach((item, index) => {
+      item.sNo = index + 1;
+    });
+    localStorage.setItem(STORAGE_KEYS.GODOWNS, JSON.stringify(list));
+  }
+
+  static deleteGodown(id: string): void {
+    const list = this.getGodowns().filter(g => g.id !== id && g.name !== id);
+    list.forEach((item, index) => {
+      item.sNo = index + 1;
+    });
+    localStorage.setItem(STORAGE_KEYS.GODOWNS, JSON.stringify(list));
+  }
+
+  // 3. Purchase Bills (Frames 0280, 0300)
+  static getPurchases(): PmsPurchaseBill[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.PURCHASES);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.PURCHASES, JSON.stringify(INITIAL_PURCHASES));
+      return INITIAL_PURCHASES;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_PURCHASES;
+    }
+  }
+
+  static savePurchase(bill: PmsPurchaseBill): void {
+    const list = this.getPurchases();
+    const idx = list.findIndex(p => p.id === bill.id || p.billNo === bill.billNo);
+    if (idx >= 0) {
+      list[idx] = bill;
+    } else {
+      list.unshift(bill);
+    }
+    localStorage.setItem(STORAGE_KEYS.PURCHASES, JSON.stringify(list));
+
+    // Update Party Account & Double-Entry Ledger (Video 19 financial integration)
+    const partyName = bill.accountName || 'Purchase';
+    const parties = this.getPartyAccounts();
+    let party = parties.find(p => p.name.toLowerCase().trim() === partyName.toLowerCase().trim());
+    if (party) {
+      if (bill.terms === 'Credit') {
+        party.balance += bill.totalNetValue;
+        party.balanceType = 'Cr'; // We owe the vendor
+      }
+      this.savePartyAccount(party);
+    } else if (bill.terms === 'Credit') {
+      // Create new vendor party
+      this.savePartyAccount({
+        id: `pa-${Date.now()}`,
+        name: partyName,
+        category: 'Corporate',
+        balance: bill.totalNetValue,
+        balanceType: 'Cr'
+      });
+    }
+
+    // Ledger debit entry on Purchase Account
+    const purchaseAccount = parties.find(p => p.name.toLowerCase() === 'purchase');
+    if (purchaseAccount) {
+      purchaseAccount.balance += bill.totalNetValue;
+      this.savePartyAccount(purchaseAccount);
+    }
+  }
+
+  static deletePurchase(id: string): void {
+    const list = this.getPurchases().filter(p => p.id !== id && p.billNo !== id);
+    localStorage.setItem(STORAGE_KEYS.PURCHASES, JSON.stringify(list));
+  }
+
+  // 4. Stock Transfers & Issues (Frames 0335, 0370)
+  static getStockTransfers(): PmsStockTransfer[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.STOCK_TRANSFERS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.STOCK_TRANSFERS, JSON.stringify(INITIAL_STOCK_TRANSFERS));
+      return INITIAL_STOCK_TRANSFERS;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_STOCK_TRANSFERS;
+    }
+  }
+
+  static saveStockTransfer(transfer: PmsStockTransfer): void {
+    const list = this.getStockTransfers();
+    const idx = list.findIndex(s => s.id === transfer.id || s.entryNo === transfer.entryNo);
+    if (idx >= 0) {
+      list[idx] = transfer;
+    } else {
+      list.unshift(transfer);
+    }
+    localStorage.setItem(STORAGE_KEYS.STOCK_TRANSFERS, JSON.stringify(list));
+  }
+
+  static deleteStockTransfer(id: string): void {
+    const list = this.getStockTransfers().filter(s => s.id !== id && s.entryNo !== id);
+    localStorage.setItem(STORAGE_KEYS.STOCK_TRANSFERS, JSON.stringify(list));
+  }
+
+  // 5. Dynamic Store-Wise Stock Calculator (Frames 0260, 0320, 0370)
+  // Computes exact In, Out, and Closing stock for all items per Godown
+  static getGodownStock(): Record<string, GodownStockRow[]> {
+    const godowns = this.getGodowns();
+    const menuItems = this.getMenuItems();
+    const purchases = this.getPurchases();
+    const transfers = this.getStockTransfers();
+
+    const result: Record<string, GodownStockRow[]> = {};
+
+    godowns.forEach(g => {
+      result[g.name] = [];
+    });
+
+    // Helper map of all items
+    const itemMap = new Map<string, { name: string; unit?: string; barcode?: string; headGroup?: string }>();
+    menuItems.forEach(m => {
+      itemMap.set(m.name.toLowerCase().trim(), {
+        name: m.name,
+        unit: m.unit || 'Pcs',
+        barcode: m.barcode || m.code,
+        headGroup: m.headGroup
+      });
+    });
+
+    // Accumulators per godown per item: { in: number, out: number }
+    const storeMap: Record<string, Record<string, { stockIn: number; stockOut: number }>> = {};
+    godowns.forEach(g => {
+      storeMap[g.name] = {};
+    });
+
+    // A. Purchases add to godown Stock In
+    purchases.forEach(p => {
+      const gName = p.godown || 'Main Store';
+      if (!storeMap[gName]) storeMap[gName] = {};
+      p.items.forEach(itm => {
+        const key = itm.itemName.toLowerCase().trim();
+        if (!storeMap[gName][key]) storeMap[gName][key] = { stockIn: 0, stockOut: 0 };
+        storeMap[gName][key].stockIn += itm.qty;
+      });
+    });
+
+    // B. Stock Transfers
+    transfers.forEach(st => {
+      const fromG = st.fromGodown;
+      const toG = st.toGodown;
+
+      if (!storeMap[fromG]) storeMap[fromG] = {};
+      if (!storeMap[toG]) storeMap[toG] = {};
+
+      st.items.forEach(itm => {
+        const key = itm.itemName.toLowerCase().trim();
+        // Out from source
+        if (!storeMap[fromG][key]) storeMap[fromG][key] = { stockIn: 0, stockOut: 0 };
+        storeMap[fromG][key].stockOut += itm.qty;
+
+        // In to destination
+        if (!storeMap[toG][key]) storeMap[toG][key] = { stockIn: 0, stockOut: 0 };
+        storeMap[toG][key].stockIn += itm.qty;
+      });
+    });
+
+    // Build tabular rows for each godown
+    godowns.forEach(g => {
+      const gName = g.name;
+      const rows: GodownStockRow[] = [];
+      const godownItems = storeMap[gName] || {};
+
+      let sNo = 1;
+      // First items present in transaction history
+      Object.keys(godownItems).forEach(key => {
+        const data = godownItems[key];
+        const itmMeta = itemMap.get(key) || { name: key.toUpperCase(), unit: 'Pcs', barcode: '' };
+        rows.push({
+          sNo: sNo++,
+          itemName: itmMeta.name,
+          unit: itmMeta.unit,
+          barcode: itmMeta.barcode,
+          stockIn: data.stockIn,
+          stockOut: data.stockOut,
+          closingStock: data.stockIn - data.stockOut
+        });
+      });
+
+      result[gName] = rows;
+    });
+
+    return result;
   }
 }
 

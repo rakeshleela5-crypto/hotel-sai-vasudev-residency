@@ -26,6 +26,9 @@ import { RoomKotRegisterModal } from './RoomKotRegisterModal';
 import { ReceiptRegisterModal } from './ReceiptRegisterModal';
 import { OutstandingReceivablesModal } from './OutstandingReceivablesModal';
 import { PaymentRegisterModal } from './PaymentRegisterModal';
+import { PurchaseEntryModal } from './PurchaseEntryModal';
+import { StockTransferModal } from './StockTransferModal';
+import { StoreWiseStockModal } from './StoreWiseStockModal';
 import './pmsStyles.css';
 
 interface HotelPmsModalProps {
@@ -92,6 +95,13 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
 
   // Video 16 Payment Register
   const [isPaymentRegisterOpen, setIsPaymentRegisterOpen] = useState(false);
+
+  // Video 19 Store Management & Stock Control
+  const [isPurchaseOpen, setIsPurchaseOpen] = useState(false);
+  const [isStockTransferOpen, setIsStockTransferOpen] = useState(false);
+  const [stockTransferMode, setStockTransferMode] = useState<'transfer' | 'issue'>('transfer');
+  const [isStoreWiseStockOpen, setIsStoreWiseStockOpen] = useState(false);
+  const [itemMasterTab, setItemMasterTab] = useState<'list' | 'form' | 'groups' | 'godowns'>('list');
 
   if (!isOpen) return null;
 
@@ -227,7 +237,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
 
                 {masterMenuOpen && (
                   <div style={{ background: '#1a1e22', paddingLeft: 12, fontSize: 12 }}>
-                    <div className="pms-nav-item" onClick={() => setIsItemMasterOpen(true)}>
+                    <div className="pms-nav-item" onClick={() => { setItemMasterTab('list'); setIsItemMasterOpen(true); }}>
                       <span style={{ color: '#f59e0b', fontWeight: 600 }}>🍽️ Item Master</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsPartyLedgerOpen(true)}>
@@ -250,8 +260,8 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                         <div className="pms-nav-item" onClick={() => setIsTableMasterOpen(true)}>
                           <span style={{ color: '#fcd34d', fontWeight: 600 }}>🍽️ Table (Dine-in / KOT)</span>
                         </div>
-                        <div className="pms-nav-item" onClick={() => alert('Godown (Store): Multi-location inventory & store transfer.')}>
-                          <span>🏬 Godown (Store)</span>
+                        <div className="pms-nav-item" onClick={() => { setItemMasterTab('godowns'); setIsItemMasterOpen(true); }}>
+                          <span style={{ color: '#38bdf8', fontWeight: 600 }}>🏬 Godown (Store)</span>
                         </div>
                         <div className="pms-nav-item" onClick={() => alert('Locker Master: Safe deposit locker management.')}>
                           <span>🔒 Locker</span>
@@ -336,6 +346,12 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     <div className="pms-nav-item" onClick={() => setIsPaymentRegisterOpen(true)}>
                       <span style={{ color: '#06b6d4', fontWeight: 700 }}>💳 Payment Register (Video 16)</span>
                     </div>
+                    <div className="pms-nav-item" onClick={() => setIsPurchaseOpen(true)}>
+                      <span style={{ color: '#ec4899', fontWeight: 700 }}>🛒 Purchase Entry (Video 19)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => { setStockTransferMode('transfer'); setIsStockTransferOpen(true); }}>
+                      <span style={{ color: '#a855f7', fontWeight: 700 }}>🔁 Stock Transfer &amp; Issue (Video 19)</span>
+                    </div>
                     <div className="pms-nav-item" onClick={() => setActiveTab('matrix')}>
                       <span>🧾 Room Check Out</span>
                     </div>
@@ -365,6 +381,9 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsOutstandingReceivablesOpen(true)}>
                       <span style={{ color: '#fb923c', fontWeight: 700 }}>💰 Outstanding Receivables (Video 15)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsStoreWiseStockOpen(true)}>
+                      <span style={{ color: '#10b981', fontWeight: 800 }}>📦 Store Wise Stock Report (Video 19)</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => alert('Daily Check-in Report')}>
                       <span>📋 Check-in Report</span>
@@ -520,10 +539,11 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         onClose={() => setIsTableMasterOpen(false)}
       />
 
-      {/* Item Master Modal (Video 08 Frame 0250) */}
+      {/* Item Master Modal (Video 08 Frame 0250, Video 19 Frame 0130, 0230) */}
       <ItemMasterModal
         isOpen={isItemMasterOpen}
         onClose={() => setIsItemMasterOpen(false)}
+        initialTab={itemMasterTab}
       />
 
       {/* Other Configurations Modal (Video 08 Frames 0920, 0980, 1000) */}
@@ -659,6 +679,28 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       <PaymentRegisterModal
         isOpen={isPaymentRegisterOpen}
         onClose={() => setIsPaymentRegisterOpen(false)}
+      />
+
+      {/* Video 19: Store & Inventory Modals */}
+      <PurchaseEntryModal
+        isOpen={isPurchaseOpen}
+        onClose={() => setIsPurchaseOpen(false)}
+      />
+
+      <StockTransferModal
+        isOpen={isStockTransferOpen}
+        onClose={() => setIsStockTransferOpen(false)}
+        initialMode={stockTransferMode}
+      />
+
+      <StoreWiseStockModal
+        isOpen={isStoreWiseStockOpen}
+        onClose={() => setIsStoreWiseStockOpen(false)}
+        onOpenPurchase={() => setIsPurchaseOpen(true)}
+        onOpenTransfer={() => {
+          setStockTransferMode('transfer');
+          setIsStockTransferOpen(true);
+        }}
       />
     </>
   );

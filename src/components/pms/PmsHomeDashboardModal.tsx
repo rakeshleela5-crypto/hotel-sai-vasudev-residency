@@ -18,6 +18,9 @@ import { RoomKotRegisterModal } from './RoomKotRegisterModal';
 import { ReceiptRegisterModal } from './ReceiptRegisterModal';
 import { OutstandingReceivablesModal } from './OutstandingReceivablesModal';
 import { PaymentRegisterModal } from './PaymentRegisterModal';
+import { PurchaseEntryModal } from './PurchaseEntryModal';
+import { StockTransferModal } from './StockTransferModal';
+import { StoreWiseStockModal } from './StoreWiseStockModal';
 import type { PmsBooking } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
@@ -53,6 +56,12 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   const [isReceiptRegisterOpen, setIsReceiptRegisterOpen] = useState(false);
   const [isOutstandingReceivablesOpen, setIsOutstandingReceivablesOpen] = useState(false);
   const [isPaymentRegisterOpen, setIsPaymentRegisterOpen] = useState(false);
+
+  // Video 19: Store & Inventory Modals
+  const [isPurchaseOpen, setIsPurchaseOpen] = useState(false);
+  const [isStockTransferOpen, setIsStockTransferOpen] = useState(false);
+  const [stockTransferMode, setStockTransferMode] = useState<'transfer' | 'issue'>('transfer');
+  const [isStoreWiseStockOpen, setIsStoreWiseStockOpen] = useState(false);
 
   const rooms = PmsStore.getRooms();
   const vacantCount = rooms.filter(r => r.status === 'vacant').length;
@@ -211,7 +220,8 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-purchase"
-          onClick={() => alert('Purchase Inventory Module: Raw material & grocery procurement.')}
+          onClick={() => setIsPurchaseOpen(true)}
+          title="Video 19: Purchase Inward to Godown (/purchases/create)"
         >
           <span className="tile-icon">🛒</span>
           <span>Purchase</span>
@@ -221,7 +231,11 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-stock-transfer"
-          onClick={() => alert('Stock Transfer: Move items from Central Store to Kitchen/Pantry.')}
+          onClick={() => {
+            setStockTransferMode('transfer');
+            setIsStockTransferOpen(true);
+          }}
+          title="Video 19: Stock Transfer (Main Store -> Kitchen)"
         >
           <span className="tile-icon">🔁</span>
           <span>Stock Transfer</span>
@@ -230,7 +244,11 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-stock-issue"
-          onClick={() => alert('Stock Issue: Consumption report & staff daily item issue.')}
+          onClick={() => {
+            setStockTransferMode('issue');
+            setIsStockTransferOpen(true);
+          }}
+          title="Video 19: Stock Issue & Consumption (Kitchen -> Consume)"
         >
           <span className="tile-icon">📦</span>
           <span>Stock Issue</span>
@@ -239,10 +257,11 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-report"
-          onClick={() => setIsOutstandingReceivablesOpen(true)}
+          onClick={() => setIsStoreWiseStockOpen(true)}
+          title="Video 19: Store Wise Stock Report (/store_wise_stock)"
         >
           <span className="tile-icon">📈</span>
-          <span>Report (Receivables)</span>
+          <span>Store Report</span>
         </button>
 
         <button
@@ -553,6 +572,28 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
       <PaymentRegisterModal
         isOpen={isPaymentRegisterOpen}
         onClose={() => setIsPaymentRegisterOpen(false)}
+      />
+
+      {/* Video 19 Store & Inventory Modals */}
+      <PurchaseEntryModal
+        isOpen={isPurchaseOpen}
+        onClose={() => setIsPurchaseOpen(false)}
+      />
+
+      <StockTransferModal
+        isOpen={isStockTransferOpen}
+        onClose={() => setIsStockTransferOpen(false)}
+        initialMode={stockTransferMode}
+      />
+
+      <StoreWiseStockModal
+        isOpen={isStoreWiseStockOpen}
+        onClose={() => setIsStoreWiseStockOpen(false)}
+        onOpenPurchase={() => setIsPurchaseOpen(true)}
+        onOpenTransfer={() => {
+          setStockTransferMode('transfer');
+          setIsStockTransferOpen(true);
+        }}
       />
     </div>
   );
