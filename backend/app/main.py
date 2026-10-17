@@ -7,8 +7,11 @@ from app.config import settings
 from app.database import engine, Base, get_db
 from app.routes import rooms, bookings, inquiries
 
-# Initialize DB tables
-Base.metadata.create_all(bind=engine)
+# Initialize DB tables safely
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as exc:
+    print(f"Notice: Initial DB schema sync deferred: {exc}")
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
