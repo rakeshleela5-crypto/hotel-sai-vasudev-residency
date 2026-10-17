@@ -13,6 +13,9 @@ export interface PmsRoom {
   status: RoomStatus;
   floor: number;
   facilities: string;
+  image1?: string;
+  image2?: string;
+  image3?: string;
   currentGuest?: {
     name: string;
     phone: string;
@@ -259,6 +262,67 @@ export interface MenuItem {
   code: string;
   rate: number;
   category: string;
+  barcode?: string;
+  company?: string;
+  mrp?: number;
+  saleRate?: number;
+  rateA?: number;
+  rateB?: number;
+  rateC?: number;
+  purchaseRate?: number;
+  unit?: string;
+  gstPercent?: number;
+  image?: string;
+}
+
+export interface PmsRoomType {
+  id: string;
+  roomTypeName: string;
+  package: string;
+  gstTaxString: string;
+  gstPercent: number;
+  roomTariff: number;
+  discountPercent: number;
+}
+
+export interface PmsDiningTable {
+  id: string;
+  tableName: string;
+  tableGroup: string;
+  capacity?: number;
+  status?: 'Vacant' | 'Running' | 'Billed';
+}
+
+export interface PmsGstMaster {
+  id: string;
+  name: string;
+  hsnNo: string;
+  sgst: number;
+  cgst: number;
+  igst: number;
+  vat: number;
+  tax1?: number;
+  tax2?: number;
+  tax3?: number;
+  tax4?: number;
+  tax5?: number;
+}
+
+export interface PmsBusinessSource {
+  id: string;
+  name: string;
+  remark: string;
+}
+
+export interface PmsVoucherType {
+  id: string;
+  voucherTypeName: string;
+  startingNumber: number;
+  prefix: string;
+  suffix: string;
+  numberingStyle: 'Continue' | 'Yearly';
+  printName: string;
+  remark: string;
 }
 
 export interface PmsAdvanceReceipt {

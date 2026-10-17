@@ -8,6 +8,10 @@ import { KotEntryModal } from './KotEntryModal';
 import { FoodBillModal } from './FoodBillModal';
 import { AdvanceReceiptModal } from './AdvanceReceiptModal';
 import { PartyLedgerModal } from './PartyLedgerModal';
+import { RoomMasterModal } from './RoomMasterModal';
+import { TableMasterModal } from './TableMasterModal';
+import { ItemMasterModal } from './ItemMasterModal';
+import { OtherMasterModal } from './OtherMasterModal';
 import './pmsStyles.css';
 
 interface HotelPmsModalProps {
@@ -32,6 +36,14 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   const [isFoodBillModalOpen, setIsFoodBillModalOpen] = useState(false);
   const [isAdvanceReceiptOpen, setIsAdvanceReceiptOpen] = useState(false);
   const [isPartyLedgerOpen, setIsPartyLedgerOpen] = useState(false);
+
+  // Video 08 Master Modals
+  const [isRoomMasterOpen, setIsRoomMasterOpen] = useState(false);
+  const [isTableMasterOpen, setIsTableMasterOpen] = useState(false);
+  const [isItemMasterOpen, setIsItemMasterOpen] = useState(false);
+  const [isOtherMasterOpen, setIsOtherMasterOpen] = useState(false);
+  const [otherMasterTab, setOtherMasterTab] = useState<'gst' | 'businessSource' | 'voucherType'>('gst');
+  const [roomRefreshTrigger, setRoomRefreshTrigger] = useState(0);
 
   if (!isOpen) return null;
 
@@ -167,14 +179,14 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
 
                 {masterMenuOpen && (
                   <div style={{ background: '#1a1e22', paddingLeft: 12, fontSize: 12 }}>
-                    <div className="pms-nav-item" onClick={() => alert('Item Master: Manage restaurant food items, codes, and tariffs.')}>
-                      <span>🍽️ Item Master</span>
+                    <div className="pms-nav-item" onClick={() => setIsItemMasterOpen(true)}>
+                      <span style={{ color: '#f59e0b', fontWeight: 600 }}>🍽️ Item Master</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => alert('Account Master: Chart of accounts, guest & vendor ledgers.')}>
-                      <span>💼 Account Master</span>
+                    <div className="pms-nav-item" onClick={() => setIsPartyLedgerOpen(true)}>
+                      <span style={{ color: '#38bdf8', fontWeight: 600 }}>💼 Account Master (Ledgers)</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => alert('Room Master: Configure room numbers, categories, and rack rates.')}>
-                      <span>🛏️ Room Master</span>
+                    <div className="pms-nav-item" onClick={() => setIsRoomMasterOpen(true)}>
+                      <span style={{ color: '#4ade80', fontWeight: 600 }}>🛏️ Room Master</span>
                     </div>
                     <div 
                       className="pms-nav-item"
@@ -187,19 +199,25 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
 
                     {otherSubmenuOpen && (
                       <div style={{ background: '#111417', paddingLeft: 12, fontSize: 11 }}>
+                        <div className="pms-nav-item" onClick={() => setIsTableMasterOpen(true)}>
+                          <span style={{ color: '#fcd34d', fontWeight: 600 }}>🍽️ Table (Dine-in / KOT)</span>
+                        </div>
+                        <div className="pms-nav-item" onClick={() => alert('Godown (Store): Multi-location inventory & store transfer.')}>
+                          <span>🏬 Godown (Store)</span>
+                        </div>
                         <div className="pms-nav-item" onClick={() => alert('Locker Master: Safe deposit locker management.')}>
                           <span>🔒 Locker</span>
                         </div>
-                        <div className="pms-nav-item" onClick={() => alert('GST, TAX, VAT: Tax slabs (12%, 18%, 5%) configuration.')}>
+                        <div className="pms-nav-item" onClick={() => { setOtherMasterTab('gst'); setIsOtherMasterOpen(true); }}>
                           <span>⚖️ GST,TAX,VAT</span>
                         </div>
-                        <div className="pms-nav-item" onClick={() => alert('Business Source: Manage channels (Walk-in, OYO, MMT, Agoda, Corporate).')}>
+                        <div className="pms-nav-item" onClick={() => { setOtherMasterTab('businessSource'); setIsOtherMasterOpen(true); }}>
                           <span>🌐 Business Source</span>
                         </div>
                         <div className="pms-nav-item" onClick={() => alert('Other Charge: Extra bed, laundry, early check-in charges.')}>
                           <span>➕ Other Charge</span>
                         </div>
-                        <div className="pms-nav-item" onClick={() => alert('Voucher Type: Configure receipt & invoice numbering sequences.')}>
+                        <div className="pms-nav-item" onClick={() => { setOtherMasterTab('voucherType'); setIsOtherMasterOpen(true); }}>
                           <span>📄 Voucher Type</span>
                         </div>
                       </div>
@@ -321,6 +339,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
             {/* Main Dynamic View: Matrix Grid vs Home Hub */}
             {activeTab === 'matrix' ? (
               <RoomDashboardModal 
+                key={roomRefreshTrigger}
                 onSwitchToHomeHub={() => setActiveTab('hub')}
                 onOpenCalendar={() => setIsCalendarOpen(true)}
               />
@@ -375,6 +394,32 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       <PartyLedgerModal
         isOpen={isPartyLedgerOpen}
         onClose={() => setIsPartyLedgerOpen(false)}
+      />
+
+      {/* Room Master & Room Type Master Modal (Video 08) */}
+      <RoomMasterModal
+        isOpen={isRoomMasterOpen}
+        onClose={() => setIsRoomMasterOpen(false)}
+        onRoomsChanged={() => setRoomRefreshTrigger(prev => prev + 1)}
+      />
+
+      {/* Table Master Modal (Video 08 Frame 0820) */}
+      <TableMasterModal
+        isOpen={isTableMasterOpen}
+        onClose={() => setIsTableMasterOpen(false)}
+      />
+
+      {/* Item Master Modal (Video 08 Frame 0250) */}
+      <ItemMasterModal
+        isOpen={isItemMasterOpen}
+        onClose={() => setIsItemMasterOpen(false)}
+      />
+
+      {/* Other Configurations Modal (Video 08 Frames 0920, 0980, 1000) */}
+      <OtherMasterModal
+        isOpen={isOtherMasterOpen}
+        onClose={() => setIsOtherMasterOpen(false)}
+        initialTab={otherMasterTab}
       />
     </>
   );

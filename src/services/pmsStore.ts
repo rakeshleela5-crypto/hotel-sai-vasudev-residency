@@ -1,4 +1,17 @@
-import type { PmsRoom, PmsBooking, PmsKotRecord, PmsCheckOutDetail, MenuItem, PmsAdvanceReceipt, LedgerEntry } from '../types/pmsModels';
+import type { 
+  PmsRoom, 
+  PmsBooking, 
+  PmsKotRecord, 
+  PmsCheckOutDetail, 
+  MenuItem, 
+  PmsAdvanceReceipt, 
+  LedgerEntry,
+  PmsRoomType,
+  PmsDiningTable,
+  PmsGstMaster,
+  PmsBusinessSource,
+  PmsVoucherType
+} from '../types/pmsModels';
 
 export const INITIAL_ROOMS: PmsRoom[] = [
   // Ground / Halls
@@ -52,21 +65,86 @@ export const INITIAL_ROOMS: PmsRoom[] = [
   { id: 'dl-20', roomNo: 'DL-20', roomType: 'DORMITORY', tariff: 600, status: 'vacant', floor: 3, facilities: 'Single Bed in Dormitory' },
 ];
 
+export const INITIAL_ROOM_TYPES: PmsRoomType[] = [
+  { id: 'rt-1', roomTypeName: 'LUXURY ROOM', package: 'GENERAL', gstTaxString: 'GST 18% || 18.00 || 0.00', gstPercent: 18, roomTariff: 4000, discountPercent: 0 },
+  { id: 'rt-2', roomTypeName: 'SUITE ROOM', package: 'GENERAL', gstTaxString: 'GST 12% || 12.00 || 0.00', gstPercent: 12, roomTariff: 3000, discountPercent: 0 },
+  { id: 'rt-3', roomTypeName: 'DELUXE', package: 'GENERAL', gstTaxString: 'GST 12% || 12.00 || 0.00', gstPercent: 12, roomTariff: 2000, discountPercent: 0 },
+  { id: 'rt-4', roomTypeName: 'STANDARD', package: 'GENERAL', gstTaxString: 'GST 12% || 12.00 || 0.00', gstPercent: 12, roomTariff: 1500, discountPercent: 0 },
+  { id: 'rt-5', roomTypeName: 'AC EXECUTIVE ROOM', package: 'GENERAL', gstTaxString: 'GST 12% || 12.00 || 0.00', gstPercent: 12, roomTariff: 1500, discountPercent: 0 },
+  { id: 'rt-6', roomTypeName: 'GROUND 2 BHK', package: 'WITHOUT BREACKFAST', gstTaxString: 'GST 5% || 5.00 || 0.00', gstPercent: 5, roomTariff: 5500, discountPercent: 10 },
+  { id: 'rt-7', roomTypeName: 'MINI HALL', package: 'GENERAL', gstTaxString: 'GST 0% || 0.00 || 0.00', gstPercent: 0, roomTariff: 10000, discountPercent: 0 },
+  { id: 'rt-8', roomTypeName: 'GARDEN', package: 'GENERAL', gstTaxString: 'GST 0% || 0.00 || 0.00', gstPercent: 0, roomTariff: 45000, discountPercent: 0 },
+  { id: 'rt-9', roomTypeName: 'BADA HALL', package: 'GENERAL', gstTaxString: 'GST 0% || 0.00 || 0.00', gstPercent: 0, roomTariff: 35000, discountPercent: 0 },
+  { id: 'rt-10', roomTypeName: 'STANDRAD ROOM', package: 'GENERAL', gstTaxString: 'GST 0% || 0.00 || 0.00', gstPercent: 0, roomTariff: 1500, discountPercent: 0 },
+  { id: 'rt-11', roomTypeName: 'DELUXE ROOM', package: 'GENERAL', gstTaxString: 'GST 0% || 0.00 || 0.00', gstPercent: 0, roomTariff: 2500, discountPercent: 0 },
+  { id: 'rt-12', roomTypeName: 'DORMITORY', package: 'GENERAL', gstTaxString: 'GST 0% || 0.00 || 0.00', gstPercent: 0, roomTariff: 800, discountPercent: 0 },
+];
+
+export const INITIAL_TABLES: PmsDiningTable[] = [
+  { id: 't-1', tableName: 'T-1', tableGroup: 'General', capacity: 4, status: 'Vacant' },
+  { id: 't-2', tableName: 'T-2', tableGroup: 'General', capacity: 4, status: 'Vacant' },
+  { id: 't-3', tableName: 'T-3', tableGroup: 'General', capacity: 4, status: 'Vacant' },
+  { id: 't-4', tableName: 'T-4', tableGroup: 'General', capacity: 4, status: 'Vacant' },
+  { id: 't-5', tableName: 'T-5', tableGroup: 'General', capacity: 6, status: 'Vacant' },
+  { id: 't-6', tableName: 'T-6', tableGroup: 'General', capacity: 6, status: 'Vacant' },
+  { id: 't-7', tableName: 'T-7', tableGroup: 'General', capacity: 2, status: 'Vacant' },
+  { id: 't-8', tableName: 'T-8', tableGroup: 'General', capacity: 2, status: 'Vacant' },
+  { id: 't-9', tableName: 'T-9', tableGroup: 'General', capacity: 8, status: 'Vacant' },
+  { id: 't-nc1', tableName: 'NC1', tableGroup: 'NC', capacity: 4, status: 'Vacant' },
+  { id: 't-nc2', tableName: 'NC2', tableGroup: 'NC', capacity: 4, status: 'Vacant' },
+  { id: 't-g1', tableName: 'G-1', tableGroup: 'Garden', capacity: 6, status: 'Vacant' },
+  { id: 't-g2', tableName: 'G-2', tableGroup: 'Garden', capacity: 6, status: 'Vacant' },
+];
+
+export const INITIAL_GST_MASTERS: PmsGstMaster[] = [
+  { id: 'gst-1', name: 'GST 5%', hsnNo: '996331', sgst: 2.5, cgst: 2.5, igst: 5.0, vat: 0 },
+  { id: 'gst-2', name: 'GST 12%', hsnNo: '996311', sgst: 6.0, cgst: 6.0, igst: 12.0, vat: 0 },
+  { id: 'gst-3', name: 'GST 18%', hsnNo: '996311', sgst: 9.0, cgst: 9.0, igst: 18.0, vat: 0 },
+  { id: 'gst-4', name: 'GST 28%', hsnNo: '996311', sgst: 14.0, cgst: 14.0, igst: 28.0, vat: 0 },
+  { id: 'gst-5', name: 'GST 0%', hsnNo: '996311', sgst: 0.0, cgst: 0.0, igst: 0.0, vat: 0 },
+];
+
+export const INITIAL_BUSINESS_SOURCES: PmsBusinessSource[] = [
+  { id: 'bs-1', name: 'OYO', remark: 'Online Travel Agency' },
+  { id: 'bs-2', name: 'Make My Trip', remark: 'Online Travel Agency' },
+  { id: 'bs-3', name: 'Goibibo', remark: 'Online Travel Agency' },
+  { id: 'bs-4', name: 'Direct', remark: 'Direct Booking' },
+  { id: 'bs-5', name: 'AGODA', remark: 'AGODA' },
+  { id: 'bs-6', name: 'Booking.com', remark: 'Online Travel Agency' },
+  { id: 'bs-7', name: 'Walk-in', remark: 'Front Desk Walk-in Guest' },
+  { id: 'bs-8', name: 'Corporate', remark: 'Corporate & Company Tie-ups' },
+];
+
+export const INITIAL_VOUCHER_TYPES: PmsVoucherType[] = [
+  { id: 'vt-1', voucherTypeName: 'Check_In', startingNumber: 575, prefix: 'SR/', suffix: '/24-25', numberingStyle: 'Continue', printName: 'Check In', remark: 'Check In' },
+  { id: 'vt-2', voucherTypeName: 'Check_Out', startingNumber: 229, prefix: 'GSR/', suffix: '/24-25', numberingStyle: 'Continue', printName: 'Tax Invoice', remark: 'Room Checkout Invoice' },
+  { id: 'vt-3', voucherTypeName: 'Advance_Receipt', startingNumber: 12, prefix: 'AR/', suffix: '/24-25', numberingStyle: 'Continue', printName: 'Advance Receipt', remark: 'Guest Advance Receipt' },
+  { id: 'vt-4', voucherTypeName: 'KOT', startingNumber: 352, prefix: 'KOT/', suffix: '/24-25', numberingStyle: 'Continue', printName: 'KOT Slip', remark: 'Kitchen Order Ticket' },
+  { id: 'vt-5', voucherTypeName: 'Food_Bill', startingNumber: 254, prefix: 'SHRI/', suffix: '/24-25', numberingStyle: 'Continue', printName: 'Food Bill', remark: 'Food & Beverage Bill' },
+];
+
 export const INITIAL_MENU_ITEMS: MenuItem[] = [
-  { id: 'm-1', name: 'Paneer Rice', code: '11', rate: 140, category: 'Rice' },
-  { id: 'm-2', name: 'PANEER TIKA', code: '10005', rate: 220, category: 'Starters' },
-  { id: 'm-3', name: 'sahi paneer', code: '10028', rate: 240, category: 'Main Course' },
-  { id: 'm-4', name: 'paneer bhurji', code: '10040', rate: 200, category: 'Main Course' },
-  { id: 'm-5', name: 'Dal Tadka', code: '10012', rate: 160, category: 'Dal' },
-  { id: 'm-6', name: 'Butter Roti', code: '10001', rate: 25, category: 'Breads' },
-  { id: 'm-7', name: 'Mineral Water 1L', code: '10002', rate: 20, category: 'Beverages' },
-  { id: 'm-8', name: 'Masala Tea', code: '10003', rate: 30, category: 'Beverages' },
-  { id: 'm-9', name: 'Veg Thali Deluxe', code: '10050', rate: 180, category: 'Thali' },
-  { id: 'm-10', name: 'Jeera Rice', code: '10015', rate: 110, category: 'Rice' }
+  { id: 'm-1', name: 'Paneer Rice', code: '11', barcode: '8901234001', company: 'In-House', rate: 140, saleRate: 140, mrp: 160, purchaseRate: 80, unit: 'Plate', gstPercent: 5, category: 'Rice' },
+  { id: 'm-2', name: 'PANEER TIKA', code: '10005', barcode: '8901234002', company: 'In-House', rate: 220, saleRate: 220, mrp: 250, purchaseRate: 120, unit: 'Portion', gstPercent: 5, category: 'Starters' },
+  { id: 'm-3', name: 'sahi paneer', code: '10028', barcode: '8901234003', company: 'In-House', rate: 240, saleRate: 240, mrp: 270, purchaseRate: 130, unit: 'Portion', gstPercent: 5, category: 'Main Course' },
+  { id: 'm-4', name: 'paneer bhurji', code: '10040', barcode: '8901234004', company: 'In-House', rate: 200, saleRate: 200, mrp: 220, purchaseRate: 110, unit: 'Portion', gstPercent: 5, category: 'Main Course' },
+  { id: 'm-5', name: 'Dal Tadka', code: '10012', barcode: '8901234005', company: 'In-House', rate: 160, saleRate: 160, mrp: 180, purchaseRate: 70, unit: 'Bowl', gstPercent: 5, category: 'Dal' },
+  { id: 'm-6', name: 'Butter Roti', code: '10001', barcode: '8901234006', company: 'In-House', rate: 25, saleRate: 25, mrp: 30, purchaseRate: 10, unit: 'Piece', gstPercent: 5, category: 'Breads' },
+  { id: 'm-7', name: 'Mineral Water 1L', code: '10002', barcode: '8901234007', company: 'Bisleri', rate: 20, saleRate: 20, mrp: 20, purchaseRate: 12, unit: 'Bottle', gstPercent: 12, category: 'Beverages' },
+  { id: 'm-8', name: 'Masala Tea', code: '10003', barcode: '8901234008', company: 'In-House', rate: 30, saleRate: 30, mrp: 35, purchaseRate: 10, unit: 'Cup', gstPercent: 5, category: 'Beverages' },
+  { id: 'm-9', name: 'Veg Thali Deluxe', code: '10050', barcode: '8901234009', company: 'In-House', rate: 180, saleRate: 180, mrp: 200, purchaseRate: 90, unit: 'Plate', gstPercent: 5, category: 'Thali' },
+  { id: 'm-10', name: 'Jeera Rice', code: '10015', barcode: '8901234010', company: 'In-House', rate: 110, saleRate: 110, mrp: 130, purchaseRate: 50, unit: 'Plate', gstPercent: 5, category: 'Rice' },
+  { id: 'm-11', name: 'KACHOOMER SALAD', code: '10060', barcode: '8901234011', company: 'In-House', rate: 90, saleRate: 90, mrp: 100, purchaseRate: 30, unit: 'Portion', gstPercent: 5, category: 'Salad' }
 ];
 
 const STORAGE_KEYS = {
   ROOMS: 'svr_pms_rooms',
+  ROOM_TYPES: 'svr_pms_room_types',
+  TABLES: 'svr_pms_tables',
+  GST_MASTERS: 'svr_pms_gst_masters',
+  BUSINESS_SOURCES: 'svr_pms_business_sources',
+  VOUCHER_TYPES: 'svr_pms_voucher_types',
+  MENU_ITEMS: 'svr_pms_menu_items',
   BOOKINGS: 'svr_pms_bookings',
   KOTS: 'svr_pms_kots',
   CHECKOUTS: 'svr_pms_checkouts',
@@ -104,6 +182,206 @@ export class PmsStore {
       return r;
     });
     this.saveRooms(updated);
+  }
+
+  static addRoom(room: PmsRoom): void {
+    const rooms = this.getRooms();
+    const idx = rooms.findIndex(r => r.roomNo === room.roomNo);
+    if (idx >= 0) {
+      rooms[idx] = room;
+    } else {
+      rooms.push(room);
+    }
+    this.saveRooms(rooms);
+  }
+
+  static updateRoom(room: PmsRoom): void {
+    const rooms = this.getRooms();
+    const idx = rooms.findIndex(r => r.id === room.id || r.roomNo === room.roomNo);
+    if (idx >= 0) {
+      rooms[idx] = { ...rooms[idx], ...room };
+      this.saveRooms(rooms);
+    }
+  }
+
+  static deleteRoom(roomNo: string): void {
+    const rooms = this.getRooms().filter(r => r.roomNo !== roomNo && r.id !== roomNo);
+    this.saveRooms(rooms);
+  }
+
+  // Room Types
+  static getRoomTypes(): PmsRoomType[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.ROOM_TYPES);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.ROOM_TYPES, JSON.stringify(INITIAL_ROOM_TYPES));
+      return INITIAL_ROOM_TYPES;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_ROOM_TYPES;
+    }
+  }
+
+  static saveRoomType(roomType: PmsRoomType): void {
+    const list = this.getRoomTypes();
+    const idx = list.findIndex(r => r.id === roomType.id || r.roomTypeName.toLowerCase() === roomType.roomTypeName.toLowerCase());
+    if (idx >= 0) {
+      list[idx] = roomType;
+    } else {
+      list.push(roomType);
+    }
+    localStorage.setItem(STORAGE_KEYS.ROOM_TYPES, JSON.stringify(list));
+  }
+
+  static deleteRoomType(id: string): void {
+    const list = this.getRoomTypes().filter(r => r.id !== id && r.roomTypeName !== id);
+    localStorage.setItem(STORAGE_KEYS.ROOM_TYPES, JSON.stringify(list));
+  }
+
+  // Dining Tables
+  static getTables(): PmsDiningTable[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.TABLES);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.TABLES, JSON.stringify(INITIAL_TABLES));
+      return INITIAL_TABLES;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_TABLES;
+    }
+  }
+
+  static saveTable(table: PmsDiningTable): void {
+    const list = this.getTables();
+    const idx = list.findIndex(t => t.id === table.id || t.tableName.toLowerCase() === table.tableName.toLowerCase());
+    if (idx >= 0) {
+      list[idx] = table;
+    } else {
+      list.push(table);
+    }
+    localStorage.setItem(STORAGE_KEYS.TABLES, JSON.stringify(list));
+  }
+
+  static deleteTable(id: string): void {
+    const list = this.getTables().filter(t => t.id !== id && t.tableName !== id);
+    localStorage.setItem(STORAGE_KEYS.TABLES, JSON.stringify(list));
+  }
+
+  // GST Masters
+  static getGstMasters(): PmsGstMaster[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.GST_MASTERS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.GST_MASTERS, JSON.stringify(INITIAL_GST_MASTERS));
+      return INITIAL_GST_MASTERS;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_GST_MASTERS;
+    }
+  }
+
+  static saveGstMaster(gst: PmsGstMaster): void {
+    const list = this.getGstMasters();
+    const idx = list.findIndex(g => g.id === gst.id || g.name.toLowerCase() === gst.name.toLowerCase());
+    if (idx >= 0) {
+      list[idx] = gst;
+    } else {
+      list.push(gst);
+    }
+    localStorage.setItem(STORAGE_KEYS.GST_MASTERS, JSON.stringify(list));
+  }
+
+  static deleteGstMaster(id: string): void {
+    const list = this.getGstMasters().filter(g => g.id !== id && g.name !== id);
+    localStorage.setItem(STORAGE_KEYS.GST_MASTERS, JSON.stringify(list));
+  }
+
+  // Business Sources
+  static getBusinessSources(): PmsBusinessSource[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.BUSINESS_SOURCES);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.BUSINESS_SOURCES, JSON.stringify(INITIAL_BUSINESS_SOURCES));
+      return INITIAL_BUSINESS_SOURCES;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_BUSINESS_SOURCES;
+    }
+  }
+
+  static saveBusinessSource(source: PmsBusinessSource): void {
+    const list = this.getBusinessSources();
+    const idx = list.findIndex(s => s.id === source.id || s.name.toLowerCase() === source.name.toLowerCase());
+    if (idx >= 0) {
+      list[idx] = source;
+    } else {
+      list.push(source);
+    }
+    localStorage.setItem(STORAGE_KEYS.BUSINESS_SOURCES, JSON.stringify(list));
+  }
+
+  static deleteBusinessSource(id: string): void {
+    const list = this.getBusinessSources().filter(s => s.id !== id && s.name !== id);
+    localStorage.setItem(STORAGE_KEYS.BUSINESS_SOURCES, JSON.stringify(list));
+  }
+
+  // Voucher Types
+  static getVoucherTypes(): PmsVoucherType[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.VOUCHER_TYPES);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.VOUCHER_TYPES, JSON.stringify(INITIAL_VOUCHER_TYPES));
+      return INITIAL_VOUCHER_TYPES;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_VOUCHER_TYPES;
+    }
+  }
+
+  static updateVoucherType(voucher: PmsVoucherType): void {
+    const list = this.getVoucherTypes();
+    const idx = list.findIndex(v => v.id === voucher.id || v.voucherTypeName.toLowerCase() === voucher.voucherTypeName.toLowerCase());
+    if (idx >= 0) {
+      list[idx] = voucher;
+    } else {
+      list.push(voucher);
+    }
+    localStorage.setItem(STORAGE_KEYS.VOUCHER_TYPES, JSON.stringify(list));
+  }
+
+  // Menu Items
+  static getMenuItems(): MenuItem[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.MENU_ITEMS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.MENU_ITEMS, JSON.stringify(INITIAL_MENU_ITEMS));
+      return INITIAL_MENU_ITEMS;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_MENU_ITEMS;
+    }
+  }
+
+  static saveMenuItem(item: MenuItem): void {
+    const list = this.getMenuItems();
+    const idx = list.findIndex(m => m.id === item.id || m.code === item.code || m.name.toLowerCase() === item.name.toLowerCase());
+    if (idx >= 0) {
+      list[idx] = item;
+    } else {
+      list.push(item);
+    }
+    localStorage.setItem(STORAGE_KEYS.MENU_ITEMS, JSON.stringify(list));
+  }
+
+  static deleteMenuItem(id: string): void {
+    const list = this.getMenuItems().filter(m => m.id !== id && m.code !== id);
+    localStorage.setItem(STORAGE_KEYS.MENU_ITEMS, JSON.stringify(list));
   }
 
   static getBookings(): PmsBooking[] {

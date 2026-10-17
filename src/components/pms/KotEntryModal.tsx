@@ -18,12 +18,16 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
   if (!isOpen) return null;
 
   const occupiedRooms = PmsStore.getRooms().filter(r => r.status === 'occupied');
+  const tables = PmsStore.getTables();
+  const menuItems = PmsStore.getMenuItems();
+
   const initialRoom = occupiedRooms.find(r => r.roomNo === defaultRoomNo) || occupiedRooms[0] || {
     roomNo: '103',
     currentGuest: { name: 'ALOK JAIN' }
   } as PmsRoom;
 
   const [selectedRoomNo, setSelectedRoomNo] = useState<string>(initialRoom.roomNo);
+  const [selectedTableNo, setSelectedTableNo] = useState<string>(tables[0]?.tableName || 'T-1');
   const selectedGuestName = occupiedRooms.find(r => r.roomNo === selectedRoomNo)?.currentGuest?.name || 'ALOK JAIN';
 
   const defaultKotNo = `KOT/${Math.floor(350 + Math.random() * 50)}/24-25`;
@@ -32,9 +36,9 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
   const [kotRemark, setKotRemark] = useState<string>('Quick Room Delivery');
 
   // Item row input
-  const [selectedItemId, setSelectedItemId] = useState<string>(INITIAL_MENU_ITEMS[6]?.id || INITIAL_MENU_ITEMS[0]?.id || '');
+  const [selectedItemId, setSelectedItemId] = useState<string>(menuItems[0]?.id || '');
   const [itemQty, setItemQty] = useState<number>(1);
-  const [itemRate, setItemRate] = useState<number>(INITIAL_MENU_ITEMS[6]?.rate || 28.57);
+  const [itemRate, setItemRate] = useState<number>(menuItems[0]?.rate || 140);
   const [itemAmount, setItemAmount] = useState<number>(itemQty * itemRate);
 
   // Items in this KOT
@@ -55,10 +59,11 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
   const handleItemSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = e.target.value;
     setSelectedItemId(id);
-    const found = INITIAL_MENU_ITEMS.find(m => m.id === id);
+    const found = menuItems.find(m => m.id === id);
     if (found) {
-      setItemRate(found.rate);
-      setItemAmount(itemQty * found.rate);
+      const r = found.saleRate || found.rate;
+      setItemRate(r);
+      setItemAmount(itemQty * r);
     }
   };
 
@@ -110,11 +115,14 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
       return;
     }
 
+    const targetRoomOrTable = serviceType === 'Restaurant' ? selectedTableNo : selectedRoomNo;
+    const targetGuest = serviceType === 'Restaurant' ? `Dine-In (${selectedTableNo})` : selectedGuestName;
+
     const kotRecord: PmsKotRecord = {
       kotNo,
       serviceType,
-      roomNo: selectedRoomNo,
-      guestName: selectedGuestName,
+      roomNo: targetRoomOrTable,
+      guestName: targetGuest,
       kotRemark,
       items: kotItems,
       totalAmount,
@@ -221,24 +229,42 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
                   </select>
                 </div>
 
-                <div className="form-group-pms" style={{ margin: 0 }}>
-                  <label className="form-label-pms">Select Room (Room || Guest)</label>
-                  <select
-                    value={selectedRoomNo}
-                    onChange={e => setSelectedRoomNo(e.target.value)}
-                    className="form-select-pms"
-                    style={{ fontWeight: 700 }}
-                  >
-                    {occupiedRooms.map(r => (
-                      <option key={r.roomNo} value={r.roomNo}>
-                        {r.roomNo} || {r.currentGuest?.name || 'Guest'}
-                      </option>
-                    ))}
-                    {occupiedRooms.length === 0 && (
-                      <option value="103">103 || ALOK JAIN</option>
-                    )}
-                  </select>
-                </div>
+                {serviceType === 'Restaurant' ? (
+                  <div className="form-group-pms" style={{ margin: 0 }}>
+                    <label className="form-label-pms">Select Table (Table || Group)</label>
+                    <select
+                      value={selectedTableNo}
+                      onChange={e => setSelectedTableNo(e.target.value)}
+                      className="form-select-pms"
+                      style={{ fontWeight: 700 }}
+                    >
+                      {tables.map(t => (
+                        <option key={t.id} value={t.tableName}>
+                          {t.tableName} || {t.tableGroup}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div className="form-group-pms" style={{ margin: 0 }}>
+                    <label className="form-label-pms">Select Room (Room || Guest)</label>
+                    <select
+                      value={selectedRoomNo}
+                      onChange={e => setSelectedRoomNo(e.target.value)}
+                      className="form-select-pms"
+                      style={{ fontWeight: 700 }}
+                    >
+                      {occupiedRooms.map(r => (
+                        <option key={r.roomNo} value={r.roomNo}>
+                          {r.roomNo} || {r.currentGuest?.name || 'Guest'}
+                        </option>
+                      ))}
+                      {occupiedRooms.length === 0 && (
+                        <option value="103">103 || ALOK JAIN</option>
+                      )}
+                    </select>
+                  </div>
+                )}
 
                 <div className="form-group-pms" style={{ margin: 0 }}>
                   <label className="form-label-pms">KOT Remark</label>
@@ -271,9 +297,9 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
                     onChange={handleItemSelect}
                     className="form-select-pms"
                   >
-                    {INITIAL_MENU_ITEMS.map(m => (
+                    {menuItems.map(m => (
                       <option key={m.id} value={m.id}>
-                        {m.name} || {m.code} (₹{m.rate})
+                        {m.name} || {m.code} (₹{m.saleRate || m.rate})
                       </option>
                     ))}
                   </select>
