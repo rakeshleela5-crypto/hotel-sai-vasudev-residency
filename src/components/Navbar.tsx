@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react';
 interface NavbarProps {
   onOpenBooking: (roomType?: string) => void;
   onOpenPms?: () => void;
+  onOpenGuestEngine?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenPms }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenPms, onOpenGuestEngine }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -28,6 +29,27 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenPms }) => {
             <span>📍 2-Minute Walk to Sacred Temple & Main Shrine</span>
           </div>
           <div className="banner-right">
+            <button 
+              type="button" 
+              onClick={onOpenGuestEngine}
+              title="Open Video 20 Online Public Guest Booking Engine"
+              style={{
+                background: '#0284c7',
+                color: '#ffffff',
+                border: 'none',
+                padding: '2px 8px',
+                borderRadius: '4px',
+                fontSize: '11px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              🌐 Online Booking Engine
+            </button>
+            <span className="banner-divider">•</span>
             <button 
               type="button" 
               onClick={onOpenPms}
@@ -87,7 +109,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenPms }) => {
             <button 
               id="nav-book-now-btn" 
               className="btn btn-primary nav-book-btn"
-              onClick={() => onOpenBooking()}
+              onClick={() => (onOpenGuestEngine ? onOpenGuestEngine() : onOpenBooking())}
             >
               <span>Book Your Stay</span>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -127,7 +149,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenPms }) => {
                   style={{ width: '100%' }}
                   onClick={() => {
                     setMobileMenuOpen(false);
-                    onOpenBooking();
+                    if (onOpenGuestEngine) {
+                      onOpenGuestEngine();
+                    } else {
+                      onOpenBooking();
+                    }
                   }}
                 >
                   Book Your Stay Now

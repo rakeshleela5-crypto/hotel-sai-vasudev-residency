@@ -78,6 +78,9 @@ export const RoomMasterModal: React.FC<RoomMasterModalProps> = ({
       setFormRoomType(room.roomType);
       setFormFloor(room.floor);
       setFormFacilities(room.facilities || '');
+      setRoomImage1(room.image1 || '');
+      setRoomImage2(room.image2 || '');
+      setRoomImage3(room.image3 || '');
     } else {
       setEditingRoom(null);
       setFormRoomNo('');
@@ -85,10 +88,10 @@ export const RoomMasterModal: React.FC<RoomMasterModalProps> = ({
       setFormRoomType(defaultType);
       setFormFloor(1);
       setFormFacilities('AC, DOUBLE BED, TV, GEYSER');
+      setRoomImage1('');
+      setRoomImage2('');
+      setRoomImage3('');
     }
-    setRoomImage1('');
-    setRoomImage2('');
-    setRoomImage3('');
     setFacilitySuggestionsOpen(false);
     setIsAddRoomOpen(true);
   };
@@ -111,9 +114,9 @@ export const RoomMasterModal: React.FC<RoomMasterModalProps> = ({
       status: editingRoom ? editingRoom.status : 'vacant',
       floor: Number(formFloor),
       facilities: formFacilities.trim() || 'Standard Hotel Room Amenities',
-      image1: roomImage1,
-      image2: roomImage2,
-      image3: roomImage3
+      image1: roomImage1 || (editingRoom ? editingRoom.image1 : undefined),
+      image2: roomImage2 || (editingRoom ? editingRoom.image2 : undefined),
+      image3: roomImage3 || (editingRoom ? editingRoom.image3 : undefined)
     };
 
     if (editingRoom) {

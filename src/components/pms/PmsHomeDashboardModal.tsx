@@ -21,6 +21,8 @@ import { PaymentRegisterModal } from './PaymentRegisterModal';
 import { PurchaseEntryModal } from './PurchaseEntryModal';
 import { StockTransferModal } from './StockTransferModal';
 import { StoreWiseStockModal } from './StoreWiseStockModal';
+import { OnlineGuestBookingModal } from './OnlineGuestBookingModal';
+import { UnconfirmedBookingsModal } from './UnconfirmedBookingsModal';
 import type { PmsBooking } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
@@ -63,12 +65,18 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   const [stockTransferMode, setStockTransferMode] = useState<'transfer' | 'issue'>('transfer');
   const [isStoreWiseStockOpen, setIsStoreWiseStockOpen] = useState(false);
 
+  // Video 20: Online Guest Booking Engine & Pending Confirmations
+  const [isOnlineGuestBookingOpen, setIsOnlineGuestBookingOpen] = useState(false);
+  const [isUnconfirmedBookingsOpen, setIsUnconfirmedBookingsOpen] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState(false);
+
   const rooms = PmsStore.getRooms();
   const vacantCount = rooms.filter(r => r.status === 'vacant').length;
   const occupiedCount = rooms.filter(r => r.status === 'occupied').length;
   const dirtyCount = rooms.filter(r => r.status === 'dirty').length;
   const unprintedRoomKots = PmsStore.getUnprintedRoomKots();
   const unprintedRestaurantKots = PmsStore.getUnprintedRestaurantKots();
+  const unconfirmedBookings = PmsStore.getUnconfirmedBookings();
 
   useEffect(() => {
     const updateClock = () => {
@@ -88,9 +96,16 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
       return;
     }
     const msg = encodeURIComponent(
-      'Namaste! Greetings from Hotel SAI VASUDEV RESIDENCY, Shirdi. Visit our website for luxury stay & direct booking: https://hotel-sai-vasudev-residency.pages.dev'
+      'Namaste! Greetings from Hotel SAI VASUDEV RESIDENCY, Shirdi. Check real-time room availability & book directly with instant confirmation voucher: https://hotel-sai-vasudev-residency.pages.dev'
     );
     window.open(`https://wa.me/91${whatsAppMobile}?text=${msg}`, '_blank');
+  };
+
+  const handleCopyWebsiteLink = () => {
+    const url = 'https://hotel-sai-vasudev-residency.pages.dev';
+    navigator.clipboard.writeText(url);
+    setCopyFeedback(true);
+    setTimeout(() => setCopyFeedback(false), 2500);
   };
 
   return (
@@ -272,6 +287,29 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           <span className="tile-icon">🏢</span>
           <span>All 24 Rooms</span>
         </button>
+
+        {/* Video 20: Online Booking Engine & Unconfirmed Bookings Tiles */}
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => setIsOnlineGuestBookingOpen(true)}
+          style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff' }}
+          title="Video 20: Online Public Guest Booking Engine (/hotel_room/DEMO0004)"
+        >
+          <span className="tile-icon">🌐</span>
+          <span>Guest Web Booking</span>
+        </button>
+
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => setIsUnconfirmedBookingsOpen(true)}
+          style={{ background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)', color: '#fff' }}
+          title="Video 20: Unconfirmed Booking Register (/pending_booking)"
+        >
+          <span className="tile-icon">🔔</span>
+          <span>Pending ({unconfirmedBookings.length})</span>
+        </button>
       </div>
 
       {/* Overview & Unprinted KOTs Notification Section matching Video 14 Frames 0145, 0230, 0255 */}
@@ -385,52 +423,102 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
                 </span>
               </div>
             )}
+
+            {/* Video 20: Unconfirmed Online Bookings Banner */}
+            {unconfirmedBookings.length > 0 && (
+              <div
+                onClick={() => setIsUnconfirmedBookingsOpen(true)}
+                title="Click to review and confirm online guest room bookings (Video 20 Frame 0360)"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '5px 12px',
+                  background: '#fef3c7',
+                  color: '#92400e',
+                  border: '1px solid #f59e0b',
+                  borderRadius: 4,
+                  fontSize: 13,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  width: 'fit-content',
+                  transition: 'transform 0.15s, box-shadow 0.15s'
+                }}
+              >
+                <span style={{ fontSize: 13, animation: 'pulse 1.2s infinite' }}>🔔</span>
+                <span style={{ textDecoration: 'underline' }}>
+                  Unconfirmed Bookings - {unconfirmedBookings.length}
+                </span>
+                <span style={{ fontSize: 11, background: '#d97706', color: '#fff', padding: '1px 6px', borderRadius: 10 }}>
+                  Review & Confirm
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Right Side: WhatsApp Promotion Tool from Frame 0100 & Frame 0145 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
+        {/* Right Side: WhatsApp Promotion Tool from Frame 0100, 0145 & Video 20 Frame 0400 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
           <input
             type="tel"
             placeholder="Enter mobile no"
             value={whatsAppMobile}
             onChange={e => setWhatsAppMobile(e.target.value)}
             className="form-input-pms"
-            style={{ width: 170 }}
+            style={{ width: 140 }}
           />
-          <span style={{ fontSize: 22 }}>📢</span>
+          <span style={{ fontSize: 20 }}>📢</span>
           <button
             type="button"
             onClick={handleSendWhatsApp}
+            title="Send direct room reservation engine link via WhatsApp"
             style={{
               background: '#22c55e',
               color: '#ffffff',
               border: 'none',
-              padding: '8px 16px',
+              padding: '7px 12px',
               borderRadius: 4,
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: 700,
               cursor: 'pointer'
             }}
           >
             Send Website Link
           </button>
-          <a
-            href="https://hotel-sai-vasudev-residency.pages.dev"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={handleCopyWebsiteLink}
+            title="Copy portal URL to clipboard for website developer or guests"
+            style={{
+              background: '#0284c7',
+              color: '#ffffff',
+              border: 'none',
+              padding: '7px 12px',
+              borderRadius: 4,
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: 'pointer'
+            }}
+          >
+            {copyFeedback ? '✓ Copied!' : '📋 Copy Link'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsOnlineGuestBookingOpen(true)}
+            title="Launch guest room showcase & online reservation engine (/hotel_room)"
             style={{
               background: '#b91c1c',
               color: '#ffffff',
-              textDecoration: 'none',
-              padding: '8px 16px',
+              border: 'none',
+              padding: '7px 14px',
               borderRadius: 4,
-              fontSize: 13,
-              fontWeight: 700
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: 'pointer'
             }}
           >
-            Visit Website
-          </a>
+            🌐 Visit Website
+          </button>
         </div>
       </div>
 
@@ -593,6 +681,21 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         onOpenTransfer={() => {
           setStockTransferMode('transfer');
           setIsStockTransferOpen(true);
+        }}
+      />
+
+      {/* Video 20: Online Guest Booking Engine & Pending Confirmations */}
+      <OnlineGuestBookingModal
+        isOpen={isOnlineGuestBookingOpen}
+        onClose={() => setIsOnlineGuestBookingOpen(false)}
+      />
+
+      <UnconfirmedBookingsModal
+        isOpen={isUnconfirmedBookingsOpen}
+        onClose={() => setIsUnconfirmedBookingsOpen(false)}
+        onOpenNewBooking={() => setIsBookingOpen(true)}
+        onOpenCheckInForBooking={() => {
+          setIsCheckInOpen(true);
         }}
       />
     </div>

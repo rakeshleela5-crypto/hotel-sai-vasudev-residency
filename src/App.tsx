@@ -10,12 +10,14 @@ import { Testimonials } from './components/Testimonials';
 import { ContactSection } from './components/ContactSection';
 import { Footer } from './components/Footer';
 import { HotelPmsModal } from './components/pms/HotelPmsModal';
+import { OnlineGuestBookingModal } from './components/pms/OnlineGuestBookingModal';
 import type { Room } from './types';
 import './App.css';
 
 export function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPmsOpen, setIsPmsOpen] = useState(false);
+  const [isGuestEngineOpen, setIsGuestEngineOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchDates, setSearchDates] = useState<{ checkIn: string; checkOut: string; guests: number } | undefined>(undefined);
@@ -25,18 +27,27 @@ export function App() {
     if (window.location.hash === '#pms' || window.location.search.includes('pms')) {
       setIsPmsOpen(true);
     }
+    // Automatically open Video 20 Online Guest Booking Engine if URL has #hotel_room or ?booking
+    if (
+      window.location.hash === '#hotel_room' || 
+      window.location.hash === '#booking' || 
+      window.location.search.includes('hotel_room') || 
+      window.location.search.includes('booking')
+    ) {
+      setIsGuestEngineOpen(true);
+    }
   }, []);
 
   const handleOpenBooking = (category?: string) => {
     if (category) {
       setSelectedCategory(category);
     }
-    setIsModalOpen(true);
+    setIsGuestEngineOpen(true);
   };
 
   const handleSelectRoom = (room: Room) => {
     setSelectedRoom(room);
-    setIsModalOpen(true);
+    setIsGuestEngineOpen(true);
   };
 
   const handleSearchAvailability = (params: {
@@ -65,6 +76,7 @@ export function App() {
       <Navbar 
         onOpenBooking={() => handleOpenBooking()} 
         onOpenPms={() => setIsPmsOpen(true)}
+        onOpenGuestEngine={() => setIsGuestEngineOpen(true)}
       />
       <main>
         <Hero onCheckAvailability={handleSearchAvailability} />
@@ -80,7 +92,7 @@ export function App() {
       </main>
       <Footer />
 
-      {/* Guest Public Reservation Modal */}
+      {/* Guest Public Reservation Modal (Legacy Quick Modal) */}
       <BookingModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -88,7 +100,13 @@ export function App() {
         initialDates={searchDates}
       />
 
-      {/* Receptionist Enterprise PMS Portal (Video 01 Cloned) */}
+      {/* Video 20 Public Guest Web Booking Engine Portal (/hotel_room/DEMO0004) */}
+      <OnlineGuestBookingModal
+        isOpen={isGuestEngineOpen}
+        onClose={() => setIsGuestEngineOpen(false)}
+      />
+
+      {/* Receptionist Enterprise PMS Portal (Video 01-20 Cloned) */}
       <HotelPmsModal
         isOpen={isPmsOpen}
         onClose={() => setIsPmsOpen(false)}

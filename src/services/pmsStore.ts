@@ -68,6 +68,9 @@ export const INITIAL_ROOMS: PmsRoom[] = [
     status: 'occupied', 
     floor: 1, 
     facilities: 'AC, Geyser, TV, Double Bed',
+    image1: '/images/deluxe_room.jpg',
+    image2: '/images/suite_room.jpg',
+    image3: '/images/hero.jpg',
     currentGuest: {
       name: 'AJUU',
       phone: '9622975444',
@@ -78,7 +81,18 @@ export const INITIAL_ROOMS: PmsRoom[] = [
       calculationType: '24hour'
     }
   },
-  { id: '102', roomNo: '102', roomType: 'SUITE ROOM', tariff: 3000, status: 'vacant', floor: 1, facilities: 'Living Area, Sofa, King Bed, Bathtub' },
+  { 
+    id: '102', 
+    roomNo: '102', 
+    roomType: 'SUITE ROOM', 
+    tariff: 3000, 
+    status: 'vacant', 
+    floor: 1, 
+    facilities: 'Living Area, Sofa, King Bed, Bathtub',
+    image1: '/images/suite_room.jpg',
+    image2: '/images/deluxe_room.jpg',
+    image3: '/images/hero.jpg'
+  },
   { 
     id: '103', 
     roomNo: '103', 
@@ -87,6 +101,9 @@ export const INITIAL_ROOMS: PmsRoom[] = [
     status: 'occupied', 
     floor: 1, 
     facilities: 'AC, Smart TV, Wi-Fi, Balcony',
+    image1: '/images/deluxe_room.jpg',
+    image2: '/images/suite_room.jpg',
+    image3: '/images/hero.jpg',
     currentGuest: {
       name: 'ARJUN',
       phone: '95487417',
@@ -98,15 +115,92 @@ export const INITIAL_ROOMS: PmsRoom[] = [
     },
     foodAmount: 100
   },
-  { id: '104', roomNo: '104', roomType: 'DELUXE', tariff: 2000, status: 'dirty', floor: 1, facilities: 'AC, Geyser, TV, Wardrobe' },
-  { id: '105', roomNo: '105', roomType: 'DELUXE', tariff: 2000, status: 'vacant', floor: 1, facilities: 'AC, King Bed, Work Desk' },
+  { 
+    id: '104', 
+    roomNo: '104', 
+    roomType: 'DELUXE', 
+    tariff: 2000, 
+    status: 'dirty', 
+    floor: 1, 
+    facilities: 'AC, Geyser, TV, Wardrobe',
+    image1: '/images/deluxe_room.jpg',
+    image2: '/images/hero.jpg',
+    image3: '/images/suite_room.jpg'
+  },
+  { 
+    id: '105', 
+    roomNo: '105', 
+    roomType: 'DELUXE', 
+    tariff: 2000, 
+    status: 'vacant', 
+    floor: 1, 
+    facilities: 'AC, King Bed, Work Desk',
+    image1: '/images/deluxe_room.jpg',
+    image2: '/images/suite_room.jpg',
+    image3: '/images/hero.jpg'
+  },
 
   // 2nd Floor
-  { id: '201', roomNo: '201', roomType: 'DELUXE', tariff: 2200, status: 'vacant', floor: 2, facilities: 'AC, Smart TV, Balcony' },
-  { id: '202', roomNo: '202', roomType: 'LUXURY ROOM', tariff: 3500, status: 'vacant', floor: 2, facilities: 'King Bed, Minibar, City View' },
-  { id: '203', roomNo: '203', roomType: 'STANDARD', tariff: 1500, status: 'vacant', floor: 2, facilities: 'Non-AC, TV, Attached Bath' },
-  { id: '204', roomNo: '204', roomType: 'DELUXE', tariff: 2200, status: 'vacant', floor: 2, facilities: 'AC, Geyser, Work Desk' },
-  { id: '205', roomNo: '205', roomType: 'SUITE ROOM', tariff: 3200, status: 'vacant', floor: 2, facilities: 'Living Room, Jacuzzi, Balcony' },
+  { 
+    id: '201', 
+    roomNo: '201', 
+    roomType: 'DELUXE', 
+    tariff: 2200, 
+    status: 'vacant', 
+    floor: 2, 
+    facilities: 'AC, Smart TV, Balcony',
+    image1: '/images/deluxe_room.jpg',
+    image2: '/images/suite_room.jpg',
+    image3: '/images/hero.jpg'
+  },
+  { 
+    id: '202', 
+    roomNo: '202', 
+    roomType: 'LUXURY ROOM', 
+    tariff: 3500, 
+    status: 'vacant', 
+    floor: 2, 
+    facilities: 'King Bed, Minibar, City View',
+    image1: '/images/hero.jpg',
+    image2: '/images/suite_room.jpg',
+    image3: '/images/deluxe_room.jpg'
+  },
+  { 
+    id: '203', 
+    roomNo: '203', 
+    roomType: 'STANDARD', 
+    tariff: 1500, 
+    status: 'vacant', 
+    floor: 2, 
+    facilities: 'Non-AC, TV, Attached Bath',
+    image1: '/images/deluxe_room.jpg',
+    image2: '/images/hero.jpg',
+    image3: '/images/suite_room.jpg'
+  },
+  { 
+    id: '204', 
+    roomNo: '204', 
+    roomType: 'DELUXE', 
+    tariff: 2200, 
+    status: 'vacant', 
+    floor: 2, 
+    facilities: 'AC, Geyser, Work Desk',
+    image1: '/images/deluxe_room.jpg',
+    image2: '/images/suite_room.jpg',
+    image3: '/images/hero.jpg'
+  },
+  { 
+    id: '205', 
+    roomNo: '205', 
+    roomType: 'SUITE ROOM', 
+    tariff: 3200, 
+    status: 'vacant', 
+    floor: 2, 
+    facilities: 'Living Room, Jacuzzi, Balcony',
+    image1: '/images/suite_room.jpg',
+    image2: '/images/deluxe_room.jpg',
+    image3: '/images/hero.jpg'
+  },
 
   // 3rd Floor
   { id: '301', roomNo: '301', roomType: 'DELUXE', tariff: 2400, status: 'vacant', floor: 3, facilities: 'AC, Temple View, Smart TV' },
@@ -609,6 +703,177 @@ export const INITIAL_STOCK_TRANSFERS: PmsStockTransfer[] = [
   }
 ];
 
+// Video 20: Online Room Booking & Reservation Seed Data (Frames 0210, 0250, 0280, 0290, 0350, 0360)
+export const INITIAL_BOOKINGS: PmsBooking[] = [
+  // Frame 0210, 0250, 0280, 0290: New online booking submitted by guest
+  {
+    bookingNo: 'RM/80/24-25',
+    bookingDate: '06-07-2025',
+    bookingTime: '10:11 PM',
+    checkInDate: '08-07-2025',
+    checkInTime: '10:11 PM',
+    checkOutDate: '12-07-2025',
+    checkOutTime: '10:11 PM',
+    numberOfDays: 4,
+    numberOfGuests: 2,
+    businessSource: 'Online',
+    package: 'ROOM ONLY || 0',
+    guestName: 'vinod kumar jain',
+    mobile: '78657656754',
+    email: 'vinod.jain@example.com',
+    addressLine1: 'main road sadar',
+    addressLine2: 'near ekta chowk',
+    city: 'jabalpur',
+    state: 'madhya pradesh',
+    country: 'India',
+    pinCode: '482001',
+    nationality: 'Indian',
+    documentName: 'Aadhaar Card',
+    documentNo: '789456123012',
+    rooms: [
+      {
+        roomNo: '103',
+        roomType: 'DELUXE',
+        tariff: 2000
+      }
+    ],
+    totalAmount: 8000,
+    bookingAmount: 2000,
+    paymentMode: 'UPI',
+    paymentReferenceNo: 'UPI/ONLINE/789123',
+    paymentRemark: 'Advance transfer via QR code by Vinod Kumar Jain',
+    status: 'Unconfirmed',
+    createdAt: '2025-07-06T22:11:00Z'
+  },
+  // Frame 0360: Pending online booking for confirmation
+  {
+    bookingNo: 'RM/74/24-25',
+    bookingDate: '21-06-2025',
+    bookingTime: '02:30 PM',
+    checkInDate: '21-06-2025',
+    checkInTime: '02:30 PM',
+    checkOutDate: '21-06-2025',
+    checkOutTime: '08:00 PM',
+    numberOfDays: 1,
+    numberOfGuests: 2,
+    businessSource: 'Online',
+    package: 'ROOM ONLY || 0',
+    guestName: 'GUHFYGVUYFT',
+    mobile: '46549889',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+    country: 'India',
+    rooms: [
+      {
+        roomNo: '205',
+        roomType: 'SUITE ROOM',
+        tariff: 3200
+      }
+    ],
+    totalAmount: 3200,
+    bookingAmount: 0,
+    paymentMode: 'Online',
+    status: 'Unconfirmed',
+    createdAt: '2025-06-21T14:30:00Z'
+  },
+  // Frame 0350: Confirmed Bookings in Room Booking Register
+  {
+    bookingNo: 'RM/79/24-25',
+    bookingDate: '05-07-2025',
+    bookingTime: '01:00 PM',
+    checkInDate: '10-07-2025',
+    checkInTime: '01:00 PM',
+    checkOutDate: '11-07-2025',
+    checkOutTime: '01:00 PM',
+    numberOfDays: 1,
+    numberOfGuests: 1,
+    businessSource: 'Walk-in',
+    package: 'Regular',
+    guestName: 'anupam ji',
+    mobile: '65448987',
+    city: 'Nagpur',
+    state: 'Maharashtra',
+    country: 'India',
+    rooms: [
+      {
+        roomNo: 'DL-20',
+        roomType: 'DELUXE',
+        tariff: 2000
+      }
+    ],
+    totalAmount: 2000,
+    bookingAmount: 1000,
+    paymentMode: 'Cash',
+    status: 'Confirmed',
+    createdAt: '2025-07-05T13:00:00Z'
+  },
+  {
+    bookingNo: 'RM/75/24-25',
+    bookingDate: '26-06-2025',
+    bookingTime: '05:11 PM',
+    checkInDate: '01-07-2025',
+    checkInTime: '05:11 PM',
+    checkOutDate: '10-07-2025',
+    checkOutTime: '05:11 PM',
+    numberOfDays: 10,
+    numberOfGuests: 2,
+    businessSource: 'OYO',
+    package: 'WITH BREAKFAST || 0',
+    guestName: 'vikash sharma',
+    mobile: '8872757274',
+    city: 'Delhi',
+    state: 'Delhi',
+    country: 'India',
+    rooms: [
+      {
+        roomNo: '101',
+        roomType: 'DELUXE',
+        tariff: 4000
+      }
+    ],
+    totalAmount: 40000,
+    bookingAmount: 10000,
+    paymentMode: 'Card',
+    status: 'Confirmed',
+    createdAt: '2025-06-26T17:11:00Z'
+  },
+  {
+    bookingNo: 'RM/58/24-25',
+    bookingDate: '02-06-2025',
+    bookingTime: '02:29 PM',
+    checkInDate: '10-06-2025',
+    checkInTime: '02:29 PM',
+    checkOutDate: '02-06-2025',
+    checkOutTime: '02:29 PM',
+    numberOfDays: 1,
+    numberOfGuests: 2,
+    businessSource: 'Corporate',
+    package: 'Regular',
+    guestName: 'CHANDRA PRAKASH',
+    mobile: '9303667616',
+    city: 'Indore',
+    state: 'Madhya Pradesh',
+    country: 'India',
+    rooms: [
+      {
+        roomNo: '11',
+        roomType: 'STANDARD',
+        tariff: 2000
+      },
+      {
+        roomNo: '302',
+        roomType: 'DELUXE',
+        tariff: 2000
+      }
+    ],
+    totalAmount: 4000,
+    bookingAmount: 2000,
+    paymentMode: 'Cash',
+    status: 'Confirmed',
+    createdAt: '2025-06-02T14:29:00Z'
+  }
+];
+
 const STORAGE_KEYS = {
   ROOMS: 'svr_pms_rooms',
   ROOM_TYPES: 'svr_pms_room_types',
@@ -1055,28 +1320,125 @@ export class PmsStore {
     }
   }
 
+  // Video 20: Booking Store & Real-Time Availability Engine
   static getBookings(): PmsBooking[] {
     const raw = localStorage.getItem(STORAGE_KEYS.BOOKINGS);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.BOOKINGS, JSON.stringify(INITIAL_BOOKINGS));
+      return INITIAL_BOOKINGS;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_BOOKINGS;
+    }
+  }
+
+  static getUnconfirmedBookings(): PmsBooking[] {
+    return this.getBookings().filter(b => b.status === 'Unconfirmed');
+  }
+
+  static getConfirmedBookings(): PmsBooking[] {
+    return this.getBookings().filter(b => b.status === 'Confirmed');
   }
 
   static saveBooking(booking: PmsBooking): void {
-    const bookings = this.getBookings();
-    bookings.unshift(booking);
-    localStorage.setItem(STORAGE_KEYS.BOOKINGS, JSON.stringify(bookings));
+    const list = this.getBookings();
+    const idx = list.findIndex(b => b.bookingNo === booking.bookingNo);
+    if (idx >= 0) {
+      list[idx] = booking;
+    } else {
+      list.unshift(booking);
+    }
+    localStorage.setItem(STORAGE_KEYS.BOOKINGS, JSON.stringify(list));
 
-    // Update room status to booked or occupied
-    const targetStatus = booking.status === 'CheckedIn' ? 'occupied' : 'booked';
-    booking.rooms.forEach(rm => {
-      this.updateRoomStatus(rm.roomNo, targetStatus, {
-        name: booking.guestName,
-        phone: booking.mobile,
-        checkInDate: booking.checkInDate,
-        checkInTime: booking.checkInTime,
-        bookingNo: booking.bookingNo,
-        advancePaid: booking.bookingAmount
+    // If confirmed or checked-in, update room status
+    if (booking.status === 'Confirmed' || booking.status === 'CheckedIn') {
+      const targetStatus = booking.status === 'CheckedIn' ? 'occupied' : 'booked';
+      booking.rooms.forEach(rm => {
+        this.updateRoomStatus(rm.roomNo, targetStatus, {
+          name: booking.guestName,
+          phone: booking.mobile,
+          checkInDate: booking.checkInDate,
+          checkInTime: booking.checkInTime,
+          bookingNo: booking.bookingNo,
+          advancePaid: booking.bookingAmount
+        });
       });
-    });
+    }
+  }
+
+  static confirmBooking(bookingNo: string, advancePaid?: number): { success: boolean; message: string } {
+    const list = this.getBookings();
+    const booking = list.find(b => b.bookingNo === bookingNo);
+    if (!booking) {
+      return { success: false, message: 'Booking not found' };
+    }
+    booking.status = 'Confirmed';
+    if (advancePaid !== undefined) {
+      booking.bookingAmount = advancePaid;
+    }
+    this.saveBooking(booking);
+    return { success: true, message: 'Selected Booking Confirm you can Make Check In' };
+  }
+
+  static deleteBooking(bookingNo: string): void {
+    const list = this.getBookings().filter(b => b.bookingNo !== bookingNo);
+    localStorage.setItem(STORAGE_KEYS.BOOKINGS, JSON.stringify(list));
+  }
+
+  /**
+   * Video 20 Real-Time Date Availability Engine [Spoken 06:25 - 07:35]:
+   * Checks whether a room is free between checkInDate and checkOutDate
+   */
+  static isRoomAvailable(roomNo: string, checkInDateStr: string, checkOutDateStr: string): boolean {
+    const parseDt = (dStr: string): number => {
+      if (!dStr) return 0;
+      const clean = dStr.trim();
+      if (clean.includes('-')) {
+        const parts = clean.split('-');
+        if (parts[0].length === 4) {
+          return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
+        } else {
+          return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0])).getTime();
+        }
+      }
+      return new Date(clean).getTime();
+    };
+
+    const reqIn = parseDt(checkInDateStr);
+    const reqOut = parseDt(checkOutDateStr);
+    if (!reqIn || !reqOut || reqIn >= reqOut) return true;
+
+    // 1. Check against active confirmed bookings
+    const bookings = this.getBookings().filter(b => b.status === 'Confirmed' || b.status === 'CheckedIn');
+    for (const b of bookings) {
+      const hasRoom = b.rooms.some(r => r.roomNo === roomNo);
+      if (hasRoom) {
+        const bIn = parseDt(b.checkInDate);
+        const bOut = parseDt(b.checkOutDate);
+        if (bIn < reqOut && bOut > reqIn) {
+          return false; // Conflicting booking exists!
+        }
+      }
+    }
+
+    // 2. Check against current check-ins
+    const checkIns = this.getCheckIns().filter(c => c.status === 'CheckedIn' && c.roomNo === roomNo);
+    for (const c of checkIns) {
+      const cIn = parseDt(c.checkInDate);
+      const cOut = cIn + (c.numberOfDays || 1) * 24 * 60 * 60 * 1000;
+      if (cIn < reqOut && cOut > reqIn) {
+        return false; // Conflicting active stay!
+      }
+    }
+
+    return true;
+  }
+
+  static getAvailableRoomsForDates(checkInDateStr: string, checkOutDateStr: string): PmsRoom[] {
+    const allRooms = this.getRooms();
+    return allRooms.filter(r => this.isRoomAvailable(r.roomNo, checkInDateStr, checkOutDateStr));
   }
 
   static getCheckIns(): import('../types/pmsModels').PmsCheckIn[] {

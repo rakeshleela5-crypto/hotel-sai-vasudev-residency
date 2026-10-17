@@ -29,6 +29,8 @@ import { PaymentRegisterModal } from './PaymentRegisterModal';
 import { PurchaseEntryModal } from './PurchaseEntryModal';
 import { StockTransferModal } from './StockTransferModal';
 import { StoreWiseStockModal } from './StoreWiseStockModal';
+import { OnlineGuestBookingModal } from './OnlineGuestBookingModal';
+import { PmsStore } from '../../services/pmsStore';
 import './pmsStyles.css';
 
 interface HotelPmsModalProps {
@@ -103,6 +105,10 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   const [isStoreWiseStockOpen, setIsStoreWiseStockOpen] = useState(false);
   const [itemMasterTab, setItemMasterTab] = useState<'list' | 'form' | 'groups' | 'godowns'>('list');
 
+  // Video 20 Online Room Booking Portal
+  const [isOnlineGuestBookingOpen, setIsOnlineGuestBookingOpen] = useState(false);
+  const unconfirmedCount = PmsStore.getUnconfirmedBookings().length;
+
   if (!isOpen) return null;
 
   return (
@@ -139,12 +145,13 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
             </div>
 
             <div className="pms-header-right">
-              {/* Quick Action Badges from Video 02 Transcripts */}
+              {/* Quick Action Badges from Video 02 & Video 20 Transcripts */}
               <button
                 type="button"
                 onClick={() => setIsUnconfirmedOpen(true)}
+                title="Click to view and confirm pending online guest bookings (Video 20 Frame 0360)"
                 style={{
-                  background: '#f59e0b',
+                  background: unconfirmedCount > 0 ? '#e11d48' : '#f59e0b',
                   color: '#ffffff',
                   border: 'none',
                   padding: '3px 10px',
@@ -154,11 +161,12 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 4
+                  gap: 4,
+                  boxShadow: unconfirmedCount > 0 ? '0 0 8px rgba(225, 29, 72, 0.5)' : undefined
                 }}
               >
                 <span>🔔</span>
-                <span>Unconfirmed (1)</span>
+                <span>Unconfirmed ({unconfirmedCount})</span>
               </button>
 
               <button
@@ -299,7 +307,10 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                 {entryMenuOpen && (
                   <div style={{ background: '#1a1e22', paddingLeft: 12, fontSize: 12 }}>
                     <div className="pms-nav-item" onClick={() => setIsUnconfirmedOpen(true)}>
-                      <span style={{ color: '#fbbf24', fontWeight: 700 }}>🔔 Unconfirmed Booking (1)</span>
+                      <span style={{ color: '#fbbf24', fontWeight: 700 }}>🔔 Unconfirmed Booking ({unconfirmedCount})</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsOnlineGuestBookingOpen(true)}>
+                      <span style={{ color: '#38bdf8', fontWeight: 700 }}>🌐 Online Guest Booking Portal (/hotel_room)</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => setActiveTab('matrix')}>
                       <span>🏨 Room Booking</span>
@@ -475,13 +486,18 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         onClose={() => setIsCalendarOpen(false)}
       />
 
-      {/* Unconfirmed Bookings Modal */}
+      {/* Unconfirmed Bookings Modal (Video 02, Video 20 Frame 0350 & 0360) */}
       <UnconfirmedBookingsModal
         isOpen={isUnconfirmedOpen}
         onClose={() => setIsUnconfirmedOpen(false)}
         onOpenCalendar={() => {
           setIsUnconfirmedOpen(false);
           setIsCalendarOpen(true);
+        }}
+        onOpenNewBooking={() => setIsOnlineGuestBookingOpen(true)}
+        onOpenCheckInForBooking={() => {
+          setIsUnconfirmedOpen(false);
+          setIsNewCheckInOpen(true);
         }}
       />
 
@@ -700,6 +716,15 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         onOpenTransfer={() => {
           setStockTransferMode('transfer');
           setIsStockTransferOpen(true);
+        }}
+      />
+
+      {/* Video 20: Online Guest Booking Portal & Reservation Form Modal */}
+      <OnlineGuestBookingModal
+        isOpen={isOnlineGuestBookingOpen}
+        onClose={() => {
+          setIsOnlineGuestBookingOpen(false);
+          setRoomRefreshTrigger(prev => prev + 1);
         }}
       />
     </>
