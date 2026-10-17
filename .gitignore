@@ -41,3 +41,9 @@ ENV/
 *.njsproj
 *.sln
 *.sw?
+
+# Media & Videos
+training_videos/
+extracted_frames/
+transcripts/temp_chunks/
+*.wav

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { RoomsSection } from './components/RoomsSection';
@@ -9,14 +9,23 @@ import { LocationSection } from './components/LocationSection';
 import { Testimonials } from './components/Testimonials';
 import { ContactSection } from './components/ContactSection';
 import { Footer } from './components/Footer';
+import { HotelPmsModal } from './components/pms/HotelPmsModal';
 import type { Room } from './types';
 import './App.css';
 
 export function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPmsOpen, setIsPmsOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchDates, setSearchDates] = useState<{ checkIn: string; checkOut: string; guests: number } | undefined>(undefined);
+
+  useEffect(() => {
+    // Automatically open PMS if URL has #pms or ?pms
+    if (window.location.hash === '#pms' || window.location.search.includes('pms')) {
+      setIsPmsOpen(true);
+    }
+  }, []);
 
   const handleOpenBooking = (category?: string) => {
     if (category) {
@@ -53,7 +62,10 @@ export function App() {
 
   return (
     <div className="hotel-app">
-      <Navbar onOpenBooking={() => handleOpenBooking()} />
+      <Navbar 
+        onOpenBooking={() => handleOpenBooking()} 
+        onOpenPms={() => setIsPmsOpen(true)}
+      />
       <main>
         <Hero onCheckAvailability={handleSearchAvailability} />
         <RoomsSection 
@@ -68,12 +80,18 @@ export function App() {
       </main>
       <Footer />
 
-      {/* Interactive Reservation Modal */}
+      {/* Guest Public Reservation Modal */}
       <BookingModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         selectedRoom={selectedRoom}
         initialDates={searchDates}
+      />
+
+      {/* Receptionist Enterprise PMS Portal (Video 01 Cloned) */}
+      <HotelPmsModal
+        isOpen={isPmsOpen}
+        onClose={() => setIsPmsOpen(false)}
       />
     </div>
   );

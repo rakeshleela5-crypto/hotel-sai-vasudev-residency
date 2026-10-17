@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 
 interface NavbarProps {
   onOpenBooking: (roomType?: string) => void;
+  onOpenPms?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenPms }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -27,6 +28,26 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking }) => {
             <span>📍 2-Minute Walk to Sacred Temple & Main Shrine</span>
           </div>
           <div className="banner-right">
+            <button 
+              type="button" 
+              onClick={onOpenPms}
+              style={{
+                background: '#ca8a04',
+                color: '#ffffff',
+                border: 'none',
+                padding: '2px 8px',
+                borderRadius: '4px',
+                fontSize: '11px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              🔑 Receptionist PMS
+            </button>
+            <span className="banner-divider">•</span>
             <a href="tel:+919876543210" className="banner-contact">
               📞 +91 98765 43210
             </a>
