@@ -112,6 +112,7 @@ export interface PmsKotRecord {
   kotRemark?: string;
   items: KotItem[];
   totalAmount: number;
+  date?: string;
   createdAt: string;
   status: 'Pending' | 'Served' | 'Billed';
 }
@@ -254,6 +255,21 @@ export interface PmsCheckOutDetail {
   isTaxInclusive?: boolean;
   isComplimentary?: boolean;
   billingOfficer?: string;    // e.g. DEMO0004
+  dayWiseRent?: DayWiseRentItem[];
+}
+
+export interface DayWiseRentItem {
+  sNo: number;
+  startDate: string;
+  endDate: string;
+  dayCount: number;
+  rent: number;
+}
+
+export interface PmsBusinessSetting {
+  calculationType: '12hour' | '24hour';
+  standardCheckoutTime: string; // e.g. "11:00 AM"
+  updatedAt?: string;
 }
 
 export interface MenuItem {

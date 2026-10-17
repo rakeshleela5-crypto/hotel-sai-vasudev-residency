@@ -12,6 +12,7 @@ import { RoomMasterModal } from './RoomMasterModal';
 import { TableMasterModal } from './TableMasterModal';
 import { ItemMasterModal } from './ItemMasterModal';
 import { OtherMasterModal } from './OtherMasterModal';
+import { BusinessSettingModal } from './BusinessSettingModal';
 import './pmsStyles.css';
 
 interface HotelPmsModalProps {
@@ -26,6 +27,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   const [entryMenuOpen, setEntryMenuOpen] = useState(true);
   const [reportMenuOpen, setReportMenuOpen] = useState(false);
   const [otherSubmenuOpen, setOtherSubmenuOpen] = useState(false);
+  const [settingMenuOpen, setSettingMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Calendar & Unconfirmed Bookings Modals
@@ -43,6 +45,9 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   const [isItemMasterOpen, setIsItemMasterOpen] = useState(false);
   const [isOtherMasterOpen, setIsOtherMasterOpen] = useState(false);
   const [otherMasterTab, setOtherMasterTab] = useState<'gst' | 'businessSource' | 'voucherType'>('gst');
+
+  // Video 09 Business Setting Modal (12 Hour vs 24 Hour Policy)
+  const [isBusinessSettingOpen, setIsBusinessSettingOpen] = useState(false);
   const [roomRefreshTrigger, setRoomRefreshTrigger] = useState(0);
 
   if (!isOpen) return null;
@@ -313,13 +318,32 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                   <span>›</span>
                 </div>
 
-                <div className="pms-nav-item">
+                {/* Setting Submenu (Video 09 Frame 0120 & 0200) */}
+                <div 
+                  className="pms-nav-item" 
+                  onClick={() => setSettingMenuOpen(!settingMenuOpen)}
+                  style={{ background: settingMenuOpen ? '#2c3136' : undefined }}
+                >
                   <div className="pms-nav-item-left">
                     <span>⚙️</span>
                     <span>Setting</span>
                   </div>
-                  <span>›</span>
+                  <span>{settingMenuOpen ? '▾' : '›'}</span>
                 </div>
+
+                {settingMenuOpen && (
+                  <div style={{ background: '#1a1e22', paddingLeft: 12, fontSize: 12 }}>
+                    <div className="pms-nav-item" onClick={() => setIsBusinessSettingOpen(true)}>
+                      <span style={{ color: '#38bdf8', fontWeight: 700 }}>⚙️ Business Setting (/businesssettings/create)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => alert('Hotel Profile / Company Settings')}>
+                      <span>🏢 Hotel Profile</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => alert('Printer & Receipt Template Setup')}>
+                      <span>🖨️ Printer &amp; POS Setup</span>
+                    </div>
+                  </div>
+                )}
 
                 <div className="pms-nav-item" onClick={() => alert('Help > Software Video Tutorials (Data House Technologies)')}>
                   <div className="pms-nav-item-left">
@@ -420,6 +444,12 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         isOpen={isOtherMasterOpen}
         onClose={() => setIsOtherMasterOpen(false)}
         initialTab={otherMasterTab}
+      />
+
+      {/* Business Setting Modal (Video 09 - 12hr vs 24hr Policy) */}
+      <BusinessSettingModal
+        isOpen={isBusinessSettingOpen}
+        onClose={() => setIsBusinessSettingOpen(false)}
       />
     </>
   );

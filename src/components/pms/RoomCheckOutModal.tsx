@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import type { PmsRoom, PmsCheckOutDetail, PaymentSplit, PmsFoodBill } from '../../types/pmsModels';
+import React, { useState, useEffect } from 'react';
+import type { PmsRoom, PmsCheckOutDetail, PaymentSplit, PmsFoodBill, DayWiseRentItem } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 
 interface RoomCheckOutModalProps {
@@ -19,19 +19,37 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
 
   const defaultInvoiceNo = `GSR/${Math.floor(200 + Math.random() * 50)}/24-25`;
   const guest = targetRoom.currentGuest;
+  const businessSettings = PmsStore.getBusinessSettings();
+
   // Basic Details
   const [invoiceNo] = useState(defaultInvoiceNo);
-  const [checkInDate] = useState(guest?.checkInDate || '06-06-2025');
-  const [checkInTime] = useState(guest?.checkInTime || '12:25 AM');
+  const [checkInDate, setCheckInDate] = useState(guest?.checkInDate || '06-06-2025');
+  const [checkInTime, setCheckInTime] = useState(guest?.checkInTime || '12:25 AM');
   const [checkOutDate, setCheckOutDate] = useState('07-06-2025');
   const [checkOutTime, setCheckOutTime] = useState('06:21 AM');
   const [calculationType, setCalculationType] = useState<'24hour' | '12hour'>(
-    guest?.calculationType || '24hour'
+    guest?.calculationType || businessSettings.calculationType || '12hour'
   );
-  const [noOfDays, setNoOfDays] = useState(2);
+  const [noOfDays, setNoOfDays] = useState(1);
   const [perDayTariff, setPerDayTariff] = useState(targetRoom.tariff || 1800);
+  const [dayWiseRent, setDayWiseRent] = useState<DayWiseRentItem[]>([]);
   const [invoiceFormat, setInvoiceFormat] = useState<'A4_Standard' | 'A5_HalfPage' | 'Detailed'>('A4_Standard');
   const [showInvoicePreview, setShowInvoicePreview] = useState(false);
+
+  // Automatically recalculate day-wise rent matching Video 09 Frames 0240 & 0260
+  useEffect(() => {
+    const res = PmsStore.computeDayWiseRent({
+      checkInDate,
+      checkInTime,
+      checkOutDate,
+      checkOutTime,
+      perDayTariff,
+      calculationType,
+      standardCheckoutTime: businessSettings.standardCheckoutTime || '11:00 AM'
+    });
+    setDayWiseRent(res.dayWiseRent);
+    setNoOfDays(res.totalDays);
+  }, [checkInDate, checkInTime, checkOutDate, checkOutTime, perDayTariff, calculationType, businessSettings.standardCheckoutTime]);
 
   // Food Bill automatically pulled from room account (Video 04 Frame 0230 / Spoken [10:30])
   const foodBills = PmsStore.getFoodBills().filter(f => f.roomNo === targetRoom.roomNo);
@@ -100,7 +118,9 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
 
   // Computations
   // If Tax Inclusive: base rate is derived so that Base + 12% GST = Total Tariff
-  const rawRent = perDayTariff * noOfDays;
+  const rawRent = dayWiseRent.length > 0
+    ? dayWiseRent.reduce((s, r) => s + r.rent, 0)
+    : perDayTariff * noOfDays;
   const taxableRoomRent = isComplimentary
     ? 0
     : isTaxInclusive
@@ -147,8 +167,8 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
       invoiceNo: activeInvoiceNo,
       roomNo: targetRoom.roomNo,
       roomType: targetRoom.roomType,
-      guestName: guest?.name || 'ALOK JAIN',
-      guestPhone: guest?.phone || '9407525111',
+      guestName: guest?.name || 'akash ji',
+      guestPhone: guest?.phone || '787846514',
       checkInDate,
       checkInTime,
       checkOutDate,
@@ -179,7 +199,8 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
       invoiceFormat,
       isTaxInclusive,
       isComplimentary,
-      billingOfficer: 'DEMO0004'
+      billingOfficer: 'DEMO0004',
+      dayWiseRent
     };
 
     // Save checkout & mark room as Dirty (Red card 🧹)
@@ -301,31 +322,188 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                 </div>
               </div>
 
-              {/* 4 Multi-Card Inspection Grid (Frame 0180 / 0340) */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.3fr 1.6fr', gap: 10, marginBottom: 12 }}>
-                {/* Card 1: Pending Kot List (Video 05 [03:45 - 06:00]) */}
-                <div style={{ border: pendingKots.length > 0 ? '2px solid #ef4444' : '1px solid #93c5fd', borderRadius: 4, background: '#f8fafc', padding: 8 }}>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: '#1e40af', borderBottom: '1px solid #bfdbfe', paddingBottom: 4, marginBottom: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span>Pending Kot List</span>
-                    <span style={{ background: pendingKots.length > 0 ? '#ef4444' : '#16a34a', color: '#fff', padding: '1px 5px', borderRadius: 2, fontSize: 9, fontWeight: 800 }}>
-                      {pendingKots.length} Pending
-                    </span>
+              {/* Guest Profile Details matching Video 09 Frame 0240 */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1.2fr 1.2fr 1.2fr 1.5fr',
+                gap: 8,
+                background: '#f8fafc',
+                padding: '6px 10px',
+                border: '1px solid #e2e8f0',
+                borderRadius: 4,
+                marginBottom: 10
+              }}>
+                <div>
+                  <label style={{ fontSize: 10, color: '#1d4ed8', fontWeight: 800, display: 'block' }}>Nationality</label>
+                  <input
+                    type="text"
+                    value="India"
+                    readOnly
+                    className="form-input-pms"
+                    style={{ fontSize: 11, padding: '2px 6px', background: '#fff' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, color: '#1d4ed8', fontWeight: 800, display: 'block' }}>Mobile</label>
+                  <input
+                    type="text"
+                    value={guest?.phone || '787846514'}
+                    readOnly
+                    className="form-input-pms"
+                    style={{ fontSize: 11, padding: '2px 6px', background: '#fff' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, color: '#1d4ed8', fontWeight: 800, display: 'block' }}>Phone</label>
+                  <input
+                    type="text"
+                    placeholder="Phone"
+                    defaultValue=""
+                    className="form-input-pms"
+                    style={{ fontSize: 11, padding: '2px 6px', background: '#fff' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, color: '#1d4ed8', fontWeight: 800, display: 'block' }}>Email</label>
+                  <input
+                    type="text"
+                    placeholder="Email"
+                    defaultValue={(guest as any)?.email || ''}
+                    className="form-input-pms"
+                    style={{ fontSize: 11, padding: '2px 6px', background: '#fff' }}
+                  />
+                </div>
+              </div>
+
+              {/* Stay Time & Policy Controls matching Video 09 Frames 0120 & 0240 */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 8,
+                background: '#f1f5f9',
+                padding: '6px 10px',
+                borderRadius: 4,
+                border: '1px solid #cbd5e1',
+                marginBottom: 10
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                  <span style={{ fontWeight: 800, color: '#334155' }}>Check-In:</span>
+                  <input
+                    type="text"
+                    value={checkInDate}
+                    onChange={e => setCheckInDate(e.target.value)}
+                    className="form-input-pms"
+                    style={{ width: 85, padding: '1px 4px', fontSize: 11 }}
+                  />
+                  <input
+                    type="text"
+                    value={checkInTime}
+                    onChange={e => setCheckInTime(e.target.value)}
+                    className="form-input-pms"
+                    style={{ width: 65, padding: '1px 4px', fontSize: 11 }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                  <span style={{ fontWeight: 800, color: '#b91c1c' }}>Check-Out:</span>
+                  <input
+                    type="text"
+                    value={checkOutDate}
+                    onChange={e => setCheckOutDate(e.target.value)}
+                    className="form-input-pms"
+                    style={{ width: 85, padding: '1px 4px', fontSize: 11 }}
+                  />
+                  <input
+                    type="text"
+                    value={checkOutTime}
+                    onChange={e => setCheckOutTime(e.target.value)}
+                    className="form-input-pms"
+                    style={{ width: 65, padding: '1px 4px', fontSize: 11 }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                  <span style={{ fontWeight: 800, color: '#0369a1' }}>Policy:</span>
+                  <select
+                    value={calculationType}
+                    onChange={e => setCalculationType(e.target.value as '12hour' | '24hour')}
+                    className="form-select-pms"
+                    style={{ padding: '2px 6px', fontSize: 11, fontWeight: 700 }}
+                  >
+                    <option value="12hour">12-Hour (Standard 11:00 AM Checkout)</option>
+                    <option value="24hour">24-Hour (Exact 24h from checkin)</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                  <span style={{ fontWeight: 800, color: '#334155' }}>Tariff/Day:</span>
+                  <input
+                    type="number"
+                    value={perDayTariff}
+                    onChange={e => setPerDayTariff(Number(e.target.value))}
+                    className="form-input-pms"
+                    style={{ width: 75, padding: '2px 4px', fontSize: 11, fontWeight: 800 }}
+                  />
+                </div>
+              </div>
+
+              {/* 4 Multi-Card Inspection Grid matching Video 09 Frames 0240 & 0260 */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.35fr 1.45fr', gap: 8, marginBottom: 12 }}>
+                {/* Card 1: Pending Kot List (Frame 0240 / 0260) */}
+                <div style={{ border: '1px solid #38bdf8', borderRadius: 2, background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{
+                    background: '#bef264',
+                    color: '#000000',
+                    fontWeight: 800,
+                    fontSize: 11,
+                    padding: '4px 8px',
+                    borderBottom: '1px solid #a3e635'
+                  }}>
+                    Pending Kot List
                   </div>
-                  <div style={{ maxHeight: 110, overflowY: 'auto', fontSize: 11 }}>
-                    {pendingKots.map((k, idx) => (
-                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
-                        <span>{k.kotNo} ({k.items[0]?.itemName || 'Order'})</span>
-                        <strong>₹{k.totalAmount.toFixed(2)}</strong>
-                      </div>
-                    ))}
-                    {pendingKots.length === 0 && (
-                      <div style={{ color: '#16a34a', fontStyle: 'italic', padding: '8px 0', textAlign: 'center' }}>
-                        ✓ All KOTs cleared to Food Bill
-                      </div>
-                    )}
+                  <div style={{ overflowX: 'auto', minHeight: 110, maxHeight: 130, flex: 1, padding: 2 }}>
+                    <table style={{ width: '100%', fontSize: 10, borderCollapse: 'collapse', textAlign: 'left' }}>
+                      <thead>
+                        <tr style={{ background: '#f1f5f9', color: '#334155', borderBottom: '1px solid #cbd5e1' }}>
+                          <th style={{ padding: '2px 4px' }}>S.No</th>
+                          <th style={{ padding: '2px 4px' }}>Date</th>
+                          <th style={{ padding: '2px 4px' }}>KOT No</th>
+                          <th style={{ padding: '2px 4px' }}>Total Qty</th>
+                          <th style={{ padding: '2px 4px', textAlign: 'right' }}>Total Amou</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pendingKots.length > 0 ? (
+                          pendingKots.map((k, idx) => (
+                            <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                              <td style={{ padding: '2px 4px' }}>{idx + 1}</td>
+                              <td style={{ padding: '2px 4px' }}>{k.date || k.createdAt?.slice(0, 10) || '06-06-2025'}</td>
+                              <td style={{ padding: '2px 4px', fontWeight: 700 }}>{k.kotNo}</td>
+                              <td style={{ padding: '2px 4px' }}>{k.items.reduce((s, i) => s + i.qty, 0)}</td>
+                              <td style={{ padding: '2px 4px', textAlign: 'right', fontWeight: 700 }}>₹{k.totalAmount.toFixed(2)}</td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={5} style={{ padding: '12px 4px', textAlign: 'center', color: '#94a3b8', fontStyle: 'italic' }}>
+                              No Pending KOTs
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
-                  <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 4, marginTop: 4, fontSize: 11, fontWeight: 700, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span>Pending: ₹{pendingKotAmount.toFixed(2)}</span>
+                  <div style={{ padding: '4px 6px', borderTop: '1px solid #e2e8f0', background: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      readOnly
+                      value={pendingKotAmount.toFixed(2)}
+                      className="form-input-pms"
+                      style={{ width: 70, fontSize: 10, padding: '1px 4px', fontWeight: 700, background: '#fff' }}
+                      title="Total Pending KOT Amount"
+                    />
                     {pendingKots.length > 0 && (
                       <button
                         type="button"
@@ -339,165 +517,306 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                   </div>
                 </div>
 
-                {/* Card 2: Pending Food Bill (Frame 0180) */}
-                <div style={{ border: '1px solid #6ee7b7', borderRadius: 4, background: '#f0fdf4', padding: 8 }}>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: '#065f46', borderBottom: '1px solid #a7f3d0', paddingBottom: 4, marginBottom: 6 }}>
+                {/* Card 2: Pending Food Bill (Frame 0240 / 0260) */}
+                <div style={{ border: '1px solid #38bdf8', borderRadius: 2, background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{
+                    background: '#bef264',
+                    color: '#000000',
+                    fontWeight: 800,
+                    fontSize: 11,
+                    padding: '4px 8px',
+                    borderBottom: '1px solid #a3e635'
+                  }}>
                     Pending Food Bill
                   </div>
-                  <div style={{ fontSize: 11 }}>
-                    <div><strong>Bill No:</strong> {foodBillNo}</div>
-                    <div><strong>Date:</strong> {checkOutDate}</div>
-                    <div><strong>Taxable:</strong> ₹{foodAmount > 0 ? (foodAmount / 1.05).toFixed(2) : '0.00'}</div>
-                    <div><strong>5% GST:</strong> ₹{foodAmount > 0 ? (foodAmount - (foodAmount / 1.05)).toFixed(2) : '0.00'}</div>
-                    <div style={{ marginTop: 4, fontWeight: 800, color: '#16a34a' }}>Net Billed: ₹{foodAmount.toFixed(2)}</div>
+                  <div style={{ overflowX: 'auto', minHeight: 110, maxHeight: 130, flex: 1, padding: 2 }}>
+                    <table style={{ width: '100%', fontSize: 10, borderCollapse: 'collapse', textAlign: 'left' }}>
+                      <thead>
+                        <tr style={{ background: '#f1f5f9', color: '#334155', borderBottom: '1px solid #cbd5e1' }}>
+                          <th style={{ padding: '2px 4px' }}>S.No</th>
+                          <th style={{ padding: '2px 4px' }}>Date</th>
+                          <th style={{ padding: '2px 4px' }}>Bill No</th>
+                          <th style={{ padding: '2px 4px' }}>Total Qty</th>
+                          <th style={{ padding: '2px 4px', textAlign: 'right' }}>Total Amou</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {foodBills.length > 0 ? (
+                          foodBills.map((fb, idx) => (
+                            <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                              <td style={{ padding: '2px 4px' }}>{idx + 1}</td>
+                              <td style={{ padding: '2px 4px' }}>{fb.date}</td>
+                              <td style={{ padding: '2px 4px', fontWeight: 700 }}>{fb.billNo}</td>
+                              <td style={{ padding: '2px 4px' }}>{fb.items.reduce((s, i) => s + i.qty, 0)}</td>
+                              <td style={{ padding: '2px 4px', textAlign: 'right', fontWeight: 700 }}>₹{fb.netBillAmount.toFixed(2)}</td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={5} style={{ padding: '12px 4px', textAlign: 'center', color: '#94a3b8', fontStyle: 'italic' }}>
+                              No Pending Food Bill
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
-                </div>
-
-                {/* Card 3: Room Stay Report */}
-                <div style={{ border: '1px solid #fed7aa', borderRadius: 4, background: '#fffbeb', padding: 8 }}>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: '#9a3412', borderBottom: '1px solid #fde68a', paddingBottom: 4, marginBottom: 6 }}>
-                    Room Stay Report
-                  </div>
-                  <div style={{ fontSize: 11 }}>
-                    <div><strong>Check In:</strong> {checkInDate} {checkInTime}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
-                      <span><strong>Out:</strong></span>
-                      <input
-                        type="text"
-                        value={checkOutDate}
-                        onChange={e => setCheckOutDate(e.target.value)}
-                        className="form-input-pms"
-                        style={{ width: 75, padding: '1px 4px', fontSize: 10 }}
-                      />
-                      <input
-                        type="text"
-                        value={checkOutTime}
-                        onChange={e => setCheckOutTime(e.target.value)}
-                        className="form-input-pms"
-                        style={{ width: 60, padding: '1px 4px', fontSize: 10 }}
-                      />
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
-                      <span>Calc:</span>
-                      <select
-                        value={calculationType}
-                        onChange={e => setCalculationType(e.target.value as '24hour' | '12hour')}
-                        className="form-select-pms"
-                        style={{ padding: '1px 4px', fontSize: 10, flex: 1 }}
-                      >
-                        <option value="24hour">24 Hours</option>
-                        <option value="12hour">12 Hours</option>
-                      </select>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                      <span>Days:</span>
-                      <input
-                        type="number"
-                        min="1"
-                        value={noOfDays}
-                        onChange={e => setNoOfDays(Number(e.target.value))}
-                        className="form-input-pms"
-                        style={{ width: 55, padding: '2px 4px', fontWeight: 800 }}
-                      />
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                      <span>Rate/Day:</span>
-                      <input
-                        type="number"
-                        value={perDayTariff}
-                        onChange={e => setPerDayTariff(Number(e.target.value))}
-                        className="form-input-pms"
-                        style={{ width: 75, padding: '2px 4px', fontWeight: 800 }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Card 4: Settlement Box with Green Outline (Frame 0340) */}
-                <div style={{ border: '2px solid #22c55e', borderRadius: 4, background: '#f8fafc', padding: 10 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                    <span style={{ fontSize: 12, fontWeight: 800, color: '#15803d' }}>Balance To Pay</span>
-                    <button
-                      type="button"
-                      onClick={() => alert(`Folio Recalculated:\nRent: ₹${taxableRoomRent}\nGST: ₹${gstAmount}\nFood: ₹${foodAmount}\nAdvance: -₹${advanceDeducted}\nNet: ₹${netPayable}`)}
-                      style={{ background: '#475569', color: '#fff', border: 'none', padding: '2px 6px', borderRadius: 2, fontSize: 10, cursor: 'pointer' }}
-                    >
-                      Recalculate
-                    </button>
+                  <div style={{ padding: '4px 6px', borderTop: '1px solid #e2e8f0', background: '#f8fafc' }}>
                     <input
                       type="text"
                       readOnly
-                      value={`₹${netPayable.toFixed(2)}`}
+                      value={foodAmount.toFixed(2)}
                       className="form-input-pms"
-                      style={{ width: 95, fontWeight: 800, textAlign: 'right', background: '#dcfce7', color: '#166534' }}
+                      style={{ width: 70, fontSize: 10, padding: '1px 4px', fontWeight: 700, background: '#fff' }}
+                      title="Total Food Bill Amount"
+                    />
+                  </div>
+                </div>
+
+                {/* Card 3: Day Wise Rent (Frame 0240 / 0260) */}
+                <div style={{ border: '1px solid #38bdf8', borderRadius: 2, background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{
+                    background: '#bef264',
+                    color: '#000000',
+                    fontWeight: 800,
+                    fontSize: 11,
+                    padding: '4px 8px',
+                    borderBottom: '1px solid #a3e635',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
+                    <span>Day Wise Rent</span>
+                    <span style={{ fontSize: 9, background: '#0f172a', color: '#fff', padding: '1px 4px', borderRadius: 2 }}>
+                      {calculationType === '12hour' ? '12-Hour' : '24-Hour'}
+                    </span>
+                  </div>
+                  <div style={{ overflowX: 'auto', minHeight: 110, maxHeight: 130, flex: 1, padding: 2 }}>
+                    <table style={{ width: '100%', fontSize: 10, borderCollapse: 'collapse', textAlign: 'left' }}>
+                      <thead>
+                        <tr style={{ background: '#f1f5f9', color: '#334155', borderBottom: '1px solid #cbd5e1' }}>
+                          <th style={{ padding: '2px 4px' }}>Start Date</th>
+                          <th style={{ padding: '2px 4px' }}>End Date</th>
+                          <th style={{ padding: '2px 4px', textAlign: 'center' }}>Day Count</th>
+                          <th style={{ padding: '2px 4px', textAlign: 'right' }}>Rent</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dayWiseRent.map((slab, idx) => (
+                          <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                            <td style={{ padding: '2px 4px', whiteSpace: 'nowrap' }}>{slab.startDate}</td>
+                            <td style={{ padding: '2px 4px', whiteSpace: 'nowrap' }}>{slab.endDate}</td>
+                            <td style={{ padding: '2px 4px', textAlign: 'center', fontWeight: 700 }}>{slab.dayCount}</td>
+                            <td style={{ padding: '2px 4px', textAlign: 'right', fontWeight: 700 }}>₹{slab.rent.toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div style={{
+                    padding: '4px 6px',
+                    borderTop: '1px solid #e2e8f0',
+                    background: '#f8fafc',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    fontSize: 10
+                  }}>
+                    <span>Days: <strong>{noOfDays}</strong></span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span>Total Rent:</span>
+                      <input
+                        type="text"
+                        readOnly
+                        value={`₹${rawRent.toFixed(2)}`}
+                        className="form-input-pms"
+                        style={{ width: 75, fontSize: 10, padding: '1px 4px', fontWeight: 800, textAlign: 'right', background: '#fff' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card 4: Right Settlement Box (Green Border Outline - Frame 0240 / 0260) */}
+                <div style={{
+                  border: '2px solid #84cc16',
+                  borderRadius: 4,
+                  background: '#f8fafc',
+                  padding: '8px 10px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 4
+                }}>
+                  {/* Less Discount (-) */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 11, color: '#334155' }}>Less Discount (-)</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={lessDiscount}
+                      onChange={e => setLessDiscount(Number(e.target.value))}
+                      className="form-input-pms"
+                      style={{ width: 85, fontSize: 10, padding: '2px 4px', textAlign: 'right' }}
                     />
                   </div>
 
-                  {/* Payment Splits */}
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#334155', marginBottom: 4 }}>
-                    Settlement Splits:
+                  {/* Bill Amount */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#334155' }}>Bill Amount</span>
+                    <input
+                      type="text"
+                      readOnly
+                      value={netBillAmount.toFixed(2)}
+                      className="form-input-pms"
+                      style={{ width: 85, fontSize: 10, padding: '2px 4px', textAlign: 'right', fontWeight: 800, background: '#fff' }}
+                    />
                   </div>
-                  {paymentSplits.map((split, i) => (
-                    <div key={i} style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
-                      <select
-                        value={split.mode}
-                        onChange={e => handleUpdateSplit(i, 'mode', e.target.value)}
-                        className="form-select-pms"
-                        style={{ width: 85, fontSize: 10 }}
+
+                  {/* Total Advance */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 11, color: '#334155' }}>Total Advance</span>
+                    <input
+                      type="number"
+                      value={advanceDeducted}
+                      onChange={e => setAdvanceDeducted(Number(e.target.value))}
+                      className="form-input-pms"
+                      style={{ width: 85, fontSize: 10, padding: '2px 4px', textAlign: 'right' }}
+                    />
+                  </div>
+
+                  {/* Balance To Pay + Recalculate */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: '#15803d' }}>Balance To Pay</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <button
+                        type="button"
+                        onClick={() => alert(`Folio Recalculated:\nRent (${noOfDays} days): ₹${taxableRoomRent}\nGST (12%): ₹${gstAmount}\nFood: ₹${foodAmount}\nAdvance: -₹${advanceDeducted}\nNet: ₹${netPayable}`)}
+                        style={{
+                          background: '#475569',
+                          color: '#fff',
+                          border: 'none',
+                          padding: '1px 5px',
+                          borderRadius: 2,
+                          fontSize: 9,
+                          cursor: 'pointer'
+                        }}
                       >
-                        <option value="Cash">Cash</option>
-                        <option value="Online">Online</option>
-                        <option value="UPI">UPI</option>
-                        <option value="Card">Card</option>
-                      </select>
+                        Recalculate
+                      </button>
                       <input
-                        type="number"
-                        value={split.amount}
-                        onChange={e => handleUpdateSplit(i, 'amount', Number(e.target.value))}
+                        type="text"
+                        readOnly
+                        value={netPayable.toFixed(2)}
                         className="form-input-pms"
-                        style={{ width: 80, fontSize: 10, textAlign: 'right', fontWeight: 700 }}
+                        style={{ width: 75, fontSize: 10, padding: '2px 4px', textAlign: 'right', fontWeight: 800, background: '#dcfce7', color: '#166534' }}
                       />
                     </div>
-                  ))}
+                  </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+                  {/* Select Mode */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
+                    <select
+                      value={paymentSplits[0]?.mode || 'Cash'}
+                      onChange={e => handleUpdateSplit(0, 'mode', e.target.value)}
+                      className="form-select-pms"
+                      style={{ fontSize: 10, padding: '1px 4px', flex: 1 }}
+                    >
+                      <option value="Cash">Cash</option>
+                      <option value="Online">Online</option>
+                      <option value="UPI">UPI</option>
+                      <option value="Card">Card</option>
+                      <option value="Credit">Credit</option>
+                    </select>
+                    <input
+                      type="number"
+                      value={paymentSplits[0]?.amount || 0}
+                      onChange={e => handleUpdateSplit(0, 'amount', Number(e.target.value))}
+                      className="form-input-pms"
+                      style={{ width: 75, fontSize: 10, padding: '2px 4px', textAlign: 'right' }}
+                    />
+                  </div>
+
+                  {/* + Payment Mode Button */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
                     <button
                       type="button"
                       onClick={handleAddPaymentMode}
-                      style={{ background: '#0284c7', color: '#fff', border: 'none', padding: '2px 8px', borderRadius: 2, fontSize: 10, cursor: 'pointer' }}
+                      style={{
+                        background: '#2563eb',
+                        color: '#fff',
+                        border: 'none',
+                        padding: '2px 8px',
+                        borderRadius: 2,
+                        fontSize: 10,
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
                     >
                       + Payment Mode
                     </button>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <span style={{ fontSize: 10, color: '#dc2626', fontWeight: 700 }}>
-                        Total Advance (-):
-                      </span>
+                    {paymentSplits.length > 1 ? (
                       <input
                         type="number"
-                        value={advanceDeducted}
-                        onChange={e => setAdvanceDeducted(Number(e.target.value))}
+                        value={paymentSplits[1]?.amount || 0}
+                        onChange={e => handleUpdateSplit(1, 'amount', Number(e.target.value))}
                         className="form-input-pms"
-                        style={{ width: 65, fontSize: 10, padding: '1px 4px', textAlign: 'right', fontWeight: 800, color: '#dc2626' }}
+                        style={{ width: 75, fontSize: 10, padding: '2px 4px', textAlign: 'right' }}
                       />
-                    </div>
+                    ) : (
+                      <input
+                        type="text"
+                        disabled
+                        placeholder="Split Amount"
+                        className="form-input-pms"
+                        style={{ width: 75, fontSize: 10, padding: '2px 4px', background: '#f1f5f9' }}
+                      />
+                    )}
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 6 }}>
+                  {/* Credit to guest */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 10, color: '#475569' }}>Credit to {guest?.name || 'akash ji'}</span>
+                    <input
+                      type="number"
+                      defaultValue={0}
+                      className="form-input-pms"
+                      style={{ width: 75, fontSize: 10, padding: '2px 4px', textAlign: 'right' }}
+                    />
+                  </div>
+
+                  {/* Balance */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 10, color: '#475569' }}>Balance</span>
+                    <input
+                      type="number"
+                      defaultValue={0}
+                      className="form-input-pms"
+                      style={{ width: 75, fontSize: 10, padding: '2px 4px', textAlign: 'right' }}
+                    />
+                  </div>
+
+                  {/* Payment Reference */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 10, color: '#475569' }}>Payment Reference</span>
                     <input
                       type="text"
                       placeholder="Ref / UTR"
                       value={paymentReference}
                       onChange={e => setPaymentReference(e.target.value)}
                       className="form-input-pms"
-                      style={{ fontSize: 10, padding: 3 }}
+                      style={{ width: 75, fontSize: 10, padding: '2px 4px' }}
                     />
+                  </div>
+
+                  {/* Payment Remark */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 10, color: '#475569' }}>Payment Remark</span>
                     <input
                       type="text"
-                      placeholder="Remark (PHONE PAY)"
+                      placeholder="Remark"
                       value={paymentRemark}
                       onChange={e => setPaymentRemark(e.target.value)}
                       className="form-input-pms"
-                      style={{ fontSize: 10, padding: 3 }}
+                      style={{ width: 75, fontSize: 10, padding: '2px 4px' }}
                     />
                   </div>
                 </div>

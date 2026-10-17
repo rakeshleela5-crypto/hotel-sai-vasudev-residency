@@ -10,8 +10,15 @@ import type {
   PmsDiningTable,
   PmsGstMaster,
   PmsBusinessSource,
-  PmsVoucherType
+  PmsVoucherType,
+  PmsBusinessSetting,
+  DayWiseRentItem
 } from '../types/pmsModels';
+
+export const DEFAULT_BUSINESS_SETTING: PmsBusinessSetting = {
+  calculationType: '12hour',
+  standardCheckoutTime: '11:00 AM'
+};
 
 export const INITIAL_ROOMS: PmsRoom[] = [
   // Ground / Halls
@@ -148,7 +155,8 @@ const STORAGE_KEYS = {
   BOOKINGS: 'svr_pms_bookings',
   KOTS: 'svr_pms_kots',
   CHECKOUTS: 'svr_pms_checkouts',
-  ADVANCE_RECEIPTS: 'svr_pms_advance_receipts'
+  ADVANCE_RECEIPTS: 'svr_pms_advance_receipts',
+  BUSINESS_SETTINGS: 'svr_pms_business_settings'
 };
 
 export class PmsStore {
@@ -382,6 +390,163 @@ export class PmsStore {
   static deleteMenuItem(id: string): void {
     const list = this.getMenuItems().filter(m => m.id !== id && m.code !== id);
     localStorage.setItem(STORAGE_KEYS.MENU_ITEMS, JSON.stringify(list));
+  }
+
+  // Business Settings (Video 09 - 12 Hour vs 24 Hour Policy)
+  static getBusinessSettings(): PmsBusinessSetting {
+    const raw = localStorage.getItem(STORAGE_KEYS.BUSINESS_SETTINGS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.BUSINESS_SETTINGS, JSON.stringify(DEFAULT_BUSINESS_SETTING));
+      return DEFAULT_BUSINESS_SETTING;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return DEFAULT_BUSINESS_SETTING;
+    }
+  }
+
+  static saveBusinessSettings(settings: PmsBusinessSetting): void {
+    localStorage.setItem(STORAGE_KEYS.BUSINESS_SETTINGS, JSON.stringify(settings));
+  }
+
+  /**
+   * Computes Day-Wise Rent and intervals matching Video 09 Frames 0240 & 0260:
+   * 12-Hour standard checkout policy vs 24-Hour rolling stay duration
+   */
+  static computeDayWiseRent(params: {
+    checkInDate: string;        // DD-MM-YYYY or YYYY-MM-DD
+    checkInTime: string;        // e.g. "06:01 PM" or "18:01"
+    checkOutDate: string;       // DD-MM-YYYY or YYYY-MM-DD
+    checkOutTime: string;       // e.g. "06:02 PM" or "18:02"
+    perDayTariff: number;
+    calculationType: '12hour' | '24hour';
+    standardCheckoutTime?: string; // e.g. "11:00 AM"
+  }): { dayWiseRent: DayWiseRentItem[]; totalDays: number; totalRent: number } {
+    const {
+      checkInDate,
+      checkInTime,
+      checkOutDate,
+      checkOutTime,
+      perDayTariff,
+      calculationType,
+      standardCheckoutTime = '11:00 AM'
+    } = params;
+
+    const items: DayWiseRentItem[] = [];
+
+    const parseTime = (tStr: string): { hours: number; minutes: number } => {
+      if (!tStr) return { hours: 12, minutes: 0 };
+      const isPM = /pm/i.test(tStr);
+      const isAM = /am/i.test(tStr);
+      const clean = tStr.replace(/am|pm/gi, '').trim();
+      const parts = clean.split(':').map(Number);
+      let h = parts[0] || 0;
+      const m = parts[1] || 0;
+      if (isPM && h < 12) h += 12;
+      if (isAM && h === 12) h = 0;
+      return { hours: h, minutes: m };
+    };
+
+    const parseDateToObj = (dStr: string, tStr: string): Date => {
+      const { hours, minutes } = parseTime(tStr);
+      let y = 2025, m = 5, d = 9;
+      if (dStr && dStr.includes('-')) {
+        const p = dStr.split('-');
+        if (p[0].length === 4) {
+          y = Number(p[0]);
+          m = Number(p[1]) - 1;
+          d = Number(p[2]);
+        } else {
+          d = Number(p[0]);
+          m = Number(p[1]) - 1;
+          y = Number(p[2]);
+        }
+      }
+      return new Date(y, m, d, hours, minutes, 0);
+    };
+
+    const inDate = parseDateToObj(checkInDate, checkInTime);
+    const outDate = parseDateToObj(checkOutDate, checkOutTime);
+    const stdTime = parseTime(standardCheckoutTime);
+
+    const formatDt = (d: Date): string => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const hours = String(d.getHours()).padStart(2, '0');
+      const mins = String(d.getMinutes()).padStart(2, '0');
+      const secs = String(d.getSeconds()).padStart(2, '0');
+      return `${year}-${month}-${day} ${hours}:${mins}:${secs}`;
+    };
+
+    if (calculationType === '24hour') {
+      const diffMs = Math.max(0, outDate.getTime() - inDate.getTime());
+      const totalHours = diffMs / (1000 * 60 * 60);
+      let dayCount = Math.ceil(totalHours / 24);
+      if (dayCount < 1) dayCount = 1;
+
+      let currentStart = new Date(inDate);
+      for (let i = 1; i <= dayCount; i++) {
+        const nextPeriodEnd = new Date(currentStart.getTime() + 24 * 60 * 60 * 1000);
+        const effectiveEnd = (i === dayCount && outDate > currentStart && outDate <= nextPeriodEnd)
+          ? outDate
+          : nextPeriodEnd;
+
+        items.push({
+          sNo: i,
+          startDate: formatDt(currentStart),
+          endDate: formatDt(effectiveEnd),
+          dayCount: 1,
+          rent: perDayTariff
+        });
+        currentStart = nextPeriodEnd;
+      }
+
+      return {
+        dayWiseRent: items,
+        totalDays: items.length,
+        totalRent: items.length * perDayTariff
+      };
+    } else {
+      // 12-Hour policy / Standard Fixed Checkout Time Policy (e.g. 11:00 AM)
+      let nextStd = new Date(inDate);
+      nextStd.setHours(stdTime.hours, stdTime.minutes, 0, 0);
+      if (nextStd <= inDate) {
+        nextStd.setDate(nextStd.getDate() + 1);
+      }
+
+      items.push({
+        sNo: 1,
+        startDate: formatDt(inDate),
+        endDate: formatDt(nextStd),
+        dayCount: 1,
+        rent: perDayTariff
+      });
+
+      let currentPeriodStart = new Date(nextStd);
+      while (currentPeriodStart < outDate) {
+        const nextPeriodEnd = new Date(currentPeriodStart);
+        nextPeriodEnd.setDate(nextPeriodEnd.getDate() + 1);
+
+        const isLast = nextPeriodEnd >= outDate;
+        items.push({
+          sNo: items.length + 1,
+          startDate: formatDt(currentPeriodStart),
+          endDate: formatDt(isLast ? outDate : nextPeriodEnd),
+          dayCount: 1,
+          rent: perDayTariff
+        });
+
+        currentPeriodStart = nextPeriodEnd;
+      }
+
+      return {
+        dayWiseRent: items,
+        totalDays: items.length,
+        totalRent: items.length * perDayTariff
+      };
+    }
   }
 
   static getBookings(): PmsBooking[] {
