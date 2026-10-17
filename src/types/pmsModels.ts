@@ -260,3 +260,31 @@ export interface MenuItem {
   rate: number;
   category: string;
 }
+
+export interface PmsAdvanceReceipt {
+  receiptNo: string;        // e.g. AR12 or AR/101/24-25
+  voucherNo?: string;       // e.g. 12
+  date: string;             // DD-MM-YYYY
+  time: string;
+  voucherName: 'Advance_Receipt';
+  roomNo: string;
+  guestName: string;
+  mobile: string;
+  amount: number;
+  paymentMode: 'Cash' | 'Online' | 'Card' | 'PAY TM' | 'STATE BANK OF INDIA' | 'tata moters';
+  referenceNo?: string;
+  remark: string;
+  createdAt: string;
+}
+
+export interface LedgerEntry {
+  date: string;
+  type: 'Advance_Receipt' | 'Check_Out' | 'Room_Checkout' | 'Payment';
+  accountName: string;
+  remark: string;
+  debit: number;
+  credit: number;
+  balance: number;
+  balanceType: 'Dr' | 'Cr';
+}
+

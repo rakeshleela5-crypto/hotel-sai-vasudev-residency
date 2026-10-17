@@ -1,4 +1,4 @@
-import type { PmsRoom, PmsBooking, PmsKotRecord, PmsCheckOutDetail, MenuItem } from '../types/pmsModels';
+import type { PmsRoom, PmsBooking, PmsKotRecord, PmsCheckOutDetail, MenuItem, PmsAdvanceReceipt, LedgerEntry } from '../types/pmsModels';
 
 export const INITIAL_ROOMS: PmsRoom[] = [
   // Ground / Halls
@@ -69,7 +69,8 @@ const STORAGE_KEYS = {
   ROOMS: 'svr_pms_rooms',
   BOOKINGS: 'svr_pms_bookings',
   KOTS: 'svr_pms_kots',
-  CHECKOUTS: 'svr_pms_checkouts'
+  CHECKOUTS: 'svr_pms_checkouts',
+  ADVANCE_RECEIPTS: 'svr_pms_advance_receipts'
 };
 
 export class PmsStore {
@@ -292,7 +293,55 @@ export class PmsStore {
 
   static getCheckouts(): PmsCheckOutDetail[] {
     const raw = localStorage.getItem(STORAGE_KEYS.CHECKOUTS);
-    return raw ? JSON.parse(raw) : [];
+    if (raw) {
+      try {
+        return JSON.parse(raw);
+      } catch {
+        // fallback
+      }
+    }
+
+    // Initial demo checkout matching Video 06 Frame 0200 & 0230 (Shiv Room 101)
+    const initialCheckouts: PmsCheckOutDetail[] = [
+      {
+        invoiceNo: 'GSR/225/24-25',
+        roomNo: '101',
+        roomType: 'DELUXE',
+        guestName: 'Shiv',
+        guestPhone: '8432066047',
+        checkInDate: '07-06-2025',
+        checkInTime: '07:53 AM',
+        checkOutDate: '07-06-2025',
+        checkOutTime: '07:55 AM',
+        calculationType: '24hour',
+        numberOfDays: 1,
+        perDayTariff: 4000,
+        totalRoomRent: 4000,
+        foodAmount: 0,
+        gstPercent: 12,
+        gstAmount: 480,
+        cgstAmount: 240,
+        sgstAmount: 240,
+        addOthers: 0,
+        lessDiscount: 0,
+        advanceDeducted: 2000,
+        billAmount: 4480,
+        netPayable: 2480,
+        paymentMode: 'Online',
+        payments: [
+          { mode: 'Online', amount: 2480, referenceNo: 'UPI/984210', remark: 'PhonePe Checkout' }
+        ],
+        checkoutRemark: 'Checkout completed successfully',
+        city: 'Dausa',
+        state: 'Rajasthan',
+        country: 'India',
+        pinCode: '303313',
+        sacCode: '996311',
+        invoiceFormat: 'A4_Standard'
+      }
+    ];
+    localStorage.setItem(STORAGE_KEYS.CHECKOUTS, JSON.stringify(initialCheckouts));
+    return initialCheckouts;
   }
 
   static saveCheckout(checkout: PmsCheckOutDetail): void {
@@ -302,5 +351,206 @@ export class PmsStore {
 
     // Mark room as dirty upon checkout
     this.updateRoomStatus(checkout.roomNo, 'dirty', undefined);
+  }
+
+  static getAdvanceReceipts(): PmsAdvanceReceipt[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.ADVANCE_RECEIPTS);
+    if (raw) {
+      try {
+        return JSON.parse(raw);
+      } catch {
+        // fallback
+      }
+    }
+
+    // Initial demo advance receipts matching RoomG Video 06 (Frames 0148, 0150, 0154, 0182)
+    const initialReceipts: PmsAdvanceReceipt[] = [
+      {
+        receiptNo: 'AR12',
+        voucherNo: '12',
+        date: '07-06-2025',
+        time: '07:54 AM',
+        voucherName: 'Advance_Receipt',
+        roomNo: '101',
+        guestName: 'Shiv',
+        mobile: '8432066047',
+        amount: 2000,
+        paymentMode: 'Cash',
+        remark: 'advance',
+        createdAt: '2025-06-07T02:24:00.000Z'
+      },
+      {
+        receiptNo: 'AR11',
+        voucherNo: '11',
+        date: '05-06-2025',
+        time: '11:45 PM',
+        voucherName: 'Advance_Receipt',
+        roomNo: '103',
+        guestName: 'AJUU',
+        mobile: '9622975444',
+        amount: 500,
+        paymentMode: 'Online',
+        remark: '5 march check in advance',
+        createdAt: '2025-06-05T18:15:00.000Z'
+      },
+      {
+        receiptNo: 'AR10',
+        voucherNo: '10',
+        date: '04-06-2025',
+        time: '04:10 PM',
+        voucherName: 'Advance_Receipt',
+        roomNo: '105',
+        guestName: 'sunil agrwal',
+        mobile: '9829012345',
+        amount: 1000,
+        paymentMode: 'Cash',
+        remark: 'advance booking',
+        createdAt: '2025-06-04T10:40:00.000Z'
+      }
+    ];
+    localStorage.setItem(STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify(initialReceipts));
+    return initialReceipts;
+  }
+
+  static saveAdvanceReceipt(receipt: PmsAdvanceReceipt): void {
+    const list = this.getAdvanceReceipts();
+    list.unshift(receipt);
+    localStorage.setItem(STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify(list));
+
+    // Stacking Advance: Update room's current guest advancePaid if present
+    const rooms = this.getRooms();
+    const updatedRooms = rooms.map(r => {
+      if (r.roomNo === receipt.roomNo && r.currentGuest) {
+        return {
+          ...r,
+          currentGuest: {
+            ...r.currentGuest,
+            advancePaid: (r.currentGuest.advancePaid || 0) + receipt.amount
+          }
+        };
+      }
+      return r;
+    });
+    this.saveRooms(updatedRooms);
+  }
+
+  static deleteAdvanceReceipt(receiptNo: string): void {
+    const list = this.getAdvanceReceipts().filter(r => r.receiptNo !== receiptNo);
+    localStorage.setItem(STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify(list));
+  }
+
+  static getAdvanceReceiptsByRoom(roomNo: string): PmsAdvanceReceipt[] {
+    return this.getAdvanceReceipts().filter(r => r.roomNo === roomNo);
+  }
+
+  static getTotalAdvanceByRoom(roomNo: string): number {
+    const receipts = this.getAdvanceReceiptsByRoom(roomNo);
+    const sum = receipts.reduce((acc, r) => acc + (Number(r.amount) || 0), 0);
+    if (sum > 0) return sum;
+    // Fallback to room currentGuest advancePaid
+    const room = this.getRooms().find(r => r.roomNo === roomNo);
+    return room?.currentGuest?.advancePaid || 0;
+  }
+
+  static getPartyLedger(
+    accountName: string,
+    _fromDate: string = '07-06-2025',
+    _toDate: string = '07-06-2025'
+  ): {
+    entries: LedgerEntry[];
+    totalDebit: number;
+    totalCredit: number;
+    closingBalance: number;
+    closingType: 'Dr' | 'Cr';
+  } {
+    const cleanQuery = accountName.toLowerCase().trim();
+    const entries: LedgerEntry[] = [];
+    let runningBalance = 0; // positive for Credit, negative for Debit
+
+    // 1. Opening Balance row (Always 0.00 as shown in Frame 0182 & 0230)
+    entries.push({
+      date: '',
+      type: 'Advance_Receipt',
+      accountName: 'Opening Balnce',
+      remark: '',
+      debit: 0,
+      credit: 0,
+      balance: 0,
+      balanceType: 'Cr'
+    });
+
+    // 2. Fetch all Advance Receipts matching this guest / account
+    const receipts = this.getAdvanceReceipts().filter(r => 
+      !cleanQuery || 
+      r.guestName.toLowerCase().includes(cleanQuery) || 
+      (r.roomNo && r.roomNo.toLowerCase().includes(cleanQuery)) ||
+      (r.mobile && r.mobile.includes(cleanQuery))
+    );
+
+    for (const r of receipts) {
+      runningBalance += r.amount;
+      entries.push({
+        date: r.date,
+        type: 'Advance_Receipt',
+        accountName: r.paymentMode,
+        remark: r.remark || 'advance',
+        debit: 0,
+        credit: r.amount,
+        balance: Math.abs(runningBalance),
+        balanceType: runningBalance >= 0 ? 'Cr' : 'Dr'
+      });
+    }
+
+    // 3. Fetch all Checkouts matching this guest / account
+    const checkouts = this.getCheckouts().filter(c =>
+      !cleanQuery ||
+      c.guestName.toLowerCase().includes(cleanQuery) ||
+      c.roomNo.toLowerCase().includes(cleanQuery) ||
+      (c.guestPhone && c.guestPhone.includes(cleanQuery))
+    );
+
+    for (const c of checkouts) {
+      // 3a. Check_Out settlement payment (Credit)
+      const settlementPaid = c.netPayable || (c.billAmount - (c.advanceDeducted || 0));
+      if (settlementPaid > 0) {
+        runningBalance += settlementPaid;
+        entries.push({
+          date: c.checkOutDate,
+          type: 'Check_Out',
+          accountName: c.paymentMode || 'Online',
+          remark: `Check_out/${c.invoiceNo}/Room-${c.roomNo}`,
+          debit: 0,
+          credit: settlementPaid,
+          balance: Math.abs(runningBalance),
+          balanceType: runningBalance >= 0 ? 'Cr' : 'Dr'
+        });
+      }
+
+      // 3b. Room_Checkout invoice bill charged (Debit)
+      runningBalance -= c.billAmount;
+      entries.push({
+        date: c.checkOutDate,
+        type: 'Room_Checkout',
+        accountName: 'Room_Checkout',
+        remark: `Room_Checkout/${c.invoiceNo}`,
+        debit: c.billAmount,
+        credit: 0,
+        balance: Math.abs(runningBalance),
+        balanceType: runningBalance >= 0 ? 'Dr' : 'Dr'
+      });
+    }
+
+    const totalDebit = entries.reduce((s, e) => s + (e.debit || 0), 0);
+    const totalCredit = entries.reduce((s, e) => s + (e.credit || 0), 0);
+    const closingBalance = Math.abs(totalCredit - totalDebit);
+    const closingType: 'Dr' | 'Cr' = totalCredit >= totalDebit ? 'Cr' : 'Dr';
+
+    return {
+      entries,
+      totalDebit,
+      totalCredit,
+      closingBalance,
+      closingType
+    };
   }
 }

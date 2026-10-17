@@ -6,6 +6,8 @@ import { BookingReceiptModal } from './BookingReceiptModal';
 import { KotEntryModal } from './KotEntryModal';
 import { FoodBillModal } from './FoodBillModal';
 import { RoomCheckOutModal } from './RoomCheckOutModal';
+import { AdvanceReceiptModal } from './AdvanceReceiptModal';
+import { PartyLedgerModal } from './PartyLedgerModal';
 import type { PmsBooking } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
@@ -27,6 +29,8 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   const [isKotOpen, setIsKotOpen] = useState(false);
   const [isFoodBillOpen, setIsFoodBillOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isAdvanceReceiptOpen, setIsAdvanceReceiptOpen] = useState(false);
+  const [isLedgerOpen, setIsLedgerOpen] = useState(false);
 
   const rooms = PmsStore.getRooms();
   const vacantCount = rooms.filter(r => r.status === 'vacant').length;
@@ -137,7 +141,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-advance-receipt"
-          onClick={() => setIsBookingOpen(true)}
+          onClick={() => setIsAdvanceReceiptOpen(true)}
         >
           <span className="tile-icon">💵</span>
           <span>Room Advance Receipt</span>
@@ -146,15 +150,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-receipt"
-          onClick={() => {
-            const bookings = PmsStore.getBookings();
-            if (bookings.length > 0) {
-              setLatestBooking(bookings[0]);
-              setIsReceiptOpen(true);
-            } else {
-              setIsBookingOpen(true);
-            }
-          }}
+          onClick={() => setIsAdvanceReceiptOpen(true)}
         >
           <span className="tile-icon">📄</span>
           <span>Receipt</span>
@@ -173,7 +169,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-ledger"
-          onClick={() => alert('Party & Guest Ledger Module: Displaying balance statements.')}
+          onClick={() => setIsLedgerOpen(true)}
         >
           <span className="tile-icon">📑</span>
           <span>Ledger</span>
@@ -346,6 +342,16 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         onCheckoutComplete={() => {
           alert('Room checkout completed! Room status updated.');
         }}
+      />
+
+      <AdvanceReceiptModal
+        isOpen={isAdvanceReceiptOpen}
+        onClose={() => setIsAdvanceReceiptOpen(false)}
+      />
+
+      <PartyLedgerModal
+        isOpen={isLedgerOpen}
+        onClose={() => setIsLedgerOpen(false)}
       />
     </div>
   );

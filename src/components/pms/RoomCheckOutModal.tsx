@@ -45,7 +45,13 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
   const [gstPercent, setGstPercent] = useState<number>(12);
   const [addOthers, setAddOthers] = useState<number>(0);
   const [lessDiscount, setLessDiscount] = useState<number>(0);
-  const advanceDeducted = guest?.advancePaid || 1000;
+  
+  // Dynamic Advance Calculation (Video 06 Frame 0200)
+  const roomAdvanceReceipts = PmsStore.getAdvanceReceiptsByRoom(targetRoom.roomNo);
+  const totalAdvanceFromReceipts = roomAdvanceReceipts.reduce((sum, r) => sum + Number(r.amount), 0);
+  const [advanceDeducted, setAdvanceDeducted] = useState<number>(
+    totalAdvanceFromReceipts > 0 ? totalAdvanceFromReceipts : (guest?.advancePaid || 0)
+  );
 
   // Pending KOTs enforcement (Video 05 [03:45 - 06:00])
   const [pendingKots, setPendingKots] = useState(PmsStore.getPendingKotsByRoom(targetRoom.roomNo));
@@ -436,9 +442,18 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                     >
                       + Payment Mode
                     </button>
-                    <span style={{ fontSize: 10, color: '#64748b' }}>
-                      Advance: ₹{advanceDeducted}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span style={{ fontSize: 10, color: '#dc2626', fontWeight: 700 }}>
+                        Total Advance (-):
+                      </span>
+                      <input
+                        type="number"
+                        value={advanceDeducted}
+                        onChange={e => setAdvanceDeducted(Number(e.target.value))}
+                        className="form-input-pms"
+                        style={{ width: 65, fontSize: 10, padding: '1px 4px', textAlign: 'right', fontWeight: 800, color: '#dc2626' }}
+                      />
+                    </div>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 6 }}>

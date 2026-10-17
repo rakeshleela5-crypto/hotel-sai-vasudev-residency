@@ -6,6 +6,8 @@ import { UnconfirmedBookingsModal } from './UnconfirmedBookingsModal';
 import { FbbReportModal } from './FbbReportModal';
 import { KotEntryModal } from './KotEntryModal';
 import { FoodBillModal } from './FoodBillModal';
+import { AdvanceReceiptModal } from './AdvanceReceiptModal';
+import { PartyLedgerModal } from './PartyLedgerModal';
 import './pmsStyles.css';
 
 interface HotelPmsModalProps {
@@ -28,6 +30,8 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   const [isFbbReportOpen, setIsFbbReportOpen] = useState(false);
   const [isKotModalOpen, setIsKotModalOpen] = useState(false);
   const [isFoodBillModalOpen, setIsFoodBillModalOpen] = useState(false);
+  const [isAdvanceReceiptOpen, setIsAdvanceReceiptOpen] = useState(false);
+  const [isPartyLedgerOpen, setIsPartyLedgerOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -233,13 +237,16 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     <div className="pms-nav-item" onClick={() => setIsFoodBillModalOpen(true)}>
                       <span style={{ color: '#38bdf8', fontWeight: 700 }}>🧾 Food Bill (FBB)</span>
                     </div>
+                    <div className="pms-nav-item" onClick={() => setIsAdvanceReceiptOpen(true)}>
+                      <span style={{ color: '#34d399', fontWeight: 700 }}>💵 Room Advance Receipt</span>
+                    </div>
                     <div className="pms-nav-item" onClick={() => setActiveTab('matrix')}>
                       <span>🧾 Room Check Out</span>
                     </div>
                   </div>
                 )}
 
-                {/* Report Submenu (Video 02 Transcript [07:30, 15:45]) */}
+                {/* Report Submenu (Video 02 Transcript [07:30, 15:45] & Video 06) */}
                 <div 
                   className="pms-nav-item" 
                   onClick={() => setReportMenuOpen(!reportMenuOpen)}
@@ -256,6 +263,9 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                   <div style={{ background: '#1a1e22', paddingLeft: 12, fontSize: 12 }}>
                     <div className="pms-nav-item" onClick={() => setIsCalendarOpen(true)}>
                       <span style={{ color: '#38bdf8', fontWeight: 700 }}>📅 Booking Calendar</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsPartyLedgerOpen(true)}>
+                      <span style={{ color: '#fbbf24', fontWeight: 700 }}>📑 Party &amp; Guest Ledger</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => alert('Daily Check-in Report')}>
                       <span>📋 Check-in Report</span>
@@ -353,6 +363,18 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       <FoodBillModal
         isOpen={isFoodBillModalOpen}
         onClose={() => setIsFoodBillModalOpen(false)}
+      />
+
+      {/* Advance Receipt Modal (Video 06) */}
+      <AdvanceReceiptModal
+        isOpen={isAdvanceReceiptOpen}
+        onClose={() => setIsAdvanceReceiptOpen(false)}
+      />
+
+      {/* Party & Guest Ledger Modal (Video 06) */}
+      <PartyLedgerModal
+        isOpen={isPartyLedgerOpen}
+        onClose={() => setIsPartyLedgerOpen(false)}
       />
     </>
   );
