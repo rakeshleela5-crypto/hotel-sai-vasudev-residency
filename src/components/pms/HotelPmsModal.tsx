@@ -14,6 +14,9 @@ import { ItemMasterModal } from './ItemMasterModal';
 import { OtherMasterModal } from './OtherMasterModal';
 import { BusinessSettingModal } from './BusinessSettingModal';
 import { CompanyInfoModal } from './CompanyInfoModal';
+import { RoomShiftModal } from './RoomShiftModal';
+import { RoomCheckInRegisterModal } from './RoomCheckInRegisterModal';
+import { NewRoomCheckInModal } from './NewRoomCheckInModal';
 import './pmsStyles.css';
 
 interface HotelPmsModalProps {
@@ -53,6 +56,12 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   // Video 10 Company Info Modal (Local vs Interstate GST & State Codes)
   const [isCompanyInfoOpen, setIsCompanyInfoOpen] = useState(false);
   const [roomRefreshTrigger, setRoomRefreshTrigger] = useState(0);
+
+  // Video 11 Room Shifting & Check In Register Modals
+  const [isRoomShiftOpen, setIsRoomShiftOpen] = useState(false);
+  const [selectedRoomForShift, setSelectedRoomForShift] = useState<string | undefined>(undefined);
+  const [isCheckInRegisterOpen, setIsCheckInRegisterOpen] = useState(false);
+  const [isNewCheckInOpen, setIsNewCheckInOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -255,8 +264,14 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     <div className="pms-nav-item" onClick={() => setActiveTab('matrix')}>
                       <span>🏨 Room Booking</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => setActiveTab('matrix')}>
-                      <span>🚪 Check In</span>
+                    <div className="pms-nav-item" onClick={() => setIsCheckInRegisterOpen(true)}>
+                      <span style={{ color: '#38bdf8', fontWeight: 700 }}>📋 Room Check In Register</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsNewCheckInOpen(true)}>
+                      <span>🚪 New Check In</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => { setSelectedRoomForShift(undefined); setIsRoomShiftOpen(true); }}>
+                      <span style={{ color: '#06b6d4', fontWeight: 800 }}>🔄 Room Shifting (Video 11)</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsKotModalOpen(true)}>
                       <span style={{ color: '#f59e0b', fontWeight: 700 }}>🍴 Room Service (KOT Entry)</span>
@@ -460,6 +475,33 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       <CompanyInfoModal
         isOpen={isCompanyInfoOpen}
         onClose={() => setIsCompanyInfoOpen(false)}
+      />
+
+      {/* Video 11: Room Shifting Modal */}
+      <RoomShiftModal
+        isOpen={isRoomShiftOpen}
+        onClose={() => setIsRoomShiftOpen(false)}
+        initialFromRoomNo={selectedRoomForShift}
+        onShiftCompleted={() => setRoomRefreshTrigger(prev => prev + 1)}
+      />
+
+      {/* Video 11: Room Check In Register Table */}
+      <RoomCheckInRegisterModal
+        isOpen={isCheckInRegisterOpen}
+        onClose={() => setIsCheckInRegisterOpen(false)}
+        onOpenNewCheckIn={() => setIsNewCheckInOpen(true)}
+        onOpenRoomShift={(rNo) => {
+          setSelectedRoomForShift(rNo);
+          setIsRoomShiftOpen(true);
+        }}
+        onOpenCheckout={() => setActiveTab('matrix')}
+      />
+
+      {/* New Room Check In Modal */}
+      <NewRoomCheckInModal
+        isOpen={isNewCheckInOpen}
+        onClose={() => setIsNewCheckInOpen(false)}
+        onCheckInCompleted={() => setRoomRefreshTrigger(prev => prev + 1)}
       />
     </>
   );

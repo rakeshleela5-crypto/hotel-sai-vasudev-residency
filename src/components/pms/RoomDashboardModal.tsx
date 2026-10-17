@@ -8,6 +8,7 @@ import { KotEntryModal } from './KotEntryModal';
 import { FoodBillModal } from './FoodBillModal';
 import { RoomCheckOutModal } from './RoomCheckOutModal';
 import { MarkDirtyModal } from './MarkDirtyModal';
+import { RoomShiftModal } from './RoomShiftModal';
 
 interface RoomDashboardModalProps {
   onSwitchToHomeHub?: () => void;
@@ -42,6 +43,8 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
   const [selectedRoomForCheckout, setSelectedRoomForCheckout] = useState<PmsRoom | null>(null);
 
   const [isDirtyModalOpen, setIsDirtyModalOpen] = useState(false);
+  const [isRoomShiftOpen, setIsRoomShiftOpen] = useState(false);
+  const [selectedRoomForShift, setSelectedRoomForShift] = useState<string | undefined>(undefined);
 
   const refreshData = () => {
     setRooms(PmsStore.getRooms());
@@ -86,8 +89,10 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
   };
 
   const handleGuestClick = (room: PmsRoom) => {
-    if (room.currentGuest) {
-      alert(`Guest Details for Room ${room.roomNo}:\nName: ${room.currentGuest.name}\nPhone: ${room.currentGuest.phone}\nCheck-In: ${room.currentGuest.checkInDate} ${room.currentGuest.checkInTime}\nTariff: ₹${room.tariff}`);
+    if (room.status === 'occupied') {
+      // Video 11: Direct Shift Room from Occupied Room tile!
+      setSelectedRoomForShift(room.roomNo);
+      setIsRoomShiftOpen(true);
     } else {
       alert(`Room ${room.roomNo} is currently vacant (${room.roomType}).\nTariff: ₹${room.tariff}/night.`);
     }
@@ -145,6 +150,18 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
             onClick={() => setIsDirtyModalOpen(true)}
           >
             Mark Room Dirty 🧹
+          </button>
+          <button
+            type="button"
+            className="status-btn"
+            style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#ffffff', fontWeight: 800 }}
+            onClick={() => {
+              setSelectedRoomForShift(undefined);
+              setIsRoomShiftOpen(true);
+            }}
+            title="Room Shifting &bull; Change Guest Room (Video 11)"
+          >
+            🔄 Room Shifting
           </button>
           {onSwitchToHomeHub && (
             <button
@@ -369,6 +386,15 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
         isOpen={isDirtyModalOpen}
         onClose={() => setIsDirtyModalOpen(false)}
         onStatusUpdated={refreshData}
+      />
+
+      <RoomShiftModal
+        isOpen={isRoomShiftOpen}
+        onClose={() => setIsRoomShiftOpen(false)}
+        initialFromRoomNo={selectedRoomForShift}
+        onShiftCompleted={() => {
+          refreshData();
+        }}
       />
     </div>
   );

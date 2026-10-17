@@ -388,3 +388,27 @@ export interface PmsCompanyInfo {
   updatedAt?: string;
 }
 
+// Video 11: Room Shifting Data Contracts
+export interface PmsRoomShiftRecord {
+  id: string;
+  shiftNo: string;              // e.g. RS/01/24-25
+  checkInNo: string;            // e.g. SR/204/25-26
+  guestName: string;
+  guestMobile: string;
+  fromRoomNo: string;
+  fromRoomType: string;
+  toRoomNo: string;
+  toRoomType: string;
+  oldTariff: number;
+  newTariff: number;
+  shiftDate: string;            // DD-MM-YYYY
+  shiftTime: string;            // HH:MM AM/PM
+  reason: string;
+  transferredKotsCount: number;
+  transferredAdvance: number;
+  previousRoomMarkedDirty: boolean;
+  shiftedBy: string;
+  remark?: string;
+  createdAt: string;
+}
+

@@ -13,7 +13,8 @@ import type {
   PmsVoucherType,
   PmsBusinessSetting,
   DayWiseRentItem,
-  PmsCompanyInfo
+  PmsCompanyInfo,
+  PmsRoomShiftRecord
 } from '../types/pmsModels';
 
 export const DEFAULT_BUSINESS_SETTING: PmsBusinessSetting = {
@@ -42,29 +43,48 @@ export const DEFAULT_COMPANY_INFO: PmsCompanyInfo = {
 
 export const INITIAL_ROOMS: PmsRoom[] = [
   // Ground / Halls
+  { id: '1', roomNo: '1', roomType: 'STANDARD', tariff: 2000, status: 'vacant', floor: 1, facilities: 'AC, Geyser, TV, Double Bed' },
+  { id: '2', roomNo: '2', roomType: 'STANDARD', tariff: 2000, status: 'vacant', floor: 1, facilities: 'AC, Double Bed, TV' },
   { id: 'g-2bhk', roomNo: 'ground 2 bhk', roomType: 'SUITE ROOM', tariff: 4500, status: 'vacant', floor: 0, facilities: 'AC, Hall, Kitchen, 2 Bedrooms' },
   { id: 'mini-hall', roomNo: 'MINI HALL', roomType: 'HALL', tariff: 6000, status: 'vacant', floor: 0, facilities: 'Seating 50 pax, Stage, Mic' },
   { id: 'garden', roomNo: 'GARDEN', roomType: 'HALL', tariff: 10000, status: 'booked', floor: 0, facilities: 'Lawn Area, Lights, Buffet Setup' },
   { id: 'big-hall', roomNo: 'BIG HALL', roomType: 'HALL', tariff: 15000, status: 'booked', floor: 0, facilities: 'Seating 200 pax, Central AC' },
 
   // 1st Floor
-  { id: '101', roomNo: '101', roomType: 'DELUXE', tariff: 2000, status: 'dirty', floor: 1, facilities: 'AC, Geyser, TV, Double Bed' },
+  { 
+    id: '101', 
+    roomNo: '101', 
+    roomType: 'DELUXE', 
+    tariff: 2000, 
+    status: 'occupied', 
+    floor: 1, 
+    facilities: 'AC, Geyser, TV, Double Bed',
+    currentGuest: {
+      name: 'AJUU',
+      phone: '9622975444',
+      checkInDate: '16-06-2025',
+      checkInTime: '05:15 AM',
+      bookingNo: 'SR/203/25-26',
+      advancePaid: 500,
+      calculationType: '24hour'
+    }
+  },
   { id: '102', roomNo: '102', roomType: 'SUITE ROOM', tariff: 3000, status: 'vacant', floor: 1, facilities: 'Living Area, Sofa, King Bed, Bathtub' },
   { 
     id: '103', 
     roomNo: '103', 
     roomType: 'DELUXE', 
-    tariff: 2000, 
+    tariff: 2500, 
     status: 'occupied', 
     floor: 1, 
     facilities: 'AC, Smart TV, Wi-Fi, Balcony',
     currentGuest: {
-      name: 'AJUU',
-      phone: '9622975444',
-      checkInDate: '05-06-2025',
-      checkInTime: '11:34 PM',
-      bookingNo: 'RM/60/24-25',
-      advancePaid: 500,
+      name: 'ARJUN',
+      phone: '95487417',
+      checkInDate: '16-06-2025',
+      checkInTime: '06:30 AM',
+      bookingNo: 'SR/204/25-26',
+      advancePaid: 1000,
       calculationType: '24hour'
     },
     foodAmount: 100
@@ -176,7 +196,8 @@ const STORAGE_KEYS = {
   KOTS: 'svr_pms_kots',
   CHECKOUTS: 'svr_pms_checkouts',
   ADVANCE_RECEIPTS: 'svr_pms_advance_receipts',
-  BUSINESS_SETTINGS: 'svr_pms_business_settings'
+  BUSINESS_SETTINGS: 'svr_pms_business_settings',
+  ROOM_SHIFTS: 'svr_pms_room_shifts'
 };
 
 export class PmsStore {
@@ -595,7 +616,67 @@ export class PmsStore {
 
   static getCheckIns(): import('../types/pmsModels').PmsCheckIn[] {
     const raw = localStorage.getItem('hotel_pms_checkins');
-    return raw ? JSON.parse(raw) : [];
+    if (raw) {
+      try {
+        return JSON.parse(raw);
+      } catch {
+        // fallback
+      }
+    }
+
+    const defaultCheckIns: import('../types/pmsModels').PmsCheckIn[] = [
+      {
+        checkInNo: 'SR/204/25-26',
+        roomNo: '103',
+        roomType: 'DELUXE',
+        guestName: 'ARJUN',
+        mobile: '95487417',
+        checkInDate: '16-06-2025',
+        checkInTime: '06:30 AM',
+        numberOfDays: 1,
+        numberOfGuests: 1,
+        businessSource: 'OYO',
+        package: 'WITH BREAKFAST || WITH BREAKFAST',
+        tariffPerDay: 2500,
+        advancePaid: 1000,
+        paymentMode: 'Cash',
+        addressLine1: 'Main Market Road',
+        addressLine2: '0',
+        city: 'Pune',
+        state: 'Maharashtra',
+        country: 'India',
+        pinCode: '411001',
+        nationality: 'India',
+        status: 'CheckedIn',
+        createdAt: '2025-06-16T06:30:00.000Z'
+      },
+      {
+        checkInNo: 'SR/203/25-26',
+        roomNo: '101',
+        roomType: 'DELUXE',
+        guestName: 'AJUU',
+        mobile: '9622975444',
+        checkInDate: '16-06-2025',
+        checkInTime: '05:15 AM',
+        numberOfDays: 1,
+        numberOfGuests: 1,
+        businessSource: 'Direct',
+        package: 'ROOM ONLY || 0',
+        tariffPerDay: 2000,
+        advancePaid: 500,
+        paymentMode: 'Cash',
+        addressLine1: 'Station Road',
+        city: 'Bilaspur',
+        state: 'Chhattisgarh',
+        country: 'India',
+        pinCode: '495220',
+        nationality: 'India',
+        status: 'CheckedIn',
+        createdAt: '2025-06-16T05:15:00.000Z'
+      }
+    ];
+    localStorage.setItem('hotel_pms_checkins', JSON.stringify(defaultCheckIns));
+    return defaultCheckIns;
   }
 
   static saveCheckIn(checkIn: import('../types/pmsModels').PmsCheckIn): void {
@@ -1116,6 +1197,169 @@ export class PmsStore {
         ruleApplied
       };
     }
+  }
+
+  // --- Video 11: Room Shifting (Change Guest Room Easily) ---
+  static getRoomShifts(): PmsRoomShiftRecord[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.ROOM_SHIFTS);
+    return raw ? JSON.parse(raw) : [];
+  }
+
+  static shiftRoom(params: {
+    fromRoomNo: string;
+    toRoomNo: string;
+    newTariff?: number;
+    reason: string;
+    shiftedBy?: string;
+    transferKots?: boolean;
+    remark?: string;
+  }): { success: boolean; message: string; record?: PmsRoomShiftRecord } {
+    const rooms = this.getRooms();
+    const fromRoom = rooms.find(r => r.roomNo === params.fromRoomNo);
+    const toRoom = rooms.find(r => r.roomNo === params.toRoomNo);
+
+    if (!fromRoom) {
+      return { success: false, message: `Source Room ${params.fromRoomNo} not found.` };
+    }
+    if (fromRoom.status !== 'occupied') {
+      return { success: false, message: `Source Room ${params.fromRoomNo} is not occupied (current status: ${fromRoom.status}). Only occupied rooms can be shifted.` };
+    }
+    if (!toRoom) {
+      return { success: false, message: `Destination Room ${params.toRoomNo} not found.` };
+    }
+    if (toRoom.status !== 'vacant') {
+      return { success: false, message: `Destination Room ${params.toRoomNo} is not vacant (current status: ${toRoom.status.toUpperCase()}). Please select a vacant, clean room.` };
+    }
+
+    const checkIns = this.getCheckIns();
+    const checkInIdx = checkIns.findIndex(c => c.roomNo === params.fromRoomNo && c.status === 'CheckedIn');
+    const activeCheckIn = checkInIdx >= 0 ? checkIns[checkInIdx] : null;
+
+    const guestName = fromRoom.currentGuest?.name || activeCheckIn?.guestName || 'Guest';
+    const guestMobile = fromRoom.currentGuest?.phone || activeCheckIn?.mobile || '';
+    const oldTariff = fromRoom.tariff;
+    const finalNewTariff = params.newTariff !== undefined ? params.newTariff : toRoom.tariff;
+
+    // Check for pending KOTs & transfer if requested (Video 11 [07:30])
+    const allKots = this.getKots();
+    let transferredKotsCount = 0;
+    if (params.transferKots !== false) {
+      const updatedKots = allKots.map(kot => {
+        if (kot.roomNo === params.fromRoomNo && kot.status === 'Pending') {
+          transferredKotsCount++;
+          return {
+            ...kot,
+            roomNo: params.toRoomNo,
+            guestName: guestName,
+            kotRemark: `${kot.kotRemark ? kot.kotRemark + ' | ' : ''}Shifted from Room ${params.fromRoomNo}`
+          };
+        }
+        return kot;
+      });
+      if (transferredKotsCount > 0) {
+        localStorage.setItem(STORAGE_KEYS.KOTS, JSON.stringify(updatedKots));
+      }
+    }
+
+    // Update Check-In records
+    if (activeCheckIn && checkInIdx >= 0) {
+      checkIns[checkInIdx] = {
+        ...activeCheckIn,
+        roomNo: params.toRoomNo,
+        roomType: toRoom.roomType,
+        tariffPerDay: finalNewTariff,
+        remark1: `${activeCheckIn.remark1 || ''} [Shifted from ${params.fromRoomNo} to ${params.toRoomNo} on ${new Date().toLocaleDateString('en-GB')}]`.trim()
+      };
+      localStorage.setItem('hotel_pms_checkins', JSON.stringify(checkIns));
+    }
+
+    // Update Advance Receipts roomNo
+    const advanceReceipts = this.getAdvanceReceipts();
+    let transferredAdvance = 0;
+    const updatedAdvances = advanceReceipts.map(ar => {
+      if (ar.roomNo === params.fromRoomNo) {
+        transferredAdvance += ar.amount;
+        return {
+          ...ar,
+          roomNo: params.toRoomNo,
+          remark: `${ar.remark || ''} (Shifted from ${params.fromRoomNo})`
+        };
+      }
+      return ar;
+    });
+    if (transferredAdvance > 0) {
+      localStorage.setItem(STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify(updatedAdvances));
+    }
+
+    // Update Room statuses
+    // 1. Source Room: Marked as DIRTY (Video 11 rule: frame 204 & speech [06:45])
+    // 2. Destination Room: Marked as OCCUPIED (frame 209)
+    const now = new Date();
+    const shiftDate = now.toLocaleDateString('en-GB').replace(/\//g, '-');
+    const shiftTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+    const updatedRooms = rooms.map(r => {
+      if (r.roomNo === params.fromRoomNo) {
+        return {
+          ...r,
+          status: 'dirty' as const,
+          currentGuest: undefined,
+          foodAmount: 0
+        };
+      }
+      if (r.roomNo === params.toRoomNo) {
+        return {
+          ...r,
+          status: 'occupied' as const,
+          tariff: finalNewTariff,
+          currentGuest: {
+            name: guestName,
+            phone: guestMobile,
+            checkInDate: fromRoom.currentGuest?.checkInDate || activeCheckIn?.checkInDate || shiftDate,
+            checkInTime: fromRoom.currentGuest?.checkInTime || activeCheckIn?.checkInTime || shiftTime,
+            bookingNo: fromRoom.currentGuest?.bookingNo || activeCheckIn?.checkInNo || `SR/${params.toRoomNo}`,
+            advancePaid: (fromRoom.currentGuest?.advancePaid || 0) + transferredAdvance,
+            calculationType: fromRoom.currentGuest?.calculationType || '24hour'
+          },
+          foodAmount: fromRoom.foodAmount || 0
+        };
+      }
+      return r;
+    });
+    this.saveRooms(updatedRooms);
+
+    // Create Room Shift Record
+    const shifts = this.getRoomShifts();
+    const shiftRecord: PmsRoomShiftRecord = {
+      id: `rs-${Date.now()}`,
+      shiftNo: `RS/${shifts.length + 1}/${now.getFullYear() % 100}-${(now.getFullYear() % 100) + 1}`,
+      checkInNo: activeCheckIn?.checkInNo || fromRoom.currentGuest?.bookingNo || `SR/${params.fromRoomNo}`,
+      guestName,
+      guestMobile,
+      fromRoomNo: params.fromRoomNo,
+      fromRoomType: fromRoom.roomType,
+      toRoomNo: params.toRoomNo,
+      toRoomType: toRoom.roomType,
+      oldTariff,
+      newTariff: finalNewTariff,
+      shiftDate,
+      shiftTime,
+      reason: params.reason || 'Guest Request / Routine Shift',
+      transferredKotsCount,
+      transferredAdvance,
+      previousRoomMarkedDirty: true,
+      shiftedBy: params.shiftedBy || 'Reception Desk (Admin)',
+      remark: params.remark,
+      createdAt: now.toISOString()
+    };
+    shifts.unshift(shiftRecord);
+    localStorage.setItem(STORAGE_KEYS.ROOM_SHIFTS, JSON.stringify(shifts));
+
+    return {
+      success: true,
+      message: `Room shifted successfully from ${params.fromRoomNo} to ${params.toRoomNo}. Room ${params.fromRoomNo} is now marked as Dirty for housekeeping.`,
+      record: shiftRecord
+    };
   }
 }
 
