@@ -17,6 +17,8 @@ import { CompanyInfoModal } from './CompanyInfoModal';
 import { RoomShiftModal } from './RoomShiftModal';
 import { RoomCheckInRegisterModal } from './RoomCheckInRegisterModal';
 import { NewRoomCheckInModal } from './NewRoomCheckInModal';
+import { KitchenDashboardModal } from './KitchenDashboardModal';
+import { RestaurantKotRegisterModal } from './RestaurantKotRegisterModal';
 import './pmsStyles.css';
 
 interface HotelPmsModalProps {
@@ -62,6 +64,10 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   const [selectedRoomForShift, setSelectedRoomForShift] = useState<string | undefined>(undefined);
   const [isCheckInRegisterOpen, setIsCheckInRegisterOpen] = useState(false);
   const [isNewCheckInOpen, setIsNewCheckInOpen] = useState(false);
+
+  // Video 12 Kitchen Dashboard (KDS) & Restaurant KOT Register Modals
+  const [isKitchenDashboardOpen, setIsKitchenDashboardOpen] = useState(false);
+  const [isRestaurantKotOpen, setIsRestaurantKotOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -275,6 +281,12 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsKotModalOpen(true)}>
                       <span style={{ color: '#f59e0b', fontWeight: 700 }}>🍴 Room Service (KOT Entry)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsKitchenDashboardOpen(true)}>
+                      <span style={{ color: '#eab308', fontWeight: 800 }}>🍳 Kitchen Dashboard (KDS - Video 12)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsRestaurantKotOpen(true)}>
+                      <span style={{ color: '#10b981', fontWeight: 700 }}>🍽️ Restaurant KOT Register</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsFoodBillModalOpen(true)}>
                       <span style={{ color: '#38bdf8', fontWeight: 700 }}>🧾 Food Bill (FBB)</span>
@@ -502,6 +514,21 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         isOpen={isNewCheckInOpen}
         onClose={() => setIsNewCheckInOpen(false)}
         onCheckInCompleted={() => setRoomRefreshTrigger(prev => prev + 1)}
+      />
+
+      {/* Video 12: Kitchen Dashboard (KDS) */}
+      <KitchenDashboardModal
+        isOpen={isKitchenDashboardOpen}
+        onClose={() => setIsKitchenDashboardOpen(false)}
+        onOpenNewKot={() => setIsKotModalOpen(true)}
+      />
+
+      {/* Video 12: Restaurant KOT Register */}
+      <RestaurantKotRegisterModal
+        isOpen={isRestaurantKotOpen}
+        onClose={() => setIsRestaurantKotOpen(false)}
+        onOpenKitchenDashboard={() => setIsKitchenDashboardOpen(true)}
+        onOpenNewKot={() => setIsKotModalOpen(true)}
       />
     </>
   );

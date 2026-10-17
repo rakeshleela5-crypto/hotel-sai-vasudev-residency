@@ -705,46 +705,128 @@ export class PmsStore {
         // fallback
       }
     }
-    // Seed default KOT matching Video 05 Frame 0150
+    // Seed default KOT matching Video 05 & Video 12 Frames 0225, 0300
+    const now = Date.now();
     const initialKots: PmsKotRecord[] = [
       {
-        kotNo: 'KOT/351/24-25',
-        serviceType: 'Room',
-        roomNo: '103',
-        guestName: 'ALOK JAIN',
-        kotRemark: 'Quick Room Delivery',
+        kotNo: '370',
+        serviceType: 'Restaurant',
+        roomNo: '138',
+        tableNo: 'T-16',
+        waiterName: 'DEMO0004',
+        guestName: 'DEMO GUEST',
+        kotRemark: 'Less Spicy',
         items: [
-          { sNo: 1, itemName: 'WATER BOTLE', itemCode: '10003', qty: 1, rate: 28.57, amount: 28.57 }
+          { sNo: 1, itemName: 'Boondi Raita', itemCode: '10008', qty: 2, rate: 57.14, amount: 120.00 },
+          { sNo: 2, itemName: 'bread pakoda', itemCode: '10009', qty: 1, rate: 95.24, amount: 100.00 }
         ],
-        totalAmount: 28.57,
-        createdAt: '2025-06-07T06:36:00.000Z',
-        status: 'Pending'
+        totalQty: 3,
+        totalAmount: 220.00,
+        createdAt: new Date(now - 2 * 60 * 1000).toISOString(), // 2 mins ago
+        status: 'Pending',
+        serveStatus: 'Pending'
       },
       {
-        kotNo: 'KOT/349/24-25',
-        serviceType: 'Room',
-        roomNo: '105',
-        guestName: 'sunil agrwal',
+        kotNo: '369',
+        serviceType: 'Restaurant',
+        roomNo: '85',
+        tableNo: 'T-14',
+        waiterName: 'DEMO0004',
+        guestName: 'WALK-IN DINE',
+        kotRemark: 'Crispy Bread',
         items: [
-          { sNo: 1, itemName: 'TEA', itemCode: '10003', qty: 2, rate: 19.05, amount: 38.10 }
+          { sNo: 1, itemName: 'bread pakoda', itemCode: '10009', qty: 2, rate: 50.00, amount: 100.00 },
+          { sNo: 2, itemName: 'Boondi Raita', itemCode: '10008', qty: 2, rate: 10.00, amount: 20.00 }
         ],
-        totalAmount: 38.10,
-        createdAt: '2025-06-07T06:10:00.000Z',
-        status: 'Billed'
+        totalQty: 4,
+        totalAmount: 120.00,
+        createdAt: new Date(now - 28 * 60 * 1000).toISOString(), // 28 mins ago
+        status: 'Pending',
+        serveStatus: 'Pending'
       },
       {
-        kotNo: 'KOT/350/24-25',
+        kotNo: '368',
         serviceType: 'Room',
-        roomNo: '105',
-        guestName: 'sunil agrwal',
+        roomNo: '203',
+        tableNo: 'Room 203',
+        waiterName: 'DEMO0004',
+        guestName: 'AJUU',
+        kotRemark: 'Hot Delivery',
         items: [
-          { sNo: 1, itemName: 'Rasgulla', itemCode: '10002', qty: 1, rate: 190.48, amount: 190.48 },
-          { sNo: 2, itemName: 'Ras Malai', itemCode: '10015', qty: 1, rate: 85.71, amount: 85.71 },
-          { sNo: 3, itemName: 'WATER BOTLE', itemCode: '10003', qty: 1, rate: 28.57, amount: 28.57 }
+          { sNo: 1, itemName: 'TAWA ROTI', itemCode: '10010', qty: 3, rate: 20.00, amount: 60.00 },
+          { sNo: 2, itemName: 'PANEER TIKA', itemCode: '10007', qty: 2, rate: 100.00, amount: 200.00 }
         ],
-        totalAmount: 304.76,
-        createdAt: '2025-06-07T06:12:00.000Z',
-        status: 'Billed'
+        totalQty: 5,
+        totalAmount: 260.00,
+        createdAt: new Date(now - 30 * 60 * 1000).toISOString(), // 30 mins ago
+        status: 'Pending',
+        serveStatus: 'Pending'
+      },
+      {
+        kotNo: '367',
+        serviceType: 'Room',
+        roomNo: '203',
+        tableNo: 'Room 203',
+        waiterName: 'DEMO0004',
+        guestName: 'AJUU',
+        items: [
+          { sNo: 1, itemName: 'WATER BOTLE', itemCode: '10003', qty: 2, rate: 28.57, amount: 57.14 }
+        ],
+        totalQty: 2,
+        totalAmount: 57.14,
+        createdAt: new Date(now - 37 * 60 * 1000).toISOString(), // 37 mins ago
+        status: 'Pending',
+        serveStatus: 'Pending'
+      },
+      {
+        kotNo: '366',
+        serviceType: 'Room',
+        roomNo: '203',
+        tableNo: 'Room 203',
+        waiterName: 'DEMO0004',
+        guestName: 'AJUU',
+        items: [
+          { sNo: 1, itemName: 'WATER BOTLE', itemCode: '10003', qty: 2, rate: 28.57, amount: 57.14 }
+        ],
+        totalQty: 2,
+        totalAmount: 57.14,
+        createdAt: new Date(now - 49 * 60 * 1000).toISOString(), // 49 mins ago
+        status: 'Pending',
+        serveStatus: 'Pending'
+      },
+      {
+        kotNo: '365',
+        serviceType: 'Room',
+        roomNo: '203',
+        tableNo: 'Room 203',
+        waiterName: 'DEMO0004',
+        guestName: 'AJUU',
+        items: [
+          { sNo: 1, itemName: 'WATER BOTLE', itemCode: '10003', qty: 2, rate: 28.57, amount: 57.14 }
+        ],
+        totalQty: 2,
+        totalAmount: 57.14,
+        createdAt: new Date(now - 51 * 60 * 1000).toISOString(), // 51 mins ago
+        status: 'Pending',
+        serveStatus: 'Pending'
+      },
+      {
+        kotNo: 'R/362',
+        serviceType: 'Restaurant',
+        roomNo: 'T-8',
+        tableNo: 'T-8',
+        waiterName: 'DEMO0004',
+        guestName: 'VASUH MHANGGLAM',
+        items: [
+          { sNo: 1, itemName: 'PANEER TIKA', itemCode: '10007', qty: 1, rate: 76.20, amount: 80.00 },
+          { sNo: 2, itemName: 'WATER BOTLE', itemCode: '10003', qty: 5, rate: 28.60, amount: 150.00 },
+          { sNo: 3, itemName: 'coldrink 750 ml', itemCode: '10011', qty: 3, rate: 25.40, amount: 90.00 }
+        ],
+        totalQty: 9,
+        totalAmount: 320.00,
+        createdAt: new Date(now - 60 * 60 * 1000).toISOString(),
+        status: 'Ready To Serve',
+        serveStatus: 'Ready To Serve'
       }
     ];
     localStorage.setItem(STORAGE_KEYS.KOTS, JSON.stringify(initialKots));
@@ -752,13 +834,27 @@ export class PmsStore {
   }
 
   static getPendingKotsByRoom(roomNo: string): PmsKotRecord[] {
-    return this.getKots().filter(k => k.roomNo === roomNo && k.status === 'Pending');
+    return this.getKots().filter(k => k.roomNo === roomNo && (k.status === 'Pending' || k.status === 'Cooking' || k.status === 'Ready To Serve'));
+  }
+
+  static updateKotStatus(kotNo: string, newStatus: PmsKotRecord['status']): void {
+    const kots = this.getKots();
+    const updated = kots.map(k => {
+      if (k.kotNo === kotNo || k.kotNo.includes(kotNo)) {
+        return {
+          ...k,
+          status: newStatus,
+          serveStatus: newStatus === 'Ready To Serve' ? 'Ready To Serve' : (newStatus === 'Served' ? 'Served' : k.serveStatus)
+        };
+      }
+      return k;
+    });
+    localStorage.setItem(STORAGE_KEYS.KOTS, JSON.stringify(updated));
   }
 
   static markKotsAsBilled(kotNumbers: string[]): void {
     const kots = this.getKots();
     const updated = kots.map(k => {
-      // Handle matching by full kotNo 'KOT/351/24-25' or number '351'
       const matches = kotNumbers.some(num => k.kotNo.includes(num));
       if (matches) {
         return { ...k, status: 'Billed' as const };

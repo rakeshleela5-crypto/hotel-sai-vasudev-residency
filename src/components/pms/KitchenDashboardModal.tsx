@@ -1,0 +1,610 @@
+import React, { useState, useEffect } from 'react';
+import type { PmsKotRecord } from '../../types/pmsModels';
+import { PmsStore } from '../../services/pmsStore';
+
+interface KitchenDashboardModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onOpenNewKot?: () => void;
+}
+
+export const KitchenDashboardModal: React.FC<KitchenDashboardModalProps> = ({
+  isOpen,
+  onClose,
+  onOpenNewKot
+}) => {
+  const [kots, setKots] = useState<PmsKotRecord[]>([]);
+  const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'ready' | 'served'>('pending');
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [countdown, setCountdown] = useState(30);
+  const [nowTime, setNowTime] = useState(Date.now());
+  const [selectedKotForPrint, setSelectedKotForPrint] = useState<PmsKotRecord | null>(null);
+
+  const refreshKots = () => {
+    setKots(PmsStore.getKots());
+    setNowTime(Date.now());
+    setCountdown(30);
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      refreshKots();
+    }
+  }, [isOpen]);
+
+  // Live timer tick every second for real-time order timers & 30s auto-refresh (Video 12 [08:15])
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const interval = setInterval(() => {
+      setNowTime(Date.now());
+      setCountdown(prev => {
+        if (prev <= 1) {
+          if (autoRefresh) {
+            setKots(PmsStore.getKots());
+          }
+          return 30;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isOpen, autoRefresh]);
+
+  if (!isOpen) return null;
+
+  // Format elapsed time: (0h 51m 15s) matching Video 12 Frame 0225
+  const getElapsedTimeString = (createdAt: string): { text: string; totalMinutes: number } => {
+    const created = new Date(createdAt).getTime();
+    const diffMs = Math.max(0, nowTime - created);
+    const totalSecs = Math.floor(diffMs / 1000);
+    const hours = Math.floor(totalSecs / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const secs = totalSecs % 60;
+    return {
+      text: `${hours}h ${mins}m ${secs}s`,
+      totalMinutes: Math.floor(totalSecs / 60)
+    };
+  };
+
+  const handleReadyToServe = (kotNo: string) => {
+    PmsStore.updateKotStatus(kotNo, 'Ready To Serve');
+    refreshKots();
+  };
+
+  const handleServeAndPrint = (kot: PmsKotRecord) => {
+    PmsStore.updateKotStatus(kot.kotNo, 'Served');
+    setSelectedKotForPrint(kot);
+    refreshKots();
+  };
+
+  const filteredKots = kots.filter(k => {
+    if (activeFilter === 'pending') {
+      return k.status === 'Pending' || k.status === 'Cooking';
+    }
+    if (activeFilter === 'ready') {
+      return k.status === 'Ready To Serve';
+    }
+    if (activeFilter === 'served') {
+      return k.status === 'Served' || k.status === 'Billed';
+    }
+    return k.status !== 'Cancelled';
+  });
+
+  const pendingCount = kots.filter(k => k.status === 'Pending' || k.status === 'Cooking').length;
+  const readyCount = kots.filter(k => k.status === 'Ready To Serve').length;
+  const servedCount = kots.filter(k => k.status === 'Served' || k.status === 'Billed').length;
+
+  return (
+    <div className="pms-submodal-overlay" onClick={onClose}>
+      <div
+        className="pms-form-box"
+        onClick={e => e.stopPropagation()}
+        style={{ maxWidth: 1180, width: '96%', maxHeight: '94vh', overflowY: 'auto' }}
+      >
+        {/* Header Banner matching RoomG KDS */}
+        <div
+          className="pms-form-banner"
+          style={{
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '12px 20px',
+            borderBottom: '3px solid #eab308'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 24 }}>🍳</span>
+            <div>
+              <div style={{ fontWeight: 900, fontSize: 16, color: '#ffffff', letterSpacing: 0.5 }}>
+                KITCHEN DISPLAY SYSTEM (KDS) &bull; LIVE KOT DASHBOARD
+              </div>
+              <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                Video 12 Standard &bull; Android TV &amp; Kitchen Touch Terminal Mode
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            {/* 30s Auto Refresh Badge */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                background: '#334155',
+                padding: '4px 10px',
+                borderRadius: 4,
+                fontSize: 11,
+                color: '#f8fafc'
+              }}
+            >
+              <input
+                type="checkbox"
+                id="kdsAutoRefresh"
+                checked={autoRefresh}
+                onChange={e => setAutoRefresh(e.target.checked)}
+              />
+              <label htmlFor="kdsAutoRefresh" style={{ cursor: 'pointer' }}>
+                Auto-Refresh in <strong>{countdown}s</strong>
+              </label>
+              <button
+                type="button"
+                onClick={refreshKots}
+                style={{ background: 'none', border: 'none', color: '#38bdf8', cursor: 'pointer', fontSize: 12 }}
+                title="Refresh Now"
+              >
+                🔄
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              style={{ background: 'none', border: 'none', color: '#fff', fontSize: 20, cursor: 'pointer' }}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        {/* Status Filter & Action Bar */}
+        <div
+          style={{
+            background: '#f8fafc',
+            borderBottom: '1px solid #e2e8f0',
+            padding: '10px 18px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 10
+          }}
+        >
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              type="button"
+              onClick={() => setActiveFilter('pending')}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 4,
+                border: 'none',
+                background: activeFilter === 'pending' ? '#ef4444' : '#e2e8f0',
+                color: activeFilter === 'pending' ? '#ffffff' : '#334155',
+                fontWeight: 800,
+                fontSize: 12,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
+              }}
+            >
+              <span>🔥 Cooking / In-Progress</span>
+              <span style={{ background: 'rgba(0,0,0,0.2)', padding: '1px 6px', borderRadius: 10, fontSize: 10 }}>
+                {pendingCount}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveFilter('ready')}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 4,
+                border: 'none',
+                background: activeFilter === 'ready' ? '#16a34a' : '#e2e8f0',
+                color: activeFilter === 'ready' ? '#ffffff' : '#334155',
+                fontWeight: 800,
+                fontSize: 12,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
+              }}
+            >
+              <span>✅ Ready To Serve</span>
+              <span style={{ background: 'rgba(0,0,0,0.2)', padding: '1px 6px', borderRadius: 10, fontSize: 10 }}>
+                {readyCount}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveFilter('served')}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 4,
+                border: 'none',
+                background: activeFilter === 'served' ? '#0284c7' : '#e2e8f0',
+                color: activeFilter === 'served' ? '#ffffff' : '#334155',
+                fontWeight: 700,
+                fontSize: 12,
+                cursor: 'pointer'
+              }}
+            >
+              <span>Served / History ({servedCount})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveFilter('all')}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 4,
+                border: 'none',
+                background: activeFilter === 'all' ? '#64748b' : '#e2e8f0',
+                color: activeFilter === 'all' ? '#ffffff' : '#334155',
+                fontWeight: 700,
+                fontSize: 12,
+                cursor: 'pointer'
+              }}
+            >
+              <span>All Tickets</span>
+            </button>
+          </div>
+
+          {onOpenNewKot && (
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onOpenNewKot();
+              }}
+              style={{
+                background: '#16a34a',
+                color: '#ffffff',
+                border: 'none',
+                padding: '6px 14px',
+                borderRadius: 4,
+                fontWeight: 800,
+                fontSize: 12,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
+              }}
+            >
+              <span>➕</span>
+              <span>Create New KOT</span>
+            </button>
+          )}
+        </div>
+
+        {/* Live KOT Cards Grid matching Video 12 Frame 0225 */}
+        <div style={{ padding: 20 }}>
+          {filteredKots.length === 0 ? (
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '50px 20px',
+                background: '#f8fafc',
+                borderRadius: 8,
+                border: '2px dashed #cbd5e1',
+                color: '#64748b'
+              }}
+            >
+              <div style={{ fontSize: 40, marginBottom: 10 }}>👨‍🍳✨</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#334155' }}>
+                All clear! No pending orders in this view.
+              </div>
+              <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+                New orders placed from Room Service or Dining Tables will appear here live.
+              </div>
+            </div>
+          ) : (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+                gap: 16
+              }}
+            >
+              {filteredKots.map(kot => {
+                const { text: elapsedText, totalMinutes } = getElapsedTimeString(kot.createdAt);
+                const isUrgent = totalMinutes >= 30;
+                const isMedium = totalMinutes >= 15 && totalMinutes < 30;
+                const headerBg = isUrgent
+                  ? '#fee2e2'
+                  : isMedium
+                  ? '#fef3c7'
+                  : '#f1f5f9';
+                const headerTextColor = isUrgent
+                  ? '#b91c1c'
+                  : isMedium
+                  ? '#b45309'
+                  : '#0f172a';
+
+                return (
+                  <div
+                    key={kot.kotNo}
+                    style={{
+                      background: '#ffffff',
+                      border: isUrgent ? '2px solid #ef4444' : '1px solid #cbd5e1',
+                      borderRadius: 6,
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    {/* Top Header line matching Frame 0225: Kot No: 365, (0h 51m 15s) */}
+                    <div
+                      style={{
+                        background: headerBg,
+                        color: headerTextColor,
+                        padding: '8px 10px',
+                        borderBottom: '1px solid #cbd5e1',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <span style={{ fontWeight: 900, fontSize: 13 }}>
+                        Kot No: {kot.kotNo}
+                      </span>
+                      <span
+                        style={{
+                          fontWeight: 800,
+                          fontSize: 11,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4
+                        }}
+                      >
+                        ⏱️ ({elapsedText})
+                      </span>
+                    </div>
+
+                    {/* Room/Table Metadata line matching Frame 0225:
+                        Room No:203|| Total Qty:2.00|| Remark: || Waiter: DEMO0004||Total Qty:2.00 */}
+                    <div
+                      style={{
+                        padding: '6px 10px',
+                        fontSize: 10,
+                        background: '#f8fafc',
+                        borderBottom: '1px solid #e2e8f0',
+                        color: '#334155',
+                        lineHeight: 1.5
+                      }}
+                    >
+                      <div>
+                        <strong>{kot.tableNo ? `Table: ${kot.tableNo}` : `Room No: ${kot.roomNo}`}</strong>
+                        {' || '}
+                        Total Qty: {kot.totalQty || kot.items.reduce((a, b) => a + b.qty, 0)}.00
+                      </div>
+                      <div>
+                        {kot.kotRemark ? `Remark: ${kot.kotRemark} || ` : ''}
+                        Waiter: {kot.waiterName || 'DEMO0004'}
+                      </div>
+                    </div>
+
+                    {/* Items Table matching Frame 0225 */}
+                    <div style={{ flex: 1, padding: '4px 10px', minHeight: 90 }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+                        <thead>
+                          <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#64748b' }}>
+                            <th style={{ textAlign: 'left', padding: '4px 0', fontWeight: 800 }}>Item Name</th>
+                            <th style={{ textAlign: 'right', padding: '4px 0', fontWeight: 800, width: 45 }}>QTY</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {kot.items.map((item, idx) => (
+                            <tr key={idx} style={{ borderBottom: '1px dashed #f1f5f9' }}>
+                              <td style={{ padding: '4px 0', fontWeight: 700, color: '#0f172a' }}>
+                                {item.itemName}
+                              </td>
+                              <td style={{ textAlign: 'right', padding: '4px 0', fontWeight: 800, color: '#0284c7' }}>
+                                {item.qty}.00
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Action Buttons matching Video 12 Frame 0225:
+                        [Ready To Serve] (Green) & [Serve & Print] (Yellow) */}
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: 6,
+                        padding: '8px 10px',
+                        background: '#f8fafc',
+                        borderTop: '1px solid #e2e8f0'
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => handleReadyToServe(kot.kotNo)}
+                        disabled={kot.status === 'Ready To Serve' || kot.status === 'Served'}
+                        style={{
+                          background: kot.status === 'Ready To Serve' ? '#15803d' : '#16a34a',
+                          color: '#ffffff',
+                          border: 'none',
+                          padding: '7px 4px',
+                          borderRadius: 4,
+                          fontWeight: 800,
+                          fontSize: 11,
+                          cursor: (kot.status === 'Ready To Serve' || kot.status === 'Served') ? 'default' : 'pointer',
+                          opacity: kot.status === 'Served' ? 0.6 : 1,
+                          textAlign: 'center'
+                        }}
+                      >
+                        {kot.status === 'Ready To Serve' ? '✓ Ready' : 'Ready To Serve'}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleServeAndPrint(kot)}
+                        style={{
+                          background: '#eab308',
+                          color: '#0f172a',
+                          border: 'none',
+                          padding: '7px 4px',
+                          borderRadius: 4,
+                          fontWeight: 800,
+                          fontSize: 11,
+                          cursor: 'pointer',
+                          textAlign: 'center'
+                        }}
+                      >
+                        Serve &amp; Print
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Print Slip Dialog matching Video 12 Frame 0151 */}
+        {selectedKotForPrint && (
+          <div className="pms-submodal-overlay" onClick={() => setSelectedKotForPrint(null)}>
+            <div
+              className="pms-form-box"
+              onClick={e => e.stopPropagation()}
+              style={{ maxWidth: 440, padding: 0, overflow: 'hidden', background: '#ffffff' }}
+            >
+              {/* Slip Header matching Frame 0151 (Yellow Header) */}
+              <div
+                style={{
+                  background: '#fef08a',
+                  padding: '12px 16px',
+                  textAlign: 'center',
+                  borderBottom: '2px solid #000'
+                }}
+              >
+                <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: 2, color: '#000' }}>
+                  KOT
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: '#1e293b', marginTop: 2 }}>
+                  HOTEL SAI VASUDEV RESIDENCY
+                </div>
+              </div>
+
+              {/* Guest / Table Detail (Green & Yellow side by side Frame 0151) */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid #000', fontSize: 11 }}>
+                <div style={{ background: '#bbf7d0', padding: 10, borderRight: '1px solid #000' }}>
+                  <div style={{ fontWeight: 700, color: '#166534' }}>Guest Detail</div>
+                  <div style={{ fontSize: 12, fontWeight: 800, marginTop: 4 }}>
+                    {selectedKotForPrint.tableNo ? `Table: ${selectedKotForPrint.tableNo}` : `Room: ${selectedKotForPrint.roomNo}`}
+                  </div>
+                  <div style={{ color: '#334155' }}>{selectedKotForPrint.guestName}</div>
+                </div>
+
+                <div style={{ background: '#fef08a', padding: 10 }}>
+                  <div><strong>Kot No:</strong> {selectedKotForPrint.kotNo}</div>
+                  <div><strong>Date:</strong> {selectedKotForPrint.date || new Date().toISOString().split('T')[0]}</div>
+                  <div><strong>Time:</strong> {new Date(selectedKotForPrint.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                  <div><strong>Waiter:</strong> {selectedKotForPrint.waiterName || 'DEMO0004'}</div>
+                </div>
+              </div>
+
+              {/* Items Table */}
+              <div style={{ padding: 12 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, textAlign: 'left' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid #000' }}>
+                      <th style={{ padding: '4px 2px', width: 25 }}>S.no</th>
+                      <th style={{ padding: '4px 6px' }}>Item Name</th>
+                      <th style={{ padding: '4px 6px', textAlign: 'center', width: 40 }}>Qty</th>
+                      <th style={{ padding: '4px 6px', textAlign: 'right', width: 55 }}>Rate</th>
+                      <th style={{ padding: '4px 6px', textAlign: 'right', width: 60 }}>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedKotForPrint.items.map((item, idx) => (
+                      <tr key={idx} style={{ borderBottom: '1px dashed #cbd5e1' }}>
+                        <td style={{ padding: '4px 2px' }}>{idx + 1}</td>
+                        <td style={{ padding: '4px 6px', fontWeight: 700 }}>{item.itemName}</td>
+                        <td style={{ padding: '4px 6px', textAlign: 'center' }}>{item.qty}</td>
+                        <td style={{ padding: '4px 6px', textAlign: 'right' }}>₹{item.rate.toFixed(1)}</td>
+                        <td style={{ padding: '4px 6px', textAlign: 'right', fontWeight: 700 }}>₹{item.amount.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                <div
+                  style={{
+                    borderTop: '1px solid #000',
+                    marginTop: 8,
+                    paddingTop: 6,
+                    textAlign: 'right',
+                    fontSize: 12,
+                    fontWeight: 800
+                  }}
+                >
+                  Total Item QTY={selectedKotForPrint.items.reduce((a, b) => a + b.qty, 0).toFixed(2)} Total Amount =₹{selectedKotForPrint.totalAmount.toFixed(2)}
+                </div>
+              </div>
+
+              {/* Slip Buttons matching Frame 0151: [Print] & [Restaurant] */}
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 10, padding: 12, background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.print();
+                    setSelectedKotForPrint(null);
+                  }}
+                  style={{
+                    background: '#0284c7',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '8px 24px',
+                    borderRadius: 4,
+                    fontWeight: 800,
+                    fontSize: 12,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Print 🖨️
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedKotForPrint(null)}
+                  style={{
+                    background: '#06b6d4',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '8px 20px',
+                    borderRadius: 4,
+                    fontWeight: 800,
+                    fontSize: 12,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Restaurant
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

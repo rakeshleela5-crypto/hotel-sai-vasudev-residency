@@ -105,16 +105,20 @@ export interface KotItem {
 }
 
 export interface PmsKotRecord {
-  kotNo: string;              // e.g. KOT/343/24-25
+  kotNo: string;              // e.g. KOT/343/24-25 or R/370
   serviceType: 'Room' | 'Restaurant' | 'Banquet';
   roomNo: string;
+  tableNo?: string;           // Dining Table, e.g. T-16, T-8, T-14
+  waiterName?: string;        // e.g. DEMO0004, Ramesh, Suresh
   guestName: string;
   kotRemark?: string;
   items: KotItem[];
   totalAmount: number;
+  totalQty?: number;
   date?: string;
   createdAt: string;
-  status: 'Pending' | 'Served' | 'Billed';
+  status: 'Pending' | 'Cooking' | 'Ready To Serve' | 'Served' | 'Billed' | 'Cancelled';
+  serveStatus?: 'Pending' | 'Cooking' | 'Ready To Serve' | 'Served';
 }
 export interface PmsCheckIn {
   checkInNo: string;          // e.g. SR/188/24-25

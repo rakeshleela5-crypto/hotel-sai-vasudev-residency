@@ -8,6 +8,8 @@ import { FoodBillModal } from './FoodBillModal';
 import { RoomCheckOutModal } from './RoomCheckOutModal';
 import { AdvanceReceiptModal } from './AdvanceReceiptModal';
 import { PartyLedgerModal } from './PartyLedgerModal';
+import { KitchenDashboardModal } from './KitchenDashboardModal';
+import { RestaurantKotRegisterModal } from './RestaurantKotRegisterModal';
 import type { PmsBooking } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
@@ -31,6 +33,8 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isAdvanceReceiptOpen, setIsAdvanceReceiptOpen] = useState(false);
   const [isLedgerOpen, setIsLedgerOpen] = useState(false);
+  const [isKitchenDashboardOpen, setIsKitchenDashboardOpen] = useState(false);
+  const [isRestaurantKotOpen, setIsRestaurantKotOpen] = useState(false);
 
   const rooms = PmsStore.getRooms();
   const vacantCount = rooms.filter(r => r.status === 'vacant').length;
@@ -178,7 +182,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-restaurant"
-          onClick={() => setIsKotOpen(true)}
+          onClick={() => setIsRestaurantKotOpen(true)}
         >
           <span className="tile-icon">🏬</span>
           <span>Restaurant</span>
@@ -352,6 +356,19 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
       <PartyLedgerModal
         isOpen={isLedgerOpen}
         onClose={() => setIsLedgerOpen(false)}
+      />
+
+      <KitchenDashboardModal
+        isOpen={isKitchenDashboardOpen}
+        onClose={() => setIsKitchenDashboardOpen(false)}
+        onOpenNewKot={() => setIsKotOpen(true)}
+      />
+
+      <RestaurantKotRegisterModal
+        isOpen={isRestaurantKotOpen}
+        onClose={() => setIsRestaurantKotOpen(false)}
+        onOpenKitchenDashboard={() => setIsKitchenDashboardOpen(true)}
+        onOpenNewKot={() => setIsKotOpen(true)}
       />
     </div>
   );
