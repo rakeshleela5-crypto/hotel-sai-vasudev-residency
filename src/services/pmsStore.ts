@@ -721,9 +721,168 @@ export class PmsStore {
         // fallback
       }
     }
-    // Seed default KOT matching Video 05 & Video 12 Frames 0225, 0300
+    // Seed default KOTs matching Video 14 Frames 0210, 0230, 0260 & Video 13
     const now = Date.now();
     const initialKots: PmsKotRecord[] = [
+      {
+        kotNo: 'KOT/368/24-25',
+        serviceType: 'Room',
+        roomNo: '101',
+        tableNo: 'Room 101',
+        waiterName: 'DEMO0004',
+        guestName: 'AJUU',
+        checkInNo: '203',
+        kotRemark: 'Tawa Roti + Paneer Tika',
+        items: [
+          { sNo: 1, itemName: 'TAWA ROTI', itemCode: '10004', qty: 3, rate: 9.52, amount: 28.56 },
+          { sNo: 2, itemName: 'PANEER TIKA', itemCode: '10005', qty: 2, rate: 76.19, amount: 1.44 }
+        ],
+        totalQty: 5,
+        totalAmount: 30.00,
+        date: '16-06-25',
+        time: '05:37 AM',
+        createdAt: new Date(now - 12 * 60 * 1000).toISOString(),
+        status: 'Pending',
+        serveStatus: 'Unprinted',
+        isPrinted: false,
+        orderSource: 'Mobile'
+      },
+      {
+        kotNo: 'KOT/367/24-25',
+        serviceType: 'Room',
+        roomNo: '101',
+        tableNo: 'Room 101',
+        waiterName: 'DEMO0004',
+        guestName: 'AJUU',
+        checkInNo: '203',
+        kotRemark: 'Complimentary Water',
+        items: [
+          { sNo: 1, itemName: 'WATER BOTLE', itemCode: '10003', qty: 2, rate: 0.00, amount: 0.00 }
+        ],
+        totalQty: 2,
+        totalAmount: 0.00,
+        date: '16-06-25',
+        time: '05:30 AM',
+        createdAt: new Date(now - 18 * 60 * 1000).toISOString(),
+        status: 'Pending',
+        serveStatus: 'Unprinted',
+        isPrinted: false,
+        orderSource: 'Mobile'
+      },
+      {
+        kotNo: 'R/369',
+        serviceType: 'Restaurant',
+        roomNo: '85',
+        tableNo: 'T-14',
+        waiterName: 'DEMO0004',
+        guestName: 'WALK-IN DINE',
+        kotRemark: 'Crispy Bread Pakoda',
+        items: [
+          { sNo: 1, itemName: 'bread pakoda', itemCode: '10001', qty: 2, rate: 50.00, amount: 100.00 },
+          { sNo: 2, itemName: 'Boondi Raita', itemCode: '10030', qty: 2, rate: 10.00, amount: 20.00 }
+        ],
+        totalQty: 4,
+        totalAmount: 120.00,
+        date: '16-06-25',
+        time: '05:39 AM',
+        createdAt: new Date(now - 8 * 60 * 1000).toISOString(),
+        status: 'Pending',
+        serveStatus: 'Unprinted',
+        isPrinted: false,
+        orderSource: 'Mobile'
+      },
+      {
+        kotNo: 'KOT/366/24-25',
+        serviceType: 'Room',
+        roomNo: '101',
+        tableNo: 'Room 101',
+        waiterName: 'DEMO0004',
+        guestName: 'AJUU',
+        checkInNo: '203',
+        items: [
+          { sNo: 1, itemName: 'WATER BOTLE', itemCode: '10003', qty: 2, rate: 30.00, amount: 60.00 }
+        ],
+        totalQty: 2,
+        totalAmount: 60.00,
+        date: '16-06-25',
+        createdAt: new Date(now - 49 * 60 * 1000).toISOString(),
+        status: 'Pending',
+        serveStatus: '0',
+        isPrinted: true
+      },
+      {
+        kotNo: 'KOT/365/24-25',
+        serviceType: 'Room',
+        roomNo: '101',
+        tableNo: 'Room 101',
+        waiterName: 'DEMO0004',
+        guestName: 'AJUU',
+        checkInNo: '203',
+        items: [
+          { sNo: 1, itemName: 'WATER BOTLE', itemCode: '10003', qty: 2, rate: 30.00, amount: 60.00 }
+        ],
+        totalQty: 2,
+        totalAmount: 60.00,
+        date: '16-06-25',
+        createdAt: new Date(now - 51 * 60 * 1000).toISOString(),
+        status: 'Pending',
+        serveStatus: '0',
+        isPrinted: true
+      },
+      {
+        kotNo: 'KOT/158/24-25',
+        serviceType: 'Room',
+        roomNo: '102',
+        tableNo: 'Room 102',
+        waiterName: 'DEMO0004',
+        guestName: 'AJAY SHARMA',
+        items: [
+          { sNo: 1, itemName: 'TEA', itemCode: '10019', qty: 1, rate: 30.00, amount: 30.00 }
+        ],
+        totalQty: 1,
+        totalAmount: 30.00,
+        date: '15-02-25',
+        createdAt: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        status: 'Ready To Serve',
+        serveStatus: 'Ready To Serve',
+        isPrinted: true
+      },
+      {
+        kotNo: 'KOT/157/24-25',
+        serviceType: 'Room',
+        roomNo: '102',
+        tableNo: 'Room 102',
+        waiterName: 'DEMO0004',
+        guestName: 'AJAY SHARMA',
+        items: [
+          { sNo: 1, itemName: 'PANEER TIKA', itemCode: '10007', qty: 2, rate: 115.00, amount: 230.00 }
+        ],
+        totalQty: 2,
+        totalAmount: 230.00,
+        date: '15-02-25',
+        createdAt: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        status: 'Ready To Serve',
+        serveStatus: 'Ready To Serve',
+        isPrinted: true
+      },
+      {
+        kotNo: 'KOT/136/24-25',
+        serviceType: 'Room',
+        roomNo: '103',
+        tableNo: 'Room 103',
+        waiterName: 'DEMO0004',
+        guestName: 'SURESH VERMA',
+        items: [
+          { sNo: 1, itemName: 'THALI SPECIAL', itemCode: '10006', qty: 2, rate: 200.00, amount: 400.00 }
+        ],
+        totalQty: 2,
+        totalAmount: 400.00,
+        date: '10-02-25',
+        createdAt: new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        status: 'Ready To Serve',
+        serveStatus: 'Ready To Serve',
+        isPrinted: true
+      },
       {
         kotNo: 'R/371',
         serviceType: 'Restaurant',
@@ -745,6 +904,7 @@ export class PmsStore {
         createdAt: new Date(now - 1 * 60 * 1000).toISOString(),
         status: 'Cancelled',
         serveStatus: 'Pending',
+        isPrinted: true,
         cancelReason: 'NOT REQ',
         cancelledAt: new Date(now - 30 * 1000).toISOString()
       },
@@ -762,115 +922,61 @@ export class PmsStore {
         ],
         totalQty: 3,
         totalAmount: 220.00,
-        createdAt: new Date(now - 2 * 60 * 1000).toISOString(), // 2 mins ago
+        date: '16-06-25',
+        createdAt: new Date(now - 2 * 60 * 1000).toISOString(),
         status: 'Pending',
-        serveStatus: 'Pending'
-      },
-      {
-        kotNo: '369',
-        serviceType: 'Restaurant',
-        roomNo: '85',
-        tableNo: 'T-14',
-        waiterName: 'DEMO0004',
-        guestName: 'WALK-IN DINE',
-        kotRemark: 'Crispy Bread',
-        items: [
-          { sNo: 1, itemName: 'bread pakoda', itemCode: '10009', qty: 2, rate: 50.00, amount: 100.00 },
-          { sNo: 2, itemName: 'Boondi Raita', itemCode: '10008', qty: 2, rate: 10.00, amount: 20.00 }
-        ],
-        totalQty: 4,
-        totalAmount: 120.00,
-        createdAt: new Date(now - 28 * 60 * 1000).toISOString(), // 28 mins ago
-        status: 'Pending',
-        serveStatus: 'Pending'
-      },
-      {
-        kotNo: '368',
-        serviceType: 'Room',
-        roomNo: '203',
-        tableNo: 'Room 203',
-        waiterName: 'DEMO0004',
-        guestName: 'AJUU',
-        kotRemark: 'Hot Delivery',
-        items: [
-          { sNo: 1, itemName: 'TAWA ROTI', itemCode: '10010', qty: 3, rate: 20.00, amount: 60.00 },
-          { sNo: 2, itemName: 'PANEER TIKA', itemCode: '10007', qty: 2, rate: 100.00, amount: 200.00 }
-        ],
-        totalQty: 5,
-        totalAmount: 260.00,
-        createdAt: new Date(now - 30 * 60 * 1000).toISOString(), // 30 mins ago
-        status: 'Pending',
-        serveStatus: 'Pending'
-      },
-      {
-        kotNo: '367',
-        serviceType: 'Room',
-        roomNo: '203',
-        tableNo: 'Room 203',
-        waiterName: 'DEMO0004',
-        guestName: 'AJUU',
-        items: [
-          { sNo: 1, itemName: 'WATER BOTLE', itemCode: '10003', qty: 2, rate: 28.57, amount: 57.14 }
-        ],
-        totalQty: 2,
-        totalAmount: 57.14,
-        createdAt: new Date(now - 37 * 60 * 1000).toISOString(), // 37 mins ago
-        status: 'Pending',
-        serveStatus: 'Pending'
-      },
-      {
-        kotNo: '366',
-        serviceType: 'Room',
-        roomNo: '203',
-        tableNo: 'Room 203',
-        waiterName: 'DEMO0004',
-        guestName: 'AJUU',
-        items: [
-          { sNo: 1, itemName: 'WATER BOTLE', itemCode: '10003', qty: 2, rate: 28.57, amount: 57.14 }
-        ],
-        totalQty: 2,
-        totalAmount: 57.14,
-        createdAt: new Date(now - 49 * 60 * 1000).toISOString(), // 49 mins ago
-        status: 'Pending',
-        serveStatus: 'Pending'
-      },
-      {
-        kotNo: '365',
-        serviceType: 'Room',
-        roomNo: '203',
-        tableNo: 'Room 203',
-        waiterName: 'DEMO0004',
-        guestName: 'AJUU',
-        items: [
-          { sNo: 1, itemName: 'WATER BOTLE', itemCode: '10003', qty: 2, rate: 28.57, amount: 57.14 }
-        ],
-        totalQty: 2,
-        totalAmount: 57.14,
-        createdAt: new Date(now - 51 * 60 * 1000).toISOString(), // 51 mins ago
-        status: 'Pending',
-        serveStatus: 'Pending'
-      },
-      {
-        kotNo: 'R/362',
-        serviceType: 'Restaurant',
-        roomNo: 'T-8',
-        tableNo: 'T-8',
-        waiterName: 'DEMO0004',
-        guestName: 'VASUH MHANGGLAM',
-        items: [
-          { sNo: 1, itemName: 'PANEER TIKA', itemCode: '10007', qty: 1, rate: 76.20, amount: 80.00 },
-          { sNo: 2, itemName: 'WATER BOTLE', itemCode: '10003', qty: 5, rate: 28.60, amount: 150.00 },
-          { sNo: 3, itemName: 'coldrink 750 ml', itemCode: '10011', qty: 3, rate: 25.40, amount: 90.00 }
-        ],
-        totalQty: 9,
-        totalAmount: 320.00,
-        createdAt: new Date(now - 60 * 60 * 1000).toISOString(),
-        status: 'Ready To Serve',
-        serveStatus: 'Ready To Serve'
+        serveStatus: 'Pending',
+        isPrinted: true
       }
     ];
     localStorage.setItem(STORAGE_KEYS.KOTS, JSON.stringify(initialKots));
     return initialKots;
+  }
+
+  static getUnprintedKots(): PmsKotRecord[] {
+    return this.getKots().filter(k => k.isPrinted === false && k.status !== 'Cancelled' && k.status !== 'Billed');
+  }
+
+  static getUnprintedRoomKots(): PmsKotRecord[] {
+    return this.getKots().filter(k => k.isPrinted === false && k.serviceType === 'Room' && k.status !== 'Cancelled' && k.status !== 'Billed');
+  }
+
+  static getUnprintedRestaurantKots(): PmsKotRecord[] {
+    return this.getKots().filter(k => k.isPrinted === false && k.serviceType === 'Restaurant' && k.status !== 'Cancelled' && k.status !== 'Billed');
+  }
+
+  static markKotAsPrinted(kotNo: string, printedBy?: string): void {
+    const kots = this.getKots();
+    const updated = kots.map(k => {
+      if (k.kotNo === kotNo || k.kotNo.includes(kotNo)) {
+        return {
+          ...k,
+          isPrinted: true,
+          printedAt: new Date().toISOString(),
+          printedBy: printedBy || 'Central Kitchen PC',
+          serveStatus: (k.serveStatus === 'Unprinted' ? '0' : k.serveStatus) as any
+        };
+      }
+      return k;
+    });
+    localStorage.setItem(STORAGE_KEYS.KOTS, JSON.stringify(updated));
+  }
+
+  static markAllKotsAsPrinted(serviceType?: 'Room' | 'Restaurant'): void {
+    const kots = this.getKots();
+    const updated = kots.map(k => {
+      if (k.isPrinted === false && (!serviceType || k.serviceType === serviceType)) {
+        return {
+          ...k,
+          isPrinted: true,
+          printedAt: new Date().toISOString(),
+          printedBy: 'Central Kitchen PC',
+          serveStatus: (k.serveStatus === 'Unprinted' ? '0' : k.serveStatus) as any
+        };
+      }
+      return k;
+    });
+    localStorage.setItem(STORAGE_KEYS.KOTS, JSON.stringify(updated));
   }
 
   static getPendingKotsByRoom(roomNo: string): PmsKotRecord[] {
@@ -906,7 +1012,13 @@ export class PmsStore {
 
   static saveKot(kot: PmsKotRecord): void {
     const kots = this.getKots();
-    kots.unshift(kot);
+    const isPrinted = kot.isPrinted !== undefined ? kot.isPrinted : true;
+    const enrichedKot: PmsKotRecord = {
+      ...kot,
+      isPrinted,
+      serveStatus: (!isPrinted) ? 'Unprinted' : (kot.serveStatus || '0')
+    };
+    kots.unshift(enrichedKot);
     localStorage.setItem(STORAGE_KEYS.KOTS, JSON.stringify(kots));
 
     // If KOT is assigned to a table and not cancelled, ensure table is marked Running

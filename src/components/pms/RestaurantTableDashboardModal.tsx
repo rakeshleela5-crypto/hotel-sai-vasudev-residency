@@ -42,6 +42,8 @@ export const RestaurantTableDashboardModal: React.FC<RestaurantTableDashboardMod
 
   if (!isOpen) return null;
 
+  const unprintedRestaurantKots = PmsStore.getUnprintedRestaurantKots();
+
   // Group tables matching Video 13 Frame 110 & 140
   const generalTables = tables.filter(
     (t) => !t.tableGroup || t.tableGroup === 'General' || t.tableGroup === 'Dining'
@@ -261,17 +263,25 @@ export const RestaurantTableDashboardModal: React.FC<RestaurantTableDashboardMod
                 type="button"
                 onClick={onOpenKotRegister}
                 style={{
-                  background: '#0284c7',
+                  background: unprintedRestaurantKots.length > 0 ? '#dc2626' : '#0284c7',
                   color: '#ffffff',
                   border: 'none',
                   padding: '5px 12px',
                   borderRadius: 4,
                   fontSize: 12,
                   fontWeight: 700,
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6
                 }}
               >
-                KOT Register
+                <span>KOT Register</span>
+                {unprintedRestaurantKots.length > 0 && (
+                  <span style={{ background: '#ffffff', color: '#b91c1c', padding: '1px 6px', borderRadius: 10, fontSize: 10, fontWeight: 900 }}>
+                    🔴 {unprintedRestaurantKots.length} Unprinted
+                  </span>
+                )}
               </button>
             )}
 

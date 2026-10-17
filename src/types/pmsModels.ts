@@ -111,19 +111,25 @@ export interface PmsKotRecord {
   tableNo?: string;           // Dining Table, e.g. T-16, T-8, T-14
   waiterName?: string;        // e.g. DEMO0004, Ramesh, Suresh
   guestName: string;
+  checkInNo?: string;         // e.g. 203 (Frame 0275)
   kotRemark?: string;
   items: KotItem[];
   totalAmount: number;
   totalQty?: number;
   date?: string;
+  time?: string;
   createdAt: string;
   status: 'Pending' | 'Cooking' | 'Ready To Serve' | 'Served' | 'Billed' | 'Cancelled';
-  serveStatus?: 'Pending' | 'Cooking' | 'Ready To Serve' | 'Served';
+  serveStatus?: 'Pending' | 'Cooking' | 'Ready To Serve' | 'Served' | 'Unprinted' | '0';
   isNc?: boolean;
   ncRemark?: string;
   operatorName?: string;
   cancelReason?: string;
   cancelledAt?: string;
+  isPrinted?: boolean;        // Video 14: true if printed, false if unprinted
+  printedAt?: string;
+  printedBy?: string;
+  orderSource?: 'Mobile' | 'Desktop';
 }
 export interface PmsCheckIn {
   checkInNo: string;          // e.g. SR/188/24-25

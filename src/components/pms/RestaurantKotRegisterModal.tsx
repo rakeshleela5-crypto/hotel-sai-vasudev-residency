@@ -298,53 +298,106 @@ export const RestaurantKotRegisterModal: React.FC<RestaurantKotRegisterModalProp
                   </tr>
                 ) : (
                   filteredKots.slice(0, entriesPerPage).map((item, idx) => {
+                    const isUnprinted = item.isPrinted === false && item.status !== 'Cancelled';
                     const isCancelled = item.status === 'Cancelled';
                     const isReady = item.status === 'Ready To Serve' || item.serveStatus === 'Ready To Serve';
                     const isPending = item.status === 'Pending' || item.status === 'Cooking';
                     const isServed = item.status === 'Served';
                     const isBilled = item.status === 'Billed';
 
+                    const rowBg = isUnprinted
+                      ? '#22c55e'
+                      : isCancelled
+                      ? '#fee2e2'
+                      : idx % 2 === 0
+                      ? '#ffffff'
+                      : '#f8fafc';
+
+                    const textColor = isUnprinted ? '#ffffff' : isCancelled ? '#991b1b' : '#0f172a';
+
                     return (
                       <tr
                         key={item.kotNo}
                         style={{
                           borderBottom: isCancelled ? '1px solid #f87171' : '1px solid #e2e8f0',
-                          background: isCancelled ? '#fee2e2' : idx % 2 === 0 ? '#ffffff' : '#f8fafc'
+                          background: rowBg,
+                          color: textColor,
+                          fontWeight: isUnprinted ? 700 : 500,
+                          transition: 'background-color 0.2s'
                         }}
                       >
-                        <td style={{ padding: '10px 8px', textAlign: 'center', color: '#64748b' }}>
+                        <td style={{ padding: '10px 8px', textAlign: 'center' }}>
                           {idx + 1}
                         </td>
                         <td style={{ padding: '10px 10px' }}>
                           {item.date || new Date(item.createdAt).toLocaleDateString('en-GB')}
                         </td>
-                        <td style={{ padding: '10px 10px', fontWeight: 800, color: '#0284c7' }}>
+                        <td style={{ padding: '10px 10px', fontWeight: 800, color: isUnprinted ? '#ffffff' : '#0284c7' }}>
                           {item.kotNo}
+                          {item.orderSource === 'Mobile' && (
+                            <span
+                              style={{
+                                marginLeft: 6,
+                                fontSize: 10,
+                                background: isUnprinted ? '#ffffff' : '#dbeafe',
+                                color: isUnprinted ? '#15803d' : '#1e40af',
+                                padding: '1px 5px',
+                                borderRadius: 3,
+                                fontWeight: 700
+                              }}
+                            >
+                              📱 Mobile
+                            </span>
+                          )}
                         </td>
                         <td style={{ padding: '10px 10px', textAlign: 'center', fontWeight: 700 }}>
                           {item.tableNo || `Room ${item.roomNo}`}
                         </td>
                         <td style={{ padding: '10px 10px', textAlign: 'right' }}>
-                          {item.totalQty || item.items.reduce((a, b) => a + b.qty, 0)}.00
+                          {(item.totalQty || item.items.reduce((a, b) => a + b.qty, 0)).toFixed(2)}
                         </td>
-                        <td style={{ padding: '10px 10px', textAlign: 'right', fontWeight: 800, color: '#0f172a' }}>
+                        <td style={{ padding: '10px 10px', textAlign: 'right', fontWeight: 800 }}>
                           ₹{item.totalAmount.toFixed(2)}
                         </td>
                         <td style={{ padding: '10px 10px', textAlign: 'center' }}>
                           <span
                             style={{
-                              background: isCancelled ? '#fecaca' : isReady ? '#dcfce7' : isPending ? '#fee2e2' : isServed ? '#fef3c7' : isBilled ? '#e0e7ff' : '#f1f5f9',
-                              color: isCancelled ? '#991b1b' : isReady ? '#166534' : isPending ? '#b91c1c' : isServed ? '#92400e' : isBilled ? '#3730a3' : '#475569',
+                              background: isUnprinted
+                                ? '#ffffff'
+                                : isCancelled
+                                ? '#fecaca'
+                                : isReady
+                                ? '#dcfce7'
+                                : isPending
+                                ? '#fee2e2'
+                                : isServed
+                                ? '#fef3c7'
+                                : isBilled
+                                ? '#e0e7ff'
+                                : '#f1f5f9',
+                              color: isUnprinted
+                                ? '#15803d'
+                                : isCancelled
+                                ? '#991b1b'
+                                : isReady
+                                ? '#166534'
+                                : isPending
+                                ? '#b91c1c'
+                                : isServed
+                                ? '#92400e'
+                                : isBilled
+                                ? '#3730a3'
+                                : '#475569',
                               padding: '2px 8px',
                               borderRadius: 12,
                               fontSize: 11,
                               fontWeight: 800
                             }}
                           >
-                            {isCancelled ? 'cancel' : isReady ? 'Ready To Serve' : isPending ? 'Cooking / Pending' : isServed ? 'Served' : isBilled ? 'Billed' : item.status}
+                            {isUnprinted ? 'Unprinted' : isCancelled ? 'cancel' : isReady ? 'Ready To Serve' : isPending ? 'Cooking / Pending' : isServed ? 'Served' : isBilled ? 'Billed' : item.status}
                           </span>
                         </td>
-                        <td style={{ padding: '10px 10px', color: isCancelled ? '#b91c1c' : '#64748b', fontSize: 11, fontWeight: isCancelled ? 700 : 400 }}>
+                        <td style={{ padding: '10px 10px', fontSize: 11, fontWeight: isCancelled ? 700 : 400 }}>
                           {item.cancelReason || item.kotRemark || (item.isNc ? item.ncRemark : '-')}
                         </td>
                         <td style={{ padding: '10px 10px', textAlign: 'center' }}>
@@ -352,9 +405,21 @@ export const RestaurantKotRegisterModal: React.FC<RestaurantKotRegisterModalProp
                             {/* Print */}
                             <button
                               type="button"
-                              title="Print KOT Slip"
-                              onClick={() => setSelectedKotForView(item)}
-                              style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 4, padding: '3px 6px', cursor: 'pointer', fontSize: 12 }}
+                              title="Print KOT Slip (Marks as Printed)"
+                              onClick={() => {
+                                PmsStore.markKotAsPrinted(item.kotNo);
+                                loadKots();
+                                setSelectedKotForView(item);
+                              }}
+                              style={{
+                                background: isUnprinted ? '#ffffff' : '#f1f5f9',
+                                color: isUnprinted ? '#16a34a' : '#0f172a',
+                                border: isUnprinted ? '1px solid #16a34a' : '1px solid #cbd5e1',
+                                borderRadius: 4,
+                                padding: '3px 6px',
+                                cursor: 'pointer',
+                                fontSize: 12
+                              }}
                             >
                               🖨️
                             </button>

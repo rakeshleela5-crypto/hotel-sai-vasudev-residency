@@ -14,6 +14,7 @@ import { RestaurantTableDashboardModal } from './RestaurantTableDashboardModal';
 import { ShiftTableModal } from './ShiftTableModal';
 import { NcKotRegisterModal } from './NcKotRegisterModal';
 import { TableMasterModal } from './TableMasterModal';
+import { RoomKotRegisterModal } from './RoomKotRegisterModal';
 import type { PmsBooking } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
@@ -41,6 +42,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   const [isLedgerOpen, setIsLedgerOpen] = useState(false);
   const [isKitchenDashboardOpen, setIsKitchenDashboardOpen] = useState(false);
   const [isRestaurantKotOpen, setIsRestaurantKotOpen] = useState(false);
+  const [isRoomKotRegisterOpen, setIsRoomKotRegisterOpen] = useState(false);
   const [isTableDashboardOpen, setIsTableDashboardOpen] = useState(false);
   const [isShiftTableOpen, setIsShiftTableOpen] = useState(false);
   const [isNcKotRegisterOpen, setIsNcKotRegisterOpen] = useState(false);
@@ -50,6 +52,8 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   const vacantCount = rooms.filter(r => r.status === 'vacant').length;
   const occupiedCount = rooms.filter(r => r.status === 'occupied').length;
   const dirtyCount = rooms.filter(r => r.status === 'dirty').length;
+  const unprintedRoomKots = PmsStore.getUnprintedRoomKots();
+  const unprintedRestaurantKots = PmsStore.getUnprintedRestaurantKots();
 
   useEffect(() => {
     const updateClock = () => {
@@ -245,29 +249,122 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         </button>
       </div>
 
-      {/* Bottom Summary Bar & WhatsApp Promotion Tool from Frame 0100 */}
+      {/* Overview & Unprinted KOTs Notification Section matching Video 14 Frames 0145, 0230, 0255 */}
       <div style={{
         maxWidth: 1050,
         margin: '0 auto',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
         gap: 20,
-        background: '#f8fafc',
+        background: '#ffffff',
         padding: '16px 20px',
         borderRadius: 6,
-        border: '1px solid #e2e8f0'
+        border: '1px solid #e2e8f0',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
       }}>
-        {/* Real-time Room Status Counts */}
-        <div style={{ display: 'flex', gap: 24, fontSize: 14, fontWeight: 700 }}>
-          <span style={{ color: '#0f172a' }}>Vacant: <strong style={{ fontSize: 18, color: '#2563eb' }}>{vacantCount}</strong></span>
-          <span style={{ color: '#0f172a' }}>Occupied: <strong style={{ fontSize: 18, color: '#16a34a' }}>{occupiedCount}</strong></span>
-          <span style={{ color: '#0f172a' }}>Dirty: <strong style={{ fontSize: 18, color: '#dc2626' }}>{dirtyCount}</strong></span>
+        {/* Left Side: Overview Table & Red Unprinted KOT Banners */}
+        <div style={{ flex: 1, minWidth: 280 }}>
+          <h2 style={{ margin: '0 0 10px', fontSize: 18, fontWeight: 800, color: '#0f172a' }}>
+            Overview
+          </h2>
+
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ borderCollapse: 'collapse', fontSize: 13, minWidth: 320 }}>
+              <thead>
+                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #cbd5e1', color: '#475569' }}>
+                  <th style={{ padding: '6px 14px', textAlign: 'left', fontWeight: 700 }}>Room CheckIn</th>
+                  <th style={{ padding: '6px 14px', textAlign: 'center', fontWeight: 700 }}>Vacant</th>
+                  <th style={{ padding: '6px 14px', textAlign: 'center', fontWeight: 700 }}>Occupied</th>
+                  <th style={{ padding: '6px 14px', textAlign: 'center', fontWeight: 700 }}>Dirty</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                  <td style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 700, color: '#0284c7' }}>
+                    {occupiedCount > 0 ? occupiedCount : 1}
+                  </td>
+                  <td style={{ padding: '8px 14px', textAlign: 'center', fontWeight: 700, color: '#2563eb' }}>
+                    {vacantCount}
+                  </td>
+                  <td style={{ padding: '8px 14px', textAlign: 'center', fontWeight: 700, color: '#16a34a' }}>
+                    {occupiedCount}
+                  </td>
+                  <td style={{ padding: '8px 14px', textAlign: 'center', fontWeight: 700, color: '#dc2626' }}>
+                    {dirtyCount}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Video 14 Core Feature: Unprinted KOT Alerts below Overview Table (Frames 0145, 0230, 0255) */}
+          <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {unprintedRoomKots.length > 0 && (
+              <div
+                onClick={() => setIsRoomKotRegisterOpen(true)}
+                title="Click to view and print pending Room KOTs (Video 14)"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '5px 12px',
+                  background: '#fee2e2',
+                  color: '#b91c1c',
+                  border: '1px solid #f87171',
+                  borderRadius: 4,
+                  fontSize: 13,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  width: 'fit-content',
+                  transition: 'transform 0.15s, box-shadow 0.15s'
+                }}
+              >
+                <span style={{ fontSize: 13, animation: 'pulse 1.2s infinite' }}>🔴</span>
+                <span style={{ textDecoration: 'underline' }}>
+                  Room Kot Unprinted - {unprintedRoomKots.length}
+                </span>
+                <span style={{ fontSize: 11, background: '#ef4444', color: '#fff', padding: '1px 6px', borderRadius: 10 }}>
+                  Click to Print
+                </span>
+              </div>
+            )}
+
+            {unprintedRestaurantKots.length > 0 && (
+              <div
+                onClick={() => setIsRestaurantKotOpen(true)}
+                title="Click to view and print pending Restaurant Table KOTs (Video 14)"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '5px 12px',
+                  background: '#fee2e2',
+                  color: '#b91c1c',
+                  border: '1px solid #f87171',
+                  borderRadius: 4,
+                  fontSize: 13,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  width: 'fit-content',
+                  transition: 'transform 0.15s, box-shadow 0.15s'
+                }}
+              >
+                <span style={{ fontSize: 13, animation: 'pulse 1.2s infinite' }}>🔴</span>
+                <span style={{ textDecoration: 'underline' }}>
+                  Restaurant Kot Unprinted - {unprintedRestaurantKots.length}
+                </span>
+                <span style={{ fontSize: 11, background: '#ef4444', color: '#fff', padding: '1px 6px', borderRadius: 10 }}>
+                  Click to Print
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* WhatsApp Sender Tool (Frame 0100) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        {/* Right Side: WhatsApp Promotion Tool from Frame 0100 & Frame 0145 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
           <input
             type="tel"
             placeholder="Enter mobile no"
@@ -276,7 +373,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
             className="form-input-pms"
             style={{ width: 170 }}
           />
-          <span style={{ fontSize: 20 }}>📢</span>
+          <span style={{ fontSize: 22 }}>📢</span>
           <button
             type="button"
             onClick={handleSendWhatsApp}
@@ -284,7 +381,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
               background: '#22c55e',
               color: '#ffffff',
               border: 'none',
-              padding: '7px 14px',
+              padding: '8px 16px',
               borderRadius: 4,
               fontSize: 13,
               fontWeight: 700,
@@ -301,7 +398,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
               background: '#b91c1c',
               color: '#ffffff',
               textDecoration: 'none',
-              padding: '7px 14px',
+              padding: '8px 16px',
               borderRadius: 4,
               fontSize: 13,
               fontWeight: 700
@@ -422,6 +519,16 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
       <TableMasterModal
         isOpen={isTableMasterOpen}
         onClose={() => setIsTableMasterOpen(false)}
+      />
+
+      {/* Video 14 Room KOT Register Modal (Frame 0260) */}
+      <RoomKotRegisterModal
+        isOpen={isRoomKotRegisterOpen}
+        onClose={() => setIsRoomKotRegisterOpen(false)}
+        onOpenKitchenDashboard={() => setIsKitchenDashboardOpen(true)}
+        onOpenNewKot={() => setIsKotOpen(true)}
+        filterServiceType="Room"
+        titleOverride="Room KOT Register (Video 14 Frame 0260)"
       />
     </div>
   );

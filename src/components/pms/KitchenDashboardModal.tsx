@@ -14,7 +14,7 @@ export const KitchenDashboardModal: React.FC<KitchenDashboardModalProps> = ({
   onOpenNewKot
 }) => {
   const [kots, setKots] = useState<PmsKotRecord[]>([]);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'ready' | 'served'>('pending');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'ready' | 'served' | 'unprinted'>('pending');
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [countdown, setCountdown] = useState(30);
   const [nowTime, setNowTime] = useState(Date.now());
@@ -75,11 +75,21 @@ export const KitchenDashboardModal: React.FC<KitchenDashboardModalProps> = ({
 
   const handleServeAndPrint = (kot: PmsKotRecord) => {
     PmsStore.updateKotStatus(kot.kotNo, 'Served');
+    PmsStore.markKotAsPrinted(kot.kotNo);
+    setSelectedKotForPrint(kot);
+    refreshKots();
+  };
+
+  const handlePrintOnly = (kot: PmsKotRecord) => {
+    PmsStore.markKotAsPrinted(kot.kotNo);
     setSelectedKotForPrint(kot);
     refreshKots();
   };
 
   const filteredKots = kots.filter(k => {
+    if (activeFilter === 'unprinted') {
+      return k.isPrinted === false && k.status !== 'Cancelled';
+    }
     if (activeFilter === 'pending') {
       return k.status === 'Pending' || k.status === 'Cooking';
     }
@@ -95,6 +105,7 @@ export const KitchenDashboardModal: React.FC<KitchenDashboardModalProps> = ({
   const pendingCount = kots.filter(k => k.status === 'Pending' || k.status === 'Cooking').length;
   const readyCount = kots.filter(k => k.status === 'Ready To Serve').length;
   const servedCount = kots.filter(k => k.status === 'Served' || k.status === 'Billed').length;
+  const unprintedCount = kots.filter(k => k.isPrinted === false && k.status !== 'Cancelled').length;
 
   return (
     <div className="pms-submodal-overlay" onClick={onClose}>
@@ -263,6 +274,57 @@ export const KitchenDashboardModal: React.FC<KitchenDashboardModalProps> = ({
             >
               <span>All Tickets</span>
             </button>
+
+            {unprintedCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setActiveFilter('unprinted')}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 4,
+                  border: 'none',
+                  background: activeFilter === 'unprinted' ? '#dc2626' : '#fee2e2',
+                  color: activeFilter === 'unprinted' ? '#ffffff' : '#b91c1c',
+                  fontWeight: 800,
+                  fontSize: 12,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6
+                }}
+              >
+                <span>📱 Unprinted Mobile</span>
+                <span style={{ background: '#ef4444', color: '#fff', padding: '1px 6px', borderRadius: 10, fontSize: 10 }}>
+                  {unprintedCount}
+                </span>
+              </button>
+            )}
+
+            {unprintedCount > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  PmsStore.markAllKotsAsPrinted();
+                  refreshKots();
+                  alert(`All ${unprintedCount} unprinted KOTs dispatched to Kitchen Thermal Printer!`);
+                }}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 4,
+                  border: 'none',
+                  background: '#059669',
+                  color: '#ffffff',
+                  fontWeight: 800,
+                  fontSize: 12,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6
+                }}
+              >
+                <span>🖨️ Print All Unprinted ({unprintedCount})</span>
+              </button>
+            )}
           </div>
 
           {onOpenNewKot && (
@@ -376,6 +438,41 @@ export const KitchenDashboardModal: React.FC<KitchenDashboardModalProps> = ({
                         ⏱️ ({elapsedText})
                       </span>
                     </div>
+
+                    {/* Video 14: Mobile Unprinted KOT indicator on Kitchen card */}
+                    {kot.isPrinted === false && (
+                      <div
+                        style={{
+                          background: '#22c55e',
+                          color: '#ffffff',
+                          padding: '4px 10px',
+                          fontSize: 11,
+                          fontWeight: 800,
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          borderBottom: '1px solid #16a34a'
+                        }}
+                      >
+                        <span>📱 Unprinted Mobile Order</span>
+                        <button
+                          type="button"
+                          onClick={() => handlePrintOnly(kot)}
+                          style={{
+                            background: '#ffffff',
+                            color: '#15803d',
+                            border: 'none',
+                            borderRadius: 3,
+                            padding: '2px 8px',
+                            fontWeight: 800,
+                            fontSize: 11,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          🖨️ Print Slip
+                        </button>
+                      </div>
+                    )}
 
                     {/* Room/Table Metadata line matching Frame 0225:
                         Room No:203|| Total Qty:2.00|| Remark: || Waiter: DEMO0004||Total Qty:2.00 */}

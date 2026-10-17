@@ -22,6 +22,7 @@ import { RestaurantKotRegisterModal } from './RestaurantKotRegisterModal';
 import { RestaurantTableDashboardModal } from './RestaurantTableDashboardModal';
 import { ShiftTableModal } from './ShiftTableModal';
 import { NcKotRegisterModal } from './NcKotRegisterModal';
+import { RoomKotRegisterModal } from './RoomKotRegisterModal';
 import './pmsStyles.css';
 
 interface HotelPmsModalProps {
@@ -78,6 +79,9 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   const [isTableDashboardOpen, setIsTableDashboardOpen] = useState(false);
   const [isShiftTableOpen, setIsShiftTableOpen] = useState(false);
   const [isNcKotRegisterOpen, setIsNcKotRegisterOpen] = useState(false);
+
+  // Video 14 Room KOT Register & Mobile Unprinted Queue
+  const [isRoomKotRegisterOpen, setIsRoomKotRegisterOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -291,6 +295,9 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsKotModalOpen(true)}>
                       <span style={{ color: '#f59e0b', fontWeight: 700 }}>🍴 Room Service (KOT Entry)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsRoomKotRegisterOpen(true)}>
+                      <span style={{ color: '#22c55e', fontWeight: 800 }}>📋 Room KOT Register (Video 14)</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsKitchenDashboardOpen(true)}>
                       <span style={{ color: '#eab308', fontWeight: 800 }}>🍳 Kitchen Dashboard (KDS - Video 12)</span>
@@ -592,6 +599,16 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
           setSelectedKotTable('Table NC1');
           setIsKotModalOpen(true);
         }}
+      />
+
+      {/* Video 14: Room KOT Register & Mobile Unprinted Queue */}
+      <RoomKotRegisterModal
+        isOpen={isRoomKotRegisterOpen}
+        onClose={() => setIsRoomKotRegisterOpen(false)}
+        onOpenKitchenDashboard={() => setIsKitchenDashboardOpen(true)}
+        onOpenNewKot={() => setIsKotModalOpen(true)}
+        filterServiceType="Room"
+        titleOverride="Room KOT Register (Video 14 Frame 0260)"
       />
     </>
   );

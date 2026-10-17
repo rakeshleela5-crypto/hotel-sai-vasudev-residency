@@ -63,6 +63,7 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
 
   const [showSlipPreview, setShowSlipPreview] = useState<boolean>(false);
   const [savedKotRecord, setSavedKotRecord] = useState<PmsKotRecord | null>(null);
+  const [isMobileMode, setIsMobileMode] = useState<boolean>(false);
 
   const handleItemSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = e.target.value;
@@ -131,12 +132,16 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
       ? `Dine-In (${selectedTableNo})`
       : selectedGuestName;
 
+    const isPrinted = printSlip;
+    const nowTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
     const kotRecord: PmsKotRecord = {
       kotNo,
       serviceType,
       roomNo: targetRoomOrTable,
       tableNo: serviceType === 'Restaurant' ? selectedTableNo : undefined,
       guestName: targetGuest,
+      checkInNo: '203',
       kotRemark,
       ncRemark: isNcTable ? (kotRemark || 'Complimentary Guest') : undefined,
       isNc: isNcTable,
@@ -145,9 +150,12 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
       totalAmount,
       totalQty,
       date: new Date().toLocaleDateString('en-GB').replace(/\//g, '-'),
+      time: nowTime,
       createdAt: new Date().toISOString(),
       status: 'Pending',
-      serveStatus: 'Pending'
+      serveStatus: isPrinted ? '0' : 'Unprinted',
+      isPrinted,
+      orderSource: isMobileMode ? 'Mobile' : 'Desktop'
     };
 
     PmsStore.saveKot(kotRecord);
@@ -160,7 +168,7 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
     if (printSlip) {
       setShowSlipPreview(true);
     } else {
-      alert(`KOT ${kotNo} successfully sent to Kitchen for Room ${selectedRoomNo}!`);
+      alert(`KOT ${kotNo} saved as Unprinted! Added to Central Unprinted Queue (Waiters Mobile Order).`);
       onClose();
     }
   };
@@ -176,55 +184,87 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
       <div 
         className="pms-form-box" 
         onClick={e => e.stopPropagation()} 
-        style={{ maxWidth: showSlipPreview ? 460 : 860 }}
+        style={{
+          maxWidth: showSlipPreview ? 460 : (isMobileMode ? 400 : 860),
+          width: '95%',
+          transition: 'all 0.3s ease'
+        }}
       >
         {!showSlipPreview ? (
           <>
-            {/* Top Bar matching Frame 0150 */}
-            <div className="pms-form-banner banner-navy" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Kitchen Order Ticket (KOT) Entry &bull; demo.datahouseerp.com/kots/create</span>
-              <button 
-                type="button" 
-                onClick={onClose} 
-                style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer' }}
-              >
-                &times;
-              </button>
+            {/* Top Bar matching Frame 0150 & 0175 */}
+            <div className="pms-form-banner banner-navy" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px' }}>
+              <span style={{ fontSize: isMobileMode ? 13 : 14, fontWeight: 700 }}>
+                {isMobileMode ? '📱 Mobile KOT (Waiter)' : 'Kitchen Order Ticket (KOT) Entry'}
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileMode(!isMobileMode)}
+                  title="Toggle Mobile Waiter Screen (Video 14)"
+                  style={{
+                    background: isMobileMode ? '#22c55e' : '#334155',
+                    color: '#ffffff',
+                    border: '1px solid #475569',
+                    padding: '3px 8px',
+                    borderRadius: 4,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  {isMobileMode ? '🖥️ Desktop View' : '📱 Mobile Waiter View'}
+                </button>
+                <button 
+                  type="button" 
+                  onClick={onClose} 
+                  style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer' }}
+                >
+                  &times;
+                </button>
+              </div>
             </div>
 
-            <div className="pms-form-body">
-              {/* Info alerts from Video 05 Frame 0150 */}
+            <div className="pms-form-body" style={{ padding: isMobileMode ? 12 : 16 }}>
+              {/* Info alert from Video 14 Frame 0165 */}
               <div style={{ background: '#dbeafe', color: '#1e40af', padding: '6px 12px', borderRadius: 4, fontSize: 12, marginBottom: 8, fontWeight: 600 }}>
                 &bull; Please Add Items to generate Kitchen Order Ticket
               </div>
 
-              {/* Top Action Bar */}
+              {/* Top Action Bar matching Frame 0165: Add New (Green), Save (Blue), Save & Print (Black) */}
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginBottom: 12 }}>
                 <button
                   type="button"
                   onClick={handleAddNew}
-                  style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '5px 14px', borderRadius: 3, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                  style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: 3, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
                 >
                   Add New
                 </button>
                 <button
                   type="button"
                   onClick={() => handleSaveKot(false)}
-                  style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '5px 16px', borderRadius: 3, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                  title="Save without printing (Unprinted Queue for Central Kitchen)"
+                  style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: 3, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
                 >
                   Save
                 </button>
                 <button
                   type="button"
                   onClick={() => handleSaveKot(true)}
-                  style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '5px 16px', borderRadius: 3, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                  title="Save and dispatch immediately to thermal printer"
+                  style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: 3, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
                 >
                   Save &amp; Print
                 </button>
               </div>
 
-              {/* Form Controls Row 1 */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1.8fr 1.5fr', gap: 10, marginBottom: 12 }}>
+              {/* Form Controls Row 1 - responsive for mobile layout (Frame 0175) */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: isMobileMode ? '1fr 1fr' : '1.2fr 1fr 1.8fr 1.5fr',
+                gap: 10,
+                marginBottom: 12
+              }}>
                 <div className="form-group-pms" style={{ margin: 0 }}>
                   <label className="form-label-pms">KOT No</label>
                   <input
