@@ -368,3 +368,23 @@ export interface LedgerEntry {
   balanceType: 'Dr' | 'Cr';
 }
 
+export interface PmsCompanyInfo {
+  firmName: string;
+  address1: string;
+  address2?: string;
+  city: string;
+  pincode: string;
+  state: string;
+  phone?: string;
+  mobile: string;
+  email: string;
+  website?: string;
+  gstNo: string;
+  companyGstCode: string; // 2-digit state code, e.g. "27" (Maharashtra) or "22" (Chhattisgarh)
+  pencardNo?: string;
+  regNo2?: string;
+  gstNotApplicable: boolean;
+  makeAllBillLocalGst: boolean;
+  updatedAt?: string;
+}
+

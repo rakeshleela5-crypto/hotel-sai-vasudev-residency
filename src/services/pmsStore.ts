@@ -12,12 +12,32 @@ import type {
   PmsBusinessSource,
   PmsVoucherType,
   PmsBusinessSetting,
-  DayWiseRentItem
+  DayWiseRentItem,
+  PmsCompanyInfo
 } from '../types/pmsModels';
 
 export const DEFAULT_BUSINESS_SETTING: PmsBusinessSetting = {
   calculationType: '12hour',
   standardCheckoutTime: '11:00 AM'
+};
+
+export const DEFAULT_COMPANY_INFO: PmsCompanyInfo = {
+  firmName: 'HOTEL SAI VASUDEV RESIDENCY',
+  address1: 'Near Sai Baba Temple, Shirdi',
+  address2: 'Taluka Rahata, Ahmednagar District',
+  city: 'Shirdi',
+  pincode: '423109',
+  state: 'MAHARASHTRA',
+  phone: '02423-255000',
+  mobile: '9822000000',
+  email: 'hotelsaivasudevresidency@gmail.com',
+  website: 'https://hotel-sai-vasudev-residency.pages.dev',
+  gstNo: '27ABCDE1234F1Z5',
+  companyGstCode: '27',
+  pencardNo: 'ABCDE1234F',
+  regNo2: 'REG-MS-2024-9871',
+  gstNotApplicable: false,
+  makeAllBillLocalGst: true // Video 10 local sales default
 };
 
 export const INITIAL_ROOMS: PmsRoom[] = [
@@ -996,4 +1016,106 @@ export class PmsStore {
       closingType
     };
   }
+
+  // --- Video 10: Company Info & Local vs Interstate GST Methods ---
+  static getCompanyInfo(): PmsCompanyInfo {
+    const raw = localStorage.getItem('pms_company_info');
+    if (!raw) {
+      localStorage.setItem('pms_company_info', JSON.stringify(DEFAULT_COMPANY_INFO));
+      return { ...DEFAULT_COMPANY_INFO };
+    }
+    try {
+      return { ...DEFAULT_COMPANY_INFO, ...JSON.parse(raw) };
+    } catch {
+      return { ...DEFAULT_COMPANY_INFO };
+    }
+  }
+
+  static saveCompanyInfo(info: PmsCompanyInfo): void {
+    localStorage.setItem('pms_company_info', JSON.stringify(info));
+  }
+
+  static calculateGst(params: {
+    taxableAmount: number;
+    gstPercent: number;
+    guestGstin?: string;
+    guestState?: string;
+  }): {
+    isLocal: boolean;
+    cgstPercent: number;
+    sgstPercent: number;
+    igstPercent: number;
+    cgstAmount: number;
+    sgstAmount: number;
+    igstAmount: number;
+    totalGstAmount: number;
+    ruleApplied: string;
+  } {
+    const company = this.getCompanyInfo();
+    if (company.gstNotApplicable || params.gstPercent <= 0) {
+      return {
+        isLocal: true,
+        cgstPercent: 0,
+        sgstPercent: 0,
+        igstPercent: 0,
+        cgstAmount: 0,
+        sgstAmount: 0,
+        igstAmount: 0,
+        totalGstAmount: 0,
+        ruleApplied: 'GST Not Applicable (Exempt)'
+      };
+    }
+
+    const cleanGstNo = (params.guestGstin || '').trim();
+    const guestStateCode = cleanGstNo.length >= 2 ? cleanGstNo.slice(0, 2) : '';
+    const hotelStateCode = (company.companyGstCode || '27').trim();
+
+    // Video 10 rule: If "Make All Bill Local GST" is enabled in company settings,
+    // force Local SGST + CGST for all guests regardless of state!
+    let isLocal = true;
+    let ruleApplied = '';
+
+    if (company.makeAllBillLocalGst) {
+      isLocal = true;
+      ruleApplied = 'Local GST Forced by Hotel Setting (Make All Bill Local GST = True)';
+    } else if (guestStateCode && guestStateCode !== hotelStateCode) {
+      isLocal = false;
+      ruleApplied = `Interstate GST (Hotel Code ${hotelStateCode} != Guest Code ${guestStateCode} [${cleanGstNo}])`;
+    } else {
+      isLocal = true;
+      ruleApplied = `Intrastate Local GST (State Code ${hotelStateCode})`;
+    }
+
+    const halfPercent = params.gstPercent / 2;
+
+    if (isLocal) {
+      const cgstAmount = Number(((params.taxableAmount * halfPercent) / 100).toFixed(2));
+      const sgstAmount = Number(((params.taxableAmount * halfPercent) / 100).toFixed(2));
+      return {
+        isLocal: true,
+        cgstPercent: halfPercent,
+        sgstPercent: halfPercent,
+        igstPercent: 0,
+        cgstAmount,
+        sgstAmount,
+        igstAmount: 0,
+        totalGstAmount: Number((cgstAmount + sgstAmount).toFixed(2)),
+        ruleApplied
+      };
+    } else {
+      const igstAmount = Number(((params.taxableAmount * params.gstPercent) / 100).toFixed(2));
+      return {
+        isLocal: false,
+        cgstPercent: 0,
+        sgstPercent: 0,
+        igstPercent: params.gstPercent,
+        cgstAmount: 0,
+        sgstAmount: 0,
+        igstAmount,
+        totalGstAmount: igstAmount,
+        ruleApplied
+      };
+    }
+  }
 }
+

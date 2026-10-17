@@ -116,6 +116,9 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
   const [gstNumber, setGstNumber] = useState('23SJDHGSJDHGHS');
   const [checkoutRemark, setCheckoutRemark] = useState('Checked out peacefully. Key returned.');
 
+  const companyInfo = PmsStore.getCompanyInfo();
+  const [forceLocalGst, setForceLocalGst] = useState<boolean>(companyInfo.makeAllBillLocalGst);
+
   // Computations
   // If Tax Inclusive: base rate is derived so that Base + 12% GST = Total Tariff
   const rawRent = dayWiseRent.length > 0
@@ -127,14 +130,44 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
     ? Number((rawRent / 1.12).toFixed(2))
     : rawRent;
 
+  // Video 10 GST Calculation Engine
+  const cleanPartyGstin = (gstNumber || '').trim();
+  const partyStateCode = cleanPartyGstin.length >= 2 ? cleanPartyGstin.slice(0, 2) : '';
+  const hotelStateCode = (companyInfo.companyGstCode || '27').trim();
+
+  // If forceLocalGst is active: Local SGST + CGST for all guests regardless of state!
+  const isLocalGst = forceLocalGst || !partyStateCode || partyStateCode === hotelStateCode;
+
+  const halfPercent = gstPercent / 2;
+  const cgstAmount = isComplimentary
+    ? 0
+    : isLocalGst
+    ? isTaxInclusive
+      ? Number(((rawRent - taxableRoomRent) / 2).toFixed(2))
+      : Number(((taxableRoomRent * halfPercent) / 100).toFixed(2))
+    : 0;
+
+  const sgstAmount = isComplimentary
+    ? 0
+    : isLocalGst
+    ? isTaxInclusive
+      ? Number(((rawRent - taxableRoomRent) / 2).toFixed(2))
+      : Number(((taxableRoomRent * halfPercent) / 100).toFixed(2))
+    : 0;
+
+  const igstAmount = isComplimentary
+    ? 0
+    : !isLocalGst
+    ? isTaxInclusive
+      ? Number((rawRent - taxableRoomRent).toFixed(2))
+      : Number(((taxableRoomRent * gstPercent) / 100).toFixed(2))
+    : 0;
+
   const gstAmount = isComplimentary
     ? 0
-    : isTaxInclusive
-    ? Number((rawRent - taxableRoomRent).toFixed(2))
-    : Number(((taxableRoomRent * gstPercent) / 100).toFixed(2));
-
-  const cgstAmount = Number((gstAmount / 2).toFixed(2));
-  const sgstAmount = Number((gstAmount / 2).toFixed(2));
+    : isLocalGst
+    ? Number((cgstAmount + sgstAmount).toFixed(2))
+    : igstAmount;
 
   const netBillAmount = isComplimentary
     ? 0
@@ -183,7 +216,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
       gstAmount,
       cgstAmount,
       sgstAmount,
-      igstAmount: 0,
+      igstAmount,
       addOthers,
       lessDiscount,
       advanceDeducted,
@@ -850,6 +883,64 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                 </div>
               </div>
 
+              {/* Video 10 GST Calculation Status & Local Policy Banner */}
+              <div style={{
+                background: isComplimentary ? '#f8fafc' : isLocalGst ? '#f0fdf4' : '#fffbeb',
+                border: `1px solid ${isComplimentary ? '#cbd5e1' : isLocalGst ? '#86efac' : '#fde68a'}`,
+                padding: '6px 12px',
+                borderRadius: 4,
+                marginBottom: 10,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 8,
+                fontSize: 11
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{
+                    fontWeight: 800,
+                    padding: '2px 6px',
+                    borderRadius: 3,
+                    background: isComplimentary ? '#64748b' : isLocalGst ? '#16a34a' : '#d97706',
+                    color: '#fff',
+                    fontSize: 10
+                  }}>
+                    {isComplimentary
+                      ? 'EXEMPT (0% GST)'
+                      : isLocalGst
+                      ? `LOCAL SALES (SGST ${halfPercent}% + CGST ${halfPercent}%)`
+                      : `INTERSTATE SALES (IGST ${gstPercent}%)`}
+                  </span>
+                  <span style={{ color: '#475569', fontSize: 10 }}>
+                    {forceLocalGst
+                      ? '✓ Local GST Forced by Hotel Settings (Make All Bill Local GST = True)'
+                      : partyStateCode && partyStateCode !== hotelStateCode
+                      ? `Interstate Party: State ${partyStateCode} != Hotel State ${hotelStateCode} (Maharashtra)`
+                      : `Intrastate Party: Maharashtra State Code ${hotelStateCode}`}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', fontWeight: 700, color: '#0369a1', fontSize: 11 }}>
+                    <input
+                      type="checkbox"
+                      checked={forceLocalGst}
+                      onChange={e => setForceLocalGst(e.target.checked)}
+                    />
+                    <span>Make All Bill Local GST (Video 10)</span>
+                  </label>
+
+                  <div style={{ fontWeight: 800, color: '#0f172a' }}>
+                    {isLocalGst ? (
+                      <span>SGST: ₹{sgstAmount.toFixed(2)} | CGST: ₹{cgstAmount.toFixed(2)}</span>
+                    ) : (
+                      <span style={{ color: '#b45309' }}>IGST: ₹{igstAmount.toFixed(2)}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {/* Company Address & Remark */}
               <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: 8, marginBottom: 12 }}>
                 <div className="form-group-pms" style={{ margin: 0 }}>
@@ -1004,11 +1095,11 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                 /* Video 07 Frame 0290 Detailed Yellow Header & Two-Column Split */
                 <div>
                   <div style={{ background: '#facc15', border: '1px solid #eab308', padding: '10px 14px', borderRadius: 4, marginBottom: 10, textAlign: 'center', position: 'relative' }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#000' }}>GST NO: 27AABCS1429B1Z2</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#000' }}>GST NO: {companyInfo.gstNo}</div>
                     <div style={{ fontSize: 18, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1, margin: '2px 0' }}>INVOICE</div>
-                    <div style={{ fontSize: 17, fontWeight: 800, textTransform: 'uppercase' }}>HOTEL SAI VASUDEV RESIDENCY</div>
-                    <div style={{ fontSize: 10, fontWeight: 600 }}>Pimpalwadi Road, Shirdi - 423109 (Maharashtra)</div>
-                    <div style={{ fontSize: 10, fontWeight: 600 }}>India Email: stay@hotelsai-vasudev.com Phone Mobile 999663696</div>
+                    <div style={{ fontSize: 17, fontWeight: 800, textTransform: 'uppercase' }}>{companyInfo.firmName}</div>
+                    <div style={{ fontSize: 10, fontWeight: 600 }}>{companyInfo.address1}, {companyInfo.city} - {companyInfo.pincode} ({companyInfo.state})</div>
+                    <div style={{ fontSize: 10, fontWeight: 600 }}>India Email: {companyInfo.email} Phone Mobile {companyInfo.mobile}</div>
                     <div style={{ position: 'absolute', right: 14, top: 12, border: '1px solid #ca8a04', background: '#fef08a', padding: '4px 8px', fontSize: 9, fontWeight: 700 }}>
                       [QR Code]
                     </div>
@@ -1097,10 +1188,10 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                   {/* Hotel Header */}
                   <div style={{ textAlign: 'center', borderBottom: '2px solid #0f172a', paddingBottom: 8, marginBottom: 10 }}>
                     <h2 style={{ margin: 0, fontSize: 20, fontWeight: 900, letterSpacing: 1 }}>
-                      HOTEL SAI VASUDEV RESIDENCY
+                      {companyInfo.firmName}
                     </h2>
                     <div style={{ fontSize: 11, color: '#475569' }}>
-                      Opp. Gate No. 2, Pimpalwadi Road, Shirdi, Maharashtra - 423109 &bull; GSTIN: 27AABCS1429B1Z2
+                      {companyInfo.address1}, {companyInfo.city}, {companyInfo.state} - {companyInfo.pincode} &bull; GSTIN: {companyInfo.gstNo}
                     </div>
                     <div style={{ fontSize: 14, fontWeight: 800, textTransform: 'uppercase', marginTop: 4, letterSpacing: 1 }}>
                       TAX INVOICE (GUEST CHECKOUT)
@@ -1156,16 +1247,18 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
                 <div style={{ width: 280, fontSize: 11, lineHeight: 1.7 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>SGST (6.00%):</span>
-                    <span>₹{sgstAmount.toFixed(2)}</span>
+                    <span>SGST ({isLocalGst ? halfPercent.toFixed(2) : '0.00'}%):</span>
+                    <span style={{ fontWeight: isLocalGst && sgstAmount > 0 ? 700 : 400 }}>₹{sgstAmount.toFixed(2)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>CGST (6.00%):</span>
-                    <span>₹{cgstAmount.toFixed(2)}</span>
+                    <span>CGST ({isLocalGst ? halfPercent.toFixed(2) : '0.00'}%):</span>
+                    <span style={{ fontWeight: isLocalGst && cgstAmount > 0 ? 700 : 400 }}>₹{cgstAmount.toFixed(2)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>IGST (0.00%):</span>
-                    <span>₹0.00</span>
+                    <span>IGST ({!isLocalGst ? gstPercent.toFixed(2) : '0.00'}%):</span>
+                    <span style={{ fontWeight: !isLocalGst && igstAmount > 0 ? 700 : 400, color: !isLocalGst && igstAmount > 0 ? '#b45309' : undefined }}>
+                      ₹{igstAmount.toFixed(2)}
+                    </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed #cbd5e1', paddingTop: 2 }}>
                     <span>Food Amount ({foodBillNo}):</span>

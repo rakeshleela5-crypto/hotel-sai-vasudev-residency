@@ -13,6 +13,7 @@ import { TableMasterModal } from './TableMasterModal';
 import { ItemMasterModal } from './ItemMasterModal';
 import { OtherMasterModal } from './OtherMasterModal';
 import { BusinessSettingModal } from './BusinessSettingModal';
+import { CompanyInfoModal } from './CompanyInfoModal';
 import './pmsStyles.css';
 
 interface HotelPmsModalProps {
@@ -48,6 +49,9 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
 
   // Video 09 Business Setting Modal (12 Hour vs 24 Hour Policy)
   const [isBusinessSettingOpen, setIsBusinessSettingOpen] = useState(false);
+
+  // Video 10 Company Info Modal (Local vs Interstate GST & State Codes)
+  const [isCompanyInfoOpen, setIsCompanyInfoOpen] = useState(false);
   const [roomRefreshTrigger, setRoomRefreshTrigger] = useState(0);
 
   if (!isOpen) return null;
@@ -333,11 +337,11 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
 
                 {settingMenuOpen && (
                   <div style={{ background: '#1a1e22', paddingLeft: 12, fontSize: 12 }}>
+                    <div className="pms-nav-item" onClick={() => setIsCompanyInfoOpen(true)}>
+                      <span style={{ color: '#4ade80', fontWeight: 700 }}>🏢 Company Info (/company_info_form)</span>
+                    </div>
                     <div className="pms-nav-item" onClick={() => setIsBusinessSettingOpen(true)}>
                       <span style={{ color: '#38bdf8', fontWeight: 700 }}>⚙️ Business Setting (/businesssettings/create)</span>
-                    </div>
-                    <div className="pms-nav-item" onClick={() => alert('Hotel Profile / Company Settings')}>
-                      <span>🏢 Hotel Profile</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => alert('Printer & Receipt Template Setup')}>
                       <span>🖨️ Printer &amp; POS Setup</span>
@@ -450,6 +454,12 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       <BusinessSettingModal
         isOpen={isBusinessSettingOpen}
         onClose={() => setIsBusinessSettingOpen(false)}
+      />
+
+      {/* Company Info Modal (Video 10 - Local vs Interstate GST) */}
+      <CompanyInfoModal
+        isOpen={isCompanyInfoOpen}
+        onClose={() => setIsCompanyInfoOpen(false)}
       />
     </>
   );
