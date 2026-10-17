@@ -17,6 +17,7 @@ import { TableMasterModal } from './TableMasterModal';
 import { RoomKotRegisterModal } from './RoomKotRegisterModal';
 import { ReceiptRegisterModal } from './ReceiptRegisterModal';
 import { OutstandingReceivablesModal } from './OutstandingReceivablesModal';
+import { PaymentRegisterModal } from './PaymentRegisterModal';
 import type { PmsBooking } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
@@ -51,6 +52,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   const [isTableMasterOpen, setIsTableMasterOpen] = useState(false);
   const [isReceiptRegisterOpen, setIsReceiptRegisterOpen] = useState(false);
   const [isOutstandingReceivablesOpen, setIsOutstandingReceivablesOpen] = useState(false);
+  const [isPaymentRegisterOpen, setIsPaymentRegisterOpen] = useState(false);
 
   const rooms = PmsStore.getRooms();
   const vacantCount = rooms.filter(r => r.status === 'vacant').length;
@@ -182,7 +184,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-payment"
-          onClick={() => alert('Payment Entry Module: Record cash/UPI payment payouts.')}
+          onClick={() => setIsPaymentRegisterOpen(true)}
         >
           <span className="tile-icon">💳</span>
           <span>Payment</span>
@@ -545,6 +547,12 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
       <OutstandingReceivablesModal
         isOpen={isOutstandingReceivablesOpen}
         onClose={() => setIsOutstandingReceivablesOpen(false)}
+      />
+
+      {/* Video 16 General Payment Register Modal (Frame 0200, 0290, 0320) */}
+      <PaymentRegisterModal
+        isOpen={isPaymentRegisterOpen}
+        onClose={() => setIsPaymentRegisterOpen(false)}
       />
     </div>
   );

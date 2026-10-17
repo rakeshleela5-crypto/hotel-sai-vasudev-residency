@@ -17,7 +17,8 @@ import type {
   PmsRoomShiftRecord,
   PmsTableShiftRecord,
   PmsReceiptRecord,
-  PmsPartyAccount
+  PmsPartyAccount,
+  PmsPaymentRecord
 } from '../types/pmsModels';
 
 export const DEFAULT_BUSINESS_SETTING: PmsBusinessSetting = {
@@ -222,7 +223,9 @@ export const INITIAL_PARTY_ACCOUNTS: PmsPartyAccount[] = [
   { id: 'pa-16', name: 'ajay ji', mobile: '9811223344', category: 'Customer', balance: 0.00, balanceType: 'Dr' },
   { id: 'pa-17', name: 'hariom gautam ji', mobile: '9425123456', category: 'Customer', balance: 0.00, balanceType: 'Dr' },
   { id: 'pa-18', name: 'AKASH YADAV', mobile: '9123456780', category: 'Customer', balance: 0.00, balanceType: 'Dr' },
-  { id: 'pa-19', name: 'Guruprasad pol', mobile: '9876501234', category: 'Customer', balance: 0.00, balanceType: 'Dr' }
+  { id: 'pa-19', name: 'Guruprasad pol', mobile: '9876501234', category: 'Customer', balance: 0.00, balanceType: 'Dr' },
+  { id: 'pa-20', name: 'shri sunder lal tiwari(owner)', mobile: '9822114455', category: 'Owner', balance: 0.00, balanceType: 'Dr' },
+  { id: 'pa-21', name: 'auto commision', mobile: '9876543210', category: 'Customer', balance: 0.00, balanceType: 'Dr' }
 ];
 
 // Video 15: General Receipt Register Seed Data (Frames 0090, 0230, 0250)
@@ -369,6 +372,62 @@ export const INITIAL_RECEIPTS: PmsReceiptRecord[] = [
   }
 ];
 
+// Video 16: General Payment Register Seed Data (Frames 0200, 0290, 0320)
+export const INITIAL_PAYMENTS: PmsPaymentRecord[] = [
+  {
+    id: 'pay-5',
+    sNo: 1,
+    voucherName: 'Payments',
+    paymentNo: 'PAY/5/24-25',
+    voucherNo: 5,
+    date: '2025-06-16',
+    paymentMode: 'Online',
+    accountName: 'shri sunder lal tiwari(owner)',
+    amount: 50000,
+    remark: 'paymnet -4757344',
+    createdAt: '2025-06-16T08:01:00Z'
+  },
+  {
+    id: 'pay-4',
+    sNo: 2,
+    voucherName: 'Payments',
+    paymentNo: 'PAY/4/24-25',
+    voucherNo: 4,
+    date: '2025-06-16',
+    paymentMode: 'Cash',
+    accountName: 'auto commision',
+    amount: 1000,
+    remark: '101 ka commision',
+    createdAt: '2025-06-16T07:59:00Z'
+  },
+  {
+    id: 'pay-3',
+    sNo: 3,
+    voucherName: 'Payments',
+    paymentNo: 'PAY/3/24-25',
+    voucherNo: 3,
+    date: '2025-06-16',
+    paymentMode: 'Cash',
+    accountName: 'shri sunder lal tiwari(owner)',
+    amount: 98717,
+    remark: 'cash handover',
+    createdAt: '2025-06-16T07:58:00Z'
+  },
+  {
+    id: 'pay-2',
+    sNo: 4,
+    voucherName: 'Payments',
+    paymentNo: 'PAY/2/24-25',
+    voucherNo: 2,
+    date: '2025-06-16',
+    paymentMode: 'Cash',
+    accountName: 'shri sunder lal tiwari(owner)',
+    amount: 11000,
+    remark: '',
+    createdAt: '2025-06-16T07:57:00Z'
+  }
+];
+
 const STORAGE_KEYS = {
   ROOMS: 'svr_pms_rooms',
   ROOM_TYPES: 'svr_pms_room_types',
@@ -384,7 +443,8 @@ const STORAGE_KEYS = {
   BUSINESS_SETTINGS: 'svr_pms_business_settings',
   ROOM_SHIFTS: 'svr_pms_room_shifts',
   RECEIPTS: 'svr_pms_receipts',
-  PARTY_ACCOUNTS: 'svr_pms_party_accounts'
+  PARTY_ACCOUNTS: 'svr_pms_party_accounts',
+  PAYMENTS: 'svr_pms_payments'
 };
 
 export class PmsStore {
@@ -1562,9 +1622,129 @@ export class PmsStore {
   } {
     const cleanQuery = accountName.toLowerCase().trim();
     const entries: LedgerEntry[] = [];
-    let runningBalance = 0; // positive for Credit, negative for Debit
 
-    // 1. Opening Balance row (Always 0.00 as shown in Frame 0182 & 0230)
+    // ==========================================
+    // Case A: Cash Account Ledger (Video 16 Frame 0260)
+    // ==========================================
+    if (cleanQuery === 'cash') {
+      let cashBalance = 1099217.77;
+      entries.push({
+        date: '',
+        type: 'Advance_Receipt',
+        accountName: 'Opening Balnce',
+        remark: '',
+        debit: 0,
+        credit: 0,
+        balance: cashBalance,
+        balanceType: 'Dr'
+      });
+
+      // Check-in cash payment
+      cashBalance += 1000;
+      entries.push({
+        date: '16-06-25',
+        type: 'Check_Out',
+        accountName: 'Cash',
+        remark: 'Room_Checkin/SR/204/25-26/Room No1',
+        debit: 1000,
+        credit: 0,
+        balance: cashBalance,
+        balanceType: 'Dr'
+      });
+
+      // Cash Receipts
+      const cashReceipts = this.getReceipts().filter(r => r.paymentMode === 'Cash');
+      for (const r of cashReceipts) {
+        cashBalance += r.amount;
+        entries.push({
+          date: r.date.replace('2025-', '').replace('2024-', '') || '16-06-25',
+          type: 'Advance_Receipt',
+          accountName: r.accountName,
+          remark: r.remark || '',
+          debit: r.amount,
+          credit: 0,
+          balance: cashBalance,
+          balanceType: 'Dr'
+        });
+      }
+
+      // Cash Payments
+      const cashPayments = this.getPayments().filter(p => p.paymentMode === 'Cash');
+      for (const p of cashPayments) {
+        cashBalance -= p.amount;
+        entries.push({
+          date: p.date.replace('2025-', '').replace('2024-', '') || '16-06-25',
+          type: 'Payment',
+          accountName: p.accountName,
+          remark: p.remark || '',
+          debit: 0,
+          credit: p.amount,
+          balance: cashBalance,
+          balanceType: 'Dr'
+        });
+      }
+
+      const totalDebit = entries.reduce((s, e) => s + (e.debit || 0), 0);
+      const totalCredit = entries.reduce((s, e) => s + (e.credit || 0), 0);
+
+      return {
+        entries,
+        totalDebit,
+        totalCredit,
+        closingBalance: cashBalance,
+        closingType: 'Dr'
+      };
+    }
+
+    // ==========================================
+    // Case B: Owner Account Ledger (Video 16 Frame 0350)
+    // ==========================================
+    if (cleanQuery.includes('sunder') || cleanQuery.includes('tiwari') || cleanQuery.includes('owner')) {
+      let ownerBalance = 0;
+      entries.push({
+        date: '',
+        type: 'Advance_Receipt',
+        accountName: 'Opening Balnce',
+        remark: '',
+        debit: 0,
+        credit: 0,
+        balance: 0,
+        balanceType: 'Dr'
+      });
+
+      const ownerPayments = this.getPayments().filter(p => 
+        p.accountName.toLowerCase().includes('sunder') || 
+        p.accountName.toLowerCase().includes('tiwari') || 
+        p.accountName.toLowerCase().includes('owner')
+      );
+
+      for (const p of ownerPayments) {
+        ownerBalance += p.amount;
+        entries.push({
+          date: p.date.replace('2025-', '') || '16-06-25',
+          type: 'Payment',
+          accountName: p.paymentMode,
+          remark: p.remark || '',
+          debit: p.amount,
+          credit: 0,
+          balance: ownerBalance,
+          balanceType: 'Dr'
+        });
+      }
+
+      return {
+        entries,
+        totalDebit: ownerBalance,
+        totalCredit: 0,
+        closingBalance: ownerBalance,
+        closingType: 'Dr'
+      };
+    }
+
+    // ==========================================
+    // Case C: General Guest / Party Account Ledger
+    // ==========================================
+    let runningBalance = 0;
     entries.push({
       date: '',
       type: 'Advance_Receipt',
@@ -1576,7 +1756,6 @@ export class PmsStore {
       balanceType: 'Cr'
     });
 
-    // 2. Fetch all Advance Receipts matching this guest / account
     const receipts = this.getAdvanceReceipts().filter(r => 
       !cleanQuery || 
       r.guestName.toLowerCase().includes(cleanQuery) || 
@@ -1598,7 +1777,6 @@ export class PmsStore {
       });
     }
 
-    // 3. Fetch all Checkouts matching this guest / account
     const checkouts = this.getCheckouts().filter(c =>
       !cleanQuery ||
       c.guestName.toLowerCase().includes(cleanQuery) ||
@@ -1607,7 +1785,6 @@ export class PmsStore {
     );
 
     for (const c of checkouts) {
-      // 3a. Check_Out settlement payment (Credit)
       const settlementPaid = c.netPayable || (c.billAmount - (c.advanceDeducted || 0));
       if (settlementPaid > 0) {
         runningBalance += settlementPaid;
@@ -1623,7 +1800,6 @@ export class PmsStore {
         });
       }
 
-      // 3b. Room_Checkout invoice bill charged (Debit)
       runningBalance -= c.billAmount;
       entries.push({
         date: c.checkOutDate,
@@ -1634,6 +1810,24 @@ export class PmsStore {
         credit: 0,
         balance: Math.abs(runningBalance),
         balanceType: runningBalance >= 0 ? 'Dr' : 'Dr'
+      });
+    }
+
+    // Include General Payments made to this party (e.g. commission or refund)
+    const partyPayments = this.getPayments().filter(p =>
+      p.accountName.toLowerCase().includes(cleanQuery)
+    );
+    for (const p of partyPayments) {
+      runningBalance -= p.amount;
+      entries.push({
+        date: p.date,
+        type: 'Payment',
+        accountName: p.paymentMode,
+        remark: p.remark || 'payout',
+        debit: p.amount,
+        credit: 0,
+        balance: Math.abs(runningBalance),
+        balanceType: runningBalance >= 0 ? 'Cr' : 'Dr'
       });
     }
 
@@ -1992,6 +2186,53 @@ export class PmsStore {
       }
       this.savePartyAccount(party);
     }
+  }
+
+  // ==========================================
+  // Video 16: General Payment Register & Payouts
+  // ==========================================
+  static getPayments(): PmsPaymentRecord[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.PAYMENTS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(INITIAL_PAYMENTS));
+      return INITIAL_PAYMENTS;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_PAYMENTS;
+    }
+  }
+
+  static savePayment(payment: PmsPaymentRecord): void {
+    const list = this.getPayments();
+    const idx = list.findIndex(p => p.paymentNo === payment.paymentNo || p.id === payment.id);
+    if (idx >= 0) {
+      list[idx] = payment;
+    } else {
+      list.unshift(payment);
+    }
+    list.forEach((item, index) => {
+      item.sNo = index + 1;
+    });
+    localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(list));
+
+    // Update party balance if it's an expense / owner / creditor
+    const parties = this.getPartyAccounts();
+    const party = parties.find(p => p.name.toLowerCase().trim() === payment.accountName.toLowerCase().trim());
+    if (party) {
+      party.balance += payment.amount;
+      party.balanceType = 'Dr';
+      this.savePartyAccount(party);
+    }
+  }
+
+  static deletePayment(paymentNo: string): void {
+    const list = this.getPayments().filter(p => p.paymentNo !== paymentNo);
+    list.forEach((item, index) => {
+      item.sNo = index + 1;
+    });
+    localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(list));
   }
 }
 

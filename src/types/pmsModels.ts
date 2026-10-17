@@ -464,4 +464,21 @@ export interface PmsPartyAccount {
   balanceType: 'Dr' | 'Cr';     // Debit or Credit
 }
 
+// Video 16: Payment Voucher & Payouts Entry
+export interface PmsPaymentRecord {
+  id: string;
+  sNo: number;
+  voucherName: string;          // e.g. "Payments"
+  paymentNo: string;            // e.g. "PAY/5/24-25"
+  voucherNo: number;            // e.g. 5
+  date: string;                 // YYYY-MM-DD or DD-MM-YYYY
+  paymentMode: 'Cash' | 'Online' | 'Card' | 'UPI' | 'Cheque';
+  accountName: string;          // e.g. "shri sunder lal tiwari(owner)", "auto commision"
+  accountMobile?: string;
+  amount: number;               // e.g. 11000, 98717, 1000, 50000
+  remark: string;               // e.g. "cash handover", "101 ka commision", "paymnet -4757344"
+  createdAt: string;
+}
+
+
 

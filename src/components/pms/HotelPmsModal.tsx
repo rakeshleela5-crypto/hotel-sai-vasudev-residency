@@ -25,6 +25,7 @@ import { NcKotRegisterModal } from './NcKotRegisterModal';
 import { RoomKotRegisterModal } from './RoomKotRegisterModal';
 import { ReceiptRegisterModal } from './ReceiptRegisterModal';
 import { OutstandingReceivablesModal } from './OutstandingReceivablesModal';
+import { PaymentRegisterModal } from './PaymentRegisterModal';
 import './pmsStyles.css';
 
 interface HotelPmsModalProps {
@@ -88,6 +89,9 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   // Video 15 Receipt Register & Outstanding Receivables
   const [isReceiptRegisterOpen, setIsReceiptRegisterOpen] = useState(false);
   const [isOutstandingReceivablesOpen, setIsOutstandingReceivablesOpen] = useState(false);
+
+  // Video 16 Payment Register
+  const [isPaymentRegisterOpen, setIsPaymentRegisterOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -328,6 +332,9 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsReceiptRegisterOpen(true)}>
                       <span style={{ color: '#60a5fa', fontWeight: 700 }}>📄 Receipt Register (Video 15)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsPaymentRegisterOpen(true)}>
+                      <span style={{ color: '#06b6d4', fontWeight: 700 }}>💳 Payment Register (Video 16)</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => setActiveTab('matrix')}>
                       <span>🧾 Room Check Out</span>
@@ -633,6 +640,12 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       <OutstandingReceivablesModal
         isOpen={isOutstandingReceivablesOpen}
         onClose={() => setIsOutstandingReceivablesOpen(false)}
+      />
+
+      {/* Video 16: General Payment Register Modal (Frame 0200, 0290, 0320) */}
+      <PaymentRegisterModal
+        isOpen={isPaymentRegisterOpen}
+        onClose={() => setIsPaymentRegisterOpen(false)}
       />
     </>
   );
