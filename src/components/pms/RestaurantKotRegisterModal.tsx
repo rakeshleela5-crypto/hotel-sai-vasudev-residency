@@ -54,6 +54,30 @@ export const RestaurantKotRegisterModal: React.FC<RestaurantKotRegisterModalProp
     return matchesSearch && matchesStatus;
   });
 
+  const handleExportExcel = () => {
+    const headers = ['S.No', 'Date', 'KOT No', 'Table/Room', 'Guest Name', 'Total Qty', 'Total Amount', 'Serve Status', 'Remark', 'Status'];
+    const rows = filteredKots.map((k, idx) => [
+      idx + 1,
+      k.date || new Date(k.createdAt).toLocaleDateString('en-GB'),
+      k.kotNo,
+      k.tableNo || k.roomNo || '',
+      k.guestName || '',
+      k.totalQty || k.items.reduce((s, it) => s + it.qty, 0),
+      k.totalAmount,
+      k.serveStatus || k.status,
+      k.kotRemark || '',
+      k.status
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.map(x => `"${x}"`).join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `restaurant_kot_register_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="pms-submodal-overlay" onClick={onClose}>
       <div
@@ -76,7 +100,7 @@ export const RestaurantKotRegisterModal: React.FC<RestaurantKotRegisterModalProp
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 20 }}>🍴</span>
             <span style={{ fontWeight: 800, fontSize: 16, color: '#ffffff', letterSpacing: 0.5 }}>
-              Restaurant KOT Register (Video 12 Frame 0300)
+              Restaurant KOT Register (Video 18 Frame 0420)
             </span>
           </div>
           <button
@@ -89,7 +113,7 @@ export const RestaurantKotRegisterModal: React.FC<RestaurantKotRegisterModalProp
         </div>
 
         <div style={{ padding: 20 }}>
-          {/* Top 7 Action Buttons matching Video 12 Frame 0300 */}
+          {/* Top 7 Action Buttons matching Video 12 & 18 Frame 0420 */}
           <div
             style={{
               display: 'flex',
@@ -141,7 +165,7 @@ export const RestaurantKotRegisterModal: React.FC<RestaurantKotRegisterModalProp
               Cleared KOT List
             </button>
 
-            {/* 3. NC KOT Register (Burgundy / Red - Video 13) */}
+            {/* 3. NC KOT Register (Burgundy / Red - Video 13 & 18) */}
             <button
               type="button"
               onClick={() => setIsNcRegisterOpen(true)}
@@ -240,7 +264,7 @@ export const RestaurantKotRegisterModal: React.FC<RestaurantKotRegisterModalProp
             </button>
           </div>
 
-          {/* Search & Pagination Bar */}
+          {/* Search, Filter & Export Bar */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#475569' }}>
               <select
@@ -255,7 +279,47 @@ export const RestaurantKotRegisterModal: React.FC<RestaurantKotRegisterModalProp
               <span>entries per page</span>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button
+                type="button"
+                onClick={handleExportExcel}
+                title="Export KOT Register to CSV/Excel (Video 18 Transcript [14:15])"
+                style={{
+                  background: '#16a34a',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: 4,
+                  padding: '5px 12px',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4
+                }}
+              >
+                📊 Excel Export
+              </button>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                title="Print KOT Register"
+                style={{
+                  background: '#475569',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: 4,
+                  padding: '5px 12px',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4
+                }}
+              >
+                🖨️ Print
+              </button>
               <span style={{ fontSize: 12, color: '#475569', fontWeight: 600 }}>Search:</span>
               <input
                 type="text"
@@ -267,7 +331,7 @@ export const RestaurantKotRegisterModal: React.FC<RestaurantKotRegisterModalProp
                   borderRadius: 4,
                   border: '1px solid #cbd5e1',
                   fontSize: 12,
-                  width: 240
+                  width: 200
                 }}
               />
             </div>

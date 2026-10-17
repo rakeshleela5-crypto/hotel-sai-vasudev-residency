@@ -565,6 +565,39 @@ export class PmsStore {
     localStorage.setItem(STORAGE_KEYS.TABLES, JSON.stringify(list));
   }
 
+  static vacateTable(tableNameOrId: string): void {
+    if (!tableNameOrId) return;
+    const list = this.getTables();
+    const clean = tableNameOrId.toLowerCase().trim().replace(/^table\s+/i, '');
+    const table = list.find(t => 
+      t.id.toLowerCase() === clean || 
+      t.tableName.toLowerCase() === clean ||
+      t.tableName.toLowerCase() === `table ${clean}` ||
+      t.tableName.toLowerCase().replace(/^table\s+/i, '').trim() === clean
+    );
+    if (table) {
+      table.status = 'Vacant';
+      table.activeKotNos = [];
+      this.saveTable(table);
+    }
+  }
+
+  static occupyTable(tableNameOrId: string): void {
+    if (!tableNameOrId) return;
+    const list = this.getTables();
+    const clean = tableNameOrId.toLowerCase().trim().replace(/^table\s+/i, '');
+    const table = list.find(t => 
+      t.id.toLowerCase() === clean || 
+      t.tableName.toLowerCase() === clean ||
+      t.tableName.toLowerCase() === `table ${clean}` ||
+      t.tableName.toLowerCase().replace(/^table\s+/i, '').trim() === clean
+    );
+    if (table) {
+      table.status = 'Running';
+      this.saveTable(table);
+    }
+  }
+
   // GST Masters
   static getGstMasters(): PmsGstMaster[] {
     const raw = localStorage.getItem(STORAGE_KEYS.GST_MASTERS);
@@ -1428,11 +1461,19 @@ export class PmsStore {
     list.unshift(bill);
     localStorage.setItem('hotel_pms_foodbills', JSON.stringify(list));
 
-    // Mark KOTs as Billed
+    // 1. Mark KOTs as Billed
     if (bill.kotNumbers && bill.kotNumbers.length > 0) {
       this.markKotsAsBilled(bill.kotNumbers);
     }
 
+    // 2. Vacate Table if Dine-In / Restaurant Table Bill (Video 18 Frame 0370)
+    if (bill.tableNo) {
+      this.vacateTable(bill.tableNo);
+    } else if (bill.roomNo && (bill.roomNo.toLowerCase().includes('table') || bill.roomNo.toLowerCase().startsWith('t-') || bill.roomNo.toLowerCase().startsWith('nc') || bill.roomNo.toLowerCase().startsWith('a1'))) {
+      this.vacateTable(bill.roomNo);
+    }
+
+    // 3. If Settle To Room, add to guest room folio
     if (bill.settlementType === 'Settle To Room') {
       const rooms = this.getRooms();
       const updated = rooms.map(r => {
@@ -1445,6 +1486,41 @@ export class PmsStore {
         return r;
       });
       this.saveRooms(updated);
+    }
+
+    // 4. If Settle To Cash or Online, register in financial ledger (Video 17 & 18)
+    const sType = (bill.settlementType || '').toLowerCase();
+    const vNum = parseInt(bill.billNo.replace(/\D/g, '').slice(-3) || '264', 10);
+    const currReceipts = this.getReceipts();
+
+    if (sType.includes('cash')) {
+      this.saveReceipt({
+        id: `rec-food-${Date.now()}`,
+        sNo: currReceipts.length + 1,
+        voucherName: 'Receipts',
+        receiptNo: bill.billNo,
+        voucherNo: vNum,
+        date: bill.date,
+        accountName: bill.guestName || 'Restaurant Guest',
+        paymentMode: 'Cash',
+        amount: bill.netBillAmount,
+        remark: `Restaurant Food Bill ${bill.billNo} - ${bill.tableNo || bill.roomNo}`,
+        createdAt: bill.createdAt
+      });
+    } else if (sType.includes('online') || sType.includes('upi') || sType.includes('card')) {
+      this.saveReceipt({
+        id: `rec-food-${Date.now()}`,
+        sNo: currReceipts.length + 1,
+        voucherName: 'Receipts',
+        receiptNo: bill.billNo,
+        voucherNo: vNum,
+        date: bill.date,
+        accountName: bill.guestName || 'Restaurant Guest',
+        paymentMode: 'Online',
+        amount: bill.netBillAmount,
+        remark: `Restaurant Food Bill ${bill.billNo} - ${bill.tableNo || bill.roomNo}`,
+        createdAt: bill.createdAt
+      });
     }
   }
 

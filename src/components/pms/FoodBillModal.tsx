@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PmsStore } from '../../services/pmsStore';
-import type { FoodBillItem, PmsFoodBill, PmsKotRecord, PmsRoom } from '../../types/pmsModels';
+import type { FoodBillItem, PmsFoodBill, PmsKotRecord } from '../../types/pmsModels';
 
 interface FoodBillModalProps {
   isOpen: boolean;
@@ -19,54 +19,84 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
+  const tables = PmsStore.getTables();
   const occupiedRooms = PmsStore.getRooms().filter(r => r.status === 'occupied');
-  const initialRoom = occupiedRooms.find(r => r.roomNo === defaultRoomNo) || occupiedRooms[0] || {
-    roomNo: '103',
-    currentGuest: { name: 'ALOK JAIN' }
-  } as PmsRoom;
+  const companyInfo = PmsStore.getCompanyInfo();
 
-  const [selectedRoomNo, setSelectedRoomNo] = useState<string>(defaultTableNo || initialRoom.roomNo);
-  const selectedGuestName = defaultTableNo
-    ? `Dine-In (${defaultTableNo})`
-    : occupiedRooms.find(r => r.roomNo === selectedRoomNo)?.currentGuest?.name || 'ALOK JAIN';
+  const isTableMode = Boolean(defaultTableNo) || (!defaultRoomNo && tables.length > 0);
 
-  const defaultBillNo = `SHRI/${Math.floor(250 + Math.random() * 50)}/24-25`;
-  const [billNo, setBillNo] = useState<string>(defaultBillNo);
-  const [billDate, setBillDate] = useState<string>('07-06-2025');
-  const [billTime, setBillTime] = useState<string>('06:37');
-  const [printApproval, setPrintApproval] = useState<boolean>(true);
-  const [discountPercent, setDiscountPercent] = useState<number>(0);
-  const [discountAmount, setDiscountAmount] = useState<number>(0);
-  const [settlementType, setSettlementType] = useState<'Settle To Room' | 'Cash' | 'UPI' | 'Card'>(
-    defaultTableNo ? 'Cash' : 'Settle To Room'
+  const [serviceType, setServiceType] = useState<string>(
+    defaultTableNo ? 'Table Service' : defaultRoomNo ? 'Room Service' : 'Table Service'
+  );
+  const [selectedTable, setSelectedTable] = useState<string>(
+    defaultTableNo || (tables.find(t => t.status === 'Running')?.tableName || 'Table T-1')
+  );
+  const [selectedRoomNo, setSelectedRoomNo] = useState<string>(
+    defaultRoomNo || occupiedRooms[0]?.roomNo || '103'
   );
 
-  // Load KOTs for selected room or table
+  const [customerName, setCustomerName] = useState<string>('vinod sharma');
+  const [customerAddress, setCustomerAddress] = useState<string>('');
+  const [customerMobile, setCustomerMobile] = useState<string>('7657657655');
+  const [customerRemark, setCustomerRemark] = useState<string>('');
+  const [paymentRemark, setPaymentRemark] = useState<string>('');
+
+  const [billNo, setBillNo] = useState<string>(
+    isTableMode ? `Res/${Math.floor(260 + Math.random() * 20)}/24-25` : `SHRI/${Math.floor(235 + Math.random() * 20)}/24-25`
+  );
+  const [billDate, setBillDate] = useState<string>('16-06-2025');
+  const billTime = '08:18';
+  const [printApproval, setPrintApproval] = useState<boolean>(true);
+  const [discountPercent, setDiscountPercent] = useState<number>(5);
+  const [discountAmount, setDiscountAmount] = useState<number>(13.69);
+  const [settlementType, setSettlementType] = useState<string>(
+    isTableMode ? 'Settle To Cash' : 'Settle To Room'
+  );
+
   const [pendingKots, setPendingKots] = useState<PmsKotRecord[]>([]);
   const [billItems, setBillItems] = useState<FoodBillItem[]>([]);
   const [showPrintSlip, setShowPrintSlip] = useState<boolean>(false);
   const [savedBill, setSavedBill] = useState<PmsFoodBill | null>(null);
 
+  // Load KOTs
   useEffect(() => {
-    // Find KOTs for this room or table
-    const cleanSearch = selectedRoomNo.replace(/^Table\s+/i, '').trim().toLowerCase();
-    const kots = PmsStore.getKots().filter(k => {
-      const matchRoom = k.roomNo && k.roomNo.toLowerCase() === selectedRoomNo.toLowerCase();
-      const matchTable = k.tableNo && k.tableNo.replace(/^Table\s+/i, '').trim().toLowerCase() === cleanSearch;
-      const isOpen = k.status !== 'Billed' && k.status !== 'Cancelled';
-      return (matchRoom || matchTable) && isOpen;
-    });
+    let kots: PmsKotRecord[] = [];
+    if (serviceType === 'Room Service') {
+      kots = PmsStore.getKots().filter(
+        k => k.roomNo === selectedRoomNo && k.status !== 'Billed' && k.status !== 'Cancelled'
+      );
+      const room = occupiedRooms.find(r => r.roomNo === selectedRoomNo);
+      if (room?.currentGuest) {
+        setCustomerName(room.currentGuest.name);
+        setCustomerMobile(room.currentGuest.phone || '');
+      }
+    } else {
+      const cleanTable = selectedTable.toLowerCase().replace(/^table\s+/i, '').trim();
+      kots = PmsStore.getKots().filter(k => {
+        const kTable = (k.tableNo || '').toLowerCase().replace(/^table\s+/i, '').trim();
+        return kTable === cleanTable && k.status !== 'Billed' && k.status !== 'Cancelled';
+      });
+      if (kots.length > 0 && kots[0].guestName && kots[0].guestName !== 'Walk-In Guest') {
+        setCustomerName(kots[0].guestName);
+      } else {
+        setCustomerName('vinod sharma');
+        setCustomerMobile('7657657655');
+      }
+    }
+
     setPendingKots(kots);
 
     if (kots.length > 0) {
-      // Flatten items from all pending KOTs
       let sNo = 1;
       const items: FoodBillItem[] = [];
       kots.forEach(k => {
         k.items.forEach(it => {
           const taxable = it.amount;
-          const gstAmount = Number(((taxable * 5) / 100).toFixed(2));
-          const value = Number((taxable + gstAmount).toFixed(2));
+          const disAmt = Number(((taxable * discountPercent) / 100).toFixed(2));
+          const netTaxable = Number((taxable - disAmt).toFixed(2));
+          const gstRate = 5.0;
+          const gstAmount = Number(((netTaxable * gstRate) / 100).toFixed(2));
+          const value = Number((netTaxable + gstAmount).toFixed(2));
           items.push({
             sNo: sNo++,
             itemName: it.itemName,
@@ -74,10 +104,10 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
             qty: it.qty,
             rate: it.rate,
             amount: it.amount,
-            discountPercent: 0,
-            discountAmount: 0,
-            taxable,
-            gstPercent: 5.0,
+            discountPercent,
+            discountAmount: disAmt,
+            taxable: netTaxable,
+            gstPercent: gstRate,
             gstAmount,
             vatPercent: 0,
             surPercent: 0,
@@ -87,52 +117,109 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
       });
       setBillItems(items);
     } else {
-      // Default sample matching Frame 0200
-      setBillItems([
+      // Default sample matching Video 18 Frame 0330
+      const defaultSample: FoodBillItem[] = [
         {
           sNo: 1,
           itemName: 'WATER BOTLE',
           itemCode: '10003',
-          qty: 1,
+          qty: 1.0,
           rate: 28.57,
           amount: 28.57,
-          discountPercent: 0,
-          discountAmount: 0,
-          taxable: 28.57,
+          discountPercent: 5,
+          discountAmount: 1.43,
+          taxable: 27.14,
           gstPercent: 5.0,
-          gstAmount: 1.43,
+          gstAmount: 1.36,
           vatPercent: 0,
           surPercent: 0,
-          value: 30.00
+          value: 28.50
+        },
+        {
+          sNo: 2,
+          itemName: 'bread pakoda',
+          itemCode: '10006',
+          qty: 1.0,
+          rate: 95.24,
+          amount: 95.24,
+          discountPercent: 5,
+          discountAmount: 4.76,
+          taxable: 90.48,
+          gstPercent: 5.0,
+          gstAmount: 4.52,
+          vatPercent: 0,
+          surPercent: 0,
+          value: 95.00
+        },
+        {
+          sNo: 3,
+          itemName: 'Chiken Biryani',
+          itemCode: '10018',
+          qty: 1.0,
+          rate: 90.0,
+          amount: 90.0,
+          discountPercent: 5,
+          discountAmount: 4.50,
+          taxable: 85.50,
+          gstPercent: 0.0,
+          gstAmount: 0.0,
+          vatPercent: 0,
+          surPercent: 0,
+          value: 85.50
+        },
+        {
+          sNo: 4,
+          itemName: 'BADA PAO',
+          itemCode: '10022',
+          qty: 1.0,
+          rate: 60.0,
+          amount: 60.0,
+          discountPercent: 5,
+          discountAmount: 3.00,
+          taxable: 57.00,
+          gstPercent: 0.0,
+          gstAmount: 0.0,
+          vatPercent: 0,
+          surPercent: 0,
+          value: 57.00
         }
-      ]);
+      ];
+      setBillItems(defaultSample);
     }
-  }, [selectedRoomNo]);
+  }, [selectedTable, selectedRoomNo, serviceType]);
 
-  const kotNoDisplay = pendingKots.map(k => k.kotNo.replace(/\D/g, '').slice(-3) || k.kotNo).join(', ') || '351';
+  // Recalculate items when discount changes
+  const applyDiscount = (pct: number) => {
+    setDiscountPercent(pct);
+    const updated = billItems.map(item => {
+      const disAmt = Number(((item.amount * pct) / 100).toFixed(2));
+      const taxable = Number((item.amount - disAmt).toFixed(2));
+      const gstVal = Number(((taxable * (item.gstPercent || 0)) / 100).toFixed(2));
+      const value = Number((taxable + gstVal).toFixed(2));
+      return {
+        ...item,
+        discountPercent: pct,
+        discountAmount: disAmt,
+        taxable,
+        value
+      };
+    });
+    setBillItems(updated);
+    const totDisAmt = updated.reduce((s, it) => s + (it.discountAmount || 0), 0);
+    setDiscountAmount(Number(totDisAmt.toFixed(2)));
+  };
 
-  // Calculations
+  const kotNoDisplay = pendingKots.length > 0
+    ? pendingKots.map(k => k.kotNo.replace(/\D/g, '').slice(-3) || k.kotNo).join(',')
+    : '372,374';
+
   const totalQty = billItems.reduce((acc, it) => acc + it.qty, 0);
   const totalAmount = Number(billItems.reduce((acc, it) => acc + it.amount, 0).toFixed(2));
-  const totalTaxable = Number((totalAmount - discountAmount).toFixed(2));
-  const gstAmount = Number(((totalTaxable * 5) / 100).toFixed(2));
-  const cgstAmount = Number((gstAmount / 2).toFixed(2));
-  const sgstAmount = Number((gstAmount / 2).toFixed(2));
-  const rawNet = totalTaxable + gstAmount;
-  const netBillAmount = Math.round(rawNet);
-  const roundOff = Number((netBillAmount - rawNet).toFixed(2));
-
-  const handleDiscountPercentChange = (pct: number) => {
-    setDiscountPercent(pct);
-    const amt = Number(((totalAmount * pct) / 100).toFixed(2));
-    setDiscountAmount(amt);
-  };
-
-  const handleDiscountAmountChange = (amt: number) => {
-    setDiscountAmount(amt);
-    const pct = totalAmount > 0 ? Number(((amt / totalAmount) * 100).toFixed(2)) : 0;
-    setDiscountPercent(pct);
-  };
+  const totalTaxable = Number(billItems.reduce((acc, it) => acc + it.taxable, 0).toFixed(2));
+  const totalGst = Number(billItems.reduce((acc, it) => acc + (it.gstAmount || 0), 0).toFixed(2));
+  const totalValue = Number(billItems.reduce((acc, it) => acc + it.value, 0).toFixed(2));
+  const netBillAmount = Math.round(totalValue);
+  const roundOff = Number((netBillAmount - totalValue).toFixed(2));
 
   const convertNumberToWords = (num: number): string => {
     const units = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 
@@ -150,21 +237,27 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
   const handleSaveBill = (printSlip: boolean = true) => {
     const kotNums = pendingKots.map(k => k.kotNo);
     if (kotNums.length === 0) {
-      kotNums.push('KOT/351/24-25');
+      kotNums.push('KOT/372/24-25', 'KOT/374/24-25');
     }
 
     const billRecord: PmsFoodBill = {
       billNo,
       date: billDate,
       time: billTime,
-      roomNo: selectedRoomNo,
-      guestName: selectedGuestName,
+      roomNo: serviceType === 'Room Service' ? selectedRoomNo : selectedTable,
+      tableNo: serviceType !== 'Room Service' ? selectedTable : undefined,
+      serviceType,
+      guestName: customerName,
+      mobile: customerMobile,
+      address: customerAddress,
+      remark: customerRemark,
+      paymentRemark,
       kotNumbers: kotNums,
       items: billItems,
       taxableAmount: totalTaxable,
       gstPercent: 5.0,
-      cgstAmount,
-      sgstAmount,
+      cgstAmount: Number((totalGst / 2).toFixed(2)),
+      sgstAmount: Number((totalGst / 2).toFixed(2)),
       discountPercent,
       discountAmount,
       roundOff,
@@ -185,15 +278,9 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
     if (printSlip) {
       setShowPrintSlip(true);
     } else {
-      alert(`Food Bill ${billNo} saved successfully! Settled via: ${settlementType}`);
+      alert(`Restaurant Food Bill ${billNo} saved & settled! Table ${selectedTable} has been vacated.`);
       onClose();
     }
-  };
-
-  const handleAddNew = () => {
-    setBillNo(`SHRI/${Math.floor(250 + Math.random() * 50)}/24-25`);
-    setBillItems([]);
-    setShowPrintSlip(false);
   };
 
   return (
@@ -201,13 +288,16 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
       <div 
         className="pms-form-box" 
         onClick={e => e.stopPropagation()} 
-        style={{ maxWidth: showPrintSlip ? 480 : 1050 }}
+        style={{ maxWidth: showPrintSlip ? 450 : 1080, maxHeight: '92vh', overflowY: 'auto' }}
       >
         {!showPrintSlip ? (
           <>
-            {/* Top Bar matching Frame 0200 */}
-            <div className="pms-form-banner banner-navy" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Food Bill Generation &bull; demo.datahouseerp.com/facttkot_records</span>
+            {/* Top Bar matching Frame 0330 */}
+            <div
+              className="pms-form-banner banner-navy"
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+            >
+              <span>Restaurant Food Bill Generation &bull; demo.datahouseerp.com/table_facthkot_records/52</span>
               <button 
                 type="button" 
                 onClick={onClose} 
@@ -221,18 +311,10 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
               {/* Action Bar */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <span style={{ fontSize: 14, fontWeight: 800, color: '#0369a1' }}>
-                  Food &amp; Beverage Bill (5% GST &bull; SAC 996331)
+                  Restaurant POS Bill &bull; SAC 996331 &bull; 5% GST
                 </span>
 
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                  <button
-                    type="button"
-                    onClick={handleAddNew}
-                    style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '5px 14px', borderRadius: 3, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
-                  >
-                    Add New
-                  </button>
-
                   <label style={{ fontSize: 12, fontWeight: 700, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 4 }}>
                     <input
                       type="checkbox"
@@ -245,15 +327,32 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                   <button
                     type="button"
                     onClick={() => handleSaveBill(true)}
-                    style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '5px 18px', borderRadius: 3, fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
+                    style={{
+                      background: '#0284c7',
+                      color: '#fff',
+                      border: 'none',
+                      padding: '6px 20px',
+                      borderRadius: 4,
+                      fontSize: 13,
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 4px rgba(2,132,199,0.3)'
+                    }}
                   >
                     Save &amp; Print
                   </button>
                 </div>
               </div>
 
-              {/* Header Controls (Frame 0200) */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr 1.3fr 1.8fr 1fr 1fr 1fr', gap: 8, marginBottom: 12 }}>
+              {/* Row 1 Controls matching Frame 0330 */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1.2fr 1.3fr 1.3fr 1.2fr 1.2fr 0.9fr 1fr',
+                  gap: 8,
+                  marginBottom: 8
+                }}
+              >
                 <div className="form-group-pms" style={{ margin: 0 }}>
                   <label className="form-label-pms">Date</label>
                   <input
@@ -265,43 +364,63 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                 </div>
 
                 <div className="form-group-pms" style={{ margin: 0 }}>
-                  <label className="form-label-pms">Time</label>
-                  <input
-                    type="text"
-                    value={billTime}
-                    onChange={e => setBillTime(e.target.value)}
-                    className="form-input-pms"
-                  />
-                </div>
-
-                <div className="form-group-pms" style={{ margin: 0 }}>
                   <label className="form-label-pms">Bill No</label>
                   <input
                     type="text"
-                    readOnly
                     value={billNo}
+                    onChange={e => setBillNo(e.target.value)}
                     className="form-input-pms"
-                    style={{ background: '#f1f5f9', fontWeight: 800 }}
+                    style={{ fontWeight: 700, color: '#0369a1' }}
                   />
                 </div>
 
                 <div className="form-group-pms" style={{ margin: 0 }}>
-                  <label className="form-label-pms">Select Room (Guest || Room)</label>
+                  <label className="form-label-pms">Service Type</label>
                   <select
-                    value={selectedRoomNo}
-                    onChange={e => setSelectedRoomNo(e.target.value)}
+                    value={serviceType}
+                    onChange={e => setServiceType(e.target.value)}
                     className="form-select-pms"
-                    style={{ fontWeight: 700 }}
+                    style={{ fontWeight: 600 }}
                   >
-                    {occupiedRooms.map(r => (
-                      <option key={r.roomNo} value={r.roomNo}>
-                        {r.currentGuest?.name || 'Guest'} || {r.roomNo}
-                      </option>
-                    ))}
-                    {occupiedRooms.length === 0 && (
-                      <option value="103">ALOK JAIN || 103</option>
-                    )}
+                    <option value="Table Service">Table Service</option>
+                    <option value="Take Away">Take Away</option>
+                    <option value="Room Service">Room Service</option>
+                    <option value="Home Delivery">Home Delivery</option>
                   </select>
+                </div>
+
+                <div className="form-group-pms" style={{ margin: 0 }}>
+                  <label className="form-label-pms">
+                    {serviceType === 'Room Service' ? 'Select Room' : 'Selected Table'}
+                  </label>
+                  {serviceType === 'Room Service' ? (
+                    <select
+                      value={selectedRoomNo}
+                      onChange={e => setSelectedRoomNo(e.target.value)}
+                      className="form-select-pms"
+                      style={{ fontWeight: 700 }}
+                    >
+                      {occupiedRooms.map(r => (
+                        <option key={r.roomNo} value={r.roomNo}>
+                          {r.currentGuest?.name || 'Guest'} || {r.roomNo}
+                        </option>
+                      ))}
+                      {occupiedRooms.length === 0 && <option value="103">ALOK JAIN || 103</option>}
+                    </select>
+                  ) : (
+                    <select
+                      value={selectedTable}
+                      onChange={e => setSelectedTable(e.target.value)}
+                      className="form-select-pms"
+                      style={{ fontWeight: 700 }}
+                    >
+                      {tables.map(t => (
+                        <option key={t.id} value={t.tableName}>
+                          {t.tableName} ({t.status || 'Vacant'})
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
 
                 <div className="form-group-pms" style={{ margin: 0 }}>
@@ -311,7 +430,7 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                     readOnly
                     value={kotNoDisplay}
                     className="form-input-pms"
-                    style={{ background: '#f1f5f9', fontWeight: 700 }}
+                    style={{ background: '#f8fafc', fontWeight: 700 }}
                   />
                 </div>
 
@@ -321,11 +440,11 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                     type="number"
                     min="0"
                     max="100"
-                    step="0.1"
+                    step="1"
                     value={discountPercent}
-                    onChange={e => handleDiscountPercentChange(Number(e.target.value))}
+                    onChange={e => applyDiscount(Number(e.target.value))}
                     className="form-input-pms"
-                    style={{ textAlign: 'right' }}
+                    style={{ textAlign: 'right', fontWeight: 700 }}
                   />
                 </div>
 
@@ -333,98 +452,171 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                   <label className="form-label-pms">Dis Amt</label>
                   <input
                     type="number"
-                    min="0"
-                    step="0.01"
+                    readOnly
                     value={discountAmount}
-                    onChange={e => handleDiscountAmountChange(Number(e.target.value))}
                     className="form-input-pms"
-                    style={{ textAlign: 'right' }}
+                    style={{ textAlign: 'right', background: '#f8fafc', color: '#dc2626', fontWeight: 700 }}
                   />
                 </div>
               </div>
 
-              {/* Exact Table matching Frame 0200 */}
-              <div style={{ overflowX: 'auto', border: '1px solid #0f172a', borderRadius: 3, marginBottom: 12 }}>
+              {/* Row 2 Customer Info matching Frame 0330 */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1.6fr 1.6fr 1.4fr 1.4fr',
+                  gap: 8,
+                  marginBottom: 12
+                }}
+              >
+                <div className="form-group-pms" style={{ margin: 0 }}>
+                  <label className="form-label-pms">Name</label>
+                  <input
+                    type="text"
+                    value={customerName}
+                    onChange={e => setCustomerName(e.target.value)}
+                    placeholder="vinod sharma"
+                    className="form-input-pms"
+                    style={{ fontWeight: 700 }}
+                  />
+                </div>
+
+                <div className="form-group-pms" style={{ margin: 0 }}>
+                  <label className="form-label-pms">Address</label>
+                  <input
+                    type="text"
+                    value={customerAddress}
+                    onChange={e => setCustomerAddress(e.target.value)}
+                    placeholder="Address / Area"
+                    className="form-input-pms"
+                  />
+                </div>
+
+                <div className="form-group-pms" style={{ margin: 0 }}>
+                  <label className="form-label-pms">Mobile</label>
+                  <input
+                    type="text"
+                    value={customerMobile}
+                    onChange={e => setCustomerMobile(e.target.value)}
+                    placeholder="7657657655"
+                    className="form-input-pms"
+                    style={{ fontWeight: 700 }}
+                  />
+                </div>
+
+                <div className="form-group-pms" style={{ margin: 0 }}>
+                  <label className="form-label-pms">Remark</label>
+                  <input
+                    type="text"
+                    value={customerRemark}
+                    onChange={e => setCustomerRemark(e.target.value)}
+                    placeholder="Optional remark"
+                    className="form-input-pms"
+                  />
+                </div>
+              </div>
+
+              {/* Exact Items Table matching Frame 0330 */}
+              <div style={{ overflowX: 'auto', border: '1px solid #1e293b', borderRadius: 2, marginBottom: 12 }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
                   <thead>
-                    <tr style={{ background: '#0f172a', color: '#fff', textAlign: 'left' }}>
-                      <th style={{ padding: '6px 6px', width: 35 }}>S.No</th>
-                      <th style={{ padding: '6px 6px' }}>Item Name</th>
-                      <th style={{ padding: '6px 6px', width: 50, textAlign: 'center' }}>Qty</th>
-                      <th style={{ padding: '6px 6px', width: 70, textAlign: 'right' }}>Rate</th>
-                      <th style={{ padding: '6px 6px', width: 75, textAlign: 'right' }}>Amount</th>
-                      <th style={{ padding: '6px 6px', width: 55, textAlign: 'right' }}>Dis%</th>
-                      <th style={{ padding: '6px 6px', width: 65, textAlign: 'right' }}>Dis Amt</th>
-                      <th style={{ padding: '6px 6px', width: 75, textAlign: 'right' }}>Taxable</th>
-                      <th style={{ padding: '6px 6px', width: 65, textAlign: 'right' }}>GST%</th>
-                      <th style={{ padding: '6px 6px', width: 55, textAlign: 'right' }}>VAT%</th>
-                      <th style={{ padding: '6px 6px', width: 55, textAlign: 'right' }}>SUR%</th>
-                      <th style={{ padding: '6px 6px', width: 80, textAlign: 'right' }}>Value</th>
+                    <tr style={{ background: '#1e293b', color: '#fff', textAlign: 'left' }}>
+                      <th style={{ padding: '6px 8px', width: 40 }}>S.No</th>
+                      <th style={{ padding: '6px 8px' }}>Item Name</th>
+                      <th style={{ padding: '6px 8px', width: 50, textAlign: 'center' }}>Qty</th>
+                      <th style={{ padding: '6px 8px', width: 70, textAlign: 'right' }}>Rate</th>
+                      <th style={{ padding: '6px 8px', width: 75, textAlign: 'right' }}>Amount</th>
+                      <th style={{ padding: '6px 8px', width: 50, textAlign: 'right' }}>Dis%</th>
+                      <th style={{ padding: '6px 8px', width: 65, textAlign: 'right' }}>Dis Amt</th>
+                      <th style={{ padding: '6px 8px', width: 75, textAlign: 'right' }}>Taxable</th>
+                      <th style={{ padding: '6px 8px', width: 60, textAlign: 'right' }}>GST%</th>
+                      <th style={{ padding: '6px 8px', width: 50, textAlign: 'right' }}>VAT%</th>
+                      <th style={{ padding: '6px 8px', width: 50, textAlign: 'right' }}>SUR%</th>
+                      <th style={{ padding: '6px 8px', width: 80, textAlign: 'right' }}>Value</th>
                     </tr>
                   </thead>
                   <tbody>
                     {billItems.map((item, idx) => (
-                      <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0', background: idx % 2 === 0 ? '#fff' : '#f8fafc' }}>
-                        <td style={{ padding: '5px 6px' }}>{item.sNo}</td>
-                        <td style={{ padding: '5px 6px', fontWeight: 600 }}>{item.itemName}</td>
-                        <td style={{ padding: '5px 6px', textAlign: 'center', fontWeight: 700 }}>{item.qty.toFixed(2)}</td>
-                        <td style={{ padding: '5px 6px', textAlign: 'right' }}>{item.rate.toFixed(2)}</td>
-                        <td style={{ padding: '5px 6px', textAlign: 'right' }}>{item.amount.toFixed(2)}</td>
-                        <td style={{ padding: '5px 6px', textAlign: 'right' }}>{(item.discountPercent || 0).toFixed(2)}</td>
-                        <td style={{ padding: '5px 6px', textAlign: 'right' }}>{(item.discountAmount || 0).toFixed(2)}</td>
-                        <td style={{ padding: '5px 6px', textAlign: 'right', fontWeight: 600 }}>{item.taxable.toFixed(2)}</td>
-                        <td style={{ padding: '5px 6px', textAlign: 'right' }}>{item.gstPercent.toFixed(4)}</td>
-                        <td style={{ padding: '5px 6px', textAlign: 'right' }}>{(item.vatPercent || 0).toFixed(2)}</td>
-                        <td style={{ padding: '5px 6px', textAlign: 'right' }}>{(item.surPercent || 0).toFixed(2)}</td>
-                        <td style={{ padding: '5px 6px', textAlign: 'right', fontWeight: 800, color: '#0369a1' }}>
+                      <tr
+                        key={idx}
+                        style={{
+                          borderBottom: '1px solid #e2e8f0',
+                          background: idx % 2 === 0 ? '#fff' : '#f8fafc'
+                        }}
+                      >
+                        <td style={{ padding: '5px 8px' }}>{item.sNo}</td>
+                        <td style={{ padding: '5px 8px', fontWeight: 600 }}>{item.itemName}</td>
+                        <td style={{ padding: '5px 8px', textAlign: 'center', fontWeight: 700 }}>
+                          {item.qty.toFixed(2)}
+                        </td>
+                        <td style={{ padding: '5px 8px', textAlign: 'right' }}>{item.rate.toFixed(2)}</td>
+                        <td style={{ padding: '5px 8px', textAlign: 'right' }}>{item.amount.toFixed(2)}</td>
+                        <td style={{ padding: '5px 8px', textAlign: 'right' }}>{item.discountPercent || 0}</td>
+                        <td style={{ padding: '5px 8px', textAlign: 'right', color: '#dc2626' }}>
+                          {(item.discountAmount || 0).toFixed(2)}
+                        </td>
+                        <td style={{ padding: '5px 8px', textAlign: 'right', fontWeight: 600 }}>
+                          {item.taxable.toFixed(2)}
+                        </td>
+                        <td style={{ padding: '5px 8px', textAlign: 'right' }}>
+                          {(item.gstPercent || 0).toFixed(2)}
+                        </td>
+                        <td style={{ padding: '5px 8px', textAlign: 'right' }}>
+                          {(item.vatPercent || 0).toFixed(2)}
+                        </td>
+                        <td style={{ padding: '5px 8px', textAlign: 'right' }}>
+                          {(item.surPercent || 0).toFixed(2)}
+                        </td>
+                        <td style={{ padding: '5px 8px', textAlign: 'right', fontWeight: 700, color: '#0369a1' }}>
                           {item.value.toFixed(2)}
                         </td>
                       </tr>
                     ))}
-                    {billItems.length === 0 && (
-                      <tr>
-                        <td colSpan={12} style={{ textAlign: 'center', padding: 18, color: '#94a3b8' }}>
-                          No pending KOT items for this room.
-                        </td>
-                      </tr>
-                    )}
                   </tbody>
                   <tfoot>
+                    {/* TOTAL row matching Frame 0330 */}
                     <tr style={{ background: '#1e293b', color: '#fff', fontWeight: 800 }}>
-                      <td style={{ padding: '6px 6px' }}>Total</td>
-                      <td style={{ padding: '6px 6px' }}>{billItems.length}</td>
-                      <td style={{ padding: '6px 6px', textAlign: 'center' }}>{totalQty}</td>
+                      <td style={{ padding: '6px 8px' }}>Total</td>
+                      <td style={{ padding: '6px 8px' }}>{billItems.length}</td>
+                      <td style={{ padding: '6px 8px', textAlign: 'center' }}>{totalQty}</td>
                       <td></td>
-                      <td style={{ padding: '6px 6px', textAlign: 'right' }}>{totalAmount.toFixed(2)}</td>
+                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>{totalAmount.toFixed(2)}</td>
                       <td></td>
-                      <td style={{ padding: '6px 6px', textAlign: 'right' }}>{discountAmount.toFixed(2)}</td>
-                      <td style={{ padding: '6px 6px', textAlign: 'right' }}>{totalTaxable.toFixed(2)}</td>
-                      <td style={{ padding: '6px 6px', textAlign: 'right' }}>{gstAmount.toFixed(2)}</td>
-                      <td style={{ padding: '6px 6px', textAlign: 'right' }}>0.00</td>
-                      <td style={{ padding: '6px 6px', textAlign: 'right' }}>0.00</td>
-                      <td style={{ padding: '6px 6px', textAlign: 'right' }}>{netBillAmount.toFixed(2)}</td>
+                      <td style={{ padding: '6px 8px', textAlign: 'right', color: '#fca5a5' }}>
+                        {discountAmount.toFixed(3)}
+                      </td>
+                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>{totalTaxable.toFixed(2)}</td>
+                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>{totalGst.toFixed(2)}</td>
+                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>0.00</td>
+                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>0.00</td>
+                      <td style={{ padding: '6px 8px', textAlign: 'right', color: '#6ee7b7' }}>
+                        {netBillAmount.toFixed(2)}
+                      </td>
                     </tr>
                   </tfoot>
                 </table>
               </div>
 
-              {/* Bottom Settlement Controls matching Frame 0200 */}
-              <div style={{
-                background: '#f8fafc',
-                border: '1px solid #cbd5e1',
-                padding: 10,
-                borderRadius: 4,
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr 1.2fr 2fr 1fr 1.5fr',
-                gap: 8,
-                alignItems: 'center'
-              }}>
+              {/* Bottom Settlement Controls matching Frame 0330 */}
+              <div
+                style={{
+                  background: '#f8fafc',
+                  border: '1px solid #cbd5e1',
+                  padding: 10,
+                  borderRadius: 4,
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr 1.2fr 1.4fr 1fr 2fr',
+                  gap: 8,
+                  alignItems: 'center',
+                  marginBottom: 10
+                }}
+              >
                 <div>
-                  <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', display: 'block' }}>Taxable Amt</label>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', display: 'block' }}>Amount</label>
                   <input
                     type="text"
                     readOnly
-                    value={`₹${totalTaxable.toFixed(2)}`}
+                    value={netBillAmount.toFixed(2)}
                     className="form-input-pms"
                     style={{ background: '#f1f5f9', fontWeight: 700 }}
                   />
@@ -435,7 +627,7 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                   <input
                     type="text"
                     readOnly
-                    value={`${roundOff >= 0 ? '+' : ''}${roundOff.toFixed(2)}`}
+                    value={roundOff.toFixed(2)}
                     className="form-input-pms"
                     style={{ background: '#f1f5f9', fontWeight: 600 }}
                   />
@@ -453,6 +645,32 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                 </div>
 
                 <div>
+                  <label style={{ fontSize: 10, fontWeight: 800, color: '#0369a1', display: 'block' }}>Settle to Payment</label>
+                  <select
+                    value={settlementType}
+                    onChange={e => setSettlementType(e.target.value)}
+                    className="form-select-pms"
+                    style={{ fontWeight: 800, borderColor: '#0284c7' }}
+                  >
+                    <option value="Settle To Cash">Settle To Cash</option>
+                    <option value="Settle To Online">Settle To Online / UPI</option>
+                    <option value="Settle To Room">Settle To Room (Guest Folio)</option>
+                    <option value="Due / Credit">Due / Credit</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', display: 'block' }}>Amount To Post</label>
+                  <input
+                    type="text"
+                    readOnly
+                    value={netBillAmount}
+                    className="form-input-pms"
+                    style={{ background: '#f1f5f9', fontWeight: 700 }}
+                  />
+                </div>
+
+                <div>
                   <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', display: 'block' }}>Amount In Words</label>
                   <input
                     type="text"
@@ -462,38 +680,36 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                     style={{ background: '#f1f5f9', fontSize: 11 }}
                   />
                 </div>
+              </div>
 
-                <div>
-                  <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', display: 'block' }}>Net Payable</label>
+              {/* Payment Remark Row */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
+                <div className="form-group-pms" style={{ margin: 0 }}>
+                  <label className="form-label-pms">Payment Remark</label>
                   <input
                     type="text"
-                    readOnly
-                    value={`₹${netBillAmount}`}
+                    value={paymentRemark}
+                    onChange={e => setPaymentRemark(e.target.value)}
+                    placeholder="Cash counter / UPI transaction ID..."
                     className="form-input-pms"
-                    style={{ background: '#dcfce7', color: '#166534', fontWeight: 900, fontSize: 13 }}
                   />
                 </div>
-
-                <div>
-                  <label style={{ fontSize: 10, fontWeight: 800, color: '#0369a1', display: 'block' }}>Settle to Payment</label>
-                  <select
-                    value={settlementType}
-                    onChange={e => setSettlementType(e.target.value as any)}
-                    className="form-select-pms"
-                    style={{ fontWeight: 800, borderColor: '#0284c7' }}
-                  >
-                    <option value="Settle To Room">Settle To Room (Folio)</option>
-                    <option value="Cash">Cash (Immediate Pay)</option>
-                    <option value="UPI">UPI / PhonePe</option>
-                    <option value="Card">Card</option>
-                  </select>
+                <div className="form-group-pms" style={{ margin: 0 }}>
+                  <label className="form-label-pms">Remark</label>
+                  <input
+                    type="text"
+                    value={customerRemark}
+                    onChange={e => setCustomerRemark(e.target.value)}
+                    placeholder="Optional notes..."
+                    className="form-input-pms"
+                  />
                 </div>
               </div>
 
               {/* Bottom Buttons */}
-              <div style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: 11, color: '#64748b' }}>
-                  * Selecting 'Settle To Room' posts this ₹{netBillAmount} directly into Room {selectedRoomNo}'s checkout folio.
+                  * Settling will vacate {serviceType !== 'Room Service' ? selectedTable : `Room ${selectedRoomNo}`} and post ₹{netBillAmount} to {settlementType}.
                 </span>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button
@@ -506,54 +722,74 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                   <button
                     type="button"
                     onClick={() => handleSaveBill(true)}
-                    style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '6px 20px', borderRadius: 3, fontWeight: 800, cursor: 'pointer' }}
+                    style={{ background: '#0284c7', color: '#fff', border: 'none', padding: '7px 22px', borderRadius: 4, fontWeight: 800, cursor: 'pointer' }}
                   >
-                    Generate Bill
+                    Save &amp; Settle Bill
                   </button>
                 </div>
               </div>
             </div>
           </>
         ) : (
-          /* Thermal POS & GST Food Bill Print Slip */
+          /* Thermal POS Food Bill Print Slip matching Frame 0370 */
           <div style={{ padding: 16 }}>
-            <div style={{
-              background: '#fff',
-              border: '1px solid #334155',
-              padding: 16,
-              fontFamily: 'monospace',
-              fontSize: 12,
-              color: '#000'
-            }}>
+            <div
+              style={{
+                background: '#fff',
+                border: '1px solid #334155',
+                padding: '20px 16px',
+                fontFamily: 'monospace',
+                fontSize: 12,
+                color: '#000',
+                maxWidth: 380,
+                margin: '0 auto',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+              }}
+            >
+              {/* Hotel Header */}
               <div style={{ textAlign: 'center', borderBottom: '1px dashed #334155', paddingBottom: 8, marginBottom: 8 }}>
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900 }}>HOTEL SAI VASUDEV RESIDENCY</h3>
-                <p style={{ margin: '2px 0', fontSize: 11 }}>Pimpalwadi Road, Near Sai Temple, Shirdi - 423109</p>
-                <p style={{ margin: '2px 0', fontSize: 10 }}>GSTIN: 27AABCS1429B1Z2 &bull; SAC: 996331</p>
-                <div style={{
-                  display: 'inline-block',
-                  border: '1px solid #000',
-                  padding: '2px 8px',
-                  fontWeight: 900,
-                  fontSize: 12,
-                  marginTop: 4
-                }}>
-                  FOOD &amp; BEVERAGE BILL
+                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 900 }}>
+                  {companyInfo.firmName || 'HOTEL SAI VASUDEV RESIDENCY'}
+                </h3>
+                <p style={{ margin: '2px 0', fontSize: 10 }}>
+                  {companyInfo.address1 || 'NEAR RAILWAY STATION, MAIN ROAD, BILASPUR CHHATTISGARH 495220'}
+                </p>
+                <p style={{ margin: '2px 0', fontSize: 10 }}>
+                  GSTIN: {companyInfo.gstNo || '22AAAAA0000A1Z5'} &bull; SAC: 996331
+                </p>
+                <div
+                  style={{
+                    display: 'inline-block',
+                    border: '1px solid #000',
+                    padding: '2px 8px',
+                    fontWeight: 900,
+                    fontSize: 11,
+                    marginTop: 4
+                  }}
+                >
+                  RESTAURANT TAX INVOICE
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', fontSize: 11, marginBottom: 8 }}>
+              {/* Bill Details */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', fontSize: 11, marginBottom: 6 }}>
                 <div><strong>Bill No:</strong> {savedBill?.billNo || billNo}</div>
-                <div style={{ textAlign: 'right' }}><strong>Room No:</strong> {selectedRoomNo}</div>
+                <div style={{ textAlign: 'right' }}>
+                  <strong>{serviceType !== 'Room Service' ? 'Table:' : 'Room:'}</strong>{' '}
+                  {serviceType !== 'Room Service' ? selectedTable : selectedRoomNo}
+                </div>
                 <div><strong>Date:</strong> {billDate} {billTime}</div>
-                <div style={{ textAlign: 'right' }}><strong>Guest:</strong> {selectedGuestName}</div>
-                <div><strong>KOT Ref:</strong> {kotNoDisplay}</div>
+                <div style={{ textAlign: 'right' }}><strong>Guest:</strong> {customerName}</div>
+                <div><strong>Mobile:</strong> {customerMobile}</div>
                 <div style={{ textAlign: 'right', color: '#16a34a', fontWeight: 800 }}>
                   <strong>{settlementType}</strong>
                 </div>
+                <div><strong>KOT Ref:</strong> {kotNoDisplay}</div>
               </div>
 
-              <div style={{ borderTop: '1px dashed #000', borderBottom: '1px dashed #000', padding: '4px 0', marginBottom: 8 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '24px 1fr 35px 55px 65px', fontWeight: 900 }}>
+              {/* Items Table */}
+              <div style={{ borderTop: '1px dashed #000', borderBottom: '1px dashed #000', padding: '4px 0', marginBottom: 6 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '20px 1fr 30px 45px 55px', fontWeight: 900 }}>
                   <span>#</span>
                   <span>Item</span>
                   <span style={{ textAlign: 'center' }}>Qty</span>
@@ -561,7 +797,7 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                   <span style={{ textAlign: 'right' }}>Amount</span>
                 </div>
                 {billItems.map((it, idx) => (
-                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '24px 1fr 35px 55px 65px', padding: '2px 0' }}>
+                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '20px 1fr 30px 45px 55px', padding: '2px 0', fontSize: 11 }}>
                     <span>{idx + 1}</span>
                     <span>{it.itemName}</span>
                     <span style={{ textAlign: 'center' }}>{it.qty}</span>
@@ -571,18 +807,11 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                 ))}
               </div>
 
-              <div style={{ fontSize: 11, lineHeight: 1.6 }}>
+              {/* Summary */}
+              <div style={{ fontSize: 11, lineHeight: 1.5 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Taxable Food Amount:</span>
-                  <span>₹{totalTaxable.toFixed(2)}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>CGST @ 2.5%:</span>
-                  <span>₹{cgstAmount.toFixed(2)}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>SGST @ 2.5%:</span>
-                  <span>₹{sgstAmount.toFixed(2)}</span>
+                  <span>Item Subtotal:</span>
+                  <span>₹{totalAmount.toFixed(2)}</span>
                 </div>
                 {discountAmount > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', color: '#dc2626' }}>
@@ -590,13 +819,35 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                     <span>-₹{discountAmount.toFixed(2)}</span>
                   </div>
                 )}
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Taxable Food Amount:</span>
+                  <span>₹{totalTaxable.toFixed(2)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>CGST @ 2.5%:</span>
+                  <span>₹{(totalGst / 2).toFixed(2)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>SGST @ 2.5%:</span>
+                  <span>₹{(totalGst / 2).toFixed(2)}</span>
+                </div>
                 {roundOff !== 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Round Off:</span>
                     <span>{roundOff.toFixed(2)}</span>
                   </div>
                 )}
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #000', paddingTop: 4, marginTop: 4, fontSize: 13, fontWeight: 900 }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    borderTop: '1px solid #000',
+                    paddingTop: 4,
+                    marginTop: 4,
+                    fontSize: 13,
+                    fontWeight: 900
+                  }}
+                >
                   <span>NET BILL AMOUNT:</span>
                   <span>₹{netBillAmount.toFixed(2)}</span>
                 </div>
@@ -605,12 +856,12 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                 </div>
               </div>
 
-              <div style={{ borderTop: '1px dashed #000', paddingTop: 8, marginTop: 8, textAlign: 'center', fontSize: 10 }}>
-                Thank you for dining with us! &bull; Om Sai Ram
+              <div style={{ borderTop: '1px dashed #000', paddingTop: 6, marginTop: 6, textAlign: 'center', fontSize: 10 }}>
+                Thank you for dining with us! &bull; Visit Again
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 14 }}>
               <button
                 type="button"
                 onClick={() => setShowPrintSlip(false)}
@@ -624,12 +875,12 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                   onClick={() => window.print()}
                   style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '6px 18px', borderRadius: 3, cursor: 'pointer', fontWeight: 800 }}
                 >
-                  Print Bill
+                  Print Slip
                 </button>
                 <button
                   type="button"
                   onClick={onClose}
-                  style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: 3, cursor: 'pointer', fontWeight: 800 }}
+                  style={{ background: '#0284c7', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: 3, cursor: 'pointer', fontWeight: 800 }}
                 >
                   Done
                 </button>

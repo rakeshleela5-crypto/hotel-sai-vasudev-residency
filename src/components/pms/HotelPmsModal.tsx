@@ -603,6 +603,19 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         onOpenKotRegister={() => setIsRestaurantKotOpen(true)}
       />
 
+      {/* Video 18: Restaurant Food Bill Modal (Frame 0330) */}
+      <FoodBillModal
+        isOpen={isFoodBillModalOpen}
+        onClose={() => {
+          setIsFoodBillModalOpen(false);
+          setSelectedBillTable(undefined);
+        }}
+        defaultTableNo={selectedBillTable}
+        onBillSaved={() => {
+          setRoomRefreshTrigger(prev => prev + 1);
+        }}
+      />
+
       {/* Video 13: Table Shifting Modal */}
       <ShiftTableModal
         isOpen={isShiftTableOpen}

@@ -205,12 +205,18 @@ export interface FoodBillItem {
 }
 
 export interface PmsFoodBill {
-  billNo: string;             // e.g. SHRI/253/24-25
+  billNo: string;             // e.g. SHRI/253/24-25 or Res/264/24-25
   date: string;
   time: string;
   roomNo: string;
+  tableNo?: string;
+  serviceType?: string;       // Table Service, Take Away, Room Service, Home Delivery
   guestName: string;
-  kotNumbers: string[];       // e.g. ['351']
+  mobile?: string;
+  address?: string;
+  remark?: string;
+  paymentRemark?: string;
+  kotNumbers: string[];       // e.g. ['372', '374']
   items: (KotItem | FoodBillItem)[];
   taxableAmount: number;
   gstPercent: number;         // 5.0000%
@@ -219,9 +225,9 @@ export interface PmsFoodBill {
   discountPercent: number;    // e.g. 5.0%
   discountAmount: number;
   roundOff: number;           // e.g. -0.00
-  netBillAmount: number;      // e.g. 30.00
+  netBillAmount: number;      // e.g. 266.00
   amountInWords?: string;
-  settlementType: 'Settle To Room' | 'Cash' | 'UPI' | 'Card';
+  settlementType: 'Settle To Room' | 'Cash' | 'UPI' | 'Card' | 'Online' | 'Settle To Cash' | 'Settle To Online' | 'Due / Credit' | string;
   status: 'Pending' | 'Settled';
   createdAt: string;
 }
