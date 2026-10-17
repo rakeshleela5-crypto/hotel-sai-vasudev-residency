@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export PYTHONPATH="$PROJECT_DIR/backend:$PROJECT_DIR:$PYTHONPATH"
+
+if [ -f "$PROJECT_DIR/.venv/bin/uvicorn" ]; then
+    exec "$PROJECT_DIR/.venv/bin/uvicorn" "$@"
+elif [ -f "$HOME/.local/bin/uv" ]; then
+    exec "$HOME/.local/bin/uv" run --directory "$PROJECT_DIR/backend" uvicorn "$@"
+else
+    exec python3 -m uvicorn "$@"
+fi
