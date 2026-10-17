@@ -15,7 +15,9 @@ import type {
   DayWiseRentItem,
   PmsCompanyInfo,
   PmsRoomShiftRecord,
-  PmsTableShiftRecord
+  PmsTableShiftRecord,
+  PmsReceiptRecord,
+  PmsPartyAccount
 } from '../types/pmsModels';
 
 export const DEFAULT_BUSINESS_SETTING: PmsBusinessSetting = {
@@ -200,6 +202,173 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
   { id: 'm-11', name: 'KACHOOMER SALAD', code: '10060', barcode: '8901234011', company: 'In-House', rate: 90, saleRate: 90, mrp: 100, purchaseRate: 30, unit: 'Portion', gstPercent: 5, category: 'Salad' }
 ];
 
+// Video 15: Party Accounts & Receivables Seed Data (Frame 0130)
+export const INITIAL_PARTY_ACCOUNTS: PmsPartyAccount[] = [
+  { id: 'pa-1', name: 'Cash', category: 'General', balance: 1100217.77, balanceType: 'Dr' },
+  { id: 'pa-2', name: 'Online', category: 'General', balance: 397440.39, balanceType: 'Dr' },
+  { id: 'pa-3', name: 'Card', category: 'General', balance: 30842.00, balanceType: 'Dr' },
+  { id: 'pa-4', name: 'Purchase', category: 'General', balance: 28040.20, balanceType: 'Dr' },
+  { id: 'pa-5', name: 'TILAK', mobile: '52198789754', category: 'Customer', balance: 1414.00, balanceType: 'Dr' },
+  { id: 'pa-6', name: 'tata moters', mobile: '9827011223', category: 'Corporate', balance: 15662.00, balanceType: 'Dr' },
+  { id: 'pa-7', name: 'pankaj sahni', mobile: '534534534', category: 'Customer', balance: 17950.00, balanceType: 'Dr' },
+  { id: 'pa-8', name: 'PAY TM', category: 'Bank', balance: 10982.99, balanceType: 'Dr' },
+  { id: 'pa-9', name: 'Riyaz', mobile: '8876579769', category: 'Customer', balance: 1500.00, balanceType: 'Dr' },
+  { id: 'pa-10', name: 'jay sharma', mobile: '1265787544', category: 'Customer', balance: 14073.00, balanceType: 'Dr' },
+  { id: 'pa-11', name: 'monish', mobile: '704701', category: 'Customer', balance: 2000.00, balanceType: 'Dr' },
+  { id: 'pa-12', name: 'Vivek', mobile: '9741523421', category: 'Customer', balance: 7500.00, balanceType: 'Dr' },
+  { id: 'pa-13', name: 'N', mobile: '9241755581', category: 'Customer', balance: 10000.00, balanceType: 'Dr' },
+  { id: 'pa-14', name: 'STATE BANK OF INDIA', mobile: '07599999114', category: 'Bank', balance: 25100.00, balanceType: 'Dr' },
+  { id: 'pa-15', name: 'raj', mobile: '9898989898', category: 'Owner', balance: 0.00, balanceType: 'Dr' },
+  { id: 'pa-16', name: 'ajay ji', mobile: '9811223344', category: 'Customer', balance: 0.00, balanceType: 'Dr' },
+  { id: 'pa-17', name: 'hariom gautam ji', mobile: '9425123456', category: 'Customer', balance: 0.00, balanceType: 'Dr' },
+  { id: 'pa-18', name: 'AKASH YADAV', mobile: '9123456780', category: 'Customer', balance: 0.00, balanceType: 'Dr' },
+  { id: 'pa-19', name: 'Guruprasad pol', mobile: '9876501234', category: 'Customer', balance: 0.00, balanceType: 'Dr' }
+];
+
+// Video 15: General Receipt Register Seed Data (Frames 0090, 0230, 0250)
+export const INITIAL_RECEIPTS: PmsReceiptRecord[] = [
+  {
+    id: 'rec-12',
+    sNo: 1,
+    voucherName: 'Receipts',
+    receiptNo: 'REC/12/24-25',
+    voucherNo: 12,
+    date: '2025-06-16',
+    paymentMode: 'Cash',
+    accountName: 'raj',
+    accountMobile: '9898989898',
+    amount: 2000,
+    remark: 'reciept by owner',
+    createdAt: '2025-06-16T07:51:00Z'
+  },
+  {
+    id: 'rec-11',
+    sNo: 2,
+    voucherName: 'Receipts',
+    receiptNo: 'REC/11/24-25',
+    voucherNo: 11,
+    date: '2025-06-16',
+    paymentMode: 'Cash',
+    accountName: 'Vivek',
+    accountMobile: '9741523421',
+    amount: 7500,
+    remark: 'old bill',
+    createdAt: '2025-06-16T07:49:00Z'
+  },
+  {
+    id: 'rec-10',
+    sNo: 3,
+    voucherName: 'Receipts',
+    receiptNo: 'REC/10/24-25',
+    voucherNo: 10,
+    date: '2025-06-07',
+    paymentMode: 'Cash',
+    accountName: 'ajay ji',
+    accountMobile: '9811223344',
+    amount: 3000,
+    remark: '',
+    createdAt: '2025-06-07T10:00:00Z'
+  },
+  {
+    id: 'rec-9',
+    sNo: 4,
+    voucherName: 'Receipts',
+    receiptNo: 'REC/9/24-25',
+    voucherNo: 9,
+    date: '2025-06-06',
+    paymentMode: 'Cash',
+    accountName: 'hariom gautam ji',
+    accountMobile: '9425123456',
+    amount: 2000,
+    remark: 'advance booking',
+    createdAt: '2025-06-06T11:20:00Z'
+  },
+  {
+    id: 'rec-8',
+    sNo: 5,
+    voucherName: 'Receipts',
+    receiptNo: 'REC/8/24-25',
+    voucherNo: 8,
+    date: '2025-05-24',
+    paymentMode: 'Cash',
+    accountName: 'AKASH YADAV',
+    accountMobile: '9123456780',
+    amount: 1000,
+    remark: '',
+    createdAt: '2025-05-24T14:30:00Z'
+  },
+  {
+    id: 'rec-7',
+    sNo: 6,
+    voucherName: 'Receipts',
+    receiptNo: 'REC/7/24-25',
+    voucherNo: 7,
+    date: '2025-05-20',
+    paymentMode: 'Cash',
+    accountName: 'Vivek',
+    accountMobile: '9741523421',
+    amount: 4000,
+    remark: '',
+    createdAt: '2025-05-20T16:15:00Z'
+  },
+  {
+    id: 'rec-6',
+    sNo: 7,
+    voucherName: 'Receipts',
+    receiptNo: 'REC/6/24-25',
+    voucherNo: 6,
+    date: '2025-05-04',
+    paymentMode: 'Cash',
+    accountName: 'Guruprasad pol',
+    accountMobile: '9876501234',
+    amount: 2200,
+    remark: 'tariff',
+    createdAt: '2025-05-04T12:00:00Z'
+  },
+  {
+    id: 'rec-5',
+    sNo: 8,
+    voucherName: 'Receipts',
+    receiptNo: 'REC/5/24-25',
+    voucherNo: 5,
+    date: '2025-04-30',
+    paymentMode: 'Cash',
+    accountName: 'Guruprasad pol',
+    accountMobile: '9876501234',
+    amount: 200,
+    remark: '',
+    createdAt: '2025-04-30T09:45:00Z'
+  },
+  {
+    id: 'rec-4',
+    sNo: 9,
+    voucherName: 'Receipts',
+    receiptNo: 'REC/4/24-25',
+    voucherNo: 4,
+    date: '2025-01-27',
+    paymentMode: 'Online',
+    accountName: 'tata moters',
+    accountMobile: '9827011223',
+    amount: 2200,
+    remark: '103 room ki payment',
+    createdAt: '2025-01-27T15:00:00Z'
+  },
+  {
+    id: 'rec-3',
+    sNo: 10,
+    voucherName: 'Receipts',
+    receiptNo: 'REC/3/24-25',
+    voucherNo: 3,
+    date: '2024-12-24',
+    paymentMode: 'Cash',
+    accountName: 'HARIOM',
+    accountMobile: '9425123456',
+    amount: 11900,
+    remark: 'balance',
+    createdAt: '2024-12-24T18:00:00Z'
+  }
+];
+
 const STORAGE_KEYS = {
   ROOMS: 'svr_pms_rooms',
   ROOM_TYPES: 'svr_pms_room_types',
@@ -213,7 +382,9 @@ const STORAGE_KEYS = {
   CHECKOUTS: 'svr_pms_checkouts',
   ADVANCE_RECEIPTS: 'svr_pms_advance_receipts',
   BUSINESS_SETTINGS: 'svr_pms_business_settings',
-  ROOM_SHIFTS: 'svr_pms_room_shifts'
+  ROOM_SHIFTS: 'svr_pms_room_shifts',
+  RECEIPTS: 'svr_pms_receipts',
+  PARTY_ACCOUNTS: 'svr_pms_party_accounts'
 };
 
 export class PmsStore {
@@ -1742,6 +1913,85 @@ export class PmsStore {
       message: `Room shifted successfully from ${params.fromRoomNo} to ${params.toRoomNo}. Room ${params.fromRoomNo} is now marked as Dirty for housekeeping.`,
       record: shiftRecord
     };
+  }
+
+  // ==========================================
+  // Video 15: General Receipt Register & Party Receivables
+  // ==========================================
+  static getReceipts(): PmsReceiptRecord[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.RECEIPTS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.RECEIPTS, JSON.stringify(INITIAL_RECEIPTS));
+      return INITIAL_RECEIPTS;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_RECEIPTS;
+    }
+  }
+
+  static saveReceipt(receipt: PmsReceiptRecord): void {
+    const list = this.getReceipts();
+    const idx = list.findIndex(r => r.receiptNo === receipt.receiptNo || r.id === receipt.id);
+    if (idx >= 0) {
+      list[idx] = receipt;
+    } else {
+      list.unshift(receipt);
+    }
+    // Re-index sNo
+    list.forEach((item, index) => {
+      item.sNo = index + 1;
+    });
+    localStorage.setItem(STORAGE_KEYS.RECEIPTS, JSON.stringify(list));
+
+    // Automatically update party account balance if party exists (Video 15 logic)
+    this.settlePartyPayment(receipt.accountName, receipt.amount);
+  }
+
+  static deleteReceipt(receiptNo: string): void {
+    const list = this.getReceipts().filter(r => r.receiptNo !== receiptNo);
+    list.forEach((item, index) => {
+      item.sNo = index + 1;
+    });
+    localStorage.setItem(STORAGE_KEYS.RECEIPTS, JSON.stringify(list));
+  }
+
+  static getPartyAccounts(): PmsPartyAccount[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.PARTY_ACCOUNTS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.PARTY_ACCOUNTS, JSON.stringify(INITIAL_PARTY_ACCOUNTS));
+      return INITIAL_PARTY_ACCOUNTS;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_PARTY_ACCOUNTS;
+    }
+  }
+
+  static savePartyAccount(party: PmsPartyAccount): void {
+    const list = this.getPartyAccounts();
+    const idx = list.findIndex(p => p.id === party.id || p.name.toLowerCase() === party.name.toLowerCase());
+    if (idx >= 0) {
+      list[idx] = party;
+    } else {
+      list.push(party);
+    }
+    localStorage.setItem(STORAGE_KEYS.PARTY_ACCOUNTS, JSON.stringify(list));
+  }
+
+  static settlePartyPayment(accountName: string, amount: number): void {
+    const parties = this.getPartyAccounts();
+    const cleanName = accountName.toLowerCase().trim();
+    const party = parties.find(p => p.name.toLowerCase().trim() === cleanName);
+    if (party) {
+      party.balance = Math.max(0, party.balance - amount);
+      if (party.balance === 0) {
+        party.balanceType = 'Dr';
+      }
+      this.savePartyAccount(party);
+    }
   }
 }
 

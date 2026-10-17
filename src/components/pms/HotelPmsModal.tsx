@@ -23,6 +23,8 @@ import { RestaurantTableDashboardModal } from './RestaurantTableDashboardModal';
 import { ShiftTableModal } from './ShiftTableModal';
 import { NcKotRegisterModal } from './NcKotRegisterModal';
 import { RoomKotRegisterModal } from './RoomKotRegisterModal';
+import { ReceiptRegisterModal } from './ReceiptRegisterModal';
+import { OutstandingReceivablesModal } from './OutstandingReceivablesModal';
 import './pmsStyles.css';
 
 interface HotelPmsModalProps {
@@ -82,6 +84,10 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
 
   // Video 14 Room KOT Register & Mobile Unprinted Queue
   const [isRoomKotRegisterOpen, setIsRoomKotRegisterOpen] = useState(false);
+
+  // Video 15 Receipt Register & Outstanding Receivables
+  const [isReceiptRegisterOpen, setIsReceiptRegisterOpen] = useState(false);
+  const [isOutstandingReceivablesOpen, setIsOutstandingReceivablesOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -320,6 +326,9 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     <div className="pms-nav-item" onClick={() => setIsAdvanceReceiptOpen(true)}>
                       <span style={{ color: '#34d399', fontWeight: 700 }}>💵 Room Advance Receipt</span>
                     </div>
+                    <div className="pms-nav-item" onClick={() => setIsReceiptRegisterOpen(true)}>
+                      <span style={{ color: '#60a5fa', fontWeight: 700 }}>📄 Receipt Register (Video 15)</span>
+                    </div>
                     <div className="pms-nav-item" onClick={() => setActiveTab('matrix')}>
                       <span>🧾 Room Check Out</span>
                     </div>
@@ -346,6 +355,9 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsPartyLedgerOpen(true)}>
                       <span style={{ color: '#fbbf24', fontWeight: 700 }}>📑 Party &amp; Guest Ledger</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsOutstandingReceivablesOpen(true)}>
+                      <span style={{ color: '#fb923c', fontWeight: 700 }}>💰 Outstanding Receivables (Video 15)</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => alert('Daily Check-in Report')}>
                       <span>📋 Check-in Report</span>
@@ -609,6 +621,18 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         onOpenNewKot={() => setIsKotModalOpen(true)}
         filterServiceType="Room"
         titleOverride="Room KOT Register (Video 14 Frame 0260)"
+      />
+
+      {/* Video 15: General Receipt Register Modal (Frame 0090, 0250) */}
+      <ReceiptRegisterModal
+        isOpen={isReceiptRegisterOpen}
+        onClose={() => setIsReceiptRegisterOpen(false)}
+      />
+
+      {/* Video 15: Outstanding Receivables Modal (Frame 0130) */}
+      <OutstandingReceivablesModal
+        isOpen={isOutstandingReceivablesOpen}
+        onClose={() => setIsOutstandingReceivablesOpen(false)}
       />
     </>
   );

@@ -15,6 +15,8 @@ import { ShiftTableModal } from './ShiftTableModal';
 import { NcKotRegisterModal } from './NcKotRegisterModal';
 import { TableMasterModal } from './TableMasterModal';
 import { RoomKotRegisterModal } from './RoomKotRegisterModal';
+import { ReceiptRegisterModal } from './ReceiptRegisterModal';
+import { OutstandingReceivablesModal } from './OutstandingReceivablesModal';
 import type { PmsBooking } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
@@ -47,6 +49,8 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   const [isShiftTableOpen, setIsShiftTableOpen] = useState(false);
   const [isNcKotRegisterOpen, setIsNcKotRegisterOpen] = useState(false);
   const [isTableMasterOpen, setIsTableMasterOpen] = useState(false);
+  const [isReceiptRegisterOpen, setIsReceiptRegisterOpen] = useState(false);
+  const [isOutstandingReceivablesOpen, setIsOutstandingReceivablesOpen] = useState(false);
 
   const rooms = PmsStore.getRooms();
   const vacantCount = rooms.filter(r => r.status === 'vacant').length;
@@ -168,7 +172,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-receipt"
-          onClick={() => setIsAdvanceReceiptOpen(true)}
+          onClick={() => setIsReceiptRegisterOpen(true)}
         >
           <span className="tile-icon">📄</span>
           <span>Receipt</span>
@@ -233,10 +237,10 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-report"
-          onClick={() => alert('PMS Analytics & Reports: Check-in, Police Station Report, GST, Stock.')}
+          onClick={() => setIsOutstandingReceivablesOpen(true)}
         >
           <span className="tile-icon">📈</span>
-          <span>Report</span>
+          <span>Report (Receivables)</span>
         </button>
 
         <button
@@ -529,6 +533,18 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         onOpenNewKot={() => setIsKotOpen(true)}
         filterServiceType="Room"
         titleOverride="Room KOT Register (Video 14 Frame 0260)"
+      />
+
+      {/* Video 15 General Receipt Register Modal (Frame 0090, 0250) */}
+      <ReceiptRegisterModal
+        isOpen={isReceiptRegisterOpen}
+        onClose={() => setIsReceiptRegisterOpen(false)}
+      />
+
+      {/* Video 15 Outstanding Receivables Modal (Frame 0130) */}
+      <OutstandingReceivablesModal
+        isOpen={isOutstandingReceivablesOpen}
+        onClose={() => setIsOutstandingReceivablesOpen(false)}
       />
     </div>
   );

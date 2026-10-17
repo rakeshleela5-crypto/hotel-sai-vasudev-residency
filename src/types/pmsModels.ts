@@ -439,3 +439,29 @@ export interface PmsRoomShiftRecord {
   createdAt: string;
 }
 
+// Video 15: General Receipt Entry & Outstanding Receivables
+export interface PmsReceiptRecord {
+  id: string;
+  sNo: number;
+  voucherName: string;          // e.g. "Receipts"
+  receiptNo: string;            // e.g. "REC/12/24-25"
+  voucherNo: number;            // e.g. 12
+  date: string;                 // YYYY-MM-DD or DD-MM-YYYY
+  paymentMode: 'Cash' | 'Online' | 'Card' | 'UPI' | 'Cheque';
+  accountName: string;          // e.g. "raj", "Vivek", "tata moters"
+  accountMobile?: string;       // e.g. "9741523421"
+  amount: number;               // e.g. 7500, 2000
+  remark: string;               // e.g. "old bill", "reciept by owner"
+  createdAt: string;
+}
+
+export interface PmsPartyAccount {
+  id: string;
+  name: string;
+  mobile?: string;
+  category: 'Customer' | 'Corporate' | 'Owner' | 'Bank' | 'General';
+  balance: number;              // Current balance
+  balanceType: 'Dr' | 'Cr';     // Debit or Credit
+}
+
+
