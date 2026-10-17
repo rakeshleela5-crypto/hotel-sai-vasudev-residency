@@ -9,6 +9,11 @@ if (process.platform === 'win32') {
   process.exit(0);
 }
 
+if (process.env.CF_PAGES === '1' || process.env.CF_PAGES_COMMIT_SHA) {
+  console.log('[setup-backend] Cloudflare Pages detected (Frontend build). Skipping Python backend setup.');
+  process.exit(0);
+}
+
 const projectRoot = path.resolve(__dirname, '..');
 const nodeBinDir = path.dirname(process.execPath);
 console.log('[setup-backend] Node binary directory:', nodeBinDir);
