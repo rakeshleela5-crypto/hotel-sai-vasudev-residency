@@ -6,6 +6,7 @@ interface FoodBillModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultRoomNo?: string;
+  defaultTableNo?: string;
   onBillSaved?: (bill: PmsFoodBill) => void;
 }
 
@@ -13,6 +14,7 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
   isOpen,
   onClose,
   defaultRoomNo,
+  defaultTableNo,
   onBillSaved
 }) => {
   if (!isOpen) return null;
@@ -23,8 +25,10 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
     currentGuest: { name: 'ALOK JAIN' }
   } as PmsRoom;
 
-  const [selectedRoomNo, setSelectedRoomNo] = useState<string>(initialRoom.roomNo);
-  const selectedGuestName = occupiedRooms.find(r => r.roomNo === selectedRoomNo)?.currentGuest?.name || 'ALOK JAIN';
+  const [selectedRoomNo, setSelectedRoomNo] = useState<string>(defaultTableNo || initialRoom.roomNo);
+  const selectedGuestName = defaultTableNo
+    ? `Dine-In (${defaultTableNo})`
+    : occupiedRooms.find(r => r.roomNo === selectedRoomNo)?.currentGuest?.name || 'ALOK JAIN';
 
   const defaultBillNo = `SHRI/${Math.floor(250 + Math.random() * 50)}/24-25`;
   const [billNo, setBillNo] = useState<string>(defaultBillNo);
@@ -33,17 +37,25 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
   const [printApproval, setPrintApproval] = useState<boolean>(true);
   const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [discountAmount, setDiscountAmount] = useState<number>(0);
-  const [settlementType, setSettlementType] = useState<'Settle To Room' | 'Cash' | 'UPI' | 'Card'>('Settle To Room');
+  const [settlementType, setSettlementType] = useState<'Settle To Room' | 'Cash' | 'UPI' | 'Card'>(
+    defaultTableNo ? 'Cash' : 'Settle To Room'
+  );
 
-  // Load KOTs for selected room
+  // Load KOTs for selected room or table
   const [pendingKots, setPendingKots] = useState<PmsKotRecord[]>([]);
   const [billItems, setBillItems] = useState<FoodBillItem[]>([]);
   const [showPrintSlip, setShowPrintSlip] = useState<boolean>(false);
   const [savedBill, setSavedBill] = useState<PmsFoodBill | null>(null);
 
   useEffect(() => {
-    // Find KOTs for this room
-    const kots = PmsStore.getKots().filter(k => k.roomNo === selectedRoomNo && k.status === 'Pending');
+    // Find KOTs for this room or table
+    const cleanSearch = selectedRoomNo.replace(/^Table\s+/i, '').trim().toLowerCase();
+    const kots = PmsStore.getKots().filter(k => {
+      const matchRoom = k.roomNo && k.roomNo.toLowerCase() === selectedRoomNo.toLowerCase();
+      const matchTable = k.tableNo && k.tableNo.replace(/^Table\s+/i, '').trim().toLowerCase() === cleanSearch;
+      const isOpen = k.status !== 'Billed' && k.status !== 'Cancelled';
+      return (matchRoom || matchTable) && isOpen;
+    });
     setPendingKots(kots);
 
     if (kots.length > 0) {

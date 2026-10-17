@@ -6,6 +6,8 @@ interface KotEntryModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultRoomNo?: string;
+  defaultTableNo?: string;
+  defaultServiceType?: 'Room' | 'Restaurant' | 'Banquet';
   onKotSaved?: (kot: PmsKotRecord) => void;
 }
 
@@ -13,6 +15,8 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
   isOpen,
   onClose,
   defaultRoomNo,
+  defaultTableNo,
+  defaultServiceType,
   onKotSaved
 }) => {
   if (!isOpen) return null;
@@ -27,13 +31,17 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
   } as PmsRoom;
 
   const [selectedRoomNo, setSelectedRoomNo] = useState<string>(initialRoom.roomNo);
-  const [selectedTableNo, setSelectedTableNo] = useState<string>(tables[0]?.tableName || 'T-1');
+  const [selectedTableNo, setSelectedTableNo] = useState<string>(defaultTableNo || tables[0]?.tableName || 'Table T-1');
   const selectedGuestName = occupiedRooms.find(r => r.roomNo === selectedRoomNo)?.currentGuest?.name || 'ALOK JAIN';
 
-  const defaultKotNo = `KOT/${Math.floor(350 + Math.random() * 50)}/24-25`;
+  const defaultKotNo = defaultTableNo?.toUpperCase().includes('NC') ? 'R/371' : `KOT/${Math.floor(350 + Math.random() * 50)}/24-25`;
   const [kotNo, setKotNo] = useState<string>(defaultKotNo);
-  const [serviceType, setServiceType] = useState<'Room' | 'Restaurant' | 'Banquet'>('Room');
-  const [kotRemark, setKotRemark] = useState<string>('Quick Room Delivery');
+  const [serviceType, setServiceType] = useState<'Room' | 'Restaurant' | 'Banquet'>(
+    defaultServiceType || (defaultTableNo ? 'Restaurant' : 'Room')
+  );
+  const [kotRemark, setKotRemark] = useState<string>(
+    defaultTableNo?.toUpperCase().includes('NC') ? 'RAHUL' : 'Quick Room Delivery'
+  );
 
   // Item row input
   const [selectedItemId, setSelectedItemId] = useState<string>(menuItems[0]?.id || '');
@@ -116,18 +124,30 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
     }
 
     const targetRoomOrTable = serviceType === 'Restaurant' ? selectedTableNo : selectedRoomNo;
-    const targetGuest = serviceType === 'Restaurant' ? `Dine-In (${selectedTableNo})` : selectedGuestName;
+    const isNcTable = selectedTableNo.toUpperCase().includes('NC');
+    const targetGuest = isNcTable
+      ? (kotRemark || 'Complimentary Guest')
+      : serviceType === 'Restaurant'
+      ? `Dine-In (${selectedTableNo})`
+      : selectedGuestName;
 
     const kotRecord: PmsKotRecord = {
       kotNo,
       serviceType,
       roomNo: targetRoomOrTable,
+      tableNo: serviceType === 'Restaurant' ? selectedTableNo : undefined,
       guestName: targetGuest,
       kotRemark,
+      ncRemark: isNcTable ? (kotRemark || 'Complimentary Guest') : undefined,
+      isNc: isNcTable,
+      operatorName: 'DEMO0004',
       items: kotItems,
       totalAmount,
+      totalQty,
+      date: new Date().toLocaleDateString('en-GB').replace(/\//g, '-'),
       createdAt: new Date().toISOString(),
-      status: 'Pending'
+      status: 'Pending',
+      serveStatus: 'Pending'
     };
 
     PmsStore.saveKot(kotRecord);

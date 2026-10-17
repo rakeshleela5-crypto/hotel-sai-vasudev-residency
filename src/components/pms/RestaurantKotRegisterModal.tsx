@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import type { PmsKotRecord } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
+import { NcKotRegisterModal } from './NcKotRegisterModal';
+import { CancelKotModal } from './CancelKotModal';
 
 interface RestaurantKotRegisterModalProps {
   isOpen: boolean;
@@ -20,6 +22,8 @@ export const RestaurantKotRegisterModal: React.FC<RestaurantKotRegisterModalProp
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [statusFilter, setStatusFilter] = useState<'All' | 'Pending' | 'Ready To Serve' | 'Served' | 'Billed' | 'Cancelled'>('All');
   const [selectedKotForView, setSelectedKotForView] = useState<PmsKotRecord | null>(null);
+  const [isNcRegisterOpen, setIsNcRegisterOpen] = useState(false);
+  const [selectedKotForCancel, setSelectedKotForCancel] = useState<string | null>(null);
 
   const loadKots = () => {
     setKots(PmsStore.getKots());
@@ -49,13 +53,6 @@ export const RestaurantKotRegisterModal: React.FC<RestaurantKotRegisterModalProp
 
     return matchesSearch && matchesStatus;
   });
-
-  const handleCancelKot = (kotNo: string) => {
-    if (window.confirm(`Are you sure you want to cancel KOT ${kotNo}?`)) {
-      PmsStore.updateKotStatus(kotNo, 'Cancelled');
-      loadKots();
-    }
-  };
 
   return (
     <div className="pms-submodal-overlay" onClick={onClose}>
@@ -147,9 +144,9 @@ export const RestaurantKotRegisterModal: React.FC<RestaurantKotRegisterModalProp
             {/* 3. NC KOT Register (Burgundy / Red - Video 13) */}
             <button
               type="button"
-              onClick={() => alert('NC KOT (Non-Chargeable KOT) Register: For owner, VIP, and staff complimentary meals (Covered in Video 13).')}
+              onClick={() => setIsNcRegisterOpen(true)}
               style={{
-                background: '#b91c1c',
+                background: '#9d174d',
                 color: '#ffffff',
                 border: 'none',
                 padding: '7px 14px',
@@ -301,6 +298,7 @@ export const RestaurantKotRegisterModal: React.FC<RestaurantKotRegisterModalProp
                   </tr>
                 ) : (
                   filteredKots.slice(0, entriesPerPage).map((item, idx) => {
+                    const isCancelled = item.status === 'Cancelled';
                     const isReady = item.status === 'Ready To Serve' || item.serveStatus === 'Ready To Serve';
                     const isPending = item.status === 'Pending' || item.status === 'Cooking';
                     const isServed = item.status === 'Served';
@@ -310,8 +308,8 @@ export const RestaurantKotRegisterModal: React.FC<RestaurantKotRegisterModalProp
                       <tr
                         key={item.kotNo}
                         style={{
-                          borderBottom: '1px solid #e2e8f0',
-                          background: idx % 2 === 0 ? '#ffffff' : '#f8fafc'
+                          borderBottom: isCancelled ? '1px solid #f87171' : '1px solid #e2e8f0',
+                          background: isCancelled ? '#fee2e2' : idx % 2 === 0 ? '#ffffff' : '#f8fafc'
                         }}
                       >
                         <td style={{ padding: '10px 8px', textAlign: 'center', color: '#64748b' }}>
@@ -335,19 +333,19 @@ export const RestaurantKotRegisterModal: React.FC<RestaurantKotRegisterModalProp
                         <td style={{ padding: '10px 10px', textAlign: 'center' }}>
                           <span
                             style={{
-                              background: isReady ? '#dcfce7' : isPending ? '#fee2e2' : isServed ? '#fef3c7' : isBilled ? '#e0e7ff' : '#f1f5f9',
-                              color: isReady ? '#166534' : isPending ? '#b91c1c' : isServed ? '#92400e' : isBilled ? '#3730a3' : '#475569',
+                              background: isCancelled ? '#fecaca' : isReady ? '#dcfce7' : isPending ? '#fee2e2' : isServed ? '#fef3c7' : isBilled ? '#e0e7ff' : '#f1f5f9',
+                              color: isCancelled ? '#991b1b' : isReady ? '#166534' : isPending ? '#b91c1c' : isServed ? '#92400e' : isBilled ? '#3730a3' : '#475569',
                               padding: '2px 8px',
                               borderRadius: 12,
                               fontSize: 11,
                               fontWeight: 800
                             }}
                           >
-                            {isReady ? 'Ready To Serve' : isPending ? 'Cooking / Pending' : isServed ? 'Served' : isBilled ? 'Billed' : item.status}
+                            {isCancelled ? 'cancel' : isReady ? 'Ready To Serve' : isPending ? 'Cooking / Pending' : isServed ? 'Served' : isBilled ? 'Billed' : item.status}
                           </span>
                         </td>
-                        <td style={{ padding: '10px 10px', color: '#64748b', fontSize: 11 }}>
-                          {item.kotRemark || '-'}
+                        <td style={{ padding: '10px 10px', color: isCancelled ? '#b91c1c' : '#64748b', fontSize: 11, fontWeight: isCancelled ? 700 : 400 }}>
+                          {item.cancelReason || item.kotRemark || (item.isNc ? item.ncRemark : '-')}
                         </td>
                         <td style={{ padding: '10px 10px', textAlign: 'center' }}>
                           <div style={{ display: 'flex', justifyContent: 'center', gap: 6 }}>
@@ -372,16 +370,20 @@ export const RestaurantKotRegisterModal: React.FC<RestaurantKotRegisterModalProp
                             </button>
 
                             {/* Cancel */}
-                            {item.status !== 'Billed' && item.status !== 'Cancelled' && (
+                            {item.status !== 'Billed' && !isCancelled ? (
                               <button
                                 type="button"
                                 title="Cancel KOT"
-                                onClick={() => handleCancelKot(item.kotNo)}
+                                onClick={() => setSelectedKotForCancel(item.kotNo)}
                                 style={{ background: '#fee2e2', border: '1px solid #ef4444', color: '#b91c1c', borderRadius: 4, padding: '3px 6px', cursor: 'pointer', fontSize: 12 }}
                               >
                                 ❌
                               </button>
-                            )}
+                            ) : isCancelled ? (
+                              <span style={{ fontSize: 11, color: '#b91c1c', fontWeight: 700 }}>
+                                Cancelled
+                              </span>
+                            ) : null}
                           </div>
                         </td>
                       </tr>
@@ -459,6 +461,27 @@ export const RestaurantKotRegisterModal: React.FC<RestaurantKotRegisterModalProp
               </div>
             </div>
           </div>
+        )}
+
+        {/* Submodals */}
+        <NcKotRegisterModal
+          isOpen={isNcRegisterOpen}
+          onClose={() => setIsNcRegisterOpen(false)}
+          onOpenNewKot={() => {
+            setIsNcRegisterOpen(false);
+            onOpenNewKot();
+          }}
+        />
+
+        {selectedKotForCancel && (
+          <CancelKotModal
+            isOpen={Boolean(selectedKotForCancel)}
+            onClose={() => setSelectedKotForCancel(null)}
+            kotNo={selectedKotForCancel}
+            onCancelSuccess={() => {
+              loadKots();
+            }}
+          />
         )}
       </div>
     </div>

@@ -1,341 +1,567 @@
 import React, { useState, useEffect } from 'react';
-import type { PmsDiningTable } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
-import './pmsStyles.css';
+import type { PmsDiningTable, TableGroup } from '../../types/pmsModels';
 
 interface TableMasterModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onTableChange?: () => void;
 }
 
-export const TableMasterModal: React.FC<TableMasterModalProps> = ({ isOpen, onClose }) => {
+export const TableMasterModal: React.FC<TableMasterModalProps> = ({
+  isOpen,
+  onClose,
+  onTableChange
+}) => {
   const [tables, setTables] = useState<PmsDiningTable[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [entriesPerPage, setEntriesPerPage] = useState(10);
-  const [successBanner, setSuccessBanner] = useState<string | null>(null);
-
-  // Add / Edit Modal State (Frame 0820)
-  const [isAddTableOpen, setIsAddTableOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingTable, setEditingTable] = useState<PmsDiningTable | null>(null);
-  const [formTableName, setFormTableName] = useState('');
-  const [formTableGroup, setFormTableGroup] = useState('General');
 
-  const TABLE_GROUPS = [
-    'General',
-    'NC',
-    'AC Hall',
-    'Garden',
-    'Family Section',
-    'Terrace',
-    'Banquet',
-    'Lawn'
-  ];
+  // Form fields matching Frame 200
+  const [tableName, setTableName] = useState('');
+  const [tableGroup, setTableGroup] = useState<string>('General');
+  const [capacity, setCapacity] = useState(4);
 
-  const refreshData = () => {
-    setTables(PmsStore.getTables());
+  const loadTables = () => {
+    const list = PmsStore.getTables();
+    setTables(list);
   };
 
   useEffect(() => {
     if (isOpen) {
-      refreshData();
-      setSuccessBanner(null);
+      loadTables();
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleOpenAddTable = (tbl?: PmsDiningTable) => {
-    if (tbl) {
-      setEditingTable(tbl);
-      setFormTableName(tbl.tableName);
-      setFormTableGroup(tbl.tableGroup);
-    } else {
-      setEditingTable(null);
-      setFormTableName('');
-      setFormTableGroup('General');
-    }
-    setIsAddTableOpen(true);
+  const handleOpenAdd = () => {
+    setEditingTable(null);
+    setTableName('');
+    setTableGroup('General');
+    setCapacity(4);
+    setIsAddModalOpen(true);
+  };
+
+  const handleOpenEdit = (t: PmsDiningTable) => {
+    setEditingTable(t);
+    setTableName(t.tableName);
+    setTableGroup(t.tableGroup);
+    setCapacity(t.capacity || 4);
+    setIsAddModalOpen(true);
   };
 
   const handleSaveTable = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formTableName.trim()) {
-      alert('Please enter Table Name');
+    if (!tableName.trim()) {
+      alert('Please enter Table Name.');
       return;
     }
 
+    const formattedName = tableName.trim().startsWith('Table')
+      ? tableName.trim()
+      : `Table ${tableName.trim()}`;
+
     const newTable: PmsDiningTable = {
-      id: editingTable ? editingTable.id : `tbl-${Date.now()}`,
-      tableName: formTableName.trim().toUpperCase(),
-      tableGroup: formTableGroup,
-      capacity: 4,
-      status: editingTable?.status || 'Vacant'
+      id: editingTable ? editingTable.id : `t-${Date.now()}`,
+      tableName: formattedName,
+      tableGroup: tableGroup as TableGroup,
+      capacity: Number(capacity) || 4,
+      status: editingTable ? editingTable.status : 'Vacant'
     };
 
     PmsStore.saveTable(newTable);
-    setSuccessBanner(editingTable ? 'Table updated successfully' : 'table created successfully');
-    setIsAddTableOpen(false);
-    refreshData();
+    loadTables();
+    setIsAddModalOpen(false);
+    if (onTableChange) onTableChange();
+    alert(`Table "${formattedName}" saved successfully in group "${tableGroup}".`);
   };
 
   const handleDeleteTable = (id: string, name: string) => {
-    if (window.confirm(`Are you sure you want to delete table "${name}"?`)) {
+    if (window.confirm(`Are you sure you want to delete "${name}"?`)) {
       PmsStore.deleteTable(id);
-      setSuccessBanner(`Table ${name} deleted successfully`);
-      refreshData();
+      loadTables();
+      if (onTableChange) onTableChange();
     }
   };
 
-  const filteredTables = tables.filter(t =>
-    t.tableName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.tableGroup.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredTables = tables.filter(t => 
+    t.tableName.toLowerCase().includes(search.toLowerCase()) ||
+    t.tableGroup.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <div className="pms-overlay" onClick={onClose}>
-      <div className="pms-window" onClick={e => e.stopPropagation()} style={{ maxWidth: 950, height: '85vh' }}>
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(15, 23, 42, 0.75)',
+        backdropFilter: 'blur(3px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 10000,
+        padding: '16px'
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          background: '#ffffff',
+          borderRadius: 8,
+          width: '100%',
+          maxWidth: 950,
+          maxHeight: '90vh',
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          overflow: 'hidden',
+          fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <header className="pms-header" style={{ background: '#212529', color: '#fff' }}>
-          <div className="pms-header-left">
-            <span style={{ fontSize: 16 }}>🍽️</span>
-            <h2 className="pms-brand-title" style={{ fontSize: 15 }}>
-              HOTEL SAI VASUDEV RESIDENCY &bull; RESTAURANT TABLE MASTER (/tables)
-            </h2>
+        <div
+          style={{
+            background: '#1e293b',
+            color: '#ffffff',
+            padding: '12px 20px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 18 }}>🪑</span>
+            <span style={{ fontWeight: 700, fontSize: 15 }}>
+              Restaurant Table Master (Master &gt; Other &gt; Tables)
+            </span>
           </div>
-          <div className="pms-header-right">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button
+              type="button"
+              onClick={handleOpenAdd}
+              style={{
+                background: '#16a34a',
+                color: '#ffffff',
+                border: 'none',
+                padding: '6px 14px',
+                borderRadius: 4,
+                fontWeight: 700,
+                fontSize: 12.5,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
+              }}
+            >
+              + Add Table
+            </button>
             <button
               type="button"
               onClick={onClose}
-              className="pms-close-btn"
-              title="Close"
+              style={{
+                background: '#334155',
+                border: 'none',
+                color: '#ffffff',
+                borderRadius: 4,
+                width: 28,
+                height: 28,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 14
+              }}
             >
               ✕
             </button>
           </div>
-        </header>
-
-        {/* Toolbar matching Frame 0820 */}
-        <div style={{ background: '#f8f9fa', padding: '12px 18px', borderBottom: '1px solid #dee2e6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#333' }}>Table</h3>
-            <span style={{ fontSize: 12, color: '#6c757d' }}>Manage restaurant dine-in tables, room service dispatch, and banquet seating</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => handleOpenAddTable()}
-            style={{
-              background: '#0d6efd',
-              color: '#fff',
-              border: 'none',
-              padding: '7px 18px',
-              borderRadius: 4,
-              fontWeight: 600,
-              fontSize: 13,
-              cursor: 'pointer'
-            }}
-          >
-            Add New Table
-          </button>
         </div>
 
-        {/* Success Banner matching Frame 0820 ("table created successfully") */}
-        {successBanner && (
-          <div style={{ background: '#d1e7dd', color: '#0f5132', border: '1px solid #badbcc', padding: '10px 18px', fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>✓ {successBanner}</span>
-            <button
-              type="button"
-              onClick={() => setSuccessBanner(null)}
-              style={{ background: 'none', border: 'none', color: '#0f5132', cursor: 'pointer', fontWeight: 'bold' }}
-            >
-              ✕
-            </button>
+        {/* Search bar */}
+        <div
+          style={{
+            padding: '14px 20px',
+            borderBottom: '1px solid #e2e8f0',
+            background: '#f8fafc',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}
+        >
+          <div style={{ fontSize: 13, color: '#475569', fontWeight: 600 }}>
+            Configure General, TakeAway, NC, and SelfService Dining Tables
           </div>
-        )}
-
-        {/* Filter Toolbar */}
-        <div style={{ padding: '12px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', borderBottom: '1px solid #e9ecef' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#495057' }}>
-            <select
-              value={entriesPerPage}
-              onChange={e => setEntriesPerPage(Number(e.target.value))}
-              style={{ padding: '4px 8px', border: '1px solid #ced4da', borderRadius: 3 }}
-            >
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-            </select>
-            <span>entries per page</span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <label style={{ fontSize: 13, color: '#495057' }}>Search:</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <label style={{ fontSize: 13, color: '#475569', fontWeight: 600 }}>Search:</label>
             <input
               type="text"
-              placeholder="Search table or group..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              style={{ padding: '4px 8px', border: '1px solid #ced4da', borderRadius: 3, width: 220, fontSize: 13 }}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search Table Name or Group..."
+              style={{
+                border: '1px solid #cbd5e1',
+                borderRadius: 4,
+                padding: '5px 10px',
+                fontSize: 13,
+                outline: 'none',
+                width: 220
+              }}
             />
           </div>
         </div>
 
-        {/* Datatable matching Frame 0820 */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: 18, background: '#fff' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        {/* Table List matching Frame 200 background */}
+        <div style={{ flex: 1, overflow: 'auto', padding: '0 20px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, marginTop: 12 }}>
             <thead>
-              <tr style={{ background: '#f8f9fa', borderBottom: '2px solid #dee2e6', textAlign: 'left', color: '#495057' }}>
-                <th style={{ padding: '10px 12px', width: 80 }}>S.No</th>
-                <th style={{ padding: '10px 12px' }}>Table Name</th>
-                <th style={{ padding: '10px 12px' }}>Table Group</th>
-                <th style={{ padding: '10px 12px', width: 100, textAlign: 'center' }}>Actions</th>
+              <tr style={{ background: '#f1f5f9', borderBottom: '2px solid #cbd5e1', color: '#334155' }}>
+                <th style={{ padding: '9px 10px', textAlign: 'center', width: 60 }}>S.No▴</th>
+                <th style={{ padding: '9px 16px', textAlign: 'left' }}>Table Name</th>
+                <th style={{ padding: '9px 16px', textAlign: 'left' }}>Group</th>
+                <th style={{ padding: '9px 12px', textAlign: 'center' }}>Capacity</th>
+                <th style={{ padding: '9px 12px', textAlign: 'center' }}>Status</th>
+                <th style={{ padding: '9px 12px', textAlign: 'center', width: 90 }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredTables.slice(0, entriesPerPage).map((t, idx) => (
-                <tr key={t.id} style={{ borderBottom: '1px solid #dee2e6' }}>
-                  <td style={{ padding: '8px 12px', color: '#6c757d' }}>{idx + 1}</td>
-                  <td style={{ padding: '8px 12px', fontWeight: 700, color: '#0f172a' }}>{t.tableName}</td>
-                  <td style={{ padding: '8px 12px' }}>
-                    <span style={{ background: '#f1f5f9', color: '#334155', padding: '3px 8px', borderRadius: 4, fontSize: 12, fontWeight: 500 }}>
-                      {t.tableGroup}
-                    </span>
-                  </td>
-                  <td style={{ padding: '8px 12px', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
-                      <button
-                        type="button"
-                        onClick={() => handleOpenAddTable(t)}
-                        style={{
-                          background: '#0d6efd',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: 3,
-                          padding: '3px 8px',
-                          cursor: 'pointer',
-                          fontSize: 11
-                        }}
-                        title="Edit Table"
-                      >
-                        ✎
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteTable(t.id, t.tableName)}
-                        style={{
-                          background: '#dc3545',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: 3,
-                          padding: '3px 8px',
-                          cursor: 'pointer',
-                          fontSize: 11
-                        }}
-                        title="Delete Table"
-                      >
-                        🗑
-                      </button>
-                    </div>
+              {filteredTables.length === 0 ? (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>
+                    No tables found matching criteria.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredTables.map((t, idx) => {
+                  const isRunning = t.status === 'Running' || t.status === 'Occupied';
+                  return (
+                    <tr
+                      key={t.id}
+                      style={{
+                        borderBottom: '1px solid #e2e8f0',
+                        background: idx % 2 === 0 ? '#ffffff' : '#f8fafc'
+                      }}
+                    >
+                      <td style={{ padding: '8px 10px', textAlign: 'center', color: '#64748b' }}>
+                        {idx + 1}
+                      </td>
+                      <td style={{ padding: '8px 16px', fontWeight: 700, color: '#0f172a' }}>
+                        {t.tableName}
+                      </td>
+                      <td style={{ padding: '8px 16px' }}>
+                        <span
+                          style={{
+                            background:
+                              t.tableGroup === 'Nc' || t.tableGroup === 'NC'
+                                ? '#fce7f3'
+                                : t.tableGroup === 'TakeAway'
+                                ? '#fef9c3'
+                                : '#e0f2fe',
+                            color:
+                              t.tableGroup === 'Nc' || t.tableGroup === 'NC'
+                                ? '#9d174d'
+                                : t.tableGroup === 'TakeAway'
+                                ? '#854d0e'
+                                : '#0369a1',
+                            padding: '3px 8px',
+                            borderRadius: 12,
+                            fontSize: 11,
+                            fontWeight: 700
+                          }}
+                        >
+                          {t.tableGroup}
+                        </span>
+                      </td>
+                      <td style={{ padding: '8px 12px', textAlign: 'center', color: '#475569' }}>
+                        {t.capacity || 4} Pax
+                      </td>
+                      <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                        <span
+                          style={{
+                            background: isRunning ? '#dcfce7' : '#f1f5f9',
+                            color: isRunning ? '#15803d' : '#64748b',
+                            padding: '2px 8px',
+                            borderRadius: 12,
+                            fontSize: 11,
+                            fontWeight: 700
+                          }}
+                        >
+                          {isRunning ? '🟢 Running' : '⚪ Vacant'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: 6 }}>
+                          {/* Edit Frame 200 blue pen */}
+                          <button
+                            type="button"
+                            title="Edit Table"
+                            onClick={() => handleOpenEdit(t)}
+                            style={{
+                              background: '#eff6ff',
+                              border: '1px solid #93c5fd',
+                              color: '#1d4ed8',
+                              borderRadius: 4,
+                              padding: '3px 6px',
+                              cursor: 'pointer',
+                              fontSize: 12
+                            }}
+                          >
+                            ✏️
+                          </button>
+                          {/* Delete Frame 200 red trash */}
+                          <button
+                            type="button"
+                            title="Delete Table"
+                            onClick={() => handleDeleteTable(t.id, t.tableName)}
+                            style={{
+                              background: '#fef2f2',
+                              border: '1px solid #fca5a5',
+                              color: '#dc2626',
+                              borderRadius: 4,
+                              padding: '3px 6px',
+                              cursor: 'pointer',
+                              fontSize: 12
+                            }}
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
 
         {/* Footer */}
-        <div style={{ background: '#f8f9fa', padding: '10px 18px', borderTop: '1px solid #dee2e6', fontSize: 12, color: '#6c757d', display: 'flex', justifyContent: 'space-between' }}>
-          <span>Showing 1 to {filteredTables.length} of {tables.length} entries</span>
-          <span>HOTEL SAI VASUDEV RESIDENCY &bull; RESTAURANT PMS</span>
+        <div
+          style={{
+            padding: '12px 20px',
+            background: '#f8fafc',
+            borderTop: '1px solid #e2e8f0',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontSize: 12.5,
+            color: '#64748b'
+          }}
+        >
+          <div>Total Tables: {tables.length}</div>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              background: '#475569',
+              color: '#ffffff',
+              border: 'none',
+              padding: '6px 16px',
+              borderRadius: 4,
+              cursor: 'pointer',
+              fontWeight: 600
+            }}
+          >
+            Close
+          </button>
         </div>
       </div>
 
-      {/* ========================================================= */}
-      {/* ADD / EDIT TABLE MODAL (Frame 0820 Exact Replica)          */}
-      {/* ========================================================= */}
-      {isAddTableOpen && (
+      {/* Add / Edit Table Modal - Exact Replica of Frame 200 */}
+      {isAddModalOpen && (
         <div
           style={{
             position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.5)',
-            zIndex: 10005,
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            zIndex: 10005
           }}
-          onClick={() => setIsAddTableOpen(false)}
+          onClick={() => setIsAddModalOpen(false)}
         >
           <div
             style={{
-              background: '#fff',
-              width: 440,
-              maxWidth: '95vw',
-              borderRadius: 6,
-              boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
-              overflow: 'hidden'
+              background: '#ffffff',
+              borderRadius: 8,
+              width: '100%',
+              maxWidth: 440,
+              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.3)',
+              overflow: 'hidden',
+              fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
             }}
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div style={{ padding: '12px 18px', borderBottom: '1px solid #dee2e6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#212529' }}>
+            {/* Header Frame 200 */}
+            <div
+              style={{
+                padding: '14px 18px',
+                borderBottom: '1px solid #e2e8f0',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}
+            >
+              <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: '#1e293b' }}>
                 {editingTable ? 'Edit Table' : 'Add Table'}
               </h3>
               <button
                 type="button"
-                onClick={() => setIsAddTableOpen(false)}
-                style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: '#6c757d' }}
+                onClick={() => setIsAddModalOpen(false)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  fontSize: 18,
+                  cursor: 'pointer',
+                  color: '#64748b'
+                }}
               >
                 ✕
               </button>
             </div>
 
-            {/* Form */}
-            <form onSubmit={handleSaveTable} style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#495057', marginBottom: 6, textAlign: 'center' }}>
+            <form onSubmit={handleSaveTable} style={{ padding: '20px 18px' }}>
+              {/* Table Name */}
+              <div style={{ marginBottom: 16 }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: '#334155',
+                    marginBottom: 6,
+                    textAlign: 'center'
+                  }}
+                >
                   Table Name
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. NC2, T-1, G-1"
-                  value={formTableName}
-                  onChange={e => setFormTableName(e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: 4, fontSize: 14 }}
-                  required
+                  value={tableName}
+                  onChange={(e) => setTableName(e.target.value)}
+                  placeholder="e.g. NC3 or T-17"
                   autoFocus
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: '1.5px solid #cbd5e1',
+                    borderRadius: 6,
+                    fontSize: 14,
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
                 />
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#495057', marginBottom: 6, textAlign: 'center' }}>
+              {/* Select Table Group - Matching Frame 200 Dropdown */}
+              <div style={{ marginBottom: 16 }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: '#334155',
+                    marginBottom: 6,
+                    textAlign: 'center'
+                  }}
+                >
                   Select Table Group
                 </label>
                 <select
-                  value={formTableGroup}
-                  onChange={e => setFormTableGroup(e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: 4, fontSize: 13 }}
+                  value={tableGroup}
+                  onChange={(e) => setTableGroup(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: '1.5px solid #93c5fd',
+                    borderRadius: 6,
+                    fontSize: 14,
+                    outline: 'none',
+                    backgroundColor: '#ffffff',
+                    color: '#1e293b',
+                    boxSizing: 'border-box'
+                  }}
                 >
-                  {TABLE_GROUPS.map(grp => (
-                    <option key={grp} value={grp}>{grp}</option>
-                  ))}
+                  <option value="General">General</option>
+                  <option value="Nc">NC</option>
+                  <option value="TakeAway">Take Away</option>
+                  <option value="SelfService">Self Service</option>
                 </select>
               </div>
 
-              {/* Buttons matching Frame 0820 (Close, Save) */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12, paddingTop: 12, borderTop: '1px solid #dee2e6' }}>
+              {/* Capacity */}
+              <div style={{ marginBottom: 20 }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: '#334155',
+                    marginBottom: 6,
+                    textAlign: 'center'
+                  }}
+                >
+                  Seating Capacity (Pax)
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={50}
+                  value={capacity}
+                  onChange={(e) => setCapacity(Number(e.target.value))}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: '1.5px solid #cbd5e1',
+                    borderRadius: 6,
+                    fontSize: 14,
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              {/* Buttons */}
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
                 <button
                   type="button"
-                  onClick={() => setIsAddTableOpen(false)}
-                  style={{ background: '#6c757d', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: 4, cursor: 'pointer', fontSize: 13 }}
+                  onClick={() => setIsAddModalOpen(false)}
+                  style={{
+                    padding: '8px 16px',
+                    background: '#f1f5f9',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: 6,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
                 >
-                  Close
+                  Cancel
                 </button>
                 <button
                   type="submit"
-                  style={{ background: '#0d6efd', color: '#fff', border: 'none', padding: '6px 20px', borderRadius: 4, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}
+                  style={{
+                    padding: '8px 20px',
+                    background: '#16a34a',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: 6,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
                 >
-                  Save
+                  Save Table
                 </button>
               </div>
             </form>

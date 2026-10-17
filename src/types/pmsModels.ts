@@ -119,6 +119,11 @@ export interface PmsKotRecord {
   createdAt: string;
   status: 'Pending' | 'Cooking' | 'Ready To Serve' | 'Served' | 'Billed' | 'Cancelled';
   serveStatus?: 'Pending' | 'Cooking' | 'Ready To Serve' | 'Served';
+  isNc?: boolean;
+  ncRemark?: string;
+  operatorName?: string;
+  cancelReason?: string;
+  cancelledAt?: string;
 }
 export interface PmsCheckIn {
   checkInNo: string;          // e.g. SR/188/24-25
@@ -305,12 +310,24 @@ export interface PmsRoomType {
   discountPercent: number;
 }
 
+export type TableGroup = 'General' | 'TakeAway' | 'Nc' | 'SelfService' | string;
+
 export interface PmsDiningTable {
   id: string;
   tableName: string;
-  tableGroup: string;
+  tableGroup: TableGroup;
   capacity?: number;
-  status?: 'Vacant' | 'Running' | 'Billed';
+  status?: 'Vacant' | 'Running' | 'Billed' | 'Occupied';
+  activeKotNos?: string[];
+}
+
+export interface PmsTableShiftRecord {
+  id: string;
+  fromTable: string;
+  toTable: string;
+  shiftedAt: string;
+  kotsShifted: number;
+  shiftedBy: string;
 }
 
 export interface PmsGstMaster {

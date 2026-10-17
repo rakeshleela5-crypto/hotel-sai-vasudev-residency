@@ -10,6 +10,10 @@ import { AdvanceReceiptModal } from './AdvanceReceiptModal';
 import { PartyLedgerModal } from './PartyLedgerModal';
 import { KitchenDashboardModal } from './KitchenDashboardModal';
 import { RestaurantKotRegisterModal } from './RestaurantKotRegisterModal';
+import { RestaurantTableDashboardModal } from './RestaurantTableDashboardModal';
+import { ShiftTableModal } from './ShiftTableModal';
+import { NcKotRegisterModal } from './NcKotRegisterModal';
+import { TableMasterModal } from './TableMasterModal';
 import type { PmsBooking } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
@@ -29,12 +33,18 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   const [latestBooking, setLatestBooking] = useState<PmsBooking | null>(null);
 
   const [isKotOpen, setIsKotOpen] = useState(false);
+  const [selectedKotTable, setSelectedKotTable] = useState<string | undefined>(undefined);
   const [isFoodBillOpen, setIsFoodBillOpen] = useState(false);
+  const [selectedBillTable, setSelectedBillTable] = useState<string | undefined>(undefined);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isAdvanceReceiptOpen, setIsAdvanceReceiptOpen] = useState(false);
   const [isLedgerOpen, setIsLedgerOpen] = useState(false);
   const [isKitchenDashboardOpen, setIsKitchenDashboardOpen] = useState(false);
   const [isRestaurantKotOpen, setIsRestaurantKotOpen] = useState(false);
+  const [isTableDashboardOpen, setIsTableDashboardOpen] = useState(false);
+  const [isShiftTableOpen, setIsShiftTableOpen] = useState(false);
+  const [isNcKotRegisterOpen, setIsNcKotRegisterOpen] = useState(false);
+  const [isTableMasterOpen, setIsTableMasterOpen] = useState(false);
 
   const rooms = PmsStore.getRooms();
   const vacantCount = rooms.filter(r => r.status === 'vacant').length;
@@ -182,7 +192,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-restaurant"
-          onClick={() => setIsRestaurantKotOpen(true)}
+          onClick={() => setIsTableDashboardOpen(true)}
         >
           <span className="tile-icon">🏬</span>
           <span>Restaurant</span>
@@ -329,13 +339,22 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
 
       <KotEntryModal
         isOpen={isKotOpen}
-        onClose={() => setIsKotOpen(false)}
+        onClose={() => {
+          setIsKotOpen(false);
+          setSelectedKotTable(undefined);
+        }}
+        defaultTableNo={selectedKotTable}
+        defaultServiceType={selectedKotTable ? 'Restaurant' : undefined}
         onKotSaved={() => {}}
       />
 
       <FoodBillModal
         isOpen={isFoodBillOpen}
-        onClose={() => setIsFoodBillOpen(false)}
+        onClose={() => {
+          setIsFoodBillOpen(false);
+          setSelectedBillTable(undefined);
+        }}
+        defaultTableNo={selectedBillTable}
         onBillSaved={() => {}}
       />
 
@@ -369,6 +388,40 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         onClose={() => setIsRestaurantKotOpen(false)}
         onOpenKitchenDashboard={() => setIsKitchenDashboardOpen(true)}
         onOpenNewKot={() => setIsKotOpen(true)}
+      />
+
+      <RestaurantTableDashboardModal
+        isOpen={isTableDashboardOpen}
+        onClose={() => setIsTableDashboardOpen(false)}
+        onOpenKotForTable={(tbl) => {
+          setSelectedKotTable(tbl);
+          setIsKotOpen(true);
+        }}
+        onOpenBillForTable={(tbl) => {
+          setSelectedBillTable(tbl);
+          setIsFoodBillOpen(true);
+        }}
+        onOpenKitchenDashboard={() => setIsKitchenDashboardOpen(true)}
+        onOpenKotRegister={() => setIsRestaurantKotOpen(true)}
+      />
+
+      <ShiftTableModal
+        isOpen={isShiftTableOpen}
+        onClose={() => setIsShiftTableOpen(false)}
+      />
+
+      <NcKotRegisterModal
+        isOpen={isNcKotRegisterOpen}
+        onClose={() => setIsNcKotRegisterOpen(false)}
+        onOpenNewKot={() => {
+          setSelectedKotTable('Table NC1');
+          setIsKotOpen(true);
+        }}
+      />
+
+      <TableMasterModal
+        isOpen={isTableMasterOpen}
+        onClose={() => setIsTableMasterOpen(false)}
       />
     </div>
   );

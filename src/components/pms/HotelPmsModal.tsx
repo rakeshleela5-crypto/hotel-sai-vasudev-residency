@@ -19,6 +19,9 @@ import { RoomCheckInRegisterModal } from './RoomCheckInRegisterModal';
 import { NewRoomCheckInModal } from './NewRoomCheckInModal';
 import { KitchenDashboardModal } from './KitchenDashboardModal';
 import { RestaurantKotRegisterModal } from './RestaurantKotRegisterModal';
+import { RestaurantTableDashboardModal } from './RestaurantTableDashboardModal';
+import { ShiftTableModal } from './ShiftTableModal';
+import { NcKotRegisterModal } from './NcKotRegisterModal';
 import './pmsStyles.css';
 
 interface HotelPmsModalProps {
@@ -41,7 +44,9 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   const [isUnconfirmedOpen, setIsUnconfirmedOpen] = useState(false);
   const [isFbbReportOpen, setIsFbbReportOpen] = useState(false);
   const [isKotModalOpen, setIsKotModalOpen] = useState(false);
+  const [selectedKotTable, setSelectedKotTable] = useState<string | undefined>(undefined);
   const [isFoodBillModalOpen, setIsFoodBillModalOpen] = useState(false);
+  const [selectedBillTable, setSelectedBillTable] = useState<string | undefined>(undefined);
   const [isAdvanceReceiptOpen, setIsAdvanceReceiptOpen] = useState(false);
   const [isPartyLedgerOpen, setIsPartyLedgerOpen] = useState(false);
 
@@ -68,6 +73,11 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   // Video 12 Kitchen Dashboard (KDS) & Restaurant KOT Register Modals
   const [isKitchenDashboardOpen, setIsKitchenDashboardOpen] = useState(false);
   const [isRestaurantKotOpen, setIsRestaurantKotOpen] = useState(false);
+
+  // Video 13 Restaurant Table Matrix, Table Shifting, NC KOT Register
+  const [isTableDashboardOpen, setIsTableDashboardOpen] = useState(false);
+  const [isShiftTableOpen, setIsShiftTableOpen] = useState(false);
+  const [isNcKotRegisterOpen, setIsNcKotRegisterOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -288,6 +298,15 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     <div className="pms-nav-item" onClick={() => setIsRestaurantKotOpen(true)}>
                       <span style={{ color: '#10b981', fontWeight: 700 }}>🍽️ Restaurant KOT Register</span>
                     </div>
+                    <div className="pms-nav-item" onClick={() => setIsTableDashboardOpen(true)}>
+                      <span style={{ color: '#84cc16', fontWeight: 800 }}>🏬 Restaurant Table Matrix (Video 13)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsShiftTableOpen(true)}>
+                      <span style={{ color: '#f43f5e', fontWeight: 700 }}>🔁 Shift Table (Video 13)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsNcKotRegisterOpen(true)}>
+                      <span style={{ color: '#ec4899', fontWeight: 800 }}>🍽️ NC KOT Register (Video 13)</span>
+                    </div>
                     <div className="pms-nav-item" onClick={() => setIsFoodBillModalOpen(true)}>
                       <span style={{ color: '#38bdf8', fontWeight: 700 }}>🧾 Food Bill (FBB)</span>
                     </div>
@@ -430,13 +449,24 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       {/* Kot Entry Modal */}
       <KotEntryModal
         isOpen={isKotModalOpen}
-        onClose={() => setIsKotModalOpen(false)}
+        onClose={() => {
+          setIsKotModalOpen(false);
+          setSelectedKotTable(undefined);
+        }}
+        defaultTableNo={selectedKotTable}
+        defaultServiceType={selectedKotTable ? 'Restaurant' : undefined}
+        onKotSaved={() => setRoomRefreshTrigger(prev => prev + 1)}
       />
 
       {/* Food Bill Modal */}
       <FoodBillModal
         isOpen={isFoodBillModalOpen}
-        onClose={() => setIsFoodBillModalOpen(false)}
+        onClose={() => {
+          setIsFoodBillModalOpen(false);
+          setSelectedBillTable(undefined);
+        }}
+        defaultTableNo={selectedBillTable}
+        onBillSaved={() => setRoomRefreshTrigger(prev => prev + 1)}
       />
 
       {/* Advance Receipt Modal (Video 06) */}
@@ -529,6 +559,39 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         onClose={() => setIsRestaurantKotOpen(false)}
         onOpenKitchenDashboard={() => setIsKitchenDashboardOpen(true)}
         onOpenNewKot={() => setIsKotModalOpen(true)}
+      />
+
+      {/* Video 13: Restaurant Table Matrix Dashboard */}
+      <RestaurantTableDashboardModal
+        isOpen={isTableDashboardOpen}
+        onClose={() => setIsTableDashboardOpen(false)}
+        onOpenKotForTable={(tbl) => {
+          setSelectedKotTable(tbl);
+          setIsKotModalOpen(true);
+        }}
+        onOpenBillForTable={(tbl) => {
+          setSelectedBillTable(tbl);
+          setIsFoodBillModalOpen(true);
+        }}
+        onOpenKitchenDashboard={() => setIsKitchenDashboardOpen(true)}
+        onOpenKotRegister={() => setIsRestaurantKotOpen(true)}
+      />
+
+      {/* Video 13: Table Shifting Modal */}
+      <ShiftTableModal
+        isOpen={isShiftTableOpen}
+        onClose={() => setIsShiftTableOpen(false)}
+        onShiftCompleted={() => setRoomRefreshTrigger(prev => prev + 1)}
+      />
+
+      {/* Video 13: NC KOT Register */}
+      <NcKotRegisterModal
+        isOpen={isNcKotRegisterOpen}
+        onClose={() => setIsNcKotRegisterOpen(false)}
+        onOpenNewKot={() => {
+          setSelectedKotTable('Table NC1');
+          setIsKotModalOpen(true);
+        }}
       />
     </>
   );

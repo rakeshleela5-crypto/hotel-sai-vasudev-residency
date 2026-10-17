@@ -14,7 +14,8 @@ import type {
   PmsBusinessSetting,
   DayWiseRentItem,
   PmsCompanyInfo,
-  PmsRoomShiftRecord
+  PmsRoomShiftRecord,
+  PmsTableShiftRecord
 } from '../types/pmsModels';
 
 export const DEFAULT_BUSINESS_SETTING: PmsBusinessSetting = {
@@ -128,19 +129,34 @@ export const INITIAL_ROOM_TYPES: PmsRoomType[] = [
 ];
 
 export const INITIAL_TABLES: PmsDiningTable[] = [
-  { id: 't-1', tableName: 'T-1', tableGroup: 'General', capacity: 4, status: 'Vacant' },
-  { id: 't-2', tableName: 'T-2', tableGroup: 'General', capacity: 4, status: 'Vacant' },
-  { id: 't-3', tableName: 'T-3', tableGroup: 'General', capacity: 4, status: 'Vacant' },
-  { id: 't-4', tableName: 'T-4', tableGroup: 'General', capacity: 4, status: 'Vacant' },
-  { id: 't-5', tableName: 'T-5', tableGroup: 'General', capacity: 6, status: 'Vacant' },
-  { id: 't-6', tableName: 'T-6', tableGroup: 'General', capacity: 6, status: 'Vacant' },
-  { id: 't-7', tableName: 'T-7', tableGroup: 'General', capacity: 2, status: 'Vacant' },
-  { id: 't-8', tableName: 'T-8', tableGroup: 'General', capacity: 2, status: 'Vacant' },
-  { id: 't-9', tableName: 'T-9', tableGroup: 'General', capacity: 8, status: 'Vacant' },
-  { id: 't-nc1', tableName: 'NC1', tableGroup: 'NC', capacity: 4, status: 'Vacant' },
-  { id: 't-nc2', tableName: 'NC2', tableGroup: 'NC', capacity: 4, status: 'Vacant' },
-  { id: 't-g1', tableName: 'G-1', tableGroup: 'Garden', capacity: 6, status: 'Vacant' },
-  { id: 't-g2', tableName: 'G-2', tableGroup: 'Garden', capacity: 6, status: 'Vacant' },
+  // General Dining Tables (matching Video 13 Frames 110 & 140)
+  { id: 't-1', tableName: 'Table T-1', tableGroup: 'General', capacity: 4, status: 'Vacant' },
+  { id: 't-2', tableName: 'Table T-2', tableGroup: 'General', capacity: 4, status: 'Vacant' },
+  { id: 't-3', tableName: 'Table T- 3', tableGroup: 'General', capacity: 4, status: 'Running' },
+  { id: 't-4', tableName: 'Table T-4', tableGroup: 'General', capacity: 4, status: 'Vacant' },
+  { id: 't-5', tableName: 'Table T-5', tableGroup: 'General', capacity: 6, status: 'Running' },
+  { id: 't-6', tableName: 'Table T-6', tableGroup: 'General', capacity: 6, status: 'Running' },
+  { id: 't-7', tableName: 'Table T-7', tableGroup: 'General', capacity: 2, status: 'Running' },
+  { id: 't-8', tableName: 'Table T-8', tableGroup: 'General', capacity: 2, status: 'Running' },
+  { id: 't-9', tableName: 'Table T-9', tableGroup: 'General', capacity: 8, status: 'Vacant' },
+  { id: 't-10', tableName: 'Table T-10', tableGroup: 'General', capacity: 4, status: 'Vacant' },
+  { id: 't-11', tableName: 'Table T-11', tableGroup: 'General', capacity: 4, status: 'Vacant' },
+  { id: 't-12', tableName: 'Table T-12', tableGroup: 'General', capacity: 4, status: 'Vacant' },
+  { id: 't-13', tableName: 'Table T-13', tableGroup: 'General', capacity: 4, status: 'Vacant' },
+  { id: 't-14', tableName: 'Table T-14', tableGroup: 'General', capacity: 4, status: 'Running' },
+  { id: 't-15', tableName: 'Table T-15', tableGroup: 'General', capacity: 4, status: 'Vacant' },
+  { id: 't-ncc', tableName: 'Table NCC', tableGroup: 'General', capacity: 6, status: 'Running' },
+  { id: 't-16', tableName: 'Table T-16', tableGroup: 'General', capacity: 6, status: 'Running' },
+
+  // TakeAway Group
+  { id: 't-a1', tableName: 'Table A1', tableGroup: 'TakeAway', capacity: 2, status: 'Vacant' },
+
+  // NC Group (Non-Chargeable tables for Owner, VIP, Staff dining)
+  { id: 't-nc1', tableName: 'Table NC1', tableGroup: 'Nc', capacity: 4, status: 'Vacant' },
+  { id: 't-nc2', tableName: 'Table NC2', tableGroup: 'Nc', capacity: 4, status: 'Running' },
+
+  // SelfService Group
+  { id: 't-s1', tableName: 'Table S1', tableGroup: 'SelfService', capacity: 4, status: 'Vacant' },
 ];
 
 export const INITIAL_GST_MASTERS: PmsGstMaster[] = [
@@ -709,6 +725,30 @@ export class PmsStore {
     const now = Date.now();
     const initialKots: PmsKotRecord[] = [
       {
+        kotNo: 'R/371',
+        serviceType: 'Restaurant',
+        roomNo: '',
+        tableNo: 'Table NC2',
+        waiterName: 'DEMO0004',
+        operatorName: 'DEMO0004',
+        guestName: 'RAHUL',
+        kotRemark: 'NOT REQ',
+        ncRemark: 'RAHUL',
+        isNc: true,
+        items: [
+          { sNo: 1, itemName: 'TEA', itemCode: '10019', qty: 2, rate: 19.05, amount: 40.00 },
+          { sNo: 2, itemName: 'bread pakoda', itemCode: '10009', qty: 2, rate: 95.24, amount: 200.00 }
+        ],
+        totalQty: 4,
+        totalAmount: 240.00,
+        date: '16-06-25',
+        createdAt: new Date(now - 1 * 60 * 1000).toISOString(),
+        status: 'Cancelled',
+        serveStatus: 'Pending',
+        cancelReason: 'NOT REQ',
+        cancelledAt: new Date(now - 30 * 1000).toISOString()
+      },
+      {
         kotNo: '370',
         serviceType: 'Restaurant',
         roomNo: '138',
@@ -868,6 +908,140 @@ export class PmsStore {
     const kots = this.getKots();
     kots.unshift(kot);
     localStorage.setItem(STORAGE_KEYS.KOTS, JSON.stringify(kots));
+
+    // If KOT is assigned to a table and not cancelled, ensure table is marked Running
+    if (kot.tableNo && kot.status !== 'Cancelled' && kot.status !== 'Billed') {
+      const cleanTable = kot.tableNo.replace(/^Table\s+/i, '').trim().toLowerCase();
+      const tables = this.getTables();
+      const updatedTables = tables.map(t => {
+        if (t.tableName.replace(/^Table\s+/i, '').trim().toLowerCase() === cleanTable) {
+          return { ...t, status: 'Running' as const };
+        }
+        return t;
+      });
+      localStorage.setItem(STORAGE_KEYS.TABLES, JSON.stringify(updatedTables));
+    }
+  }
+
+  static shiftTable(fromTable: string, toTable: string, shiftedBy: string = 'Admin'): {
+    success: boolean;
+    transferredCount: number;
+    message: string;
+  } {
+    const kots = this.getKots();
+    let transferredCount = 0;
+    const cleanFrom = fromTable.replace(/^Table\s+/i, '').trim().toLowerCase();
+    const cleanTo = toTable.replace(/^Table\s+/i, '').trim();
+
+    const updatedKots = kots.map(kot => {
+      const kotTable = (kot.tableNo || '').replace(/^Table\s+/i, '').trim().toLowerCase();
+      if (kotTable === cleanFrom && kot.status !== 'Cancelled' && kot.status !== 'Billed') {
+        transferredCount++;
+        return {
+          ...kot,
+          tableNo: `Table ${cleanTo.replace(/^Table\s+/i, '')}`,
+          kotRemark: `${kot.kotRemark ? kot.kotRemark + ' | ' : ''}Shifted from Table ${fromTable.replace(/^Table\s+/i, '')}`
+        };
+      }
+      return kot;
+    });
+
+    if (transferredCount > 0) {
+      localStorage.setItem(STORAGE_KEYS.KOTS, JSON.stringify(updatedKots));
+    }
+
+    // Update Tables statuses: toTable is Running, fromTable is Vacant
+    const tables = this.getTables();
+    const updatedTables = tables.map(t => {
+      const tName = t.tableName.replace(/^Table\s+/i, '').trim().toLowerCase();
+      if (tName === cleanFrom) {
+        return { ...t, status: 'Vacant' as const };
+      }
+      if (tName === cleanTo.toLowerCase()) {
+        return { ...t, status: 'Running' as const };
+      }
+      return t;
+    });
+    localStorage.setItem(STORAGE_KEYS.TABLES, JSON.stringify(updatedTables));
+
+    // Save Table Shift Record
+    const rawShifts = localStorage.getItem('hotel_pms_table_shifts');
+    const shifts: PmsTableShiftRecord[] = rawShifts ? JSON.parse(rawShifts) : [];
+    shifts.unshift({
+      id: `ts-${Date.now()}`,
+      fromTable,
+      toTable,
+      shiftedAt: new Date().toISOString(),
+      kotsShifted: transferredCount,
+      shiftedBy
+    });
+    localStorage.setItem('hotel_pms_table_shifts', JSON.stringify(shifts));
+
+    return {
+      success: true,
+      transferredCount,
+      message: `Table shifted successfully from ${fromTable} to ${toTable} (${transferredCount} KOT${transferredCount === 1 ? '' : 's'} transferred).`
+    };
+  }
+
+  static cancelKot(kotNo: string, reason: string, cancelledBy: string = 'Admin'): {
+    success: boolean;
+    message: string;
+  } {
+    const kots = this.getKots();
+    const cleanSearch = kotNo.replace(/^R\//, '').trim().toLowerCase();
+    const idx = kots.findIndex(k => 
+      k.kotNo.toLowerCase() === kotNo.toLowerCase() || 
+      k.kotNo.replace(/^R\//, '').trim().toLowerCase() === cleanSearch
+    );
+    if (idx < 0) {
+      return { success: false, message: `KOT ${kotNo} not found.` };
+    }
+    const target = kots[idx];
+    kots[idx] = {
+      ...target,
+      status: 'Cancelled',
+      cancelReason: reason || 'NOT REQ',
+      kotRemark: reason || 'NOT REQ',
+      operatorName: cancelledBy || target.operatorName || 'Admin',
+      cancelledAt: new Date().toISOString()
+    };
+    localStorage.setItem(STORAGE_KEYS.KOTS, JSON.stringify(kots));
+
+    // Check if table has other active KOTs; if not, mark table Vacant
+    if (target.tableNo) {
+      const cleanTable = target.tableNo.replace(/^Table\s+/i, '').trim().toLowerCase();
+      const remainingActive = kots.filter(k => 
+        k.tableNo && 
+        k.tableNo.replace(/^Table\s+/i, '').trim().toLowerCase() === cleanTable &&
+        k.status !== 'Cancelled' && 
+        k.status !== 'Billed'
+      );
+      if (remainingActive.length === 0) {
+        const tables = this.getTables();
+        const updatedTables = tables.map(t => {
+          if (t.tableName.replace(/^Table\s+/i, '').trim().toLowerCase() === cleanTable) {
+            return { ...t, status: 'Vacant' as const };
+          }
+          return t;
+        });
+        localStorage.setItem(STORAGE_KEYS.TABLES, JSON.stringify(updatedTables));
+      }
+    }
+
+    return {
+      success: true,
+      message: `KOT ${target.kotNo} cancelled successfully with reason: ${reason || 'NOT REQ'}`
+    };
+  }
+
+  static getNcKots(): PmsKotRecord[] {
+    return this.getKots().filter(k => k.isNc || (k.tableNo && k.tableNo.toUpperCase().includes('NC')));
+  }
+
+  static getTableShifts(): PmsTableShiftRecord[] {
+    const raw = localStorage.getItem('hotel_pms_table_shifts');
+    return raw ? JSON.parse(raw) : [];
   }
 
   static getFoodBills(): import('../types/pmsModels').PmsFoodBill[] {
