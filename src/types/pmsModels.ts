@@ -168,22 +168,40 @@ export interface PmsCheckIn {
   foodAmount?: number;
 }
 
+export interface FoodBillItem {
+  sNo: number;
+  itemName: string;
+  itemCode?: string;
+  qty: number;
+  rate: number;
+  amount: number;
+  discountPercent?: number;
+  discountAmount?: number;
+  taxable: number;
+  gstPercent: number;
+  gstAmount?: number;
+  vatPercent?: number;
+  surPercent?: number;
+  value: number;
+}
+
 export interface PmsFoodBill {
-  billNo: string;             // e.g. SHRI/252/24-25
+  billNo: string;             // e.g. SHRI/253/24-25
   date: string;
   time: string;
   roomNo: string;
   guestName: string;
-  kotNumbers: string[];       // e.g. ['349', '350']
-  items: KotItem[];
+  kotNumbers: string[];       // e.g. ['351']
+  items: (KotItem | FoodBillItem)[];
   taxableAmount: number;
   gstPercent: number;         // 5.0000%
   cgstAmount: number;         // 2.5%
   sgstAmount: number;         // 2.5%
   discountPercent: number;    // e.g. 5.0%
   discountAmount: number;
-  roundOff: number;           // e.g. -2.00
-  netBillAmount: number;      // e.g. 340.00
+  roundOff: number;           // e.g. -0.00
+  netBillAmount: number;      // e.g. 30.00
+  amountInWords?: string;
   settlementType: 'Settle To Room' | 'Cash' | 'UPI' | 'Card';
   status: 'Pending' | 'Settled';
   createdAt: string;

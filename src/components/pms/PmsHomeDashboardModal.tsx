@@ -3,7 +3,8 @@ import { PmsStore } from '../../services/pmsStore';
 import { NewRoomBookingModal } from './NewRoomBookingModal';
 import { NewRoomCheckInModal } from './NewRoomCheckInModal';
 import { BookingReceiptModal } from './BookingReceiptModal';
-import { AddKotModal } from './AddKotModal';
+import { KotEntryModal } from './KotEntryModal';
+import { FoodBillModal } from './FoodBillModal';
 import { RoomCheckOutModal } from './RoomCheckOutModal';
 import type { PmsBooking } from '../../types/pmsModels';
 
@@ -24,6 +25,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   const [latestBooking, setLatestBooking] = useState<PmsBooking | null>(null);
 
   const [isKotOpen, setIsKotOpen] = useState(false);
+  const [isFoodBillOpen, setIsFoodBillOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
   const rooms = PmsStore.getRooms();
@@ -126,7 +128,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-new-food-bill"
-          onClick={() => setIsKotOpen(true)}
+          onClick={() => setIsFoodBillOpen(true)}
         >
           <span className="tile-icon">🧾</span>
           <span>New Food Bill</span>
@@ -325,10 +327,16 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         booking={latestBooking}
       />
 
-      <AddKotModal
+      <KotEntryModal
         isOpen={isKotOpen}
         onClose={() => setIsKotOpen(false)}
         onKotSaved={() => {}}
+      />
+
+      <FoodBillModal
+        isOpen={isFoodBillOpen}
+        onClose={() => setIsFoodBillOpen(false)}
+        onBillSaved={() => {}}
       />
 
       <RoomCheckOutModal

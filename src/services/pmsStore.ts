@@ -153,26 +153,80 @@ export class PmsStore {
 
   static getKots(): PmsKotRecord[] {
     const raw = localStorage.getItem(STORAGE_KEYS.KOTS);
-    return raw ? JSON.parse(raw) : [];
+    if (raw) {
+      try {
+        return JSON.parse(raw);
+      } catch {
+        // fallback
+      }
+    }
+    // Seed default KOT matching Video 05 Frame 0150
+    const initialKots: PmsKotRecord[] = [
+      {
+        kotNo: 'KOT/351/24-25',
+        serviceType: 'Room',
+        roomNo: '103',
+        guestName: 'ALOK JAIN',
+        kotRemark: 'Quick Room Delivery',
+        items: [
+          { sNo: 1, itemName: 'WATER BOTLE', itemCode: '10003', qty: 1, rate: 28.57, amount: 28.57 }
+        ],
+        totalAmount: 28.57,
+        createdAt: '2025-06-07T06:36:00.000Z',
+        status: 'Pending'
+      },
+      {
+        kotNo: 'KOT/349/24-25',
+        serviceType: 'Room',
+        roomNo: '105',
+        guestName: 'sunil agrwal',
+        items: [
+          { sNo: 1, itemName: 'TEA', itemCode: '10003', qty: 2, rate: 19.05, amount: 38.10 }
+        ],
+        totalAmount: 38.10,
+        createdAt: '2025-06-07T06:10:00.000Z',
+        status: 'Billed'
+      },
+      {
+        kotNo: 'KOT/350/24-25',
+        serviceType: 'Room',
+        roomNo: '105',
+        guestName: 'sunil agrwal',
+        items: [
+          { sNo: 1, itemName: 'Rasgulla', itemCode: '10002', qty: 1, rate: 190.48, amount: 190.48 },
+          { sNo: 2, itemName: 'Ras Malai', itemCode: '10015', qty: 1, rate: 85.71, amount: 85.71 },
+          { sNo: 3, itemName: 'WATER BOTLE', itemCode: '10003', qty: 1, rate: 28.57, amount: 28.57 }
+        ],
+        totalAmount: 304.76,
+        createdAt: '2025-06-07T06:12:00.000Z',
+        status: 'Billed'
+      }
+    ];
+    localStorage.setItem(STORAGE_KEYS.KOTS, JSON.stringify(initialKots));
+    return initialKots;
+  }
+
+  static getPendingKotsByRoom(roomNo: string): PmsKotRecord[] {
+    return this.getKots().filter(k => k.roomNo === roomNo && k.status === 'Pending');
+  }
+
+  static markKotsAsBilled(kotNumbers: string[]): void {
+    const kots = this.getKots();
+    const updated = kots.map(k => {
+      // Handle matching by full kotNo 'KOT/351/24-25' or number '351'
+      const matches = kotNumbers.some(num => k.kotNo.includes(num));
+      if (matches) {
+        return { ...k, status: 'Billed' as const };
+      }
+      return k;
+    });
+    localStorage.setItem(STORAGE_KEYS.KOTS, JSON.stringify(updated));
   }
 
   static saveKot(kot: PmsKotRecord): void {
     const kots = this.getKots();
     kots.unshift(kot);
     localStorage.setItem(STORAGE_KEYS.KOTS, JSON.stringify(kots));
-
-    // Also update room's food amount
-    const rooms = this.getRooms();
-    const updated = rooms.map(r => {
-      if (r.roomNo === kot.roomNo) {
-        return {
-          ...r,
-          foodAmount: (r.foodAmount || 0) + kot.totalAmount
-        };
-      }
-      return r;
-    });
-    this.saveRooms(updated);
   }
 
   static getFoodBills(): import('../types/pmsModels').PmsFoodBill[] {
@@ -215,6 +269,11 @@ export class PmsStore {
     const list = this.getFoodBills();
     list.unshift(bill);
     localStorage.setItem('hotel_pms_foodbills', JSON.stringify(list));
+
+    // Mark KOTs as Billed
+    if (bill.kotNumbers && bill.kotNumbers.length > 0) {
+      this.markKotsAsBilled(bill.kotNumbers);
+    }
 
     if (bill.settlementType === 'Settle To Room') {
       const rooms = this.getRooms();

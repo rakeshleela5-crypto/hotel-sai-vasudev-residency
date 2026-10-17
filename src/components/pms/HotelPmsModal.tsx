@@ -4,6 +4,8 @@ import { PmsHomeDashboardModal } from './PmsHomeDashboardModal';
 import { BookingCalendarModal } from './BookingCalendarModal';
 import { UnconfirmedBookingsModal } from './UnconfirmedBookingsModal';
 import { FbbReportModal } from './FbbReportModal';
+import { KotEntryModal } from './KotEntryModal';
+import { FoodBillModal } from './FoodBillModal';
 import './pmsStyles.css';
 
 interface HotelPmsModalProps {
@@ -24,6 +26,8 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isUnconfirmedOpen, setIsUnconfirmedOpen] = useState(false);
   const [isFbbReportOpen, setIsFbbReportOpen] = useState(false);
+  const [isKotModalOpen, setIsKotModalOpen] = useState(false);
+  const [isFoodBillModalOpen, setIsFoodBillModalOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -223,6 +227,12 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     <div className="pms-nav-item" onClick={() => setActiveTab('matrix')}>
                       <span>🚪 Check In</span>
                     </div>
+                    <div className="pms-nav-item" onClick={() => setIsKotModalOpen(true)}>
+                      <span style={{ color: '#f59e0b', fontWeight: 700 }}>🍴 Room Service (KOT Entry)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsFoodBillModalOpen(true)}>
+                      <span style={{ color: '#38bdf8', fontWeight: 700 }}>🧾 Food Bill (FBB)</span>
+                    </div>
                     <div className="pms-nav-item" onClick={() => setActiveTab('matrix')}>
                       <span>🧾 Room Check Out</span>
                     </div>
@@ -331,6 +341,18 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       <FbbReportModal
         isOpen={isFbbReportOpen}
         onClose={() => setIsFbbReportOpen(false)}
+      />
+
+      {/* Kot Entry Modal */}
+      <KotEntryModal
+        isOpen={isKotModalOpen}
+        onClose={() => setIsKotModalOpen(false)}
+      />
+
+      {/* Food Bill Modal */}
+      <FoodBillModal
+        isOpen={isFoodBillModalOpen}
+        onClose={() => setIsFoodBillModalOpen(false)}
       />
     </>
   );

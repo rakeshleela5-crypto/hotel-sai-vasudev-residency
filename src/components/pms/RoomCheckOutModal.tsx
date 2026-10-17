@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { PmsRoom, PmsCheckOutDetail, PaymentSplit } from '../../types/pmsModels';
+import type { PmsRoom, PmsCheckOutDetail, PaymentSplit, PmsFoodBill } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 
 interface RoomCheckOutModalProps {
@@ -36,15 +36,47 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
   // Food Bill automatically pulled from room account (Video 04 Frame 0230 / Spoken [10:30])
   const foodBills = PmsStore.getFoodBills().filter(f => f.roomNo === targetRoom.roomNo);
   const foodBillNo = foodBills[0]?.billNo || 'SHRI/252/24-25';
-  const foodAmount = foodBills.reduce((s, f) => s + f.netBillAmount, 0) || targetRoom.foodAmount || 340;
-
-  // Tax and Special Toggles (Video 04 [12:00, 12:45])
+  const foodAmount = foodBills.reduce((s, f) => s + f.netBillAmount, 0) || targetRoom.foodAmount || 0;
+  // Tax and Special Toggles (Video 04 [12:00, 12:45] / Video 05 [08:15])
+  const [isMyCheckout, setIsMyCheckout] = useState(false);
+  const activeInvoiceNo = isMyCheckout ? `MC/${targetRoom.roomNo}/24-25` : defaultInvoiceNo;
   const [isTaxInclusive, setIsTaxInclusive] = useState(false);
   const [isComplimentary, setIsComplimentary] = useState(false);
   const [gstPercent, setGstPercent] = useState<number>(12);
   const [addOthers, setAddOthers] = useState<number>(0);
   const [lessDiscount, setLessDiscount] = useState<number>(0);
   const advanceDeducted = guest?.advancePaid || 1000;
+
+  // Pending KOTs enforcement (Video 05 [03:45 - 06:00])
+  const [pendingKots, setPendingKots] = useState(PmsStore.getPendingKotsByRoom(targetRoom.roomNo));
+  const pendingKotAmount = pendingKots.reduce((sum, k) => sum + k.totalAmount, 0);
+
+  const handleClearKotsToFoodBill = () => {
+    if (pendingKots.length === 0) return;
+    const billRecord: PmsFoodBill = {
+      billNo: `SHRI/${Math.floor(250 + Math.random() * 50)}/24-25`,
+      date: checkOutDate,
+      time: checkOutTime,
+      roomNo: targetRoom.roomNo,
+      guestName: guest?.name || 'ALOK JAIN',
+      kotNumbers: pendingKots.map(k => k.kotNo),
+      items: pendingKots.flatMap(k => k.items),
+      taxableAmount: Number((pendingKotAmount / 1.05).toFixed(2)),
+      gstPercent: 5.0,
+      cgstAmount: Number(((pendingKotAmount / 1.05 * 0.025)).toFixed(2)),
+      sgstAmount: Number(((pendingKotAmount / 1.05 * 0.025)).toFixed(2)),
+      discountPercent: 0,
+      discountAmount: 0,
+      roundOff: 0,
+      netBillAmount: Math.round(pendingKotAmount),
+      settlementType: 'Settle To Room',
+      status: 'Settled',
+      createdAt: new Date().toISOString()
+    };
+    PmsStore.saveFoodBill(billRecord);
+    setPendingKots([]);
+    alert(`Pending KOTs cleared into Food Bill ${billRecord.billNo} and added to Room Account!`);
+  };
 
   // Multi-Payment Splits (Video 04 Frame 0340 / Spoken [12:45])
   const [paymentSplits, setPaymentSplits] = useState<PaymentSplit[]>([
@@ -100,12 +132,17 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
   const handleCheckoutSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (pendingKots.length > 0) {
+      alert("Cannot submit: Total Pending KOT is greater than 0! Please convert all pending KOTs to Food Bill before checkout (Click '⚡ Clear to Food Bill' on the Pending Kot card).");
+      return;
+    }
+
     const checkoutData: PmsCheckOutDetail = {
-      invoiceNo,
+      invoiceNo: activeInvoiceNo,
       roomNo: targetRoom.roomNo,
       roomType: targetRoom.roomType,
-      guestName: guest?.name || 'sunil agrwal',
-      guestPhone: guest?.phone || '7676767674',
+      guestName: guest?.name || 'ALOK JAIN',
+      guestPhone: guest?.phone || '9407525111',
       checkInDate,
       checkInTime,
       checkOutDate,
@@ -156,12 +193,15 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
         {!showInvoicePreview ? (
           /* Master Checkout Folio Screen matching demo.datahouseerp.com/show_checkin/188 (Frame 0340) */
           <>
-            <div className="pms-form-banner banner-navy">
-              Room Checkout Settlement Folio &bull; Room {targetRoom.roomNo} ({targetRoom.roomType})
+            <div className="pms-form-banner banner-navy" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Room Checkout Settlement Folio &bull; Room {targetRoom.roomNo} ({targetRoom.roomType})</span>
+              <span style={{ fontSize: 11, background: '#38bdf8', color: '#0f172a', padding: '2px 8px', borderRadius: 2, fontWeight: 800 }}>
+                Inv: {activeInvoiceNo}
+              </span>
             </div>
 
             <form onSubmit={handleCheckoutSubmit} className="pms-form-body">
-              {/* Header Info */}
+              {/* Header Info matching Frame 0260 */}
               <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -172,14 +212,43 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
               }}>
                 <div>
                   <span style={{ fontSize: 14, fontWeight: 800, color: '#0369a1' }}>
-                    Guest: {guest?.name || 'sunil agrwal'}
+                    Guest: {guest?.name || 'ALOK JAIN'}
                   </span>
                   <span style={{ marginLeft: 12, fontSize: 12, color: '#64748b' }}>
-                    Contact: {guest?.phone || '7676767674'} &bull; Stay Register: SR/188/24-25
+                    Contact: {guest?.phone || '9407525111'} &bull; Stay Register: SR/193/24-25
                   </span>
                 </div>
 
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                  {/* My Checkout Button (Video 05 Frame 0260 / Spoken [08:15]) */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = !isMyCheckout;
+                      setIsMyCheckout(next);
+                      if (next) {
+                        setGstPercent(0);
+                        setIsComplimentary(true);
+                      } else {
+                        setGstPercent(12);
+                        setIsComplimentary(false);
+                      }
+                    }}
+                    style={{
+                      background: isMyCheckout ? '#15803d' : '#dc2626',
+                      color: '#fff',
+                      border: 'none',
+                      padding: '4px 10px',
+                      borderRadius: 3,
+                      fontSize: 11,
+                      fontWeight: 800,
+                      cursor: 'pointer'
+                    }}
+                    title="Toggle Personal / Non-commercial stay (Frame 0260 / Spoken 08:15)"
+                  >
+                    {isMyCheckout ? '✓ My Checkout (Personal)' : 'My Checkout'}
+                  </button>
+
                   <label style={{ fontSize: 12, fontWeight: 700, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 4 }}>
                     <input
                       type="checkbox"
@@ -189,7 +258,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                     Tax Inclusive
                   </label>
 
-                  <label style={{ fontSize: 12, fontWeight: 700, color: '#dc2626', display: 'flex', alignItems: 'center', gap: 4, marginLeft: 10 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: '#dc2626', display: 'flex', alignItems: 'center', gap: 4 }}>
                     <input
                       type="checkbox"
                       checked={isComplimentary}
@@ -200,40 +269,55 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                 </div>
               </div>
 
-              {/* 4 Multi-Card Inspection Grid (Frame 0340) */}
+              {/* 4 Multi-Card Inspection Grid (Frame 0180 / 0340) */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.3fr 1.6fr', gap: 10, marginBottom: 12 }}>
-                {/* Card 1: KOT Orders */}
-                <div style={{ border: '1px solid #93c5fd', borderRadius: 4, background: '#f8fafc', padding: 8 }}>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: '#1e40af', borderBottom: '1px solid #bfdbfe', paddingBottom: 4, marginBottom: 6 }}>
-                    KOT Orders
+                {/* Card 1: Pending Kot List (Video 05 [03:45 - 06:00]) */}
+                <div style={{ border: pendingKots.length > 0 ? '2px solid #ef4444' : '1px solid #93c5fd', borderRadius: 4, background: '#f8fafc', padding: 8 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: '#1e40af', borderBottom: '1px solid #bfdbfe', paddingBottom: 4, marginBottom: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>Pending Kot List</span>
+                    <span style={{ background: pendingKots.length > 0 ? '#ef4444' : '#16a34a', color: '#fff', padding: '1px 5px', borderRadius: 2, fontSize: 9, fontWeight: 800 }}>
+                      {pendingKots.length} Pending
+                    </span>
                   </div>
-                  <div style={{ maxHeight: 120, overflowY: 'auto', fontSize: 11 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
-                      <span>KOT 349 (Tea)</span>
-                      <strong>₹40.00</strong>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
-                      <span>KOT 350 (Food)</span>
-                      <strong>₹320.00</strong>
-                    </div>
+                  <div style={{ maxHeight: 110, overflowY: 'auto', fontSize: 11 }}>
+                    {pendingKots.map((k, idx) => (
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
+                        <span>{k.kotNo} ({k.items[0]?.itemName || 'Order'})</span>
+                        <strong>₹{k.totalAmount.toFixed(2)}</strong>
+                      </div>
+                    ))}
+                    {pendingKots.length === 0 && (
+                      <div style={{ color: '#16a34a', fontStyle: 'italic', padding: '8px 0', textAlign: 'center' }}>
+                        ✓ All KOTs cleared to Food Bill
+                      </div>
+                    )}
                   </div>
-                  <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 4, marginTop: 4, fontSize: 11, fontWeight: 700, textAlign: 'right' }}>
-                    Total: ₹360.00
+                  <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 4, marginTop: 4, fontSize: 11, fontWeight: 700, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>Pending: ₹{pendingKotAmount.toFixed(2)}</span>
+                    {pendingKots.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleClearKotsToFoodBill}
+                        style={{ background: '#dc2626', color: '#fff', border: 'none', padding: '2px 6px', borderRadius: 2, fontSize: 9, fontWeight: 800, cursor: 'pointer' }}
+                        title="Convert pending KOTs into Food Bill"
+                      >
+                        ⚡ Clear to Food Bill
+                      </button>
+                    )}
                   </div>
                 </div>
 
-                {/* Card 2: Food Bills (Consolidated Room Service) */}
+                {/* Card 2: Pending Food Bill (Frame 0180) */}
                 <div style={{ border: '1px solid #6ee7b7', borderRadius: 4, background: '#f0fdf4', padding: 8 }}>
                   <div style={{ fontSize: 11, fontWeight: 800, color: '#065f46', borderBottom: '1px solid #a7f3d0', paddingBottom: 4, marginBottom: 6 }}>
-                    Food Bills (Settled)
+                    Pending Food Bill
                   </div>
                   <div style={{ fontSize: 11 }}>
                     <div><strong>Bill No:</strong> {foodBillNo}</div>
-                    <div><strong>Date:</strong> 07-06-25</div>
-                    <div><strong>Taxable:</strong> ₹342.86</div>
-                    <div><strong>5% GST:</strong> ₹17.14</div>
-                    <div><strong>Discount:</strong> ₹17.14</div>
-                    <div style={{ marginTop: 4, fontWeight: 800, color: '#16a34a' }}>Net: ₹{foodAmount.toFixed(2)}</div>
+                    <div><strong>Date:</strong> {checkOutDate}</div>
+                    <div><strong>Taxable:</strong> ₹{foodAmount > 0 ? (foodAmount / 1.05).toFixed(2) : '0.00'}</div>
+                    <div><strong>5% GST:</strong> ₹{foodAmount > 0 ? (foodAmount - (foodAmount / 1.05)).toFixed(2) : '0.00'}</div>
+                    <div style={{ marginTop: 4, fontWeight: 800, color: '#16a34a' }}>Net Billed: ₹{foodAmount.toFixed(2)}</div>
                   </div>
                 </div>
 

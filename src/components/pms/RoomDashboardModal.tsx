@@ -4,7 +4,8 @@ import { PmsStore } from '../../services/pmsStore';
 import { NewRoomBookingModal } from './NewRoomBookingModal';
 import { NewRoomCheckInModal } from './NewRoomCheckInModal';
 import { BookingReceiptModal } from './BookingReceiptModal';
-import { AddKotModal } from './AddKotModal';
+import { KotEntryModal } from './KotEntryModal';
+import { FoodBillModal } from './FoodBillModal';
 import { RoomCheckOutModal } from './RoomCheckOutModal';
 import { MarkDirtyModal } from './MarkDirtyModal';
 
@@ -33,6 +34,9 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
 
   const [isKotOpen, setIsKotOpen] = useState(false);
   const [selectedRoomForKot, setSelectedRoomForKot] = useState<PmsRoom | null>(null);
+
+  const [isFoodBillOpen, setIsFoodBillOpen] = useState(false);
+  const [selectedRoomForFoodBill, setSelectedRoomForFoodBill] = useState<PmsRoom | null>(null);
 
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [selectedRoomForCheckout, setSelectedRoomForCheckout] = useState<PmsRoom | null>(null);
@@ -65,8 +69,14 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
   };
 
   const handleKotClick = (room: PmsRoom) => {
-    setSelectedRoomForKot(room);
-    setIsKotOpen(true);
+    const pendingKots = PmsStore.getPendingKotsByRoom(room.roomNo);
+    if (pendingKots.length > 0) {
+      setSelectedRoomForFoodBill(room);
+      setIsFoodBillOpen(true);
+    } else {
+      setSelectedRoomForKot(room);
+      setIsKotOpen(true);
+    }
   };
 
   const handleCleaningClick = (room: PmsRoom) => {
@@ -147,6 +157,30 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
               🏠 Home Hub
             </button>
           )}
+          <button
+            type="button"
+            className="status-btn"
+            style={{ background: '#d97706', color: '#ffffff' }}
+            onClick={() => {
+              setSelectedRoomForKot(null);
+              setIsKotOpen(true);
+            }}
+            title="Create Kitchen Order Ticket (KOT)"
+          >
+            🍴 New KOT
+          </button>
+          <button
+            type="button"
+            className="status-btn"
+            style={{ background: '#1e293b', color: '#ffffff' }}
+            onClick={() => {
+              setSelectedRoomForFoodBill(null);
+              setIsFoodBillOpen(true);
+            }}
+            title="Generate Food Bill (FBB)"
+          >
+            🧾 Food Bill
+          </button>
           {onOpenCalendar && (
             <button
               type="button"
@@ -303,11 +337,20 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
         booking={latestBooking}
       />
 
-      <AddKotModal
+      <KotEntryModal
         isOpen={isKotOpen}
         onClose={() => setIsKotOpen(false)}
-        targetRoom={selectedRoomForKot}
+        defaultRoomNo={selectedRoomForKot?.roomNo}
         onKotSaved={() => {
+          refreshData();
+        }}
+      />
+
+      <FoodBillModal
+        isOpen={isFoodBillOpen}
+        onClose={() => setIsFoodBillOpen(false)}
+        defaultRoomNo={selectedRoomForFoodBill?.roomNo}
+        onBillSaved={() => {
           refreshData();
         }}
       />
