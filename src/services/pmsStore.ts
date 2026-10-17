@@ -1609,10 +1609,113 @@ export class PmsStore {
     return room?.currentGuest?.advancePaid || 0;
   }
 
+  static getLedgerAccountOptions(): { id: string; name: string; category: string; phone?: string }[] {
+    const defaultAccounts = [
+      { id: 'Cash', name: 'Cash', category: 'General' },
+      { id: 'Online', name: 'Online', category: 'General' },
+      { id: 'shri sunder lal tiwari(owner)', name: 'shri sunder lal tiwari(owner)', category: 'Owner' },
+      { id: 'auto commision', name: 'auto commision', category: 'Commission' },
+      { id: 'monish', name: 'monish', category: 'Guest' },
+      { id: 'sonali', name: 'sonali', category: 'Guest' },
+      { id: 'Soni atulkumar', name: 'Soni atulkumar', category: 'Guest' },
+      { id: 'SONU SAHU', name: 'SONU SAHU', category: 'Guest' },
+      { id: 'Guruprasad pol', name: 'Guruprasad pol', category: 'Guest' },
+      { id: 'AKASH YADAV', name: 'AKASH YADAV', category: 'Guest' },
+      { id: 'Vivek', name: 'Vivek', category: 'Guest' },
+      { id: 'Tata Motors', name: 'Tata Motors', category: 'Corporate' },
+      { id: 'Raj', name: 'Raj', category: 'Guest' },
+      { id: 'Shiv', name: 'Shiv', category: 'Guest', phone: '8432066047' }
+    ];
+
+    const accountMap = new Map<string, { id: string; name: string; category: string; phone?: string }>();
+    for (const a of defaultAccounts) {
+      accountMap.set(a.id.toLowerCase(), a);
+    }
+
+    // Include all active rooms
+    for (const r of this.getRooms()) {
+      if (r.currentGuest?.name) {
+        const key = r.currentGuest.name.toLowerCase();
+        if (!accountMap.has(key)) {
+          accountMap.set(key, {
+            id: r.currentGuest.name,
+            name: `${r.currentGuest.name} (Room ${r.roomNo})`,
+            category: 'Guest',
+            phone: r.currentGuest.phone
+          });
+        }
+      }
+    }
+
+    // Include checkouts
+    for (const c of this.getCheckouts()) {
+      if (c.guestName) {
+        const key = c.guestName.toLowerCase();
+        if (!accountMap.has(key)) {
+          accountMap.set(key, {
+            id: c.guestName,
+            name: `${c.guestName} (Room ${c.roomNo})`,
+            category: 'Guest',
+            phone: c.guestPhone
+          });
+        }
+      }
+    }
+
+    // Include receipts & payments parties
+    for (const rec of this.getReceipts()) {
+      if (rec.accountName) {
+        const key = rec.accountName.toLowerCase();
+        if (!accountMap.has(key)) {
+          accountMap.set(key, {
+            id: rec.accountName,
+            name: rec.accountName,
+            category: 'Party'
+          });
+        }
+      }
+    }
+
+    for (const pay of this.getPayments()) {
+      if (pay.accountName) {
+        const key = pay.accountName.toLowerCase();
+        if (!accountMap.has(key)) {
+          accountMap.set(key, {
+            id: pay.accountName,
+            name: pay.accountName,
+            category: 'Vendor'
+          });
+        }
+      }
+    }
+
+    return Array.from(accountMap.values());
+  }
+
+  static parseDateComparable(dStr: string): number {
+    if (!dStr) return 0;
+    const parts = dStr.trim().split(/[-/]/);
+    if (parts.length === 3) {
+      if (parts[0].length === 4) {
+        const y = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        const d = parseInt(parts[2], 10);
+        return y * 10000 + m * 100 + d;
+      } else {
+        const d = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        let y = parseInt(parts[2], 10);
+        if (y < 100) y += 2000;
+        return y * 10000 + m * 100 + d;
+      }
+    }
+    return 0;
+  }
+
   static getPartyLedger(
     accountName: string,
-    _fromDate: string = '07-06-2025',
-    _toDate: string = '07-06-2025'
+    fromDate: string = '01-05-2025',
+    toDate: string = '16-06-2025'
   ): {
     entries: LedgerEntry[];
     totalDebit: number;
@@ -1620,226 +1723,515 @@ export class PmsStore {
     closingBalance: number;
     closingType: 'Dr' | 'Cr';
   } {
-    const cleanQuery = accountName.toLowerCase().trim();
-    const entries: LedgerEntry[] = [];
+    const cleanQuery = (accountName || 'Cash').toLowerCase().trim();
+    const fromComp = this.parseDateComparable(fromDate) || 20250501;
+    const toComp = this.parseDateComparable(toDate) || 20250616;
 
     // ==========================================
-    // Case A: Cash Account Ledger (Video 16 Frame 0260)
+    // Case A: Cash Account Ledger (Video 17 Frames 0130, 0150)
     // ==========================================
     if (cleanQuery === 'cash') {
-      let cashBalance = 1099217.77;
-      entries.push({
-        date: '',
-        type: 'Advance_Receipt',
-        accountName: 'Opening Balnce',
-        remark: '',
-        debit: 0,
-        credit: 0,
-        balance: cashBalance,
-        balanceType: 'Dr'
-      });
+      const baseOpening = 648639.12;
+      const allTx: { date: string; type: string; account: string; remark: string; debit: number; credit: number }[] = [
+        { date: '01-05-25', type: 'Check_Out', account: 'Cash', remark: 'Check_out/GSR/192/24-25/Room-302', debit: 17050, credit: 0 },
+        { date: '04-05-25', type: 'Receipts', account: 'Guruprasad pol', remark: 'tariff', debit: 2200, credit: 0 },
+        { date: '05-05-25', type: 'Restaurant_food_bill', account: 'Cash', remark: 'Res/223/24-25||53||130||', debit: 130, credit: 0 },
+        { date: '05-05-25', type: 'Check_Out', account: 'Cash', remark: 'Check_out/GSR/194/24-25/Room-201', debit: 200, credit: 0 },
+        { date: '05-05-25', type: 'Check_Out', account: 'Cash', remark: 'Check_out/GSR/195/24-25/Room-201', debit: 210, credit: 0 },
+        { date: '05-05-25', type: 'Purchase', account: 'Purchase', remark: 'Purchase/1411', debit: 0, credit: 446.25 },
+        { date: '09-05-25', type: 'Check_In', account: 'Cash', remark: 'Room_Checkin/SR/160/24-25/Room No101', debit: 500, credit: 0 },
+        { date: '09-05-25', type: 'Check_Out', account: 'Cash', remark: 'My_Check_out/MY/13/24-25/Room-104', debit: 3000, credit: 0 },
+        { date: '24-05-25', type: 'Check_Out', account: 'Cash', remark: 'Check_out/GSR/204/24-25/Room-203', debit: 2000, credit: 0 },
+        { date: '24-05-25', type: 'Receipts', account: 'AKASH YADAV', remark: '', debit: 1000, credit: 0 },
+        { date: '30-05-25', type: 'Foodbill', account: 'Cash', remark: 'SHRI/235/24-25||173||409.96||', debit: 410, credit: 0 },
+        { date: '31-05-25', type: 'Check_In', account: 'Cash', remark: 'Room_Checkin/SR/175/24-25/Room No305', debit: 2500, credit: 0 },
+        { date: '31-05-25', type: 'Check_Out', account: 'Cash', remark: 'Check_out/GSR/206/24-25/Room-305', debit: 2540, credit: 0 },
+        { date: '01-06-25', type: 'Check_In', account: 'Cash', remark: 'Room_Checkin/SR/176/24-25/Room No104', debit: 1000, credit: 0 },
+        { date: '01-06-25', type: 'Check_In', account: 'Cash', remark: 'Room_Checkin/SR/177/24-25/Room No101', debit: 2000, credit: 0 },
+        { date: '01-06-25', type: 'Foodbill', account: 'Cash', remark: 'SHRI/237/24-25||178||450.01||', debit: 450, credit: 0 },
+        { date: '01-06-25', type: 'Foodbill', account: 'Cash', remark: 'SHRI/239/24-25||179||889.64||', debit: 890, credit: 0 },
+        { date: '02-06-25', type: 'Check_Out', account: 'Cash', remark: 'Check_out/GSR/209/24-25/Room-309,1', debit: 4000, credit: 0 },
+        { date: '02-06-25', type: 'Foodbill', account: 'Cash', remark: 'SHRI/240/24-25||179||55589.73||', debit: 55590, credit: 0 },
+        { date: '02-06-25', type: 'Check_Out', account: 'Cash', remark: 'Check_out/GSR/210/24-25/Room-GARDEN', debit: 45780, credit: 0 },
+        { date: '16-06-25', type: 'Payment', account: 'shri sunder lal tiwari(owner)', remark: '', debit: 0, credit: 11000 },
+        { date: '16-06-25', type: 'Payment', account: 'shri sunder lal tiwari(owner)', remark: 'cash handover', debit: 0, credit: 98717 }
+      ];
 
-      // Check-in cash payment
-      cashBalance += 1000;
-      entries.push({
-        date: '16-06-25',
-        type: 'Check_Out',
-        accountName: 'Cash',
-        remark: 'Room_Checkin/SR/204/25-26/Room No1',
-        debit: 1000,
-        credit: 0,
-        balance: cashBalance,
-        balanceType: 'Dr'
-      });
-
-      // Cash Receipts
-      const cashReceipts = this.getReceipts().filter(r => r.paymentMode === 'Cash');
-      for (const r of cashReceipts) {
-        cashBalance += r.amount;
-        entries.push({
-          date: r.date.replace('2025-', '').replace('2024-', '') || '16-06-25',
+      // Add dynamic cash receipts
+      for (const r of this.getReceipts().filter(x => x.paymentMode === 'Cash')) {
+        const dStr = r.date.replace('2025-', '').replace('2024-', '') || '16-06-25';
+        allTx.push({
+          date: dStr,
           type: 'Advance_Receipt',
-          accountName: r.accountName,
-          remark: r.remark || '',
+          account: r.accountName,
+          remark: r.remark || `Receipt ${r.voucherNo}`,
           debit: r.amount,
-          credit: 0,
-          balance: cashBalance,
-          balanceType: 'Dr'
+          credit: 0
         });
       }
 
-      // Cash Payments
-      const cashPayments = this.getPayments().filter(p => p.paymentMode === 'Cash');
-      for (const p of cashPayments) {
-        cashBalance -= p.amount;
-        entries.push({
-          date: p.date.replace('2025-', '').replace('2024-', '') || '16-06-25',
+      // Add dynamic cash payments
+      for (const p of this.getPayments().filter(x => x.paymentMode === 'Cash')) {
+        const dStr = p.date.replace('2025-', '').replace('2024-', '') || '16-06-25';
+        allTx.push({
+          date: dStr,
           type: 'Payment',
-          accountName: p.accountName,
-          remark: p.remark || '',
+          account: p.accountName,
+          remark: p.remark || `Payment ${p.voucherNo}`,
           debit: 0,
-          credit: p.amount,
-          balance: cashBalance,
-          balanceType: 'Dr'
+          credit: p.amount
         });
       }
 
-      const totalDebit = entries.reduce((s, e) => s + (e.debit || 0), 0);
-      const totalCredit = entries.reduce((s, e) => s + (e.credit || 0), 0);
+      let opening = baseOpening;
+      const filtered: typeof allTx = [];
+
+      for (const tx of allTx) {
+        const c = this.parseDateComparable(tx.date);
+        if (c < fromComp) {
+          opening += (tx.debit - tx.credit);
+        } else if (c <= toComp) {
+          filtered.push(tx);
+        }
+      }
+
+      let currentBal = opening;
+      const entries: LedgerEntry[] = [
+        {
+          date: '',
+          type: '',
+          accountName: 'Opening Balnce',
+          remark: '',
+          debit: 0,
+          credit: 0,
+          balance: opening,
+          balanceType: opening >= 0 ? 'Dr' : 'Cr'
+        }
+      ];
+
+      let totDeb = 0;
+      let totCred = 0;
+
+      for (const tx of filtered) {
+        currentBal += (tx.debit - tx.credit);
+        totDeb += tx.debit;
+        totCred += tx.credit;
+        entries.push({
+          date: tx.date,
+          type: tx.type,
+          accountName: tx.account,
+          remark: tx.remark,
+          debit: tx.debit,
+          credit: tx.credit,
+          balance: parseFloat(currentBal.toFixed(2)),
+          balanceType: currentBal >= 0 ? 'Dr' : 'Cr'
+        });
+      }
 
       return {
         entries,
-        totalDebit,
-        totalCredit,
-        closingBalance: cashBalance,
-        closingType: 'Dr'
+        totalDebit: parseFloat(totDeb.toFixed(2)),
+        totalCredit: parseFloat(totCred.toFixed(2)),
+        closingBalance: parseFloat(currentBal.toFixed(2)),
+        closingType: currentBal >= 0 ? 'Dr' : 'Cr'
       };
     }
 
     // ==========================================
-    // Case B: Owner Account Ledger (Video 16 Frame 0350)
+    // Case B: Online Account Ledger (Video 17 Frames 0180, 0190)
+    // ==========================================
+    if (cleanQuery === 'online') {
+      const baseOpening = 347200.39;
+      const allTx: { date: string; type: string; account: string; remark: string; debit: number; credit: number }[] = [
+        { date: '01-06-25', type: 'Check_In', account: 'Online', remark: 'Room_Checkin/SR/176/24-25/Room No104', debit: 1000, credit: 0 },
+        { date: '01-06-25', type: 'Check_Out', account: 'Online', remark: 'Check_out/GSR/207/24-25/Room-104', debit: 500, credit: 0 },
+        { date: '01-06-25', type: 'Check_Out', account: 'Online', remark: 'Check_out/GSR/208/24-25/Room-101', debit: 1000, credit: 0 },
+        { date: '01-06-25', type: 'Check_In', account: 'Online', remark: 'Room_Checkin/SR/178/24-25/Room No301', debit: 2500, credit: 0 },
+        { date: '02-06-25', type: 'Room_booking', account: 'Online', remark: 'Room_booking/RM/59/24-25', debit: 4600, credit: 0 },
+        { date: '02-06-25', type: 'Check_Out', account: 'Online', remark: 'Check_out/GSR/211/24-25/Room-103', debit: 1980, credit: 0 },
+        { date: '03-06-25', type: 'Room_booking', account: 'Online', remark: 'Room_booking/RM/60/24-25', debit: 2500, credit: 0 },
+        { date: '05-06-25', type: 'Check_In', account: 'Online', remark: 'Room_Checkin/SR/186/24-25/Room No101', debit: 500, credit: 0 },
+        { date: '06-06-25', type: 'Check_Out', account: 'Online', remark: 'Check_out/GSR/188/24-25/Room No105', debit: 200, credit: 0 },
+        { date: '07-06-25', type: 'Check_Out', account: 'Online', remark: 'Check_out/GSR/218/24-25/Room-GARDEN,BIG,306,307,308,309,12,15,16,17,18', debit: 25000, credit: 0 },
+        { date: '06-06-25', type: 'Room_booking', account: 'Online', remark: 'Room_booking/RM/67/24-25', debit: 500, credit: 0 },
+        { date: '06-06-25', type: 'Check_Out', account: 'Online', remark: 'Check_out/GSR/221/24-25/Room-1', debit: 1680, credit: 0 },
+        { date: '07-06-25', type: 'Check_Out', account: 'Online', remark: 'Check_out/GSR/222/24-25/Room-105', debit: 2000, credit: 0 },
+        { date: '07-06-25', type: 'Check_Out', account: 'Online', remark: 'Check_out/GSR/223/24-25/Room-103', debit: 3300, credit: 0 },
+        { date: '07-06-25', type: 'Check_Out', account: 'Online', remark: 'Check_out/GSR/225/24-25/Room-101', debit: 2480, credit: 0 },
+        { date: '10-06-25', type: 'Check_In', account: 'Online', remark: 'Room_Checkin/SR/199/24-25/Room No201', debit: 500, credit: 0 },
+        { date: '16-06-25', type: 'Payment', account: 'shri sunder lal tiwari(owner)', remark: 'paymnet -4757344', debit: 0, credit: 50000 }
+      ];
+
+      for (const r of this.getReceipts().filter(x => x.paymentMode === 'Online')) {
+        allTx.push({
+          date: r.date.replace('2025-', '').replace('2024-', '') || '16-06-25',
+          type: 'Advance_Receipt',
+          account: r.accountName,
+          remark: r.remark || `Online Receipt ${r.voucherNo}`,
+          debit: r.amount,
+          credit: 0
+        });
+      }
+
+      for (const p of this.getPayments().filter(x => x.paymentMode === 'Online')) {
+        allTx.push({
+          date: p.date.replace('2025-', '').replace('2024-', '') || '16-06-25',
+          type: 'Payment',
+          account: p.accountName,
+          remark: p.remark || `Online Payment ${p.voucherNo}`,
+          debit: 0,
+          credit: p.amount
+        });
+      }
+
+      let opening = baseOpening;
+      const filtered: typeof allTx = [];
+
+      for (const tx of allTx) {
+        const c = this.parseDateComparable(tx.date);
+        if (c < fromComp) {
+          opening += (tx.debit - tx.credit);
+        } else if (c <= toComp) {
+          filtered.push(tx);
+        }
+      }
+
+      let currentBal = opening;
+      const entries: LedgerEntry[] = [
+        {
+          date: '',
+          type: '',
+          accountName: 'Opening Balnce',
+          remark: '',
+          debit: 0,
+          credit: 0,
+          balance: opening,
+          balanceType: opening >= 0 ? 'Dr' : 'Cr'
+        }
+      ];
+
+      let totDeb = 0;
+      let totCred = 0;
+
+      for (const tx of filtered) {
+        currentBal += (tx.debit - tx.credit);
+        totDeb += tx.debit;
+        totCred += tx.credit;
+        entries.push({
+          date: tx.date,
+          type: tx.type,
+          accountName: tx.account,
+          remark: tx.remark,
+          debit: tx.debit,
+          credit: tx.credit,
+          balance: parseFloat(currentBal.toFixed(2)),
+          balanceType: currentBal >= 0 ? 'Dr' : 'Cr'
+        });
+      }
+
+      return {
+        entries,
+        totalDebit: parseFloat(totDeb.toFixed(2)),
+        totalCredit: parseFloat(totCred.toFixed(2)),
+        closingBalance: parseFloat(currentBal.toFixed(2)),
+        closingType: currentBal >= 0 ? 'Dr' : 'Cr'
+      };
+    }
+
+    // ==========================================
+    // Case C: Owner Account Ledger (Video 17 Frame 0180)
     // ==========================================
     if (cleanQuery.includes('sunder') || cleanQuery.includes('tiwari') || cleanQuery.includes('owner')) {
-      let ownerBalance = 0;
-      entries.push({
-        date: '',
-        type: 'Advance_Receipt',
-        accountName: 'Opening Balnce',
-        remark: '',
-        debit: 0,
-        credit: 0,
-        balance: 0,
-        balanceType: 'Dr'
-      });
+      const allTx = [
+        { date: '16-06-25', type: 'Payment', account: 'Cash', remark: '', debit: 11000, credit: 0 },
+        { date: '16-06-25', type: 'Payment', account: 'Cash', remark: 'cash handover', debit: 98717, credit: 0 },
+        { date: '16-06-25', type: 'Payment', account: 'Online', remark: 'paymnet -4757344', debit: 50000, credit: 0 }
+      ];
 
-      const ownerPayments = this.getPayments().filter(p => 
-        p.accountName.toLowerCase().includes('sunder') || 
-        p.accountName.toLowerCase().includes('tiwari') || 
+      // Dynamic owner payments
+      const ownerPayments = this.getPayments().filter(p =>
+        p.accountName.toLowerCase().includes('sunder') ||
+        p.accountName.toLowerCase().includes('tiwari') ||
         p.accountName.toLowerCase().includes('owner')
       );
 
       for (const p of ownerPayments) {
-        ownerBalance += p.amount;
-        entries.push({
+        allTx.push({
           date: p.date.replace('2025-', '') || '16-06-25',
           type: 'Payment',
-          accountName: p.paymentMode,
+          account: p.paymentMode,
           remark: p.remark || '',
           debit: p.amount,
+          credit: 0
+        });
+      }
+
+      let opening = 0;
+      const filtered: typeof allTx = [];
+
+      for (const tx of allTx) {
+        const c = this.parseDateComparable(tx.date);
+        if (c < fromComp) {
+          opening += (tx.debit - tx.credit);
+        } else if (c <= toComp) {
+          filtered.push(tx);
+        }
+      }
+
+      let currentBal = opening;
+      const entries: LedgerEntry[] = [
+        {
+          date: '',
+          type: '',
+          accountName: 'Opening Balnce',
+          remark: '',
+          debit: 0,
           credit: 0,
-          balance: ownerBalance,
+          balance: opening,
+          balanceType: 'Dr'
+        }
+      ];
+
+      let totDeb = 0;
+      let totCred = 0;
+
+      for (const tx of filtered) {
+        currentBal += (tx.debit - tx.credit);
+        totDeb += tx.debit;
+        totCred += tx.credit;
+        entries.push({
+          date: tx.date,
+          type: tx.type,
+          accountName: tx.account,
+          remark: tx.remark,
+          debit: tx.debit,
+          credit: tx.credit,
+          balance: parseFloat(currentBal.toFixed(2)),
           balanceType: 'Dr'
         });
       }
 
       return {
         entries,
-        totalDebit: ownerBalance,
-        totalCredit: 0,
-        closingBalance: ownerBalance,
+        totalDebit: parseFloat(totDeb.toFixed(2)),
+        totalCredit: parseFloat(totCred.toFixed(2)),
+        closingBalance: parseFloat(currentBal.toFixed(2)),
         closingType: 'Dr'
       };
     }
 
     // ==========================================
-    // Case C: General Guest / Party Account Ledger
+    // Case D: Auto Commission Account (Video 16 & 17 Frame 0180)
     // ==========================================
-    let runningBalance = 0;
-    entries.push({
-      date: '',
-      type: 'Advance_Receipt',
-      accountName: 'Opening Balnce',
-      remark: '',
-      debit: 0,
-      credit: 0,
-      balance: 0,
-      balanceType: 'Cr'
-    });
+    if (cleanQuery.includes('commision') || cleanQuery.includes('commission')) {
+      const allTx = [
+        { date: '16-06-25', type: 'Payment', account: 'Cash', remark: 'Room 102 agent commission', debit: 1500, credit: 0 }
+      ];
 
-    const receipts = this.getAdvanceReceipts().filter(r => 
-      !cleanQuery || 
-      r.guestName.toLowerCase().includes(cleanQuery) || 
+      for (const p of this.getPayments().filter(x => x.accountName.toLowerCase().includes('commision') || x.accountName.toLowerCase().includes('commission'))) {
+        allTx.push({
+          date: p.date.replace('2025-', '') || '16-06-25',
+          type: 'Payment',
+          account: p.paymentMode,
+          remark: p.remark || '',
+          debit: p.amount,
+          credit: 0
+        });
+      }
+
+      let currentBal = 0;
+      const entries: LedgerEntry[] = [
+        {
+          date: '',
+          type: '',
+          accountName: 'Opening Balnce',
+          remark: '',
+          debit: 0,
+          credit: 0,
+          balance: 0,
+          balanceType: 'Dr'
+        }
+      ];
+
+      let totDeb = 0;
+      let totCred = 0;
+
+      for (const tx of allTx) {
+        currentBal += tx.debit;
+        totDeb += tx.debit;
+        entries.push({
+          date: tx.date,
+          type: tx.type,
+          accountName: tx.account,
+          remark: tx.remark,
+          debit: tx.debit,
+          credit: 0,
+          balance: parseFloat(currentBal.toFixed(2)),
+          balanceType: 'Dr'
+        });
+      }
+
+      return {
+        entries,
+        totalDebit: totDeb,
+        totalCredit: totCred,
+        closingBalance: currentBal,
+        closingType: 'Dr'
+      };
+    }
+
+    // ==========================================
+    // Case E: General Guest / Party Account Ledger
+    // ==========================================
+    const allTx: { date: string; type: string; account: string; remark: string; debit: number; credit: number }[] = [];
+
+    // Pre-seeded transactions for specific demo parties (Vivek, Tata Motors, Raj, Shiv, Guruprasad pol, AKASH YADAV)
+    if (cleanQuery.includes('guruprasad')) {
+      allTx.push(
+        { date: '04-05-25', type: 'Check_In', account: 'Cash', remark: 'Room_Checkin/SR/150/24-25/Room 202', debit: 2200, credit: 0 },
+        { date: '04-05-25', type: 'Receipts', account: 'Cash', remark: 'tariff advance', debit: 0, credit: 2200 }
+      );
+    } else if (cleanQuery.includes('akash')) {
+      allTx.push(
+        { date: '24-05-25', type: 'Check_In', account: 'Cash', remark: 'Room_Checkin/SR/170/24-25/Room 105', debit: 1000, credit: 0 },
+        { date: '24-05-25', type: 'Receipts', account: 'Cash', remark: 'tariff', debit: 0, credit: 1000 }
+      );
+    } else if (cleanQuery.includes('vivek')) {
+      allTx.push(
+        { date: '10-06-25', type: 'Check_Out', account: 'Cash', remark: 'Check_out/GSR/228/24-25/Room-204', debit: 1800, credit: 0 },
+        { date: '12-06-25', type: 'Receipts', account: 'Online', remark: 'REC/10/24-25 settle bill', debit: 0, credit: 1800 }
+      );
+    } else if (cleanQuery.includes('tata')) {
+      allTx.push(
+        { date: '05-06-25', type: 'Check_Out', account: 'Cash', remark: 'Check_out/GSR/214/24-25/Corporate Room-301,302', debit: 8500, credit: 0 },
+        { date: '15-06-25', type: 'Receipts', account: 'Online', remark: 'REC/12/24-25 company settlement', debit: 0, credit: 5000 }
+      );
+    } else if (cleanQuery.includes('raj')) {
+      allTx.push(
+        { date: '01-06-25', type: 'Check_Out', account: 'Cash', remark: 'Check_out/GSR/208/24-25/Room-101', debit: 1000, credit: 0 },
+        { date: '14-06-25', type: 'Receipts', account: 'Cash', remark: 'REC/11/24-25 cash clearing', debit: 0, credit: 1000 }
+      );
+    } else if (cleanQuery.includes('shiv')) {
+      allTx.push(
+        { date: '07-06-25', type: 'Check_Out', account: 'Online', remark: 'Check_out/GSR/225/24-25/Room-101', debit: 2480, credit: 0 },
+        { date: '07-06-25', type: 'Receipts', account: 'Online', remark: 'advance settlement', debit: 0, credit: 2480 }
+      );
+    }
+
+    // Dynamic receipts
+    const receipts = this.getAdvanceReceipts().filter(r =>
+      !cleanQuery ||
+      r.guestName.toLowerCase().includes(cleanQuery) ||
       (r.roomNo && r.roomNo.toLowerCase().includes(cleanQuery)) ||
       (r.mobile && r.mobile.includes(cleanQuery))
     );
-
     for (const r of receipts) {
-      runningBalance += r.amount;
-      entries.push({
+      allTx.push({
         date: r.date,
         type: 'Advance_Receipt',
-        accountName: r.paymentMode,
-        remark: r.remark || 'advance',
+        account: r.paymentMode,
+        remark: r.remark || 'advance receipt',
         debit: 0,
-        credit: r.amount,
-        balance: Math.abs(runningBalance),
-        balanceType: runningBalance >= 0 ? 'Cr' : 'Dr'
+        credit: r.amount
       });
     }
 
+    // Dynamic checkouts
     const checkouts = this.getCheckouts().filter(c =>
       !cleanQuery ||
       c.guestName.toLowerCase().includes(cleanQuery) ||
       c.roomNo.toLowerCase().includes(cleanQuery) ||
       (c.guestPhone && c.guestPhone.includes(cleanQuery))
     );
-
     for (const c of checkouts) {
-      const settlementPaid = c.netPayable || (c.billAmount - (c.advanceDeducted || 0));
-      if (settlementPaid > 0) {
-        runningBalance += settlementPaid;
-        entries.push({
-          date: c.checkOutDate,
-          type: 'Check_Out',
-          accountName: c.paymentMode || 'Online',
-          remark: `Check_out/${c.invoiceNo}/Room-${c.roomNo}`,
-          debit: 0,
-          credit: settlementPaid,
-          balance: Math.abs(runningBalance),
-          balanceType: runningBalance >= 0 ? 'Cr' : 'Dr'
-        });
-      }
-
-      runningBalance -= c.billAmount;
-      entries.push({
+      allTx.push({
         date: c.checkOutDate,
         type: 'Room_Checkout',
-        accountName: 'Room_Checkout',
-        remark: `Room_Checkout/${c.invoiceNo}`,
+        account: 'Room_Checkout',
+        remark: `Room_Checkout/${c.invoiceNo}/Room-${c.roomNo}`,
         debit: c.billAmount,
-        credit: 0,
-        balance: Math.abs(runningBalance),
-        balanceType: runningBalance >= 0 ? 'Dr' : 'Dr'
+        credit: 0
       });
+      const settlementPaid = c.netPayable || (c.billAmount - (c.advanceDeducted || 0));
+      if (settlementPaid > 0) {
+        allTx.push({
+          date: c.checkOutDate,
+          type: 'Check_Out',
+          account: c.paymentMode || 'Online',
+          remark: `Check_out/${c.invoiceNo}/Room-${c.roomNo}`,
+          debit: 0,
+          credit: settlementPaid
+        });
+      }
     }
 
-    // Include General Payments made to this party (e.g. commission or refund)
+    // Dynamic payments
     const partyPayments = this.getPayments().filter(p =>
       p.accountName.toLowerCase().includes(cleanQuery)
     );
     for (const p of partyPayments) {
-      runningBalance -= p.amount;
-      entries.push({
+      allTx.push({
         date: p.date,
         type: 'Payment',
-        accountName: p.paymentMode,
+        account: p.paymentMode,
         remark: p.remark || 'payout',
         debit: p.amount,
+        credit: 0
+      });
+    }
+
+    let opening = 0;
+    const filtered: typeof allTx = [];
+
+    for (const tx of allTx) {
+      const c = this.parseDateComparable(tx.date);
+      if (c && c < fromComp) {
+        opening += (tx.credit - tx.debit);
+      } else if (!c || c <= toComp) {
+        filtered.push(tx);
+      }
+    }
+
+    let runningBalance = opening;
+    const entries: LedgerEntry[] = [
+      {
+        date: '',
+        type: '',
+        accountName: 'Opening Balnce',
+        remark: '',
+        debit: 0,
         credit: 0,
-        balance: Math.abs(runningBalance),
+        balance: Math.abs(opening),
+        balanceType: opening >= 0 ? 'Cr' : 'Dr'
+      }
+    ];
+
+    let totalDebit = 0;
+    let totalCredit = 0;
+
+    for (const tx of filtered) {
+      totalDebit += tx.debit;
+      totalCredit += tx.credit;
+      runningBalance += (tx.credit - tx.debit);
+      entries.push({
+        date: tx.date,
+        type: tx.type,
+        accountName: tx.account,
+        remark: tx.remark,
+        debit: tx.debit,
+        credit: tx.credit,
+        balance: Math.abs(parseFloat(runningBalance.toFixed(2))),
         balanceType: runningBalance >= 0 ? 'Cr' : 'Dr'
       });
     }
 
-    const totalDebit = entries.reduce((s, e) => s + (e.debit || 0), 0);
-    const totalCredit = entries.reduce((s, e) => s + (e.credit || 0), 0);
-    const closingBalance = Math.abs(totalCredit - totalDebit);
-    const closingType: 'Dr' | 'Cr' = totalCredit >= totalDebit ? 'Cr' : 'Dr';
+    const closingBalance = Math.abs(parseFloat(runningBalance.toFixed(2)));
+    const closingType: 'Dr' | 'Cr' = runningBalance >= 0 ? 'Cr' : 'Dr';
 
     return {
       entries,
-      totalDebit,
-      totalCredit,
+      totalDebit: parseFloat(totalDebit.toFixed(2)),
+      totalCredit: parseFloat(totalCredit.toFixed(2)),
       closingBalance,
       closingType
     };

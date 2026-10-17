@@ -386,7 +386,7 @@ export interface PmsAdvanceReceipt {
 
 export interface LedgerEntry {
   date: string;
-  type: 'Advance_Receipt' | 'Check_Out' | 'Room_Checkout' | 'Payment';
+  type: string;
   accountName: string;
   remark: string;
   debit: number;
