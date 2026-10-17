@@ -2,24 +2,38 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-console.log('[setup-backend] Preparing Python & Uvicorn runtime for Render...');
+const projectRoot = path.resolve(__dirname, '..');
+
+// 1. Always create dist/200.html for SPA fallback on Cloudflare Pages / Static Hosts
+const distDir = path.join(projectRoot, 'dist');
+const indexHtml = path.join(distDir, 'index.html');
+const html200 = path.join(distDir, '200.html');
+if (fs.existsSync(indexHtml)) {
+  try {
+    fs.copyFileSync(indexHtml, html200);
+    console.log('[setup-backend] Created dist/200.html for SPA routing fallback');
+  } catch (e) {
+    console.warn('[setup-backend] Note: could not copy 200.html:', e.message);
+  }
+}
+
+// 2. Only prepare Python backend runtime if building on Render
+if (!process.env.RENDER) {
+  console.log('[setup-backend] Non-Render environment detected (Cloudflare Pages / Local). Skipping Python backend setup.');
+  process.exit(0);
+}
 
 if (process.platform === 'win32') {
-  console.log('[setup-backend] Running on Windows (local environment). Skipping Linux shim creation.');
+  console.log('[setup-backend] Running on Windows. Skipping Linux shim creation.');
   process.exit(0);
 }
 
-if (process.env.CF_PAGES === '1' || process.env.CF_PAGES_COMMIT_SHA) {
-  console.log('[setup-backend] Cloudflare Pages detected (Frontend build). Skipping Python backend setup.');
-  process.exit(0);
-}
-
-const projectRoot = path.resolve(__dirname, '..');
+console.log('[setup-backend] Preparing Python & Uvicorn runtime for Render...');
 const nodeBinDir = path.dirname(process.execPath);
 console.log('[setup-backend] Node binary directory:', nodeBinDir);
 
 try {
-  // 1. Install uv (standalone Python runtime & package installer)
+  // Install uv (standalone Python runtime & package installer)
   console.log('[setup-backend] Installing uv standalone Python installer...');
   execSync('curl -LsSf https://astral.sh/uv/install.sh | sh', {
     stdio: 'inherit',
@@ -31,14 +45,14 @@ try {
   const venvDir = path.join(projectRoot, '.venv');
   const reqFile = path.join(projectRoot, 'backend', 'requirements.txt');
 
-  console.log('[setup-backend] Creating Python 3.11 virtual environment...');
-  execSync(`"${uvBin}" venv "${venvDir}" --python 3.11`, { stdio: 'inherit' });
+  console.log('[setup-backend] Creating/refreshing Python 3.11 virtual environment...');
+  execSync(`"${uvBin}" venv "${venvDir}" --clear --python 3.11`, { stdio: 'inherit' });
 
   console.log('[setup-backend] Installing backend requirements...');
   const pyBin = path.join(venvDir, 'bin', 'python');
   execSync(`"${uvBin}" pip install --python "${pyBin}" -r "${reqFile}"`, { stdio: 'inherit' });
 
-  // 2. Generate robust uvicorn executable shim
+  // Generate robust uvicorn executable shim
   const uvicornShimContent = `#!/usr/bin/env bash
 PROJECT_DIR="${projectRoot}"
 export PYTHONPATH="$PROJECT_DIR/backend:$PROJECT_DIR:\$PYTHONPATH"
@@ -72,7 +86,6 @@ fi
   console.log('[setup-backend] Runtime preparation complete!');
 } catch (err) {
   console.error('[setup-backend] Warning during uv setup:', err.message);
-  // Fallback: try system python3 if present
   try {
     console.log('[setup-backend] Attempting system python3 fallback...');
     execSync('python3 -m pip install -r backend/requirements.txt', { stdio: 'inherit' });
