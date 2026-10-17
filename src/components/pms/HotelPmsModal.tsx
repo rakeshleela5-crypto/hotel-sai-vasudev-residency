@@ -3,6 +3,7 @@ import { RoomDashboardModal } from './RoomDashboardModal';
 import { PmsHomeDashboardModal } from './PmsHomeDashboardModal';
 import { BookingCalendarModal } from './BookingCalendarModal';
 import { UnconfirmedBookingsModal } from './UnconfirmedBookingsModal';
+import { FbbReportModal } from './FbbReportModal';
 import './pmsStyles.css';
 
 interface HotelPmsModalProps {
@@ -22,6 +23,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   // Calendar & Unconfirmed Bookings Modals
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isUnconfirmedOpen, setIsUnconfirmedOpen] = useState(false);
+  const [isFbbReportOpen, setIsFbbReportOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -251,8 +253,8 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     <div className="pms-nav-item" onClick={() => alert('Police Station Front Office Report')}>
                       <span>👮 Police Station Report</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => alert('Food & Restaurant Sales Report')}>
-                      <span>🍴 Food Sales Report</span>
+                    <div className="pms-nav-item" onClick={() => setIsFbbReportOpen(true)}>
+                      <span style={{ color: '#4ade80', fontWeight: 700 }}>🍴 FBB Report (Food &amp; Beverage)</span>
                     </div>
                   </div>
                 )}
@@ -323,6 +325,12 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
           setIsUnconfirmedOpen(false);
           setIsCalendarOpen(true);
         }}
+      />
+
+      {/* FBB Report Modal */}
+      <FbbReportModal
+        isOpen={isFbbReportOpen}
+        onClose={() => setIsFbbReportOpen(false)}
       />
     </>
   );

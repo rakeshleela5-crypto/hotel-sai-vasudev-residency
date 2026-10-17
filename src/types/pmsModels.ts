@@ -168,6 +168,27 @@ export interface PmsCheckIn {
   foodAmount?: number;
 }
 
+export interface PmsFoodBill {
+  billNo: string;             // e.g. SHRI/252/24-25
+  date: string;
+  time: string;
+  roomNo: string;
+  guestName: string;
+  kotNumbers: string[];       // e.g. ['349', '350']
+  items: KotItem[];
+  taxableAmount: number;
+  gstPercent: number;         // 5.0000%
+  cgstAmount: number;         // 2.5%
+  sgstAmount: number;         // 2.5%
+  discountPercent: number;    // e.g. 5.0%
+  discountAmount: number;
+  roundOff: number;           // e.g. -2.00
+  netBillAmount: number;      // e.g. 340.00
+  settlementType: 'Settle To Room' | 'Cash' | 'UPI' | 'Card';
+  status: 'Pending' | 'Settled';
+  createdAt: string;
+}
+
 export interface PmsCheckOutDetail {
   invoiceNo: string;          // e.g. GSR/217/24-25
   roomNo: string;
@@ -183,15 +204,23 @@ export interface PmsCheckOutDetail {
   perDayTariff: number;
   totalRoomRent: number;
   foodAmount: number;
+  foodBillNo?: string;
   gstPercent: number;         // 12.0000, 18.0000, etc.
   gstAmount: number;
+  cgstAmount?: number;
+  sgstAmount?: number;
+  igstAmount?: number;
   addOthers: number;
   lessDiscount: number;
   advanceDeducted: number;
   billAmount: number;
-  paymentMode: 'Cash' | 'UPI' | 'Card' | 'Credit';
+  netPayable: number;
+  paymentMode: 'Cash' | 'UPI' | 'Card' | 'Credit' | 'Online' | 'Bank Transfer';
+  payments?: PaymentSplit[];
   checkoutRemark?: string;
   gstNumber?: string;
+  companyName?: string;
+  companyAddress?: string;
   addressLine1?: string;
   addressLine2?: string;
   city?: string;
@@ -199,6 +228,11 @@ export interface PmsCheckOutDetail {
   country?: string;
   pinCode?: string;
   email?: string;
+  sacCode?: string;           // 996311 (Hotel Accommodation)
+  invoiceFormat?: 'A4_Standard' | 'A5_HalfPage' | 'Detailed';
+  isTaxInclusive?: boolean;
+  isComplimentary?: boolean;
+  billingOfficer?: string;    // e.g. DEMO0004
 }
 
 export interface MenuItem {

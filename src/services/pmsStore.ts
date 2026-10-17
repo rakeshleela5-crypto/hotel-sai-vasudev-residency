@@ -175,6 +175,62 @@ export class PmsStore {
     this.saveRooms(updated);
   }
 
+  static getFoodBills(): import('../types/pmsModels').PmsFoodBill[] {
+    const raw = localStorage.getItem('hotel_pms_foodbills');
+    if (raw) return JSON.parse(raw);
+
+    // Initial default demo food bill from Video 04 (Frame 0230)
+    const initialBills: import('../types/pmsModels').PmsFoodBill[] = [
+      {
+        billNo: 'SHRI/252/24-25',
+        date: '07-06-2025',
+        time: '06:18',
+        roomNo: '105',
+        guestName: 'sunil agrwal',
+        kotNumbers: ['349', '350'],
+        items: [
+          { sNo: 1, itemName: 'Rasgulla', qty: 1, rate: 190.48, amount: 190.48 },
+          { sNo: 2, itemName: 'WATER BOTLE', qty: 1, rate: 28.57, amount: 28.57 },
+          { sNo: 3, itemName: 'TEA', qty: 2, rate: 19.05, amount: 38.10 },
+          { sNo: 4, itemName: 'Ras Malai', qty: 1, rate: 85.71, amount: 85.71 }
+        ],
+        taxableAmount: 342.86,
+        gstPercent: 5.0,
+        cgstAmount: 8.15,
+        sgstAmount: 8.15,
+        discountPercent: 5.0,
+        discountAmount: 17.14,
+        roundOff: -2.00,
+        netBillAmount: 340.00,
+        settlementType: 'Settle To Room',
+        status: 'Settled',
+        createdAt: '2025-06-07T06:18:00.000Z'
+      }
+    ];
+    localStorage.setItem('hotel_pms_foodbills', JSON.stringify(initialBills));
+    return initialBills;
+  }
+
+  static saveFoodBill(bill: import('../types/pmsModels').PmsFoodBill): void {
+    const list = this.getFoodBills();
+    list.unshift(bill);
+    localStorage.setItem('hotel_pms_foodbills', JSON.stringify(list));
+
+    if (bill.settlementType === 'Settle To Room') {
+      const rooms = this.getRooms();
+      const updated = rooms.map(r => {
+        if (r.roomNo === bill.roomNo) {
+          return {
+            ...r,
+            foodAmount: (r.foodAmount || 0) + bill.netBillAmount
+          };
+        }
+        return r;
+      });
+      this.saveRooms(updated);
+    }
+  }
+
   static getCheckouts(): PmsCheckOutDetail[] {
     const raw = localStorage.getItem(STORAGE_KEYS.CHECKOUTS);
     return raw ? JSON.parse(raw) : [];
