@@ -1106,3 +1106,73 @@ export interface PmsShiftHandoverRecord {
   status: 'Pending Verification' | 'Verified & Closed';
 }
 
+// Video 30: RoomG Hotel Management Software Training & Support Models
+export interface PmsHelpVideo {
+  id: string;
+  sNo: number;
+  businessType: string;
+  type: string;
+  topic: string;
+  description?: string;
+  url: string;
+  videoDuration?: string;
+  category?: 'All' | 'Front Desk' | 'Restaurant & POS' | 'Accounts & Ledgers' | 'Inventory & Stock' | 'Reports & GST' | 'Settings & Administration';
+}
+
+export interface PmsSupportTicket {
+  id: string;
+  ticketNo: string;
+  date: string;
+  time: string;
+  staffName: string;
+  department: string;
+  phone: string;
+  category: 'Check-in & KYC' | 'Billing & Checkout' | 'KOT & Kitchen POS' | 'GST & Tax Reports' | 'Stock & Inventory' | 'Night Audit & Day End' | 'Hardware & Printer' | 'WhatsApp SMS Integration' | 'User Roles & Access' | 'Other';
+  priority: 'Low' | 'Medium' | 'High' | 'Critical';
+  subject: string;
+  description: string;
+  preferredCallbackTime: string;
+  status: 'Open' | 'Assigned' | 'In Progress' | 'Resolved' | 'Closed';
+  assignedEngineer?: string;
+  resolutionNotes?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface PmsRemoteSupportSession {
+  tool: 'UltraViewer' | 'AnyDesk';
+  partnerId: string;
+  passcode: string;
+  status: 'Ready' | 'Connected' | 'Disconnected';
+  hotelName: string;
+  contactPhone: string;
+}
+
+export interface PmsDemoRequest {
+  id: string;
+  hotelName: string;
+  contactPerson: string;
+  phoneNumber: string;
+  whatsappNumber: string;
+  email: string;
+  propertyType: 'Hotel' | 'Resort' | 'Guest House' | 'Lodge' | 'Restaurant & Rooms' | 'Service Apartment';
+  roomCount: number;
+  hasRestaurant: boolean;
+  city: string;
+  state: string;
+  preferredDate: string;
+  status: 'Pending' | 'Demo Scheduled' | 'Demo Completed' | 'Trial Active';
+  notes?: string;
+  createdAt: string;
+}
+
+export interface PmsDocumentationChapter {
+  id: string;
+  chapterNo: number;
+  title: string;
+  shortSummary: string;
+  fullContent: string;
+  tags: string[];
+  moduleUrl: string;
+}
+

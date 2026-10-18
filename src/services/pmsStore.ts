@@ -46,7 +46,12 @@ import type {
   PmsDayEndReport,
   PmsGuestLogEntry,
   PmsItemStockReport,
-  PmsShiftHandoverRecord
+  PmsShiftHandoverRecord,
+  PmsHelpVideo,
+  PmsSupportTicket,
+  PmsRemoteSupportSession,
+  PmsDemoRequest,
+  PmsDocumentationChapter
 } from '../types/pmsModels';
 import { PMS_ALL_PERMISSIONS } from '../types/pmsModels';
 
@@ -1390,6 +1395,545 @@ export const INITIAL_WHATSAPP_LOGS: PmsWhatsAppLog[] = [
   }
 ];
 
+// ==========================================
+// Video 30: Training Videos, Documentation Chapters & Support Tickets Seed Data
+// ==========================================
+export const INITIAL_HELP_VIDEOS: PmsHelpVideo[] = [
+  {
+    id: 'vid-1',
+    sNo: 1,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'Hotel Management Software demo , Erp For Hotel And Restaurent , latest Hotel Management Software',
+    description: 'Comprehensive walkthrough of RoomG Cloud PMS for independent hotels, luxury resorts, and restaurants.',
+    url: 'https://www.youtube.com/watch?v=0kFpWbSjB_M',
+    videoDuration: '15:20',
+    category: 'Front Desk'
+  },
+  {
+    id: 'vid-2',
+    sNo: 2,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'Billing software for Hotel Management Software #pms , Online Hotel Software',
+    description: 'Real-time billing, multi-payment tender, tax auto-calculation and instant WhatsApp invoice delivery.',
+    url: 'https://www.youtube.com/watch?v=W0sT8jK2d0A',
+    videoDuration: '12:48',
+    category: 'Restaurant & POS'
+  },
+  {
+    id: 'vid-3',
+    sNo: 3,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'Hotel Management Software Demo Step By Step ,online Hotel Software ,multi user mobile base software',
+    description: 'Step-by-step master setup: Room types, tariffs, GST slabs, staff users, and multi-device cloud sync.',
+    url: 'https://www.youtube.com/watch?v=mQ6eJkL9c3s',
+    videoDuration: '18:12',
+    category: 'Settings & Administration'
+  },
+  {
+    id: 'vid-4',
+    sNo: 4,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'Hotel Management Software ,#hotel management ,erp software for hotel,hotel ke liye software',
+    description: 'Front desk operations, room visual matrix, dirty room housekeeping workflows, and night audit.',
+    url: 'https://www.youtube.com/watch?v=k9XzLmP4o2A',
+    videoDuration: '14:35',
+    category: 'Front Desk'
+  },
+  {
+    id: 'vid-5',
+    sNo: 5,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'Best Hotel Software, होटल के बिल बनाओ मोबाइल से, मल्टी यूजर, ऑनलाइन सबसे आसान',
+    description: 'Mobile responsive POS for room service KOTs, digital food ordering, and contactless guest settlement.',
+    url: 'https://www.youtube.com/watch?v=vB8xNkL7q1w',
+    videoDuration: '10:48',
+    category: 'Restaurant & POS'
+  },
+  {
+    id: 'vid-6',
+    sNo: 6,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'HotelManagement POS, FoodService, Housekeeping, MultiDatabase, RoomAvailability software demo',
+    description: 'Table management, KOT firing, bar orders, room service delivery, and multi-kitchen printer routing.',
+    url: 'https://www.youtube.com/watch?v=gT5kLm9oP2r',
+    videoDuration: '16:40',
+    category: 'Restaurant & POS'
+  },
+  {
+    id: 'vid-7',
+    sNo: 7,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'Hotel Demo Software demo ,best pms in India roomg ,software for hotel Management',
+    description: 'Guest check-in, Aadhaar/Passport photo capture, ID proof document scanner, and C-Form registration card.',
+    url: 'https://www.youtube.com/watch?v=aJ3bKm8Lz5t',
+    videoDuration: '12:34',
+    category: 'Front Desk'
+  },
+  {
+    id: 'vid-8',
+    sNo: 8,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'Hotel Business Me Software Se Bill Kaise Banate Hai , Hotel Invoice Software ,Hotel ERP Roomg',
+    description: 'Generating GST compliant invoices, Day-Wise rent billing, B2B corporate billing with GSTIN verification.',
+    url: 'https://www.youtube.com/watch?v=zX4cNm8Vb1y',
+    videoDuration: '15:42',
+    category: 'Accounts & Ledgers'
+  },
+  {
+    id: 'vid-9',
+    sNo: 9,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'General Demo',
+    description: 'Quick 10-minute executive overview of all modules from front desk to accounting and reporting.',
+    url: 'https://www.youtube.com/watch?v=qW9eRt2Yu4i',
+    videoDuration: '09:26',
+    category: 'Front Desk'
+  },
+  {
+    id: 'vid-10',
+    sNo: 10,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'Best Pms In india ,Erp Software For Hotel Management',
+    description: 'High-volume property management, banquet halls, multi-rate slabs, and centralized chain management.',
+    url: 'https://www.youtube.com/watch?v=pL8xMv2Ns1d',
+    videoDuration: '19:32',
+    category: 'Settings & Administration'
+  },
+  {
+    id: 'vid-11',
+    sNo: 11,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'Advance Room Booking & Reservation System (Room Booking Master)',
+    description: 'How to reserve rooms in advance, assign room types, record advance payment, and issue confirmation receipt.',
+    url: 'https://www.youtube.com/watch?v=adv_bk_011',
+    videoDuration: '11:15',
+    category: 'Front Desk'
+  },
+  {
+    id: 'vid-12',
+    sNo: 12,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'Guest Check-In, KYC Aadhaar Scanning & 12hr / 24hr Tariff Slabs',
+    description: 'Fast check-in process, uploading guest ID cards, auto-calculating 12hr vs 24hr tariff rules, and key card handover.',
+    url: 'https://www.youtube.com/watch?v=chk_in_012',
+    videoDuration: '13:40',
+    category: 'Front Desk'
+  },
+  {
+    id: 'vid-13',
+    sNo: 13,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'Restaurant & Room Service KOT Entry from Mobile Tablet / Kitchen Display',
+    description: 'Issuing food orders, running table orders, room delivery KOTs, item modifications, and kitchen print routing.',
+    url: 'https://www.youtube.com/watch?v=kot_mob_013',
+    videoDuration: '08:50',
+    category: 'Restaurant & POS'
+  },
+  {
+    id: 'vid-14',
+    sNo: 14,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'Checkout & Settlement (A4 Standard, Day-Wise & A5 Invoice Formats)',
+    description: 'Consolidating room rent and food bills, applying discounts, split cash/UPI/card settlement, and folio printing.',
+    url: 'https://www.youtube.com/watch?v=chk_out_014',
+    videoDuration: '17:05',
+    category: 'Accounts & Ledgers'
+  },
+  {
+    id: 'vid-15',
+    sNo: 15,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'Receipt Inward & Customer Khata Ledger Management',
+    description: 'Recording party receipts, settling corporate debtor balances, printing ledgers and sending statements on WhatsApp.',
+    url: 'https://www.youtube.com/watch?v=rec_in_015',
+    videoDuration: '12:20',
+    category: 'Accounts & Ledgers'
+  },
+  {
+    id: 'vid-16',
+    sNo: 16,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'Payment Outward Register & Daily Hotel Petty Cash Management',
+    description: 'Logging grocery purchases, staff advances, utility bills, maintenance charges, and vendor bank transfers.',
+    url: 'https://www.youtube.com/watch?v=pay_out_016',
+    videoDuration: '11:45',
+    category: 'Accounts & Ledgers'
+  },
+  {
+    id: 'vid-17',
+    sNo: 17,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'Purchase Register & Kitchen Grocery Inward with Vendor Ledgers',
+    description: 'Inward billing for groceries, cleaning liquids, linen, and toiletries, updating stock balances and accounts payable.',
+    url: 'https://www.youtube.com/watch?v=pur_reg_017',
+    videoDuration: '14:10',
+    category: 'Inventory & Stock'
+  },
+  {
+    id: 'vid-18',
+    sNo: 18,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'Stock Transfer (Central Godown to Kitchen & Bar Store)',
+    description: 'Internal stock movements between main warehouse and kitchen, preventing stock shrinkage and theft.',
+    url: 'https://www.youtube.com/watch?v=stk_trf_018',
+    videoDuration: '09:30',
+    category: 'Inventory & Stock'
+  },
+  {
+    id: 'vid-19',
+    sNo: 19,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'Stock Issue (Housekeeping Requisitions & Daily Kitchen Consumption)',
+    description: 'Issuing room supplies (soaps, towels, water bottles) to floor staff with date and user attribution.',
+    url: 'https://www.youtube.com/watch?v=stk_iss_019',
+    videoDuration: '08:15',
+    category: 'Inventory & Stock'
+  },
+  {
+    id: 'vid-20',
+    sNo: 20,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'GST Reports Suite (GSTR-1 B2B, B2C Large, B2C Small & CA WhatsApp Export)',
+    description: 'Generating monthly/quarterly tax registers, verifying SAC 996331, HSN codes, and 1-click share with CA on WhatsApp.',
+    url: 'https://www.youtube.com/watch?v=gst_rep_020',
+    videoDuration: '16:50',
+    category: 'Reports & GST'
+  },
+  {
+    id: 'vid-21',
+    sNo: 21,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'Night Audit & Day End Closing Ledger (11:59 PM Audit)',
+    description: 'Daily cash reconciliation, verifying UPI bank settlements, card EDC slips, and closing hotel books for the day.',
+    url: 'https://www.youtube.com/watch?v=day_end_021',
+    videoDuration: '18:20',
+    category: 'Reports & GST'
+  },
+  {
+    id: 'vid-22',
+    sNo: 22,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'Shift Handover & Cash Drawer Balancing with Dual Digital Sign-off',
+    description: 'Transferring cash drawer float between Morning, Evening, and Night shifts without cash discrepancies.',
+    url: 'https://www.youtube.com/watch?v=shf_hnd_022',
+    videoDuration: '13:10',
+    category: 'Reports & GST'
+  },
+  {
+    id: 'vid-23',
+    sNo: 23,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'User Roles & Granular Permission Control (Operator, Manager, Housekeeping)',
+    description: 'Restricting cashier permissions, blocking unauthorized bill discounts or deletions, and staff audit trails.',
+    url: 'https://www.youtube.com/watch?v=usr_rol_023',
+    videoDuration: '15:30',
+    category: 'Settings & Administration'
+  },
+  {
+    id: 'vid-24',
+    sNo: 24,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'Auto WhatsApp Notification Engine & Anti-Theft Checkout Alerts',
+    description: 'Setting up automated WhatsApp messages for check-in greetings, bills, and instant owner alert on deleted folios.',
+    url: 'https://www.youtube.com/watch?v=wa_notif_024',
+    videoDuration: '14:40',
+    category: 'Settings & Administration'
+  },
+  {
+    id: 'vid-25',
+    sNo: 25,
+    businessType: 'Hotel Management',
+    type: 'Video',
+    topic: 'Remote Support with UltraViewer & AnyDesk (Customer Help Desk)',
+    description: 'How to download UltraViewer, provide secure Partner ID to support team, and get instant hands-on assistance.',
+    url: 'https://www.youtube.com/watch?v=rem_sup_025',
+    videoDuration: '07:58',
+    category: 'Settings & Administration'
+  }
+];
+
+export const INITIAL_DOCUMENTATION_CHAPTERS: PmsDocumentationChapter[] = [
+  {
+    id: 'doc-ch1',
+    chapterNo: 1,
+    title: '1. Introduction to Cloud-Based RoomG PMS',
+    shortSummary: 'Architecture overview, browser access from mobile/desktop, zero-installation, and multi-user login.',
+    fullContent: 'RoomG Hotel Management Software is a 100% online, cloud-native ERP engineered for hoteliers. It supports multi-device operation simultaneously across desktops, tablets, and smartphones. Data is synced in real-time, eliminating local hardware failure and hard drive corruption risks.',
+    tags: ['Cloud', 'Login', 'Multi-Device', 'Overview'],
+    moduleUrl: '/room_dashboard'
+  },
+  {
+    id: 'doc-ch2',
+    chapterNo: 2,
+    title: '2. Room Dashboard & Color-Coded Room Matrix',
+    shortSummary: 'Real-time room status tracking: Vacant (White/Green), Booked (Yellow), Occupied (Green), and Dirty (Red).',
+    fullContent: 'The Room Dashboard provides front desk receptionists with an at-a-glance occupancy view. Each room card allows quick actions: Phone Call Guest, Room Shift, Housekeeping Status, Instant Food KOT, and View Folio Balance.',
+    tags: ['Dashboard', 'Front Desk', 'Housekeeping', 'Status'],
+    moduleUrl: '/room_dashboard'
+  },
+  {
+    id: 'doc-ch3',
+    chapterNo: 3,
+    title: '3. Advance Room Booking & Reservation System',
+    shortSummary: 'Managing advance bookings, calendar grid preview, advance payment recording, and confirmation slips.',
+    fullContent: 'Reservations can be booked days or months in advance. The system prevents double-booking room categories, records advance cash/UPI deposits, and immediately issues a WhatsApp confirmation voucher to the guest.',
+    tags: ['Booking', 'Reservation', 'Advance', 'Calendar'],
+    moduleUrl: '/room_bookings'
+  },
+  {
+    id: 'doc-ch4',
+    chapterNo: 4,
+    title: '4. Guest Check-In & KYC ID Card Upload',
+    shortSummary: 'Guest registration, 12hr vs 24hr tariff selection, scanning Aadhaar/Passport photo, and printing C-Form card.',
+    fullContent: 'During check-in, the operator records guest personal details, chooses the tariff calculation model (12hr fixed checkout vs 24hr rolling checkout), captures front/back photo of photo ID proof, and collects advance deposits.',
+    tags: ['Check-in', 'KYC', 'Aadhaar', 'Tariff'],
+    moduleUrl: '/room_checkin'
+  },
+  {
+    id: 'doc-ch5',
+    chapterNo: 5,
+    title: '5. Room Check-Out & Final Folio Settlement',
+    shortSummary: 'Consolidating room rent and food bills, applying authorized discounts, and printing GST tax invoices.',
+    fullContent: 'Checkout settles the entire guest folio. It calculates day-wise room rent plus all attached KOT restaurant bills, deducts previous advances, and presents payment tender buttons (Cash, Card Swipe, Online UPI, Corporate Credit). Upon settlement, a formal GST invoice is generated and the room is marked Dirty for housekeeping.',
+    tags: ['Checkout', 'Billing', 'Invoice', 'Settlement'],
+    moduleUrl: '/room_checkout'
+  },
+  {
+    id: 'doc-ch6',
+    chapterNo: 6,
+    title: '6. Food Bill & Restaurant POS Table Management',
+    shortSummary: 'Dining table layout, running orders, issuing final food invoices, and tax inclusive/exclusive calculation.',
+    fullContent: 'Enables restaurant and banquet managers to take orders on physical tables or direct walk-ins. Displays running tables in red and vacant tables in green. Supports split billing, service charges, and 5% restaurant GST.',
+    tags: ['Restaurant', 'POS', 'Food Bill', 'Tables'],
+    moduleUrl: '/restaurant_pos'
+  },
+  {
+    id: 'doc-ch7',
+    chapterNo: 7,
+    title: '7. Kitchen Order Ticket (KOT) & Room Service Ordering',
+    shortSummary: 'Mobile KOT entry by room boy/waiter, touch menu ordering, and kitchen printer routing.',
+    fullContent: 'Waiters can take orders directly from mobile phones standing inside guest rooms. Tapping items instantly adds them to the KOT ticket. Printing routes directly to kitchen thermal printers without requiring the waiter to walk to the cashier.',
+    tags: ['KOT', 'Room Service', 'Kitchen', 'Mobile'],
+    moduleUrl: '/new_kot'
+  },
+  {
+    id: 'doc-ch8',
+    chapterNo: 8,
+    title: '8. Customer Ledger (Khata) & Party Account Statements',
+    shortSummary: 'Tracking corporate debtor balances (e.g. Tata Motors), travel agent accounts, and debit/credit ledgers.',
+    fullContent: 'Maintains running credit ledgers for corporate accounts, regular guests, and travel agents. Displays detailed transactions with Debit (Dr), Credit (Cr), Running Balance, and 1-click WhatsApp PDF statement delivery.',
+    tags: ['Ledger', 'Khata', 'Debtor', 'Corporate'],
+    moduleUrl: '/account_ledger'
+  },
+  {
+    id: 'doc-ch9',
+    chapterNo: 9,
+    title: '9. Payment Outward Register & Daily Hotel Expenses',
+    shortSummary: 'Recording cash outflows: Grocery purchases, staff wages, electricity bills, maintenance, and petty cash.',
+    fullContent: 'All cash paid out of the hotel reception or bank account must be logged in the Payment register. Specifies payment mode, payee party name, voucher number, and category to prevent unrecorded cash leakages.',
+    tags: ['Payment', 'Expenses', 'Petty Cash', 'Outward'],
+    moduleUrl: '/payment_register'
+  },
+  {
+    id: 'doc-ch10',
+    chapterNo: 10,
+    title: '10. Receipt Inward Register & Multi-Mode Collections',
+    shortSummary: 'Inward cash, UPI, card, and NEFT receipts for advance booking settlements and corporate clearings.',
+    fullContent: 'Records all non-checkout monies received by the hotel. Updates party ledger balances and increments physical cash-in-drawer or bank ledger accounts automatically.',
+    tags: ['Receipt', 'Collections', 'Inward', 'Bank'],
+    moduleUrl: '/receipt_register'
+  },
+  {
+    id: 'doc-ch11',
+    chapterNo: 11,
+    title: '11. Purchase Register & Inventory Inward',
+    shortSummary: 'The purchase register logs all items bought for the hotel such as kitchen supplies, room cleaning products, and inventory.',
+    fullContent: 'It records the supplier name, bill number, date, and item details. This updates the stock and shows pending payments in accounts. It is essential for managing hotel stock, vendor liabilities, and kitchen raw material accounting.',
+    tags: ['Purchase', 'Supplies', 'Inventory', 'Vendor'],
+    moduleUrl: '/purchase_register'
+  },
+  {
+    id: 'doc-ch12',
+    chapterNo: 12,
+    title: '12. Stock Transfer (Godown to Kitchen / Store)',
+    shortSummary: 'Internal stock movement from main warehouse or godown to operational outlets like kitchen or floor pantries.',
+    fullContent: 'Stock transfer is used when items are moved from one department to another, like from the godown to the kitchen or central store to the restaurant pantry. It records item name, quantity, source, destination, and transfer date. This brings transparency in stock movement and prevents discrepancies.',
+    tags: ['Stock Transfer', 'Godown', 'Kitchen', 'Movement'],
+    moduleUrl: '/stock_transfer'
+  },
+  {
+    id: 'doc-ch13',
+    chapterNo: 13,
+    title: '13. Stock Issue (Departmental Requisitions & Consumption)',
+    shortSummary: 'Issuing supplies like soap, shampoo, toilet rolls, bedsheets, and cleaning chemicals to floor staff.',
+    fullContent: 'Stock issue is executed when inventory items are consumed by a department without a direct resale price. It tracks departmental consumption cost, alerts managers to abnormal wastage, and decrements central storage balances.',
+    tags: ['Stock Issue', 'Housekeeping', 'Requisition', 'Consumption'],
+    moduleUrl: '/stock_issue'
+  },
+  {
+    id: 'doc-ch14',
+    chapterNo: 14,
+    title: '14. Item-Wise Stock Ledger & Inventory Auditing',
+    shortSummary: 'Item movement history showing Opening Balance, Stock In, Stock Out, and Closing Balance.',
+    fullContent: 'Every ingredient and retail item has a real-time stock ledger. Shows exact dates, voucher types (Purchase Inward, Kitchen KOT Sale, Department Issue), and reveals any negative balances caused by unrecorded purchases.',
+    tags: ['Stock Ledger', 'Inventory', 'Audit', 'Balance'],
+    moduleUrl: '/item_wise_stock'
+  },
+  {
+    id: 'doc-ch15',
+    chapterNo: 15,
+    title: '15. GST Reports Suite (GSTR-1, GSTR-3B & HSN Summary)',
+    shortSummary: 'B2B Invoices with customer GSTIN, B2C Large, B2C Small, Tax slabs (0%, 5%, 12%, 18%), and CA export.',
+    fullContent: 'Complete compliance suite for Indian GST laws. Separates room rent (SAC 996331) from restaurant food sales (SAC 996332). Formats tables ready for JSON / Excel export directly to the Government GST portal.',
+    tags: ['GST', 'GSTR-1', 'Tax', 'B2B', 'B2C'],
+    moduleUrl: '/gst_reports'
+  },
+  {
+    id: 'doc-ch16',
+    chapterNo: 16,
+    title: '16. Day End Report & Night Audit Ledger (11:59 PM)',
+    shortSummary: 'Closing daily accounting books, cash denomination counting, and banking reconciliation.',
+    fullContent: 'The Night Audit is run daily before midnight. It prints a formal 2-page ledger showing opening cash, all day receipts by tender, expenses paid, closing physical drawer balance, and lists all occupied rooms and debtor changes.',
+    tags: ['Day End', 'Night Audit', 'Ledger', 'Reconciliation'],
+    moduleUrl: '/dayend_report'
+  },
+  {
+    id: 'doc-ch17',
+    chapterNo: 17,
+    title: '17. Shift Handover & Cash Drawer Equation',
+    shortSummary: 'Preventing internal cashier theft during staff changeover between Morning, Evening, and Night shifts.',
+    fullContent: 'Enforces the strict cashier equation: Opening Float + Room Cash + Food Cash + Advance Receipts - Petty Expenses = Net Cash Handover. Both outgoing and incoming cashiers must review, verify, and digitally sign off.',
+    tags: ['Shift Handover', 'Cash Drawer', 'Anti-Theft', 'Cashier'],
+    moduleUrl: '/shift_handover'
+  },
+  {
+    id: 'doc-ch18',
+    chapterNo: 18,
+    title: '18. User Roles, Multi-User Staff Access & Security',
+    shortSummary: 'Granular permissions for Receptionist, Waiter, Manager, Accountant, and Hotel Owner.',
+    fullContent: 'Prevents staff from altering past invoices, viewing owner reports, or deleting checkouts. Every sensitive operation (e.g. folio discount or voiding a bill) is logged with the operator username and timestamp.',
+    tags: ['Security', 'Roles', 'Permissions', 'Audit Trail'],
+    moduleUrl: '/users'
+  },
+  {
+    id: 'doc-ch19',
+    chapterNo: 19,
+    title: '19. Automated WhatsApp Integration & Owner Anti-Theft Alerts',
+    shortSummary: 'Instant SMS & WhatsApp delivery of bills, booking vouchers, and high-priority owner security notifications.',
+    fullContent: 'Connects directly to WhatsApp Business Gateway. Automatically dispatches thank-you notes, PDF invoices, and sends an immediate alert to the owner if any operator attempts to delete or modify a settled checkout folio.',
+    tags: ['WhatsApp', 'Anti-Theft', 'Owner Alert', 'Automated'],
+    moduleUrl: '/whatsapp_sms'
+  },
+  {
+    id: 'doc-ch20',
+    chapterNo: 20,
+    title: '20. Remote Desktop Support & UltraViewer / AnyDesk Help',
+    shortSummary: 'Live remote assistance from Hansin IT Services engineers for instant setup, training, and troubleshooting.',
+    fullContent: 'Hoteliers can request live remote assistance. The support team connects via UltraViewer or AnyDesk after the hotelier provides temporary session credentials. Our team provides hands-on setup for room categories, pricing, printers, and GST codes.',
+    tags: ['Support', 'Remote Desktop', 'UltraViewer', 'Helpdesk'],
+    moduleUrl: '/helps'
+  }
+];
+
+export const INITIAL_SUPPORT_TICKETS: PmsSupportTicket[] = [
+  {
+    id: 'tkt-842',
+    ticketNo: 'TKT-2026-0842',
+    date: '18-07-2025',
+    time: '11:30 AM',
+    staffName: 'Ramesh Patel (Manager)',
+    department: 'Front Desk',
+    phone: '9822000000',
+    category: 'Hardware & Printer',
+    priority: 'Medium',
+    subject: 'Thermal Printer 80mm Margin Alignment for KOT Printing',
+    description: 'When printing kitchen orders on the newly installed Posiflex 80mm thermal printer, the right margin is clipping item quantity. Need remote setup via UltraViewer.',
+    preferredCallbackTime: '12:00 PM – 02:00 PM',
+    status: 'Resolved',
+    assignedEngineer: 'Vikas Sharma (Senior Support Engineer - Hansin IT)',
+    resolutionNotes: 'Connected via UltraViewer session 98 811 274. Adjusted ESC/POS print driver page size to 72mm printable width. Test KOT printed successfully with full item and quantity alignment.',
+    createdAt: '2025-07-18 11:30:00',
+    updatedAt: '2025-07-18 12:15:00'
+  },
+  {
+    id: 'tkt-850',
+    ticketNo: 'TKT-2026-0850',
+    date: '19-07-2025',
+    time: '02:45 PM',
+    staffName: 'Sunita Rao (Accountant)',
+    department: 'Accounts',
+    phone: '9822100099',
+    category: 'GST & Tax Reports',
+    priority: 'High',
+    subject: 'GST SAC Code 996331 Configuration on Day-Wise Invoices',
+    description: 'We need to confirm that room tariff above ₹7,500 applies 18% GST while standard rooms under ₹7,500 apply 12% GST in the GSTR-1 register.',
+    preferredCallbackTime: '03:00 PM – 04:00 PM',
+    status: 'Resolved',
+    assignedEngineer: 'Amit Verma (Taxation & ERP Lead - Hansin IT)',
+    resolutionNotes: 'Verified GST master slabs. Configured automatic slab switching rule in Business Settings (/businesssettings/create). Verified on demo checkout invoice SR/204.',
+    createdAt: '2025-07-19 14:45:00',
+    updatedAt: '2025-07-19 15:20:00'
+  },
+  {
+    id: 'tkt-863',
+    ticketNo: 'TKT-2026-0863',
+    date: '20-07-2025',
+    time: '09:15 AM',
+    staffName: 'Vikram Joshi (Front Desk)',
+    department: 'Front Desk',
+    phone: '9822450012',
+    category: 'User Roles & Access',
+    priority: 'Medium',
+    subject: 'Staff Operator Role Permission for Check-Out Deletion Alert',
+    description: 'Owner wants to ensure cashier operators cannot edit settled checkout bills without manager passcode override.',
+    preferredCallbackTime: '11:00 AM – 01:00 PM',
+    status: 'In Progress',
+    assignedEngineer: 'Rahul Mishra (Support Team)',
+    resolutionNotes: 'Role permissions reviewed. Disabling "delete checkout" toggle for role "Operator" in Roles & Permissions (/roles).',
+    createdAt: '2025-07-20 09:15:00'
+  },
+  {
+    id: 'tkt-871',
+    ticketNo: 'TKT-2026-0871',
+    date: '20-07-2025',
+    time: '10:00 AM',
+    staffName: 'Kishore Kumar (Night Auditor)',
+    department: 'Accounts',
+    phone: '9822780033',
+    category: 'Night Audit & Day End',
+    priority: 'Low',
+    subject: 'Night Audit Day End Cash Drawer Float Reconciliation Check',
+    description: 'Requesting guidance on how to record petty cash advances given to housekeeping before running the midnight 11:59 PM day end statement.',
+    preferredCallbackTime: '04:00 PM – 06:00 PM',
+    status: 'Open',
+    createdAt: '2025-07-20 10:00:00'
+  }
+];
+
 const STORAGE_KEYS = {
   ROOMS: 'svr_pms_rooms',
   ROOM_TYPES: 'svr_pms_room_types',
@@ -1418,7 +1962,9 @@ const STORAGE_KEYS = {
   CURRENT_PROPERTY: 'svr_pms_current_property',
   WHATSAPP_TEMPLATES: 'svr_pms_whatsapp_templates',
   WHATSAPP_CONFIG: 'svr_pms_whatsapp_config',
-  WHATSAPP_LOGS: 'svr_pms_whatsapp_logs'
+  WHATSAPP_LOGS: 'svr_pms_whatsapp_logs',
+  SUPPORT_TICKETS: 'svr_pms_support_tickets',
+  DEMO_REQUESTS: 'svr_pms_demo_requests'
 };
 
 export class PmsStore {
@@ -6168,6 +6714,160 @@ export class PmsStore {
       handoverToUser: 'Front Desk Evening Incharge',
       handoverNotes: 'All cash verified with physical currency denomination sheet. Room 204 key given to guest at 02:30 PM. Room 301 pending laundry bill added to folio.',
       status: 'Verified & Closed'
+    };
+  }
+
+  // ==========================================
+  // Video 30: Training & Support Suite Methods (Frames 0060-0230)
+  // ==========================================
+
+  /**
+   * Video 30 Frame 0150: Video Tutorials Catalog (/helps)
+   */
+  static getHelpVideos(category?: string, query?: string): PmsHelpVideo[] {
+    let list = [...INITIAL_HELP_VIDEOS];
+    if (category && category !== 'All') {
+      list = list.filter(v => v.category === category);
+    }
+    if (query && query.trim()) {
+      const q = query.toLowerCase().trim();
+      list = list.filter(v => 
+        v.topic.toLowerCase().includes(q) || 
+        v.businessType.toLowerCase().includes(q) ||
+        (v.description && v.description.toLowerCase().includes(q))
+      );
+    }
+    return list;
+  }
+
+  /**
+   * Video 30 Frame 0060 & 0070: Software Documentation Manual Chapters
+   */
+  static getDocumentationChapters(query?: string): PmsDocumentationChapter[] {
+    let list = [...INITIAL_DOCUMENTATION_CHAPTERS];
+    if (query && query.trim()) {
+      const q = query.toLowerCase().trim();
+      list = list.filter(c => 
+        c.title.toLowerCase().includes(q) || 
+        c.shortSummary.toLowerCase().includes(q) ||
+        c.fullContent.toLowerCase().includes(q) ||
+        c.tags.some(t => t.toLowerCase().includes(q))
+      );
+    }
+    return list;
+  }
+
+  /**
+   * Video 30 Frame 0210 & Lines 05:30-06:00: Support Tickets Engine
+   */
+  static getSupportTickets(): PmsSupportTicket[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.SUPPORT_TICKETS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.SUPPORT_TICKETS, JSON.stringify(INITIAL_SUPPORT_TICKETS));
+      return INITIAL_SUPPORT_TICKETS;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_SUPPORT_TICKETS;
+    }
+  }
+
+  static createSupportTicket(data: Omit<PmsSupportTicket, 'id' | 'ticketNo' | 'createdAt' | 'status'>): PmsSupportTicket {
+    const tickets = this.getSupportTickets();
+    const nextNum = tickets.length + 845;
+    const newTicket: PmsSupportTicket = {
+      ...data,
+      id: `tkt-${Date.now()}`,
+      ticketNo: `TKT-2026-0${nextNum}`,
+      createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      status: 'Open'
+    };
+    tickets.unshift(newTicket);
+    localStorage.setItem(STORAGE_KEYS.SUPPORT_TICKETS, JSON.stringify(tickets));
+    return newTicket;
+  }
+
+  static updateSupportTicketStatus(id: string, status: PmsSupportTicket['status'], resolutionNotes?: string): void {
+    const tickets = this.getSupportTickets();
+    const idx = tickets.findIndex(t => t.id === id);
+    if (idx >= 0) {
+      tickets[idx].status = status;
+      if (resolutionNotes) {
+        tickets[idx].resolutionNotes = resolutionNotes;
+      }
+      tickets[idx].updatedAt = new Date().toISOString().replace('T', ' ').substring(0, 19);
+      localStorage.setItem(STORAGE_KEYS.SUPPORT_TICKETS, JSON.stringify(tickets));
+    }
+  }
+
+  /**
+   * Video 30 Frame 0060 & 0230: Remote Desktop Support Session (UltraViewer / AnyDesk)
+   */
+  static getRemoteSupportSession(): PmsRemoteSupportSession {
+    return {
+      tool: 'UltraViewer',
+      partnerId: '98 811 274',
+      passcode: '37551',
+      status: 'Ready',
+      hotelName: 'HOTEL SAI VASUDEV RESIDENCY',
+      contactPhone: '7999663696'
+    };
+  }
+
+  /**
+   * Video 30 Frame 0080 & Lines 01:30-02:00: Free Demo & License Activation Request
+   */
+  static getDemoRequests(): PmsDemoRequest[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.DEMO_REQUESTS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.DEMO_REQUESTS, JSON.stringify([]));
+      return [];
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+
+  static submitDemoRequest(data: Omit<PmsDemoRequest, 'id' | 'createdAt' | 'status'>): PmsDemoRequest {
+    const requests = this.getDemoRequests();
+    const newReq: PmsDemoRequest = {
+      ...data,
+      id: `demo-${Date.now()}`,
+      createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      status: 'Pending'
+    };
+    requests.unshift(newReq);
+    localStorage.setItem(STORAGE_KEYS.DEMO_REQUESTS, JSON.stringify(requests));
+    return newReq;
+  }
+
+  /**
+   * Video 30 Official Contact & Support Details (Hansin IT Services / Data House ERP)
+   */
+  static getSupportContactInfo() {
+    return {
+      companyName: 'Hansin IT Services Pvt. Ltd. / Data House ERP',
+      brand: 'RoomG Hotel Management Software',
+      headquarters: 'Jabalpur, Madhya Pradesh, India',
+      primaryPhone: '7999663696',
+      alternatePhone: '8871702803',
+      supportEmail: 'datahouseerp@gmail.com',
+      officialWebsite: 'https://datahouseerp.com',
+      demoPortalUrl: 'https://demo.datahouseerp.com',
+      supportHours: '11:00 AM – 07:00 PM IST (Mon to Sat)',
+      ultraViewerDownloadUrl: 'https://ultraviewer.net/en/download.html',
+      anyDeskDownloadUrl: 'https://anydesk.com/en/downloads',
+      licenseInfo: {
+        hotelName: 'HOTEL SAI VASUDEV RESIDENCY',
+        activationDate: '17-12-2024',
+        renewDate: '17-12-2025',
+        daysRemaining: 149,
+        whatsappValidity: '29-06-2026',
+        firmId: 'DEMO0004'
+      }
     };
   }
 }

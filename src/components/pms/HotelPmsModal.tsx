@@ -48,6 +48,7 @@ import { ItemWiseSalesReportModal } from './ItemWiseSalesReportModal';
 import { ItemWiseStockModal } from './ItemWiseStockModal';
 import { GuestLogModal } from './GuestLogModal';
 import { ShiftHandoverModal } from './ShiftHandoverModal';
+import { HelpAndSupportModal } from './HelpAndSupportModal';
 import type { PmsUserAccount, PmsChainProperty, BillFormatType, PmsCheckOutDetail, PmsGstReportTab } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import './pmsStyles.css';
@@ -172,8 +173,34 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   const [isShiftHandoverModalOpen, setIsShiftHandoverModalOpen] = useState(false);
   const [outstandingMode, setOutstandingMode] = useState<'receivable' | 'payable'>('receivable');
 
+  // Video 30: RoomG Training & Support Helpdesk Suite (Frames 0060-0230)
+  const [helpMenuOpen, setHelpMenuOpen] = useState(false);
+  const [isHelpAndSupportOpen, setIsHelpAndSupportOpen] = useState(false);
+  const [helpInitialTab, setHelpInitialTab] = useState<'videos' | 'tickets' | 'remote' | 'manual' | 'demo'>('videos');
+
   const handleLaunchReportAction = (actionKey: string) => {
     switch (actionKey) {
+      case 'help_support':
+      case 'video_tutorials':
+        setHelpInitialTab('videos');
+        setIsHelpAndSupportOpen(true);
+        break;
+      case 'support_ticket':
+        setHelpInitialTab('tickets');
+        setIsHelpAndSupportOpen(true);
+        break;
+      case 'remote_support':
+        setHelpInitialTab('remote');
+        setIsHelpAndSupportOpen(true);
+        break;
+      case 'documentation':
+        setHelpInitialTab('manual');
+        setIsHelpAndSupportOpen(true);
+        break;
+      case 'free_demo':
+        setHelpInitialTab('demo');
+        setIsHelpAndSupportOpen(true);
+        break;
       case 'room_booking':
         setActiveTab('hub');
         break;
@@ -584,6 +611,30 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               >
                 <span>📜</span>
                 <span>GST Reports</span>
+              </button>
+
+              {/* Video 30: Training & Support Suite Button */}
+              <button
+                type="button"
+                onClick={() => { setHelpInitialTab('videos'); setIsHelpAndSupportOpen(true); }}
+                title="Click to access Video Tutorials, Support Tickets, Remote Support & User Manual (Video 30)"
+                style={{
+                  background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '3px 10px',
+                  borderRadius: 3,
+                  fontSize: 11,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
+                }}
+              >
+                <span>🎓</span>
+                <span>Training &amp; Support</span>
               </button>
 
               {/* Video 21: User Avatar & Role Dropdown */}
@@ -1106,13 +1157,38 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                   </div>
                 )}
 
-                <div className="pms-nav-item" onClick={() => alert('Help > Software Video Tutorials (Data House Technologies)')}>
+                {/* Video 30: Help & Support Submenu (Frames 0130, 0150, 0180, 0230) */}
+                <div 
+                  className="pms-nav-item" 
+                  onClick={() => setHelpMenuOpen(!helpMenuOpen)}
+                  style={{ background: helpMenuOpen ? '#2c3136' : undefined }}
+                >
                   <div className="pms-nav-item-left">
                     <span>❓</span>
                     <span>Help &amp; Video Training</span>
                   </div>
-                  <span>›</span>
+                  <span>{helpMenuOpen ? '▾' : '›'}</span>
                 </div>
+
+                {helpMenuOpen && (
+                  <div style={{ background: '#1a1e22', paddingLeft: 12, fontSize: 12 }}>
+                    <div className="pms-nav-item" onClick={() => { setHelpInitialTab('videos'); setIsHelpAndSupportOpen(true); }}>
+                      <span style={{ color: '#38bdf8', fontWeight: 700 }}>🎥 Video Tutorials (/helps)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => { setHelpInitialTab('tickets'); setIsHelpAndSupportOpen(true); }}>
+                      <span style={{ color: '#fbbf24', fontWeight: 700 }}>🎫 Support Tickets (/support_tickets)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => { setHelpInitialTab('remote'); setIsHelpAndSupportOpen(true); }}>
+                      <span style={{ color: '#34d399', fontWeight: 800 }}>🖥️ Remote Support (UltraViewer &amp; AnyDesk)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => { setHelpInitialTab('manual'); setIsHelpAndSupportOpen(true); }}>
+                      <span style={{ color: '#a78bfa', fontWeight: 700 }}>📖 Software User Manual (/documentation)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => { setHelpInitialTab('demo'); setIsHelpAndSupportOpen(true); }}>
+                      <span style={{ color: '#f472b6', fontWeight: 700 }}>🚀 Free Demo &amp; License Renewal</span>
+                    </div>
+                  </div>
+                )}
 
                 {/* Video 23: Dynamic Active Staff & Role Footer */}
                 <div className="pms-sidebar-footer">
@@ -1575,6 +1651,13 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       <ShiftHandoverModal
         isOpen={isShiftHandoverModalOpen}
         onClose={() => setIsShiftHandoverModalOpen(false)}
+      />
+
+      {/* Video 30: RoomG Training & Support Helpdesk Suite */}
+      <HelpAndSupportModal
+        isOpen={isHelpAndSupportOpen}
+        onClose={() => setIsHelpAndSupportOpen(false)}
+        initialTab={helpInitialTab}
       />
     </>
   );

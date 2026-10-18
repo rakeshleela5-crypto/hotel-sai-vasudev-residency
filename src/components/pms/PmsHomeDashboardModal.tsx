@@ -41,6 +41,7 @@ import { ItemWiseSalesReportModal } from './ItemWiseSalesReportModal';
 import { ItemWiseStockModal } from './ItemWiseStockModal';
 import { GuestLogModal } from './GuestLogModal';
 import { ShiftHandoverModal } from './ShiftHandoverModal';
+import { HelpAndSupportModal } from './HelpAndSupportModal';
 import type { PmsBooking, BillFormatType, PmsCheckOutDetail, PmsGstReportTab } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
@@ -127,8 +128,33 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   const [isShiftHandoverModalOpen, setIsShiftHandoverModalOpen] = useState(false);
   const [outstandingMode, setOutstandingMode] = useState<'receivable' | 'payable'>('receivable');
 
+  // Video 30: RoomG Training & Support Helpdesk Suite
+  const [isHelpAndSupportOpen, setIsHelpAndSupportOpen] = useState(false);
+  const [helpInitialTab, setHelpInitialTab] = useState<'videos' | 'tickets' | 'remote' | 'manual' | 'demo'>('videos');
+
   const handleLaunchReportAction = (actionKey: string) => {
     switch (actionKey) {
+      case 'help_support':
+      case 'video_tutorials':
+        setHelpInitialTab('videos');
+        setIsHelpAndSupportOpen(true);
+        break;
+      case 'support_ticket':
+        setHelpInitialTab('tickets');
+        setIsHelpAndSupportOpen(true);
+        break;
+      case 'remote_support':
+        setHelpInitialTab('remote');
+        setIsHelpAndSupportOpen(true);
+        break;
+      case 'documentation':
+        setHelpInitialTab('manual');
+        setIsHelpAndSupportOpen(true);
+        break;
+      case 'free_demo':
+        setHelpInitialTab('demo');
+        setIsHelpAndSupportOpen(true);
+        break;
       case 'room_booking':
         setIsBookingOpen(true);
         break;
@@ -831,6 +857,40 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           <span className="tile-icon">📊</span>
           <span>Report Hub</span>
         </button>
+
+        {/* Video 30: RoomG Training & Support Helpdesk Suite Tiles */}
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => { setHelpInitialTab('videos'); setIsHelpAndSupportOpen(true); }}
+          style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff', fontWeight: 800 }}
+          title="Video 30: RoomG Video Tutorials & Training Hub (/helps)"
+        >
+          <span className="tile-icon">🎥</span>
+          <span>Training Hub</span>
+        </button>
+
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => { setHelpInitialTab('remote'); setIsHelpAndSupportOpen(true); }}
+          style={{ background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)', color: '#fff', fontWeight: 800 }}
+          title="Video 30: Remote Desktop Assistance with UltraViewer & AnyDesk"
+        >
+          <span className="tile-icon">🖥️</span>
+          <span>Remote Support</span>
+        </button>
+
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => { setHelpInitialTab('tickets'); setIsHelpAndSupportOpen(true); }}
+          style={{ background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)', color: '#fff', fontWeight: 800 }}
+          title="Video 30: Raise Support Ticket for Hansin IT Engineers"
+        >
+          <span className="tile-icon">🎫</span>
+          <span>Support Tickets</span>
+        </button>
       </div>
 
       {/* Overview & Unprinted KOTs Notification Section matching Video 14 Frames 0145, 0230, 0255 */}
@@ -1372,6 +1432,13 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
       <ShiftHandoverModal
         isOpen={isShiftHandoverModalOpen}
         onClose={() => setIsShiftHandoverModalOpen(false)}
+      />
+
+      {/* Video 30: RoomG Training & Support Helpdesk Suite */}
+      <HelpAndSupportModal
+        isOpen={isHelpAndSupportOpen}
+        onClose={() => setIsHelpAndSupportOpen(false)}
+        initialTab={helpInitialTab}
       />
     </div>
   );
