@@ -52,6 +52,7 @@ import { HelpAndSupportModal } from './HelpAndSupportModal';
 import { AgentCommissionModal } from './AgentCommissionModal';
 import { LiquorBarManagementModal } from './LiquorBarManagementModal';
 import { NoDiscountMasterModal } from './NoDiscountMasterModal';
+import { BanquetHallBillingModal } from './BanquetHallBillingModal';
 import type { PmsUserAccount, PmsChainProperty, BillFormatType, PmsCheckOutDetail, PmsGstReportTab } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import './pmsStyles.css';
@@ -190,12 +191,21 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   // Video 33: No-Discount Item & Margin Protection (Frames 0080-0202)
   const [isNoDiscountOpen, setIsNoDiscountOpen] = useState(false);
 
+  // Video 35: Banquet Hall Billing & Event/Party Hall Invoice Demo
+  const [isBanquetOpen, setIsBanquetOpen] = useState(false);
+
   const handleLaunchReportAction = (actionKey: string) => {
     switch (actionKey) {
       case 'no_discount':
       case 'margin_protection':
       case 'discount_rules':
         setIsNoDiscountOpen(true);
+        break;
+      case 'banquet_billing':
+      case 'banquet_hall':
+      case 'marriage_garden':
+      case 'party_lawn':
+        setIsBanquetOpen(true);
         break;
       case 'liquor_bar':
       case 'bar_pos':
@@ -777,6 +787,30 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               >
                 <span>🏬</span>
                 <span>Stock Report</span>
+              </button>
+
+              {/* Video 35: Banquet Hall Billing & Event/Party Hall Invoice Demo */}
+              <button
+                type="button"
+                onClick={() => setIsBanquetOpen(true)}
+                title="Click to manage Banquet Halls, Marriage Gardens, Event Catering, Multi-Room Linking & Tax Invoices (Video 35)"
+                style={{
+                  background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                  color: '#ffffff',
+                  border: '1px solid #6ee7b7',
+                  padding: '3px 10px',
+                  borderRadius: 3,
+                  fontSize: 11,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
+                }}
+              >
+                <span>🏰</span>
+                <span>Banquet &amp; Events</span>
               </button>
 
               {/* Video 21: User Avatar & Role Dropdown */}
@@ -1840,6 +1874,12 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         isOpen={isNoDiscountOpen}
         onClose={() => setIsNoDiscountOpen(false)}
         onOpenFoodBill={() => setIsFoodBillModalOpen(true)}
+      />
+
+      {/* Video 35: Banquet Hall Billing, Marriage Garden & Event Invoice Demo */}
+      <BanquetHallBillingModal
+        isOpen={isBanquetOpen}
+        onClose={() => setIsBanquetOpen(false)}
       />
     </>
   );

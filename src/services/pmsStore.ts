@@ -66,7 +66,10 @@ import type {
   PmsConsolidatedStockRow,
   PmsGodownBreakdownEntry,
   PmsStockAuditMovement,
-  PmsHotelAssetLinenRecord
+  PmsHotelAssetLinenRecord,
+  PmsBanquetVenue,
+  PmsBanquetBooking,
+  PmsBanquetKot
 } from '../types/pmsModels';
 import { PMS_ALL_PERMISSIONS } from '../types/pmsModels';
 
@@ -119,6 +122,8 @@ export const INITIAL_ROOMS: PmsRoom[] = [
   { id: 'mini-hall', roomNo: 'MINI HALL', roomType: 'HALL', tariff: 6000, status: 'vacant', floor: 0, facilities: 'Seating 50 pax, Stage, Mic' },
   { id: 'garden', roomNo: 'GARDEN', roomType: 'HALL', tariff: 10000, status: 'booked', floor: 0, facilities: 'Lawn Area, Lights, Buffet Setup' },
   { id: 'big-hall', roomNo: 'BIG HALL', roomType: 'HALL', tariff: 15000, status: 'booked', floor: 0, facilities: 'Seating 200 pax, Central AC' },
+  { id: 'marriage-garden-1', roomNo: 'MARRIAGE GARDEN1', roomType: 'MARRIAGE GARDEN', tariff: 50000, status: 'booked', floor: 0, facilities: 'Capacity 500 Pax, Grand Stage, Lawn Lights, Bridal Suite, DJ Platform, Buffet Enclosure' },
+  { id: 'marriage-garden-2', roomNo: 'MARRIAGE GARDEN2', roomType: 'MARRIAGE GARDEN', tariff: 65000, status: 'vacant', floor: 0, facilities: 'Capacity 1000 Pax, Royal Mandap, Covered Dining Hall, Generator Backup, Valet Parking' },
 
   // 1st Floor
   { 
@@ -365,7 +370,13 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
   { id: 'm-daal-rahar', name: 'Daal Rahar', code: '10058', barcode: '10058', company: 'Genral', rate: 175, saleRate: 175, mrp: 175, purchaseRate: 175, unit: 'KG', gstPercent: 5, category: 'Raw Material', headGroup: 'Raw_Material' },
   { id: 'm-refine-oil', name: 'Refine Oil', code: '10069', barcode: '10069', company: 'Genral', rate: 150, saleRate: 150, mrp: 150, purchaseRate: 140, unit: 'Liter', gstPercent: 12, category: 'Raw Material', headGroup: 'Raw_Material' },
   { id: 'm-sugar', name: 'Sugar / Sakkar', code: '10070', barcode: '10070', company: 'Genral', rate: 45, saleRate: 45, mrp: 45, purchaseRate: 42, unit: 'KG', gstPercent: 5, category: 'Raw Material', headGroup: 'Raw_Material' },
-  { id: 'm-milk', name: 'Milk / Doodh', code: '10071', barcode: '10071', company: 'Genral', rate: 60, saleRate: 60, mrp: 60, purchaseRate: 55, unit: 'Liter', gstPercent: 0, category: 'Raw Material', headGroup: 'Raw_Material' }
+  { id: 'm-milk', name: 'Milk / Doodh', code: '10071', barcode: '10071', company: 'Genral', rate: 60, saleRate: 60, mrp: 60, purchaseRate: 55, unit: 'Liter', gstPercent: 0, category: 'Raw Material', headGroup: 'Raw_Material' },
+  // Video 35: Banquet Catering & Event Services Items (Frames 0400, 0420, 0480, 0550)
+  { id: 'm-per-plate-food', name: 'PER PLATE FOOD', code: '10072', barcode: '10072', company: 'Genral', rate: 475, saleRate: 475, mrp: 500, purchaseRate: 280, unit: 'Plate', gstPercent: 12, category: 'Banquet Catering', headGroup: 'Restaurant_Item' },
+  { id: 'm-dj-charge', name: 'DJ CHARGE', code: '10074', barcode: '10074', company: 'SoundTech', rate: 10000, saleRate: 10000, mrp: 12000, purchaseRate: 6000, unit: 'Event', gstPercent: 12, category: 'Banquet Services', headGroup: 'Restaurant_Item' },
+  { id: 'm-decoration-charge', name: 'DECORATION CHARGE', code: '10075', barcode: '10075', company: 'RoyalDecor', rate: 15000, saleRate: 15000, mrp: 18000, purchaseRate: 9000, unit: 'Event', gstPercent: 12, category: 'Banquet Services', headGroup: 'Restaurant_Item' },
+  { id: 'm-mandap-flower', name: 'MANDAP & FLOWER STAGE', code: '10076', barcode: '10076', company: 'RoyalDecor', rate: 20000, saleRate: 20000, mrp: 25000, purchaseRate: 12000, unit: 'Event', gstPercent: 12, category: 'Banquet Services', headGroup: 'Restaurant_Item' },
+  { id: 'm-led-wall', name: 'PROJECTOR & LED WALL', code: '10077', barcode: '10077', company: 'AVPro', rate: 8000, saleRate: 8000, mrp: 10000, purchaseRate: 4500, unit: 'Event', gstPercent: 18, category: 'Banquet Services', headGroup: 'Restaurant_Item' }
 ];
 
 // Video 15: Party Accounts & Receivables Seed Data (Frame 0130)
@@ -1949,6 +1960,362 @@ export const INITIAL_SUPPORT_TICKETS: PmsSupportTicket[] = [
   }
 ];
 
+// ==========================================
+// Video 35: Banquet Hall Venues & Event Bookings Initial Data
+// ==========================================
+export const INITIAL_BANQUET_VENUES: PmsBanquetVenue[] = [
+  {
+    id: 'marriage-garden-1',
+    name: 'MARRIAGE GARDEN1',
+    type: 'Marriage Garden',
+    baseTariff: 50000,
+    gstPercent: 12,
+    capacityPaxMin: 300,
+    capacityPaxMax: 600,
+    sqFtArea: 25000,
+    floor: 'Ground / Open Lawn',
+    amenities: [
+      'Capacity 500+ Pax',
+      'Grand Wedding Mandap & Stage (40x25 ft)',
+      'Bridal Green Suite with Attached Washroom',
+      'DJ & Sound Platform with High Voltage Hookups',
+      'Illuminated Fairy-Light Pathway & Entrance Arch',
+      'Covered Food Buffet & Live Catering Stalls Area',
+      '125 kVA Silent Generator Power Backup',
+      'Designated Valet Parking for 150+ Vehicles'
+    ],
+    images: [
+      'https://images.unsplash.com/photo-1519741497674-611481863552?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=600&auto=format&fit=crop&q=80'
+    ],
+    status: 'booked',
+    cleaningStatus: 'Ready',
+    sacCode: '996311'
+  },
+  {
+    id: 'marriage-garden-2',
+    name: 'MARRIAGE GARDEN2',
+    type: 'Marriage Garden',
+    baseTariff: 65000,
+    gstPercent: 12,
+    capacityPaxMin: 500,
+    capacityPaxMax: 1200,
+    sqFtArea: 40000,
+    floor: 'Ground / Royal Lawn',
+    amenities: [
+      'Capacity 1000+ Pax Mega Gathering',
+      'Royal Rajasthani Mandap & Elevated Stage',
+      'Two Dedicated Groom & Bride Air-Conditioned Green Rooms',
+      'Weather-Proof Waterproof Dining Pavilion',
+      'High-Power Acoustic Concert Audio Setup Permitted',
+      'Separate VIP Guest Lounge with Private Bar Counter',
+      '200 kVA Dual Generator Synchronization'
+    ],
+    images: [
+      'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=600&auto=format&fit=crop&q=80'
+    ],
+    status: 'vacant',
+    cleaningStatus: 'Ready',
+    sacCode: '996311'
+  },
+  {
+    id: 'big-hall',
+    name: 'BIG HALL',
+    type: 'Banquet Hall',
+    baseTariff: 15000,
+    gstPercent: 18,
+    capacityPaxMin: 100,
+    capacityPaxMax: 300,
+    sqFtArea: 5500,
+    floor: '1st Floor',
+    amenities: [
+      'Central AC with Temperature Zoning',
+      'Built-in Stage with Motorized Curtains',
+      'Dual 150-inch 4K Projectors & LED Video Wall',
+      'JBL Pro Wireless Podium & Lapel Mics',
+      'Dimmer Mood Lighting & Chandelier Controls'
+    ],
+    images: [
+      'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=600&auto=format&fit=crop&q=80'
+    ],
+    status: 'booked',
+    cleaningStatus: 'Ready',
+    sacCode: '996311'
+  },
+  {
+    id: 'mini-hall',
+    name: 'MINI HALL',
+    type: 'Conference Hall',
+    baseTariff: 6000,
+    gstPercent: 18,
+    capacityPaxMin: 25,
+    capacityPaxMax: 70,
+    sqFtArea: 1800,
+    floor: 'Ground Floor',
+    amenities: [
+      'Executive U-Shape or Cluster Seating Layout',
+      '75" Interactive Touch Smart TV & HDMI Matrix',
+      'High Speed Dedicated 300 Mbps Fiber WiFi',
+      'Pantry Service for Continuous Tea/Coffee Hi-Tea'
+    ],
+    images: [
+      'https://images.unsplash.com/photo-1431540015161-0bf868a2d407?w=600&auto=format&fit=crop&q=80'
+    ],
+    status: 'vacant',
+    cleaningStatus: 'Ready',
+    sacCode: '996311'
+  },
+  {
+    id: 'garden',
+    name: 'GARDEN',
+    type: 'Party Lawn',
+    baseTariff: 10000,
+    gstPercent: 18,
+    capacityPaxMin: 50,
+    capacityPaxMax: 200,
+    sqFtArea: 7500,
+    floor: 'Ground Floor Outer',
+    amenities: [
+      'Lush Green Natural Grass Party Lawn',
+      'Open-Air Barbeque & Live Tandoor Counters',
+      'Fairy Tree Lighting & Ambient Garden Sound',
+      'Ideal for Birthday Parties, Kitty Parties & Anniversaries'
+    ],
+    images: [
+      'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=600&auto=format&fit=crop&q=80'
+    ],
+    status: 'vacant',
+    cleaningStatus: 'Ready',
+    sacCode: '996311'
+  }
+];
+
+export const INITIAL_BANQUET_BOOKINGS: PmsBanquetBooking[] = [
+  {
+    id: 'bq-235',
+    bookingNo: 'RM/89/24-25',
+    eventName: 'Panday Parivar Grand Wedding Reception',
+    eventType: 'Wedding / Reception',
+    hostName: 'PANDAY PARIVAR',
+    contactPerson: 'Shri Ramakant Panday',
+    contactMobile: '76763636645',
+    contactEmail: 'panday.parivar@gmail.com',
+    addressLine1: 'Civil Lines, Near Circuit House',
+    city: 'Etawah / Jabalpur',
+    state: 'M.P',
+    pincode: '206001',
+    venueId: 'marriage-garden-1',
+    venueName: 'MARRIAGE GARDEN1',
+    venueTariff: 50000,
+    venueGstPercent: 12,
+    linkedRoomNos: ['301', '302'],
+    linkedRoomsTariff: 0,
+    bookingDate: '20-07-2025',
+    eventDate: '30-07-2025',
+    checkInDate: '30-07-2025',
+    checkInTime: '06:26 AM',
+    checkOutDate: '31-07-2025',
+    checkOutTime: '06:26 AM',
+    guaranteedPax: 400,
+    actualPaxServed: 500,
+    seatingLayout: 'Open Lawn Reception',
+    perPlateMenuName: 'Royal Shahi Wedding Feast (Paneer Lababdar, Dal Makhani, Pulao, Gulab Jamun, Starters)',
+    perPlateRate: 475,
+    foodPaxCount: 500,
+    totalFoodAmount: 237500,
+    ancillaryServices: [
+      {
+        id: 'anc-1',
+        serviceName: 'DJ CHARGE',
+        rate: 10000,
+        taxPercent: 12,
+        amount: 10000
+      },
+      {
+        id: 'anc-2',
+        serviceName: 'DECORATION CHARGE',
+        rate: 15000,
+        taxPercent: 12,
+        amount: 15000
+      }
+    ],
+    kots: [
+      {
+        kotNo: 'KOT/419/24-25',
+        dateTime: '30-07-2025 07:30 PM',
+        serviceType: 'Banquet',
+        roomOrVenue: 'MARRIAGE GARDEN1',
+        items: [
+          { itemName: 'PER PLATE FOOD', qty: 450, rate: 475, amount: 213750, gstPercent: 12 },
+          { itemName: 'DJ CHARGE', qty: 1, rate: 10000, amount: 10000, gstPercent: 12 },
+          { itemName: 'DECORATION CHARGE', qty: 1, rate: 15000, amount: 15000, gstPercent: 12 }
+        ],
+        totalAmount: 238750
+      },
+      {
+        kotNo: 'KOT/420/24-25',
+        dateTime: '30-07-2025 10:15 PM',
+        serviceType: 'Banquet',
+        roomOrVenue: 'MARRIAGE GARDEN1',
+        items: [
+          { itemName: 'PER PLATE FOOD', qty: 50, rate: 475, amount: 23750, gstPercent: 12 }
+        ],
+        totalAmount: 23750
+      }
+    ],
+    financialSummary: {
+      venueRent: 50000,
+      venueGstAmount: 6000,
+      foodAndServicesTaxable: 262500,
+      foodAndServicesGstAmount: 31500,
+      foodAndServicesTotal: 294000,
+      grossBillAmount: 350000,
+      advancePaid: 15000,
+      midInstallmentsPaid: 0,
+      netPayable: 335000,
+      paidAtCheckout: 335000,
+      balanceRemaining: 0,
+      sacCode: '996311'
+    },
+    payments: [
+      {
+        id: 'pmt-adv-1',
+        date: '20-07-2025',
+        type: 'Booking Advance',
+        mode: 'Online',
+        amount: 15000,
+        referenceNo: 'UPI/98337291039',
+        remark: 'Initial booking token advance for Marriage Garden 1 + Rooms 301, 302'
+      },
+      {
+        id: 'pmt-co-1',
+        date: '31-07-2025',
+        type: 'Checkout Settlement',
+        mode: 'Online',
+        amount: 200000,
+        referenceNo: 'NEFT/SBI/923020035404769',
+        remark: 'RTGS / Online Transfer received from Panday Parivar'
+      },
+      {
+        id: 'pmt-co-2',
+        date: '31-07-2025',
+        type: 'Checkout Settlement',
+        mode: 'STATE BANK OF INDIA',
+        amount: 130000,
+        referenceNo: 'CHQ/492019',
+        remark: 'Direct account deposit into SBI Haridwar Branch'
+      },
+      {
+        id: 'pmt-co-3',
+        date: '31-07-2025',
+        type: 'Checkout Settlement',
+        mode: 'Cash',
+        amount: 5000,
+        remark: 'Cash settlement of remaining minor balance'
+      }
+    ],
+    billingMode: 'Consolidated (Settle To Room)',
+    status: 'Settled & Checked Out',
+    invoiceNo: 'GSR/258/24-25',
+    invoiceDate: '20-07-2025',
+    billingOfficer: 'DEMO0004',
+    bankDetails: {
+      bankName: 'STATE BANK OF INDIA',
+      accountNo: '923020035404769',
+      ifsc: 'SBIN000390',
+      branch: 'MAIN BRANCH HARIDWAR'
+    },
+    beoNotes: {
+      stageRequirements: '40x25 ft elevated wooden stage with floral backdrop in pastel peach & marigold',
+      mandapNotes: 'Vedic circular mandap with 4 pillars and havan kund ventilation exhaust',
+      buffetTimings: 'Dinner buffet active 07:30 PM to 12:30 AM with chaat live counter',
+      soundPermitNumber: 'ADM/SDM/SOUND/2025/4412 (Valid till 11:30 PM)',
+      specialMenuRequests: 'Jain counter with satvik paneer, pure ghee sweets, sugar-free desserts'
+    }
+  },
+  {
+    id: 'bq-236',
+    bookingNo: 'RM/92/24-25',
+    eventName: 'Sharma & Varma Sangeet & Cocktail Evening',
+    eventType: 'Sangeet / Mehendi',
+    hostName: 'SHARMA JI & FAMILY',
+    contactPerson: 'Er. Rajesh Sharma',
+    contactMobile: '9827011223',
+    city: 'Jabalpur',
+    state: 'M.P',
+    venueId: 'big-hall',
+    venueName: 'BIG HALL',
+    venueTariff: 15000,
+    venueGstPercent: 18,
+    linkedRoomNos: ['102'],
+    linkedRoomsTariff: 3000,
+    bookingDate: '22-07-2025',
+    eventDate: '05-08-2025',
+    checkInDate: '05-08-2025',
+    checkInTime: '05:00 PM',
+    checkOutDate: '06-08-2025',
+    checkOutTime: '01:00 AM',
+    guaranteedPax: 180,
+    actualPaxServed: 180,
+    seatingLayout: 'Round Table / Cluster',
+    perPlateMenuName: 'Premium Sangeet Buffet with Mocktails & Live Counters',
+    perPlateRate: 550,
+    foodPaxCount: 180,
+    totalFoodAmount: 99000,
+    ancillaryServices: [
+      { id: 'anc-3', serviceName: 'DJ CHARGE', rate: 10000, taxPercent: 12, amount: 10000 },
+      { id: 'anc-4', serviceName: 'PROJECTOR & LED WALL', rate: 8000, taxPercent: 18, amount: 8000 }
+    ],
+    kots: [
+      {
+        kotNo: 'KOT/431/24-25',
+        dateTime: '05-08-2025 06:00 PM',
+        serviceType: 'Banquet',
+        roomOrVenue: 'BIG HALL',
+        items: [
+          { itemName: 'PER PLATE FOOD', qty: 180, rate: 550, amount: 99000, gstPercent: 12 },
+          { itemName: 'DJ CHARGE', qty: 1, rate: 10000, amount: 10000, gstPercent: 12 },
+          { itemName: 'PROJECTOR & LED WALL', qty: 1, rate: 8000, amount: 8000, gstPercent: 18 }
+        ],
+        totalAmount: 117000
+      }
+    ],
+    financialSummary: {
+      venueRent: 15000,
+      venueGstAmount: 2700,
+      foodAndServicesTaxable: 117000,
+      foodAndServicesGstAmount: 14040,
+      foodAndServicesTotal: 131040,
+      grossBillAmount: 148740,
+      advancePaid: 30000,
+      midInstallmentsPaid: 0,
+      netPayable: 118740,
+      paidAtCheckout: 0,
+      balanceRemaining: 118740,
+      sacCode: '996311'
+    },
+    payments: [
+      {
+        id: 'pmt-sharma-1',
+        date: '22-07-2025',
+        type: 'Booking Advance',
+        mode: 'UPI',
+        amount: 30000,
+        referenceNo: 'UPI/77192003881',
+        remark: 'Booking advance token for Big Hall'
+      }
+    ],
+    billingMode: 'Consolidated (Settle To Room)',
+    status: 'CheckedIn / In-Progress',
+    bankDetails: {
+      bankName: 'STATE BANK OF INDIA',
+      accountNo: '923020035404769',
+      ifsc: 'SBIN000390',
+      branch: 'MAIN BRANCH HARIDWAR'
+    }
+  }
+];
+
 const STORAGE_KEYS = {
   ROOMS: 'svr_pms_rooms',
   ROOM_TYPES: 'svr_pms_room_types',
@@ -1990,7 +2357,9 @@ const STORAGE_KEYS = {
   BAR_INVOICES: 'svr_pms_bar_invoices',
   NO_DISCOUNT_CONFIG: 'svr_pms_no_discount_config',
   DISCOUNT_AUDIT_LOGS: 'svr_pms_discount_audit_logs',
-  HOTEL_ASSETS: 'svr_pms_hotel_assets'
+  HOTEL_ASSETS: 'svr_pms_hotel_assets',
+  BANQUET_VENUES: 'svr_pms_banquet_venues',
+  BANQUET_BOOKINGS: 'svr_pms_banquet_bookings'
 };
 
 export class PmsStore {
@@ -7718,6 +8087,202 @@ export class PmsStore {
     };
 
     this.saveStockTransfer(newTransfer);
+  }
+
+  // -------------------------------------------------------------
+  // Video 35: Banquet Hall Billing, Venues & Event Booking Methods
+  // -------------------------------------------------------------
+
+  static getBanquetVenues(): PmsBanquetVenue[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.BANQUET_VENUES);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.BANQUET_VENUES, JSON.stringify(INITIAL_BANQUET_VENUES));
+      return INITIAL_BANQUET_VENUES;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_BANQUET_VENUES;
+    }
+  }
+
+  static saveBanquetVenue(venue: PmsBanquetVenue): void {
+    const list = this.getBanquetVenues();
+    const idx = list.findIndex(v => v.id === venue.id);
+    if (idx >= 0) {
+      list[idx] = venue;
+    } else {
+      list.push(venue);
+    }
+    localStorage.setItem(STORAGE_KEYS.BANQUET_VENUES, JSON.stringify(list));
+
+    // Synchronize with room master
+    const rooms = this.getRooms();
+    const roomIdx = rooms.findIndex(r => r.id === venue.id || r.roomNo.toLowerCase() === venue.name.toLowerCase());
+    if (roomIdx >= 0) {
+      rooms[roomIdx].status = venue.status;
+      rooms[roomIdx].tariff = venue.baseTariff;
+      localStorage.setItem(STORAGE_KEYS.ROOMS, JSON.stringify(rooms));
+    }
+  }
+
+  static getBanquetBookings(): PmsBanquetBooking[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.BANQUET_BOOKINGS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.BANQUET_BOOKINGS, JSON.stringify(INITIAL_BANQUET_BOOKINGS));
+      return INITIAL_BANQUET_BOOKINGS;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_BANQUET_BOOKINGS;
+    }
+  }
+
+  static saveBanquetBooking(booking: PmsBanquetBooking): void {
+    const list = this.getBanquetBookings();
+    const idx = list.findIndex(b => b.id === booking.id || b.bookingNo === booking.bookingNo);
+    if (idx >= 0) {
+      list[idx] = booking;
+    } else {
+      list.unshift(booking);
+    }
+    localStorage.setItem(STORAGE_KEYS.BANQUET_BOOKINGS, JSON.stringify(list));
+
+    // Update venue status
+    const venues = this.getBanquetVenues();
+    const vIdx = venues.findIndex(v => v.id === booking.venueId || v.name === booking.venueName);
+    if (vIdx >= 0) {
+      if (booking.status === 'CheckedIn / In-Progress') {
+        venues[vIdx].status = 'occupied';
+      } else if (booking.status === 'Booked') {
+        venues[vIdx].status = 'booked';
+      } else if (booking.status === 'Settled & Checked Out') {
+        venues[vIdx].status = 'dirty';
+        venues[vIdx].cleaningStatus = 'Needs Sanitization / Cleaning';
+      }
+      localStorage.setItem(STORAGE_KEYS.BANQUET_VENUES, JSON.stringify(venues));
+    }
+  }
+
+  static addBanquetKot(bookingId: string, kot: PmsBanquetKot): void {
+    const bookings = this.getBanquetBookings();
+    const booking = bookings.find(b => b.id === bookingId || b.bookingNo === bookingId);
+    if (!booking) return;
+
+    booking.kots.push(kot);
+
+    // Recalculate financial summary
+    let additionalTaxable = 0;
+    let additionalGst = 0;
+    kot.items.forEach(itm => {
+      additionalTaxable += itm.amount;
+      additionalGst += (itm.amount * itm.gstPercent) / 100;
+    });
+
+    booking.financialSummary.foodAndServicesTaxable += additionalTaxable;
+    booking.financialSummary.foodAndServicesGstAmount += additionalGst;
+    booking.financialSummary.foodAndServicesTotal += (additionalTaxable + additionalGst);
+    booking.financialSummary.grossBillAmount += (additionalTaxable + additionalGst);
+    booking.financialSummary.netPayable += (additionalTaxable + additionalGst);
+    booking.financialSummary.balanceRemaining = Math.max(0, booking.financialSummary.netPayable - (booking.financialSummary.advancePaid + booking.financialSummary.midInstallmentsPaid + booking.financialSummary.paidAtCheckout));
+
+    this.saveBanquetBooking(booking);
+  }
+
+  static recordBanquetPayment(bookingId: string, payment: PmsBanquetBooking['payments'][0]): void {
+    const bookings = this.getBanquetBookings();
+    const booking = bookings.find(b => b.id === bookingId || b.bookingNo === bookingId);
+    if (!booking) return;
+
+    booking.payments.push(payment);
+    if (payment.type === 'Booking Advance') {
+      booking.financialSummary.advancePaid += payment.amount;
+    } else if (payment.type === 'Pre-Function Installment') {
+      booking.financialSummary.midInstallmentsPaid += payment.amount;
+    } else if (payment.type === 'Checkout Settlement') {
+      booking.financialSummary.paidAtCheckout += payment.amount;
+    }
+
+    const totalPaid = booking.financialSummary.advancePaid + booking.financialSummary.midInstallmentsPaid + booking.financialSummary.paidAtCheckout;
+    booking.financialSummary.balanceRemaining = Math.max(0, booking.financialSummary.grossBillAmount - totalPaid);
+
+    this.saveBanquetBooking(booking);
+  }
+
+  static settleBanquetCheckout(
+    bookingId: string,
+    settlementData: {
+      payments: Array<{ mode: any; amount: number; referenceNo?: string; remark?: string }>;
+      invoiceNo?: string;
+      billingOfficer?: string;
+    }
+  ): PmsBanquetBooking | null {
+    const bookings = this.getBanquetBookings();
+    const booking = bookings.find(b => b.id === bookingId || b.bookingNo === bookingId);
+    if (!booking) return null;
+
+    const today = new Date().toISOString().split('T')[0].split('-').reverse().join('-');
+    const invoiceNum = settlementData.invoiceNo || `GSR/${Math.floor(250 + Math.random() * 50)}/24-25`;
+
+    settlementData.payments.forEach((p, idx) => {
+      booking.payments.push({
+        id: `pmt-co-${Date.now()}-${idx}`,
+        date: today,
+        type: 'Checkout Settlement',
+        mode: p.mode,
+        amount: p.amount,
+        referenceNo: p.referenceNo,
+        remark: p.remark || 'Checkout bill settlement'
+      });
+      booking.financialSummary.paidAtCheckout += p.amount;
+    });
+
+    booking.status = 'Settled & Checked Out';
+    booking.invoiceNo = invoiceNum;
+    booking.invoiceDate = today;
+    booking.billingOfficer = settlementData.billingOfficer || 'DEMO0004';
+    booking.financialSummary.balanceRemaining = 0;
+
+    this.saveBanquetBooking(booking);
+
+    // Mark venue dirty
+    const venues = this.getBanquetVenues();
+    const vIdx = venues.findIndex(v => v.id === booking.venueId || v.name === booking.venueName);
+    if (vIdx >= 0) {
+      venues[vIdx].status = 'dirty';
+      venues[vIdx].cleaningStatus = 'Needs Sanitization / Cleaning';
+      localStorage.setItem(STORAGE_KEYS.BANQUET_VENUES, JSON.stringify(venues));
+    }
+
+    // Also mark linked rooms dirty in rooms list
+    const rooms = this.getRooms();
+    rooms.forEach(r => {
+      if (booking.linkedRoomNos.includes(r.roomNo) || r.roomNo.toLowerCase() === booking.venueName.toLowerCase()) {
+        r.status = 'dirty';
+      }
+    });
+    localStorage.setItem(STORAGE_KEYS.ROOMS, JSON.stringify(rooms));
+
+    return booking;
+  }
+
+  static sanitizeBanquetVenue(venueId: string): void {
+    const venues = this.getBanquetVenues();
+    const vIdx = venues.findIndex(v => v.id === venueId);
+    if (vIdx >= 0) {
+      venues[vIdx].status = 'vacant';
+      venues[vIdx].cleaningStatus = 'Ready';
+      localStorage.setItem(STORAGE_KEYS.BANQUET_VENUES, JSON.stringify(venues));
+    }
+
+    // Synchronize rooms
+    const rooms = this.getRooms();
+    const rIdx = rooms.findIndex(r => r.id === venueId);
+    if (rIdx >= 0) {
+      rooms[rIdx].status = 'vacant';
+      localStorage.setItem(STORAGE_KEYS.ROOMS, JSON.stringify(rooms));
+    }
   }
 }
 

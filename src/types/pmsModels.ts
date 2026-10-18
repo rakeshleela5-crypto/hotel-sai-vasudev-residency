@@ -8,7 +8,7 @@ export type RoomStatus = 'vacant' | 'booked' | 'occupied' | 'dirty';
 export interface PmsRoom {
   id: string;
   roomNo: string;
-  roomType: 'DELUXE' | 'SUITE ROOM' | 'LUXURY ROOM' | 'STANDARD' | 'DORMITORY' | 'HALL';
+  roomType: 'DELUXE' | 'SUITE ROOM' | 'LUXURY ROOM' | 'STANDARD' | 'DORMITORY' | 'HALL' | 'MARRIAGE GARDEN';
   tariff: number;
   status: RoomStatus;
   floor: number;
@@ -1467,6 +1467,127 @@ export interface PmsHotelAssetLinenRecord {
   missingDiscrepancy: number;
   unitCost: number;
   lastAuditDate: string;
+}
+
+// -------------------------------------------------------------
+// Video 35: Banquet Hall Billing, Event & Party Hall Invoice Models
+// -------------------------------------------------------------
+
+export interface PmsBanquetVenue {
+  id: string;
+  name: string; // e.g. 'MARRIAGE GARDEN1', 'MARRIAGE GARDEN2', 'BIG HALL', 'MINI HALL', 'GARDEN'
+  type: 'Marriage Garden' | 'Banquet Hall' | 'Party Lawn' | 'Conference Hall' | 'Poolside Lawn';
+  baseTariff: number; // e.g. 50000
+  gstPercent: number; // e.g. 12 or 18
+  capacityPaxMin: number;
+  capacityPaxMax: number;
+  sqFtArea: number;
+  floor: number | string;
+  amenities: string[];
+  images: string[];
+  status: RoomStatus; // 'vacant' | 'booked' | 'occupied' | 'dirty'
+  cleaningStatus: 'Ready' | 'Needs Sanitization / Cleaning' | 'Maintenance Underway';
+  sacCode: string; // e.g. '996311' (Mandatory GST SAC code for room/hall hire)
+}
+
+export interface PmsBanquetAncillaryService {
+  id: string;
+  serviceName: string; // 'DJ CHARGE', 'DECORATION CHARGE', 'FLOWER SETUP', 'PROJECTOR LED WALL', 'GENERATOR POWER'
+  rate: number;
+  taxPercent: number;
+  amount: number;
+}
+
+export interface PmsBanquetKot {
+  kotNo: string; // e.g. 'KOT/419/24-25'
+  dateTime: string;
+  serviceType: 'Banquet' | 'Room';
+  roomOrVenue: string;
+  items: Array<{
+    itemName: string;
+    qty: number;
+    rate: number;
+    amount: number;
+    gstPercent: number;
+  }>;
+  totalAmount: number;
+}
+
+export interface PmsBanquetBooking {
+  id: string;
+  bookingNo: string; // e.g. 'RM/89/24-25' or 'BQ/89/24-25'
+  eventName: string; // e.g. 'Panday Parivar Wedding Reception'
+  eventType: 'Wedding / Reception' | 'Sangeet / Mehendi' | 'Birthday Party' | 'Anniversary' | 'Corporate Seminar' | 'Kitty Party' | 'Exhibition';
+  hostName: string; // e.g. 'PANDAY PARIVAR'
+  contactPerson: string;
+  contactMobile: string; // e.g. '76763636645'
+  contactEmail?: string;
+  addressLine1?: string;
+  city?: string;
+  state?: string; // e.g. 'M.P'
+  pincode?: string;
+  venueId: string;
+  venueName: string; // e.g. 'MARRIAGE GARDEN1'
+  venueTariff: number; // e.g. 50000
+  venueGstPercent: number; // e.g. 12%
+  linkedRoomNos: string[]; // e.g. ['301', '302'] (Suite/Deluxe rooms for bride/groom family)
+  linkedRoomsTariff: number; // e.g. 0 (complimentary) or 2000
+  bookingDate: string; // e.g. '20-07-2025'
+  eventDate: string; // e.g. '30-07-2025'
+  checkInDate: string; // e.g. '30-07-2025'
+  checkInTime: string; // e.g. '06:26 AM'
+  checkOutDate: string; // e.g. '31-07-2025'
+  checkOutTime: string; // e.g. '06:26 AM'
+  guaranteedPax: number; // e.g. 400
+  actualPaxServed?: number; // e.g. 500
+  seatingLayout: 'Round Table / Cluster' | 'Theatre Style' | 'Classroom' | 'U-Shape' | 'Open Lawn Reception';
+  perPlateMenuName: string; // e.g. 'Royal Wedding Buffet'
+  perPlateRate: number; // e.g. 475
+  foodPaxCount: number; // e.g. 500
+  totalFoodAmount: number; // e.g. 237500
+  ancillaryServices: PmsBanquetAncillaryService[];
+  kots: PmsBanquetKot[];
+  financialSummary: {
+    venueRent: number; // 50000
+    venueGstAmount: number; // 6000
+    foodAndServicesTaxable: number; // 262500 (Food 237500 + DJ 10000 + Decor 15000)
+    foodAndServicesGstAmount: number; // 31500 (12%)
+    foodAndServicesTotal: number; // 294000
+    grossBillAmount: number; // 350000 (50000 rent + 6000 gst + 294000 food/services)
+    advancePaid: number; // 15000
+    midInstallmentsPaid: number; // 0
+    netPayable: number; // 335000
+    paidAtCheckout: number;
+    balanceRemaining: number;
+    sacCode: string; // '996311'
+  };
+  payments: Array<{
+    id: string;
+    date: string;
+    type: 'Booking Advance' | 'Pre-Function Installment' | 'Checkout Settlement';
+    mode: 'Cash' | 'Online' | 'STATE BANK OF INDIA' | 'UPI' | 'Card' | 'Bank Transfer';
+    amount: number;
+    referenceNo?: string;
+    remark?: string;
+  }>;
+  billingMode: 'Consolidated (Settle To Room)' | 'Split Billing (Food Separate / Hall Separate)';
+  status: 'Booked' | 'CheckedIn / In-Progress' | 'Settled & Checked Out' | 'Cancelled';
+  invoiceNo?: string; // e.g. 'GSR/258/24-25'
+  invoiceDate?: string;
+  billingOfficer?: string; // e.g. 'DEMO0004'
+  bankDetails?: {
+    bankName: string;
+    accountNo: string;
+    ifsc: string;
+    branch: string;
+  };
+  beoNotes?: {
+    stageRequirements?: string;
+    mandapNotes?: string;
+    buffetTimings?: string;
+    soundPermitNumber?: string;
+    specialMenuRequests?: string;
+  };
 }
 
 

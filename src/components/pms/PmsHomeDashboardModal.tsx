@@ -45,6 +45,7 @@ import { HelpAndSupportModal } from './HelpAndSupportModal';
 import { AgentCommissionModal } from './AgentCommissionModal';
 import { LiquorBarManagementModal } from './LiquorBarManagementModal';
 import { NoDiscountMasterModal } from './NoDiscountMasterModal';
+import { BanquetHallBillingModal } from './BanquetHallBillingModal';
 import type { PmsBooking, BillFormatType, PmsCheckOutDetail, PmsGstReportTab } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
@@ -144,12 +145,21 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   // Video 33: No-Discount Item & Margin Protection (Frames 0080-0202)
   const [isNoDiscountOpen, setIsNoDiscountOpen] = useState(false);
 
+  // Video 35: Banquet Hall Billing & Event/Party Hall Invoice Demo
+  const [isBanquetOpen, setIsBanquetOpen] = useState(false);
+
   const handleLaunchReportAction = (actionKey: string) => {
     switch (actionKey) {
       case 'no_discount':
       case 'margin_protection':
       case 'discount_rules':
         setIsNoDiscountOpen(true);
+        break;
+      case 'banquet_billing':
+      case 'banquet_hall':
+      case 'marriage_garden':
+      case 'party_lawn':
+        setIsBanquetOpen(true);
         break;
       case 'liquor_bar':
       case 'bar_pos':
@@ -414,6 +424,12 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
       case 'no_discount':
       case 'margin_protection':
         setIsNoDiscountOpen(true);
+        break;
+      case 'banquet_billing':
+      case 'banquet_hall':
+      case 'marriage_garden':
+      case 'party_lawn':
+        setIsBanquetOpen(true);
         break;
       case 'gst_report':
         setGstReportTab('consolidated');
@@ -1029,6 +1045,29 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           <span className="tile-icon">📊</span>
           <span>Stock Report Master</span>
         </button>
+
+        {/* Video 35: Banquet Hall Billing & Event/Party Hall Invoice Demo */}
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => setIsBanquetOpen(true)}
+          style={{ background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', color: '#fff', fontWeight: 800 }}
+          title="Video 35: Banquet Hall Billing, Marriage Garden Booking & Event Tax Invoice Demo (/roombookings/create)"
+        >
+          <span className="tile-icon">🏰</span>
+          <span>Banquet Billing</span>
+        </button>
+
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => setIsBanquetOpen(true)}
+          style={{ background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)', color: '#fff', fontWeight: 800 }}
+          title="Video 35: Banquet Tax Invoices, Frame 0700 GST Breakdown & BEO Schedules"
+        >
+          <span className="tile-icon">🧾</span>
+          <span>Event Invoices</span>
+        </button>
       </div>
 
       {/* Overview & Unprinted KOTs Notification Section matching Video 14 Frames 0145, 0230, 0255 */}
@@ -1598,6 +1637,12 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         isOpen={isNoDiscountOpen}
         onClose={() => setIsNoDiscountOpen(false)}
         onOpenFoodBill={() => setIsFoodBillOpen(true)}
+      />
+
+      {/* Video 35: Banquet Hall Billing, Marriage Garden & Event Invoice Demo */}
+      <BanquetHallBillingModal
+        isOpen={isBanquetOpen}
+        onClose={() => setIsBanquetOpen(false)}
       />
     </div>
   );
