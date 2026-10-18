@@ -86,6 +86,10 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   const [isWhatsAppSettingOpen, setIsWhatsAppSettingOpen] = useState(false);
   const [isWhatsAppLogsOpen, setIsWhatsAppLogsOpen] = useState(false);
 
+  // Video 23: Real-Time Active Staff & Role Boundary Controls
+  const [currentUser, setCurrentUser] = useState(PmsStore.getCurrentUser());
+  const [boundaryToast, setBoundaryToast] = useState<string | null>(null);
+
   const rooms = PmsStore.getRooms();
   const vacantCount = rooms.filter(r => r.status === 'vacant').length;
   const occupiedCount = rooms.filter(r => r.status === 'occupied').length;
@@ -93,6 +97,23 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   const unprintedRoomKots = PmsStore.getUnprintedRoomKots();
   const unprintedRestaurantKots = PmsStore.getUnprintedRestaurantKots();
   const unconfirmedBookings = PmsStore.getUnconfirmedBookings();
+
+  useEffect(() => {
+    const handleUserChanged = () => {
+      setCurrentUser(PmsStore.getCurrentUser());
+    };
+    window.addEventListener('pms_user_changed', handleUserChanged);
+    return () => window.removeEventListener('pms_user_changed', handleUserChanged);
+  }, []);
+
+  const guardAction = (permissionKey: string, moduleName: string, action: () => void) => {
+    if (PmsStore.hasPermission(permissionKey)) {
+      action();
+    } else {
+      setBoundaryToast(`⛔ Access Denied (Video 23 Anti-Theft Boundary): Active staff "${currentUser.userName}" (${currentUser.roleName}) is restricted from [${moduleName}]. Contact Super-Admin.`);
+      setTimeout(() => setBoundaryToast(null), 5000);
+    }
+  };
 
   useEffect(() => {
     const updateClock = () => {
@@ -150,13 +171,42 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         </div>
       </div>
 
+      {/* Video 23: Staff Boundary Alert Banner */}
+      {boundaryToast && (
+        <div
+          style={{
+            background: '#dc2626',
+            color: '#ffffff',
+            padding: '8px 16px',
+            borderRadius: 4,
+            marginBottom: 12,
+            fontSize: 12,
+            fontWeight: 700,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.25)',
+            animation: 'slideDown 0.25s ease-out'
+          }}
+        >
+          <span>{boundaryToast}</span>
+          <button
+            type="button"
+            onClick={() => setBoundaryToast(null)}
+            style={{ background: 'none', border: 'none', color: '#fff', fontSize: 14, cursor: 'pointer', fontWeight: 800, padding: '0 4px' }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* 16 Quick Module Action Tiles matching Frame 0100 */}
       <div className="home-tiles-grid">
         {/* Row 1 */}
         <button
           type="button"
           className="hub-tile-btn tile-room-dash"
-          onClick={onOpenRoomMatrix}
+          onClick={() => guardAction('Hotel Module', 'Room Dashboard', onOpenRoomMatrix)}
         >
           <span className="tile-icon">🏠</span>
           <span>Room Dashboard</span>
@@ -165,7 +215,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-room-booking"
-          onClick={() => setIsBookingOpen(true)}
+          onClick={() => guardAction('roombooking', 'Room Booking', () => setIsBookingOpen(true))}
         >
           <span className="tile-icon">📅</span>
           <span>Room Booking</span>
@@ -174,7 +224,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-check-in"
-          onClick={() => setIsCheckInOpen(true)}
+          onClick={() => guardAction('roomcheckin', 'Room Check In', () => setIsCheckInOpen(true))}
         >
           <span className="tile-icon">🚪➡️</span>
           <span>Room Check In</span>
@@ -184,10 +234,12 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           type="button"
           className="hub-tile-btn tile-checkout"
           onClick={() => {
-            const firstOccupied = rooms.find(r => r.status === 'occupied') || rooms[0];
-            if (firstOccupied) {
-              setIsCheckoutOpen(true);
-            }
+            guardAction('roomcheckout', 'Room Checkout', () => {
+              const firstOccupied = rooms.find(r => r.status === 'occupied') || rooms[0];
+              if (firstOccupied) {
+                setIsCheckoutOpen(true);
+              }
+            });
           }}
         >
           <span className="tile-icon">🚪⬅️</span>
@@ -198,7 +250,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-new-kot"
-          onClick={() => setIsKotOpen(true)}
+          onClick={() => guardAction('kot', 'New Kot Entry', () => setIsKotOpen(true))}
         >
           <span className="tile-icon">🍴</span>
           <span>New Kot</span>
@@ -207,7 +259,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-new-food-bill"
-          onClick={() => setIsFoodBillOpen(true)}
+          onClick={() => guardAction('foodbills', 'New Food Bill', () => setIsFoodBillOpen(true))}
         >
           <span className="tile-icon">🧾</span>
           <span>New Food Bill</span>
@@ -216,7 +268,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-advance-receipt"
-          onClick={() => setIsAdvanceReceiptOpen(true)}
+          onClick={() => guardAction('advance_reciept', 'Room Advance Receipt', () => setIsAdvanceReceiptOpen(true))}
         >
           <span className="tile-icon">💵</span>
           <span>Room Advance Receipt</span>
@@ -225,7 +277,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-receipt"
-          onClick={() => setIsReceiptRegisterOpen(true)}
+          onClick={() => guardAction('receipt', 'Receipt Register', () => setIsReceiptRegisterOpen(true))}
         >
           <span className="tile-icon">📄</span>
           <span>Receipt</span>
@@ -235,7 +287,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-payment"
-          onClick={() => setIsPaymentRegisterOpen(true)}
+          onClick={() => guardAction('payment', 'Payment Register', () => setIsPaymentRegisterOpen(true))}
         >
           <span className="tile-icon">💳</span>
           <span>Payment</span>
@@ -244,7 +296,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-ledger"
-          onClick={() => setIsLedgerOpen(true)}
+          onClick={() => guardAction('ledger', 'Party & Guest Ledger', () => setIsLedgerOpen(true))}
         >
           <span className="tile-icon">📑</span>
           <span>Ledger</span>
@@ -253,7 +305,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-restaurant"
-          onClick={() => setIsTableDashboardOpen(true)}
+          onClick={() => guardAction('Restaurant Module', 'Restaurant Table Matrix', () => setIsTableDashboardOpen(true))}
         >
           <span className="tile-icon">🏬</span>
           <span>Restaurant</span>
@@ -262,7 +314,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-purchase"
-          onClick={() => setIsPurchaseOpen(true)}
+          onClick={() => guardAction('purchase', 'Purchase Inward', () => setIsPurchaseOpen(true))}
           title="Video 19: Purchase Inward to Godown (/purchases/create)"
         >
           <span className="tile-icon">🛒</span>
@@ -274,8 +326,10 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           type="button"
           className="hub-tile-btn tile-stock-transfer"
           onClick={() => {
-            setStockTransferMode('transfer');
-            setIsStockTransferOpen(true);
+            guardAction('Stock_Transfer', 'Stock Transfer', () => {
+              setStockTransferMode('transfer');
+              setIsStockTransferOpen(true);
+            });
           }}
           title="Video 19: Stock Transfer (Main Store -> Kitchen)"
         >
@@ -287,8 +341,10 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           type="button"
           className="hub-tile-btn tile-stock-issue"
           onClick={() => {
-            setStockTransferMode('issue');
-            setIsStockTransferOpen(true);
+            guardAction('Stock_Transfer', 'Stock Issue', () => {
+              setStockTransferMode('issue');
+              setIsStockTransferOpen(true);
+            });
           }}
           title="Video 19: Stock Issue & Consumption (Kitchen -> Consume)"
         >
@@ -299,7 +355,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-report"
-          onClick={() => setIsStoreWiseStockOpen(true)}
+          onClick={() => guardAction('Store Wise Stock', 'Store Wise Stock Report', () => setIsStoreWiseStockOpen(true))}
           title="Video 19: Store Wise Stock Report (/store_wise_stock)"
         >
           <span className="tile-icon">📈</span>
@@ -309,7 +365,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-room-dash"
-          onClick={onOpenRoomMatrix}
+          onClick={() => guardAction('Hotel Module', 'All 24 Rooms', onOpenRoomMatrix)}
         >
           <span className="tile-icon">🏢</span>
           <span>All 24 Rooms</span>
@@ -330,7 +386,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn"
-          onClick={() => setIsUnconfirmedBookingsOpen(true)}
+          onClick={() => guardAction('Unconfirmed Bookings', 'Unconfirmed Bookings', () => setIsUnconfirmedBookingsOpen(true))}
           style={{ background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)', color: '#fff' }}
           title="Video 20: Unconfirmed Booking Register (/pending_booking)"
         >
@@ -338,12 +394,12 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           <span>Pending ({unconfirmedBookings.length})</span>
         </button>
 
-        {/* Video 21: Multi-User, Roles & Permissions, Multi-Location & Mobile Tiles */}
+        {/* Video 21 & 23: Multi-User, Roles & Permissions, Multi-Location & Mobile Tiles */}
         <button
           type="button"
           className="hub-tile-btn tile-users"
-          onClick={() => setIsUserManagementOpen(true)}
-          title="Video 21: Multi-User Account Management (/userprofile)"
+          onClick={() => guardAction('view user', 'User Accounts & Staff Shift Roster', () => setIsUserManagementOpen(true))}
+          title="Video 21 & 23: Staff Accounts & Duty Roster (/users)"
         >
           <span className="tile-icon">👥</span>
           <span>User Accounts</span>
@@ -352,8 +408,8 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-roles"
-          onClick={() => setIsRolesPermissionsOpen(true)}
-          title="Video 21: Roles & 66 Granular Permissions Matrix (/roles)"
+          onClick={() => guardAction('view role', 'Roles & Permissions Matrix', () => setIsRolesPermissionsOpen(true))}
+          title="Video 21 & 23: Roles & 72 Granular Permissions Matrix (/roles)"
         >
           <span className="tile-icon">🛡️</span>
           <span>Roles &amp; Rights</span>
@@ -362,7 +418,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn tile-properties"
-          onClick={() => setIsChainPropertyOpen(true)}
+          onClick={() => guardAction('Setting', 'Chain Branches', () => setIsChainPropertyOpen(true))}
           title="Video 21: Multi-Location Chain Hotels Switcher (/multilocation)"
         >
           <span className="tile-icon">🏨</span>

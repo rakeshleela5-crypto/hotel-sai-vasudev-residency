@@ -124,10 +124,40 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<PmsUserAccount>(PmsStore.getCurrentUser());
   const [currentProperty, setCurrentProperty] = useState<PmsChainProperty>(PmsStore.getCurrentProperty());
+  const [allStaffUsers, setAllStaffUsers] = useState<PmsUserAccount[]>(PmsStore.getUsers());
+  const [securityBanner, setSecurityBanner] = useState<string | null>(null);
 
   // Video 22: Auto WhatsApp SMS Integration & Message Outbox
   const [isWhatsAppSettingOpen, setIsWhatsAppSettingOpen] = useState(false);
   const [isWhatsAppLogsOpen, setIsWhatsAppLogsOpen] = useState(false);
+
+  // Video 23: Real-Time Active Staff & Role Boundary Listener
+  React.useEffect(() => {
+    const handleUserChanged = () => {
+      const u = PmsStore.getCurrentUser();
+      setCurrentUser(u);
+      setAllStaffUsers(PmsStore.getUsers());
+    };
+    window.addEventListener('pms_user_changed', handleUserChanged);
+    return () => window.removeEventListener('pms_user_changed', handleUserChanged);
+  }, []);
+
+  const handleQuickSwitchUser = (user: PmsUserAccount) => {
+    PmsStore.setCurrentUser(user);
+    setCurrentUser(user);
+    setUserDropdownOpen(false);
+    setSecurityBanner(`⚡ Switched Active Staff to "${user.userName}" (${user.roleName}) &bull; ${user.department || 'Front Office'}. System boundaries & anti-theft guards active!`);
+    setTimeout(() => setSecurityBanner(null), 4500);
+  };
+
+  const checkModuleAccess = (permissionKey: string, moduleName: string, onAllowed: () => void) => {
+    if (PmsStore.hasPermission(permissionKey)) {
+      onAllowed();
+    } else {
+      setSecurityBanner(`⛔ ACCESS DENIED (Video 23 Anti-Theft Boundary): Your active staff account "${currentUser.userName}" (${currentUser.roleName}) is restricted from accessing [${moduleName}]. Contact Super-Admin to update permissions in Roles & Rights (/roles).`);
+      setTimeout(() => setSecurityBanner(null), 6000);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -314,33 +344,86 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                       background: '#1e293b',
                       border: '1px solid #334155',
                       borderRadius: 6,
-                      boxShadow: '0 10px 15px -3px rgba(0,0,0,0.5)',
-                      width: 230,
+                      boxShadow: '0 10px 25px -3px rgba(0,0,0,0.6)',
+                      width: 280,
                       zIndex: 1000,
                       overflow: 'hidden',
                       fontSize: 12
                     }}
                   >
                     <div style={{ padding: '8px 12px', borderBottom: '1px solid #334155', background: '#0f172a' }}>
-                      <div style={{ fontWeight: 700, color: '#f8fafc' }}>{currentUser.userName}</div>
-                      <div style={{ fontSize: 11, color: '#38bdf8' }}>Role: {currentUser.roleName}</div>
+                      <div style={{ fontWeight: 800, color: '#f8fafc', fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>{currentUser.userName}</span>
+                        <span style={{ fontSize: 10, background: '#2563eb', color: '#fff', padding: '1px 6px', borderRadius: 10, fontWeight: 700 }}>
+                          {currentUser.roleName}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 11, color: '#38bdf8', marginTop: 2 }}>Dept: {currentUser.department || 'Front Office'}</div>
                       <div style={{ fontSize: 10, color: '#94a3b8' }}>Branch: {currentProperty.firmId} - {currentProperty.firmName}</div>
                     </div>
+
+                    {/* Video 23: Quick Role & Staff Switcher */}
+                    <div style={{ padding: '6px 10px', background: '#111827', borderBottom: '1px solid #334155' }}>
+                      <div style={{ fontSize: 10, fontWeight: 800, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>
+                        ⚡ Quick Switch Staff (Video 23)
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 3, maxHeight: 160, overflowY: 'auto' }}>
+                        {allStaffUsers.slice(0, 8).map(u => {
+                          const isActive = u.id === currentUser.id || u.userName === currentUser.userName;
+                          return (
+                            <button
+                              key={u.id}
+                              type="button"
+                              onClick={() => handleQuickSwitchUser(u)}
+                              style={{
+                                background: isActive ? 'linear-gradient(90deg, #1d4ed8 0%, #1e40af 100%)' : '#1e293b',
+                                color: isActive ? '#ffffff' : '#cbd5e1',
+                                border: isActive ? '1px solid #60a5fa' : '1px solid #334155',
+                                borderRadius: 4,
+                                padding: '4px 8px',
+                                fontSize: 11,
+                                textAlign: 'left',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center'
+                              }}
+                              title={`Switch active login to ${u.userName} (${u.roleName})`}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <span>{isActive ? '●' : '○'}</span>
+                                <span style={{ fontWeight: 700 }}>{u.userName}</span>
+                              </div>
+                              <span style={{
+                                fontSize: 9,
+                                background: isActive ? '#3b82f6' : '#334155',
+                                padding: '1px 5px',
+                                borderRadius: 3,
+                                color: isActive ? '#fff' : '#94a3b8'
+                              }}>
+                                {u.roleName}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
                     <div
                       onClick={() => { setUserDropdownOpen(false); setIsUserManagementOpen(true); }}
                       style={{ padding: '8px 12px', color: '#e2e8f0', cursor: 'pointer', borderBottom: '1px solid #334155' }}
                       onMouseEnter={e => (e.currentTarget.style.background = '#334155')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                     >
-                      👥 User Accounts (/userprofile)
+                      👥 User Accounts &amp; Staff Shift Roster (/users)
                     </div>
                     <div
                       onClick={() => { setUserDropdownOpen(false); setIsRolesPermissionsOpen(true); }}
-                      style={{ padding: '8px 12px', color: '#e2e8f0', cursor: 'pointer', borderBottom: '1px solid #334155' }}
+                      style={{ padding: '8px 12px', color: '#fbbf24', cursor: 'pointer', borderBottom: '1px solid #334155' }}
                       onMouseEnter={e => (e.currentTarget.style.background = '#334155')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                     >
-                      🛡️ Roles &amp; Permissions (/roles)
+                      🛡️ Roles &amp; Permissions Matrix (72 Permissions)
                     </div>
                     <div
                       onClick={() => { setUserDropdownOpen(false); setIsWhatsAppSettingOpen(true); }}
@@ -388,6 +471,44 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
             </div>
           </header>
 
+          {/* Video 23: Dynamic Permission & Boundary Banner */}
+          {securityBanner && (
+            <div
+              style={{
+                background: securityBanner.startsWith('⛔') ? '#dc2626' : '#059669',
+                color: '#ffffff',
+                padding: '7px 16px',
+                fontSize: 12,
+                fontWeight: 700,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.3)',
+                animation: 'slideDown 0.25s ease-out',
+                zIndex: 900
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span>{securityBanner}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSecurityBanner(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#ffffff',
+                  fontSize: 14,
+                  cursor: 'pointer',
+                  fontWeight: 800,
+                  padding: '0 4px'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
           {/* Master PMS Body Layout */}
           <div className="pms-body">
             {/* Left Dark Sidebar matching Frames 0005, 0020, 0065, 0090 */}
@@ -395,7 +516,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               <aside className="pms-sidebar">
                 <div
                   className={`pms-nav-item ${activeTab === 'matrix' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('matrix')}
+                  onClick={() => checkModuleAccess('Hotel Module', 'Room Dashboard', () => setActiveTab('matrix'))}
                 >
                   <div className="pms-nav-item-left">
                     <span>🏢</span>
@@ -495,58 +616,58 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     <div className="pms-nav-item" onClick={() => setIsOnlineGuestBookingOpen(true)}>
                       <span style={{ color: '#38bdf8', fontWeight: 700 }}>🌐 Online Guest Booking Portal (/hotel_room)</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => setActiveTab('matrix')}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Hotel Module', 'Room Booking', () => setActiveTab('matrix'))}>
                       <span>🏨 Room Booking</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => setIsCheckInRegisterOpen(true)}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Check-in Register', 'Room Check In Register', () => setIsCheckInRegisterOpen(true))}>
                       <span style={{ color: '#38bdf8', fontWeight: 700 }}>📋 Room Check In Register</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => setIsNewCheckInOpen(true)}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('roomcheckin', 'New Check In', () => setIsNewCheckInOpen(true))}>
                       <span>🚪 New Check In</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => { setSelectedRoomForShift(undefined); setIsRoomShiftOpen(true); }}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Hotel Module', 'Room Shifting', () => { setSelectedRoomForShift(undefined); setIsRoomShiftOpen(true); })}>
                       <span style={{ color: '#06b6d4', fontWeight: 800 }}>🔄 Room Shifting (Video 11)</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => setIsKotModalOpen(true)}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('kot', 'Room Service KOT Entry', () => setIsKotModalOpen(true))}>
                       <span style={{ color: '#f59e0b', fontWeight: 700 }}>🍴 Room Service (KOT Entry)</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => setIsRoomKotRegisterOpen(true)}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Kot Register', 'Room KOT Register', () => setIsRoomKotRegisterOpen(true))}>
                       <span style={{ color: '#22c55e', fontWeight: 800 }}>📋 Room KOT Register (Video 14)</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => setIsKitchenDashboardOpen(true)}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Kitchen Dash Board', 'Kitchen Dashboard (KDS)', () => setIsKitchenDashboardOpen(true))}>
                       <span style={{ color: '#eab308', fontWeight: 800 }}>🍳 Kitchen Dashboard (KDS - Video 12)</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => setIsRestaurantKotOpen(true)}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Restaurant Module', 'Restaurant KOT Register', () => setIsRestaurantKotOpen(true))}>
                       <span style={{ color: '#10b981', fontWeight: 700 }}>🍽️ Restaurant KOT Register</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => setIsTableDashboardOpen(true)}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Restaurant Module', 'Restaurant Table Matrix', () => setIsTableDashboardOpen(true))}>
                       <span style={{ color: '#84cc16', fontWeight: 800 }}>🏬 Restaurant Table Matrix (Video 13)</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => setIsShiftTableOpen(true)}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Restaurant Module', 'Shift Table', () => setIsShiftTableOpen(true))}>
                       <span style={{ color: '#f43f5e', fontWeight: 700 }}>🔁 Shift Table (Video 13)</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => setIsNcKotRegisterOpen(true)}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Restaurant Module', 'NC KOT Register', () => setIsNcKotRegisterOpen(true))}>
                       <span style={{ color: '#ec4899', fontWeight: 800 }}>🍽️ NC KOT Register (Video 13)</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => setIsFoodBillModalOpen(true)}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('foodbills', 'Food Bill (FBB)', () => setIsFoodBillModalOpen(true))}>
                       <span style={{ color: '#38bdf8', fontWeight: 700 }}>🧾 Food Bill (FBB)</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => setIsAdvanceReceiptOpen(true)}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('advance_reciept', 'Room Advance Receipt', () => setIsAdvanceReceiptOpen(true))}>
                       <span style={{ color: '#34d399', fontWeight: 700 }}>💵 Room Advance Receipt</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => setIsReceiptRegisterOpen(true)}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('receipt', 'Receipt Register', () => setIsReceiptRegisterOpen(true))}>
                       <span style={{ color: '#60a5fa', fontWeight: 700 }}>📄 Receipt Register (Video 15)</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => setIsPaymentRegisterOpen(true)}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('payment', 'Payment Register', () => setIsPaymentRegisterOpen(true))}>
                       <span style={{ color: '#06b6d4', fontWeight: 700 }}>💳 Payment Register (Video 16)</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => setIsPurchaseOpen(true)}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('purchase', 'Purchase Entry', () => setIsPurchaseOpen(true))}>
                       <span style={{ color: '#ec4899', fontWeight: 700 }}>🛒 Purchase Entry (Video 19)</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => { setStockTransferMode('transfer'); setIsStockTransferOpen(true); }}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Stock_Transfer', 'Stock Transfer & Issue', () => { setStockTransferMode('transfer'); setIsStockTransferOpen(true); })}>
                       <span style={{ color: '#a855f7', fontWeight: 700 }}>🔁 Stock Transfer &amp; Issue (Video 19)</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => setActiveTab('matrix')}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('roomcheckout', 'Room Check Out', () => setActiveTab('matrix'))}>
                       <span>🧾 Room Check Out</span>
                     </div>
                   </div>
@@ -622,30 +743,30 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
 
                 {settingMenuOpen && (
                   <div style={{ background: '#1a1e22', paddingLeft: 12, fontSize: 12 }}>
-                    <div className="pms-nav-item" onClick={() => setIsCompanyInfoOpen(true)}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Setting', 'Company Info', () => setIsCompanyInfoOpen(true))}>
                       <span style={{ color: '#4ade80', fontWeight: 700 }}>🏢 Company Info (/company_info_form)</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => setIsBusinessSettingOpen(true)}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Setting', 'Business Setting', () => setIsBusinessSettingOpen(true))}>
                       <span style={{ color: '#38bdf8', fontWeight: 700 }}>⚙️ Business Setting (/businesssettings/create)</span>
                     </div>
-                    {/* Video 21: Multi-User, Roles & Permissions, Multi-Location Items (Frame 0125) */}
-                    <div className="pms-nav-item" onClick={() => setIsUserManagementOpen(true)}>
-                      <span style={{ color: '#06b6d4', fontWeight: 700 }}>👥 User Setting (/userprofile)</span>
+                    {/* Video 21 & 23: Staff User Accounts & Roles */}
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('view user', 'User Setting', () => setIsUserManagementOpen(true))}>
+                      <span style={{ color: '#06b6d4', fontWeight: 700 }}>👥 User Setting &amp; Staff Shift Roster (/users)</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => setIsRolesPermissionsOpen(true)}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('view role', 'Roles & Permissions', () => setIsRolesPermissionsOpen(true))}>
                       <span style={{ color: '#fbbf24', fontWeight: 700 }}>🛡️ Roles &amp; Permissions (/roles)</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => setIsChainPropertyOpen(true)}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Setting', 'Chain Locations', () => setIsChainPropertyOpen(true))}>
                       <span style={{ color: '#34d399', fontWeight: 700 }}>🏨 Chain Locations (/multilocation)</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsDevicePreviewOpen(true)}>
                       <span style={{ color: '#f472b6', fontWeight: 700 }}>📱 Multi-Device Simulator (Video 21)</span>
                     </div>
                     {/* Video 22: Auto WhatsApp SMS Integration & Logs */}
-                    <div className="pms-nav-item" onClick={() => setIsWhatsAppSettingOpen(true)}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Only_Whatsapp', 'WhatsApp SMS Setting', () => setIsWhatsAppSettingOpen(true))}>
                       <span style={{ color: '#22c55e', fontWeight: 800 }}>💬 WhatsApp SMS Setting (/whatsapp_sms)</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => setIsWhatsAppLogsOpen(true)}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Only_Whatsapp', 'WhatsApp Outbox Logs', () => setIsWhatsAppLogsOpen(true))}>
                       <span style={{ color: '#fb923c', fontWeight: 700 }}>📜 WhatsApp Outbox Logs (/whatsapp_logs)</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => alert('Printer & Receipt Template Setup')}>
@@ -662,9 +783,21 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                   <span>›</span>
                 </div>
 
+                {/* Video 23: Dynamic Active Staff & Role Footer */}
                 <div className="pms-sidebar-footer">
-                  <div>Logged in as: <strong>Hotel Staff</strong></div>
-                  <div style={{ marginTop: 4, color: '#4ade80' }}>● System Online</div>
+                  <div style={{ color: '#f8fafc', fontWeight: 700, fontSize: 12 }}>
+                    Logged in as: <strong style={{ color: '#38bdf8' }}>{currentUser.userName}</strong>
+                  </div>
+                  <div style={{ fontSize: 11, color: '#fbbf24', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span>Role:</span>
+                    <strong style={{ background: '#334155', padding: '1px 5px', borderRadius: 3, color: '#f8fafc' }}>
+                      {currentUser.roleName}
+                    </strong>
+                    {currentUser.department && <span style={{ color: '#94a3b8' }}>({currentUser.department})</span>}
+                  </div>
+                  <div style={{ marginTop: 4, color: currentUser.isOnDuty !== false ? '#4ade80' : '#94a3b8', fontSize: 11, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span>●</span> {currentUser.isOnDuty !== false ? 'On Duty' : 'Off Duty'} &bull; {currentUser.shift || 'General'}
+                  </div>
                 </div>
               </aside>
             )}

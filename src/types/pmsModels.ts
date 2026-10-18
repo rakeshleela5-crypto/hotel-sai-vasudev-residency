@@ -612,6 +612,9 @@ export interface PmsUserAccount {
   verifiedDate?: string;
   mobile?: string;
   password?: string;
+  department?: 'Front Office' | 'Housekeeping' | 'Restaurant & F&B' | 'Kitchen' | 'Accounts & Cashier' | 'Security & Audit' | 'General Management';
+  shift?: 'Morning (07:00 - 15:00)' | 'Evening (15:00 - 23:00)' | 'Night (23:00 - 07:00)' | 'General (09:00 - 18:00)';
+  isOnDuty?: boolean;
 }
 
 export interface PmsChainProperty {
@@ -629,8 +632,9 @@ export interface PmsChainProperty {
   isCurrent?: boolean;
 }
 
+// RoomG Video 23: Complete 72 Granular Permission Matrix (Frame 0140 & 0185)
 export const PMS_ALL_PERMISSIONS: { key: string; label: string; category: string }[] = [
-  // Role & Permission Management
+  // Role & Permission Management (Column 1 & 2 Frame 0140)
   { key: 'view role', label: 'View Role', category: 'Roles & Permissions' },
   { key: 'create role', label: 'Create Role', category: 'Roles & Permissions' },
   { key: 'update role', label: 'Update Role', category: 'Roles & Permissions' },
@@ -640,14 +644,14 @@ export const PMS_ALL_PERMISSIONS: { key: string; label: string; category: string
   { key: 'update permission', label: 'Update Permission', category: 'Roles & Permissions' },
   { key: 'delete permission', label: 'Delete Permission', category: 'Roles & Permissions' },
 
-  // User Management
+  // User & Staff Management (Column 3 & 4 Frame 0140)
   { key: 'view user', label: 'View User', category: 'User Management' },
   { key: 'create user', label: 'Create User', category: 'User Management' },
   { key: 'update user', label: 'Update User', category: 'User Management' },
   { key: 'delete user', label: 'Delete User', category: 'User Management' },
   { key: 'Account List', label: 'Account List', category: 'User Management' },
 
-  // Master & Catalogs
+  // Master & Catalogs (Frame 0140)
   { key: 'view product', label: 'View Product / Item', category: 'Catalog & Master' },
   { key: 'create product', label: 'Create Product', category: 'Catalog & Master' },
   { key: 'update product', label: 'Update Product', category: 'Catalog & Master' },
@@ -656,7 +660,8 @@ export const PMS_ALL_PERMISSIONS: { key: string; label: string; category: string
   { key: 'Item List', label: 'Item List', category: 'Catalog & Master' },
   { key: 'Room List', label: 'Room List', category: 'Catalog & Master' },
 
-  // Front Office & Room Operations
+  // Front Office & Hotel Module (Frame 0140 & Frame 0185)
+  { key: 'Hotel Module', label: 'Hotel Module Access', category: 'Front Office & Rooms' },
   { key: 'Room_Dashboard', label: 'Room Dashboard', category: 'Front Office & Rooms' },
   { key: 'roombooking', label: 'Room Booking', category: 'Front Office & Rooms' },
   { key: 'roomcheckin', label: 'Room Check In', category: 'Front Office & Rooms' },
@@ -667,11 +672,17 @@ export const PMS_ALL_PERMISSIONS: { key: string; label: string; category: string
   { key: 'Check-in Register', label: 'Check-in Register', category: 'Front Office & Rooms' },
   { key: 'Checkout Register', label: 'Checkout Register', category: 'Front Office & Rooms' },
   { key: 'Checkout_Reg', label: 'Checkout Register Quick', category: 'Front Office & Rooms' },
-  { key: 'Change_Room_Tariff', label: 'Change Room Tariff', category: 'Front Office & Rooms' },
-  { key: 'Change_Rent_PerDay', label: 'Change Rent Per Day', category: 'Front Office & Rooms' },
-  { key: 'Change_Date&Time', label: 'Change Date & Time', category: 'Front Office & Rooms' },
+  { key: 'Handover', label: 'Shift Handover', category: 'Front Office & Rooms' },
+  { key: 'Mycheckout', label: 'My Checkout Operations', category: 'Front Office & Rooms' },
 
-  // Restaurant & Kitchen POS
+  // Critical Anti-Fraud & Boundary Control Permissions (Video 23 Spoken Transcript)
+  { key: 'Change_Room_Tariff', label: 'Change Room Tariff (Price Override)', category: 'Anti-Theft Security' },
+  { key: 'Chang_Rent_Perday', label: 'Change Rent Per Day', category: 'Anti-Theft Security' },
+  { key: 'Change_Date&Time', label: 'Change Date & Time (Anti-Backdating)', category: 'Anti-Theft Security' },
+  { key: 'sql_query', label: 'SQL Query Console (Root Access)', category: 'Anti-Theft Security' },
+
+  // Restaurant & Kitchen POS (Frame 0140 & Frame 0185)
+  { key: 'Restaurant Module', label: 'Restaurant Module Access', category: 'Restaurant & POS' },
   { key: 'kot', label: 'KOT Entry', category: 'Restaurant & POS' },
   { key: 'foodbills', label: 'Food Bills', category: 'Restaurant & POS' },
   { key: 'Restaurant', label: 'Restaurant Matrix', category: 'Restaurant & POS' },
@@ -680,7 +691,7 @@ export const PMS_ALL_PERMISSIONS: { key: string; label: string; category: string
   { key: 'Restaurant Food Bills', label: 'Restaurant Food Bills', category: 'Restaurant & POS' },
   { key: 'Kot Register', label: 'KOT Register', category: 'Restaurant & POS' },
 
-  // Accounting, Payments & Ledgers
+  // Accounting, Payments & Ledgers (Frame 0140)
   { key: 'payment', label: 'Payment Entry', category: 'Accounting & Ledgers' },
   { key: 'receipt', label: 'Receipt Entry', category: 'Accounting & Ledgers' },
   { key: 'advance_reciept', label: 'Advance Receipt', category: 'Accounting & Ledgers' },
@@ -691,8 +702,9 @@ export const PMS_ALL_PERMISSIONS: { key: string; label: string; category: string
   { key: 'sale', label: 'Sales Management', category: 'Accounting & Ledgers' },
   { key: 'Month Wise Sale', label: 'Month Wise Sale', category: 'Accounting & Ledgers' },
   { key: 'B2B Sale', label: 'B2B GST Sale', category: 'Accounting & Ledgers' },
+  { key: 'B2C Sale', label: 'B2C Retail Sale', category: 'Accounting & Ledgers' },
 
-  // Store & Inventory
+  // Store & Inventory (Frame 0140)
   { key: 'purchase', label: 'Purchase Inward', category: 'Store & Inventory' },
   { key: 'Stock_Transfer', label: 'Stock Transfer & Issue', category: 'Store & Inventory' },
   { key: 'Store Wise Stock', label: 'Store Wise Stock', category: 'Store & Inventory' },
@@ -701,23 +713,27 @@ export const PMS_ALL_PERMISSIONS: { key: string; label: string; category: string
   { key: 'Stock Out Register', label: 'Stock Out Register', category: 'Store & Inventory' },
   { key: 'Stock Transfer Register', label: 'Stock Transfer Register', category: 'Store & Inventory' },
 
-  // Reports, Audit & Compliance
+  // Reports, Audit & Compliance (Frame 0140)
   { key: 'Report', label: 'Report Menu', category: 'Reports & Compliance' },
   { key: 'ReportList', label: 'Report List', category: 'Reports & Compliance' },
   { key: 'Police Station Report', label: 'Police Station Report', category: 'Reports & Compliance' },
   { key: 'Item Wise Sale Report', label: 'Item Wise Sale Report', category: 'Reports & Compliance' },
   { key: 'Day End Report', label: 'Day End Closing Report', category: 'Reports & Compliance' },
+  { key: 'GST Report', label: 'GST Statutory Report', category: 'Reports & Compliance' },
 
-  // System, Settings & Controls
+  // System, Settings & Action Operations (Frame 0140)
   { key: 'Entry', label: 'Entry Submenu', category: 'System & Controls' },
   { key: 'Setting', label: 'Setting Submenu', category: 'System & Controls' },
   { key: 'Activity', label: 'Activity Logs', category: 'System & Controls' },
   { key: 'Membership', label: 'Membership', category: 'System & Controls' },
-  { key: 'sql_query', label: 'SQL Query Console', category: 'System & Controls' },
   { key: 'Lead Module', label: 'Lead Management Module', category: 'System & Controls' },
+  { key: 'Only_Whatsapp', label: 'Only WhatsApp Messaging', category: 'System & Controls' },
+  { key: 'Add', label: 'Add Records', category: 'System & Controls' },
+  { key: 'View', label: 'View Details', category: 'System & Controls' },
+  { key: 'Print', label: 'Print Reports & Invoices', category: 'System & Controls' },
   { key: 'Save', label: 'Save Records', category: 'System & Controls' },
   { key: 'Edit', label: 'Edit Records', category: 'System & Controls' },
-  { key: 'Delete', label: 'Delete Records', category: 'System & Controls' }
+  { key: 'Delete', label: 'Delete Records (Strict Anti-Fraud)', category: 'System & Controls' }
 ];
 
 // ============================================================================

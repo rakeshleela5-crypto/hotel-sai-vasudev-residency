@@ -21,12 +21,42 @@ export const RoomCheckInRegisterModal: React.FC<RoomCheckInRegisterModalProps> =
   const [searchTerm, setSearchTerm] = useState('');
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [selectedCheckIn, setSelectedCheckIn] = useState<PmsCheckIn | null>(null);
+  const [currentUser, setCurrentUser] = useState(PmsStore.getCurrentUser());
 
   useEffect(() => {
     if (isOpen) {
       setCheckIns(PmsStore.getCheckIns());
+      setCurrentUser(PmsStore.getCurrentUser());
     }
+
+    const handleUserChange = () => {
+      setCurrentUser(PmsStore.getCurrentUser());
+    };
+    window.addEventListener('pms_user_changed', handleUserChange);
+    return () => window.removeEventListener('pms_user_changed', handleUserChange);
   }, [isOpen]);
+
+  const handleDeleteCheckIn = (item: PmsCheckIn) => {
+    if (!PmsStore.hasPermission('Delete')) {
+      alert(
+        `🔒 Security Alert: Anti-Theft Guard Active (Video 23)\n\n` +
+        `Your active staff account "${currentUser.userName}" (${currentUser.roleName}) does NOT have "Delete" permission.\n\n` +
+        `Staff is strictly prohibited from deleting check-in bills or registers to prevent pocketing cash.\n\n` +
+        `Please contact Super-Admin or Auditor for authorization.`
+      );
+      return;
+    }
+
+    const conf = window.confirm(
+      `⚠️ ADMIN RECORD DELETION:\n\nAre you sure you want to delete Check-In ${item.checkInNo} for Guest "${item.guestName}" (Room ${item.roomNo})?\n\n` +
+      `Note: An automated WhatsApp security audit log will be dispatched to the hotel owner.`
+    );
+    if (!conf) return;
+
+    PmsStore.deleteCheckIn(item.checkInNo);
+    setCheckIns(PmsStore.getCheckIns());
+    alert(`Check-In ${item.checkInNo} deleted successfully. Room ${item.roomNo} status released.`);
+  };
 
   if (!isOpen) return null;
 
@@ -302,6 +332,24 @@ export const RoomCheckInRegisterModal: React.FC<RoomCheckInRegisterModalProps> =
                             }}
                           >
                             🧾
+                          </button>
+
+                          {/* Anti-Theft Guarded Delete Icon (Video 23) */}
+                          <button
+                            type="button"
+                            title={PmsStore.hasPermission('Delete') ? "Delete Check-In Record (Admin)" : "🔒 Anti-Theft Guard: Delete prohibited for staff"}
+                            onClick={() => handleDeleteCheckIn(item)}
+                            style={{
+                              background: PmsStore.hasPermission('Delete') ? '#fee2e2' : '#f1f5f9',
+                              border: `1px solid ${PmsStore.hasPermission('Delete') ? '#ef4444' : '#cbd5e1'}`,
+                              borderRadius: 4,
+                              padding: '3px 6px',
+                              cursor: 'pointer',
+                              fontSize: 12,
+                              opacity: PmsStore.hasPermission('Delete') ? 1 : 0.65
+                            }}
+                          >
+                            {PmsStore.hasPermission('Delete') ? '🗑️' : '🔒'}
                           </button>
                         </div>
                       </td>

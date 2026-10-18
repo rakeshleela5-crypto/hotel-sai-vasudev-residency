@@ -63,6 +63,10 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
   const [gstPercent, setGstPercent] = useState<number>(12);
   const [addOthers, setAddOthers] = useState<number>(0);
   const [lessDiscount, setLessDiscount] = useState<number>(0);
+
+  // Video 23 Anti-Theft Staff Permission Evaluator (Frame 0140 & Spoken 02:40 - 05:30)
+  const canChangeTariff = PmsStore.hasPermission('Change_Room_Tariff');
+  const canChangeDateTime = PmsStore.hasPermission('Change_Date&Time');
   
   // Dynamic Advance Calculation (Video 06 Frame 0200)
   const roomAdvanceReceipts = PmsStore.getAdvanceReceiptsByRoom(targetRoom.roomNo);
@@ -438,38 +442,74 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                 marginBottom: 10
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
-                  <span style={{ fontWeight: 800, color: '#334155' }}>Check-In:</span>
+                  <span style={{ fontWeight: 800, color: '#334155', display: 'flex', alignItems: 'center', gap: 3 }}>
+                    Check-In: {!canChangeDateTime && <span title="Locked for staff: Anti-Backdating fraud guard">🔒</span>}
+                  </span>
                   <input
                     type="text"
                     value={checkInDate}
                     onChange={e => setCheckInDate(e.target.value)}
+                    readOnly={!canChangeDateTime}
                     className="form-input-pms"
-                    style={{ width: 85, padding: '1px 4px', fontSize: 11 }}
+                    style={{
+                      width: 85,
+                      padding: '1px 4px',
+                      fontSize: 11,
+                      background: !canChangeDateTime ? '#e2e8f0' : '#ffffff',
+                      cursor: !canChangeDateTime ? 'not-allowed' : 'text'
+                    }}
+                    title={!canChangeDateTime ? "🔒 Security Guard: Date modification locked to prevent backdating fraud (Video 23)" : undefined}
                   />
                   <input
                     type="text"
                     value={checkInTime}
                     onChange={e => setCheckInTime(e.target.value)}
+                    readOnly={!canChangeDateTime}
                     className="form-input-pms"
-                    style={{ width: 65, padding: '1px 4px', fontSize: 11 }}
+                    style={{
+                      width: 65,
+                      padding: '1px 4px',
+                      fontSize: 11,
+                      background: !canChangeDateTime ? '#e2e8f0' : '#ffffff',
+                      cursor: !canChangeDateTime ? 'not-allowed' : 'text'
+                    }}
+                    title={!canChangeDateTime ? "🔒 Security Guard: Time modification locked to prevent backdating fraud (Video 23)" : undefined}
                   />
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
-                  <span style={{ fontWeight: 800, color: '#b91c1c' }}>Check-Out:</span>
+                  <span style={{ fontWeight: 800, color: '#b91c1c', display: 'flex', alignItems: 'center', gap: 3 }}>
+                    Check-Out: {!canChangeDateTime && <span title="Locked for staff: Anti-Backdating fraud guard">🔒</span>}
+                  </span>
                   <input
                     type="text"
                     value={checkOutDate}
                     onChange={e => setCheckOutDate(e.target.value)}
+                    readOnly={!canChangeDateTime}
                     className="form-input-pms"
-                    style={{ width: 85, padding: '1px 4px', fontSize: 11 }}
+                    style={{
+                      width: 85,
+                      padding: '1px 4px',
+                      fontSize: 11,
+                      background: !canChangeDateTime ? '#e2e8f0' : '#ffffff',
+                      cursor: !canChangeDateTime ? 'not-allowed' : 'text'
+                    }}
+                    title={!canChangeDateTime ? "🔒 Security Guard: Date modification locked to prevent backdating fraud (Video 23)" : undefined}
                   />
                   <input
                     type="text"
                     value={checkOutTime}
                     onChange={e => setCheckOutTime(e.target.value)}
+                    readOnly={!canChangeDateTime}
                     className="form-input-pms"
-                    style={{ width: 65, padding: '1px 4px', fontSize: 11 }}
+                    style={{
+                      width: 65,
+                      padding: '1px 4px',
+                      fontSize: 11,
+                      background: !canChangeDateTime ? '#e2e8f0' : '#ffffff',
+                      cursor: !canChangeDateTime ? 'not-allowed' : 'text'
+                    }}
+                    title={!canChangeDateTime ? "🔒 Security Guard: Time modification locked to prevent backdating fraud (Video 23)" : undefined}
                   />
                 </div>
 
@@ -487,13 +527,24 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
-                  <span style={{ fontWeight: 800, color: '#334155' }}>Tariff/Day:</span>
+                  <span style={{ fontWeight: 800, color: '#334155', display: 'flex', alignItems: 'center', gap: 3 }}>
+                    Tariff/Day: {!canChangeTariff && <span title="Locked for staff: Anti-discount theft guard">🔒</span>}
+                  </span>
                   <input
                     type="number"
                     value={perDayTariff}
                     onChange={e => setPerDayTariff(Number(e.target.value))}
+                    readOnly={!canChangeTariff}
                     className="form-input-pms"
-                    style={{ width: 75, padding: '2px 4px', fontSize: 11, fontWeight: 800 }}
+                    style={{
+                      width: 75,
+                      padding: '2px 4px',
+                      fontSize: 11,
+                      fontWeight: 800,
+                      background: !canChangeTariff ? '#e2e8f0' : '#ffffff',
+                      cursor: !canChangeTariff ? 'not-allowed' : 'text'
+                    }}
+                    title={!canChangeTariff ? "🔒 Security Guard: Room Tariff override locked for staff (Video 23)" : undefined}
                   />
                 </div>
               </div>
@@ -697,14 +748,25 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                 }}>
                   {/* Less Discount (-) */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 11, color: '#334155' }}>Less Discount (-)</span>
+                    <span style={{ fontSize: 11, color: '#334155', display: 'flex', alignItems: 'center', gap: 3 }}>
+                      Less Discount (-) {!canChangeTariff && <span title="Discount locked for staff account">🔒</span>}
+                    </span>
                     <input
                       type="number"
                       min="0"
                       value={lessDiscount}
                       onChange={e => setLessDiscount(Number(e.target.value))}
+                      readOnly={!canChangeTariff}
                       className="form-input-pms"
-                      style={{ width: 85, fontSize: 10, padding: '2px 4px', textAlign: 'right' }}
+                      style={{
+                        width: 85,
+                        fontSize: 10,
+                        padding: '2px 4px',
+                        textAlign: 'right',
+                        background: !canChangeTariff ? '#e2e8f0' : '#ffffff',
+                        cursor: !canChangeTariff ? 'not-allowed' : 'text'
+                      }}
+                      title={!canChangeTariff ? "🔒 Security Guard: Discount modification locked for staff (Video 23)" : undefined}
                     />
                   </div>
 

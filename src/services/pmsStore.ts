@@ -882,7 +882,7 @@ export const INITIAL_BOOKINGS: PmsBooking[] = [
   }
 ];
 
-// Video 21: Roles & Permissions Seed Data (Frame 0130, 0132)
+// Video 23: Roles & Permissions Seed Data (Frame 0135, 0140, 0155)
 export const INITIAL_ROLES: PmsRole[] = [
   {
     id: 1,
@@ -901,12 +901,12 @@ export const INITIAL_ROLES: PmsRole[] = [
   {
     id: 3,
     name: 'staff',
-    description: 'Front Office Receptionist & Operational Staff',
+    description: 'Front Office Receptionist & Operational Staff (Restricted from Delete & Backdating)',
     permissions: [
-      'Room_Dashboard', 'roombooking', 'roomcheckin', 'roomcheckout', 'Booking Calendar',
+      'Hotel Module', 'Room_Dashboard', 'roombooking', 'roomcheckin', 'roomcheckout', 'Booking Calendar',
       'Unconfirmed Bookings', 'Booking Register', 'Check-in Register', 'Checkout Register',
       'Checkout_Reg', 'Room List', 'kot', 'foodbills', 'Room Food Bills', 'payment', 'receipt',
-      'advance_reciept', 'Advance Receipt Reg', 'Day End Report', 'Save', 'Edit'
+      'advance_reciept', 'Advance Receipt Reg', 'Day End Report', 'View', 'Print', 'Save', 'Edit'
     ],
     isSystem: true
   },
@@ -915,9 +915,9 @@ export const INITIAL_ROLES: PmsRole[] = [
     name: 'user',
     description: 'Hotel Partner / Auditor / View-Only Access',
     permissions: [
-      'Room_Dashboard', 'Booking Calendar', 'Report', 'ReportList', 'Police Station Report',
+      'Hotel Module', 'Room_Dashboard', 'Booking Calendar', 'Report', 'ReportList', 'Police Station Report',
       'Item Wise Sale Report', 'Day End Report', 'Month Wise Sale', 'Store Wise Stock',
-      'Stock Status', 'Room List', 'Item List'
+      'Stock Status', 'Room List', 'Item List', 'GST Report', 'View'
     ],
     isSystem: true
   },
@@ -927,35 +927,64 @@ export const INITIAL_ROLES: PmsRole[] = [
     description: 'Sales, Marketing & Guest Inquiry Lead Manager',
     permissions: [
       'Room_Dashboard', 'Booking Calendar', 'Unconfirmed Bookings', 'Lead Module',
-      'view user', 'Booking Register', 'Save', 'Edit'
+      'view user', 'Booking Register', 'View', 'Print', 'Save', 'Edit'
     ],
     isSystem: false
   },
   {
     id: 6,
     name: 'Restaurent',
-    description: 'Restaurant Captain, Waiter & Kitchen Staff',
+    description: 'Restaurant Captain, Waiter & Kitchen Staff (Frame 0185 Strict Isolation)',
     permissions: [
-      'kot', 'foodbills', 'Restaurant', 'Kitchen Dash Board', 'Restaurant Food Bills',
-      'Kot Register', 'Item List', 'Save', 'Edit'
+      'Restaurant Module', 'kot', 'foodbills', 'Restaurant', 'Kitchen Dash Board', 'Restaurant Food Bills',
+      'Kot Register', 'Item List', 'Item Wise Sale Report', 'Day End Report', 'Store Wise Stock',
+      'Stock Status', 'Stock In Register', 'Stock Out Register', 'Stock Transfer Register',
+      'purchase', 'Stock_Transfer', 'Account List', 'ledger', 'Outstanding Payable',
+      'Outstanding Receivable', 'B2B Sale', 'sale', 'Month Wise Sale', 'view user',
+      'create user', 'update user', 'view product', 'create product', 'update product',
+      'delete product', 'Master', 'Entry', 'ReportList', 'Report', 'Activity',
+      'view role', 'create role', 'update role', 'delete role', 'view permission',
+      'create permission', 'update permission', 'delete permission', 'View', 'Print', 'Save', 'Edit'
     ],
     isSystem: false
   },
   {
     id: 7,
     name: 'Billing',
-    description: 'Cashier & Accounts Billing Operator',
+    description: 'Cashier & Front Office Accounts Billing Operator',
     permissions: [
-      'Room_Dashboard', 'roomcheckout', 'foodbills', 'payment', 'receipt',
+      'Hotel Module', 'Room_Dashboard', 'roomcheckout', 'foodbills', 'payment', 'receipt',
       'advance_reciept', 'Advance Receipt Reg', 'ledger', 'Outstanding Receivable',
-      'Outstanding Payable', 'Day End Report', 'Month Wise Sale', 'B2B Sale', 'sale',
-      'Save', 'Edit'
+      'Outstanding Payable', 'Day End Report', 'Month Wise Sale', 'B2B Sale', 'B2C Sale',
+      'sale', 'GST Report', 'View', 'Print', 'Save', 'Edit'
+    ],
+    isSystem: false
+  },
+  {
+    id: 8,
+    name: 'Receptionist',
+    description: 'Front Desk Operator: Check-in, Checkout & Bookings (Strictly Blocked from Delete, Tariff Override & Backdating)',
+    permissions: [
+      'Hotel Module', 'Room_Dashboard', 'roombooking', 'roomcheckin', 'roomcheckout',
+      'Booking Calendar', 'Unconfirmed Bookings', 'Booking Register', 'Check-in Register',
+      'Checkout Register', 'Checkout_Reg', 'Room List', 'kot', 'foodbills', 'Room Food Bills',
+      'receipt', 'advance_reciept', 'Advance Receipt Reg', 'Handover', 'Mycheckout',
+      'Police Station Report', 'Day End Report', 'Add', 'View', 'Print', 'Save', 'Edit'
+    ],
+    isSystem: false
+  },
+  {
+    id: 9,
+    name: 'Only_Whatsapp',
+    description: 'Guest Messaging & Automated WhatsApp Broadcast Dispatcher (Zero Billing Access)',
+    permissions: [
+      'Only_Whatsapp', 'view user', 'View', 'Print'
     ],
     isSystem: false
   }
 ];
 
-// Video 21: User Accounts Seed Data (Frame 0120)
+// Video 23: Staff User Accounts Seed Data (Frame 0120 & Frame 0165)
 export const INITIAL_USER_ACCOUNTS: PmsUserAccount[] = [
   {
     id: 63,
@@ -963,12 +992,15 @@ export const INITIAL_USER_ACCOUNTS: PmsUserAccount[] = [
     firmId: 'DEMO0004',
     userName: 'Reception',
     emailId: 'reception10@gmail.com',
-    roleId: 3,
-    roleName: 'staff',
+    roleId: 8,
+    roleName: 'Receptionist',
     status: 'Verified',
     regDate: '2025-06-21 14:37:11',
     verifiedDate: '2025-06-21 14:37:11',
-    mobile: '9822100010'
+    mobile: '9822100010',
+    department: 'Front Office',
+    shift: 'Evening (15:00 - 23:00)',
+    isOnDuty: true
   },
   {
     id: 62,
@@ -981,7 +1013,10 @@ export const INITIAL_USER_ACCOUNTS: PmsUserAccount[] = [
     status: 'Verified',
     regDate: '2025-06-21 14:36:36',
     verifiedDate: '2025-06-21 14:38:38',
-    mobile: '9822100001'
+    mobile: '9822100001',
+    department: 'Front Office',
+    shift: 'Morning (07:00 - 15:00)',
+    isOnDuty: true
   },
   {
     id: 44,
@@ -989,12 +1024,15 @@ export const INITIAL_USER_ACCOUNTS: PmsUserAccount[] = [
     firmId: 'DEMO0004',
     userName: 'whatsapp',
     emailId: 'whatsapp2025@gmail.com',
-    roleId: 3,
-    roleName: 'staff',
+    roleId: 9,
+    roleName: 'Only_Whatsapp',
     status: 'Verified',
     regDate: '2025-06-01 18:16:13',
     verifiedDate: '2025-06-01 18:16:52',
-    mobile: '9822100044'
+    mobile: '9822100044',
+    department: 'Front Office',
+    shift: 'General (09:00 - 18:00)',
+    isOnDuty: true
   },
   {
     id: 42,
@@ -1007,7 +1045,10 @@ export const INITIAL_USER_ACCOUNTS: PmsUserAccount[] = [
     status: 'Verified',
     regDate: '2025-06-01 04:04:16',
     verifiedDate: '2025-06-01 04:04:59',
-    mobile: '9822100042'
+    mobile: '9822100042',
+    department: 'Security & Audit',
+    shift: 'General (09:00 - 18:00)',
+    isOnDuty: false
   },
   {
     id: 18,
@@ -1020,7 +1061,10 @@ export const INITIAL_USER_ACCOUNTS: PmsUserAccount[] = [
     status: 'Verified',
     regDate: '2024-12-17 08:58:38',
     verifiedDate: '2025-01-10 12:15:40',
-    mobile: '9822100018'
+    mobile: '9822100018',
+    department: 'General Management',
+    shift: 'General (09:00 - 18:00)',
+    isOnDuty: true
   },
   {
     id: 19,
@@ -1033,7 +1077,10 @@ export const INITIAL_USER_ACCOUNTS: PmsUserAccount[] = [
     status: 'Verified',
     regDate: '2024-12-17 08:58:38',
     verifiedDate: '2025-01-18 06:48:23',
-    mobile: '9822100019'
+    mobile: '9822100019',
+    department: 'Housekeeping',
+    shift: 'Morning (07:00 - 15:00)',
+    isOnDuty: true
   },
   {
     id: 15,
@@ -1046,7 +1093,10 @@ export const INITIAL_USER_ACCOUNTS: PmsUserAccount[] = [
     status: 'Verified',
     regDate: '2024-12-17 08:58:37',
     verifiedDate: '2025-05-16 10:32:45',
-    mobile: '9822100015'
+    mobile: '9822100015',
+    department: 'Front Office',
+    shift: 'General (09:00 - 18:00)',
+    isOnDuty: false
   },
   {
     id: 16,
@@ -1059,7 +1109,42 @@ export const INITIAL_USER_ACCOUNTS: PmsUserAccount[] = [
     status: 'Verified',
     regDate: '2024-12-17 08:58:37',
     verifiedDate: '2024-12-17 08:58:37',
-    mobile: '7999663696'
+    mobile: '7999663696',
+    department: 'General Management',
+    shift: 'General (09:00 - 18:00)',
+    isOnDuty: true
+  },
+  {
+    id: 21,
+    sNo: 21,
+    firmId: 'DEMO0004',
+    userName: 'Chef Sanjeev',
+    emailId: 'kitchen@hotelsai.com',
+    roleId: 6,
+    roleName: 'Restaurent',
+    status: 'Verified',
+    regDate: '2025-01-01 10:00:00',
+    verifiedDate: '2025-01-01 10:00:00',
+    mobile: '9822100021',
+    department: 'Kitchen',
+    shift: 'Morning (07:00 - 15:00)',
+    isOnDuty: true
+  },
+  {
+    id: 22,
+    sNo: 22,
+    firmId: 'DEMO0004',
+    userName: 'Cashier Rahul',
+    emailId: 'cashier@hotelsai.com',
+    roleId: 7,
+    roleName: 'Billing',
+    status: 'Verified',
+    regDate: '2025-01-01 10:00:00',
+    verifiedDate: '2025-01-01 10:00:00',
+    mobile: '9822100022',
+    department: 'Accounts & Cashier',
+    shift: 'Evening (15:00 - 23:00)',
+    isOnDuty: true
   }
 ];
 
@@ -1927,6 +2012,40 @@ export class PmsStore {
       advancePaid: checkIn.advancePaid,
       calculationType: '24hour'
     });
+  }
+
+  // Video 22 & 23 Anti-Theft Guard: Delete Check-In Record
+  static deleteCheckIn(checkInNo: string): boolean {
+    const list = this.getCheckIns();
+    const target = list.find(c => c.checkInNo === checkInNo);
+    if (!target) return false;
+    const remaining = list.filter(c => c.checkInNo !== checkInNo);
+    localStorage.setItem('hotel_pms_checkins', JSON.stringify(remaining));
+
+    // Release occupied room back to vacant if it was occupied by this check-in
+    const room = this.getRooms().find(r => r.roomNo === target.roomNo);
+    if (room && room.status === 'occupied' && room.currentGuest?.bookingNo === checkInNo) {
+      this.updateRoomStatus(target.roomNo, 'vacant');
+    }
+
+    // Video 22 Audit: Send automated WhatsApp alert to Hotel Owner on sensitive bill deletion
+    try {
+      const currentUser = this.getCurrentUser();
+      this.addWhatsAppLog({
+        recipientMobile: '9822100000',
+        recipientName: 'Hotel Owner / GM',
+        recipientType: 'Guest',
+        voucherType: 'Audit Alert',
+        voucherNo: checkInNo,
+        roomNo: target.roomNo,
+        message: `⚠️ SECURITY AUDIT: Check-In ${checkInNo} for guest ${target.guestName} (Room ${target.roomNo}) was DELETED by ${currentUser.userName} (${currentUser.roleName}) on ${new Date().toLocaleString('en-IN')}.`,
+        status: 'Delivered'
+      });
+    } catch {
+      // ignore
+    }
+
+    return true;
   }
 
   static getKots(): PmsKotRecord[] {
@@ -3911,19 +4030,37 @@ export class PmsStore {
   }
 
   // ==========================================
-  // Video 21: Roles & Permissions Store Methods
+  // Video 23: Roles & Permissions Store Methods (Frames 0135, 0140, 0155)
   // ==========================================
   static getRoles(): PmsRole[] {
     const raw = localStorage.getItem(STORAGE_KEYS.ROLES);
+    let roles: PmsRole[] = [];
     if (!raw) {
-      localStorage.setItem(STORAGE_KEYS.ROLES, JSON.stringify(INITIAL_ROLES));
-      return INITIAL_ROLES;
+      roles = INITIAL_ROLES;
+      localStorage.setItem(STORAGE_KEYS.ROLES, JSON.stringify(roles));
+      return roles;
     }
     try {
-      return JSON.parse(raw);
+      roles = JSON.parse(raw);
     } catch {
-      return INITIAL_ROLES;
+      roles = INITIAL_ROLES;
+      localStorage.setItem(STORAGE_KEYS.ROLES, JSON.stringify(roles));
+      return roles;
     }
+
+    // Ensure all 9 seed roles (Video 23 Frame 0135 & 0155) are present in storage
+    let updated = false;
+    for (const initRole of INITIAL_ROLES) {
+      const existing = roles.find(r => r.id === initRole.id || r.name.toLowerCase() === initRole.name.toLowerCase());
+      if (!existing) {
+        roles.push(initRole);
+        updated = true;
+      }
+    }
+    if (updated) {
+      localStorage.setItem(STORAGE_KEYS.ROLES, JSON.stringify(roles));
+    }
+    return roles;
   }
 
   static saveRoles(roles: PmsRole[]): void {
@@ -3960,19 +4097,36 @@ export class PmsStore {
   }
 
   // ==========================================
-  // Video 21: User Accounts Store Methods
+  // Video 23: Staff User Accounts Store Methods (Frame 0120 & 0165)
   // ==========================================
   static getUsers(): PmsUserAccount[] {
     const raw = localStorage.getItem(STORAGE_KEYS.USERS);
+    let users: PmsUserAccount[] = [];
     if (!raw) {
-      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(INITIAL_USER_ACCOUNTS));
-      return INITIAL_USER_ACCOUNTS;
+      users = INITIAL_USER_ACCOUNTS;
+      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+      return users;
     }
     try {
-      return JSON.parse(raw);
+      users = JSON.parse(raw);
     } catch {
-      return INITIAL_USER_ACCOUNTS;
+      users = INITIAL_USER_ACCOUNTS;
+      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+      return users;
     }
+
+    // Ensure staff users from Video 23 Frame 0165 exist
+    let updated = false;
+    for (const initUser of INITIAL_USER_ACCOUNTS) {
+      if (!users.some(u => u.id === initUser.id || u.emailId === initUser.emailId)) {
+        users.push(initUser);
+        updated = true;
+      }
+    }
+    if (updated) {
+      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+    }
+    return users;
   }
 
   static saveUsers(users: PmsUserAccount[]): void {
@@ -4024,13 +4178,42 @@ export class PmsStore {
 
   static setCurrentUser(user: PmsUserAccount): void {
     localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('pms_user_changed', { detail: user }));
+    }
   }
 
+  // Video 23 Anti-Theft & Fraud Prevention Permission Evaluator (Frame 0140 & 0185)
   static hasPermission(permissionKey: string): boolean {
     const currentUser = this.getCurrentUser();
-    const role = this.getRoleById(currentUser.roleId);
+    const role = this.getRoleById(currentUser.roleId) || this.getRoles().find(r => r.name.toLowerCase() === currentUser.roleName.toLowerCase());
     if (!role) return true;
-    if (role.name === 'super-admin') return true;
+    if (role.name === 'super-admin' || role.name === '1 - super-admin' || currentUser.userName === 'Admin') return true;
+
+    // Normalizing permission aliases for tariff control
+    if ((permissionKey === 'Change_Rent_PerDay' || permissionKey === 'Chang_Rent_Perday' || permissionKey === 'Change_Room_Tariff') &&
+        (role.permissions.includes('Chang_Rent_Perday') || role.permissions.includes('Change_Room_Tariff') || role.permissions.includes('Change_Rent_PerDay'))) {
+      return true;
+    }
+
+    // Normalizing anti-theft delete permissions
+    if (permissionKey === 'Delete' || permissionKey === 'delete') {
+      return role.permissions.includes('Delete') || role.permissions.includes('delete') || role.permissions.includes('delete user');
+    }
+
+    // Role-specific module boundaries (Video 23 Frame 0185)
+    if (permissionKey === 'Hotel Module') {
+      return role.permissions.includes('Hotel Module') || role.permissions.includes('Room_Dashboard') || role.permissions.includes('roombooking');
+    }
+
+    if (permissionKey === 'Restaurant Module') {
+      return role.permissions.includes('Restaurant Module') || role.permissions.includes('Restaurant') || role.permissions.includes('kot');
+    }
+
+    if (permissionKey === 'Setting') {
+      return role.permissions.includes('Setting') || role.name === 'admin' || role.name === '2 - admin';
+    }
+
     return role.permissions.includes(permissionKey);
   }
 

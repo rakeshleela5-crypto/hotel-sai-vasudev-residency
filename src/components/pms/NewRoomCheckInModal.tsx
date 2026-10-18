@@ -104,6 +104,10 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
   const [remark1, setRemark1] = useState('');
   const [remark2, setRemark2] = useState('');
 
+  // Video 23 Anti-Theft & Boundary Protection: Permission checks
+  const canChangeTariff = PmsStore.hasPermission('Change_Room_Tariff');
+  const canChangeDateTime = PmsStore.hasPermission('Change_Date&Time');
+
   // Selected Room & Custom Tariff
   const [selectedRoomNo, setSelectedRoomNo] = useState<string>(
     preselectedRoom ? preselectedRoom.roomNo : (availableRooms[0]?.roomNo || '105')
@@ -421,12 +425,44 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                     <input type="text" readOnly value={checkInNo} className="form-input-pms" style={{ background: '#f1f5f9', fontWeight: 800 }} />
                   </div>
                   <div className="form-group-pms">
-                    <label className="form-label-pms"><span className="req">*</span> Check In Date</label>
-                    <input type="date" value={checkInDate} onChange={e => setCheckInDate(e.target.value)} className="form-input-pms" />
+                    <label className="form-label-pms">
+                      <span className="req">*</span> Check In Date {!canChangeDateTime && <span title="Date Locked: Anti-Backdating Guard (Video 23)" style={{ color: '#e11d48' }}>🔒</span>}
+                    </label>
+                    <input 
+                      type="date" 
+                      value={checkInDate} 
+                      readOnly={!canChangeDateTime}
+                      onChange={e => {
+                        if (!canChangeDateTime) {
+                          alert('Permission Denied: Standard staff are restricted from altering Date & Time to prevent backdated ledger manipulation (Video 23 Anti-Backdating Protection).');
+                          return;
+                        }
+                        setCheckInDate(e.target.value);
+                      }} 
+                      className="form-input-pms" 
+                      style={{ background: !canChangeDateTime ? '#f1f5f9' : '#ffffff', cursor: !canChangeDateTime ? 'not-allowed' : 'auto' }}
+                      title={!canChangeDateTime ? 'Date locked: Anti-backdating protection active' : undefined}
+                    />
                   </div>
                   <div className="form-group-pms">
-                    <label className="form-label-pms"><span className="req">*</span> Check In Time</label>
-                    <input type="text" value={checkInTime} onChange={e => setCheckInTime(e.target.value)} className="form-input-pms" />
+                    <label className="form-label-pms">
+                      <span className="req">*</span> Check In Time {!canChangeDateTime && <span title="Time Locked: Anti-Backdating Guard (Video 23)" style={{ color: '#e11d48' }}>🔒</span>}
+                    </label>
+                    <input 
+                      type="text" 
+                      value={checkInTime} 
+                      readOnly={!canChangeDateTime}
+                      onChange={e => {
+                        if (!canChangeDateTime) {
+                          alert('Permission Denied: Standard staff are restricted from altering Date & Time to prevent backdated ledger manipulation (Video 23 Anti-Backdating Protection).');
+                          return;
+                        }
+                        setCheckInTime(e.target.value);
+                      }} 
+                      className="form-input-pms" 
+                      style={{ background: !canChangeDateTime ? '#f1f5f9' : '#ffffff', cursor: !canChangeDateTime ? 'not-allowed' : 'auto' }}
+                      title={!canChangeDateTime ? 'Time locked: Anti-backdating protection active' : undefined}
+                    />
                   </div>
                   <div className="form-group-pms">
                     <label className="form-label-pms"><span className="req">*</span> No Of Days</label>
@@ -604,9 +640,11 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
               <div>
                 {/* Available Rooms Table with In-line Editable Tariff (Video 03 Frame 0210) */}
                 <div style={{ border: '2px solid #38bdf8', borderRadius: 4, padding: 8, marginBottom: 12 }}>
-                  <div style={{ fontWeight: 800, fontSize: 13, marginBottom: 6, color: '#0369a1', display: 'flex', justifyContent: 'space-between' }}>
+                  <div style={{ fontWeight: 800, fontSize: 13, marginBottom: 6, color: '#0369a1', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>Available Vacant Rooms ({availableRooms.length}):</span>
-                    <span style={{ fontSize: 11, color: '#64748b' }}>Tariff is Negotiable</span>
+                    <span style={{ fontSize: 11, color: canChangeTariff ? '#64748b' : '#dc2626', fontWeight: !canChangeTariff ? 700 : 400 }}>
+                      {canChangeTariff ? 'Tariff is Negotiable' : '🔒 Published Tariff Enforced (Staff Locked)'}
+                    </span>
                   </div>
                   <div style={{ maxHeight: 180, overflowY: 'auto' }}>
                     <table className="pms-table-compact">
@@ -636,13 +674,36 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                             <td>{r.roomType}</td>
                             <td>
                               {selectedRoomNo === r.roomNo ? (
-                                <input
-                                  type="number"
-                                  value={customTariff}
-                                  onChange={e => setCustomTariff(Number(e.target.value))}
-                                  className="form-input-pms"
-                                  style={{ width: 85, padding: '2px 4px', fontWeight: 800, textAlign: 'right' }}
-                                />
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                  <input
+                                    type="number"
+                                    value={customTariff}
+                                    readOnly={!canChangeTariff}
+                                    onChange={e => {
+                                      if (!canChangeTariff) {
+                                        alert('Permission Denied: Only Super-Admin or General Manager can modify room tariff. Standard staff cannot override rates or offer unauthorized discounts (Video 23 Anti-Theft Guard).');
+                                        return;
+                                      }
+                                      setCustomTariff(Number(e.target.value));
+                                    }}
+                                    className="form-input-pms"
+                                    style={{
+                                      width: 85,
+                                      padding: '2px 4px',
+                                      fontWeight: 800,
+                                      textAlign: 'right',
+                                      background: !canChangeTariff ? '#f8fafc' : '#ffffff',
+                                      cursor: !canChangeTariff ? 'not-allowed' : 'auto',
+                                      borderColor: !canChangeTariff ? '#cbd5e1' : '#38bdf8'
+                                    }}
+                                    title={!canChangeTariff ? 'Room Tariff Locked: "Change_Room_Tariff" permission required to modify rates (Video 23 Anti-Theft Guard)' : 'Tariff is editable'}
+                                  />
+                                  {!canChangeTariff && (
+                                    <span title="Tariff Locked: Standard staff restricted from unauthorized discounts (Video 23)" style={{ fontSize: 11, color: '#e11d48', cursor: 'help' }}>
+                                      🔒
+                                    </span>
+                                  )}
+                                </div>
                               ) : (
                                 `₹${r.tariff}`
                               )}
