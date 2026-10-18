@@ -799,3 +799,40 @@ export interface PoliceGuestProfileItem {
     url: string;
   }[];
 }
+
+// ==========================================
+// Video 25: Online Vs Offline Architecture & Backup Types (Frames 0120, 0280, 0320, 0350)
+// ==========================================
+export interface PmsDatabaseBackup {
+  version: string;
+  timestamp: string;
+  firmId: string;
+  firmName: string;
+  data: {
+    rooms?: any[];
+    bookings?: any[];
+    checkIns?: any[];
+    kots?: any[];
+    bills?: any[];
+    payments?: any[];
+    users?: any[];
+    godowns?: any[];
+    itemGroups?: any[];
+    whatsAppLogs?: any[];
+    companyInfo?: any;
+  };
+}
+
+export interface ArchitectureComparisonItem {
+  sNo: number;
+  feature: string;
+  category: 'Core' | 'Security' | 'Operations' | 'Enterprise';
+  offline: {
+    status: 'yes' | 'no' | 'partial';
+    text: string;
+  };
+  online: {
+    status: 'yes' | 'no' | 'partial';
+    text: string;
+  };
+}

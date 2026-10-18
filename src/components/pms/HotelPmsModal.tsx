@@ -37,6 +37,7 @@ import { DeviceResponsivePreviewModal } from './DeviceResponsivePreviewModal';
 import { WhatsAppSettingModal } from './WhatsAppSettingModal';
 import { WhatsAppLogsModal } from './WhatsAppLogsModal';
 import { PoliceStationReportModal } from './PoliceStationReportModal';
+import { OnlineVsOfflineModal } from './OnlineVsOfflineModal';
 import type { PmsUserAccount, PmsChainProperty } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import './pmsStyles.css';
@@ -134,6 +135,9 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
 
   // Video 24: Police Station Report Modal (Frames 0100, 0105, 0110, 0140)
   const [isPoliceReportOpen, setIsPoliceReportOpen] = useState(false);
+
+  // Video 25: Online vs Offline Architecture & Disaster Recovery Modal (Frames 0120, 0280, 0350)
+  const [isOnlineVsOfflineOpen, setIsOnlineVsOfflineOpen] = useState(false);
 
   // Video 23: Real-Time Active Staff & Role Boundary Listener
   React.useEffect(() => {
@@ -311,6 +315,29 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               >
                 <span>💬</span>
                 <span>WhatsApp: Valid (29-06-2026)</span>
+              </button>
+
+              {/* Video 25: Online vs Offline Architecture & Disaster Recovery Badge (Frames 0070, 0120, 0350) */}
+              <button
+                type="button"
+                onClick={() => setIsOnlineVsOfflineOpen(true)}
+                title="Click to view 30-Dimension Online vs Offline Matrix & Disaster Recovery Tools (Video 25)"
+                style={{
+                  background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '3px 10px',
+                  borderRadius: 3,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4
+                }}
+              >
+                <span>🌐</span>
+                <span>Online / Hybrid Sync</span>
               </button>
 
               {/* Video 21: User Avatar & Role Dropdown */}
@@ -774,6 +801,10 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('Only_Whatsapp', 'WhatsApp Outbox Logs', () => setIsWhatsAppLogsOpen(true))}>
                       <span style={{ color: '#fb923c', fontWeight: 700 }}>📜 WhatsApp Outbox Logs (/whatsapp_logs)</span>
                     </div>
+                    {/* Video 25: Online vs Offline Architecture & Disaster Recovery Tools */}
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Setting', 'Online vs Offline Architecture', () => setIsOnlineVsOfflineOpen(true))}>
+                      <span style={{ color: '#38bdf8', fontWeight: 800 }}>🌐 Online vs Offline Architecture &amp; Backup (Video 25)</span>
+                    </div>
                     <div className="pms-nav-item" onClick={() => alert('Printer & Receipt Template Setup')}>
                       <span>🖨️ Printer &amp; POS Setup</span>
                     </div>
@@ -1165,6 +1196,12 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       <PoliceStationReportModal
         isOpen={isPoliceReportOpen}
         onClose={() => setIsPoliceReportOpen(false)}
+      />
+
+      {/* Video 25: Online vs Offline Architecture & Disaster Recovery Modal (Frames 0120, 0280, 0350) */}
+      <OnlineVsOfflineModal
+        isOpen={isOnlineVsOfflineOpen}
+        onClose={() => setIsOnlineVsOfflineOpen(false)}
       />
     </>
   );

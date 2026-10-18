@@ -4613,5 +4613,93 @@ export class PmsStore {
 
     return { success: true, log, directUrl };
   }
+
+  // ==========================================
+  // Video 25: Online vs Offline Architecture & Local Backup / Disaster Recovery
+  // ==========================================
+  static exportDatabaseBackup(): import('../types/pmsModels').PmsDatabaseBackup {
+    const prop = this.getCurrentProperty();
+    const backup: import('../types/pmsModels').PmsDatabaseBackup = {
+      version: '1.25.0',
+      timestamp: new Date().toISOString(),
+      firmId: prop.firmId,
+      firmName: prop.firmName,
+      data: {
+        rooms: this.getRooms(),
+        bookings: this.getBookings(),
+        checkIns: this.getCheckIns(),
+        kots: this.getKots(),
+        bills: this.getFoodBills(),
+        payments: this.getPayments(),
+        users: this.getUsers(),
+        godowns: this.getGodowns(),
+        itemGroups: this.getItemGroups(),
+        whatsAppLogs: this.getWhatsAppLogs(),
+        companyInfo: this.getCompanyInfo()
+      }
+    };
+    return backup;
+  }
+
+  static importDatabaseBackup(backup: import('../types/pmsModels').PmsDatabaseBackup): { success: boolean; message: string } {
+    if (!backup || !backup.data) {
+      return { success: false, message: 'Invalid backup file structure.' };
+    }
+    try {
+      if (backup.data.rooms) localStorage.setItem(STORAGE_KEYS.ROOMS, JSON.stringify(backup.data.rooms));
+      if (backup.data.bookings) localStorage.setItem(STORAGE_KEYS.BOOKINGS, JSON.stringify(backup.data.bookings));
+      if (backup.data.checkIns) localStorage.setItem('hotel_pms_checkins', JSON.stringify(backup.data.checkIns));
+      if (backup.data.kots) localStorage.setItem(STORAGE_KEYS.KOTS, JSON.stringify(backup.data.kots));
+      if (backup.data.bills) localStorage.setItem('hotel_pms_food_bills', JSON.stringify(backup.data.bills));
+      if (backup.data.payments) localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(backup.data.payments));
+      if (backup.data.users) localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(backup.data.users));
+      if ((backup.data as any).godowns) localStorage.setItem(STORAGE_KEYS.GODOWNS, JSON.stringify((backup.data as any).godowns));
+      if ((backup.data as any).itemGroups) localStorage.setItem(STORAGE_KEYS.ITEM_GROUPS, JSON.stringify((backup.data as any).itemGroups));
+      if (backup.data.whatsAppLogs) localStorage.setItem(STORAGE_KEYS.WHATSAPP_LOGS, JSON.stringify(backup.data.whatsAppLogs));
+      if (backup.data.companyInfo) localStorage.setItem('hotel_pms_company_info', JSON.stringify(backup.data.companyInfo));
+
+      // Broadcast update event
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('pms_database_restored'));
+        window.dispatchEvent(new Event('pms_user_changed'));
+      }
+      return { success: true, message: `Successfully restored database for ${backup.firmName || 'Hotel'}. Total records restored.` };
+    } catch (e: any) {
+      return { success: false, message: `Failed to restore database: ${e?.message || e}` };
+    }
+  }
+
+  static getStorageMetrics(): { totalKeys: number; sizeKb: number; recordCounts: Record<string, number> } {
+    let sizeBytes = 0;
+    let totalKeys = 0;
+    const recordCounts: Record<string, number> = {
+      rooms: this.getRooms().length,
+      bookings: this.getBookings().length,
+      checkIns: this.getCheckIns().length,
+      kots: this.getKots().length,
+      foodBills: this.getFoodBills().length,
+      payments: this.getPayments().length,
+      users: this.getUsers().length,
+      godowns: this.getGodowns().length,
+      whatsAppLogs: this.getWhatsAppLogs().length
+    };
+
+    if (typeof localStorage !== 'undefined') {
+      totalKeys = localStorage.length;
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('hotel_pms_')) {
+          const val = localStorage.getItem(key) || '';
+          sizeBytes += (key.length + val.length) * 2; // UTF-16
+        }
+      }
+    }
+
+    return {
+      totalKeys,
+      sizeKb: Math.round((sizeBytes / 1024) * 10) / 10,
+      recordCounts
+    };
+  }
 }
 

@@ -30,6 +30,7 @@ import { DeviceResponsivePreviewModal } from './DeviceResponsivePreviewModal';
 import { WhatsAppSettingModal } from './WhatsAppSettingModal';
 import { WhatsAppLogsModal } from './WhatsAppLogsModal';
 import { PoliceStationReportModal } from './PoliceStationReportModal';
+import { OnlineVsOfflineModal } from './OnlineVsOfflineModal';
 import type { PmsBooking } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
@@ -89,6 +90,9 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
 
   // Video 24: Police Station Report (Frames 0100, 0105, 0110, 0140)
   const [isPoliceReportOpen, setIsPoliceReportOpen] = useState(false);
+
+  // Video 25: Online vs Offline Architecture & Disaster Recovery Modal (Frames 0120, 0280, 0350)
+  const [isOnlineVsOfflineOpen, setIsOnlineVsOfflineOpen] = useState(false);
 
   // Video 23: Real-Time Active Staff & Role Boundary Controls
   const [currentUser, setCurrentUser] = useState(PmsStore.getCurrentUser());
@@ -472,6 +476,18 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         >
           <span className="tile-icon">👮</span>
           <span>Police Report</span>
+        </button>
+
+        {/* Video 25: Online vs Offline Architecture & Disaster Recovery Tile (Frame 0070, 0120) */}
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => guardAction('Setting', 'Online vs Offline Architecture', () => setIsOnlineVsOfflineOpen(true))}
+          style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff', fontWeight: 800 }}
+          title="Video 25: Online vs Offline Architecture Comparison, Evaluator & Disaster Recovery Tools"
+        >
+          <span className="tile-icon">🌐</span>
+          <span>Online/Offline</span>
         </button>
       </div>
 
@@ -933,6 +949,12 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
       <PoliceStationReportModal
         isOpen={isPoliceReportOpen}
         onClose={() => setIsPoliceReportOpen(false)}
+      />
+
+      {/* Video 25: Online vs Offline Architecture & Disaster Recovery Modal (Frames 0120, 0280, 0350) */}
+      <OnlineVsOfflineModal
+        isOpen={isOnlineVsOfflineOpen}
+        onClose={() => setIsOnlineVsOfflineOpen(false)}
       />
     </div>
   );
