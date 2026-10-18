@@ -805,6 +805,7 @@ export const GstReportsModal: React.FC<GstReportsModalProps> = ({
                         } else if (btn.actionKey === 'b2c_gst') {
                           setActiveTab('b2c');
                         } else if (onLaunchReportAction) {
+                          onClose();
                           onLaunchReportAction(btn.actionKey);
                         }
                       }}

@@ -36,6 +36,11 @@ import { CompanyBrandingModal } from './CompanyBrandingModal';
 import { CheckOutRegisterModal } from './CheckOutRegisterModal';
 import { Top20FeaturesModal } from './Top20FeaturesModal';
 import { GstReportsModal } from './GstReportsModal';
+import { DayEndReportModal } from './DayEndReportModal';
+import { ItemWiseSalesReportModal } from './ItemWiseSalesReportModal';
+import { ItemWiseStockModal } from './ItemWiseStockModal';
+import { GuestLogModal } from './GuestLogModal';
+import { ShiftHandoverModal } from './ShiftHandoverModal';
 import type { PmsBooking, BillFormatType, PmsCheckOutDetail, PmsGstReportTab } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
@@ -114,6 +119,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   const [isGstReportsOpen, setIsGstReportsOpen] = useState(false);
   const [gstReportTab, setGstReportTab] = useState<PmsGstReportTab>('consolidated');
 
+  // Video 29: All Hotel Reports Master Suite
+  const [isDayEndModalOpen, setIsDayEndModalOpen] = useState(false);
+  const [isItemWiseSaleModalOpen, setIsItemWiseSaleModalOpen] = useState(false);
+  const [isItemWiseStockModalOpen, setIsItemWiseStockModalOpen] = useState(false);
+  const [isGuestLogModalOpen, setIsGuestLogModalOpen] = useState(false);
+  const [isShiftHandoverModalOpen, setIsShiftHandoverModalOpen] = useState(false);
+  const [outstandingMode, setOutstandingMode] = useState<'receivable' | 'payable'>('receivable');
+
   const handleLaunchReportAction = (actionKey: string) => {
     switch (actionKey) {
       case 'room_booking':
@@ -141,6 +154,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         setIsPoliceReportOpen(true);
         break;
       case 'store_wise_stock':
+      case 'liqour_stock':
         setIsStoreWiseStockOpen(true);
         break;
       case 'purchase_entry':
@@ -166,6 +180,45 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         break;
       case 'room_dashboard':
         onOpenRoomMatrix();
+        break;
+      case 'outstanding_receivables':
+        setOutstandingMode('receivable');
+        setIsOutstandingReceivablesOpen(true);
+        break;
+      case 'outstanding_payable':
+      case 'outstanding_payables':
+        setOutstandingMode('payable');
+        setIsOutstandingReceivablesOpen(true);
+        break;
+      case 'day_end':
+        setIsDayEndModalOpen(true);
+        break;
+      case 'item_wise_sale':
+        setIsItemWiseSaleModalOpen(true);
+        break;
+      case 'item_wise_stock':
+        setIsItemWiseStockModalOpen(true);
+        break;
+      case 'guest_log':
+        setIsGuestLogModalOpen(true);
+        break;
+      case 'shift_handover':
+        setIsShiftHandoverModalOpen(true);
+        break;
+      case 'room_sales':
+        setIsCheckOutRegisterOpen(true);
+        break;
+      case 'gst_report':
+        setGstReportTab('consolidated');
+        setIsGstReportsOpen(true);
+        break;
+      case 'b2b_gst':
+        setGstReportTab('b2b');
+        setIsGstReportsOpen(true);
+        break;
+      case 'b2c_gst':
+        setGstReportTab('b2c');
+        setIsGstReportsOpen(true);
         break;
       default:
         break;
@@ -1118,10 +1171,11 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         onClose={() => setIsReceiptRegisterOpen(false)}
       />
 
-      {/* Video 15 Outstanding Receivables Modal (Frame 0130) */}
+      {/* Video 15 & 29 Outstanding Receivables (Dr) & Payables (Cr - Frame 0160) */}
       <OutstandingReceivablesModal
         isOpen={isOutstandingReceivablesOpen}
         onClose={() => setIsOutstandingReceivablesOpen(false)}
+        initialMode={outstandingMode}
       />
 
       {/* Video 16 General Payment Register Modal (Frame 0200, 0290, 0320) */}
@@ -1290,6 +1344,34 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         onClose={() => setIsGstReportsOpen(false)}
         initialTab={gstReportTab}
         onLaunchReportAction={handleLaunchReportAction}
+      />
+
+      {/* Video 29: All Hotel Reports Master Suite */}
+      <DayEndReportModal
+        isOpen={isDayEndModalOpen}
+        onClose={() => setIsDayEndModalOpen(false)}
+      />
+
+      <ItemWiseSalesReportModal
+        isOpen={isItemWiseSaleModalOpen}
+        onClose={() => setIsItemWiseSaleModalOpen(false)}
+      />
+
+      <ItemWiseStockModal
+        isOpen={isItemWiseStockModalOpen}
+        onClose={() => setIsItemWiseStockModalOpen(false)}
+      />
+
+      <GuestLogModal
+        isOpen={isGuestLogModalOpen}
+        onClose={() => setIsGuestLogModalOpen(false)}
+        onOpenRoomDashboard={onOpenRoomMatrix}
+        onOpenCheckOut={() => setIsCheckOutRegisterOpen(true)}
+      />
+
+      <ShiftHandoverModal
+        isOpen={isShiftHandoverModalOpen}
+        onClose={() => setIsShiftHandoverModalOpen(false)}
       />
     </div>
   );

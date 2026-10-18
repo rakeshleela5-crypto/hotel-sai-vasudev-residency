@@ -996,3 +996,113 @@ export interface PmsReportDashboardButton {
   actionKey: string;
 }
 
+// ==========================================
+// Video 29: All Hotel Reports Master Models (Frames 0080-0550)
+// ==========================================
+
+export interface PmsOutstandingAccount {
+  sNo: number;
+  accountName: string;
+  mobile: string;
+  balance: number;
+  balanceType: 'Dr' | 'Cr';
+  category?: string;
+  lastTransactionDate?: string;
+}
+
+export interface PmsItemWiseSale {
+  sNo: number;
+  itemName: string;
+  category?: string;
+  qty: number;
+  rate: number;
+  amount: number;
+}
+
+export interface PmsDayEndLedgerEntry {
+  date: string;
+  type: string;
+  accountName: string;
+  remark: string;
+  debit: number;
+  credit: number;
+  balance: number;
+}
+
+export interface PmsDayEndAccountGroup {
+  accountName: string;
+  date: string;
+  closingBalance: number;
+  entries: PmsDayEndLedgerEntry[];
+  totalDebit: number;
+  totalCredit: number;
+}
+
+export interface PmsDayEndReport {
+  hotelName: string;
+  address: string;
+  phone: string;
+  email: string;
+  reportDate: string;
+  generatedAt: string;
+  groups: PmsDayEndAccountGroup[];
+  grandTotalDebit: number;
+  grandTotalCredit: number;
+  cashInHand: number;
+}
+
+export interface PmsGuestLogEntry {
+  sNo: number;
+  guestName: string;
+  phone?: string;
+  city?: string;
+  numberOfVisits: number;
+  totalAmount: number;
+  lastVisitDate?: string;
+  vipTier?: 'Bronze' | 'Silver' | 'Gold' | 'Platinum';
+}
+
+export interface PmsItemStockLedgerEntry {
+  date: string;
+  transactionType: string;
+  remark: string;
+  stockIn: number;
+  stockOut: number;
+  balance: number;
+}
+
+export interface PmsItemStockReport {
+  itemName: string;
+  itemCategory: string;
+  unit: string;
+  fromDate: string;
+  toDate: string;
+  openingBalance: number;
+  entries: PmsItemStockLedgerEntry[];
+  totalStockIn: number;
+  totalStockOut: number;
+  closingBalance: number;
+}
+
+export interface PmsShiftHandoverRecord {
+  shiftId: string;
+  shiftDate: string;
+  shiftTime: string;
+  userEmail: string;
+  userName: string;
+  shiftType: 'Morning' | 'Evening' | 'Night';
+  openingDrawerCash: number;
+  roomCashCollected: number;
+  foodCashCollected: number;
+  advanceCashCollected: number;
+  expensesPaidFromDrawer: number;
+  netPhysicalCashInDrawer: number;
+  onlineUpiVerified: number;
+  cardSwipeVerified: number;
+  creditAccountsAdded: number;
+  totalTransactionsHandled: number;
+  handoverToUser: string;
+  handoverNotes: string;
+  status: 'Pending Verification' | 'Verified & Closed';
+}
+

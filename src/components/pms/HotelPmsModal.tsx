@@ -43,6 +43,11 @@ import { CompanyBrandingModal } from './CompanyBrandingModal';
 import { CheckOutRegisterModal } from './CheckOutRegisterModal';
 import { Top20FeaturesModal } from './Top20FeaturesModal';
 import { GstReportsModal } from './GstReportsModal';
+import { DayEndReportModal } from './DayEndReportModal';
+import { ItemWiseSalesReportModal } from './ItemWiseSalesReportModal';
+import { ItemWiseStockModal } from './ItemWiseStockModal';
+import { GuestLogModal } from './GuestLogModal';
+import { ShiftHandoverModal } from './ShiftHandoverModal';
 import type { PmsUserAccount, PmsChainProperty, BillFormatType, PmsCheckOutDetail, PmsGstReportTab } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import './pmsStyles.css';
@@ -159,6 +164,14 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   const [isGstReportsOpen, setIsGstReportsOpen] = useState(false);
   const [gstReportTab, setGstReportTab] = useState<PmsGstReportTab>('consolidated');
 
+  // Video 29: All Hotel Reports Master Suite (Frames 0080-0550)
+  const [isDayEndModalOpen, setIsDayEndModalOpen] = useState(false);
+  const [isItemWiseSaleModalOpen, setIsItemWiseSaleModalOpen] = useState(false);
+  const [isItemWiseStockModalOpen, setIsItemWiseStockModalOpen] = useState(false);
+  const [isGuestLogModalOpen, setIsGuestLogModalOpen] = useState(false);
+  const [isShiftHandoverModalOpen, setIsShiftHandoverModalOpen] = useState(false);
+  const [outstandingMode, setOutstandingMode] = useState<'receivable' | 'payable'>('receivable');
+
   const handleLaunchReportAction = (actionKey: string) => {
     switch (actionKey) {
       case 'room_booking':
@@ -186,6 +199,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         setIsPoliceReportOpen(true);
         break;
       case 'store_wise_stock':
+      case 'liqour_stock':
         setIsStoreWiseStockOpen(true);
         break;
       case 'purchase_entry':
@@ -210,6 +224,49 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         break;
       case 'room_dashboard':
         setActiveTab('matrix');
+        break;
+      case 'outstanding_receivables':
+        setOutstandingMode('receivable');
+        setIsOutstandingReceivablesOpen(true);
+        break;
+      case 'outstanding_payable':
+      case 'outstanding_payables':
+        setOutstandingMode('payable');
+        setIsOutstandingReceivablesOpen(true);
+        break;
+      case 'day_end':
+        setIsDayEndModalOpen(true);
+        break;
+      case 'item_wise_sale':
+        setIsItemWiseSaleModalOpen(true);
+        break;
+      case 'item_wise_stock':
+        setIsItemWiseStockModalOpen(true);
+        break;
+      case 'guest_log':
+        setIsGuestLogModalOpen(true);
+        break;
+      case 'shift_handover':
+        setIsShiftHandoverModalOpen(true);
+        break;
+      case 'room_sales':
+        setIsCheckOutRegisterOpen(true);
+        break;
+      case 'item_list':
+        setItemMasterTab('list');
+        setIsItemMasterOpen(true);
+        break;
+      case 'gst_report':
+        setGstReportTab('consolidated');
+        setIsGstReportsOpen(true);
+        break;
+      case 'b2b_gst':
+        setGstReportTab('b2b');
+        setIsGstReportsOpen(true);
+        break;
+      case 'b2c_gst':
+        setGstReportTab('b2c');
+        setIsGstReportsOpen(true);
         break;
       default:
         break;
@@ -947,6 +1004,25 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     <div className="pms-nav-item" onClick={() => { setGstReportTab('dashboard'); setIsGstReportsOpen(true); }}>
                       <span style={{ color: '#fbbf24', fontWeight: 800 }}>📊 Master Report Hub (/report_dashboard)</span>
                     </div>
+                    {/* Video 29: All Hotel Reports Master Suite */}
+                    <div className="pms-nav-item" onClick={() => setIsDayEndModalOpen(true)}>
+                      <span style={{ color: '#f43f5e', fontWeight: 800 }}>🌅 Day End Report (Night Audit - Video 29)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsItemWiseSaleModalOpen(true)}>
+                      <span style={{ color: '#38bdf8', fontWeight: 700 }}>📊 Item Wise Sales Report (Video 29)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsItemWiseStockModalOpen(true)}>
+                      <span style={{ color: '#a855f7', fontWeight: 700 }}>🏷️ Item Wise Stock Ledger (Video 29)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsGuestLogModalOpen(true)}>
+                      <span style={{ color: '#fbbf24', fontWeight: 800 }}>📖 Guest Log VIP Register (Video 29)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsShiftHandoverModalOpen(true)}>
+                      <span style={{ color: '#34d399', fontWeight: 800 }}>🤝 Shift Handover Report (Video 29)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => { setOutstandingMode('payable'); setIsOutstandingReceivablesOpen(true); }}>
+                      <span style={{ color: '#ef4444', fontWeight: 700 }}>💳 Outstanding Payables (Creditors - Video 29)</span>
+                    </div>
                     <div className="pms-nav-item" onClick={() => setIsFbbReportOpen(true)}>
                       <span style={{ color: '#4ade80', fontWeight: 700 }}>🍴 FBB Report (Food &amp; Beverage)</span>
                     </div>
@@ -1276,10 +1352,11 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         onClose={() => setIsReceiptRegisterOpen(false)}
       />
 
-      {/* Video 15: Outstanding Receivables Modal (Frame 0130) */}
+      {/* Video 15 & Video 29: Outstanding Receivables (Dr) & Payables (Cr - Frame 0160) */}
       <OutstandingReceivablesModal
         isOpen={isOutstandingReceivablesOpen}
         onClose={() => setIsOutstandingReceivablesOpen(false)}
+        initialMode={outstandingMode}
       />
 
       {/* Video 16: General Payment Register Modal (Frame 0200, 0290, 0320) */}
@@ -1470,6 +1547,34 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         onClose={() => setIsGstReportsOpen(false)}
         initialTab={gstReportTab}
         onLaunchReportAction={handleLaunchReportAction}
+      />
+
+      {/* Video 29: All Hotel Reports Master Suite */}
+      <DayEndReportModal
+        isOpen={isDayEndModalOpen}
+        onClose={() => setIsDayEndModalOpen(false)}
+      />
+
+      <ItemWiseSalesReportModal
+        isOpen={isItemWiseSaleModalOpen}
+        onClose={() => setIsItemWiseSaleModalOpen(false)}
+      />
+
+      <ItemWiseStockModal
+        isOpen={isItemWiseStockModalOpen}
+        onClose={() => setIsItemWiseStockModalOpen(false)}
+      />
+
+      <GuestLogModal
+        isOpen={isGuestLogModalOpen}
+        onClose={() => setIsGuestLogModalOpen(false)}
+        onOpenRoomDashboard={() => setActiveTab('matrix')}
+        onOpenCheckOut={() => setIsCheckOutRegisterOpen(true)}
+      />
+
+      <ShiftHandoverModal
+        isOpen={isShiftHandoverModalOpen}
+        onClose={() => setIsShiftHandoverModalOpen(false)}
       />
     </>
   );
