@@ -29,6 +29,7 @@ import { ChainPropertyModal } from './ChainPropertyModal';
 import { DeviceResponsivePreviewModal } from './DeviceResponsivePreviewModal';
 import { WhatsAppSettingModal } from './WhatsAppSettingModal';
 import { WhatsAppLogsModal } from './WhatsAppLogsModal';
+import { PoliceStationReportModal } from './PoliceStationReportModal';
 import type { PmsBooking } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
@@ -85,6 +86,9 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   // Video 22: Auto WhatsApp SMS Integration & Outbox
   const [isWhatsAppSettingOpen, setIsWhatsAppSettingOpen] = useState(false);
   const [isWhatsAppLogsOpen, setIsWhatsAppLogsOpen] = useState(false);
+
+  // Video 24: Police Station Report (Frames 0100, 0105, 0110, 0140)
+  const [isPoliceReportOpen, setIsPoliceReportOpen] = useState(false);
 
   // Video 23: Real-Time Active Staff & Role Boundary Controls
   const [currentUser, setCurrentUser] = useState(PmsStore.getCurrentUser());
@@ -456,6 +460,18 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         >
           <span className="tile-icon">📜</span>
           <span>WhatsApp Logs</span>
+        </button>
+
+        {/* Video 24: Police Station Front Office Report Tile (Frame 0100) */}
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => guardAction('Police Station Report', 'Police Station Report', () => setIsPoliceReportOpen(true))}
+          style={{ background: 'linear-gradient(135deg, #eab308 0%, #ca8a04 100%)', color: '#1e293b', fontWeight: 800 }}
+          title="Video 24: Police Station Front Office Arrival & Departure Register (/police_station_report)"
+        >
+          <span className="tile-icon">👮</span>
+          <span>Police Report</span>
         </button>
       </div>
 
@@ -911,6 +927,12 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           setIsWhatsAppLogsOpen(false);
           setIsWhatsAppSettingOpen(true);
         }}
+      />
+
+      {/* Video 24: Police Station Report Modal (Frames 0100, 0105, 0110, 0140) */}
+      <PoliceStationReportModal
+        isOpen={isPoliceReportOpen}
+        onClose={() => setIsPoliceReportOpen(false)}
       />
     </div>
   );

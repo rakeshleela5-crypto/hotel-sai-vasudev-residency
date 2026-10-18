@@ -1933,16 +1933,138 @@ export class PmsStore {
   }
 
   static getCheckIns(): import('../types/pmsModels').PmsCheckIn[] {
-    const raw = localStorage.getItem('hotel_pms_checkins');
-    if (raw) {
-      try {
-        return JSON.parse(raw);
-      } catch {
-        // fallback
-      }
-    }
-
     const defaultCheckIns: import('../types/pmsModels').PmsCheckIn[] = [
+      {
+        checkInNo: 'SR/231/25-26',
+        roomNo: '201',
+        roomType: 'DELUXE',
+        guestName: 'SAMEER KHAN',
+        mobile: '7999663646',
+        checkInDate: '10-07-2025',
+        checkInTime: '23:10:00',
+        numberOfDays: 1,
+        numberOfGuests: 3,
+        businessSource: 'Direct',
+        package: 'ROOM ONLY',
+        tariffPerDay: 2500,
+        advancePaid: 2500,
+        paymentMode: 'Cash',
+        documentName: 'Aadhaar Card',
+        documentNo: '348784787487',
+        addressLine1: 'MAIN ROAD NEAR SHYAM TAKIES',
+        city: 'Jabalpur',
+        state: 'Madhya Pradesh',
+        country: 'India',
+        pinCode: '482001',
+        nationality: 'India',
+        guestImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+        documentImage: 'https://images.unsplash.com/photo-1618042164219-62c820f10723?w=200&auto=format&fit=crop&q=80',
+        secondGuestName: 'juli',
+        secondGuestIdName: 'Aadhaar Card',
+        secondGuestIdNo: '23234232',
+        secondGuestDocument: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+        thirdGuestName: 'vipin',
+        thirdGuestIdName: 'Voter ID',
+        thirdGuestIdNo: '392849732',
+        thirdGuestDocument: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+        status: 'CheckedIn',
+        createdAt: '2025-07-10T23:10:00.000Z'
+      },
+      {
+        checkInNo: 'SR/232/25-26',
+        roomNo: '202',
+        roomType: 'LUXRY ROOM',
+        guestName: 'sunil kumar yadav',
+        mobile: '983982735',
+        checkInDate: '10-07-2025',
+        checkInTime: '23:21:00',
+        numberOfDays: 1,
+        numberOfGuests: 3,
+        businessSource: 'Goibibo',
+        package: 'WITH LUNCH || WITH LUNCH',
+        tariffPerDay: 4700,
+        advancePaid: 4700,
+        paymentMode: 'Cash',
+        documentName: 'aadhar card',
+        documentNo: '983298274',
+        addressLine1: 'shop no 8',
+        city: 'jabalpur',
+        state: 'm.p.',
+        country: 'India',
+        pinCode: '482001',
+        nationality: 'India',
+        companyName: 'HCL',
+        companyAddress: 'BANGLORE',
+        gstNo: '23IJHKJHKJI',
+        guestImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+        documentImage: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=200&auto=format&fit=crop&q=80',
+        secondGuestName: 'sanjay',
+        secondGuestIdName: 'aadhar card',
+        secondGuestIdNo: '54654654',
+        secondGuestDocument: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
+        thirdGuestName: 'mohan',
+        thirdGuestIdName: 'aadhar card',
+        thirdGuestIdNo: '234234234',
+        thirdGuestDocument: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80',
+        status: 'CheckedIn',
+        createdAt: '2025-07-10T23:21:00.000Z'
+      },
+      {
+        checkInNo: 'SR/229/25-26',
+        roomNo: '202',
+        roomType: 'LUXRY ROOM',
+        guestName: 'CHANDAN',
+        mobile: '5645648848',
+        checkInDate: '10-07-2025',
+        checkInTime: '17:04:00',
+        numberOfDays: 1,
+        numberOfGuests: 1,
+        businessSource: 'Walk-in',
+        package: 'ROOM ONLY',
+        tariffPerDay: 4000,
+        advancePaid: 4000,
+        paymentMode: 'Cash',
+        documentName: 'Voter ID',
+        documentNo: 'VTR-8947291',
+        addressLine1: 'Station Road',
+        city: 'Patna',
+        state: 'Bihar',
+        country: 'India',
+        pinCode: '800001',
+        nationality: 'India',
+        guestImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+        documentImage: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=200&auto=format&fit=crop&q=80',
+        status: 'CheckedIn',
+        createdAt: '2025-07-10T17:04:00.000Z'
+      },
+      {
+        checkInNo: 'SR/230/25-26',
+        roomNo: '205',
+        roomType: 'Dormitory',
+        guestName: 'SALIM',
+        mobile: '7479499435',
+        checkInDate: '10-07-2025',
+        checkInTime: '18:10:00',
+        numberOfDays: 1,
+        numberOfGuests: 2,
+        businessSource: 'Direct',
+        package: 'ROOM ONLY',
+        tariffPerDay: 3000,
+        advancePaid: 3000,
+        paymentMode: 'Cash',
+        documentName: 'Driving License',
+        documentNo: 'DL-092023910',
+        addressLine1: 'Boring Road, PATNA',
+        city: 'Patna',
+        state: 'Bihar',
+        country: 'India',
+        pinCode: '800001',
+        nationality: 'India',
+        guestImage: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80',
+        documentImage: 'https://images.unsplash.com/photo-1618042164219-62c820f10723?w=200&auto=format&fit=crop&q=80',
+        status: 'CheckedIn',
+        createdAt: '2025-07-10T18:10:00.000Z'
+      },
       {
         checkInNo: 'SR/204/25-26',
         roomNo: '103',
@@ -1993,6 +2115,27 @@ export class PmsStore {
         createdAt: '2025-06-16T05:15:00.000Z'
       }
     ];
+
+    const raw = localStorage.getItem('hotel_pms_checkins');
+    if (raw) {
+      try {
+        const parsed: import('../types/pmsModels').PmsCheckIn[] = JSON.parse(raw);
+        let updated = false;
+        for (const seed of defaultCheckIns) {
+          if (!parsed.some(c => c.checkInNo === seed.checkInNo)) {
+            parsed.push(seed);
+            updated = true;
+          }
+        }
+        if (updated) {
+          localStorage.setItem('hotel_pms_checkins', JSON.stringify(parsed));
+        }
+        return parsed;
+      } catch {
+        // fallback
+      }
+    }
+
     localStorage.setItem('hotel_pms_checkins', JSON.stringify(defaultCheckIns));
     return defaultCheckIns;
   }
@@ -2046,6 +2189,40 @@ export class PmsStore {
     }
 
     return true;
+  }
+
+  // ==========================================
+  // Video 24: Police Station Report Generator (Frames 0100, 0105, 0110, 0134, 0140)
+  // ==========================================
+  static getPoliceStationReport(fromDate?: string, toDate?: string): import('../types/pmsModels').PmsCheckIn[] {
+    const list = this.getCheckIns();
+    if (!fromDate && !toDate) return list;
+
+    // Helper to parse DD-MM-YYYY or YYYY-MM-DD
+    const parseDate = (dStr?: string): number => {
+      if (!dStr) return 0;
+      const clean = dStr.trim();
+      const parts = clean.split('-');
+      if (parts.length === 3) {
+        if (parts[0].length === 4) {
+          // YYYY-MM-DD
+          return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
+        } else {
+          // DD-MM-YYYY
+          return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0])).getTime();
+        }
+      }
+      return new Date(clean).getTime() || 0;
+    };
+
+    const fromTime = fromDate ? parseDate(fromDate) : 0;
+    const toTime = toDate ? parseDate(toDate) + (24 * 60 * 60 * 1000 - 1) : Infinity;
+
+    return list.filter(c => {
+      const cTime = parseDate(c.checkInDate);
+      if (cTime === 0) return true;
+      return cTime >= fromTime && cTime <= toTime;
+    });
   }
 
   static getKots(): PmsKotRecord[] {

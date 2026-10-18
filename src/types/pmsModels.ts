@@ -779,6 +779,23 @@ export interface PmsWhatsAppConfig {
   autoAlertOwnerOnUpdate: boolean;
 }
 
+// ==========================================
+// Video 24: Police Station Report Types (Frames 0100, 0105, 0110, 0125, 0140)
+// ==========================================
+export interface PoliceStationReportFilter {
+  fromDate: string;   // DD-MM-YYYY
+  toDate: string;     // DD-MM-YYYY
+  format: 'format1' | 'format2'; // format1 = Interactive Table, format2 = Official Police Verification PDF
+}
 
-
-
+export interface PoliceGuestProfileItem {
+  checkInNo: string;
+  guestName: string;
+  documentNo?: string;
+  secondGuestName?: string;
+  thirdGuestName?: string;
+  photos: {
+    label: string;
+    url: string;
+  }[];
+}

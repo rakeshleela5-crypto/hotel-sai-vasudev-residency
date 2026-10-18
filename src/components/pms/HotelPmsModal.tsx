@@ -36,6 +36,7 @@ import { ChainPropertyModal } from './ChainPropertyModal';
 import { DeviceResponsivePreviewModal } from './DeviceResponsivePreviewModal';
 import { WhatsAppSettingModal } from './WhatsAppSettingModal';
 import { WhatsAppLogsModal } from './WhatsAppLogsModal';
+import { PoliceStationReportModal } from './PoliceStationReportModal';
 import type { PmsUserAccount, PmsChainProperty } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import './pmsStyles.css';
@@ -130,6 +131,9 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   // Video 22: Auto WhatsApp SMS Integration & Message Outbox
   const [isWhatsAppSettingOpen, setIsWhatsAppSettingOpen] = useState(false);
   const [isWhatsAppLogsOpen, setIsWhatsAppLogsOpen] = useState(false);
+
+  // Video 24: Police Station Report Modal (Frames 0100, 0105, 0110, 0140)
+  const [isPoliceReportOpen, setIsPoliceReportOpen] = useState(false);
 
   // Video 23: Real-Time Active Staff & Role Boundary Listener
   React.useEffect(() => {
@@ -703,8 +707,9 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     <div className="pms-nav-item" onClick={() => alert('Daily Check-in Report')}>
                       <span>📋 Check-in Report</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => alert('Police Station Front Office Report')}>
-                      <span>👮 Police Station Report</span>
+                    {/* Video 24: Police Station Report (Frames 0100, 0105, 0110, 0140) */}
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Police Station Report', 'Police Station Report', () => setIsPoliceReportOpen(true))}>
+                      <span style={{ color: '#f59e0b', fontWeight: 800 }}>👮 Police Station Report (Video 24)</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsFbbReportOpen(true)}>
                       <span style={{ color: '#4ade80', fontWeight: 700 }}>🍴 FBB Report (Food &amp; Beverage)</span>
@@ -1154,6 +1159,12 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
           setIsWhatsAppLogsOpen(false);
           setIsWhatsAppSettingOpen(true);
         }}
+      />
+
+      {/* Video 24: Police Station Report Modal (Frames 0100, 0105, 0110, 0140) */}
+      <PoliceStationReportModal
+        isOpen={isPoliceReportOpen}
+        onClose={() => setIsPoliceReportOpen(false)}
       />
     </>
   );
