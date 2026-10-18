@@ -888,3 +888,42 @@ export interface CompanyPicAsset {
   description: string;
 }
 
+// ==========================================
+// Video 27: Top 20 Features of RoomG PMS Master Models (Frames 0005-0815)
+// ==========================================
+export type PmsFeatureCategory = 
+  | 'FrontDesk' 
+  | 'Restaurant' 
+  | 'Billing' 
+  | 'Inventory' 
+  | 'Security';
+
+export interface PmsTopFeature {
+  id: number;
+  title: string;
+  hindiTitle: string;
+  category: PmsFeatureCategory;
+  categoryLabel: string;
+  route: string;
+  summary: string;
+  fullDescription: string;
+  antiTheftRationale?: string;
+  targetModal: string;
+  icon: string;
+  accentColor: string;
+  specs: string[];
+}
+
+export interface RoomGSystemPricing {
+  mrp: number;
+  discount: number;
+  finalPrice: number;
+  gstExtra: boolean;
+  demoUrl: string;
+  demoUser: string;
+  demoPassword: string;
+  salesPhones: string[];
+  salesEmail: string;
+  officialWebsite: string;
+}
+

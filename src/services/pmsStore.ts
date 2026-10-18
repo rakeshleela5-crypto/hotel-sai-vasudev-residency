@@ -33,7 +33,9 @@ import type {
   PmsWhatsAppConfig,
   BillFormatOption,
   BillFormatType,
-  CompanyPicAsset
+  CompanyPicAsset,
+  PmsTopFeature,
+  RoomGSystemPricing
 } from '../types/pmsModels';
 import { PMS_ALL_PERMISSIONS } from '../types/pmsModels';
 
@@ -5055,6 +5057,485 @@ export class PmsStore {
     const upiPayload = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(payeeName)}&am=${cleanAmount}&cu=INR&tn=${encodeURIComponent(note)}`;
     return `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiPayload)}`;
   }
+
+  // ==========================================
+  // Video 27: Top 20 Features of RoomG PMS Master Methods (Frames 0005-0815)
+  // ==========================================
+  static getTop20Features(): PmsTopFeature[] {
+    return TOP_20_FEATURES;
+  }
+
+  static getTopFeatureById(id: number): PmsTopFeature | undefined {
+    return TOP_20_FEATURES.find(f => f.id === id);
+  }
+
+  static getRoomGPricingInfo(): RoomGSystemPricing {
+    return DEFAULT_ROOMG_PRICING;
+  }
+
+  /**
+   * Video 27 Timestamp [26:00]: Real-Time Anti-Theft Owner WhatsApp Alert
+   * Automatically dispatches an alert to hotel owner when a checkout folio is deleted or modified.
+   */
+  static triggerAntiTheftAlert(payload: {
+    voucherType: 'Check_out_delete' | 'Check_out_update';
+    roomNo: string;
+    voucherNo: string;
+    guestName: string;
+    checkoutDate: string;
+    totalBillAmount: number;
+    operatorName?: string;
+  }): void {
+    const comp = this.getCompanyInfo();
+    const config = this.getWhatsAppConfig();
+    const operator = payload.operatorName || this.getCurrentUser().userName || 'Staff';
+    const ownerMobile = config.ownerMobile || '7999663696';
+    
+    const message = `Dear Owner, This is to inform you that a guest bill has been deleted at *${comp.firmName}*. *Details* Room No: ${payload.roomNo} Bill No: ${payload.voucherNo} Guest Name: ${payload.guestName} Checkout Date: ${payload.checkoutDate} Delete Bill Amount: ₹${payload.totalBillAmount.toFixed(2)} Oprater Name: ${operator} Please ensure all *Deleted* Record`;
+
+    this.addWhatsAppLog({
+      recipientName: 'Hotel Owner',
+      recipientMobile: ownerMobile,
+      recipientType: 'Owner',
+      voucherType: payload.voucherType,
+      voucherNo: payload.voucherNo,
+      message,
+      status: 'Sent',
+      roomNo: payload.roomNo
+    });
+
+    // Broadcast event for live UI toast/notification
+    try {
+      const event = new CustomEvent('pms_anti_theft_alert', {
+        detail: {
+          ...payload,
+          operatorName: operator,
+          ownerMobile,
+          message
+        }
+      });
+      window.dispatchEvent(event);
+    } catch {}
+  }
 }
+
+// ==========================================
+// Video 27: Top 20 Features of RoomG PMS Master Seed Data (Frames 0005-0815)
+// ==========================================
+export const DEFAULT_ROOMG_PRICING: RoomGSystemPricing = {
+  mrp: 15600,
+  discount: 5600,
+  finalPrice: 10000,
+  gstExtra: true,
+  demoUrl: 'demo.datahouseerp.com',
+  demoUser: 'demo4@gmail.com',
+  demoPassword: '12345678',
+  salesPhones: ['7999663696', '8871702803'],
+  salesEmail: 'datahouseerp@gmail.com',
+  officialWebsite: 'https://datahouseerp.com'
+};
+
+export const TOP_20_FEATURES: PmsTopFeature[] = [
+  {
+    id: 1,
+    title: 'Room Dashboard',
+    hindiTitle: 'रियल-टाइम रूम डैशबोर्ड',
+    category: 'FrontDesk',
+    categoryLabel: 'Front Desk & Operations',
+    route: 'demo.datahouseerp.com/room_dashboard',
+    targetModal: 'room_dashboard',
+    icon: '🏢',
+    accentColor: '#16a34a',
+    summary: 'Real-time visual room matrix showing Vacant, Booked, Occupied, and Dirty rooms with 6 quick action triggers per room card.',
+    fullDescription: 'The Room Dashboard is the central operational command center for front-desk receptionists and managers. It displays live status indicators (Vacant in white/green, Booked in yellow, Occupied in solid green, Dirty in crimson red), advance booking date inspection, and 6 instant micro-action buttons on every room card (phone call guest, extend/shift room, laundry service, instant billing, guest folio details, and housekeeping clean status).',
+    antiTheftRationale: 'Eliminates unrecorded room sales and backroom cash pocketing by making every room state visually indisputable to owner and staff at all times.',
+    specs: [
+      'Visual color matrix: Vacant (White/Green), Booked (Yellow), Occupied (Green), Dirty (Crimson)',
+      '6 Instant micro-actions on room card: Call, Shift, Laundry, Folio, Guest info, Dirty/Clean',
+      'Instant counts summary header: Vacant, Occupied, Dirty, Check-ins',
+      'Date picker filter to preview future room availability on any date'
+    ]
+  },
+  {
+    id: 2,
+    title: 'Online Room Booking Engine',
+    hindiTitle: 'ऑनलाइन व एडवांस रूम बुकिंग',
+    category: 'FrontDesk',
+    categoryLabel: 'Front Desk & Operations',
+    route: 'demo.datahouseerp.com/roombookings/create',
+    targetModal: 'room_booking',
+    icon: '📅',
+    accentColor: '#ca8a04',
+    summary: 'Advance room reservation engine supporting OTA channel tagging (Agoda, MMT, Booking.com, Goibibo) and automated guest lookup.',
+    fullDescription: 'Book rooms in advance with complete guest details and real-time room availability validation. It records business sources (Agoda, MakeMyTrip, Goibibo, Booking.com, Corporate, Walk-In), package selection (Room Only, With Breakfast, EP/CP/MAP), advance token payments, and vehicle/parking metadata while maintaining strict availability locks.',
+    antiTheftRationale: 'Locks in advance booking revenue immediately into the ledger with automated receipt generation, ensuring advance deposits cannot disappear before check-in.',
+    specs: [
+      'Auto-complete guest lookup by phone number to pull existing ID records',
+      'OTA & Corporate source attribution: Agoda, MakeMyTrip, Goibibo, Booking.com, Corporate, Walk-in',
+      'Package & meal plan selector (EP, CP, MAP, AP, Room Only, With Breakfast)',
+      'Multi-room bulk reservation capability with tariff customization'
+    ]
+  },
+  {
+    id: 3,
+    title: 'Double-Booking Prevention Calendar',
+    hindiTitle: 'डबल-बुकिंग रोकथाम कैलेंडर मैट्रिक्स',
+    category: 'FrontDesk',
+    categoryLabel: 'Front Desk & Operations',
+    route: 'demo.datahouseerp.com/booking_calendar',
+    targetModal: 'booking_calendar',
+    icon: '🗓️',
+    accentColor: '#0284c7',
+    summary: '30-day horizontal date matrix mapping every room against calendar days with green "B" badges to prevent double bookings.',
+    fullDescription: 'A timeline-based horizontal availability calendar displaying rooms along the Y-axis and dates across the X-axis. As demonstrated in Video 27 Frame 0205, when Room 204 is booked from 20-07 to 24-07, the software locks those cells with green "B" badges and automatically removes Room 204 from the booking dropdown for those dates.',
+    antiTheftRationale: 'Prevents rogue staff from accepting off-the-books bookings on already committed rooms or claiming a room was vacant when it was occupied.',
+    specs: [
+      '30-day horizontal scrollable availability grid',
+      'Green "B" (Booked) badges on reserved dates',
+      'Real-time automated room availability filter in booking form',
+      'One-click room selection directly from calendar cells'
+    ]
+  },
+  {
+    id: 4,
+    title: 'Guest Check-In & Police ID Verification',
+    hindiTitle: 'गेस्ट चेक-इन व पुलिस आईडी सत्यापन',
+    category: 'FrontDesk',
+    categoryLabel: 'Front Desk & Operations',
+    route: 'demo.datahouseerp.com/roomcheckins/create',
+    targetModal: 'room_checkin',
+    icon: '🪪',
+    accentColor: '#0ea5e9',
+    summary: 'Streamlined guest arrival workflow with 3 document image slots (webcam/ID card), auto-billing initiation, and police report compliance.',
+    fullDescription: 'Handles physical guest arrival, key handover, and tariff lock. Automatically pulls booking details or accepts walk-ins. Includes 3 dedicated photo upload/capture preview slots (guest face photo, ID front, ID back). Stores Aadhaar/Passport securely for instant police station arrival register generation.',
+    antiTheftRationale: 'Ensures every guest is identified and digitally archived. Front desk staff cannot check in anonymous guests or omit check-in records.',
+    specs: [
+      '3 image preview slots (Guest Face Photo, ID Card Front, ID Card Back)',
+      'Live webcam capture and file upload support',
+      'Integrated Police Station Arrival/Departure Register export',
+      'Immediate room status transition from Vacant to Occupied'
+    ]
+  },
+  {
+    id: 5,
+    title: 'Guest Checkout & Auto Housekeeping Status',
+    hindiTitle: 'गेस्ट चेकआउट व ऑटो हाउसकीपिंग स्टेटस',
+    category: 'FrontDesk',
+    categoryLabel: 'Front Desk & Operations',
+    route: 'demo.datahouseerp.com/roomcheckouts',
+    targetModal: 'room_checkout',
+    icon: '🚪',
+    accentColor: '#2563eb',
+    summary: 'Consolidated final folio calculation combining room rent, restaurant food bills, laundry, and taxes with auto-switch to "Cleaning Pending".',
+    fullDescription: 'Prepares the consolidated final checkout folio by merging day-wise room rent, pending KOT food orders, mini-bar, laundry, and GST. Upon checkout completion, the room automatically changes from Occupied (Green) to "Cleaning Pending" (Dirty / Red), alerting housekeeping staff to sanitize the room before it can be re-assigned.',
+    antiTheftRationale: 'Prevents rooms from being immediately re-sold under the table before housekeeping clearance, while ensuring all food and laundry charges are billed.',
+    specs: [
+      'Merged room rent, pending KOT food bills, laundry, and incidental charges',
+      'Instant room status switch to "Cleaning Pending" (Dirty / Red)',
+      'Full checkout register table with CSV, Excel, PDF, and Print exports',
+      'Immediate payment receipt issuance and key collection verification'
+    ]
+  },
+  {
+    id: 6,
+    title: 'Kitchen Order Ticket (KOT) Engine',
+    hindiTitle: 'किचन ऑर्डर टिकट (KOT) इंजन',
+    category: 'Restaurant',
+    categoryLabel: 'Restaurant & Food Service',
+    route: 'demo.datahouseerp.com/kots/create/:id',
+    targetModal: 'kot_entry',
+    icon: '🍽️',
+    accentColor: '#eab308',
+    summary: 'Real-time kitchen order ticket generator with multi-outlet routing for room service and restaurant tables.',
+    fullDescription: 'Creates live Kitchen Order Tickets whenever food is ordered in the restaurant or via room service. Prints tickets directly to kitchen printers so chefs can prepare orders without delay. Maintains 100% transparency between kitchen, service captains, and reception so no food order can be served without a billing record.',
+    antiTheftRationale: 'Eliminates kitchen food theft and unbilled food service by ensuring kitchen staff only release food against an authenticated system KOT number.',
+    specs: [
+      'Dual service routing: Room Service vs Restaurant Dine-In Table',
+      'Instant thermal KOT printing with item name, quantity, and prep instructions',
+      'Live unprinted KOT notification badge on dashboard for pending orders',
+      'Integration with Kitchen Display System (KDS)'
+    ]
+  },
+  {
+    id: 7,
+    title: 'New Food Bill & Room Service Posting',
+    hindiTitle: 'फूड बिल व रूम सर्विस पोस्टिंग',
+    category: 'Restaurant',
+    categoryLabel: 'Restaurant & Food Service',
+    route: 'demo.datahouseerp.com/facthkot_records/:id',
+    targetModal: 'food_bill',
+    icon: '🧾',
+    accentColor: '#334155',
+    summary: 'Food invoice generator consolidating pending KOTs with 5% restaurant GST and one-click "Settle to Room" folio posting.',
+    fullDescription: 'Aggregates all completed KOTs for a room or table into an official Food Bill. Automatically applies restaurant GST (2.5% CGST + 2.5% SGST under SAC 996331). Supports instant "Settle to Room" posting to add to guest room folio, or direct cash/UPI/card settlement for walk-in dining guests.',
+    antiTheftRationale: 'Ensures food served to rooms is automatically locked into the guest room bill before checkout, preventing room guests from checking out without paying for room service.',
+    specs: [
+      'Batch conversion of open KOT tickets into final Tax Invoice',
+      'One-click "Settle to Room" or direct payment (Cash/UPI/Card)',
+      'SAC 996331 compliant GST breakdown with automatic round-off',
+      'Print Approval and thermal bill printing support'
+    ]
+  },
+  {
+    id: 8,
+    title: 'Room Advance Receipt Engine',
+    hindiTitle: 'रूम एडवांस रसीद वाउचर',
+    category: 'Billing',
+    categoryLabel: 'Accounting & Billing',
+    route: 'demo.datahouseerp.com/advace_receipt',
+    targetModal: 'advance_receipt',
+    icon: '💵',
+    accentColor: '#0284c7',
+    summary: 'Dedicated advance collection module generating official AR vouchers and posting immediate ledger credits.',
+    fullDescription: 'Issues numbered Advance Receipts (e.g. AR17) when deposits are collected during reservation or check-in. Posts credit to the guest ledger immediately and automatically deducts the advance amount from the final checkout folio balance with transparent proof.',
+    antiTheftRationale: 'Eliminates reception staff denying receipt of cash advance or misplacing advance payment records.',
+    specs: [
+      'Numbered Advance Receipt Vouchers (e.g. AR17, Voucher 17)',
+      'Payment mode tagging (Cash, Google Pay, PhonePe, Card, Bank Transfer)',
+      'Automatic deduction on checkout folio (-Advance)',
+      'Searchable Advance Receipt Register with Edit/Delete/Print actions'
+    ]
+  },
+  {
+    id: 9,
+    title: 'Multi-Payment Split Settlement',
+    hindiTitle: 'मल्टी-पेमेंट स्प्लिट सेटलमेंट',
+    category: 'Billing',
+    categoryLabel: 'Accounting & Billing',
+    route: 'demo.datahouseerp.com/show_checkin/:id',
+    targetModal: 'room_checkout',
+    icon: '💳',
+    accentColor: '#059669',
+    summary: 'Dynamic split-payment engine allowing arbitrary combinations of Cash, Online UPI, Bank Transfer (SBI/HDFC), Cheque, and Credit.',
+    fullDescription: 'Hotels frequently receive split payments (e.g., ₹2,000 cash, ₹40,000 UPI, ₹6,612 Bank transfer). As highlighted in Video 27 Frame 0445, RoomG features a dynamic [+ Payment Mode] button allowing receptionists to split any bill across multiple channels with zero balance discrepancy.',
+    antiTheftRationale: 'Prevents cash skimming where cashier collects full cash from guest but records partial amount as credit or discount.',
+    specs: [
+      'Dynamic [+ Payment Mode] row addition for unlimited split payment channels',
+      'Integrated bank accounts: State Bank of India, HDFC, ICICI, Cash, Online UPI',
+      'Live balance recalculation and validation to ensure zero rupee variance',
+      'Payment reference number logging for audit trail'
+    ]
+  },
+  {
+    id: 10,
+    title: 'Role-Based Access Control & Theft Prevention',
+    hindiTitle: 'यूजर रोल व अधिकार प्रबंधन (चोरी रोकथाम)',
+    category: 'Security',
+    categoryLabel: 'Security, Theft Control & Direct Booking',
+    route: 'demo.datahouseerp.com/roles',
+    targetModal: 'roles_permissions',
+    icon: '🛡️',
+    accentColor: '#dc2626',
+    summary: 'Granular permissions matrix for super-admin, staff, restaurant, and billing roles to prevent bill deletion and hide profit reports.',
+    fullDescription: 'Empowers hotel owners to strictly define what each staff member can and cannot do. Standard staff can generate bills but are blocked from deleting bills, modifying rates after check-in, backdating entries, or viewing owner net profit reports.',
+    antiTheftRationale: 'Prevents the #1 source of hotel fraud: receptionists printing bills for guests, pocketing the cash, and deleting the checkout record from the software.',
+    specs: [
+      'Pre-configured roles: Super-Admin, Admin, Staff, Receptionist, Restaurant, Billing, Only_Whatsapp',
+      'Disable Bill Deletion for operational staff',
+      'Restrict Profit / Financial Reports access to Owner only',
+      'Active staff session tracking with instant role boundary enforcement'
+    ]
+  },
+  {
+    id: 11,
+    title: 'Comprehensive Financial Ledger & Statement',
+    hindiTitle: 'डबल-एंट्री फाइनेंशियल लेजर व खाता विवरण',
+    category: 'Billing',
+    categoryLabel: 'Accounting & Billing',
+    route: 'demo.datahouseerp.com/ledger_show',
+    targetModal: 'party_ledger',
+    icon: '📑',
+    accentColor: '#be123c',
+    summary: 'Real-time double-entry account ledger tracking Debit, Credit, Opening Balance, and running balances for guests, corporate clients, and vendors.',
+    fullDescription: 'Provides an audit-grade account ledger for every guest, corporate client, and supplier. Features Opening Balance, running Debit/Credit entries linked to check-in/checkout voucher numbers, and one-click printable statements with Excel export.',
+    antiTheftRationale: 'Provides an unalterable paper trail for all money flows, ensuring corporate accounts and credit stays are tracked until final clearance.',
+    specs: [
+      'Date-range ledger query (From Date To Date) with instant [OK] lookup',
+      'Columns: Date, Type, Account Name, Remark, Debit, Credit, Running Balance Cr/Dr',
+      'Group categorization: Sundry Debtors, Sundry Creditors, Guest Customer',
+      'One-click Printable Ledger Statement with PDF and Excel export'
+    ]
+  },
+  {
+    id: 12,
+    title: 'Restaurant & Table Management',
+    hindiTitle: 'रेस्टोरेंट व टेबल प्रबंधन मॉड्यूल',
+    category: 'Restaurant',
+    categoryLabel: 'Restaurant & Food Service',
+    route: 'demo.datahouseerp.com/table_dashboard',
+    targetModal: 'restaurant_table',
+    icon: '🏬',
+    accentColor: '#0284c7',
+    summary: 'Dedicated dine-in restaurant module with live visual table status (Vacant, Running KOT, Billed), table shifting, and NC KOT handling.',
+    fullDescription: 'Enables hotel properties with attached restaurants to operate a complete restaurant POS without additional software. Features color-coded dine-in tables, table-to-table shifting, non-chargeable (NC) KOTs for hotel management dining, and separated food tax reports.',
+    antiTheftRationale: 'Prevents dining room waiters from serving food to walk-in guests and pocketing cash without generating a system bill.',
+    specs: [
+      'Visual table matrix: Vacant (Green), Running KOT (Yellow), Billed (Blue)',
+      'Table shifting & order merging capabilities',
+      'Non-Chargeable (NC) KOT register with management approval audit',
+      'Independent restaurant sales register separate from room lodging'
+    ]
+  },
+  {
+    id: 13,
+    title: 'Purchase Register & Accounts Payable',
+    hindiTitle: 'खरीद रजिस्टर व सप्लायर देयता ट्रैकिंग',
+    category: 'Inventory',
+    categoryLabel: 'Inventory & Warehousing',
+    route: 'demo.datahouseerp.com/purchases',
+    targetModal: 'purchase_entry',
+    icon: '🛒',
+    accentColor: '#1d4ed8',
+    summary: 'Inward procurement register for kitchen groceries, linen, and housekeeping supplies with supplier bill tracking and automatic stock updates.',
+    fullDescription: 'Logs all items purchased for hotel operations (vegetables, dairy, toiletries, detergents, linens). Records supplier name, invoice number, tax rates, and purchase rates. Automatically updates store stock while posting payables to supplier ledgers.',
+    antiTheftRationale: 'Prevents procurement kickbacks and fictitious supplier bills by requiring itemized inward purchase logging before stock can be issued.',
+    specs: [
+      'Supplier invoice tracking with GSTIN, Bill Date, and Due Date',
+      'Itemized inward stock updating with purchase rates and tax breakdown',
+      'Automated posting to Sundry Creditors accounts payable',
+      'Integration with Central Godown stock inward register'
+    ]
+  },
+  {
+    id: 14,
+    title: 'Stock Transfer Engine (Godown to Dept)',
+    hindiTitle: 'स्टॉक ट्रांसफर इंजन (गोदाम से विभाग)',
+    category: 'Inventory',
+    categoryLabel: 'Inventory & Warehousing',
+    route: 'demo.datahouseerp.com/stock_transfer',
+    targetModal: 'stock_transfer',
+    icon: '🔁',
+    accentColor: '#16a34a',
+    summary: 'Inter-department inventory movement from Central Godown/Store to Kitchen, Housekeeping, or Restaurant with digital transfer slips.',
+    fullDescription: 'Facilitates controlled movement of stock between locations (e.g. from Main Godown to Kitchen, or Store to Housekeeping). Records item name, transferred quantity, and dispatch timestamp, eliminating discrepancies between storekeeper and kitchen chef.',
+    antiTheftRationale: 'Stops kitchen and housekeeping staff from blaming "missing stock" on the central storekeeper by recording exact signed transfer quantities.',
+    specs: [
+      'Source godown to destination department selection',
+      'Real-time quantity balance check before transfer authorization',
+      'Automated stock debit at source and credit at destination',
+      'Transfer history log with department recipient signature'
+    ]
+  },
+  {
+    id: 15,
+    title: 'Stock Issue & Consumption Auditing',
+    hindiTitle: 'स्टॉक निर्गमन व खपत ऑडिट',
+    category: 'Inventory',
+    categoryLabel: 'Inventory & Warehousing',
+    route: 'demo.datahouseerp.com/store_wise_stock',
+    targetModal: 'store_wise_stock',
+    icon: '📦',
+    accentColor: '#d97706',
+    summary: 'Departmental stock consumption tracking showing Stock In, Stock Out, and Closing Stock with native Excel 2010 export.',
+    fullDescription: 'Tracks actual consumption of raw materials and supplies (e.g., kilograms of paneer used, detergent consumed). Features the Store Wise Stock report shown in Frame 0625 with columns: S.No, Item Name, Stock In, Stock Out, and Closing Stock, with native Excel export.',
+    antiTheftRationale: 'Identifies inventory wastage, pilferage, and over-consumption by comparing actual food sales against raw material depletion.',
+    specs: [
+      'Store-wise stock report: Kitchen Godown, Housekeeping Store, Bar Store',
+      'Columns: Item Name, Stock In, Stock Out, Closing Stock',
+      'One-click Excel (.xlsx/.csv) and PDF export matching Frame 0625',
+      'Low stock warning threshold alerts'
+    ]
+  },
+  {
+    id: 16,
+    title: '30+ Comprehensive MIS & GST Reports',
+    hindiTitle: '30+ संपूर्ण होटल रिपोर्ट्स व जीएसटी रिटर्न',
+    category: 'Billing',
+    categoryLabel: 'Accounting & Billing',
+    route: 'demo.datahouseerp.com/reports',
+    targetModal: 'outstanding_receivables',
+    icon: '📈',
+    accentColor: '#1e293b',
+    summary: 'Full suite of 30+ operational reports including GSTR-1, GSTR-3B, Day End Closing, Police Station Report, and Outstanding Receivables.',
+    fullDescription: 'Provides exhaustive operational and compliance intelligence across all hotel facets: GSTR-1, 3B, B2B Sales, B2C Sales, Booking Register, Check-in Register, Checkout Register, Room Food Bills, Restaurant Register, KOT Register, Day End Closing, and Police Station Reports.',
+    antiTheftRationale: 'Enables hotel owners to conduct surprise day-end audits and verify cash drawer balances against computer totals.',
+    specs: [
+      '30+ specialized report formats (GSTR-1, 3B, B2B, B2C, Day End, Police Report)',
+      'Day End closing report showing total collections by Cash, UPI, Card, and Credit',
+      'Outstanding customer receivables with aging analysis',
+      'Instant export to Excel, CSV, PDF, and Print'
+    ]
+  },
+  {
+    id: 17,
+    title: 'Guest CRM & Bulk Promotional WhatsApp',
+    hindiTitle: 'गेस्ट सीआरएम व बल्क प्रोमोशनल व्हाट्सएप',
+    category: 'Security',
+    categoryLabel: 'Security, Theft Control & Direct Booking',
+    route: 'demo.datahouseerp.com/whatsapp_sms',
+    targetModal: 'whatsapp_setting',
+    icon: '📢',
+    accentColor: '#059669',
+    summary: 'Customer Relationship Management repository with guest birthday/anniversary tracking and one-click bulk promotional WhatsApp broadcasts.',
+    fullDescription: 'Maintains historical records of every guest who stayed at the hotel. Allows hotel managers to filter guests by city, booking frequency, or anniversary/birthday dates, and broadcast promotional holiday offers, festival discounts, and loyalty perks via WhatsApp.',
+    antiTheftRationale: 'Drives repeat direct bookings, reducing reliance on expensive OTA commissions (18-25% saved).',
+    specs: [
+      'Guest database with contact number, city, email, and visit history',
+      'One-click [Send Promotional WhatsApp] broadcast launcher',
+      'Personalized message tokens ({firm_name}, {guest_name}, {booking_link})',
+      'Festival and anniversary campaign templates'
+    ]
+  },
+  {
+    id: 18,
+    title: 'Digital Signature on Invoices',
+    hindiTitle: 'बिल पर डिजिटल हस्ताक्षर (पेपरलेस बिलिंग)',
+    category: 'Billing',
+    categoryLabel: 'Accounting & Billing',
+    route: 'demo.datahouseerp.com/comp_pic_form',
+    targetModal: 'company_branding',
+    icon: '✍️',
+    accentColor: '#7c3aed',
+    summary: 'Authorized digital signature asset upload in PMS settings that automatically prints on all invoice formats without manual stamping.',
+    fullDescription: 'Hotel owners can upload their authorized manager or accountant signature PNG in PMS settings (`/comp_pic_form`). The signature renders crisp and clean on all A4 Standard, Day-Wise, and A5 invoices, giving instant legal validity without requiring physical ink stamps.',
+    antiTheftRationale: 'Prevents staff from issuing forged paper receipts with hand-scribbled unverified signatures.',
+    specs: [
+      'PNG / JPEG transparent digital signature upload and preview',
+      'Automatic positioning on invoice footer above "Authorized Signatory"',
+      'Dual signature layout: Guest Signature & Hotel Authorized Signature',
+      'Instant synchronization across all 4 invoice format templates'
+    ]
+  },
+  {
+    id: 19,
+    title: 'Dynamic Bill QR Code for Instant UPI Payment',
+    hindiTitle: 'बिल पर डायनामिक यूपीआई क्यूआर कोड',
+    category: 'Billing',
+    categoryLabel: 'Accounting & Billing',
+    route: 'demo.datahouseerp.com/comp_pic_form',
+    targetModal: 'company_branding',
+    icon: '📱',
+    accentColor: '#0284c7',
+    summary: 'Dynamic UPI QR Code printed on checkout folios matching exact net payable amount for error-free scan & pay.',
+    fullDescription: 'Prints a high-resolution UPI QR Code directly on the invoice. When the guest scans with PhonePe, Google Pay, or Paytm, the exact bill amount (e.g. ₹50,432.00) and invoice reference are pre-filled, guaranteeing swift settlement and zero transaction typos.',
+    antiTheftRationale: 'Ensures guest UPI payments go directly into the hotel owner verified bank account rather than staff personal UPI IDs.',
+    specs: [
+      'Dynamic UPI intent QR code matching exact folio balance',
+      'Pre-fills Payee Name, UPI ID, Amount, and Bill Number note',
+      'Compatible with PhonePe, GPay, Paytm, BHIM, and all Indian banking apps',
+      'Static hotel QR code fallback from company branding asset vault'
+    ]
+  },
+  {
+    id: 20,
+    title: 'Automated Anti-Theft Alerts & Public Booking Website',
+    hindiTitle: 'ऑटोमेटेड एंटी-थेफ्ट अलर्ट व पब्लिक बुकिंग वेबसाइट',
+    category: 'Security',
+    categoryLabel: 'Security, Theft Control & Direct Booking',
+    route: 'demo.datahouseerp.com/hotel_room/DEMO0004',
+    targetModal: 'online_booking',
+    icon: '🌐',
+    accentColor: '#b91c1c',
+    summary: 'Real-time WhatsApp alert to owner when checkout is deleted, plus integrated guest-facing booking showcase ("OUR ROOM") with photo gallery.',
+    fullDescription: 'The pinnacle twin-pillar of RoomG PMS: First, the automated anti-theft alert dispatches an instant WhatsApp warning to the hotel owner if any operator deletes or modifies a checkout bill (`Check_out_delete`). Second, the built-in guest booking engine (`/hotel_room/DEMO0004`) provides a beautiful responsive public website with room photo collages, live tariffs, and direct booking inquiries, eliminating third-party OTA commissions.',
+    antiTheftRationale: 'Immediate deterrence against bill tampering and deletion by rogue staff, combined with direct commission-free guest acquisition.',
+    specs: [
+      'Instant owner alert on checkout deletion: Room No, Bill No, Amount, Operator Name',
+      'Automatic guest thank-you and invoice delivery on checkout',
+      'Public "OUR ROOM" website showcase with multi-photo collages and amenities',
+      'Direct guest booking inquiry flow directly into PMS reservation pipeline'
+    ]
+  }
+];
 
 

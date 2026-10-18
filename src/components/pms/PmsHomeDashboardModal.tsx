@@ -34,6 +34,7 @@ import { OnlineVsOfflineModal } from './OnlineVsOfflineModal';
 import { HotelBillFormatModal } from './HotelBillFormatModal';
 import { CompanyBrandingModal } from './CompanyBrandingModal';
 import { CheckOutRegisterModal } from './CheckOutRegisterModal';
+import { Top20FeaturesModal } from './Top20FeaturesModal';
 import type { PmsBooking, BillFormatType, PmsCheckOutDetail } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
@@ -105,6 +106,9 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   const [companyBrandingTab, setCompanyBrandingTab] = useState<'pictures' | 'banking' | 'format' | 'company_info'>('pictures');
   const [isCheckOutRegisterOpen, setIsCheckOutRegisterOpen] = useState(false);
 
+  // Video 27: Top 20 Features of RoomG PMS Master Navigator
+  const [isTop20FeaturesOpen, setIsTop20FeaturesOpen] = useState(false);
+
   // Video 23: Real-Time Active Staff & Role Boundary Controls
   const [currentUser, setCurrentUser] = useState(PmsStore.getCurrentUser());
   const [boundaryToast, setBoundaryToast] = useState<string | null>(null);
@@ -168,6 +172,66 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
     setTimeout(() => setCopyFeedback(false), 2500);
   };
 
+  const handleLaunchFeatureFromTop20 = (targetModal: string) => {
+    switch (targetModal) {
+      case 'room_dashboard':
+        onOpenRoomMatrix();
+        break;
+      case 'room_booking':
+        setIsBookingOpen(true);
+        break;
+      case 'room_checkin':
+        setIsCheckInOpen(true);
+        break;
+      case 'room_checkout':
+        setIsCheckOutRegisterOpen(true);
+        break;
+      case 'kot_entry':
+        setIsKotOpen(true);
+        break;
+      case 'food_bill':
+        setIsFoodBillOpen(true);
+        break;
+      case 'advance_receipt':
+        setIsAdvanceReceiptOpen(true);
+        break;
+      case 'roles_permissions':
+        setIsRolesPermissionsOpen(true);
+        break;
+      case 'party_ledger':
+        setIsLedgerOpen(true);
+        break;
+      case 'restaurant_table':
+        setIsTableDashboardOpen(true);
+        break;
+      case 'purchase_entry':
+        setIsPurchaseOpen(true);
+        break;
+      case 'stock_transfer':
+        setStockTransferMode('transfer');
+        setIsStockTransferOpen(true);
+        break;
+      case 'store_wise_stock':
+        setIsStoreWiseStockOpen(true);
+        break;
+      case 'outstanding_receivables':
+        setIsOutstandingReceivablesOpen(true);
+        break;
+      case 'whatsapp_setting':
+        setIsWhatsAppSettingOpen(true);
+        break;
+      case 'company_branding':
+        setCompanyBrandingTab('pictures');
+        setIsCompanyBrandingOpen(true);
+        break;
+      case 'online_booking':
+        setIsOnlineGuestBookingOpen(true);
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <div className="pms-content">
       {/* Top Brand & Metadata Banner from Frame 0100 */}
@@ -218,6 +282,58 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           </button>
         </div>
       )}
+
+      {/* Video 27: Top 20 Features Golden Spotlight Banner (Frames 0005-0815) */}
+      <div
+        onClick={() => setIsTop20FeaturesOpen(true)}
+        style={{
+          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%)',
+          color: '#ffffff',
+          padding: '10px 18px',
+          borderRadius: 6,
+          marginBottom: 16,
+          fontSize: 13,
+          fontWeight: 700,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          boxShadow: '0 4px 10px rgba(217, 119, 6, 0.35)',
+          cursor: 'pointer',
+          transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-1px)';
+          e.currentTarget.style.boxShadow = '0 6px 14px rgba(217, 119, 6, 0.45)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 4px 10px rgba(217, 119, 6, 0.35)';
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 20 }}>🏆</span>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.3px' }}>
+              Top 20 Features of RoomG PMS | Best Hotel Software in India
+            </div>
+            <div style={{ fontSize: 11, fontWeight: 500, opacity: 0.9 }}>
+              Anti-Theft Security &bull; Auto Dirty Status &bull; Instant Bill UPI QR &bull; Multi-Payment Splits &bull; Live Feature Showcase
+            </div>
+          </div>
+        </div>
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.22)',
+          padding: '6px 14px',
+          borderRadius: 4,
+          fontSize: 12,
+          fontWeight: 800,
+          letterSpacing: '0.5px',
+          whiteSpace: 'nowrap',
+          border: '1px solid rgba(255, 255, 255, 0.4)'
+        }}>
+          Explore All 20 Features &rarr;
+        </div>
+      </div>
 
       {/* 16 Quick Module Action Tiles matching Frame 0100 */}
       <div className="home-tiles-grid">
@@ -535,6 +651,18 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         >
           <span className="tile-icon">🖼️</span>
           <span>Logo &amp; Assets</span>
+        </button>
+
+        {/* Video 27: Top 20 Features Showcase Tile (Frames 0005-0815) */}
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => setIsTop20FeaturesOpen(true)}
+          style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)', color: '#fff', fontWeight: 800 }}
+          title="Video 27: Top 20 Features of RoomG PMS & Commercial Pricing Suite"
+        >
+          <span className="tile-icon">🏆</span>
+          <span>Top 20 Features</span>
         </button>
       </div>
 
@@ -1033,6 +1161,13 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           setActiveBillFormat(format);
           setIsBillFormatOpen(true);
         }}
+      />
+
+      {/* Video 27: Top 20 Features Master Showcase & Pricing Modal */}
+      <Top20FeaturesModal
+        isOpen={isTop20FeaturesOpen}
+        onClose={() => setIsTop20FeaturesOpen(false)}
+        onLaunchFeature={handleLaunchFeatureFromTop20}
       />
     </div>
   );

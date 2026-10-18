@@ -18,6 +18,14 @@ export const CheckOutRegisterModal: React.FC<CheckOutRegisterModalProps> = ({
   const [checkouts, setCheckouts] = useState<PmsCheckOutDetail[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [antiTheftAlert, setAntiTheftAlert] = useState<{
+    show: boolean;
+    invoiceNo: string;
+    roomNo: string;
+    amount: number;
+    operator: string;
+    message: string;
+  } | null>(null);
   const itemsPerPage = 8;
 
   useEffect(() => {
@@ -58,10 +66,37 @@ export const CheckOutRegisterModal: React.FC<CheckOutRegisterModalProps> = ({
   };
 
   const handleDelete = (invoiceNo: string) => {
-    if (confirm(`Are you sure you want to delete checkout record ${invoiceNo}?`)) {
+    const target = checkouts.find(c => c.invoiceNo === invoiceNo);
+    if (!target) return;
+
+    if (confirm(`⚠️ ANTI-THEFT AUDIT WARNING:\nAre you sure you want to delete checkout record ${invoiceNo} (Room ${target.roomNo}, ₹${target.netPayable.toFixed(2)})?\n\nAn instant fraud-prevention WhatsApp alert will be dispatched to the hotel owner!`)) {
+      const currentUser = PmsStore.getCurrentUser();
+      
+      // Video 27: Trigger Anti-Theft alert to hotel owner
+      PmsStore.triggerAntiTheftAlert({
+        voucherType: 'Check_out_delete',
+        roomNo: target.roomNo,
+        voucherNo: target.invoiceNo,
+        guestName: target.guestName,
+        checkoutDate: target.checkOutDate,
+        totalBillAmount: target.netPayable,
+        operatorName: currentUser.userName
+      });
+
       const updated = checkouts.filter(c => c.invoiceNo !== invoiceNo);
       setCheckouts(updated);
       localStorage.setItem('hotel_pms_checkouts', JSON.stringify(updated));
+
+      setAntiTheftAlert({
+        show: true,
+        invoiceNo: target.invoiceNo,
+        roomNo: target.roomNo,
+        amount: target.netPayable,
+        operator: currentUser.userName,
+        message: `🚨 ANTI-THEFT OWNER ALERT DISPATCHED: Owner notified on WhatsApp (7999663696) that checkout folio ${target.invoiceNo} (Room ${target.roomNo}, ₹${target.netPayable.toFixed(2)}) was deleted by operator "${currentUser.userName}".`
+      });
+
+      setTimeout(() => setAntiTheftAlert(null), 8000);
     }
   };
 
@@ -114,6 +149,43 @@ export const CheckOutRegisterModal: React.FC<CheckOutRegisterModalProps> = ({
             ✕
           </button>
         </header>
+
+        {/* Video 27 Anti-Theft Fraud Prevention Banner */}
+        {antiTheftAlert && (
+          <div
+            style={{
+              background: '#fef2f2',
+              borderBottom: '2px solid #ef4444',
+              padding: '10px 18px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+              animation: 'fadeIn 0.3s ease-in'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 20 }}>🚨</span>
+              <div style={{ fontSize: 13, color: '#991b1b', fontWeight: 700 }}>
+                {antiTheftAlert.message}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAntiTheftAlert(null)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#991b1b',
+                fontWeight: 800,
+                cursor: 'pointer',
+                fontSize: 14
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {/* Toolbar: Print & Search matching Frame 0150 */}
         <div

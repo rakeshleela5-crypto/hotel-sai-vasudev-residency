@@ -41,6 +41,7 @@ import { OnlineVsOfflineModal } from './OnlineVsOfflineModal';
 import { HotelBillFormatModal } from './HotelBillFormatModal';
 import { CompanyBrandingModal } from './CompanyBrandingModal';
 import { CheckOutRegisterModal } from './CheckOutRegisterModal';
+import { Top20FeaturesModal } from './Top20FeaturesModal';
 import type { PmsUserAccount, PmsChainProperty, BillFormatType, PmsCheckOutDetail } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import './pmsStyles.css';
@@ -149,6 +150,73 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   const [isCompanyBrandingOpen, setIsCompanyBrandingOpen] = useState(false);
   const [companyBrandingTab, setCompanyBrandingTab] = useState<'pictures' | 'banking' | 'format' | 'company_info'>('pictures');
   const [isCheckOutRegisterOpen, setIsCheckOutRegisterOpen] = useState(false);
+
+  // Video 27: Top 20 Features of RoomG PMS Master Navigator (Frames 0005-0815)
+  const [isTop20FeaturesOpen, setIsTop20FeaturesOpen] = useState(false);
+
+  const handleLaunchFeatureFromTop20 = (targetModal: string) => {
+    switch (targetModal) {
+      case 'room_dashboard':
+        setActiveTab('matrix');
+        break;
+      case 'room_booking':
+        setActiveTab('hub');
+        break;
+      case 'booking_calendar':
+        setIsCalendarOpen(true);
+        break;
+      case 'room_checkin':
+        setIsNewCheckInOpen(true);
+        break;
+      case 'room_checkout':
+        setIsCheckOutRegisterOpen(true);
+        break;
+      case 'kot_entry':
+        setIsKotModalOpen(true);
+        break;
+      case 'food_bill':
+        setIsFoodBillModalOpen(true);
+        break;
+      case 'advance_receipt':
+        setIsAdvanceReceiptOpen(true);
+        break;
+      case 'roles_permissions':
+        setIsRolesPermissionsOpen(true);
+        break;
+      case 'party_ledger':
+        setIsPartyLedgerOpen(true);
+        break;
+      case 'restaurant_table':
+        setIsTableDashboardOpen(true);
+        break;
+      case 'purchase_entry':
+        setIsPurchaseOpen(true);
+        break;
+      case 'stock_transfer':
+        setStockTransferMode('transfer');
+        setIsStockTransferOpen(true);
+        break;
+      case 'store_wise_stock':
+        setIsStoreWiseStockOpen(true);
+        break;
+      case 'outstanding_receivables':
+        setIsOutstandingReceivablesOpen(true);
+        break;
+      case 'whatsapp_setting':
+        setIsWhatsAppSettingOpen(true);
+        break;
+      case 'company_branding':
+        setCompanyBrandingTab('pictures');
+        setIsCompanyBrandingOpen(true);
+        break;
+      case 'online_booking':
+        setIsOnlineGuestBookingOpen(true);
+        break;
+      default:
+        setActiveTab('hub');
+        break;
+    }
+  };
 
   // Video 23: Real-Time Active Staff & Role Boundary Listener
   React.useEffect(() => {
@@ -349,6 +417,30 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               >
                 <span>🌐</span>
                 <span>Online / Hybrid Sync</span>
+              </button>
+
+              {/* Video 27: Top 20 Features of RoomG PMS Master Navigator */}
+              <button
+                type="button"
+                onClick={() => setIsTop20FeaturesOpen(true)}
+                title="Click to explore all 20 Master Features of RoomG PMS (Video 27)"
+                style={{
+                  background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                  color: '#0f172a',
+                  border: '1px solid #fef08a',
+                  padding: '3px 10px',
+                  borderRadius: 3,
+                  fontSize: 11,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
+                }}
+              >
+                <span>🏆</span>
+                <span>Top 20 Features</span>
               </button>
 
               {/* Video 21: User Avatar & Role Dropdown */}
@@ -1264,6 +1356,13 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
           setActiveBillFormat(format);
           setIsBillFormatOpen(true);
         }}
+      />
+
+      {/* Video 27: Top 20 Features of RoomG PMS Master Navigator */}
+      <Top20FeaturesModal
+        isOpen={isTop20FeaturesOpen}
+        onClose={() => setIsTop20FeaturesOpen(false)}
+        onLaunchFeature={handleLaunchFeatureFromTop20}
       />
     </>
   );
