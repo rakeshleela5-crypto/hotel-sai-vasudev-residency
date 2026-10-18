@@ -20,7 +20,7 @@ import { OutstandingReceivablesModal } from './OutstandingReceivablesModal';
 import { PaymentRegisterModal } from './PaymentRegisterModal';
 import { PurchaseEntryModal } from './PurchaseEntryModal';
 import { StockTransferModal } from './StockTransferModal';
-import { StoreWiseStockModal } from './StoreWiseStockModal';
+import { StockReportMasterModal } from './StockReportMasterModal';
 import { OnlineGuestBookingModal } from './OnlineGuestBookingModal';
 import { UnconfirmedBookingsModal } from './UnconfirmedBookingsModal';
 import { UserManagementModal } from './UserManagementModal';
@@ -1006,6 +1006,29 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           <span className="tile-icon">💰</span>
           <span>Margin Protection</span>
         </button>
+
+        {/* Video 34: Stock Report & Inventory Control Tiles */}
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => setIsStoreWiseStockOpen(true)}
+          style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff', fontWeight: 800 }}
+          title="Video 34: Store-Wise Stock Report, Multi-Godown Balance & Inventory (/store_wise_stock)"
+        >
+          <span className="tile-icon">🏬</span>
+          <span>Store-Wise Stock</span>
+        </button>
+
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => setIsStoreWiseStockOpen(true)}
+          style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)', color: '#fff', fontWeight: 800 }}
+          title="Video 34: Consolidated Hotel Inventory & Linen Anti-Theft Ledger (/inventories)"
+        >
+          <span className="tile-icon">📊</span>
+          <span>Stock Report Master</span>
+        </button>
       </div>
 
       {/* Overview & Unprinted KOTs Notification Section matching Video 14 Frames 0145, 0230, 0255 */}
@@ -1371,7 +1394,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         initialMode={stockTransferMode}
       />
 
-      <StoreWiseStockModal
+      <StockReportMasterModal
         isOpen={isStoreWiseStockOpen}
         onClose={() => setIsStoreWiseStockOpen(false)}
         onOpenPurchase={() => setIsPurchaseOpen(true)}

@@ -28,7 +28,7 @@ import { OutstandingReceivablesModal } from './OutstandingReceivablesModal';
 import { PaymentRegisterModal } from './PaymentRegisterModal';
 import { PurchaseEntryModal } from './PurchaseEntryModal';
 import { StockTransferModal } from './StockTransferModal';
-import { StoreWiseStockModal } from './StoreWiseStockModal';
+import { StockReportMasterModal } from './StockReportMasterModal';
 import { OnlineGuestBookingModal } from './OnlineGuestBookingModal';
 import { UserManagementModal } from './UserManagementModal';
 import { RolesPermissionsModal } from './RolesPermissionsModal';
@@ -755,6 +755,30 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                 <span>No-Discount Control</span>
               </button>
 
+              {/* Video 34: Stock Report & Inventory Control Suite */}
+              <button
+                type="button"
+                onClick={() => setIsStoreWiseStockOpen(true)}
+                title="Click to view Store Wise Stock, Consolidated Inventories, Simulator & Linen Control (Video 34)"
+                style={{
+                  background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                  color: '#ffffff',
+                  border: '1px solid #7dd3fc',
+                  padding: '3px 10px',
+                  borderRadius: 3,
+                  fontSize: 11,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
+                }}
+              >
+                <span>🏬</span>
+                <span>Stock Report</span>
+              </button>
+
               {/* Video 21: User Avatar & Role Dropdown */}
               <div style={{ position: 'relative' }}>
                 <div
@@ -1210,6 +1234,10 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     <div className="pms-nav-item" onClick={() => setIsNoDiscountOpen(true)}>
                       <span style={{ color: '#fbbf24', fontWeight: 800 }}>🛡️ No-Discount Items &amp; Margin Rules (Video 33)</span>
                     </div>
+                    {/* Video 34: Stock Report & Inventory Control Suite */}
+                    <div className="pms-nav-item" onClick={() => setIsStoreWiseStockOpen(true)}>
+                      <span style={{ color: '#38bdf8', fontWeight: 800 }}>🏬 Store-Wise Stock &amp; Inventory Suite (Video 34)</span>
+                    </div>
                   </div>
                 )}
 
@@ -1586,7 +1614,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         initialMode={stockTransferMode}
       />
 
-      <StoreWiseStockModal
+      <StockReportMasterModal
         isOpen={isStoreWiseStockOpen}
         onClose={() => setIsStoreWiseStockOpen(false)}
         onOpenPurchase={() => setIsPurchaseOpen(true)}

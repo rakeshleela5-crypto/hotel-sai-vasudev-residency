@@ -608,9 +608,15 @@ export interface GodownStockRow {
   itemName: string;
   barcode?: string;
   unit?: string;
+  category?: string;
+  headGroup?: string;
   stockIn: number;
   stockOut: number;
   closingStock: number;
+  rate?: number;
+  stockValue?: number;
+  reorderLevel?: number;
+  isLowStock?: boolean;
 }
 
 // ==========================================
@@ -1408,6 +1414,61 @@ export interface PmsDiscountAuditRecord {
   cashierName: string;
   timestamp: string;
 }
+
+// ==========================================
+// Video 34: Godown-Wise Stock, Item-Wise Inventory, Asset/Linen Audit & Anti-Theft Tracking (Frames 0110-0260)
+// ==========================================
+export interface PmsGodownBreakdownEntry {
+  godownName: string;
+  stockIn: number;
+  stockOut: number;
+  closingStock: number;
+}
+
+export interface PmsConsolidatedStockRow {
+  sNo: number;
+  itemName: string;
+  barcode?: string;
+  category: string;
+  unit: string;
+  totalStockIn: number;
+  totalStockOut: number;
+  totalClosingStock: number;
+  purchaseRate: number;
+  totalValuation: number;
+  reorderLevel: number;
+  status: 'In Stock' | 'Low Stock' | 'Negative / Deficient';
+  godownBreakdown: PmsGodownBreakdownEntry[];
+}
+
+export interface PmsStockAuditMovement {
+  id: string;
+  date: string;
+  type: 'PURCHASE' | 'TRANSFER_IN' | 'TRANSFER_OUT' | 'KOT_SALE' | 'INTERNAL_ISSUE' | 'LAUNDRY_OUT' | 'LAUNDRY_IN' | 'REPAIR';
+  referenceNo: string;
+  godown: string;
+  toGodown?: string;
+  qtyIn: number;
+  qtyOut: number;
+  balance: number;
+  remark: string;
+}
+
+export interface PmsHotelAssetLinenRecord {
+  id: string;
+  assetName: string;
+  category: 'Linen' | 'Electronics' | 'Furniture' | 'Toiletries' | 'Kitchen Equipment';
+  unit: string;
+  totalPurchased: number;
+  inRooms: number;
+  inLinenStore: number;
+  inLaundry: number;
+  inDamagedRepair: number;
+  missingDiscrepancy: number;
+  unitCost: number;
+  lastAuditDate: string;
+}
+
 
 
 
