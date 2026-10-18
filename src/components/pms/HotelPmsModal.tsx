@@ -42,7 +42,8 @@ import { HotelBillFormatModal } from './HotelBillFormatModal';
 import { CompanyBrandingModal } from './CompanyBrandingModal';
 import { CheckOutRegisterModal } from './CheckOutRegisterModal';
 import { Top20FeaturesModal } from './Top20FeaturesModal';
-import type { PmsUserAccount, PmsChainProperty, BillFormatType, PmsCheckOutDetail } from '../../types/pmsModels';
+import { GstReportsModal } from './GstReportsModal';
+import type { PmsUserAccount, PmsChainProperty, BillFormatType, PmsCheckOutDetail, PmsGstReportTab } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import './pmsStyles.css';
 
@@ -153,6 +154,67 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
 
   // Video 27: Top 20 Features of RoomG PMS Master Navigator (Frames 0005-0815)
   const [isTop20FeaturesOpen, setIsTop20FeaturesOpen] = useState(false);
+
+  // Video 28: GST Tax Reports & Master Report Dashboard (Frames 0080-0330)
+  const [isGstReportsOpen, setIsGstReportsOpen] = useState(false);
+  const [gstReportTab, setGstReportTab] = useState<PmsGstReportTab>('consolidated');
+
+  const handleLaunchReportAction = (actionKey: string) => {
+    switch (actionKey) {
+      case 'room_booking':
+        setActiveTab('hub');
+        break;
+      case 'checkin_register':
+        setIsCheckInRegisterOpen(true);
+        break;
+      case 'room_checkout':
+      case 'checkout_register_only':
+      case 'my_checkout_register':
+        setIsCheckOutRegisterOpen(true);
+        break;
+      case 'food_bill':
+      case 'restaurant_food_bills':
+        setIsFoodBillModalOpen(true);
+        break;
+      case 'kot_entry':
+        setIsKotModalOpen(true);
+        break;
+      case 'advance_receipt':
+        setIsAdvanceReceiptOpen(true);
+        break;
+      case 'police_report':
+        setIsPoliceReportOpen(true);
+        break;
+      case 'store_wise_stock':
+        setIsStoreWiseStockOpen(true);
+        break;
+      case 'purchase_entry':
+        setIsPurchaseOpen(true);
+        break;
+      case 'stock_transfer':
+        setStockTransferMode('transfer');
+        setIsStockTransferOpen(true);
+        break;
+      case 'stock_issue':
+        setStockTransferMode('issue');
+        setIsStockTransferOpen(true);
+        break;
+      case 'party_ledger':
+        setIsPartyLedgerOpen(true);
+        break;
+      case 'restaurant_table':
+        setIsTableDashboardOpen(true);
+        break;
+      case 'fb_report':
+        setIsFbbReportOpen(true);
+        break;
+      case 'room_dashboard':
+        setActiveTab('matrix');
+        break;
+      default:
+        break;
+    }
+  };
 
   const handleLaunchFeatureFromTop20 = (targetModal: string) => {
     switch (targetModal) {
@@ -441,6 +503,30 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               >
                 <span>🏆</span>
                 <span>Top 20 Features</span>
+              </button>
+
+              {/* Video 28: GST Tax Reports & CA Filing Suite */}
+              <button
+                type="button"
+                onClick={() => { setGstReportTab('consolidated'); setIsGstReportsOpen(true); }}
+                title="Click to view Room & Food GST Reports, B2B, B2C and Report Hub (Video 28)"
+                style={{
+                  background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '3px 10px',
+                  borderRadius: 3,
+                  fontSize: 11,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
+                }}
+              >
+                <span>📜</span>
+                <span>GST Reports</span>
               </button>
 
               {/* Video 21: User Avatar & Role Dropdown */}
@@ -847,6 +933,19 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     {/* Video 24: Police Station Report (Frames 0100, 0105, 0110, 0140) */}
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('Police Station Report', 'Police Station Report', () => setIsPoliceReportOpen(true))}>
                       <span style={{ color: '#f59e0b', fontWeight: 800 }}>👮 Police Station Report (Video 24)</span>
+                    </div>
+                    {/* Video 28: GST Tax Reports Suite (Frames 0080-0330) */}
+                    <div className="pms-nav-item" onClick={() => { setGstReportTab('consolidated'); setIsGstReportsOpen(true); }}>
+                      <span style={{ color: '#4ade80', fontWeight: 800 }}>📜 Room &amp; Food Bill GST Report</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => { setGstReportTab('b2b'); setIsGstReportsOpen(true); }}>
+                      <span style={{ color: '#38bdf8', fontWeight: 700 }}>🏢 B2B Register (Only GST Invoices)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => { setGstReportTab('b2c'); setIsGstReportsOpen(true); }}>
+                      <span style={{ color: '#f87171', fontWeight: 700 }}>👥 B2C Register (Without GST Invoices)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => { setGstReportTab('dashboard'); setIsGstReportsOpen(true); }}>
+                      <span style={{ color: '#fbbf24', fontWeight: 800 }}>📊 Master Report Hub (/report_dashboard)</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsFbbReportOpen(true)}>
                       <span style={{ color: '#4ade80', fontWeight: 700 }}>🍴 FBB Report (Food &amp; Beverage)</span>
@@ -1363,6 +1462,14 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         isOpen={isTop20FeaturesOpen}
         onClose={() => setIsTop20FeaturesOpen(false)}
         onLaunchFeature={handleLaunchFeatureFromTop20}
+      />
+
+      {/* Video 28: GST Tax Reports & CA Filing Suite */}
+      <GstReportsModal
+        isOpen={isGstReportsOpen}
+        onClose={() => setIsGstReportsOpen(false)}
+        initialTab={gstReportTab}
+        onLaunchReportAction={handleLaunchReportAction}
       />
     </>
   );

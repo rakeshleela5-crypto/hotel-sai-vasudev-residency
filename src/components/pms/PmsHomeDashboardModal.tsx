@@ -35,7 +35,8 @@ import { HotelBillFormatModal } from './HotelBillFormatModal';
 import { CompanyBrandingModal } from './CompanyBrandingModal';
 import { CheckOutRegisterModal } from './CheckOutRegisterModal';
 import { Top20FeaturesModal } from './Top20FeaturesModal';
-import type { PmsBooking, BillFormatType, PmsCheckOutDetail } from '../../types/pmsModels';
+import { GstReportsModal } from './GstReportsModal';
+import type { PmsBooking, BillFormatType, PmsCheckOutDetail, PmsGstReportTab } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
   onOpenRoomMatrix: () => void;
@@ -108,6 +109,68 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
 
   // Video 27: Top 20 Features of RoomG PMS Master Navigator
   const [isTop20FeaturesOpen, setIsTop20FeaturesOpen] = useState(false);
+
+  // Video 28: GST Tax Reports & CA Filing Suite
+  const [isGstReportsOpen, setIsGstReportsOpen] = useState(false);
+  const [gstReportTab, setGstReportTab] = useState<PmsGstReportTab>('consolidated');
+
+  const handleLaunchReportAction = (actionKey: string) => {
+    switch (actionKey) {
+      case 'room_booking':
+        setIsBookingOpen(true);
+        break;
+      case 'checkin_register':
+        setIsCheckInOpen(true);
+        break;
+      case 'room_checkout':
+      case 'checkout_register_only':
+      case 'my_checkout_register':
+        setIsCheckOutRegisterOpen(true);
+        break;
+      case 'food_bill':
+      case 'restaurant_food_bills':
+        setIsFoodBillOpen(true);
+        break;
+      case 'kot_entry':
+        setIsKotOpen(true);
+        break;
+      case 'advance_receipt':
+        setIsAdvanceReceiptOpen(true);
+        break;
+      case 'police_report':
+        setIsPoliceReportOpen(true);
+        break;
+      case 'store_wise_stock':
+        setIsStoreWiseStockOpen(true);
+        break;
+      case 'purchase_entry':
+        setIsPurchaseOpen(true);
+        break;
+      case 'stock_transfer':
+        setStockTransferMode('transfer');
+        setIsStockTransferOpen(true);
+        break;
+      case 'stock_issue':
+        setStockTransferMode('issue');
+        setIsStockTransferOpen(true);
+        break;
+      case 'party_ledger':
+        setIsLedgerOpen(true);
+        break;
+      case 'restaurant_table':
+        setIsTableDashboardOpen(true);
+        break;
+      case 'fb_report':
+        setGstReportTab('consolidated');
+        setIsGstReportsOpen(true);
+        break;
+      case 'room_dashboard':
+        onOpenRoomMatrix();
+        break;
+      default:
+        break;
+    }
+  };
 
   // Video 23: Real-Time Active Staff & Role Boundary Controls
   const [currentUser, setCurrentUser] = useState(PmsStore.getCurrentUser());
@@ -226,6 +289,10 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         break;
       case 'online_booking':
         setIsOnlineGuestBookingOpen(true);
+        break;
+      case 'gst_report':
+        setGstReportTab('consolidated');
+        setIsGstReportsOpen(true);
         break;
       default:
         break;
@@ -663,6 +730,53 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         >
           <span className="tile-icon">🏆</span>
           <span>Top 20 Features</span>
+        </button>
+
+        {/* Video 28: Room & Food Bill GST Report Tile (Frames 0200, 0210, 0270) */}
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => { setGstReportTab('consolidated'); setIsGstReportsOpen(true); }}
+          style={{ background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)', color: '#fff', fontWeight: 800 }}
+          title="Video 28: Room & Food Bill GST Report (23-Column Tax Audit Sheet)"
+        >
+          <span className="tile-icon">📜</span>
+          <span>GST Reports</span>
+        </button>
+
+        {/* Video 28: B2B & B2C GST Register Tiles (Frames 0110, 0170) */}
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => { setGstReportTab('b2b'); setIsGstReportsOpen(true); }}
+          style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff', fontWeight: 800 }}
+          title="Video 28: B2B Register (Only GST Customer Invoices - GSTR-1 Table 4)"
+        >
+          <span className="tile-icon">🏢</span>
+          <span>B2B GST</span>
+        </button>
+
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => { setGstReportTab('b2c'); setIsGstReportsOpen(true); }}
+          style={{ background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)', color: '#fff', fontWeight: 800 }}
+          title="Video 28: B2C Register (Without GST Invoices - GSTR-1 Table 7)"
+        >
+          <span className="tile-icon">👥</span>
+          <span>B2C GST</span>
+        </button>
+
+        {/* Video 28: Master 28-Report Dashboard Tile (Frame 0100) */}
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => { setGstReportTab('dashboard'); setIsGstReportsOpen(true); }}
+          style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', color: '#fff', fontWeight: 800 }}
+          title="Video 28: Master Report Dashboard (/report_dashboard - All 28 Reports)"
+        >
+          <span className="tile-icon">📊</span>
+          <span>Report Hub</span>
         </button>
       </div>
 
@@ -1168,6 +1282,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         isOpen={isTop20FeaturesOpen}
         onClose={() => setIsTop20FeaturesOpen(false)}
         onLaunchFeature={handleLaunchFeatureFromTop20}
+      />
+
+      {/* Video 28: GST Tax Reports & Master Report Dashboard */}
+      <GstReportsModal
+        isOpen={isGstReportsOpen}
+        onClose={() => setIsGstReportsOpen(false)}
+        initialTab={gstReportTab}
+        onLaunchReportAction={handleLaunchReportAction}
       />
     </div>
   );

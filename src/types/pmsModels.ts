@@ -927,3 +927,72 @@ export interface RoomGSystemPricing {
   officialWebsite: string;
 }
 
+// ==========================================
+// Video 28: GST Reports & Report Dashboard Types (Frames 0080-0330)
+// ==========================================
+export type PmsGstReportTab = 'consolidated' | 'b2b' | 'b2c' | 'dashboard';
+
+export interface PmsB2BInvoiceRecord {
+  sNo: number;
+  gstin: string;
+  receiverName: string;
+  invoiceNumber: string;
+  invoiceDate: string;
+  invoiceValue: number;
+  placeOfSupply: string;
+  reverseCharge: 'Y' | 'N';
+  applicableTaxRate: string;
+  invoiceType: 'Regular B2B' | 'SEZ Supplies' | 'Deemed Exports';
+  eCommerceGstin: string;
+  rate: number;
+  taxableValue: number;
+  cessAmount: number;
+}
+
+export interface PmsB2CInvoiceRecord {
+  sNo: number;
+  type: string;
+  placeOfSupply: string;
+  applicableTaxRate: string;
+  rate: number;
+  taxableValue: number;
+  cessAmount: number;
+  eCommerceGstin: string;
+}
+
+export interface PmsConsolidatedGstItem {
+  sNo: number;
+  voucherNo: string;
+  roomNoOrTable: string;
+  guestName: string;
+  address: string;
+  city: string;
+  state: string;
+  mobile: string;
+  firmName: string;
+  gstin: string;
+  checkInDate: string;
+  invoiceDate: string;
+  totalDays: number;
+  type: 'Room Bill' | 'Food Bill';
+  gstRate: number;
+  sgst: number;
+  cgst: number;
+  igst: number;
+  taxable: number;
+  totalGst: number;
+  billAmount: number;
+  advanceOrDiscount: number;
+  netPayAmount: number;
+}
+
+export interface PmsReportDashboardButton {
+  title: string;
+  route: string;
+  bgColor: string;
+  textColor: string;
+  icon: string;
+  category: 'Front Desk' | 'Restaurant' | 'Store' | 'Financials' | 'GST & Taxes' | 'Staff';
+  actionKey: string;
+}
+
