@@ -1,5 +1,6 @@
 import React from 'react';
 import type { PmsCheckIn } from '../../types/pmsModels';
+import { PmsStore } from '../../services/pmsStore';
 
 interface CheckInSlipModalProps {
   isOpen: boolean;
@@ -228,6 +229,43 @@ export const CheckInSlipModal: React.FC<CheckInSlipModalProps> = ({
           </button>
           <button type="button" onClick={handlePrint} className="btn-pms-print">
             🖨️ Print Room Check Inn Slip
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (checkIn.mobile) {
+                PmsStore.sendWhatsAppNotification({
+                  voucherType: 'Check_in_store',
+                  recipientMobile: checkIn.mobile,
+                  recipientName: checkIn.guestName,
+                  voucherNo: checkIn.checkInNo,
+                  roomNo: checkIn.roomNo,
+                  templateParams: {
+                    checkin_date: checkIn.checkInDate,
+                    total_billamount: checkIn.tariffPerDay.toString()
+                  },
+                  openDirectly: true
+                });
+              } else {
+                alert('No guest mobile number found on this check-in slip');
+              }
+            }}
+            style={{
+              background: '#16a34a',
+              color: '#ffffff',
+              border: 'none',
+              padding: '6px 14px',
+              borderRadius: 4,
+              fontWeight: 700,
+              fontSize: 12,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6
+            }}
+            title="Send automatic WhatsApp welcome greeting & check-in details to guest"
+          >
+            💬 Send WhatsApp
           </button>
         </div>
       </div>

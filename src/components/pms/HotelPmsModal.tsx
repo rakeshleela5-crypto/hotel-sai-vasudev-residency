@@ -34,6 +34,8 @@ import { UserManagementModal } from './UserManagementModal';
 import { RolesPermissionsModal } from './RolesPermissionsModal';
 import { ChainPropertyModal } from './ChainPropertyModal';
 import { DeviceResponsivePreviewModal } from './DeviceResponsivePreviewModal';
+import { WhatsAppSettingModal } from './WhatsAppSettingModal';
+import { WhatsAppLogsModal } from './WhatsAppLogsModal';
 import type { PmsUserAccount, PmsChainProperty } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import './pmsStyles.css';
@@ -122,6 +124,10 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<PmsUserAccount>(PmsStore.getCurrentUser());
   const [currentProperty, setCurrentProperty] = useState<PmsChainProperty>(PmsStore.getCurrentProperty());
+
+  // Video 22: Auto WhatsApp SMS Integration & Message Outbox
+  const [isWhatsAppSettingOpen, setIsWhatsAppSettingOpen] = useState(false);
+  const [isWhatsAppLogsOpen, setIsWhatsAppLogsOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -250,6 +256,29 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                 <span>Mobile View</span>
               </button>
 
+              {/* Video 22: WhatsApp Validity & Gateway Status Badge (Frame 0110) */}
+              <button
+                type="button"
+                onClick={() => setIsWhatsAppSettingOpen(true)}
+                title="Click to manage WhatsApp SMS Gateway & Message Templates (Video 22)"
+                style={{
+                  background: '#059669',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '3px 10px',
+                  borderRadius: 3,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4
+                }}
+              >
+                <span>💬</span>
+                <span>WhatsApp: Valid (29-06-2026)</span>
+              </button>
+
               {/* Video 21: User Avatar & Role Dropdown */}
               <div style={{ position: 'relative' }}>
                 <div
@@ -312,6 +341,22 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                     >
                       🛡️ Roles &amp; Permissions (/roles)
+                    </div>
+                    <div
+                      onClick={() => { setUserDropdownOpen(false); setIsWhatsAppSettingOpen(true); }}
+                      style={{ padding: '8px 12px', color: '#4ade80', cursor: 'pointer', borderBottom: '1px solid #334155' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#334155')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      💬 WhatsApp SMS Setting (/whatsapp_sms)
+                    </div>
+                    <div
+                      onClick={() => { setUserDropdownOpen(false); setIsWhatsAppLogsOpen(true); }}
+                      style={{ padding: '8px 12px', color: '#fb923c', cursor: 'pointer', borderBottom: '1px solid #334155' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#334155')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      📜 WhatsApp Outbox Logs (/whatsapp_logs)
                     </div>
                     <div
                       onClick={() => { setUserDropdownOpen(false); setIsChainPropertyOpen(true); }}
@@ -595,6 +640,13 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsDevicePreviewOpen(true)}>
                       <span style={{ color: '#f472b6', fontWeight: 700 }}>📱 Multi-Device Simulator (Video 21)</span>
+                    </div>
+                    {/* Video 22: Auto WhatsApp SMS Integration & Logs */}
+                    <div className="pms-nav-item" onClick={() => setIsWhatsAppSettingOpen(true)}>
+                      <span style={{ color: '#22c55e', fontWeight: 800 }}>💬 WhatsApp SMS Setting (/whatsapp_sms)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsWhatsAppLogsOpen(true)}>
+                      <span style={{ color: '#fb923c', fontWeight: 700 }}>📜 WhatsApp Outbox Logs (/whatsapp_logs)</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => alert('Printer & Receipt Template Setup')}>
                       <span>🖨️ Printer &amp; POS Setup</span>
@@ -949,6 +1001,25 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         onOpenFoodBill={() => {
           setIsDevicePreviewOpen(false);
           setIsFoodBillModalOpen(true);
+        }}
+      />
+
+      {/* Video 22: Auto WhatsApp SMS Integration & Message Outbox Modals */}
+      <WhatsAppSettingModal
+        isOpen={isWhatsAppSettingOpen}
+        onClose={() => setIsWhatsAppSettingOpen(false)}
+        onOpenLogs={() => {
+          setIsWhatsAppSettingOpen(false);
+          setIsWhatsAppLogsOpen(true);
+        }}
+      />
+
+      <WhatsAppLogsModal
+        isOpen={isWhatsAppLogsOpen}
+        onClose={() => setIsWhatsAppLogsOpen(false)}
+        onOpenSettings={() => {
+          setIsWhatsAppLogsOpen(false);
+          setIsWhatsAppSettingOpen(true);
         }}
       />
     </>

@@ -27,6 +27,8 @@ import { UserManagementModal } from './UserManagementModal';
 import { RolesPermissionsModal } from './RolesPermissionsModal';
 import { ChainPropertyModal } from './ChainPropertyModal';
 import { DeviceResponsivePreviewModal } from './DeviceResponsivePreviewModal';
+import { WhatsAppSettingModal } from './WhatsAppSettingModal';
+import { WhatsAppLogsModal } from './WhatsAppLogsModal';
 import type { PmsBooking } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
@@ -80,6 +82,10 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   const [isChainPropertyOpen, setIsChainPropertyOpen] = useState(false);
   const [isDevicePreviewOpen, setIsDevicePreviewOpen] = useState(false);
 
+  // Video 22: Auto WhatsApp SMS Integration & Outbox
+  const [isWhatsAppSettingOpen, setIsWhatsAppSettingOpen] = useState(false);
+  const [isWhatsAppLogsOpen, setIsWhatsAppLogsOpen] = useState(false);
+
   const rooms = PmsStore.getRooms();
   const vacantCount = rooms.filter(r => r.status === 'vacant').length;
   const occupiedCount = rooms.filter(r => r.status === 'occupied').length;
@@ -105,10 +111,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
       alert('Please enter a valid 10-digit mobile number.');
       return;
     }
-    const msg = encodeURIComponent(
-      'Namaste! Greetings from Hotel SAI VASUDEV RESIDENCY, Shirdi. Check real-time room availability & book directly with instant confirmation voucher: https://hotel-sai-vasudev-residency.pages.dev'
-    );
-    window.open(`https://wa.me/91${whatsAppMobile}?text=${msg}`, '_blank');
+    PmsStore.sendWhatsAppNotification({
+      voucherType: 'Promotional',
+      recipientMobile: whatsAppMobile,
+      recipientName: 'Valued Guest',
+      recipientType: 'Guest',
+      openDirectly: true
+    });
+    setWhatsAppMobile('');
   };
 
   const handleCopyWebsiteLink = () => {
@@ -129,7 +139,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           <span>Hotel Dashboard Date: {currentTime}</span>
           <span>&bull;</span>
           <span>Activation Date: 17-12-24 & Renew Date: 17-12-25 & Day Remaining: 194</span>
-          <span className="whatsapp-badge">WhatsApp Validity: 29-06-2025</span>
+          <span
+            className="whatsapp-badge"
+            style={{ cursor: 'pointer' }}
+            onClick={() => setIsWhatsAppSettingOpen(true)}
+            title="Click to configure WhatsApp SMS Gateway & Message Templates"
+          >
+            WhatsApp Validity: 29-06-2026
+          </span>
         </div>
       </div>
 
@@ -360,6 +377,29 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         >
           <span className="tile-icon">📱</span>
           <span>Mobile View</span>
+        </button>
+
+        {/* Video 22: Auto WhatsApp SMS Integration & Outbox Tiles */}
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => setIsWhatsAppSettingOpen(true)}
+          style={{ background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', color: '#fff' }}
+          title="Video 22: Automated WhatsApp SMS Settings & Templates (/whatsapp_sms)"
+        >
+          <span className="tile-icon">💬</span>
+          <span>Auto WhatsApp</span>
+        </button>
+
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => setIsWhatsAppLogsOpen(true)}
+          style={{ background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)', color: '#fff' }}
+          title="Video 22: WhatsApp Message Outbox & Fraud Audit Logs (/whatsapp_logs)"
+        >
+          <span className="tile-icon">📜</span>
+          <span>WhatsApp Logs</span>
         </button>
       </div>
 
@@ -796,6 +836,25 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         onOpenKotEntry={() => setIsKotOpen(true)}
         onOpenCheckIn={() => setIsCheckInOpen(true)}
         onOpenFoodBill={() => setIsFoodBillOpen(true)}
+      />
+
+      {/* Video 22: Auto WhatsApp SMS Integration & Message Outbox Modals */}
+      <WhatsAppSettingModal
+        isOpen={isWhatsAppSettingOpen}
+        onClose={() => setIsWhatsAppSettingOpen(false)}
+        onOpenLogs={() => {
+          setIsWhatsAppSettingOpen(false);
+          setIsWhatsAppLogsOpen(true);
+        }}
+      />
+
+      <WhatsAppLogsModal
+        isOpen={isWhatsAppLogsOpen}
+        onClose={() => setIsWhatsAppLogsOpen(false)}
+        onOpenSettings={() => {
+          setIsWhatsAppLogsOpen(false);
+          setIsWhatsAppSettingOpen(true);
+        }}
       />
     </div>
   );

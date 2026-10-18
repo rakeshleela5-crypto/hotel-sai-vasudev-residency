@@ -720,5 +720,49 @@ export const PMS_ALL_PERMISSIONS: { key: string; label: string; category: string
   { key: 'Delete', label: 'Delete Records', category: 'System & Controls' }
 ];
 
+// ============================================================================
+// Video 22: Auto WhatsApp SMS Integration, Message Templates & Fraud Alerts
+// ============================================================================
+
+export interface PmsWhatsAppTemplate {
+  id: number;
+  sNo: number;
+  type: 'WhatsApp' | 'SMS';
+  voucherType: string; // e.g. "Check_out_store", "Check_out_delete", "Check_in_store"
+  label: string;       // e.g. "Check-Out Guest Bill & Thank You"
+  message: string;
+  active: 'On' | 'Off';
+  sendTo: 'Guest' | 'Owner' | 'Both';
+}
+
+export interface PmsWhatsAppLog {
+  id: string;
+  timestamp: string;      // DD-MM-YYYY HH:mm:ss
+  recipientMobile: string;
+  recipientName: string;
+  recipientType: 'Guest' | 'Owner' | 'Staff';
+  voucherType: string;
+  voucherNo?: string;
+  roomNo?: string;
+  message: string;
+  status: 'Sent' | 'Delivered' | 'Pending' | 'Failed';
+  firmId?: string;
+}
+
+export interface PmsWhatsAppConfig {
+  apiUrl: string;
+  instanceId: string;
+  token: string;
+  ownerMobile: string;
+  validityDate: string;    // e.g. "2026-06-29"
+  autoSendOnCheckIn: boolean;
+  autoSendOnCheckOut: boolean;
+  autoSendOnBooking: boolean;
+  autoSendOnFoodBill: boolean;
+  autoAlertOwnerOnDelete: boolean;
+  autoAlertOwnerOnUpdate: boolean;
+}
+
+
 
 

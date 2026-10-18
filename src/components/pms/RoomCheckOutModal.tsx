@@ -239,6 +239,22 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
     // Save checkout & mark room as Dirty (Red card 🧹)
     PmsStore.saveCheckout(checkoutData);
 
+    // Video 22: Auto WhatsApp on checkout
+    const waConfig = PmsStore.getWhatsAppConfig();
+    if (waConfig.autoSendOnCheckOut && guest?.phone) {
+      PmsStore.sendWhatsAppNotification({
+        voucherType: 'Check_out_store',
+        recipientMobile: guest.phone || '9822100042',
+        recipientName: guest.name || 'Guest',
+        voucherNo: activeInvoiceNo,
+        roomNo: targetRoom.roomNo,
+        templateParams: {
+          checkout_date: checkOutDate,
+          total_billamount: netPayable.toFixed(2)
+        }
+      });
+    }
+
     onCheckoutComplete(checkoutData);
     setShowInvoicePreview(true);
   };
@@ -1078,6 +1094,29 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                   style={{ background: '#d97706', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: 3, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
                 >
                   📄 PDF
+                </button>
+                {/* Video 22: Send WhatsApp Bill */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const guestPhone = guest?.phone || '9822100042';
+                    PmsStore.sendWhatsAppNotification({
+                      voucherType: 'Check_out_store',
+                      recipientMobile: guestPhone,
+                      recipientName: guest?.name || 'Guest',
+                      voucherNo: activeInvoiceNo,
+                      roomNo: targetRoom.roomNo,
+                      templateParams: {
+                        checkout_date: checkOutDate,
+                        total_billamount: netPayable.toFixed(2)
+                      },
+                      openDirectly: true
+                    });
+                  }}
+                  style={{ background: '#25d366', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: 3, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                  title="Send digital tax invoice & thank you message to guest on WhatsApp"
+                >
+                  <span>💬</span> WhatsApp Bill
                 </button>
                 <button
                   type="button"

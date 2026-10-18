@@ -559,6 +559,26 @@ export const AdvanceReceiptModal: React.FC<AdvanceReceiptModalProps> = ({
               >
                 🖨️ Print Voucher
               </button>
+              <button
+                type="button"
+                onClick={() => {
+                  PmsStore.sendWhatsAppNotification({
+                    voucherType: 'Advance_receipt_store',
+                    recipientMobile: '9822100042',
+                    recipientName: printingReceipt.guestName,
+                    voucherNo: printingReceipt.receiptNo,
+                    roomNo: printingReceipt.roomNo || '',
+                    templateParams: {
+                      total_billamount: printingReceipt.amount.toString()
+                    },
+                    openDirectly: true
+                  });
+                }}
+                style={{ background: '#25d366', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: 4, cursor: 'pointer', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}
+                title="Send advance payment receipt to guest WhatsApp"
+              >
+                <span>💬</span> WhatsApp Receipt
+              </button>
             </div>
           </div>
         </div>

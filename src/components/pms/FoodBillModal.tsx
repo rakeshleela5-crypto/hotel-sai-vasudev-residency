@@ -721,6 +721,28 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                   </button>
                   <button
                     type="button"
+                    onClick={() => {
+                      const guestMobile = customerMobile || '9822100042';
+                      PmsStore.sendWhatsAppNotification({
+                        voucherType: 'Food_bill_store',
+                        recipientMobile: guestMobile,
+                        recipientName: customerName || 'Valued Guest',
+                        voucherNo: billNo,
+                        roomNo: serviceType === 'Room Service' ? selectedRoomNo : selectedTable,
+                        templateParams: {
+                          checkout_date: billDate,
+                          total_billamount: netBillAmount.toString()
+                        },
+                        openDirectly: true
+                      });
+                    }}
+                    style={{ background: '#25d366', color: '#fff', border: 'none', padding: '7px 16px', borderRadius: 4, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                    title="Send food bill receipt to guest WhatsApp"
+                  >
+                    <span>💬</span> WhatsApp Food Bill
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => handleSaveBill(true)}
                     style={{ background: '#0284c7', color: '#fff', border: 'none', padding: '7px 22px', borderRadius: 4, fontWeight: 800, cursor: 'pointer' }}
                   >

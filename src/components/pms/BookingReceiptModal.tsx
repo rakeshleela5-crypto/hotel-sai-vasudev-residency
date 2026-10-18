@@ -1,5 +1,6 @@
 import React from 'react';
 import type { PmsBooking } from '../../types/pmsModels';
+import { PmsStore } from '../../services/pmsStore';
 
 interface BookingReceiptModalProps {
   isOpen: boolean;
@@ -246,6 +247,46 @@ export const BookingReceiptModal: React.FC<BookingReceiptModalProps> = ({
           </button>
           <button type="button" onClick={handlePrint} className="btn-pms-print">
             🖨️ Print Booking Slip
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (booking.mobile) {
+                PmsStore.sendWhatsAppNotification({
+                  voucherType: 'Room_booking_store',
+                  recipientMobile: booking.mobile,
+                  recipientName: booking.guestName,
+                  voucherNo: booking.bookingNo,
+                  roomNo: booking.rooms?.map(r => r.roomNo).join(', ') || booking.assignedRoomType || 'Room',
+                  templateParams: {
+                    checkin_date: booking.checkInDate,
+                    checkout_date: booking.checkOutDate,
+                    total_billamount: booking.bookingAmount.toString(),
+                    advance_paid: booking.bookingAmount.toString(),
+                    balance_due: Math.max(0, booking.totalAmount - booking.bookingAmount).toString()
+                  },
+                  openDirectly: true
+                });
+              } else {
+                alert('No guest mobile number found on this booking');
+              }
+            }}
+            style={{
+              background: '#16a34a',
+              color: '#ffffff',
+              border: 'none',
+              padding: '6px 14px',
+              borderRadius: 4,
+              fontWeight: 700,
+              fontSize: 12,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6
+            }}
+            title="Send automated booking voucher & directions to guest on WhatsApp"
+          >
+            💬 Send WhatsApp Voucher
           </button>
         </div>
       </div>

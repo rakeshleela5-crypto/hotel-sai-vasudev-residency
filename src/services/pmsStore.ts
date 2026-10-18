@@ -27,7 +27,10 @@ import type {
   GodownStockRow,
   PmsRole,
   PmsUserAccount,
-  PmsChainProperty
+  PmsChainProperty,
+  PmsWhatsAppTemplate,
+  PmsWhatsAppLog,
+  PmsWhatsAppConfig
 } from '../types/pmsModels';
 import { PMS_ALL_PERMISSIONS } from '../types/pmsModels';
 
@@ -1106,6 +1109,169 @@ export const INITIAL_CHAIN_PROPERTIES: PmsChainProperty[] = [
   }
 ];
 
+// ============================================================================
+// Video 22: Auto WhatsApp SMS Integration Seed Data (Frame 0110, 0150, 0230)
+// ============================================================================
+
+export const INITIAL_WHATSAPP_CONFIG: PmsWhatsAppConfig = {
+  apiUrl: 'https://api.datahouseerp.com/whatsapp/v1/send',
+  instanceId: 'DH-WA-DEMO0004-9822',
+  token: 'dh_token_svr_live_9822100004',
+  ownerMobile: '7999663696', // matches video demo owner contact
+  validityDate: '29-06-2026',
+  autoSendOnCheckIn: true,
+  autoSendOnCheckOut: true,
+  autoSendOnBooking: true,
+  autoSendOnFoodBill: true,
+  autoAlertOwnerOnDelete: true,
+  autoAlertOwnerOnUpdate: true
+};
+
+export const INITIAL_WHATSAPP_TEMPLATES: PmsWhatsAppTemplate[] = [
+  {
+    id: 1,
+    sNo: 1,
+    type: 'WhatsApp',
+    voucherType: 'Check_out_store',
+    label: 'Check-Out Guest Bill & Thank You',
+    message: 'Dear Sir/Madam, Thank you for choosing to stay with us at *{firm_name}*. We hope you had a pleasant experience. *Details* Room No: {room_no} Bill No: {voucher_no} Checkout Date: {checkout_date} Bill Amount: ₹{total_billamount} We appreciate your patronage and look forward to welcoming you again. For your next reservation, feel free to reach out to us. *{firm_name}* Address: {address1}, {address2}, {city}, {pincode}, {state} Email: {email} Website: {website} Booking Link: https://hotel-sai-vasudev-residency.pages.dev Reception: {phone}, {mobile} Wishing you safe travels and a wonderful day ahead. Warm regards, *Team {firm_name}*',
+    active: 'On',
+    sendTo: 'Guest'
+  },
+  {
+    id: 2,
+    sNo: 2,
+    type: 'WhatsApp',
+    voucherType: 'Check_out_delete',
+    label: 'Owner Alert - Checkout Bill Deleted (Fraud Prevention)',
+    message: 'Dear Owner, This is to inform you that a guest bill has been deleted at *{firm_name}*. *Details* Room No: {room_no} Bill No: {voucher_no} Guest Name: {guest_name} Checkout Date: {checkout_date} Delete Bill Amount: ₹{total_billamount} Oprater Name: {name} Please ensure all *Deleted* Record',
+    active: 'On',
+    sendTo: 'Owner'
+  },
+  {
+    id: 3,
+    sNo: 3,
+    type: 'WhatsApp',
+    voucherType: 'Check_out_update',
+    label: 'Owner Alert - Checkout Bill Updated / Discounted',
+    message: 'Dear Owner, This is to inform you that a guest bill has been updated at *{firm_name}*. *Details* Room No: {room_no} Bill No: {voucher_no} Checkout Date: {checkout_date} Updated Bill Amount: ₹{total_billamount} Guest has been successfully checked out. Please ensure all records are updated',
+    active: 'On',
+    sendTo: 'Owner'
+  },
+  {
+    id: 4,
+    sNo: 4,
+    type: 'WhatsApp',
+    voucherType: 'Check_in_store',
+    label: 'Check-In Guest Welcome & Stay Details',
+    message: 'Dear Sir/Madam, Welcome to *{firm_name}*! We are delighted to have you stay with us and hope you enjoy a comfortable and pleasant stay. *Check-in Details* Room No: {room_no} Bill No: {voucher_no} Check-in Date: {checkin_date} Should you need any assistance during your stay, please feel free to contact our reception at any time. *{firm_name}* Address: {address1}, {city}, {pincode} Reception: {phone}, {mobile} Thank you for choosing us. We wish you a wonderful stay! Warm regards, *Team {firm_name}*',
+    active: 'On',
+    sendTo: 'Guest'
+  },
+  {
+    id: 5,
+    sNo: 5,
+    type: 'WhatsApp',
+    voucherType: 'Check_in_delete',
+    label: 'Owner Alert - Check-In Cancelled / Deleted',
+    message: 'Dear Owner, This is to inform you that a guest bill has been deleted at *{firm_name}*. *Details* Room No: {room_no} Bill No: {voucher_no} Checkin Date: {checkin_date} Guest Name: {guest_name} Room Tariff: {total_billamount} Oprater Name: {name} Please ensure all Deleted Record',
+    active: 'On',
+    sendTo: 'Owner'
+  },
+  {
+    id: 6,
+    sNo: 6,
+    type: 'WhatsApp',
+    voucherType: 'Check_in_update',
+    label: 'Owner Alert - Check-In Tariff or Guest Updated',
+    message: 'Dear Owner, This is to inform you that a guest bill has been Updated at *{firm_name}*. *New Details* Room No: {room_no} Bill No: {voucher_no} Checkin Date: {checkin_date} Guest Name: {guest_name} Room Tariff: {total_billamount} Oprater Name: {name} Please ensure all *Updated* Record',
+    active: 'On',
+    sendTo: 'Owner'
+  },
+  {
+    id: 7,
+    sNo: 7,
+    type: 'WhatsApp',
+    voucherType: 'Room_booking_store',
+    label: 'Room Booking Instant Confirmation Voucher',
+    message: 'Namaste {guest_name}! Greetings from *{firm_name}*. Your room booking is confirmed! *Booking No:* {voucher_no} *Room Category:* {room_no} *Check-in:* {checkin_date} *Check-out:* {checkout_date} *Advance Paid:* ₹{total_billamount}. Download voucher: https://hotel-sai-vasudev-residency.pages.dev Reception: {phone}. We look forward to hosting you in Shirdi!',
+    active: 'On',
+    sendTo: 'Guest'
+  },
+  {
+    id: 8,
+    sNo: 8,
+    type: 'WhatsApp',
+    voucherType: 'Food_bill_store',
+    label: 'Food Bill & Dining Invoice',
+    message: 'Dear Guest, Thank you for dining with us at *{firm_name}*. *Invoice No:* {voucher_no} *Table / Room:* {room_no} *Total Amount:* ₹{total_billamount} *Date:* {checkout_date}. We hope you enjoyed your meal! Warm regards, *{firm_name}*',
+    active: 'On',
+    sendTo: 'Guest'
+  },
+  {
+    id: 9,
+    sNo: 9,
+    type: 'WhatsApp',
+    voucherType: 'Advance_receipt_store',
+    label: 'Advance Payment Receipt',
+    message: 'Dear {guest_name}, We have received your advance payment of *₹{total_billamount}* at *{firm_name}*. *Receipt No:* {voucher_no}. Thank you for your trust! Reception: {phone}.',
+    active: 'On',
+    sendTo: 'Guest'
+  },
+  {
+    id: 10,
+    sNo: 10,
+    type: 'WhatsApp',
+    voucherType: 'Promotional',
+    label: 'Promotional Website Link & Special Offer',
+    message: 'Namaste! Greetings from *{firm_name}*, Shirdi. Book directly through our website to get 15% off and complimentary breakfast for your upcoming Shirdi Pilgrimage: https://hotel-sai-vasudev-residency.pages.dev Call: {phone}',
+    active: 'On',
+    sendTo: 'Guest'
+  }
+];
+
+export const INITIAL_WHATSAPP_LOGS: PmsWhatsAppLog[] = [
+  {
+    id: 'wal-101',
+    timestamp: '2025-07-06 22:45:10',
+    recipientMobile: '9822100042',
+    recipientName: 'Rahul Sharma',
+    recipientType: 'Guest',
+    voucherType: 'Check_out_store',
+    voucherNo: 'RM/63/24-25',
+    roomNo: '101',
+    message: 'Dear Sir/Madam, Thank you for choosing to stay with us at *HOTEL SAI VASUDEV RESIDENCY*...',
+    status: 'Delivered',
+    firmId: 'DEMO0004'
+  },
+  {
+    id: 'wal-102',
+    timestamp: '2025-07-06 22:46:15',
+    recipientMobile: '7999663696',
+    recipientName: 'Hotel Owner',
+    recipientType: 'Owner',
+    voucherType: 'Check_out_update',
+    voucherNo: 'RM/62/24-25',
+    roomNo: '104',
+    message: 'Dear Owner, This is to inform you that a guest bill has been updated at *HOTEL SAI VASUDEV RESIDENCY*...',
+    status: 'Delivered',
+    firmId: 'DEMO0004'
+  },
+  {
+    id: 'wal-103',
+    timestamp: '2025-07-06 22:48:30',
+    recipientMobile: '9822100099',
+    recipientName: 'Pooja Verma',
+    recipientType: 'Guest',
+    voucherType: 'Check_in_store',
+    voucherNo: 'CI/88/24-25',
+    roomNo: '202',
+    message: 'Dear Sir/Madam, Welcome to *HOTEL SAI VASUDEV RESIDENCY*! We are delighted to have you stay with us...',
+    status: 'Delivered',
+    firmId: 'DEMO0004'
+  }
+];
+
 const STORAGE_KEYS = {
   ROOMS: 'svr_pms_rooms',
   ROOM_TYPES: 'svr_pms_room_types',
@@ -1131,7 +1297,10 @@ const STORAGE_KEYS = {
   USERS: 'svr_pms_users',
   PROPERTIES: 'svr_pms_properties',
   CURRENT_USER: 'svr_pms_current_user',
-  CURRENT_PROPERTY: 'svr_pms_current_property'
+  CURRENT_PROPERTY: 'svr_pms_current_property',
+  WHATSAPP_TEMPLATES: 'svr_pms_whatsapp_templates',
+  WHATSAPP_CONFIG: 'svr_pms_whatsapp_config',
+  WHATSAPP_LOGS: 'svr_pms_whatsapp_logs'
 };
 
 export class PmsStore {
@@ -3909,6 +4078,180 @@ export class PmsStore {
     if (selected) {
       localStorage.setItem(STORAGE_KEYS.CURRENT_PROPERTY, JSON.stringify(selected));
     }
+  }
+
+  // ==========================================
+  // Video 22: Auto WhatsApp SMS Integration Methods
+  // ==========================================
+  static getWhatsAppTemplates(): PmsWhatsAppTemplate[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.WHATSAPP_TEMPLATES);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.WHATSAPP_TEMPLATES, JSON.stringify(INITIAL_WHATSAPP_TEMPLATES));
+      return INITIAL_WHATSAPP_TEMPLATES;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_WHATSAPP_TEMPLATES;
+    }
+  }
+
+  static saveWhatsAppTemplates(templates: PmsWhatsAppTemplate[]): void {
+    localStorage.setItem(STORAGE_KEYS.WHATSAPP_TEMPLATES, JSON.stringify(templates));
+  }
+
+  static getWhatsAppTemplate(voucherType: string): PmsWhatsAppTemplate | undefined {
+    return this.getWhatsAppTemplates().find(t => t.voucherType.toLowerCase() === voucherType.toLowerCase());
+  }
+
+  static saveWhatsAppTemplate(tmpl: PmsWhatsAppTemplate): void {
+    const list = this.getWhatsAppTemplates();
+    const idx = list.findIndex(t => t.id === tmpl.id || t.voucherType.toLowerCase() === tmpl.voucherType.toLowerCase());
+    if (idx >= 0) {
+      list[idx] = tmpl;
+    } else {
+      list.push(tmpl);
+    }
+    this.saveWhatsAppTemplates(list);
+  }
+
+  static deleteWhatsAppTemplate(id: number): void {
+    const list = this.getWhatsAppTemplates().filter(t => t.id !== id);
+    this.saveWhatsAppTemplates(list);
+  }
+
+  static getWhatsAppConfig(): PmsWhatsAppConfig {
+    const raw = localStorage.getItem(STORAGE_KEYS.WHATSAPP_CONFIG);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.WHATSAPP_CONFIG, JSON.stringify(INITIAL_WHATSAPP_CONFIG));
+      return INITIAL_WHATSAPP_CONFIG;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_WHATSAPP_CONFIG;
+    }
+  }
+
+  static saveWhatsAppConfig(config: PmsWhatsAppConfig): void {
+    localStorage.setItem(STORAGE_KEYS.WHATSAPP_CONFIG, JSON.stringify(config));
+  }
+
+  static getWhatsAppLogs(): PmsWhatsAppLog[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.WHATSAPP_LOGS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.WHATSAPP_LOGS, JSON.stringify(INITIAL_WHATSAPP_LOGS));
+      return INITIAL_WHATSAPP_LOGS;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_WHATSAPP_LOGS;
+    }
+  }
+
+  static addWhatsAppLog(log: Omit<PmsWhatsAppLog, 'id' | 'timestamp'> & { id?: string; timestamp?: string }): PmsWhatsAppLog {
+    const list = this.getWhatsAppLogs();
+    const newLog: PmsWhatsAppLog = {
+      id: log.id || `wal-${Date.now()}`,
+      timestamp: log.timestamp || new Date().toISOString().replace('T', ' ').slice(0, 19),
+      recipientMobile: log.recipientMobile,
+      recipientName: log.recipientName,
+      recipientType: log.recipientType,
+      voucherType: log.voucherType,
+      voucherNo: log.voucherNo,
+      roomNo: log.roomNo,
+      message: log.message,
+      status: log.status || 'Delivered',
+      firmId: log.firmId || this.getCurrentProperty().firmId
+    };
+    list.unshift(newLog);
+    const trimmed = list.slice(0, 150);
+    localStorage.setItem(STORAGE_KEYS.WHATSAPP_LOGS, JSON.stringify(trimmed));
+    return newLog;
+  }
+
+  static clearWhatsAppLogs(): void {
+    localStorage.setItem(STORAGE_KEYS.WHATSAPP_LOGS, JSON.stringify([]));
+  }
+
+  static renderWhatsAppMessage(templateText: string, params: Record<string, any>): string {
+    const prop = this.getCurrentProperty();
+    const user = this.getCurrentUser();
+    const defaults: Record<string, string> = {
+      firm_name: prop.firmName,
+      firm_id: prop.firmId,
+      address1: prop.address.split(',')[0] || prop.address,
+      address2: prop.address.split(',')[1] || '',
+      city: prop.location.split(' ')[0] || 'Shirdi',
+      pincode: '423109',
+      state: 'Maharashtra',
+      email: prop.email,
+      website: 'https://hotel-sai-vasudev-residency.pages.dev',
+      phone: prop.phone,
+      mobile: prop.phone,
+      name: user.userName || 'Admin'
+    };
+
+    let rendered = templateText;
+    const combined = { ...defaults, ...params };
+
+    for (const [key, val] of Object.entries(combined)) {
+      const reg = new RegExp(`\\{${key}\\}`, 'gi');
+      rendered = rendered.replace(reg, String(val ?? ''));
+    }
+
+    return rendered;
+  }
+
+  static sendWhatsAppNotification(params: {
+    voucherType: string;
+    recipientMobile: string;
+    recipientName: string;
+    recipientType?: 'Guest' | 'Owner';
+    voucherNo?: string;
+    roomNo?: string;
+    templateParams?: Record<string, any>;
+    customMessage?: string;
+    openDirectly?: boolean;
+  }): { success: boolean; log: PmsWhatsAppLog; directUrl: string } {
+    const template = this.getWhatsAppTemplate(params.voucherType);
+
+    let messageText = params.customMessage || '';
+    if (!messageText && template) {
+      messageText = this.renderWhatsAppMessage(template.message, {
+        guest_name: params.recipientName,
+        voucher_no: params.voucherNo || '',
+        room_no: params.roomNo || '',
+        ...(params.templateParams || {})
+      });
+    }
+
+    if (!messageText) {
+      messageText = `Greetings from ${this.getCurrentProperty().firmName}! Room: ${params.roomNo || '-'}, Voucher: ${params.voucherNo || '-'}.`;
+    }
+
+    const cleanPhone = params.recipientMobile.replace(/[^0-9]/g, '');
+    const phoneWithCountry = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+    const directUrl = `https://api.whatsapp.com/send?phone=${phoneWithCountry}&text=${encodeURIComponent(messageText)}`;
+
+    const log = this.addWhatsAppLog({
+      recipientMobile: params.recipientMobile,
+      recipientName: params.recipientName,
+      recipientType: params.recipientType || (template?.sendTo === 'Owner' ? 'Owner' : 'Guest'),
+      voucherType: params.voucherType,
+      voucherNo: params.voucherNo,
+      roomNo: params.roomNo,
+      message: messageText,
+      status: 'Delivered',
+      firmId: this.getCurrentProperty().firmId
+    });
+
+    if (params.openDirectly && typeof window !== 'undefined') {
+      window.open(directUrl, '_blank', 'noopener,noreferrer');
+    }
+
+    return { success: true, log, directUrl };
   }
 }
 
