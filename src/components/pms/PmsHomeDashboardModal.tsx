@@ -44,6 +44,7 @@ import { ShiftHandoverModal } from './ShiftHandoverModal';
 import { HelpAndSupportModal } from './HelpAndSupportModal';
 import { AgentCommissionModal } from './AgentCommissionModal';
 import { LiquorBarManagementModal } from './LiquorBarManagementModal';
+import { NoDiscountMasterModal } from './NoDiscountMasterModal';
 import type { PmsBooking, BillFormatType, PmsCheckOutDetail, PmsGstReportTab } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
@@ -140,8 +141,16 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   // Video 32: Liquor & Bar Management Software Suite (Frames 0080-0350)
   const [isLiquorBarOpen, setIsLiquorBarOpen] = useState(false);
 
+  // Video 33: No-Discount Item & Margin Protection (Frames 0080-0202)
+  const [isNoDiscountOpen, setIsNoDiscountOpen] = useState(false);
+
   const handleLaunchReportAction = (actionKey: string) => {
     switch (actionKey) {
+      case 'no_discount':
+      case 'margin_protection':
+      case 'discount_rules':
+        setIsNoDiscountOpen(true);
+        break;
       case 'liquor_bar':
       case 'bar_pos':
       case 'liquor_stock':
@@ -401,6 +410,10 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
       case 'liquor_bar':
       case 'bar_management':
         setIsLiquorBarOpen(true);
+        break;
+      case 'no_discount':
+      case 'margin_protection':
+        setIsNoDiscountOpen(true);
         break;
       case 'gst_report':
         setGstReportTab('consolidated');
@@ -970,6 +983,29 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           <span className="tile-icon">🍾</span>
           <span>Bar Stock (ML)</span>
         </button>
+
+        {/* Video 33: No-Discount Item & Margin Protection Rules Tiles */}
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => setIsNoDiscountOpen(true)}
+          style={{ background: 'linear-gradient(135deg, #b45309 0%, #78350f 100%)', color: '#fff', fontWeight: 800 }}
+          title="Video 33: No-Discount Items, Price Integrity, Exemption Groups & Live Bill Margin Protection (/no_discount_master)"
+        >
+          <span className="tile-icon">🛡️</span>
+          <span>No-Discount Rules</span>
+        </button>
+
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => setIsNoDiscountOpen(true)}
+          style={{ background: 'linear-gradient(135deg, #0f766e 0%, #115e59 100%)', color: '#fff', fontWeight: 800 }}
+          title="Video 33: Live Bill Discount Simulator & Profit Margin Auditor (Frame 0180)"
+        >
+          <span className="tile-icon">💰</span>
+          <span>Margin Protection</span>
+        </button>
       </div>
 
       {/* Overview & Unprinted KOTs Notification Section matching Video 14 Frames 0145, 0230, 0255 */}
@@ -1532,6 +1568,13 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         isOpen={isLiquorBarOpen}
         onClose={() => setIsLiquorBarOpen(false)}
         onOpenTableDashboard={() => setIsTableDashboardOpen(true)}
+      />
+
+      {/* Video 33: No-Discount Item & Margin Protection Suite */}
+      <NoDiscountMasterModal
+        isOpen={isNoDiscountOpen}
+        onClose={() => setIsNoDiscountOpen(false)}
+        onOpenFoodBill={() => setIsFoodBillOpen(true)}
       />
     </div>
   );

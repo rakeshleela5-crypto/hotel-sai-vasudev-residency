@@ -51,6 +51,7 @@ import { ShiftHandoverModal } from './ShiftHandoverModal';
 import { HelpAndSupportModal } from './HelpAndSupportModal';
 import { AgentCommissionModal } from './AgentCommissionModal';
 import { LiquorBarManagementModal } from './LiquorBarManagementModal';
+import { NoDiscountMasterModal } from './NoDiscountMasterModal';
 import type { PmsUserAccount, PmsChainProperty, BillFormatType, PmsCheckOutDetail, PmsGstReportTab } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import './pmsStyles.css';
@@ -186,8 +187,16 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   // Video 32: Liquor & Bar Management Software Suite (Frames 0080-0350)
   const [isLiquorBarOpen, setIsLiquorBarOpen] = useState(false);
 
+  // Video 33: No-Discount Item & Margin Protection (Frames 0080-0202)
+  const [isNoDiscountOpen, setIsNoDiscountOpen] = useState(false);
+
   const handleLaunchReportAction = (actionKey: string) => {
     switch (actionKey) {
+      case 'no_discount':
+      case 'margin_protection':
+      case 'discount_rules':
+        setIsNoDiscountOpen(true);
+        break;
       case 'liquor_bar':
       case 'bar_pos':
       case 'liquor_stock':
@@ -390,6 +399,10 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       case 'liquor_bar':
       case 'bar_management':
         setIsLiquorBarOpen(true);
+        break;
+      case 'no_discount':
+      case 'margin_protection':
+        setIsNoDiscountOpen(true);
         break;
       default:
         setActiveTab('hub');
@@ -716,6 +729,30 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               >
                 <span>🍷</span>
                 <span>Liquor &amp; Bar</span>
+              </button>
+
+              {/* Video 33: No-Discount Item & Margin Protection Control */}
+              <button
+                type="button"
+                onClick={() => setIsNoDiscountOpen(true)}
+                title="Click to configure No-Discount Items, Price Integrity, and Exemption Rules (Video 33)"
+                style={{
+                  background: 'linear-gradient(135deg, #b45309 0%, #78350f 100%)',
+                  color: '#ffffff',
+                  border: '1px solid #fde68a',
+                  padding: '3px 10px',
+                  borderRadius: 3,
+                  fontSize: 11,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
+                }}
+              >
+                <span>🛡️</span>
+                <span>No-Discount Control</span>
               </button>
 
               {/* Video 21: User Avatar & Role Dropdown */}
@@ -1168,6 +1205,10 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     {/* Video 32: Liquor & Bar Management Software */}
                     <div className="pms-nav-item" onClick={() => setIsLiquorBarOpen(true)}>
                       <span style={{ color: '#f43f5e', fontWeight: 800 }}>🍷 Brand-Wise Liquor Stock &amp; Bar POS (Video 32)</span>
+                    </div>
+                    {/* Video 33: No-Discount Item & Margin Protection Control */}
+                    <div className="pms-nav-item" onClick={() => setIsNoDiscountOpen(true)}>
+                      <span style={{ color: '#fbbf24', fontWeight: 800 }}>🛡️ No-Discount Items &amp; Margin Rules (Video 33)</span>
                     </div>
                   </div>
                 )}
@@ -1764,6 +1805,13 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         isOpen={isLiquorBarOpen}
         onClose={() => setIsLiquorBarOpen(false)}
         onOpenTableDashboard={() => setIsTableDashboardOpen(true)}
+      />
+
+      {/* Video 33: No-Discount Item & Margin Protection Suite */}
+      <NoDiscountMasterModal
+        isOpen={isNoDiscountOpen}
+        onClose={() => setIsNoDiscountOpen(false)}
+        onOpenFoodBill={() => setIsFoodBillModalOpen(true)}
       />
     </>
   );

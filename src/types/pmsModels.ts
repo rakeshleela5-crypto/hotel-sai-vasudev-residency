@@ -201,6 +201,7 @@ export interface FoodBillItem {
   gstAmount?: number;
   vatPercent?: number;
   surPercent?: number;
+  noDiscount?: boolean;
   value: number;
 }
 
@@ -312,6 +313,7 @@ export interface MenuItem {
   image?: string;
   headGroup?: 'Restaurant_Item' | 'Raw_Material';
   group?: string;
+  noDiscount?: boolean; // Video 33: Flag to prohibit bill discounts on protected items
 }
 
 export interface PmsRoomType {
@@ -519,8 +521,9 @@ export type ItemHeadGroup = 'Restaurant_Item' | 'Raw_Material';
 export interface PmsItemGroup {
   id: string;
   sNo: number;
-  name: string;               // e.g. "Genral", "Raw Material", "spices", "sabzi and paneer"
+  name: string;               // e.g. "Genral", "Raw Material", "spices", "sabzi and paneer", "Beverage", "Dessert", "Liquor"
   headGroup: ItemHeadGroup;   // "Restaurant_Item" vs "Raw_Material"
+  noDiscount?: boolean;       // Video 33: Auto-exempts all items under this group from bill discounts
   createdAt?: string;
 }
 
@@ -1380,6 +1383,32 @@ export interface PmsBarInvoice {
   roomNo?: string;
   createdAt: string;
 }
+
+// ==========================================
+// Video 33: No-Discount Item, Margin Protection & Group Rules Contracts (Frames 0080-0202)
+// ==========================================
+export interface PmsNoDiscountConfig {
+  enabled: boolean;
+  protectedGroups: string[];   // e.g. ["Beverage", "BAVRAGE", "Dessert", "DESERT", "Liquor", "Beer", "No Discount", "Tobacco"]
+  maxAllowedDiscountPercent: number; // e.g. 20%
+  allowManualOverride: boolean;
+  overrideRoleRequired: string; // e.g. "Admin"
+  reasonRequiredForOverride: boolean;
+}
+
+export interface PmsDiscountAuditRecord {
+  id: string;
+  billNo: string;
+  tableNo: string;
+  requestedDiscountPercent: number;
+  actualDiscountAmount: number;
+  savingsProtectedAmount: number; // The discount amount blocked from non-discount items
+  eligibleItemsCount: number;
+  exemptItemsCount: number;
+  cashierName: string;
+  timestamp: string;
+}
+
 
 
 

@@ -188,17 +188,21 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
     }
   }, [selectedTable, selectedRoomNo, serviceType]);
 
-  // Recalculate items when discount changes
+  // Video 33: Recalculate items when discount changes (Exempting No-Discount Items - Frames 0140 & 0180)
   const applyDiscount = (pct: number) => {
     setDiscountPercent(pct);
     const updated = billItems.map(item => {
-      const disAmt = Number(((item.amount * pct) / 100).toFixed(2));
+      // Check if item is exempt from discount (Video 33 Frame 0180)
+      const isExempt = item.noDiscount === true || PmsStore.isItemDiscountExempt(item.itemName);
+      const effectivePct = isExempt ? 0 : pct;
+      const disAmt = isExempt ? 0 : Number(((item.amount * pct) / 100).toFixed(2));
       const taxable = Number((item.amount - disAmt).toFixed(2));
       const gstVal = Number(((taxable * (item.gstPercent || 0)) / 100).toFixed(2));
       const value = Number((taxable + gstVal).toFixed(2));
       return {
         ...item,
-        discountPercent: pct,
+        noDiscount: isExempt,
+        discountPercent: effectivePct,
         discountAmount: disAmt,
         taxable,
         value
@@ -551,8 +555,16 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                         </td>
                         <td style={{ padding: '5px 8px', textAlign: 'right' }}>{item.rate.toFixed(2)}</td>
                         <td style={{ padding: '5px 8px', textAlign: 'right' }}>{item.amount.toFixed(2)}</td>
-                        <td style={{ padding: '5px 8px', textAlign: 'right' }}>{item.discountPercent || 0}</td>
-                        <td style={{ padding: '5px 8px', textAlign: 'right', color: '#dc2626' }}>
+                        <td style={{ padding: '5px 8px', textAlign: 'right' }}>
+                          {item.noDiscount ? (
+                            <span style={{ fontSize: 9, background: '#fee2e2', color: '#dc2626', padding: '1px 4px', borderRadius: 2, fontWeight: 800 }} title="No Discount Item (Video 33)">
+                              NO DISC
+                            </span>
+                          ) : (
+                            item.discountPercent || 0
+                          )}
+                        </td>
+                        <td style={{ padding: '5px 8px', textAlign: 'right', color: item.noDiscount ? '#94a3b8' : '#dc2626', fontWeight: item.noDiscount ? 400 : 700 }}>
                           {(item.discountAmount || 0).toFixed(2)}
                         </td>
                         <td style={{ padding: '5px 8px', textAlign: 'right', fontWeight: 600 }}>

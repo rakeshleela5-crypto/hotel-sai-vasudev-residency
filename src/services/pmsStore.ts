@@ -60,7 +60,9 @@ import type {
   PmsLiquorBrand,
   PmsLiquorItem,
   PmsBrandWiseLiquorStock,
-  PmsBarInvoice
+  PmsBarInvoice,
+  PmsNoDiscountConfig,
+  PmsDiscountAuditRecord
 } from '../types/pmsModels';
 import { PMS_ALL_PERMISSIONS } from '../types/pmsModels';
 
@@ -1981,7 +1983,9 @@ const STORAGE_KEYS = {
   LIQUOR_BRANDS: 'svr_pms_liquor_brands',
   LIQUOR_ITEMS: 'svr_pms_liquor_items',
   LIQUOR_STOCKS: 'svr_pms_liquor_stocks',
-  BAR_INVOICES: 'svr_pms_bar_invoices'
+  BAR_INVOICES: 'svr_pms_bar_invoices',
+  NO_DISCOUNT_CONFIG: 'svr_pms_no_discount_config',
+  DISCOUNT_AUDIT_LOGS: 'svr_pms_discount_audit_logs'
 };
 
 export class PmsStore {
@@ -2243,6 +2247,10 @@ export class PmsStore {
       list.push(item);
     }
     localStorage.setItem(STORAGE_KEYS.MENU_ITEMS, JSON.stringify(list));
+  }
+
+  static saveMenuItems(items: MenuItem[]): void {
+    localStorage.setItem(STORAGE_KEYS.MENU_ITEMS, JSON.stringify(items));
   }
 
   static deleteMenuItem(id: string): void {
@@ -7243,6 +7251,114 @@ export class PmsStore {
 
     return invoice;
   }
+
+  // ==========================================
+  // Video 33: No-Discount Item, Margin Protection & Group Rules Methods (Frames 0080-0202)
+  // ==========================================
+  static getNoDiscountConfig(): PmsNoDiscountConfig {
+    const raw = localStorage.getItem(STORAGE_KEYS.NO_DISCOUNT_CONFIG);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.NO_DISCOUNT_CONFIG, JSON.stringify(DEFAULT_NO_DISCOUNT_CONFIG));
+      return DEFAULT_NO_DISCOUNT_CONFIG;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return DEFAULT_NO_DISCOUNT_CONFIG;
+    }
+  }
+
+  static saveNoDiscountConfig(cfg: PmsNoDiscountConfig): void {
+    localStorage.setItem(STORAGE_KEYS.NO_DISCOUNT_CONFIG, JSON.stringify(cfg));
+  }
+
+  static isItemDiscountExempt(itemName: string, category?: string, group?: string, itemNoDiscount?: boolean): boolean {
+    if (itemNoDiscount === true) return true;
+    const cfg = this.getNoDiscountConfig();
+    if (!cfg.enabled) return false;
+
+    const lowerName = itemName.toLowerCase();
+    const lowerCat = (category || '').toLowerCase();
+    const lowerGrp = (group || '').toLowerCase();
+
+    // Check against configured protected groups (e.g. Beverage, Dessert, Liquor, Beer, Wine)
+    const isProtectedGroup = cfg.protectedGroups.some(pg => {
+      const g = pg.toLowerCase();
+      return lowerCat.includes(g) || lowerGrp.includes(g);
+    });
+    if (isProtectedGroup) return true;
+
+    // Check specific known exemption patterns from Video 33 (Frame 0180)
+    const isExemptKeywords = ['bavrage', 'beverage', 'desert', 'dessert', 'liquor', 'beer', 'whisky', 'rum', 'vodka', 'wine', 'blender spride', 'blenderspride', 'royal stag', 'kingfisher'];
+    return isExemptKeywords.some(kw => lowerName.includes(kw) || lowerCat.includes(kw) || lowerGrp.includes(kw));
+  }
+
+  static computeBillDiscountWithExemptions(
+    items: Array<{ itemName: string; amount: number; category?: string; group?: string; noDiscount?: boolean }>,
+    discountPercent: number
+  ): {
+    actualDiscountAmount: number;
+    savingsProtectedAmount: number;
+    eligibleCount: number;
+    exemptCount: number;
+    lineDiscounts: Array<{ discountPercent: number; discountAmount: number; isExempt: boolean }>;
+  } {
+    let actualDiscountAmount = 0;
+    let savingsProtectedAmount = 0;
+    let eligibleCount = 0;
+    let exemptCount = 0;
+
+    const lineDiscounts = items.map(itm => {
+      const isExempt = this.isItemDiscountExempt(itm.itemName, itm.category, itm.group, itm.noDiscount);
+      if (isExempt) {
+        exemptCount++;
+        const potentialDis = Number(((itm.amount * discountPercent) / 100).toFixed(2));
+        savingsProtectedAmount += potentialDis;
+        return {
+          discountPercent: 0,
+          discountAmount: 0,
+          isExempt: true
+        };
+      } else {
+        eligibleCount++;
+        const dis = Number(((itm.amount * discountPercent) / 100).toFixed(2));
+        actualDiscountAmount += dis;
+        return {
+          discountPercent,
+          discountAmount: dis,
+          isExempt: false
+        };
+      }
+    });
+
+    return {
+      actualDiscountAmount: Number(actualDiscountAmount.toFixed(2)),
+      savingsProtectedAmount: Number(savingsProtectedAmount.toFixed(2)),
+      eligibleCount,
+      exemptCount,
+      lineDiscounts
+    };
+  }
+
+  static getDiscountAuditRecords(): PmsDiscountAuditRecord[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.DISCOUNT_AUDIT_LOGS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.DISCOUNT_AUDIT_LOGS, JSON.stringify(INITIAL_DISCOUNT_AUDIT_LOGS));
+      return INITIAL_DISCOUNT_AUDIT_LOGS;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_DISCOUNT_AUDIT_LOGS;
+    }
+  }
+
+  static recordDiscountAudit(record: PmsDiscountAuditRecord): void {
+    const logs = this.getDiscountAuditRecords();
+    logs.unshift(record);
+    if (logs.length > 50) logs.pop();
+    localStorage.setItem(STORAGE_KEYS.DISCOUNT_AUDIT_LOGS, JSON.stringify(logs));
+  }
 }
 
 // ==========================================
@@ -8430,6 +8546,59 @@ export const INITIAL_BAR_INVOICES: PmsBarInvoice[] = [
     createdAt: '2025-07-20T06:16:00Z'
   }
 ];
+
+// ==========================================
+// Video 33: No-Discount Item, Margin Protection & Group Rules Seed Data (Frames 0080-0202)
+// ==========================================
+
+export const DEFAULT_NO_DISCOUNT_CONFIG: PmsNoDiscountConfig = {
+  enabled: true,
+  protectedGroups: [
+    'Beverage',
+    'BAVRAGE',
+    'Dessert',
+    'DESERT',
+    'Liquor',
+    'Beer',
+    'Wine',
+    'Whisky',
+    'No Discount',
+    'Cigarettes',
+    'Packaged Goods'
+  ],
+  maxAllowedDiscountPercent: 20,
+  allowManualOverride: true,
+  overrideRoleRequired: 'Admin',
+  reasonRequiredForOverride: true
+};
+
+export const INITIAL_DISCOUNT_AUDIT_LOGS: PmsDiscountAuditRecord[] = [
+  {
+    id: 'disc-audit-1',
+    billNo: 'Res/293/24-25',
+    tableNo: 'T-10',
+    requestedDiscountPercent: 10,
+    actualDiscountAmount: 24.00, // Burger ₹12 + Bada Pao ₹12 (Frame 0180)
+    savingsProtectedAmount: 68.00, // ₹230 Blender Spride (₹23) + ₹270 Beverage (₹27) + ₹180 Dessert (₹18) protected!
+    eligibleItemsCount: 2,
+    exemptItemsCount: 3,
+    cashierName: 'Hotel & restaurant (Cashier)',
+    timestamp: '2025-07-20T07:23:00Z'
+  },
+  {
+    id: 'disc-audit-2',
+    billNo: 'Res/289/24-25',
+    tableNo: 'T-11',
+    requestedDiscountPercent: 15,
+    actualDiscountAmount: 37.50,
+    savingsProtectedAmount: 172.50, // Liquor protected from 15% discount
+    eligibleItemsCount: 3,
+    exemptItemsCount: 2,
+    cashierName: 'Admin',
+    timestamp: '2025-07-20T06:20:00Z'
+  }
+];
+
 
 
 
