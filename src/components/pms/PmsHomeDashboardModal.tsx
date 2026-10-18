@@ -23,6 +23,10 @@ import { StockTransferModal } from './StockTransferModal';
 import { StoreWiseStockModal } from './StoreWiseStockModal';
 import { OnlineGuestBookingModal } from './OnlineGuestBookingModal';
 import { UnconfirmedBookingsModal } from './UnconfirmedBookingsModal';
+import { UserManagementModal } from './UserManagementModal';
+import { RolesPermissionsModal } from './RolesPermissionsModal';
+import { ChainPropertyModal } from './ChainPropertyModal';
+import { DeviceResponsivePreviewModal } from './DeviceResponsivePreviewModal';
 import type { PmsBooking } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
@@ -69,6 +73,12 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   const [isOnlineGuestBookingOpen, setIsOnlineGuestBookingOpen] = useState(false);
   const [isUnconfirmedBookingsOpen, setIsUnconfirmedBookingsOpen] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState(false);
+
+  // Video 21: Multi-User, Roles & Permissions, Multi-Location & Multi-Device
+  const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
+  const [isRolesPermissionsOpen, setIsRolesPermissionsOpen] = useState(false);
+  const [isChainPropertyOpen, setIsChainPropertyOpen] = useState(false);
+  const [isDevicePreviewOpen, setIsDevicePreviewOpen] = useState(false);
 
   const rooms = PmsStore.getRooms();
   const vacantCount = rooms.filter(r => r.status === 'vacant').length;
@@ -309,6 +319,47 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         >
           <span className="tile-icon">🔔</span>
           <span>Pending ({unconfirmedBookings.length})</span>
+        </button>
+
+        {/* Video 21: Multi-User, Roles & Permissions, Multi-Location & Mobile Tiles */}
+        <button
+          type="button"
+          className="hub-tile-btn tile-users"
+          onClick={() => setIsUserManagementOpen(true)}
+          title="Video 21: Multi-User Account Management (/userprofile)"
+        >
+          <span className="tile-icon">👥</span>
+          <span>User Accounts</span>
+        </button>
+
+        <button
+          type="button"
+          className="hub-tile-btn tile-roles"
+          onClick={() => setIsRolesPermissionsOpen(true)}
+          title="Video 21: Roles & 66 Granular Permissions Matrix (/roles)"
+        >
+          <span className="tile-icon">🛡️</span>
+          <span>Roles &amp; Rights</span>
+        </button>
+
+        <button
+          type="button"
+          className="hub-tile-btn tile-properties"
+          onClick={() => setIsChainPropertyOpen(true)}
+          title="Video 21: Multi-Location Chain Hotels Switcher (/multilocation)"
+        >
+          <span className="tile-icon">🏨</span>
+          <span>Chain Branches</span>
+        </button>
+
+        <button
+          type="button"
+          className="hub-tile-btn tile-mobile-preview"
+          onClick={() => setIsDevicePreviewOpen(true)}
+          title="Video 21: Mobile Responsive Device Simulator (Frame 0138)"
+        >
+          <span className="tile-icon">📱</span>
+          <span>Mobile View</span>
         </button>
       </div>
 
@@ -697,6 +748,54 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         onOpenCheckInForBooking={() => {
           setIsCheckInOpen(true);
         }}
+      />
+
+      {/* Video 21: User Management Modal (/userprofile) */}
+      <UserManagementModal
+        isOpen={isUserManagementOpen}
+        onClose={() => setIsUserManagementOpen(false)}
+        onOpenRoles={() => {
+          setIsUserManagementOpen(false);
+          setIsRolesPermissionsOpen(true);
+        }}
+        onOpenProperties={() => {
+          setIsUserManagementOpen(false);
+          setIsChainPropertyOpen(true);
+        }}
+      />
+
+      {/* Video 21: Roles & Permissions Matrix Modal (/roles) */}
+      <RolesPermissionsModal
+        isOpen={isRolesPermissionsOpen}
+        onClose={() => setIsRolesPermissionsOpen(false)}
+        onOpenUsers={() => {
+          setIsRolesPermissionsOpen(false);
+          setIsUserManagementOpen(true);
+        }}
+      />
+
+      {/* Video 21: Multi-Location Chain Property Management Modal (/multilocation) */}
+      <ChainPropertyModal
+        isOpen={isChainPropertyOpen}
+        onClose={() => setIsChainPropertyOpen(false)}
+        onOpenUsers={() => {
+          setIsChainPropertyOpen(false);
+          setIsUserManagementOpen(true);
+        }}
+        onOpenRoles={() => {
+          setIsChainPropertyOpen(false);
+          setIsRolesPermissionsOpen(true);
+        }}
+      />
+
+      {/* Video 21: Multi-Device Mobile Responsive Simulator */}
+      <DeviceResponsivePreviewModal
+        isOpen={isDevicePreviewOpen}
+        onClose={() => setIsDevicePreviewOpen(false)}
+        onOpenRoomDashboard={onOpenRoomMatrix}
+        onOpenKotEntry={() => setIsKotOpen(true)}
+        onOpenCheckIn={() => setIsCheckInOpen(true)}
+        onOpenFoodBill={() => setIsFoodBillOpen(true)}
       />
     </div>
   );

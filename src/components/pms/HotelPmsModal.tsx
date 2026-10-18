@@ -30,6 +30,11 @@ import { PurchaseEntryModal } from './PurchaseEntryModal';
 import { StockTransferModal } from './StockTransferModal';
 import { StoreWiseStockModal } from './StoreWiseStockModal';
 import { OnlineGuestBookingModal } from './OnlineGuestBookingModal';
+import { UserManagementModal } from './UserManagementModal';
+import { RolesPermissionsModal } from './RolesPermissionsModal';
+import { ChainPropertyModal } from './ChainPropertyModal';
+import { DeviceResponsivePreviewModal } from './DeviceResponsivePreviewModal';
+import type { PmsUserAccount, PmsChainProperty } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import './pmsStyles.css';
 
@@ -108,6 +113,15 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   // Video 20 Online Room Booking Portal
   const [isOnlineGuestBookingOpen, setIsOnlineGuestBookingOpen] = useState(false);
   const unconfirmedCount = PmsStore.getUnconfirmedBookings().length;
+
+  // Video 21: Multi-User, Roles & Permissions, Multi-Location & Multi-Device
+  const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
+  const [isRolesPermissionsOpen, setIsRolesPermissionsOpen] = useState(false);
+  const [isChainPropertyOpen, setIsChainPropertyOpen] = useState(false);
+  const [isDevicePreviewOpen, setIsDevicePreviewOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<PmsUserAccount>(PmsStore.getCurrentUser());
+  const [currentProperty, setCurrentProperty] = useState<PmsChainProperty>(PmsStore.getCurrentProperty());
 
   if (!isOpen) return null;
 
@@ -190,9 +204,133 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                 <span>Calendar</span>
               </button>
 
-              <div className="pms-user-tag">
-                <span>👤</span>
-                <span>Reception Desk (Admin)</span>
+              {/* Video 21: Active Chain Property Selector */}
+              <button
+                type="button"
+                onClick={() => setIsChainPropertyOpen(true)}
+                title="Click to switch property / branch (Video 21 Multi-Location)"
+                style={{
+                  background: '#047857',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '3px 10px',
+                  borderRadius: 3,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4
+                }}
+              >
+                <span>🏨</span>
+                <span>{currentProperty.firmId} ({currentProperty.location})</span>
+              </button>
+
+              {/* Video 21: Mobile Responsive View Emulator Toggle */}
+              <button
+                type="button"
+                onClick={() => setIsDevicePreviewOpen(true)}
+                title="Click to test PMS on mobile / tablet responsive emulator (Video 21 Frame 0138)"
+                style={{
+                  background: '#7c3aed',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '3px 10px',
+                  borderRadius: 3,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4
+                }}
+              >
+                <span>📱</span>
+                <span>Mobile View</span>
+              </button>
+
+              {/* Video 21: User Avatar & Role Dropdown */}
+              <div style={{ position: 'relative' }}>
+                <div
+                  className="pms-user-tag"
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  style={{ cursor: 'pointer', userSelect: 'none' }}
+                  title="Click to switch user or view permissions"
+                >
+                  <span style={{
+                    background: '#2563eb',
+                    color: '#fff',
+                    borderRadius: '50%',
+                    width: 20,
+                    height: 20,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 10,
+                    fontWeight: 700
+                  }}>
+                    {currentUser.userName.charAt(0)}
+                  </span>
+                  <span>{currentUser.userName} ({currentUser.roleName}) ▾</span>
+                </div>
+
+                {userDropdownOpen && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      right: 0,
+                      marginTop: 6,
+                      background: '#1e293b',
+                      border: '1px solid #334155',
+                      borderRadius: 6,
+                      boxShadow: '0 10px 15px -3px rgba(0,0,0,0.5)',
+                      width: 230,
+                      zIndex: 1000,
+                      overflow: 'hidden',
+                      fontSize: 12
+                    }}
+                  >
+                    <div style={{ padding: '8px 12px', borderBottom: '1px solid #334155', background: '#0f172a' }}>
+                      <div style={{ fontWeight: 700, color: '#f8fafc' }}>{currentUser.userName}</div>
+                      <div style={{ fontSize: 11, color: '#38bdf8' }}>Role: {currentUser.roleName}</div>
+                      <div style={{ fontSize: 10, color: '#94a3b8' }}>Branch: {currentProperty.firmId} - {currentProperty.firmName}</div>
+                    </div>
+                    <div
+                      onClick={() => { setUserDropdownOpen(false); setIsUserManagementOpen(true); }}
+                      style={{ padding: '8px 12px', color: '#e2e8f0', cursor: 'pointer', borderBottom: '1px solid #334155' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#334155')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      👥 User Accounts (/userprofile)
+                    </div>
+                    <div
+                      onClick={() => { setUserDropdownOpen(false); setIsRolesPermissionsOpen(true); }}
+                      style={{ padding: '8px 12px', color: '#e2e8f0', cursor: 'pointer', borderBottom: '1px solid #334155' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#334155')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      🛡️ Roles &amp; Permissions (/roles)
+                    </div>
+                    <div
+                      onClick={() => { setUserDropdownOpen(false); setIsChainPropertyOpen(true); }}
+                      style={{ padding: '8px 12px', color: '#e2e8f0', cursor: 'pointer', borderBottom: '1px solid #334155' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#334155')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      🏨 Switch Chain Branch
+                    </div>
+                    <div
+                      onClick={() => { setUserDropdownOpen(false); setIsDevicePreviewOpen(true); }}
+                      style={{ padding: '8px 12px', color: '#e2e8f0', cursor: 'pointer' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#334155')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      📱 Mobile Device Simulator
+                    </div>
+                  </div>
+                )}
               </div>
               <button
                 type="button"
@@ -444,6 +582,19 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsBusinessSettingOpen(true)}>
                       <span style={{ color: '#38bdf8', fontWeight: 700 }}>⚙️ Business Setting (/businesssettings/create)</span>
+                    </div>
+                    {/* Video 21: Multi-User, Roles & Permissions, Multi-Location Items (Frame 0125) */}
+                    <div className="pms-nav-item" onClick={() => setIsUserManagementOpen(true)}>
+                      <span style={{ color: '#06b6d4', fontWeight: 700 }}>👥 User Setting (/userprofile)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsRolesPermissionsOpen(true)}>
+                      <span style={{ color: '#fbbf24', fontWeight: 700 }}>🛡️ Roles &amp; Permissions (/roles)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsChainPropertyOpen(true)}>
+                      <span style={{ color: '#34d399', fontWeight: 700 }}>🏨 Chain Locations (/multilocation)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsDevicePreviewOpen(true)}>
+                      <span style={{ color: '#f472b6', fontWeight: 700 }}>📱 Multi-Device Simulator (Video 21)</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => alert('Printer & Receipt Template Setup')}>
                       <span>🖨️ Printer &amp; POS Setup</span>
@@ -727,6 +878,80 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
           setRoomRefreshTrigger(prev => prev + 1);
         }}
       />
+
+      {/* Video 21: User Management Modal (/userprofile) */}
+      <UserManagementModal
+        isOpen={isUserManagementOpen}
+        onClose={() => {
+          setIsUserManagementOpen(false);
+          setCurrentUser(PmsStore.getCurrentUser());
+        }}
+        onOpenRoles={() => {
+          setIsUserManagementOpen(false);
+          setIsRolesPermissionsOpen(true);
+        }}
+        onOpenProperties={() => {
+          setIsUserManagementOpen(false);
+          setIsChainPropertyOpen(true);
+        }}
+      />
+
+      {/* Video 21: Roles & Permissions Matrix Modal (/roles) */}
+      <RolesPermissionsModal
+        isOpen={isRolesPermissionsOpen}
+        onClose={() => {
+          setIsRolesPermissionsOpen(false);
+          setCurrentUser(PmsStore.getCurrentUser());
+        }}
+        onOpenUsers={() => {
+          setIsRolesPermissionsOpen(false);
+          setIsUserManagementOpen(true);
+        }}
+      />
+
+      {/* Video 21: Multi-Location Chain Property Management Modal (/multilocation) */}
+      <ChainPropertyModal
+        isOpen={isChainPropertyOpen}
+        onClose={() => {
+          setIsChainPropertyOpen(false);
+          setCurrentProperty(PmsStore.getCurrentProperty());
+        }}
+        onSelectProperty={(prop) => {
+          setCurrentProperty(prop);
+          setRoomRefreshTrigger(prev => prev + 1);
+        }}
+        onOpenUsers={() => {
+          setIsChainPropertyOpen(false);
+          setIsUserManagementOpen(true);
+        }}
+        onOpenRoles={() => {
+          setIsChainPropertyOpen(false);
+          setIsRolesPermissionsOpen(true);
+        }}
+      />
+
+      {/* Video 21: Multi-Device Mobile Responsive Simulator */}
+      <DeviceResponsivePreviewModal
+        isOpen={isDevicePreviewOpen}
+        onClose={() => setIsDevicePreviewOpen(false)}
+        onOpenRoomDashboard={() => {
+          setIsDevicePreviewOpen(false);
+          setActiveTab('matrix');
+        }}
+        onOpenKotEntry={() => {
+          setIsDevicePreviewOpen(false);
+          setIsKotModalOpen(true);
+        }}
+        onOpenCheckIn={() => {
+          setIsDevicePreviewOpen(false);
+          setIsNewCheckInOpen(true);
+        }}
+        onOpenFoodBill={() => {
+          setIsDevicePreviewOpen(false);
+          setIsFoodBillModalOpen(true);
+        }}
+      />
     </>
   );
 };
+

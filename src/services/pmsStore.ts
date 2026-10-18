@@ -22,9 +22,14 @@ import type {
   PmsItemGroup,
   PmsGodown,
   PmsPurchaseBill,
+  PmsPurchaseItem,
   PmsStockTransfer,
-  GodownStockRow
+  GodownStockRow,
+  PmsRole,
+  PmsUserAccount,
+  PmsChainProperty
 } from '../types/pmsModels';
+import { PMS_ALL_PERMISSIONS } from '../types/pmsModels';
 
 export const DEFAULT_BUSINESS_SETTING: PmsBusinessSetting = {
   calculationType: '12hour',
@@ -874,6 +879,233 @@ export const INITIAL_BOOKINGS: PmsBooking[] = [
   }
 ];
 
+// Video 21: Roles & Permissions Seed Data (Frame 0130, 0132)
+export const INITIAL_ROLES: PmsRole[] = [
+  {
+    id: 1,
+    name: 'super-admin',
+    description: 'Full Root & Super Administrator Access Across All Locations',
+    permissions: PMS_ALL_PERMISSIONS.map(p => p.key),
+    isSystem: true
+  },
+  {
+    id: 2,
+    name: 'admin',
+    description: 'Hotel General Manager / Branch Administrator Access',
+    permissions: PMS_ALL_PERMISSIONS.filter(p => p.key !== 'sql_query' && p.key !== 'delete user').map(p => p.key),
+    isSystem: true
+  },
+  {
+    id: 3,
+    name: 'staff',
+    description: 'Front Office Receptionist & Operational Staff',
+    permissions: [
+      'Room_Dashboard', 'roombooking', 'roomcheckin', 'roomcheckout', 'Booking Calendar',
+      'Unconfirmed Bookings', 'Booking Register', 'Check-in Register', 'Checkout Register',
+      'Checkout_Reg', 'Room List', 'kot', 'foodbills', 'Room Food Bills', 'payment', 'receipt',
+      'advance_reciept', 'Advance Receipt Reg', 'Day End Report', 'Save', 'Edit'
+    ],
+    isSystem: true
+  },
+  {
+    id: 4,
+    name: 'user',
+    description: 'Hotel Partner / Auditor / View-Only Access',
+    permissions: [
+      'Room_Dashboard', 'Booking Calendar', 'Report', 'ReportList', 'Police Station Report',
+      'Item Wise Sale Report', 'Day End Report', 'Month Wise Sale', 'Store Wise Stock',
+      'Stock Status', 'Room List', 'Item List'
+    ],
+    isSystem: true
+  },
+  {
+    id: 5,
+    name: 'Lead Managment',
+    description: 'Sales, Marketing & Guest Inquiry Lead Manager',
+    permissions: [
+      'Room_Dashboard', 'Booking Calendar', 'Unconfirmed Bookings', 'Lead Module',
+      'view user', 'Booking Register', 'Save', 'Edit'
+    ],
+    isSystem: false
+  },
+  {
+    id: 6,
+    name: 'Restaurent',
+    description: 'Restaurant Captain, Waiter & Kitchen Staff',
+    permissions: [
+      'kot', 'foodbills', 'Restaurant', 'Kitchen Dash Board', 'Restaurant Food Bills',
+      'Kot Register', 'Item List', 'Save', 'Edit'
+    ],
+    isSystem: false
+  },
+  {
+    id: 7,
+    name: 'Billing',
+    description: 'Cashier & Accounts Billing Operator',
+    permissions: [
+      'Room_Dashboard', 'roomcheckout', 'foodbills', 'payment', 'receipt',
+      'advance_reciept', 'Advance Receipt Reg', 'ledger', 'Outstanding Receivable',
+      'Outstanding Payable', 'Day End Report', 'Month Wise Sale', 'B2B Sale', 'sale',
+      'Save', 'Edit'
+    ],
+    isSystem: false
+  }
+];
+
+// Video 21: User Accounts Seed Data (Frame 0120)
+export const INITIAL_USER_ACCOUNTS: PmsUserAccount[] = [
+  {
+    id: 63,
+    sNo: 63,
+    firmId: 'DEMO0004',
+    userName: 'Reception',
+    emailId: 'reception10@gmail.com',
+    roleId: 3,
+    roleName: 'staff',
+    status: 'Verified',
+    regDate: '2025-06-21 14:37:11',
+    verifiedDate: '2025-06-21 14:37:11',
+    mobile: '9822100010'
+  },
+  {
+    id: 62,
+    sNo: 62,
+    firmId: 'DEMO0004',
+    userName: 'Reception',
+    emailId: 'reception@gmail.com',
+    roleId: 3,
+    roleName: 'staff',
+    status: 'Verified',
+    regDate: '2025-06-21 14:36:36',
+    verifiedDate: '2025-06-21 14:38:38',
+    mobile: '9822100001'
+  },
+  {
+    id: 44,
+    sNo: 44,
+    firmId: 'DEMO0004',
+    userName: 'whatsapp',
+    emailId: 'whatsapp2025@gmail.com',
+    roleId: 3,
+    roleName: 'staff',
+    status: 'Verified',
+    regDate: '2025-06-01 18:16:13',
+    verifiedDate: '2025-06-01 18:16:52',
+    mobile: '9822100044'
+  },
+  {
+    id: 42,
+    sNo: 42,
+    firmId: 'DEMO0004',
+    userName: 'Demo user',
+    emailId: 'demo4@gmail.com',
+    roleId: 4,
+    roleName: 'user',
+    status: 'Verified',
+    regDate: '2025-06-01 04:04:16',
+    verifiedDate: '2025-06-01 04:04:59',
+    mobile: '9822100042'
+  },
+  {
+    id: 18,
+    sNo: 18,
+    firmId: 'DEMO0004',
+    userName: 'Admin',
+    emailId: 'DEMO0004_admin@gmail.com',
+    roleId: 2,
+    roleName: 'admin',
+    status: 'Verified',
+    regDate: '2024-12-17 08:58:38',
+    verifiedDate: '2025-01-10 12:15:40',
+    mobile: '9822100018'
+  },
+  {
+    id: 19,
+    sNo: 19,
+    firmId: 'DEMO0004',
+    userName: 'Staff',
+    emailId: 'DEMO0004_staff@gmail.com',
+    roleId: 3,
+    roleName: 'staff',
+    status: 'Verified',
+    regDate: '2024-12-17 08:58:38',
+    verifiedDate: '2025-01-18 06:48:23',
+    mobile: '9822100019'
+  },
+  {
+    id: 15,
+    sNo: 15,
+    firmId: 'DEMO0004',
+    userName: 'RIFAT ULLAH',
+    emailId: 'sales.bsgbd@gmail.com',
+    roleId: 5,
+    roleName: 'Lead Managment',
+    status: 'Verified',
+    regDate: '2024-12-17 08:58:37',
+    verifiedDate: '2025-05-16 10:32:45',
+    mobile: '9822100015'
+  },
+  {
+    id: 16,
+    sNo: 16,
+    firmId: 'DEMO0004',
+    userName: 'Data House',
+    emailId: 'DEMO0004_datahouset@gmail.com',
+    roleId: 1,
+    roleName: 'super-admin',
+    status: 'Verified',
+    regDate: '2024-12-17 08:58:37',
+    verifiedDate: '2024-12-17 08:58:37',
+    mobile: '7999663696'
+  }
+];
+
+// Video 21: Multi-Location Hotel Properties (Chain Management)
+export const INITIAL_CHAIN_PROPERTIES: PmsChainProperty[] = [
+  {
+    firmId: 'DEMO0004',
+    firmName: 'HALL OF KNOTS / HOTEL SAI VASUDEV RESIDENCY',
+    location: 'Shirdi (Main Temple Shrine)',
+    address: 'Near Sai Baba Temple, Taluka Rahata, Shirdi - 423109',
+    phone: '02423-255000',
+    email: 'hotelsaivasudevresidency@gmail.com',
+    gstin: '27ABCDE1234F1Z5',
+    totalRooms: 24,
+    activationDate: '17-12-24',
+    renewDate: '17-12-25',
+    whatsAppValidity: '29-06-2026',
+    isCurrent: true
+  },
+  {
+    firmId: 'SVR0002',
+    firmName: 'SAI VASUDEV SUITES & EXECUTIVE RESIDENCY',
+    location: 'Pune (Mumbai-Pune Expressway Branch)',
+    address: 'Survey 48, Near Hinjawadi IT Park, Pune - 411057',
+    phone: '020-67890000',
+    email: 'pune.branch@saivasudev.com',
+    gstin: '27XYZAB5678G2Z1',
+    totalRooms: 36,
+    activationDate: '01-01-25',
+    renewDate: '01-01-26',
+    whatsAppValidity: '29-06-2026',
+    isCurrent: false
+  },
+  {
+    firmId: 'SVR0003',
+    firmName: 'SAI VASUDEV GRAND & BANQUET RESORT',
+    location: 'Nashik (Airport Road Branch)',
+    address: 'Plot 12, Ozar Airport Road, Nashik - 422206',
+    phone: '0253-2991000',
+    email: 'nashik.resort@saivasudev.com',
+    gstin: '27PQRST9012H3Z8',
+    totalRooms: 48,
+    activationDate: '15-02-25',
+    renewDate: '15-02-26',
+    whatsAppValidity: '29-06-2026',
+    isCurrent: false
+  }
+];
+
 const STORAGE_KEYS = {
   ROOMS: 'svr_pms_rooms',
   ROOM_TYPES: 'svr_pms_room_types',
@@ -894,7 +1126,12 @@ const STORAGE_KEYS = {
   ITEM_GROUPS: 'svr_pms_item_groups',
   GODOWNS: 'svr_pms_godowns',
   PURCHASES: 'svr_pms_purchases',
-  STOCK_TRANSFERS: 'svr_pms_stock_transfers'
+  STOCK_TRANSFERS: 'svr_pms_stock_transfers',
+  ROLES: 'svr_pms_roles',
+  USERS: 'svr_pms_users',
+  PROPERTIES: 'svr_pms_properties',
+  CURRENT_USER: 'svr_pms_current_user',
+  CURRENT_PROPERTY: 'svr_pms_current_property'
 };
 
 export class PmsStore {
@@ -3449,7 +3686,7 @@ export class PmsStore {
     purchases.forEach(p => {
       const gName = p.godown || 'Main Store';
       if (!storeMap[gName]) storeMap[gName] = {};
-      p.items.forEach(itm => {
+      p.items.forEach((itm: PmsPurchaseItem) => {
         const key = itm.itemName.toLowerCase().trim();
         if (!storeMap[gName][key]) storeMap[gName][key] = { stockIn: 0, stockOut: 0 };
         storeMap[gName][key].stockIn += itm.qty;
@@ -3502,6 +3739,176 @@ export class PmsStore {
     });
 
     return result;
+  }
+
+  // ==========================================
+  // Video 21: Roles & Permissions Store Methods
+  // ==========================================
+  static getRoles(): PmsRole[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.ROLES);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.ROLES, JSON.stringify(INITIAL_ROLES));
+      return INITIAL_ROLES;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_ROLES;
+    }
+  }
+
+  static saveRoles(roles: PmsRole[]): void {
+    localStorage.setItem(STORAGE_KEYS.ROLES, JSON.stringify(roles));
+  }
+
+  static getRoleById(id: number): PmsRole | undefined {
+    return this.getRoles().find(r => r.id === id);
+  }
+
+  static saveRole(role: PmsRole): void {
+    const roles = this.getRoles();
+    const idx = roles.findIndex(r => r.id === role.id);
+    if (idx >= 0) {
+      roles[idx] = role;
+    } else {
+      roles.push(role);
+    }
+    this.saveRoles(roles);
+  }
+
+  static updateRolePermissions(roleId: number, permissions: string[]): void {
+    const roles = this.getRoles();
+    const idx = roles.findIndex(r => r.id === roleId);
+    if (idx >= 0) {
+      roles[idx].permissions = permissions;
+      this.saveRoles(roles);
+    }
+  }
+
+  static deleteRole(id: number): void {
+    const roles = this.getRoles().filter(r => r.id !== id);
+    this.saveRoles(roles);
+  }
+
+  // ==========================================
+  // Video 21: User Accounts Store Methods
+  // ==========================================
+  static getUsers(): PmsUserAccount[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.USERS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(INITIAL_USER_ACCOUNTS));
+      return INITIAL_USER_ACCOUNTS;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_USER_ACCOUNTS;
+    }
+  }
+
+  static saveUsers(users: PmsUserAccount[]): void {
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+  }
+
+  static getUserById(id: number): PmsUserAccount | undefined {
+    return this.getUsers().find(u => u.id === id);
+  }
+
+  static saveUser(user: PmsUserAccount): void {
+    const users = this.getUsers();
+    const idx = users.findIndex(u => u.id === user.id);
+    if (idx >= 0) {
+      users[idx] = user;
+    } else {
+      users.push(user);
+    }
+    this.saveUsers(users);
+  }
+
+  static toggleUserStatus(id: number): void {
+    const users = this.getUsers();
+    const idx = users.findIndex(u => u.id === id);
+    if (idx >= 0) {
+      users[idx].status = users[idx].status === 'Verified' ? 'Pending' : 'Verified';
+      users[idx].verifiedDate = users[idx].status === 'Verified' ? new Date().toISOString().replace('T', ' ').slice(0, 19) : undefined;
+      this.saveUsers(users);
+    }
+  }
+
+  static deleteUser(id: number): void {
+    const users = this.getUsers().filter(u => u.id !== id);
+    this.saveUsers(users);
+  }
+
+  static getCurrentUser(): PmsUserAccount {
+    const raw = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+    if (raw) {
+      try {
+        return JSON.parse(raw);
+      } catch {}
+    }
+    const users = this.getUsers();
+    const admin = users.find(u => u.userName === 'Admin') || users[0];
+    localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(admin));
+    return admin;
+  }
+
+  static setCurrentUser(user: PmsUserAccount): void {
+    localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
+  }
+
+  static hasPermission(permissionKey: string): boolean {
+    const currentUser = this.getCurrentUser();
+    const role = this.getRoleById(currentUser.roleId);
+    if (!role) return true;
+    if (role.name === 'super-admin') return true;
+    return role.permissions.includes(permissionKey);
+  }
+
+  // ==========================================
+  // Video 21: Multi-Location Properties Store Methods
+  // ==========================================
+  static getProperties(): PmsChainProperty[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.PROPERTIES);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(INITIAL_CHAIN_PROPERTIES));
+      return INITIAL_CHAIN_PROPERTIES;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_CHAIN_PROPERTIES;
+    }
+  }
+
+  static saveProperties(props: PmsChainProperty[]): void {
+    localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(props));
+  }
+
+  static getCurrentProperty(): PmsChainProperty {
+    const raw = localStorage.getItem(STORAGE_KEYS.CURRENT_PROPERTY);
+    if (raw) {
+      try {
+        return JSON.parse(raw);
+      } catch {}
+    }
+    const props = this.getProperties();
+    const current = props.find(p => p.isCurrent) || props[0];
+    localStorage.setItem(STORAGE_KEYS.CURRENT_PROPERTY, JSON.stringify(current));
+    return current;
+  }
+
+  static setCurrentProperty(firmId: string): void {
+    const props = this.getProperties();
+    const updated = props.map(p => ({
+      ...p,
+      isCurrent: p.firmId === firmId
+    }));
+    this.saveProperties(updated);
+    const selected = updated.find(p => p.firmId === firmId);
+    if (selected) {
+      localStorage.setItem(STORAGE_KEYS.CURRENT_PROPERTY, JSON.stringify(selected));
+    }
   }
 }
 

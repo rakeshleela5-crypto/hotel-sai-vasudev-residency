@@ -587,5 +587,138 @@ export interface GodownStockRow {
   closingStock: number;
 }
 
+// ==========================================
+// Video 21: Multi-User, Multi-Location & Role-Based Access Control Models (Frames 0115 - 0180)
+// ==========================================
+
+export interface PmsRole {
+  id: number;
+  name: string; // 'super-admin' | 'admin' | 'staff' | 'user' | 'Lead Managment' | 'Restaurent' | 'Billing' | custom
+  description?: string;
+  permissions: string[];
+  isSystem?: boolean;
+}
+
+export interface PmsUserAccount {
+  id: number;
+  sNo: number;
+  firmId: string; // 'DEMO0004', 'SVR0001', etc.
+  userName: string;
+  emailId: string;
+  roleId: number;
+  roleName: string;
+  status: 'Verified' | 'Pending' | 'Active' | 'Inactive';
+  regDate: string; // 'YYYY-MM-DD HH:mm:ss'
+  verifiedDate?: string;
+  mobile?: string;
+  password?: string;
+}
+
+export interface PmsChainProperty {
+  firmId: string; // e.g. "DEMO0004", "SVR0001", "SVR0002"
+  firmName: string; // e.g. "HALL OF KNOTS / SAI VASUDEV RESIDENCY"
+  location: string; // e.g. "Shirdi", "Pune", "Nashik"
+  address: string;
+  phone: string;
+  email: string;
+  gstin: string;
+  totalRooms: number;
+  activationDate: string;
+  renewDate: string;
+  whatsAppValidity: string;
+  isCurrent?: boolean;
+}
+
+export const PMS_ALL_PERMISSIONS: { key: string; label: string; category: string }[] = [
+  // Role & Permission Management
+  { key: 'view role', label: 'View Role', category: 'Roles & Permissions' },
+  { key: 'create role', label: 'Create Role', category: 'Roles & Permissions' },
+  { key: 'update role', label: 'Update Role', category: 'Roles & Permissions' },
+  { key: 'delete role', label: 'Delete Role', category: 'Roles & Permissions' },
+  { key: 'view permission', label: 'View Permission', category: 'Roles & Permissions' },
+  { key: 'create permission', label: 'Create Permission', category: 'Roles & Permissions' },
+  { key: 'update permission', label: 'Update Permission', category: 'Roles & Permissions' },
+  { key: 'delete permission', label: 'Delete Permission', category: 'Roles & Permissions' },
+
+  // User Management
+  { key: 'view user', label: 'View User', category: 'User Management' },
+  { key: 'create user', label: 'Create User', category: 'User Management' },
+  { key: 'update user', label: 'Update User', category: 'User Management' },
+  { key: 'delete user', label: 'Delete User', category: 'User Management' },
+  { key: 'Account List', label: 'Account List', category: 'User Management' },
+
+  // Master & Catalogs
+  { key: 'view product', label: 'View Product / Item', category: 'Catalog & Master' },
+  { key: 'create product', label: 'Create Product', category: 'Catalog & Master' },
+  { key: 'update product', label: 'Update Product', category: 'Catalog & Master' },
+  { key: 'delete product', label: 'Delete Product', category: 'Catalog & Master' },
+  { key: 'Master', label: 'Master Submenu', category: 'Catalog & Master' },
+  { key: 'Item List', label: 'Item List', category: 'Catalog & Master' },
+  { key: 'Room List', label: 'Room List', category: 'Catalog & Master' },
+
+  // Front Office & Room Operations
+  { key: 'Room_Dashboard', label: 'Room Dashboard', category: 'Front Office & Rooms' },
+  { key: 'roombooking', label: 'Room Booking', category: 'Front Office & Rooms' },
+  { key: 'roomcheckin', label: 'Room Check In', category: 'Front Office & Rooms' },
+  { key: 'roomcheckout', label: 'Room Check Out', category: 'Front Office & Rooms' },
+  { key: 'Booking Calendar', label: 'Booking Calendar', category: 'Front Office & Rooms' },
+  { key: 'Unconfirmed Bookings', label: 'Unconfirmed Bookings', category: 'Front Office & Rooms' },
+  { key: 'Booking Register', label: 'Booking Register', category: 'Front Office & Rooms' },
+  { key: 'Check-in Register', label: 'Check-in Register', category: 'Front Office & Rooms' },
+  { key: 'Checkout Register', label: 'Checkout Register', category: 'Front Office & Rooms' },
+  { key: 'Checkout_Reg', label: 'Checkout Register Quick', category: 'Front Office & Rooms' },
+  { key: 'Change_Room_Tariff', label: 'Change Room Tariff', category: 'Front Office & Rooms' },
+  { key: 'Change_Rent_PerDay', label: 'Change Rent Per Day', category: 'Front Office & Rooms' },
+  { key: 'Change_Date&Time', label: 'Change Date & Time', category: 'Front Office & Rooms' },
+
+  // Restaurant & Kitchen POS
+  { key: 'kot', label: 'KOT Entry', category: 'Restaurant & POS' },
+  { key: 'foodbills', label: 'Food Bills', category: 'Restaurant & POS' },
+  { key: 'Restaurant', label: 'Restaurant Matrix', category: 'Restaurant & POS' },
+  { key: 'Kitchen Dash Board', label: 'Kitchen Dashboard', category: 'Restaurant & POS' },
+  { key: 'Room Food Bills', label: 'Room Food Bills', category: 'Restaurant & POS' },
+  { key: 'Restaurant Food Bills', label: 'Restaurant Food Bills', category: 'Restaurant & POS' },
+  { key: 'Kot Register', label: 'KOT Register', category: 'Restaurant & POS' },
+
+  // Accounting, Payments & Ledgers
+  { key: 'payment', label: 'Payment Entry', category: 'Accounting & Ledgers' },
+  { key: 'receipt', label: 'Receipt Entry', category: 'Accounting & Ledgers' },
+  { key: 'advance_reciept', label: 'Advance Receipt', category: 'Accounting & Ledgers' },
+  { key: 'Advance Receipt Reg', label: 'Advance Receipt Register', category: 'Accounting & Ledgers' },
+  { key: 'ledger', label: 'Party Ledger', category: 'Accounting & Ledgers' },
+  { key: 'Outstanding Receivable', label: 'Outstanding Receivables', category: 'Accounting & Ledgers' },
+  { key: 'Outstanding Payable', label: 'Outstanding Payables', category: 'Accounting & Ledgers' },
+  { key: 'sale', label: 'Sales Management', category: 'Accounting & Ledgers' },
+  { key: 'Month Wise Sale', label: 'Month Wise Sale', category: 'Accounting & Ledgers' },
+  { key: 'B2B Sale', label: 'B2B GST Sale', category: 'Accounting & Ledgers' },
+
+  // Store & Inventory
+  { key: 'purchase', label: 'Purchase Inward', category: 'Store & Inventory' },
+  { key: 'Stock_Transfer', label: 'Stock Transfer & Issue', category: 'Store & Inventory' },
+  { key: 'Store Wise Stock', label: 'Store Wise Stock', category: 'Store & Inventory' },
+  { key: 'Stock Status', label: 'Stock Status', category: 'Store & Inventory' },
+  { key: 'Stock In Register', label: 'Stock In Register', category: 'Store & Inventory' },
+  { key: 'Stock Out Register', label: 'Stock Out Register', category: 'Store & Inventory' },
+  { key: 'Stock Transfer Register', label: 'Stock Transfer Register', category: 'Store & Inventory' },
+
+  // Reports, Audit & Compliance
+  { key: 'Report', label: 'Report Menu', category: 'Reports & Compliance' },
+  { key: 'ReportList', label: 'Report List', category: 'Reports & Compliance' },
+  { key: 'Police Station Report', label: 'Police Station Report', category: 'Reports & Compliance' },
+  { key: 'Item Wise Sale Report', label: 'Item Wise Sale Report', category: 'Reports & Compliance' },
+  { key: 'Day End Report', label: 'Day End Closing Report', category: 'Reports & Compliance' },
+
+  // System, Settings & Controls
+  { key: 'Entry', label: 'Entry Submenu', category: 'System & Controls' },
+  { key: 'Setting', label: 'Setting Submenu', category: 'System & Controls' },
+  { key: 'Activity', label: 'Activity Logs', category: 'System & Controls' },
+  { key: 'Membership', label: 'Membership', category: 'System & Controls' },
+  { key: 'sql_query', label: 'SQL Query Console', category: 'System & Controls' },
+  { key: 'Lead Module', label: 'Lead Management Module', category: 'System & Controls' },
+  { key: 'Save', label: 'Save Records', category: 'System & Controls' },
+  { key: 'Edit', label: 'Edit Records', category: 'System & Controls' },
+  { key: 'Delete', label: 'Delete Records', category: 'System & Controls' }
+];
+
 
 

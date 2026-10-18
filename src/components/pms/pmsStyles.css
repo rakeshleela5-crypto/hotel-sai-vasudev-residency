@@ -615,3 +615,81 @@
   cursor: pointer;
   font-size: 13px;
 }
+
+/* ==========================================================================
+   Video 21: Multi-User, Multi-Location & Multi-Device Responsive Media Queries
+   Matches RoomG Frames 0138 (1-column stacked mobile tiles) and 0145 (2-column room cards)
+   ========================================================================== */
+
+@media (max-width: 900px) {
+  .home-tiles-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
+
+@media (max-width: 540px) {
+  .home-tiles-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 0 4px;
+  }
+  
+  .hub-tile-btn {
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+
+  .pms-header {
+    height: auto;
+    padding: 8px 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .pms-header-left {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .pms-header-search {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .pms-search-input {
+    width: 100%;
+    flex: 1;
+  }
+
+  .pms-header-right {
+    width: 100%;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* 2-Column Mobile Room Matrix (Frame 0145) */
+  .pms-room-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+}
+
+/* Video 21 Quick Action Buttons */
+.tile-users {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+}
+
+.tile-roles {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+}
+
+.tile-properties {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.tile-mobile-preview {
+  background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+}
+
