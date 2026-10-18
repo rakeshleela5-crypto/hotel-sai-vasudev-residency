@@ -30,7 +30,10 @@ import type {
   PmsChainProperty,
   PmsWhatsAppTemplate,
   PmsWhatsAppLog,
-  PmsWhatsAppConfig
+  PmsWhatsAppConfig,
+  BillFormatOption,
+  BillFormatType,
+  CompanyPicAsset
 } from '../types/pmsModels';
 import { PMS_ALL_PERMISSIONS } from '../types/pmsModels';
 
@@ -55,7 +58,24 @@ export const DEFAULT_COMPANY_INFO: PmsCompanyInfo = {
   pencardNo: 'ABCDE1234F',
   regNo2: 'REG-MS-2024-9871',
   gstNotApplicable: false,
-  makeAllBillLocalGst: true // Video 10 local sales default
+  makeAllBillLocalGst: true, // Video 10 local sales default
+  
+  // Video 26 Banking & Digital Assets (Frames 0240, 0250, 0255)
+  bankName: 'STATE BANK OF INDIA',
+  bankAccountNo: '923020035404769',
+  bankIfsc: 'SBIN000390',
+  bankBranch: 'MAIN BRANCH SHIRDI',
+  upiId: '7999663696@YBL',
+  phonePeGpay: '07999663696',
+  jurisdiction: 'Shirdi / Rahata Jurisdiction',
+  country: 'Indian',
+  currency: '₹ Indian Rupee (INR)',
+  taxSystem: 'GST',
+  restaurantFoodBillTaxInclusive: false,
+  termsAndConditions: '1. Check-out time is 11:00 AM sharp. Late checkout will be billed as extra day.\n2. In case of dispute, Shirdi Jurisdiction will apply.\n3. Room key must be deposited at reception desk while going outside and at checkout.\n4. Management is not responsible for valuables left inside the room without safe deposit.',
+  voucherPrefix: '.',
+  voucherSuffix: '.',
+  voucherNote: '.'
 };
 
 export const INITIAL_ROOMS: PmsRoom[] = [
@@ -2783,8 +2803,216 @@ export class PmsStore {
       }
     }
 
-    // Initial demo checkout matching Video 06 Frame 0200 & 0230 (Shiv Room 101)
+    // Initial demo checkouts matching Video 26 Frames 0115 & 0150 (demo.datahouseerp.com/roomcheckouts)
     const initialCheckouts: PmsCheckOutDetail[] = [
+      {
+        invoiceNo: 'GSR/252/24-25',
+        roomNo: '105',
+        roomType: 'DELUXE',
+        guestName: 'SIDDHANT JI',
+        guestPhone: '9466219194',
+        checkInDate: '01-07-25',
+        checkInTime: '06:32 PM',
+        checkOutDate: '15-07-25',
+        checkOutTime: '01:15 PM',
+        calculationType: '12hour',
+        numberOfDays: 15,
+        perDayTariff: 3000,
+        totalRoomRent: 45000,
+        foodAmount: 32,
+        gstPercent: 12,
+        gstAmount: 5400,
+        cgstAmount: 2700,
+        sgstAmount: 2700,
+        addOthers: 0,
+        lessDiscount: 0,
+        advanceDeducted: 0,
+        billAmount: 50432,
+        netPayable: 50432,
+        paymentMode: 'Online',
+        payments: [
+          { mode: 'Online', amount: 50432, referenceNo: 'UPI/9466219194', remark: 'PhonePe QR Payment' }
+        ],
+        checkoutRemark: '15 Days Stay with Breakfast package. Key deposited at reception.',
+        city: 'Etawah',
+        state: 'Uttar Pradesh',
+        country: 'India',
+        pinCode: '206001',
+        sacCode: '996311',
+        invoiceFormat: 'A4_Standard'
+      },
+      {
+        invoiceNo: 'GSR/238/24-25',
+        roomNo: '1',
+        roomType: 'STANDARD ROOM',
+        guestName: 'ARJUN',
+        guestPhone: '95487417',
+        checkInDate: '16-06-25',
+        checkInTime: '06:30 AM',
+        checkOutDate: '25-06-25',
+        checkOutTime: '02:31 PM',
+        calculationType: '24hour',
+        numberOfDays: 10,
+        perDayTariff: 2000,
+        totalRoomRent: 20000,
+        foodAmount: 0,
+        gstPercent: 0,
+        gstAmount: 0,
+        cgstAmount: 0,
+        sgstAmount: 0,
+        addOthers: 0,
+        lessDiscount: 0,
+        advanceDeducted: 1000,
+        billAmount: 20000,
+        netPayable: 19000,
+        paymentMode: 'Cash',
+        payments: [
+          { mode: 'Cash', amount: 19000, referenceNo: 'CASH/238', remark: 'Settled at front desk' }
+        ],
+        checkoutRemark: 'Corporate guest Arjun checkout. Keys dropped at front desk.',
+        city: 'Etawah',
+        state: 'Uttar Pradesh',
+        country: 'India',
+        pinCode: '206001',
+        sacCode: '996311',
+        invoiceFormat: 'A4_Standard'
+      },
+      {
+        invoiceNo: 'GSR/241/24-25',
+        roomNo: '202',
+        roomType: 'DELUXE',
+        guestName: 'ranjit ji',
+        guestPhone: '56454898',
+        checkInDate: '18-07-25',
+        checkInTime: '11:00 AM',
+        checkOutDate: '18-07-25',
+        checkOutTime: '07:30 PM',
+        calculationType: '12hour',
+        numberOfDays: 1,
+        perDayTariff: 4000,
+        totalRoomRent: 4000,
+        foodAmount: 0,
+        gstPercent: 0,
+        gstAmount: 0,
+        cgstAmount: 0,
+        sgstAmount: 0,
+        addOthers: 0,
+        lessDiscount: 0,
+        advanceDeducted: 0,
+        billAmount: 4000,
+        netPayable: 4000,
+        paymentMode: 'Cash',
+        payments: [{ mode: 'Cash', amount: 4000, referenceNo: '', remark: 'Cash' }],
+        checkoutRemark: 'Day visit',
+        city: 'Agra',
+        state: 'Uttar Pradesh',
+        country: 'India',
+        pinCode: '282001',
+        sacCode: '996311',
+        invoiceFormat: 'A4_Standard'
+      },
+      {
+        invoiceNo: 'GSR/232/24-25',
+        roomNo: '202',
+        roomType: 'DELUXE',
+        guestName: 'sunil kumar yadav',
+        guestPhone: '983982735',
+        checkInDate: '10-07-25',
+        checkInTime: '09:00 AM',
+        checkOutDate: '11-07-25',
+        checkOutTime: '12:00 PM',
+        calculationType: '24hour',
+        numberOfDays: 2,
+        perDayTariff: 4700,
+        totalRoomRent: 9400,
+        foodAmount: 0,
+        gstPercent: 12,
+        gstAmount: 1128,
+        cgstAmount: 564,
+        sgstAmount: 564,
+        addOthers: 0,
+        lessDiscount: 0,
+        advanceDeducted: 0,
+        billAmount: 10528,
+        netPayable: 10528,
+        paymentMode: 'Online',
+        payments: [{ mode: 'Online', amount: 10528, referenceNo: 'UPI/983982', remark: 'PhonePe' }],
+        checkoutRemark: 'Police report registered. Checked out on time.',
+        city: 'Lucknow',
+        state: 'Uttar Pradesh',
+        country: 'India',
+        pinCode: '226001',
+        sacCode: '996311',
+        invoiceFormat: 'A4_Standard'
+      },
+      {
+        invoiceNo: 'GSR/230/24-25',
+        roomNo: '205',
+        roomType: 'SUPER DELUXE',
+        guestName: 'SALIM',
+        guestPhone: '7479499435',
+        checkInDate: '10-07-25',
+        checkInTime: '01:00 PM',
+        checkOutDate: '10-07-25',
+        checkOutTime: '08:00 PM',
+        calculationType: '12hour',
+        numberOfDays: 1,
+        perDayTariff: 5400,
+        totalRoomRent: 5400,
+        foodAmount: 0,
+        gstPercent: 0,
+        gstAmount: 0,
+        cgstAmount: 0,
+        sgstAmount: 0,
+        addOthers: 0,
+        lessDiscount: 0,
+        advanceDeducted: 0,
+        billAmount: 5400,
+        netPayable: 5400,
+        paymentMode: 'Cash',
+        payments: [{ mode: 'Cash', amount: 5400, referenceNo: '', remark: 'Cash' }],
+        checkoutRemark: 'Express checkout',
+        city: 'Kanpur',
+        state: 'Uttar Pradesh',
+        country: 'India',
+        pinCode: '208001',
+        sacCode: '996311',
+        invoiceFormat: 'A4_Standard'
+      },
+      {
+        invoiceNo: 'GSR/229/24-25',
+        roomNo: '202',
+        roomType: 'DELUXE',
+        guestName: 'CHANDAN',
+        guestPhone: '5645648848',
+        checkInDate: '10-07-25',
+        checkInTime: '10:00 AM',
+        checkOutDate: '10-07-25',
+        checkOutTime: '06:00 PM',
+        calculationType: '12hour',
+        numberOfDays: 1,
+        perDayTariff: 3693.75,
+        totalRoomRent: 3693.75,
+        foodAmount: 0,
+        gstPercent: 12,
+        gstAmount: 443.25,
+        cgstAmount: 221.62,
+        sgstAmount: 221.63,
+        addOthers: 0,
+        lessDiscount: 0,
+        advanceDeducted: 0,
+        billAmount: 4137,
+        netPayable: 4137,
+        paymentMode: 'Online',
+        payments: [{ mode: 'Online', amount: 4137, referenceNo: 'UPI/CHANDAN', remark: 'Google Pay' }],
+        checkoutRemark: 'Checked out cleanly',
+        city: 'Varanasi',
+        state: 'Uttar Pradesh',
+        country: 'India',
+        pinCode: '221001',
+        sacCode: '996311',
+        invoiceFormat: 'A4_Standard'
+      },
       {
         invoiceNo: 'GSR/225/24-25',
         roomNo: '101',
@@ -4701,5 +4929,132 @@ export class PmsStore {
       recordCounts
     };
   }
+
+  // ==========================================
+  // Video 26: Bill Format Engine & Digital Branding Assets (Frames 0115, 0170, 0195, 0215, 0240, 0250, 0270)
+  // ==========================================
+  static getBillFormatOptions(): BillFormatOption[] {
+    return [
+      {
+        id: 'Format_1_DayWise',
+        name: 'Format 1 / Day-wise Breakdown (/room_checkout_view2)',
+        label: 'Format 1 (Day-wise)',
+        route: '/room_checkout_view2',
+        paperSize: 'A4',
+        buttonColor: '#ca8a04',
+        description: 'Itemized day-by-day stay table with yellow header banner, SAC 996311 code, food addition, advance deduction, and dual bank/UPI QR footer.'
+      },
+      {
+        id: 'Format_2_Summary',
+        name: 'Format 2 / General Invoice (/room_checkout_view)',
+        label: 'Format 2 (Summary)',
+        route: '/room_checkout_view',
+        paperSize: 'A4',
+        buttonColor: '#2563eb',
+        description: 'Compact 2-column invoice with guest address box, particulars table, total days count, and advance deduction.'
+      },
+      {
+        id: 'Format_3_A4_Standard',
+        name: 'Format 3 / A4 Standard Format (/room_checkout_view3) [RECOMMENDED]',
+        label: 'Format 3 (A4 Standard)',
+        route: '/room_checkout_view3',
+        paperSize: 'A4',
+        recommended: true,
+        buttonColor: '#16a34a',
+        description: 'Most popular hotel format with full SAC & GST breakup table, front desk key drop reminder (🔑), Payment Completed stamp, and dual signature lines.'
+      },
+      {
+        id: 'Format_4_A5_Compact',
+        name: 'Format 4 / A5 Half-Page Compact (/room_checkout_view4)',
+        label: 'Format 4 (A5 Compact)',
+        route: '/room_checkout_view4',
+        paperSize: 'A5',
+        buttonColor: '#ca8a04',
+        description: 'Condensed half-page format tailored for A5 paper printers, zero margins, and economized billing stationery.'
+      }
+    ];
+  }
+
+  static getDefaultBillFormat(): BillFormatType {
+    const saved = localStorage.getItem('pms_default_bill_format');
+    if (saved && ['Format_1_DayWise', 'Format_2_Summary', 'Format_3_A4_Standard', 'Format_4_A5_Compact'].includes(saved)) {
+      return saved as BillFormatType;
+    }
+    return 'Format_3_A4_Standard';
+  }
+
+  static setDefaultBillFormat(format: BillFormatType): void {
+    localStorage.setItem('pms_default_bill_format', format);
+  }
+
+  static getCompanyPicAssets(): CompanyPicAsset[] {
+    const comp = this.getCompanyInfo();
+    return [
+      {
+        sNo: 1,
+        title: 'Logo',
+        code: 'logo',
+        currentUrl: comp.logoUrl || '',
+        description: 'Hotel official crest / monogram printed on top-left of all bills and receipts.'
+      },
+      {
+        sNo: 2,
+        title: 'QR Code',
+        code: 'qr_code',
+        currentUrl: comp.qrCodeUrl || '',
+        description: 'UPI QR code printed on bills for direct guest payment via PhonePe, GPay, or Paytm.'
+      },
+      {
+        sNo: 3,
+        title: 'Seal',
+        code: 'seal',
+        currentUrl: comp.sealUrl || '',
+        description: 'Digital stamp "Payment Completed - Thank You! Ref #..." printed on final tax invoices.'
+      },
+      {
+        sNo: 4,
+        title: 'Signature',
+        code: 'signature',
+        currentUrl: comp.signatureUrl || '',
+        description: 'Front Office Manager / Receptionist digital signature for authorized signatory block.'
+      },
+      {
+        sNo: 5,
+        title: 'Brand',
+        code: 'brand',
+        currentUrl: comp.brandUrl || '',
+        description: 'Header brand banner or chain brand watermarks on statements.'
+      }
+    ];
+  }
+
+  static saveCompanyPicAsset(code: 'logo' | 'qr_code' | 'seal' | 'signature' | 'brand', url: string): void {
+    const comp = this.getCompanyInfo();
+    if (code === 'logo') comp.logoUrl = url;
+    else if (code === 'qr_code') comp.qrCodeUrl = url;
+    else if (code === 'seal') comp.sealUrl = url;
+    else if (code === 'signature') comp.signatureUrl = url;
+    else if (code === 'brand') comp.brandUrl = url;
+    this.saveCompanyInfo(comp);
+  }
+
+  /**
+   * Generates a standard UPI Payment Intent URL and returns a fast SVG QR Code image Data-URI.
+   * Completely offline capable with fallback to standard qrserver URL.
+   */
+  static generateUpiPaymentQrUrl(amount: number, guestName?: string, billNo?: string): string {
+    const comp = this.getCompanyInfo();
+    if (comp.qrCodeUrl && comp.qrCodeUrl.trim().length > 0) {
+      return comp.qrCodeUrl;
+    }
+    const upiId = comp.upiId || '7999663696@YBL';
+    const payeeName = comp.firmName || 'HOTEL SAI VASUDEV RESIDENCY';
+    const note = billNo ? `Bill ${billNo}${guestName ? ' - ' + guestName : ''}` : (guestName ? `Room Settlement - ${guestName}` : 'Hotel Room Settlement');
+    const cleanAmount = amount > 0 ? amount.toFixed(2) : '1.00';
+    
+    const upiPayload = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(payeeName)}&am=${cleanAmount}&cu=INR&tn=${encodeURIComponent(note)}`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiPayload)}`;
+  }
 }
+
 

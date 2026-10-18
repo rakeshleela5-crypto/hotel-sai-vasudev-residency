@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import type { PmsRoom, PmsCheckOutDetail, PaymentSplit, PmsFoodBill, DayWiseRentItem } from '../../types/pmsModels';
+import type { PmsRoom, PmsCheckOutDetail, PaymentSplit, PmsFoodBill, DayWiseRentItem, BillFormatType } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
+import { HotelBillFormatModal } from './HotelBillFormatModal';
 
 interface RoomCheckOutModalProps {
   isOpen: boolean;
@@ -35,6 +36,8 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
   const [dayWiseRent, setDayWiseRent] = useState<DayWiseRentItem[]>([]);
   const [invoiceFormat, setInvoiceFormat] = useState<'A4_Standard' | 'A5_HalfPage' | 'Detailed'>('A4_Standard');
   const [showInvoicePreview, setShowInvoicePreview] = useState(false);
+  const [isFullBillFormatOpen, setIsFullBillFormatOpen] = useState(false);
+  const [fullBillFormat, setFullBillFormat] = useState<BillFormatType>('Format_3_A4_Standard');
 
   // Automatically recalculate day-wise rent matching Video 09 Frames 0240 & 0260
   useEffect(() => {
@@ -1142,6 +1145,17 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
               <div style={{ display: 'flex', gap: 8 }}>
                 <button
                   type="button"
+                  onClick={() => {
+                    setFullBillFormat('Format_3_A4_Standard');
+                    setIsFullBillFormatOpen(true);
+                  }}
+                  style={{ background: '#7c3aed', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: 3, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                  title="Open Video 26 Multi-Format Bill Suite (A4 Standard, Day-wise Breakdown, General Invoice, A5 Compact)"
+                >
+                  <span>🧾</span> Multi-Format Suite (Video 26)
+                </button>
+                <button
+                  type="button"
                   onClick={() => window.print()}
                   style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: 3, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
                 >
@@ -1452,6 +1466,47 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
           </div>
         )}
       </div>
+
+      {/* Video 26 Multi-Format Tax Invoice & Print Engine Modal */}
+      <HotelBillFormatModal
+        isOpen={isFullBillFormatOpen}
+        onClose={() => setIsFullBillFormatOpen(false)}
+        initialFormat={fullBillFormat}
+        initialCheckout={{
+          invoiceNo: activeInvoiceNo,
+          roomNo: targetRoom.roomNo,
+          roomType: targetRoom.roomType,
+          guestName: guest?.name || 'Guest',
+          guestPhone: guest?.phone || '9822100042',
+          checkInDate,
+          checkInTime,
+          checkOutDate,
+          checkOutTime,
+          calculationType,
+          numberOfDays: noOfDays,
+          perDayTariff,
+          totalRoomRent: taxableRoomRent,
+          foodAmount,
+          gstPercent,
+          gstAmount,
+          cgstAmount,
+          sgstAmount,
+          addOthers,
+          lessDiscount,
+          advanceDeducted,
+          billAmount: netBillAmount,
+          netPayable,
+          paymentMode: paymentSplits[0]?.mode || 'Cash',
+          payments: paymentSplits,
+          checkoutRemark,
+          city: 'Shirdi',
+          state: 'Maharashtra',
+          country: 'India',
+          pinCode: '423109',
+          sacCode: '996311',
+          invoiceFormat: 'A4_Standard'
+        }}
+      />
     </div>
   );
 };

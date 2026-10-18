@@ -38,7 +38,10 @@ import { WhatsAppSettingModal } from './WhatsAppSettingModal';
 import { WhatsAppLogsModal } from './WhatsAppLogsModal';
 import { PoliceStationReportModal } from './PoliceStationReportModal';
 import { OnlineVsOfflineModal } from './OnlineVsOfflineModal';
-import type { PmsUserAccount, PmsChainProperty } from '../../types/pmsModels';
+import { HotelBillFormatModal } from './HotelBillFormatModal';
+import { CompanyBrandingModal } from './CompanyBrandingModal';
+import { CheckOutRegisterModal } from './CheckOutRegisterModal';
+import type { PmsUserAccount, PmsChainProperty, BillFormatType, PmsCheckOutDetail } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import './pmsStyles.css';
 
@@ -138,6 +141,14 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
 
   // Video 25: Online vs Offline Architecture & Disaster Recovery Modal (Frames 0120, 0280, 0350)
   const [isOnlineVsOfflineOpen, setIsOnlineVsOfflineOpen] = useState(false);
+
+  // Video 26: Bill Format Engine & Company Branding Suite (Frames 0115, 0150, 0170, 0195, 0240, 0250)
+  const [isBillFormatOpen, setIsBillFormatOpen] = useState(false);
+  const [selectedBillCheckout, setSelectedBillCheckout] = useState<PmsCheckOutDetail | null>(null);
+  const [activeBillFormat, setActiveBillFormat] = useState<BillFormatType>('Format_3_A4_Standard');
+  const [isCompanyBrandingOpen, setIsCompanyBrandingOpen] = useState(false);
+  const [companyBrandingTab, setCompanyBrandingTab] = useState<'pictures' | 'banking' | 'format' | 'company_info'>('pictures');
+  const [isCheckOutRegisterOpen, setIsCheckOutRegisterOpen] = useState(false);
 
   // Video 23: Real-Time Active Staff & Role Boundary Listener
   React.useEffect(() => {
@@ -701,6 +712,13 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('roomcheckout', 'Room Check Out', () => setActiveTab('matrix'))}>
                       <span>🧾 Room Check Out</span>
                     </div>
+                    {/* Video 26: Check Out Register & Bill Formats (Frames 0115, 0150) */}
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('roomcheckout', 'Check Out Register', () => setIsCheckOutRegisterOpen(true))}>
+                      <span style={{ color: '#38bdf8', fontWeight: 800 }}>📋 Room Check Out Register (/roomcheckouts)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => { setSelectedBillCheckout(null); setActiveBillFormat('Format_3_A4_Standard'); setIsBillFormatOpen(true); }}>
+                      <span style={{ color: '#4ade80', fontWeight: 700 }}>🧾 Bill Formats &amp; Design (Video 26)</span>
+                    </div>
                   </div>
                 )}
 
@@ -804,6 +822,16 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     {/* Video 25: Online vs Offline Architecture & Disaster Recovery Tools */}
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('Setting', 'Online vs Offline Architecture', () => setIsOnlineVsOfflineOpen(true))}>
                       <span style={{ color: '#38bdf8', fontWeight: 800 }}>🌐 Online vs Offline Architecture &amp; Backup (Video 25)</span>
+                    </div>
+                    {/* Video 26: Company Logo, QR, Banking & Bill Format Selector (Frames 0240, 0250, 0270) */}
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Setting', 'Company Logo & Media', () => { setCompanyBrandingTab('pictures'); setIsCompanyBrandingOpen(true); })}>
+                      <span style={{ color: '#fbbf24', fontWeight: 700 }}>🖼️ Company Logo &amp; QR (/comp_pic_form)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Setting', 'Bank & Footer Settings', () => { setCompanyBrandingTab('banking'); setIsCompanyBrandingOpen(true); })}>
+                      <span style={{ color: '#60a5fa', fontWeight: 700 }}>🏦 Other Details &amp; Bank Settings (/comp_info_footer)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Setting', 'Bill Format Selector', () => { setCompanyBrandingTab('format'); setIsCompanyBrandingOpen(true); })}>
+                      <span style={{ color: '#a3e635', fontWeight: 800 }}>🧾 Bill Format Selector (/checkout_print_view)</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => alert('Printer & Receipt Template Setup')}>
                       <span>🖨️ Printer &amp; POS Setup</span>
@@ -1202,6 +1230,40 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       <OnlineVsOfflineModal
         isOpen={isOnlineVsOfflineOpen}
         onClose={() => setIsOnlineVsOfflineOpen(false)}
+      />
+
+      {/* Video 26: Bill Format Engine & Print Viewer (Frames 0115, 0170, 0195, 0215) */}
+      <HotelBillFormatModal
+        isOpen={isBillFormatOpen}
+        onClose={() => setIsBillFormatOpen(false)}
+        initialCheckout={selectedBillCheckout}
+        initialFormat={activeBillFormat}
+        onOpenBrandingSettings={() => {
+          setIsBillFormatOpen(false);
+          setCompanyBrandingTab('pictures');
+          setIsCompanyBrandingOpen(true);
+        }}
+      />
+
+      {/* Video 26: Company Logo, Banking & Footer Suite (Frames 0240, 0250, 0270, 0280) */}
+      <CompanyBrandingModal
+        isOpen={isCompanyBrandingOpen}
+        onClose={() => setIsCompanyBrandingOpen(false)}
+        initialTab={companyBrandingTab}
+        onSaved={() => {
+          // Trigger rerender
+        }}
+      />
+
+      {/* Video 26: Room Check Out Register Table (/roomcheckouts - Frame 0150) */}
+      <CheckOutRegisterModal
+        isOpen={isCheckOutRegisterOpen}
+        onClose={() => setIsCheckOutRegisterOpen(false)}
+        onOpenBillFormat={(checkout, format) => {
+          setSelectedBillCheckout(checkout);
+          setActiveBillFormat(format);
+          setIsBillFormatOpen(true);
+        }}
       />
     </>
   );

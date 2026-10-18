@@ -420,6 +420,29 @@ export interface PmsCompanyInfo {
   regNo2?: string;
   gstNotApplicable: boolean;
   makeAllBillLocalGst: boolean;
+  
+  // Video 26 Banking, UPI & Branding Details (Frames 0240, 0250, 0255)
+  bankName?: string;
+  bankAccountNo?: string;
+  bankIfsc?: string;
+  bankBranch?: string;
+  upiId?: string;
+  phonePeGpay?: string;
+  jurisdiction?: string;
+  country?: string;
+  currency?: string;
+  taxSystem?: string;
+  restaurantFoodBillTaxInclusive?: boolean;
+  termsAndConditions?: string;
+  logoUrl?: string;
+  qrCodeUrl?: string;
+  sealUrl?: string;
+  signatureUrl?: string;
+  brandUrl?: string;
+  voucherPrefix?: string;
+  voucherSuffix?: string;
+  voucherNote?: string;
+  
   updatedAt?: string;
 }
 
@@ -836,3 +859,32 @@ export interface ArchitectureComparisonItem {
     text: string;
   };
 }
+
+// ==========================================
+// Video 26: Bill Format Engine & Digital Branding Assets (Frames 0115, 0170, 0195, 0215, 0240, 0250, 0270)
+// ==========================================
+export type BillFormatType = 
+  | 'Format_1_DayWise'       // /room_checkout_view2/:id - Itemized daily stay breakdown with yellow header & SAC 996311
+  | 'Format_2_Summary'       // /room_checkout_view/:id - General Tax Invoice with guest & room details
+  | 'Format_3_A4_Standard'   // /room_checkout_view3/:id - A4 Standard Format with key drop notice, GST table & signatures (RECOMMENDED)
+  | 'Format_4_A5_Compact';   // /room_checkout_view4/:id - A5 Half-Page condensed format for thermal/A5 stationery
+
+export interface BillFormatOption {
+  id: BillFormatType;
+  name: string;
+  label: string;
+  route: string;
+  paperSize: 'A4' | 'A5' | 'Letter';
+  recommended?: boolean;
+  buttonColor: string;
+  description: string;
+}
+
+export interface CompanyPicAsset {
+  sNo: number;
+  title: string;
+  code: 'logo' | 'qr_code' | 'seal' | 'signature' | 'brand';
+  currentUrl?: string;
+  description: string;
+}
+

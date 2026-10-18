@@ -31,7 +31,10 @@ import { WhatsAppSettingModal } from './WhatsAppSettingModal';
 import { WhatsAppLogsModal } from './WhatsAppLogsModal';
 import { PoliceStationReportModal } from './PoliceStationReportModal';
 import { OnlineVsOfflineModal } from './OnlineVsOfflineModal';
-import type { PmsBooking } from '../../types/pmsModels';
+import { HotelBillFormatModal } from './HotelBillFormatModal';
+import { CompanyBrandingModal } from './CompanyBrandingModal';
+import { CheckOutRegisterModal } from './CheckOutRegisterModal';
+import type { PmsBooking, BillFormatType, PmsCheckOutDetail } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
   onOpenRoomMatrix: () => void;
@@ -93,6 +96,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
 
   // Video 25: Online vs Offline Architecture & Disaster Recovery Modal (Frames 0120, 0280, 0350)
   const [isOnlineVsOfflineOpen, setIsOnlineVsOfflineOpen] = useState(false);
+
+  // Video 26: Bill Format Engine & Company Branding Suite (Frames 0115, 0150, 0170, 0195, 0240, 0250)
+  const [isBillFormatOpen, setIsBillFormatOpen] = useState(false);
+  const [selectedBillCheckout, setSelectedBillCheckout] = useState<PmsCheckOutDetail | null>(null);
+  const [activeBillFormat, setActiveBillFormat] = useState<BillFormatType>('Format_3_A4_Standard');
+  const [isCompanyBrandingOpen, setIsCompanyBrandingOpen] = useState(false);
+  const [companyBrandingTab, setCompanyBrandingTab] = useState<'pictures' | 'banking' | 'format' | 'company_info'>('pictures');
+  const [isCheckOutRegisterOpen, setIsCheckOutRegisterOpen] = useState(false);
 
   // Video 23: Real-Time Active Staff & Role Boundary Controls
   const [currentUser, setCurrentUser] = useState(PmsStore.getCurrentUser());
@@ -488,6 +499,42 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         >
           <span className="tile-icon">🌐</span>
           <span>Online/Offline</span>
+        </button>
+
+        {/* Video 26: Bill Format Engine & Print Viewer (Frames 0115, 0170, 0195, 0215) */}
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => { setSelectedBillCheckout(null); setActiveBillFormat('Format_3_A4_Standard'); setIsBillFormatOpen(true); }}
+          style={{ background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)', color: '#fff', fontWeight: 800 }}
+          title="Video 26: Multi-Format Hotel Invoice Viewer (A4 Standard, Day-wise, Summary & A5 Compact)"
+        >
+          <span className="tile-icon">🧾</span>
+          <span>Bill Formats</span>
+        </button>
+
+        {/* Video 26: Room Check Out Register (/roomcheckouts - Frame 0150) */}
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => guardAction('roomcheckout', 'Check Out Register', () => setIsCheckOutRegisterOpen(true))}
+          style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff', fontWeight: 800 }}
+          title="Video 26: Hotel Room Check Out Register Table (/roomcheckouts)"
+        >
+          <span className="tile-icon">📋</span>
+          <span>CheckOut List</span>
+        </button>
+
+        {/* Video 26: Company Logo, UPI QR & Digital Assets (/comp_pic_form - Frame 0240) */}
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => guardAction('Setting', 'Company Logo & Media', () => { setCompanyBrandingTab('pictures'); setIsCompanyBrandingOpen(true); })}
+          style={{ background: 'linear-gradient(135deg, #ca8a04 0%, #a16207 100%)', color: '#fff', fontWeight: 800 }}
+          title="Video 26: Company Logo, UPI QR Code, Seal, and Signature Settings (/comp_pic_form)"
+        >
+          <span className="tile-icon">🖼️</span>
+          <span>Logo &amp; Assets</span>
         </button>
       </div>
 
@@ -955,6 +1002,37 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
       <OnlineVsOfflineModal
         isOpen={isOnlineVsOfflineOpen}
         onClose={() => setIsOnlineVsOfflineOpen(false)}
+      />
+
+      {/* Video 26: Bill Format Engine & Print Viewer (Frames 0115, 0170, 0195, 0215) */}
+      <HotelBillFormatModal
+        isOpen={isBillFormatOpen}
+        onClose={() => setIsBillFormatOpen(false)}
+        initialCheckout={selectedBillCheckout}
+        initialFormat={activeBillFormat}
+        onOpenBrandingSettings={() => {
+          setIsBillFormatOpen(false);
+          setCompanyBrandingTab('pictures');
+          setIsCompanyBrandingOpen(true);
+        }}
+      />
+
+      {/* Video 26: Company Logo, Banking & Footer Suite (Frames 0240, 0250, 0270, 0280) */}
+      <CompanyBrandingModal
+        isOpen={isCompanyBrandingOpen}
+        onClose={() => setIsCompanyBrandingOpen(false)}
+        initialTab={companyBrandingTab}
+      />
+
+      {/* Video 26: Room Check Out Register Table (/roomcheckouts - Frame 0150) */}
+      <CheckOutRegisterModal
+        isOpen={isCheckOutRegisterOpen}
+        onClose={() => setIsCheckOutRegisterOpen(false)}
+        onOpenBillFormat={(checkout, format) => {
+          setSelectedBillCheckout(checkout);
+          setActiveBillFormat(format);
+          setIsBillFormatOpen(true);
+        }}
       />
     </div>
   );
