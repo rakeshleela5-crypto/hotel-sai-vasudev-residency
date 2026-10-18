@@ -50,6 +50,7 @@ import { GuestLogModal } from './GuestLogModal';
 import { ShiftHandoverModal } from './ShiftHandoverModal';
 import { HelpAndSupportModal } from './HelpAndSupportModal';
 import { AgentCommissionModal } from './AgentCommissionModal';
+import { LiquorBarManagementModal } from './LiquorBarManagementModal';
 import type { PmsUserAccount, PmsChainProperty, BillFormatType, PmsCheckOutDetail, PmsGstReportTab } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import './pmsStyles.css';
@@ -182,8 +183,17 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   // Video 31: MR & Salesman Wise Commission Tracking & Top 15 PMS Features
   const [isAgentCommissionOpen, setIsAgentCommissionOpen] = useState(false);
 
+  // Video 32: Liquor & Bar Management Software Suite (Frames 0080-0350)
+  const [isLiquorBarOpen, setIsLiquorBarOpen] = useState(false);
+
   const handleLaunchReportAction = (actionKey: string) => {
     switch (actionKey) {
+      case 'liquor_bar':
+      case 'bar_pos':
+      case 'liquor_stock':
+      case 'bar_management':
+        setIsLiquorBarOpen(true);
+        break;
       case 'agent_commission':
       case 'agent_ledger':
       case 'agent_master':
@@ -376,6 +386,10 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         break;
       case 'top20_features':
         setIsTop20FeaturesOpen(true);
+        break;
+      case 'liquor_bar':
+      case 'bar_management':
+        setIsLiquorBarOpen(true);
         break;
       default:
         setActiveTab('hub');
@@ -678,6 +692,30 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               >
                 <span>🤝</span>
                 <span>Agent Commissions</span>
+              </button>
+
+              {/* Video 32: Liquor & Bar Management Software Button */}
+              <button
+                type="button"
+                onClick={() => setIsLiquorBarOpen(true)}
+                title="Click to manage Liquor & Bar Inventory, Peg Billing, VAT 13% + SUR 10%, and ML Stock (Video 32)"
+                style={{
+                  background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)',
+                  color: '#ffffff',
+                  border: '1px solid #f87171',
+                  padding: '3px 10px',
+                  borderRadius: 3,
+                  fontSize: 11,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
+                }}
+              >
+                <span>🍷</span>
+                <span>Liquor &amp; Bar</span>
               </button>
 
               {/* Video 21: User Avatar & Role Dropdown */}
@@ -1126,6 +1164,10 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsAgentCommissionOpen(true)}>
                       <span style={{ color: '#f59e0b', fontWeight: 800 }}>🏆 Top 15 PMS Features Hub (Video 31)</span>
+                    </div>
+                    {/* Video 32: Liquor & Bar Management Software */}
+                    <div className="pms-nav-item" onClick={() => setIsLiquorBarOpen(true)}>
+                      <span style={{ color: '#f43f5e', fontWeight: 800 }}>🍷 Brand-Wise Liquor Stock &amp; Bar POS (Video 32)</span>
                     </div>
                   </div>
                 )}
@@ -1715,6 +1757,13 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         isOpen={isAgentCommissionOpen}
         onClose={() => setIsAgentCommissionOpen(false)}
         onLaunchFeature={handleLaunchFeatureFromTop20}
+      />
+
+      {/* Video 32: Liquor & Bar Management Software Suite */}
+      <LiquorBarManagementModal
+        isOpen={isLiquorBarOpen}
+        onClose={() => setIsLiquorBarOpen(false)}
+        onOpenTableDashboard={() => setIsTableDashboardOpen(true)}
       />
     </>
   );

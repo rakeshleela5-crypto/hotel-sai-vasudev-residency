@@ -43,6 +43,7 @@ import { GuestLogModal } from './GuestLogModal';
 import { ShiftHandoverModal } from './ShiftHandoverModal';
 import { HelpAndSupportModal } from './HelpAndSupportModal';
 import { AgentCommissionModal } from './AgentCommissionModal';
+import { LiquorBarManagementModal } from './LiquorBarManagementModal';
 import type { PmsBooking, BillFormatType, PmsCheckOutDetail, PmsGstReportTab } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
@@ -136,8 +137,17 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   // Video 31: MR & Salesman Wise Commission Tracking & Top 15 PMS Features
   const [isAgentCommissionOpen, setIsAgentCommissionOpen] = useState(false);
 
+  // Video 32: Liquor & Bar Management Software Suite (Frames 0080-0350)
+  const [isLiquorBarOpen, setIsLiquorBarOpen] = useState(false);
+
   const handleLaunchReportAction = (actionKey: string) => {
     switch (actionKey) {
+      case 'liquor_bar':
+      case 'bar_pos':
+      case 'liquor_stock':
+      case 'bar_management':
+        setIsLiquorBarOpen(true);
+        break;
       case 'agent_commission':
       case 'agent_ledger':
       case 'agent_master':
@@ -387,6 +397,10 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         break;
       case 'top20_features':
         setIsTop20FeaturesOpen(true);
+        break;
+      case 'liquor_bar':
+      case 'bar_management':
+        setIsLiquorBarOpen(true);
         break;
       case 'gst_report':
         setGstReportTab('consolidated');
@@ -932,6 +946,29 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         >
           <span className="tile-icon">🏆</span>
           <span>Top 15 Features</span>
+        </button>
+
+        {/* Video 32: Liquor & Bar Management Software Suite Tiles */}
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => setIsLiquorBarOpen(true)}
+          style={{ background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)', color: '#fff', fontWeight: 800 }}
+          title="Video 32: Liquor & Bar POS, Peg Billing, VAT 13% + SUR 10%, ML Inventory & Stock (/liqour_stock_brand_wise)"
+        >
+          <span className="tile-icon">🍷</span>
+          <span>Liquor &amp; Bar</span>
+        </button>
+
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => setIsLiquorBarOpen(true)}
+          style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff', fontWeight: 800 }}
+          title="Video 32: Brand-Wise Liquid Stock Ledger in ML and Bottle Equivalents"
+        >
+          <span className="tile-icon">🍾</span>
+          <span>Bar Stock (ML)</span>
         </button>
       </div>
 
@@ -1488,6 +1525,13 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         isOpen={isAgentCommissionOpen}
         onClose={() => setIsAgentCommissionOpen(false)}
         onLaunchFeature={handleLaunchFeatureFromTop20}
+      />
+
+      {/* Video 32: Liquor & Bar Management Software Suite */}
+      <LiquorBarManagementModal
+        isOpen={isLiquorBarOpen}
+        onClose={() => setIsLiquorBarOpen(false)}
+        onOpenTableDashboard={() => setIsTableDashboardOpen(true)}
       />
     </div>
   );

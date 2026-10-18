@@ -1281,4 +1281,105 @@ export interface PmsTop15OfficialFeature {
   videoTimestamp: string;
 }
 
+// ==========================================
+// Video 32: Liquor & Bar Management Software Contracts (Frames 0080-0350)
+// ==========================================
+export interface PmsLiquorUnit {
+  id: string;
+  sNo: number;
+  primaryUnitName: string;    // e.g. "30 ml", "60 Ml", "BOTTEL", "Pcs"
+  conversion: number;         // e.g. 30, 60, 750, 1
+  alternateUnitName: string;  // e.g. "ML", "Ml", "ML"
+}
+
+export interface PmsLiquorBrand {
+  id: string;
+  sNo: number;
+  name: string;               // e.g. "Blander Spride", "Royal Stag", "Kingfisher", "Signature", "Imperial Blue"
+  discountPercentage: number; // e.g. 0 or 5
+  status: 'ACTIVE' | 'INACTIVE';
+}
+
+export interface PmsLiquorItem {
+  id: string;
+  sNo: number;
+  name: string;               // e.g. "Blender Spride (30Ml)", "Blenderspride (60 ML)", "Blender Spride (Bottel 750 ML )"
+  brandName: string;          // e.g. "Blander Spride"
+  barcodeNo: string;          // e.g. "10070", "10071", "10072"
+  group: 'Liquor' | 'Beer' | 'Wine' | 'Whisky' | 'Vodka' | 'Rum';
+  headGroup: 'Restaurant_Item';
+  mrp: number;                // e.g. 230, 330, 1000
+  rate: number;               // e.g. 230, 330, 1000
+  purchaseRate: number;       // e.g. 400 (for 750ml bottle)
+  unit: string;               // e.g. "30 ml", "60 Ml", "BOTTEL"
+  conversionMl: number;       // e.g. 30, 60, 750
+  taxType: 'VAT 13%' | 'VAT 10%' | 'GST 5%' | 'EXEMPT';
+  vatPercentage: number;      // e.g. 13
+  surchargePercentage: number;// e.g. 10 (Surcharge on VAT)
+  active: boolean;
+}
+
+export interface PmsBrandWiseLiquorStock {
+  brand: string;              // e.g. "Blander Spride"
+  bottleMl: number;           // e.g. 750
+  stockInMl: number;          // e.g. 22500
+  stockOutMl: number;         // e.g. 450
+  closingMl: number;          // e.g. 22050
+  closingBottel: number;      // e.g. 29.4 (closingMl / bottleMl)
+  lastUpdated?: string;
+}
+
+export interface PmsBarBillItem {
+  sNo: number;
+  itemId: string;
+  itemName: string;
+  brandName?: string;
+  category: 'Liquor' | 'Food';
+  qty: number;
+  rate: number;
+  amount: number;
+  discountPercentage: number;
+  discountAmount: number;
+  taxableAmount: number;
+  gstPercentage: number;      // e.g. 5% for food, 0% for liquor
+  gstAmount: number;
+  vatPercentage: number;      // e.g. 13% for liquor, 0% for food
+  vatAmount: number;
+  surchargePercentage: number;// e.g. 10% on VAT for liquor
+  surchargeAmount: number;
+  totalValue: number;
+  unit: string;
+  mlConsumed: number;         // e.g. qty * 30 ml
+}
+
+export interface PmsBarInvoice {
+  billNo: string;             // e.g. "Res/289/24-25"
+  date: string;               // e.g. "2025-07-20"
+  time: string;               // e.g. "06:16"
+  tableNo: string;            // e.g. "T-11"
+  kotNo: string;              // e.g. "418"
+  serviceType: 'Table Service' | 'Bar Counter' | 'Room Service' | 'TakeAway';
+  guestName?: string;
+  guestAddress?: string;
+  guestMobile?: string;
+  remark?: string;
+  isB2b: boolean;
+  gstin?: string;
+  items: PmsBarBillItem[];
+  totalItems: number;
+  totalQuantity: number;
+  basicAmount: number;
+  sgstAmount: number;
+  cgstAmount: number;
+  vatAmount: number;
+  surchargeAmount: number;
+  roundOff: number;
+  grandTotal: number;
+  settled: boolean;
+  paymentMode?: 'CASH' | 'CARD' | 'UPI' | 'ROOM_FOLIO';
+  roomNo?: string;
+  createdAt: string;
+}
+
+
 

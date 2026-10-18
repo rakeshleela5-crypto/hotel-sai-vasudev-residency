@@ -55,7 +55,12 @@ import type {
   PmsCommissionAgent,
   PmsAgentCommissionBooking,
   PmsAgentPayoutVoucher,
-  PmsTop15OfficialFeature
+  PmsTop15OfficialFeature,
+  PmsLiquorUnit,
+  PmsLiquorBrand,
+  PmsLiquorItem,
+  PmsBrandWiseLiquorStock,
+  PmsBarInvoice
 } from '../types/pmsModels';
 import { PMS_ALL_PERMISSIONS } from '../types/pmsModels';
 
@@ -1971,7 +1976,12 @@ const STORAGE_KEYS = {
   DEMO_REQUESTS: 'svr_pms_demo_requests',
   COMMISSION_AGENTS: 'svr_pms_commission_agents',
   AGENT_COMMISSIONS: 'svr_pms_agent_commissions',
-  AGENT_PAYOUT_VOUCHERS: 'svr_pms_agent_payout_vouchers'
+  AGENT_PAYOUT_VOUCHERS: 'svr_pms_agent_payout_vouchers',
+  LIQUOR_UNITS: 'svr_pms_liquor_units',
+  LIQUOR_BRANDS: 'svr_pms_liquor_brands',
+  LIQUOR_ITEMS: 'svr_pms_liquor_items',
+  LIQUOR_STOCKS: 'svr_pms_liquor_stocks',
+  BAR_INVOICES: 'svr_pms_bar_invoices'
 };
 
 export class PmsStore {
@@ -7065,6 +7075,174 @@ export class PmsStore {
   static getTop15OfficialFeatures(): PmsTop15OfficialFeature[] {
     return TOP_15_OFFICIAL_FEATURES;
   }
+
+  // ==========================================
+  // Video 32: Liquor & Bar Management Software Methods (Frames 0080-0350)
+  // ==========================================
+  static getLiquorUnits(): PmsLiquorUnit[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.LIQUOR_UNITS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.LIQUOR_UNITS, JSON.stringify(INITIAL_LIQUOR_UNITS));
+      return INITIAL_LIQUOR_UNITS;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_LIQUOR_UNITS;
+    }
+  }
+
+  static saveLiquorUnit(unit: PmsLiquorUnit): void {
+    const list = this.getLiquorUnits();
+    const idx = list.findIndex(u => u.id === unit.id || u.primaryUnitName.toLowerCase() === unit.primaryUnitName.toLowerCase());
+    if (idx >= 0) {
+      list[idx] = unit;
+    } else {
+      list.push(unit);
+    }
+    list.forEach((item, index) => { item.sNo = index + 1; });
+    localStorage.setItem(STORAGE_KEYS.LIQUOR_UNITS, JSON.stringify(list));
+  }
+
+  static getLiquorBrands(): PmsLiquorBrand[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.LIQUOR_BRANDS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.LIQUOR_BRANDS, JSON.stringify(INITIAL_LIQUOR_BRANDS));
+      return INITIAL_LIQUOR_BRANDS;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_LIQUOR_BRANDS;
+    }
+  }
+
+  static saveLiquorBrand(brand: PmsLiquorBrand): void {
+    const list = this.getLiquorBrands();
+    const idx = list.findIndex(b => b.id === brand.id || b.name.toLowerCase() === brand.name.toLowerCase());
+    if (idx >= 0) {
+      list[idx] = brand;
+    } else {
+      list.push(brand);
+    }
+    list.forEach((item, index) => { item.sNo = index + 1; });
+    localStorage.setItem(STORAGE_KEYS.LIQUOR_BRANDS, JSON.stringify(list));
+  }
+
+  static getLiquorItems(): PmsLiquorItem[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.LIQUOR_ITEMS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.LIQUOR_ITEMS, JSON.stringify(INITIAL_LIQUOR_ITEMS));
+      return INITIAL_LIQUOR_ITEMS;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_LIQUOR_ITEMS;
+    }
+  }
+
+  static saveLiquorItem(item: PmsLiquorItem): void {
+    const list = this.getLiquorItems();
+    const idx = list.findIndex(i => i.id === item.id || i.barcodeNo === item.barcodeNo);
+    if (idx >= 0) {
+      list[idx] = item;
+    } else {
+      list.push(item);
+    }
+    list.forEach((itm, index) => { itm.sNo = index + 1; });
+    localStorage.setItem(STORAGE_KEYS.LIQUOR_ITEMS, JSON.stringify(list));
+  }
+
+  static getBrandWiseLiquorStocks(): PmsBrandWiseLiquorStock[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.LIQUOR_STOCKS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.LIQUOR_STOCKS, JSON.stringify(INITIAL_LIQUOR_STOCKS));
+      return INITIAL_LIQUOR_STOCKS;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_LIQUOR_STOCKS;
+    }
+  }
+
+  static recordLiquorSaleDeduction(brand: string, mlSold: number): void {
+    const stocks = this.getBrandWiseLiquorStocks();
+    let record = stocks.find(s => s.brand.toLowerCase() === brand.toLowerCase());
+    if (!record) {
+      record = {
+        brand,
+        bottleMl: 750,
+        stockInMl: 7500,
+        stockOutMl: 0,
+        closingMl: 7500,
+        closingBottel: 10
+      };
+      stocks.push(record);
+    }
+    record.stockOutMl += mlSold;
+    record.closingMl = Math.max(0, record.stockInMl - record.stockOutMl);
+    record.closingBottel = Number((record.closingMl / (record.bottleMl || 750)).toFixed(2));
+    record.lastUpdated = new Date().toISOString();
+    localStorage.setItem(STORAGE_KEYS.LIQUOR_STOCKS, JSON.stringify(stocks));
+  }
+
+  static recordLiquorPurchaseInward(brand: string, bottleQty: number, bottleMl = 750): void {
+    const stocks = this.getBrandWiseLiquorStocks();
+    let record = stocks.find(s => s.brand.toLowerCase() === brand.toLowerCase());
+    const addedMl = bottleQty * bottleMl;
+    if (!record) {
+      record = {
+        brand,
+        bottleMl,
+        stockInMl: addedMl,
+        stockOutMl: 0,
+        closingMl: addedMl,
+        closingBottel: bottleQty
+      };
+      stocks.push(record);
+    } else {
+      record.stockInMl += addedMl;
+      record.closingMl = Math.max(0, record.stockInMl - record.stockOutMl);
+      record.closingBottel = Number((record.closingMl / (record.bottleMl || 750)).toFixed(2));
+      record.lastUpdated = new Date().toISOString();
+    }
+    localStorage.setItem(STORAGE_KEYS.LIQUOR_STOCKS, JSON.stringify(stocks));
+  }
+
+  static getBarInvoices(): PmsBarInvoice[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.BAR_INVOICES);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.BAR_INVOICES, JSON.stringify(INITIAL_BAR_INVOICES));
+      return INITIAL_BAR_INVOICES;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_BAR_INVOICES;
+    }
+  }
+
+  static saveBarInvoice(invoice: PmsBarInvoice): PmsBarInvoice {
+    const invoices = this.getBarInvoices();
+    const idx = invoices.findIndex(i => i.billNo === invoice.billNo);
+    if (idx >= 0) {
+      invoices[idx] = invoice;
+    } else {
+      invoices.unshift(invoice);
+    }
+    localStorage.setItem(STORAGE_KEYS.BAR_INVOICES, JSON.stringify(invoices));
+
+    // Deduct liquor ML stock for all liquor items sold
+    for (const item of invoice.items) {
+      if (item.category === 'Liquor' && item.brandName && item.mlConsumed > 0) {
+        this.recordLiquorSaleDeduction(item.brandName, item.mlConsumed);
+      }
+    }
+
+    return invoice;
+  }
 }
 
 // ==========================================
@@ -7945,6 +8123,314 @@ export const TOP_15_OFFICIAL_FEATURES: PmsTop15OfficialFeature[] = [
     videoTimestamp: '[04:55]'
   }
 ];
+
+// ==========================================
+// Video 32: Liquor & Bar Management Software Seed Data (Frames 0080-0350)
+// ==========================================
+
+export const INITIAL_LIQUOR_UNITS: PmsLiquorUnit[] = [
+  { id: 'unit-1', sNo: 1, primaryUnitName: '30 ml', conversion: 30, alternateUnitName: 'ML' },
+  { id: 'unit-2', sNo: 2, primaryUnitName: '60 Ml', conversion: 60, alternateUnitName: 'Ml' },
+  { id: 'unit-3', sNo: 3, primaryUnitName: 'BOTTEL', conversion: 750, alternateUnitName: 'ML' },
+  { id: 'unit-4', sNo: 4, primaryUnitName: 'Pint', conversion: 375, alternateUnitName: 'ML' },
+  { id: 'unit-5', sNo: 5, primaryUnitName: 'Nip', conversion: 180, alternateUnitName: 'ML' },
+  { id: 'unit-6', sNo: 6, primaryUnitName: 'Liter', conversion: 1000, alternateUnitName: 'Liter' },
+  { id: 'unit-7', sNo: 7, primaryUnitName: 'Can', conversion: 500, alternateUnitName: 'ML' },
+  { id: 'unit-8', sNo: 8, primaryUnitName: 'KG', conversion: 1, alternateUnitName: 'KG' },
+  { id: 'unit-9', sNo: 9, primaryUnitName: 'Pcs', conversion: 1, alternateUnitName: 'Pcs' },
+  { id: 'unit-10', sNo: 10, primaryUnitName: 'Plate', conversion: 1, alternateUnitName: 'Plate' }
+];
+
+export const INITIAL_LIQUOR_BRANDS: PmsLiquorBrand[] = [
+  { id: 'brand-1', sNo: 1, name: 'Blander Spride', discountPercentage: 0, status: 'ACTIVE' },
+  { id: 'brand-2', sNo: 2, name: 'Royal Stag', discountPercentage: 0, status: 'ACTIVE' },
+  { id: 'brand-3', sNo: 3, name: 'Kingfisher Premium', discountPercentage: 0, status: 'ACTIVE' },
+  { id: 'brand-4', sNo: 4, name: 'Imperial Blue', discountPercentage: 0, status: 'ACTIVE' },
+  { id: 'brand-5', sNo: 5, name: 'Signature Rare', discountPercentage: 0, status: 'ACTIVE' },
+  { id: 'brand-6', sNo: 6, name: 'Bacardi White Rum', discountPercentage: 0, status: 'ACTIVE' },
+  { id: 'brand-7', sNo: 7, name: 'Magic Moments Vodka', discountPercentage: 0, status: 'ACTIVE' },
+  { id: 'brand-8', sNo: 8, name: 'Antiquity Blue', discountPercentage: 0, status: 'ACTIVE' }
+];
+
+export const INITIAL_LIQUOR_ITEMS: PmsLiquorItem[] = [
+  {
+    id: 'liq-10070',
+    sNo: 1,
+    name: 'Blender Spride (30Ml)',
+    brandName: 'Blander Spride',
+    barcodeNo: '10070',
+    group: 'Liquor',
+    headGroup: 'Restaurant_Item',
+    mrp: 230,
+    rate: 230,
+    purchaseRate: 16,
+    unit: '30 ml',
+    conversionMl: 30,
+    taxType: 'VAT 13%',
+    vatPercentage: 13,
+    surchargePercentage: 10,
+    active: true
+  },
+  {
+    id: 'liq-10071',
+    sNo: 2,
+    name: 'Blenderspride (60 ML)',
+    brandName: 'Blander Spride',
+    barcodeNo: '10071',
+    group: 'Liquor',
+    headGroup: 'Restaurant_Item',
+    mrp: 330,
+    rate: 330,
+    purchaseRate: 32,
+    unit: '60 Ml',
+    conversionMl: 60,
+    taxType: 'VAT 13%',
+    vatPercentage: 13,
+    surchargePercentage: 10,
+    active: true
+  },
+  {
+    id: 'liq-10072',
+    sNo: 3,
+    name: 'Blender Spride (Bottel 750 ML )',
+    brandName: 'Blander Spride',
+    barcodeNo: '10072',
+    group: 'Liquor',
+    headGroup: 'Restaurant_Item',
+    mrp: 1000,
+    rate: 1000,
+    purchaseRate: 400,
+    unit: 'BOTTEL',
+    conversionMl: 750,
+    taxType: 'VAT 13%',
+    vatPercentage: 13,
+    surchargePercentage: 10,
+    active: true
+  },
+  {
+    id: 'liq-10080',
+    sNo: 4,
+    name: 'Royal Stag (30Ml)',
+    brandName: 'Royal Stag',
+    barcodeNo: '10080',
+    group: 'Liquor',
+    headGroup: 'Restaurant_Item',
+    mrp: 180,
+    rate: 180,
+    purchaseRate: 14,
+    unit: '30 ml',
+    conversionMl: 30,
+    taxType: 'VAT 13%',
+    vatPercentage: 13,
+    surchargePercentage: 10,
+    active: true
+  },
+  {
+    id: 'liq-10081',
+    sNo: 5,
+    name: 'Royal Stag (60 ML)',
+    brandName: 'Royal Stag',
+    barcodeNo: '10081',
+    group: 'Liquor',
+    headGroup: 'Restaurant_Item',
+    mrp: 260,
+    rate: 260,
+    purchaseRate: 28,
+    unit: '60 Ml',
+    conversionMl: 60,
+    taxType: 'VAT 13%',
+    vatPercentage: 13,
+    surchargePercentage: 10,
+    active: true
+  },
+  {
+    id: 'liq-10082',
+    sNo: 6,
+    name: 'Royal Stag (Bottel 750 ML)',
+    brandName: 'Royal Stag',
+    barcodeNo: '10082',
+    group: 'Liquor',
+    headGroup: 'Restaurant_Item',
+    mrp: 850,
+    rate: 850,
+    purchaseRate: 350,
+    unit: 'BOTTEL',
+    conversionMl: 750,
+    taxType: 'VAT 13%',
+    vatPercentage: 13,
+    surchargePercentage: 10,
+    active: true
+  },
+  {
+    id: 'liq-10090',
+    sNo: 7,
+    name: 'Kingfisher Ultra Beer (650 ML)',
+    brandName: 'Kingfisher Premium',
+    barcodeNo: '10090',
+    group: 'Beer',
+    headGroup: 'Restaurant_Item',
+    mrp: 280,
+    rate: 280,
+    purchaseRate: 150,
+    unit: 'BOTTEL',
+    conversionMl: 650,
+    taxType: 'VAT 13%',
+    vatPercentage: 13,
+    surchargePercentage: 10,
+    active: true
+  },
+  {
+    id: 'liq-10091',
+    sNo: 8,
+    name: 'Bacardi Carta Blanca (30Ml)',
+    brandName: 'Bacardi White Rum',
+    barcodeNo: '10091',
+    group: 'Rum',
+    headGroup: 'Restaurant_Item',
+    mrp: 210,
+    rate: 210,
+    purchaseRate: 18,
+    unit: '30 ml',
+    conversionMl: 30,
+    taxType: 'VAT 13%',
+    vatPercentage: 13,
+    surchargePercentage: 10,
+    active: true
+  }
+];
+
+export const INITIAL_LIQUOR_STOCKS: PmsBrandWiseLiquorStock[] = [
+  {
+    brand: 'Blander Spride',
+    bottleMl: 750,
+    stockInMl: 22500, // 30 bottles purchased (10 initial + 20 from Video 32 Frame 0320)
+    stockOutMl: 450,   // 15 pegs sold (Frame 0300 & Frame 0350)
+    closingMl: 22050,  // Closing 22,050 ML
+    closingBottel: 29.4, // 29.4 Bottles (Frame 0350)
+    lastUpdated: '2025-07-20T18:19:00Z'
+  },
+  {
+    brand: 'Royal Stag',
+    bottleMl: 750,
+    stockInMl: 15000, // 20 bottles
+    stockOutMl: 600,   // 20 pegs sold
+    closingMl: 14400,
+    closingBottel: 19.2,
+    lastUpdated: '2025-07-20T18:00:00Z'
+  },
+  {
+    brand: 'Kingfisher Premium',
+    bottleMl: 650,
+    stockInMl: 15600, // 24 bottles
+    stockOutMl: 2600,  // 4 bottles sold
+    closingMl: 13000,
+    closingBottel: 20.0,
+    lastUpdated: '2025-07-20T17:45:00Z'
+  },
+  {
+    brand: 'Bacardi White Rum',
+    bottleMl: 750,
+    stockInMl: 7500,  // 10 bottles
+    stockOutMl: 300,   // 10 pegs sold
+    closingMl: 7200,
+    closingBottel: 9.6,
+    lastUpdated: '2025-07-20T17:30:00Z'
+  }
+];
+
+export const INITIAL_BAR_INVOICES: PmsBarInvoice[] = [
+  {
+    billNo: 'Res/289/24-25',
+    date: '2025-07-20',
+    time: '06:16',
+    tableNo: 'T-11',
+    kotNo: '418',
+    serviceType: 'Table Service',
+    guestName: 'Guest (Table T-11)',
+    guestMobile: '9822100000',
+    remark: 'Bar & Restaurant Combined Bill (Video 32)',
+    isB2b: false,
+    items: [
+      {
+        sNo: 1,
+        itemId: 'food-bp',
+        itemName: 'bread pakoda',
+        category: 'Food',
+        qty: 6,
+        rate: 100,
+        amount: 600,
+        discountPercentage: 0,
+        discountAmount: 0,
+        taxableAmount: 600,
+        gstPercentage: 5,
+        gstAmount: 30,
+        vatPercentage: 0,
+        vatAmount: 0,
+        surchargePercentage: 0,
+        surchargeAmount: 0,
+        totalValue: 630,
+        unit: 'Plate',
+        mlConsumed: 0
+      },
+      {
+        sNo: 2,
+        itemId: 'food-cb',
+        itemName: 'Chiken Biryani',
+        category: 'Food',
+        qty: 5,
+        rate: 90,
+        amount: 450,
+        discountPercentage: 0,
+        discountAmount: 0,
+        taxableAmount: 450,
+        gstPercentage: 0,
+        gstAmount: 0,
+        vatPercentage: 0,
+        vatAmount: 0,
+        surchargePercentage: 0,
+        surchargeAmount: 0,
+        totalValue: 450,
+        unit: 'Plate',
+        mlConsumed: 0
+      },
+      {
+        sNo: 3,
+        itemId: 'liq-10070',
+        itemName: 'Blender Spride (30Ml)',
+        brandName: 'Blander Spride',
+        category: 'Liquor',
+        qty: 5,
+        rate: 230,
+        amount: 1150,
+        discountPercentage: 0,
+        discountAmount: 0,
+        taxableAmount: 1150,
+        gstPercentage: 0,
+        gstAmount: 0,
+        vatPercentage: 13,
+        vatAmount: 149.50,
+        surchargePercentage: 10,
+        surchargeAmount: 14.95,
+        totalValue: 1314.45,
+        unit: '30 ml',
+        mlConsumed: 150
+      }
+    ],
+    totalItems: 3,
+    totalQuantity: 16,
+    basicAmount: 2200,
+    sgstAmount: 15,
+    cgstAmount: 15,
+    vatAmount: 149.50,
+    surchargeAmount: 14.95,
+    roundOff: 0.45,
+    grandTotal: 2394,
+    settled: true,
+    paymentMode: 'CASH',
+    createdAt: '2025-07-20T06:16:00Z'
+  }
+];
+
 
 
 
