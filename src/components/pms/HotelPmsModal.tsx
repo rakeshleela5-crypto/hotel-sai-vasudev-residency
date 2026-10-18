@@ -49,6 +49,7 @@ import { ItemWiseStockModal } from './ItemWiseStockModal';
 import { GuestLogModal } from './GuestLogModal';
 import { ShiftHandoverModal } from './ShiftHandoverModal';
 import { HelpAndSupportModal } from './HelpAndSupportModal';
+import { AgentCommissionModal } from './AgentCommissionModal';
 import type { PmsUserAccount, PmsChainProperty, BillFormatType, PmsCheckOutDetail, PmsGstReportTab } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import './pmsStyles.css';
@@ -178,8 +179,17 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   const [isHelpAndSupportOpen, setIsHelpAndSupportOpen] = useState(false);
   const [helpInitialTab, setHelpInitialTab] = useState<'videos' | 'tickets' | 'remote' | 'manual' | 'demo'>('videos');
 
+  // Video 31: MR & Salesman Wise Commission Tracking & Top 15 PMS Features
+  const [isAgentCommissionOpen, setIsAgentCommissionOpen] = useState(false);
+
   const handleLaunchReportAction = (actionKey: string) => {
     switch (actionKey) {
+      case 'agent_commission':
+      case 'agent_ledger':
+      case 'agent_master':
+      case 'top15_features':
+        setIsAgentCommissionOpen(true);
+        break;
       case 'help_support':
       case 'video_tutorials':
         setHelpInitialTab('videos');
@@ -357,6 +367,15 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         break;
       case 'online_booking':
         setIsOnlineGuestBookingOpen(true);
+        break;
+      case 'agent_commission':
+        setIsAgentCommissionOpen(true);
+        break;
+      case 'top15_features':
+        setIsAgentCommissionOpen(true);
+        break;
+      case 'top20_features':
+        setIsTop20FeaturesOpen(true);
         break;
       default:
         setActiveTab('hub');
@@ -635,6 +654,30 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               >
                 <span>🎓</span>
                 <span>Training &amp; Support</span>
+              </button>
+
+              {/* Video 31: MR & Salesman Commission Hub Button */}
+              <button
+                type="button"
+                onClick={() => setIsAgentCommissionOpen(true)}
+                title="Click to manage MR & Salesman Commissions, Agent Master, and Top 15 PMS Features (Video 31)"
+                style={{
+                  background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                  color: '#ffffff',
+                  border: '1px solid #6ee7b7',
+                  padding: '3px 10px',
+                  borderRadius: 3,
+                  fontSize: 11,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
+                }}
+              >
+                <span>🤝</span>
+                <span>Agent Commissions</span>
               </button>
 
               {/* Video 21: User Avatar & Role Dropdown */}
@@ -1076,6 +1119,13 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsFbbReportOpen(true)}>
                       <span style={{ color: '#4ade80', fontWeight: 700 }}>🍴 FBB Report (Food &amp; Beverage)</span>
+                    </div>
+                    {/* Video 31: MR & Salesman Commission Ledger & Top 15 PMS Features */}
+                    <div className="pms-nav-item" onClick={() => setIsAgentCommissionOpen(true)}>
+                      <span style={{ color: '#10b981', fontWeight: 800 }}>🤝 MR &amp; Salesman Commission Ledger (Video 31)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsAgentCommissionOpen(true)}>
+                      <span style={{ color: '#f59e0b', fontWeight: 800 }}>🏆 Top 15 PMS Features Hub (Video 31)</span>
                     </div>
                   </div>
                 )}
@@ -1658,6 +1708,13 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         isOpen={isHelpAndSupportOpen}
         onClose={() => setIsHelpAndSupportOpen(false)}
         initialTab={helpInitialTab}
+      />
+
+      {/* Video 31: MR & Salesman Wise Commission Tracking & Top 15 PMS Features */}
+      <AgentCommissionModal
+        isOpen={isAgentCommissionOpen}
+        onClose={() => setIsAgentCommissionOpen(false)}
+        onLaunchFeature={handleLaunchFeatureFromTop20}
       />
     </>
   );

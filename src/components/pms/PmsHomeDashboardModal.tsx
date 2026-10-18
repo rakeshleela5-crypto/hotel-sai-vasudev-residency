@@ -42,6 +42,7 @@ import { ItemWiseStockModal } from './ItemWiseStockModal';
 import { GuestLogModal } from './GuestLogModal';
 import { ShiftHandoverModal } from './ShiftHandoverModal';
 import { HelpAndSupportModal } from './HelpAndSupportModal';
+import { AgentCommissionModal } from './AgentCommissionModal';
 import type { PmsBooking, BillFormatType, PmsCheckOutDetail, PmsGstReportTab } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
@@ -132,8 +133,17 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   const [isHelpAndSupportOpen, setIsHelpAndSupportOpen] = useState(false);
   const [helpInitialTab, setHelpInitialTab] = useState<'videos' | 'tickets' | 'remote' | 'manual' | 'demo'>('videos');
 
+  // Video 31: MR & Salesman Wise Commission Tracking & Top 15 PMS Features
+  const [isAgentCommissionOpen, setIsAgentCommissionOpen] = useState(false);
+
   const handleLaunchReportAction = (actionKey: string) => {
     switch (actionKey) {
+      case 'agent_commission':
+      case 'agent_ledger':
+      case 'agent_master':
+      case 'top15_features':
+        setIsAgentCommissionOpen(true);
+        break;
       case 'help_support':
       case 'video_tutorials':
         setHelpInitialTab('videos');
@@ -368,6 +378,15 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         break;
       case 'online_booking':
         setIsOnlineGuestBookingOpen(true);
+        break;
+      case 'agent_commission':
+        setIsAgentCommissionOpen(true);
+        break;
+      case 'top15_features':
+        setIsAgentCommissionOpen(true);
+        break;
+      case 'top20_features':
+        setIsTop20FeaturesOpen(true);
         break;
       case 'gst_report':
         setGstReportTab('consolidated');
@@ -890,6 +909,29 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         >
           <span className="tile-icon">🎫</span>
           <span>Support Tickets</span>
+        </button>
+
+        {/* Video 31: MR & Salesman Wise Commission Tracking & Top 15 PMS Features Tiles */}
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => setIsAgentCommissionOpen(true)}
+          style={{ background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', color: '#fff', fontWeight: 800 }}
+          title="Video 31: MR & Salesman Wise Commission Tracking, Agent Directory & Payout Vouchers (/agent_commission)"
+        >
+          <span className="tile-icon">🤝</span>
+          <span>Agent Commissions</span>
+        </button>
+
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => setIsAgentCommissionOpen(true)}
+          style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)', color: '#fff', fontWeight: 800 }}
+          title="Video 31: Top 15 PMS Features Official Canonical Architecture & 1-Click Launch Hub"
+        >
+          <span className="tile-icon">🏆</span>
+          <span>Top 15 Features</span>
         </button>
       </div>
 
@@ -1439,6 +1481,13 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         isOpen={isHelpAndSupportOpen}
         onClose={() => setIsHelpAndSupportOpen(false)}
         initialTab={helpInitialTab}
+      />
+
+      {/* Video 31: MR & Salesman Wise Commission Tracking & Top 15 PMS Features */}
+      <AgentCommissionModal
+        isOpen={isAgentCommissionOpen}
+        onClose={() => setIsAgentCommissionOpen(false)}
+        onLaunchFeature={handleLaunchFeatureFromTop20}
       />
     </div>
   );

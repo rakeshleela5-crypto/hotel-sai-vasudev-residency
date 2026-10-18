@@ -51,7 +51,11 @@ import type {
   PmsSupportTicket,
   PmsRemoteSupportSession,
   PmsDemoRequest,
-  PmsDocumentationChapter
+  PmsDocumentationChapter,
+  PmsCommissionAgent,
+  PmsAgentCommissionBooking,
+  PmsAgentPayoutVoucher,
+  PmsTop15OfficialFeature
 } from '../types/pmsModels';
 import { PMS_ALL_PERMISSIONS } from '../types/pmsModels';
 
@@ -1964,7 +1968,10 @@ const STORAGE_KEYS = {
   WHATSAPP_CONFIG: 'svr_pms_whatsapp_config',
   WHATSAPP_LOGS: 'svr_pms_whatsapp_logs',
   SUPPORT_TICKETS: 'svr_pms_support_tickets',
-  DEMO_REQUESTS: 'svr_pms_demo_requests'
+  DEMO_REQUESTS: 'svr_pms_demo_requests',
+  COMMISSION_AGENTS: 'svr_pms_commission_agents',
+  AGENT_COMMISSIONS: 'svr_pms_agent_commissions',
+  AGENT_PAYOUT_VOUCHERS: 'svr_pms_agent_payout_vouchers'
 };
 
 export class PmsStore {
@@ -6870,6 +6877,194 @@ export class PmsStore {
       }
     };
   }
+
+  // ==========================================
+  // Video 31: MR / Salesman Wise Commission Tracking & Agent Ledger
+  // ==========================================
+  static getCommissionAgents(): PmsCommissionAgent[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.COMMISSION_AGENTS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.COMMISSION_AGENTS, JSON.stringify(INITIAL_COMMISSION_AGENTS));
+      return INITIAL_COMMISSION_AGENTS;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_COMMISSION_AGENTS;
+    }
+  }
+
+  static saveCommissionAgent(agent: PmsCommissionAgent): void {
+    const agents = this.getCommissionAgents();
+    const idx = agents.findIndex(a => a.id === agent.id);
+    if (idx >= 0) {
+      agents[idx] = agent;
+    } else {
+      agents.unshift(agent);
+    }
+    localStorage.setItem(STORAGE_KEYS.COMMISSION_AGENTS, JSON.stringify(agents));
+  }
+
+  static getAgentCommissionBookings(agentId?: string, status?: string): PmsAgentCommissionBooking[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.AGENT_COMMISSIONS);
+    let list: PmsAgentCommissionBooking[];
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.AGENT_COMMISSIONS, JSON.stringify(INITIAL_AGENT_COMMISSIONS));
+      list = INITIAL_AGENT_COMMISSIONS;
+    } else {
+      try {
+        list = JSON.parse(raw);
+      } catch {
+        list = INITIAL_AGENT_COMMISSIONS;
+      }
+    }
+    if (agentId) {
+      list = list.filter(c => c.agentId === agentId);
+    }
+    if (status) {
+      list = list.filter(c => c.status === status);
+    }
+    return list;
+  }
+
+  static addAgentCommissionBooking(data: Omit<PmsAgentCommissionBooking, 'id' | 'createdAt'>): PmsAgentCommissionBooking {
+    const list = this.getAgentCommissionBookings();
+    const newRecord: PmsAgentCommissionBooking = {
+      ...data,
+      id: `COMM-2026-${String(list.length + 1).padStart(3, '0')}`,
+      createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19)
+    };
+    list.unshift(newRecord);
+    localStorage.setItem(STORAGE_KEYS.AGENT_COMMISSIONS, JSON.stringify(list));
+
+    // Update agent totals
+    const agents = this.getCommissionAgents();
+    const agent = agents.find(a => a.id === data.agentId || a.name.toLowerCase() === data.agentName.toLowerCase());
+    if (agent) {
+      agent.totalBookings += 1;
+      agent.totalRevenueGenerated += data.grossRoomTariff;
+      agent.totalCommissionEarned += data.netPayableCommission;
+      agent.balancePayable += data.netPayableCommission;
+      this.saveCommissionAgent(agent);
+    }
+
+    return newRecord;
+  }
+
+  static updateAgentCommissionStatus(id: string, status: PmsAgentCommissionBooking['status']): void {
+    const list = this.getAgentCommissionBookings();
+    const item = list.find(c => c.id === id);
+    if (item) {
+      item.status = status;
+      localStorage.setItem(STORAGE_KEYS.AGENT_COMMISSIONS, JSON.stringify(list));
+    }
+  }
+
+  static getAgentPayoutVouchers(agentId?: string): PmsAgentPayoutVoucher[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.AGENT_PAYOUT_VOUCHERS);
+    let vouchers: PmsAgentPayoutVoucher[];
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.AGENT_PAYOUT_VOUCHERS, JSON.stringify(INITIAL_AGENT_PAYOUT_VOUCHERS));
+      vouchers = INITIAL_AGENT_PAYOUT_VOUCHERS;
+    } else {
+      try {
+        vouchers = JSON.parse(raw);
+      } catch {
+        vouchers = INITIAL_AGENT_PAYOUT_VOUCHERS;
+      }
+    }
+    if (agentId) {
+      return vouchers.filter(v => v.agentId === agentId);
+    }
+    return vouchers;
+  }
+
+  static recordAgentCommissionPayout(payload: {
+    agentId: string;
+    agentName: string;
+    amount: number;
+    paymentMode: 'CASH' | 'BANK_TRANSFER' | 'UPI' | 'CHEQUE';
+    referenceNo?: string;
+    commissionIds: string[];
+    tdsDeducted?: number;
+    grossAmount?: number;
+    notes?: string;
+    createdBy?: string;
+  }): PmsAgentPayoutVoucher {
+    const vouchers = this.getAgentPayoutVouchers();
+    const voucherNo = `AGTPAY-${1000 + vouchers.length + 1}`;
+    const today = new Date().toISOString().split('T')[0];
+    const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+    const newVoucher: PmsAgentPayoutVoucher = {
+      voucherNo,
+      voucherDate: today,
+      agentId: payload.agentId,
+      agentName: payload.agentName,
+      amount: payload.amount,
+      paymentMode: payload.paymentMode,
+      referenceNo: payload.referenceNo || 'NA',
+      settledCommissionIds: payload.commissionIds,
+      tdsDeducted: payload.tdsDeducted || 0,
+      grossAmount: payload.grossAmount || payload.amount,
+      notes: payload.notes || `Commission settlement for ${payload.commissionIds.length} booking(s)`,
+      createdBy: payload.createdBy || this.getCurrentUser().userName || 'Accounts',
+      printTimestamp: timestamp
+    };
+
+    vouchers.unshift(newVoucher);
+    localStorage.setItem(STORAGE_KEYS.AGENT_PAYOUT_VOUCHERS, JSON.stringify(vouchers));
+
+    // Mark commission bookings as PAID
+    const comms = this.getAgentCommissionBookings();
+    comms.forEach(c => {
+      if (payload.commissionIds.includes(c.id)) {
+        c.status = 'PAID';
+        c.payoutVoucherNo = voucherNo;
+        c.payoutDate = today;
+      }
+    });
+    localStorage.setItem(STORAGE_KEYS.AGENT_COMMISSIONS, JSON.stringify(comms));
+
+    // Update agent balance
+    const agents = this.getCommissionAgents();
+    const agent = agents.find(a => a.id === payload.agentId);
+    if (agent) {
+      agent.totalCommissionPaid += payload.amount;
+      agent.balancePayable = Math.max(0, agent.balancePayable - payload.amount);
+      this.saveCommissionAgent(agent);
+    }
+
+    // Automatically record into Hotel Payment Register (Cash/Bank Outflow)
+    try {
+      const payments = this.getPayments();
+      const pRecord: PmsPaymentRecord = {
+        id: `pay-${Date.now()}`,
+        sNo: payments.length + 1,
+        voucherName: 'Payments',
+        paymentNo: `PAY/${payments.length + 1}/25-26`,
+        voucherNo: payments.length + 1,
+        date: today,
+        paymentMode: payload.paymentMode === 'CASH' ? 'Cash' : 'UPI',
+        accountName: `${payload.agentName} (Agent Commission)`,
+        amount: payload.amount,
+        remark: `Voucher: ${voucherNo} - ${payload.notes || ''} (Ref: ${payload.referenceNo || 'NA'})`,
+        createdAt: timestamp
+      };
+      this.savePayment(pRecord);
+    } catch {
+      // Payment register integration fallback
+    }
+
+    return newVoucher;
+  }
+
+  // ==========================================
+  // Video 31: Top 15 Official Features of RoomG PMS (Word Doc & Spoken Script)
+  // ==========================================
+  static getTop15OfficialFeatures(): PmsTop15OfficialFeature[] {
+    return TOP_15_OFFICIAL_FEATURES;
+  }
 }
 
 // ==========================================
@@ -7290,5 +7485,466 @@ export const TOP_20_FEATURES: PmsTopFeature[] = [
     ]
   }
 ];
+
+// ==========================================
+// Video 31: MR / Salesman Wise Commission Tracking Seed Data
+// ==========================================
+export const INITIAL_COMMISSION_AGENTS: PmsCommissionAgent[] = [
+  {
+    id: 'AGT-101',
+    name: 'Sharma Travels & Tours (Ramesh Sharma)',
+    phone: '9822154321',
+    alternatePhone: '02423-255111',
+    email: 'sharmatravelsshirdi@gmail.com',
+    city: 'Shirdi',
+    address: 'Near Sai Baba Mandir Gate 3, Shirdi, Maharashtra',
+    agentType: 'Travel_Agent',
+    commissionType: 'PERCENTAGE',
+    defaultRate: 15,
+    panNumber: 'ABCPR1234F',
+    gstNumber: '27ABCPR1234F1Z1',
+    bankDetails: {
+      bankName: 'HDFC BANK',
+      accountNo: '50200012345678',
+      ifsc: 'HDFC0001890',
+      accountHolder: 'Ramesh Sharma',
+      upiId: 'sharmatravels@okhdfcbank'
+    },
+    status: 'ACTIVE',
+    totalBookings: 8,
+    totalRevenueGenerated: 35200,
+    totalCommissionEarned: 5280,
+    totalCommissionPaid: 2830,
+    balancePayable: 2450,
+    notes: 'Primary pilgrimage tour travel agency partner bringing family groups from Mumbai/Pune.',
+    createdAt: '2026-01-10'
+  },
+  {
+    id: 'AGT-102',
+    name: "Vikram Roy (Dr. Reddy's Lab MR)",
+    phone: '9711223344',
+    email: 'vikram.roy@drreddys.com',
+    city: 'Mumbai / Pune',
+    address: 'Andheri East, Corporate HQ, Mumbai',
+    agentType: 'MR_Corporate',
+    commissionType: 'PERCENTAGE',
+    defaultRate: 10,
+    panNumber: 'BKRPR5678G',
+    bankDetails: {
+      bankName: 'ICICI BANK',
+      accountNo: '001105009876',
+      ifsc: 'ICIC0000011',
+      accountHolder: 'Vikram Roy',
+      upiId: 'vikram.roy@paytm'
+    },
+    status: 'ACTIVE',
+    totalBookings: 6,
+    totalRevenueGenerated: 24000,
+    totalCommissionEarned: 2400,
+    totalCommissionPaid: 600,
+    balancePayable: 1800,
+    notes: 'Medical representative bringing pharma doctors and delegates visiting Shirdi & Ahmednagar hospitals.',
+    createdAt: '2026-02-05'
+  },
+  {
+    id: 'AGT-103',
+    name: 'Sainagar Shirdi Station Auto Union (Raju Bhai)',
+    phone: '9890123456',
+    city: 'Sainagar Shirdi',
+    address: 'Station Auto Stand, Shirdi Railway Station',
+    agentType: 'Auto_Taxi_Driver',
+    commissionType: 'FIXED_PER_ROOM',
+    defaultRate: 300,
+    bankDetails: {
+      bankName: 'STATE BANK OF INDIA',
+      accountNo: '31234567890',
+      ifsc: 'SBIN0000390',
+      accountHolder: 'Raju Auto Union Rep',
+      upiId: 'rajushirdiauto@ybl'
+    },
+    status: 'ACTIVE',
+    totalBookings: 12,
+    totalRevenueGenerated: 32000,
+    totalCommissionEarned: 3600,
+    totalCommissionPaid: 2100,
+    balancePayable: 1500,
+    notes: 'Local auto driver union bringing direct walk-in pilgrims arriving on late-night trains.',
+    createdAt: '2026-03-01'
+  },
+  {
+    id: 'AGT-104',
+    name: 'Maharashtra Darshan Yatra (Anil Jadhav)',
+    phone: '9422001122',
+    email: 'anildarshan@rediffmail.com',
+    city: 'Nashik',
+    address: 'CBS Road, Nashik, Maharashtra',
+    agentType: 'Tour_Operator',
+    commissionType: 'PERCENTAGE',
+    defaultRate: 20,
+    panNumber: 'AAAPJ9988H',
+    bankDetails: {
+      bankName: 'BANK OF MAHARASHTRA',
+      accountNo: '60123456789',
+      ifsc: 'MAHB0000123',
+      accountHolder: 'Anil Jadhav',
+      upiId: 'anil.jadhav@sbi'
+    },
+    status: 'ACTIVE',
+    totalBookings: 15,
+    totalRevenueGenerated: 68000,
+    totalCommissionEarned: 13600,
+    totalCommissionPaid: 9000,
+    balancePayable: 4600,
+    notes: 'Large luxury bus tour operator conducting Shirdi-Shani Shingnapur-Trimbakeshwar circuit tours.',
+    createdAt: '2026-01-15'
+  },
+  {
+    id: 'AGT-105',
+    name: 'Online OTA Local Broker (Sunil Joshi)',
+    phone: '9123456780',
+    city: 'Pune',
+    agentType: 'OTA_Broker',
+    commissionType: 'FIXED_PER_NIGHT',
+    defaultRate: 250,
+    bankDetails: {
+      bankName: 'AXIS BANK',
+      accountNo: '914010023456789',
+      ifsc: 'UTIB0000543',
+      accountHolder: 'Sunil Joshi',
+      upiId: 'sunilbroker@icici'
+    },
+    status: 'ACTIVE',
+    totalBookings: 5,
+    totalRevenueGenerated: 18500,
+    totalCommissionEarned: 2500,
+    totalCommissionPaid: 1250,
+    balancePayable: 1250,
+    notes: 'Coordinates last-minute overflow bookings from Agoda, Booking.com, and local phone hotlines.',
+    createdAt: '2026-02-20'
+  }
+];
+
+export const INITIAL_AGENT_COMMISSIONS: PmsAgentCommissionBooking[] = [
+  {
+    id: 'COMM-2026-001',
+    agentId: 'AGT-101',
+    agentName: 'Sharma Travels & Tours (Ramesh Sharma)',
+    agentType: 'Travel_Agent',
+    checkInNo: 'SR/188/24-25',
+    bookingRefNo: 'BK-2026-042',
+    roomNo: '105',
+    guestName: 'Sanjay Deshmukh',
+    guestMobile: '9822987111',
+    checkInDate: '2026-10-15',
+    checkOutDate: '2026-10-17',
+    numberOfNights: 2,
+    roomTariff: 2200,
+    grossRoomTariff: 4400,
+    commissionType: 'PERCENTAGE',
+    commissionRate: 15,
+    grossCommission: 660,
+    tdsPercentage: 5,
+    tdsAmount: 33,
+    netPayableCommission: 627,
+    status: 'APPROVED',
+    createdAt: '2026-10-15 11:30:00',
+    remarks: 'Deluxe AC Room 2-day booking via Sharma Travels Pune yatra.'
+  },
+  {
+    id: 'COMM-2026-002',
+    agentId: 'AGT-102',
+    agentName: "Vikram Roy (Dr. Reddy's Lab MR)",
+    agentType: 'MR_Corporate',
+    checkInNo: 'SR/192/24-25',
+    roomNo: '101',
+    guestName: 'AJUU',
+    guestMobile: '9622975444',
+    checkInDate: '2026-10-16',
+    checkOutDate: '2026-10-18',
+    numberOfNights: 2,
+    roomTariff: 2000,
+    grossRoomTariff: 4000,
+    commissionType: 'PERCENTAGE',
+    commissionRate: 10,
+    grossCommission: 400,
+    tdsPercentage: 5,
+    tdsAmount: 20,
+    netPayableCommission: 380,
+    status: 'APPROVED',
+    createdAt: '2026-10-16 09:15:00',
+    remarks: 'MR sales rep medical team stay.'
+  },
+  {
+    id: 'COMM-2026-003',
+    agentId: 'AGT-103',
+    agentName: 'Sainagar Shirdi Station Auto Union (Raju Bhai)',
+    agentType: 'Auto_Taxi_Driver',
+    checkInNo: 'SR/195/24-25',
+    roomNo: '103',
+    guestName: 'Mahesh Patil',
+    guestMobile: '9822114455',
+    checkInDate: '2026-10-17',
+    checkOutDate: '2026-10-18',
+    numberOfNights: 1,
+    roomTariff: 2500,
+    grossRoomTariff: 2500,
+    commissionType: 'FIXED_PER_ROOM',
+    commissionRate: 300,
+    grossCommission: 300,
+    tdsPercentage: 0,
+    tdsAmount: 0,
+    netPayableCommission: 300,
+    status: 'PENDING',
+    createdAt: '2026-10-17 14:00:00',
+    remarks: 'Auto union walk-in from morning express train.'
+  },
+  {
+    id: 'COMM-2026-004',
+    agentId: 'AGT-104',
+    agentName: 'Maharashtra Darshan Yatra (Anil Jadhav)',
+    agentType: 'Tour_Operator',
+    checkInNo: 'SR/176/24-25',
+    bookingRefNo: 'BK-2026-029',
+    roomNo: '201',
+    guestName: 'Kishore Kadam & Group',
+    guestMobile: '9422556677',
+    checkInDate: '2026-10-12',
+    checkOutDate: '2026-10-14',
+    numberOfNights: 2,
+    roomTariff: 3500,
+    grossRoomTariff: 7000,
+    commissionType: 'PERCENTAGE',
+    commissionRate: 20,
+    grossCommission: 1400,
+    tdsPercentage: 5,
+    tdsAmount: 70,
+    netPayableCommission: 1330,
+    status: 'PAID',
+    payoutVoucherNo: 'AGTPAY-1001',
+    payoutDate: '2026-10-15',
+    createdAt: '2026-10-12 10:00:00',
+    remarks: 'Suite room group booking commission settled via UPI.'
+  }
+];
+
+export const INITIAL_AGENT_PAYOUT_VOUCHERS: PmsAgentPayoutVoucher[] = [
+  {
+    voucherNo: 'AGTPAY-1001',
+    voucherDate: '2026-10-15',
+    agentId: 'AGT-104',
+    agentName: 'Maharashtra Darshan Yatra (Anil Jadhav)',
+    grossAmount: 1400,
+    tdsDeducted: 70,
+    amount: 1330,
+    paymentMode: 'UPI',
+    referenceNo: 'UPI/20261015/9988776655',
+    settledCommissionIds: ['COMM-2026-004'],
+    notes: 'Commission disbursed for Suite Room 201 group booking. TDS 5% deducted under Sec 194H.',
+    createdBy: 'Accounts Manager',
+    printTimestamp: '2026-10-15 16:45:00'
+  }
+];
+
+// ==========================================
+// Video 31: Top 15 Official Features of RoomG PMS (Word Doc & Spoken Script)
+// ==========================================
+export const TOP_15_OFFICIAL_FEATURES: PmsTop15OfficialFeature[] = [
+  {
+    id: 1,
+    title: 'Centralized Room Dashboard',
+    hindiTitle: 'सेंट्रलाइज्ड रूम डैशबोर्ड (रियल-टाइम ओवरव्यू)',
+    bulletSummary: 'Get a real-time overview of all room statuses: vacant, occupied, reserved, or under maintenance.',
+    fullDetail: 'Interactive color-coded visual grid displaying real-time live occupancy. Green = Vacant, Red = Occupied with guest details, Yellow = Dirty/Housekeeping, Blue = Reserved/Booked. Immediate 1-click room booking, check-in, check-out, and room shifting directly from the visual dashboard.',
+    targetModal: 'room_dashboard',
+    route: 'demo.datahouseerp.com/home',
+    icon: '🏨',
+    badge: 'Core Operations',
+    category: 'Front Desk',
+    videoTimestamp: '[03:00]'
+  },
+  {
+    id: 2,
+    title: 'Online & Walk-in Booking Support',
+    hindiTitle: 'ऑनलाइन व वॉक-इन बुकिंग मैनेजमेंट',
+    bulletSummary: 'Manage all bookings in one place — whether they come from walk-ins, travel agents, or online channels.',
+    fullDetail: 'Unified reservation book coordinating direct hotel walk-in guests, phone reservations, corporate contracts, travel agent referrals, and online OTA channels (MakeMyTrip, Agoda, Booking.com, Goibibo) with advance deposit tracking and receipt generation.',
+    targetModal: 'room_booking',
+    route: 'demo.datahouseerp.com/room_booking',
+    icon: '📅',
+    badge: 'Reservations',
+    category: 'Front Desk',
+    videoTimestamp: '[03:15]'
+  },
+  {
+    id: 3,
+    title: 'Seamless Check-In & Check-Out Process',
+    hindiTitle: 'फास्ट व पेपरलेस चेक-इन व चेक-आउट प्रोसेस',
+    bulletSummary: 'Fast, paperless check-in/out with auto-room allocation and bill calculation.',
+    fullDetail: 'Digital guest onboarding with live webcam ID capture, Aadhaar/Passport KYC upload, co-traveler profiling, 12-hour/24-hour tariff calculation, advance adjustment, dynamic room folio generation, and instant checkout bill settlement in under 60 seconds.',
+    targetModal: 'room_check_in',
+    route: 'demo.datahouseerp.com/room_check_in',
+    icon: '⚡',
+    badge: 'High Velocity',
+    category: 'Front Desk',
+    videoTimestamp: '[03:25]'
+  },
+  {
+    id: 4,
+    title: 'GST-Ready Billing & Reports',
+    hindiTitle: 'जीएसटी-रेडी बिलिंग व टैक्स रिपोर्ट्स (CGST, SGST, IGST)',
+    bulletSummary: '100% GST-compliant billing, including SGST, CGST, and IGST with professional invoice formats.',
+    fullDetail: 'Statutory Indian GST compliance with SAC 996331 (Room Accommodation) and SAC 996332 (Restaurant & Food Services). Supports local intra-state sales (CGST+SGST) and inter-state sales (IGST), B2B GSTIN party verification, B2C consolidated sales, and GSTR-1 / GSTR-3B ready Excel summaries.',
+    targetModal: 'gst_reports',
+    route: 'demo.datahouseerp.com/gst_report',
+    icon: '📊',
+    badge: 'Statutory GST',
+    category: 'Billing & Tax',
+    videoTimestamp: '[03:30]'
+  },
+  {
+    id: 5,
+    title: 'Room Service & Food Billing',
+    hindiTitle: 'रूम सर्विस व फूड बिलिंग (KOT व टेबल पीओएस)',
+    bulletSummary: 'Add food orders and services to the room account instantly — ideal for room dining and extras.',
+    fullDetail: 'Integrated Kitchen Order Ticket (KOT) workflow with kitchen thermal printing, NC KOT management, and instant room folio post. Food orders from in-house dining or room service automatically append to the guest room invoice for consolidated checkout settlement or instant restaurant cash POS.',
+    targetModal: 'restaurant_pos',
+    route: 'demo.datahouseerp.com/table_dashboard',
+    icon: '🍽️',
+    badge: 'F&B POS',
+    category: 'F&B POS',
+    videoTimestamp: '[03:35]'
+  },
+  {
+    id: 6,
+    title: 'Mobile Number-Based Search & Booking History',
+    hindiTitle: 'मोबाइल नंबर आधारित सर्च व गेस्ट बुकिंग हिस्ट्री',
+    bulletSummary: 'Easily fetch guest data using mobile numbers for faster service and repeat guest recognition.',
+    fullDetail: 'Enter any 10-digit mobile number during check-in to instantly auto-populate full guest profile, Aadhaar/KYC documents, historical stay dates, preferred room types, corporate GSTIN, and previous billing ledger, slashing front-desk check-in time to 15 seconds.',
+    targetModal: 'guest_history_search',
+    route: 'demo.datahouseerp.com/guest_history',
+    icon: '🔍',
+    badge: 'Guest CRM',
+    category: 'Front Desk',
+    videoTimestamp: '[03:40]'
+  },
+  {
+    id: 7,
+    title: 'Multiple Tariff & Day-Based Pricing',
+    hindiTitle: 'मल्टी-टैरिफ व डे-बेस्ड प्राइसिंग (12-घंटे vs 24-घंटे)',
+    bulletSummary: 'Set tariffs based on weekends, holidays, peak season, or corporate/client rates.',
+    fullDetail: 'Flexible hotel rate engine supporting 12-Hour fixed checkout (11:00 AM standard) and 24-Hour rolling check-in to checkout cycles. Allows day-wise pricing overrides for weekend surges, festival seasons (Shirdi Sai Baba festivals), corporate company contracts, and custom seasonal rate cards.',
+    targetModal: 'day_end_report',
+    route: 'demo.datahouseerp.com/business_setting',
+    icon: '💰',
+    badge: 'Revenue Strategy',
+    category: 'Billing & Tax',
+    videoTimestamp: '[03:45]'
+  },
+  {
+    id: 8,
+    title: 'Inventory & Stock Management',
+    hindiTitle: 'इन्वेंटरी व स्टॉक मैनेजमेंट (परचेज, इश्यू, ट्रांसफर)',
+    bulletSummary: 'Track and manage stock for kitchen, bar, housekeeping, and other departments.',
+    fullDetail: 'Complete godown and store inventory control. Inward raw materials through Purchase Bill entry (`/purchase`), transfer stock between central godown and kitchen/bar/housekeeping (`/stock_transfer`), and issue linen, toiletries, and beverage amenities (`/stock_issue`) with real-time low-stock alerts.',
+    targetModal: 'purchase_entry',
+    route: 'demo.datahouseerp.com/purchase',
+    icon: '📦',
+    badge: 'Store Control',
+    category: 'Inventory & Stock',
+    videoTimestamp: '[03:50]'
+  },
+  {
+    id: 9,
+    title: 'MR / Salesman Wise Commission Tracking',
+    hindiTitle: 'एमआर व सेल्समैन वाइज कमीशन ट्रैकिंग व लेजर',
+    bulletSummary: 'Automatically calculate and track booking commissions for agents and sales reps.',
+    fullDetail: 'Automated commission management for travel agents, Medical Representatives (MRs), tour operators, local taxi/auto drivers, and OTA brokers. Configures percentage (%) or fixed per-room/per-night rates, calculates TDS deductions (Sec 194H), maintains agent ledgers, and generates official payout vouchers.',
+    targetModal: 'agent_commission',
+    route: 'demo.datahouseerp.com/agent_commission',
+    icon: '🤝',
+    badge: 'Agent Network',
+    category: 'Commissions',
+    videoTimestamp: '[03:55]'
+  },
+  {
+    id: 10,
+    title: 'Multi-User with Role-Based Access Control',
+    hindiTitle: 'मल्टी-यूजर रोल आधारित एक्सेस कंट्रोल (72 परमिशन)',
+    bulletSummary: 'Assign different permissions for reception, manager, admin, housekeeping, etc.',
+    fullDetail: 'Enterprise permission matrix with 72 distinct security toggles. Segregates duties across Reception, Shift Cashier, Restaurant Captain, Housekeeping Supervisor, Accountant, and Hotel Owner. Prevents cashiers from altering tariffs, deleting checked-out bills, or backdating voucher dates.',
+    targetModal: 'roles_permissions',
+    route: 'demo.datahouseerp.com/user_permission',
+    icon: '🛡️',
+    badge: 'Anti-Theft Security',
+    category: 'WhatsApp & Security',
+    videoTimestamp: '[04:05]'
+  },
+  {
+    id: 11,
+    title: 'Multi-Branch / Multi-Firm Setup',
+    hindiTitle: 'मल्टी-ब्रांच व मल्टी-फर्म सेटअप (होटल चेन मैनेजमेंट)',
+    bulletSummary: 'Operate multiple hotels, guest houses, or branches with one software login.',
+    fullDetail: 'Enterprise chain architecture allowing hotel owners to run multiple hotels, resort wings, banquets, and guest houses from a single master login. Switch active properties in 1 click, maintain separate GST accounts, and compare cross-property occupancy and RevPAR in real time.',
+    targetModal: 'chain_property',
+    route: 'demo.datahouseerp.com/company_list',
+    icon: '🏢',
+    badge: 'Chain Management',
+    category: 'Multi-Property',
+    videoTimestamp: '[04:15]'
+  },
+  {
+    id: 12,
+    title: 'Document Upload (KYC & ID Proofs)',
+    hindiTitle: 'डिजिटल डॉक्यूमेंट व आईडी प्रूफ अपलोड (केवाईसी)',
+    bulletSummary: 'Attach customer IDs, photos, and proofs digitally during check-in.',
+    fullDetail: 'Eliminates messy physical paper photocopies. Capture live guest face webcam snapshots and attach digital copies of Aadhaar Card, Passport, Voter ID, or Driving License directly to the guest check-in record. Automatically compiles Form C and Police Station Guest Registration logs.',
+    targetModal: 'room_check_in',
+    route: 'demo.datahouseerp.com/guest_kyc',
+    icon: '📷',
+    badge: 'Statutory Police Log',
+    category: 'Front Desk',
+    videoTimestamp: '[04:25]'
+  },
+  {
+    id: 13,
+    title: 'Auto WhatsApp Integration',
+    hindiTitle: 'ऑटो व्हाट्सएप इंटीग्रेशन व एंटी-थेफ्ट अलर्ट्स',
+    bulletSummary: 'Send booking confirmations, bills, and reminders via WhatsApp directly from the software.',
+    fullDetail: 'Dispatches instant booking confirmations, advance receipts, room check-in greetings, and final PDF tax invoices to guests directly on WhatsApp. Crucially features automated Anti-Theft alerts: if any operator voids or deletes a checkout bill, an immediate security alert is dispatched to the hotel owner.',
+    targetModal: 'whatsapp_setting',
+    route: 'demo.datahouseerp.com/whatsapp_setting',
+    icon: '📱',
+    badge: 'Real-Time WhatsApp',
+    category: 'WhatsApp & Security',
+    videoTimestamp: '[04:30]'
+  },
+  {
+    id: 14,
+    title: 'Data Security & Auto Backup',
+    hindiTitle: 'डेटा सिक्योरिटी व ऑटोमेटेड क्लाउड बैकअप',
+    bulletSummary: 'Daily auto backup system ensures no data loss due to power failure or system crash.',
+    fullDetail: 'Automated background data snapshots ensuring zero data loss during power outages or hardware faults. Features 1-click manual encrypted JSON/SQL database export and cloud synchronization with high-availability enterprise redundancy.',
+    targetModal: 'database_backup',
+    route: 'demo.datahouseerp.com/db_backup',
+    icon: '💾',
+    badge: 'Disaster Recovery',
+    category: 'WhatsApp & Security',
+    videoTimestamp: '[04:45]'
+  },
+  {
+    id: 15,
+    title: 'Powerful Reports & Analytics',
+    hindiTitle: 'पावरफुल रिपोर्ट्स व ऑडिट एनालिटिक्स (Excel व PDF एक्सपोर्ट)',
+    bulletSummary: 'Export Excel/PDF reports for audit, tax filing, daily sales, occupancy, ledger, and more.',
+    fullDetail: 'Over 30 operational, statutory, and financial reporting modules: Daily Sales Register, Police Station Report, Room Sales, F&B Sales, KOT Register, Stock Status, Party Ledgers, Day-End Audit, RevPAR Occupancy Analysis, and 1-click export to Microsoft Excel and printable PDF formats.',
+    targetModal: 'report_dashboard',
+    route: 'demo.datahouseerp.com/report_dashboard',
+    icon: '📈',
+    badge: 'Executive Analytics',
+    category: 'Billing & Tax',
+    videoTimestamp: '[04:55]'
+  }
+];
+
 
 

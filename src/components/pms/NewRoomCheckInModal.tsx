@@ -295,6 +295,59 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
     // Save to PmsStore & update room status to occupied
     PmsStore.saveCheckIn(checkInRecord);
 
+    // Video 31: MR / Salesman Wise Commission Tracking (Frame 0120 & Spoken Hindi)
+    if (agent && agent.trim()) {
+      try {
+        const allAgents = PmsStore.getCommissionAgents();
+        const matchedAgent = allAgents.find(
+          a => a.name.toLowerCase() === agent.trim().toLowerCase() || a.id === agent.trim()
+        );
+        const agentId = matchedAgent ? matchedAgent.id : `AGT-${Date.now().toString().slice(-4)}`;
+        const agentName = matchedAgent ? matchedAgent.name : agent.trim();
+        const agentType = matchedAgent ? matchedAgent.agentType : 'Travel_Agent';
+        const commType = matchedAgent ? matchedAgent.commissionType : 'PERCENTAGE';
+        const commRate = matchedAgent ? matchedAgent.defaultRate : 10;
+        
+        const grossRoomTariff = customTariff * noOfDays;
+        let grossComm = 0;
+        if (commType === 'PERCENTAGE') {
+          grossComm = Math.round((grossRoomTariff * commRate) / 100);
+        } else if (commType === 'FIXED_PER_NIGHT') {
+          grossComm = Math.round(commRate * noOfDays);
+        } else {
+          grossComm = Math.round(commRate);
+        }
+        const tds = matchedAgent?.panNumber ? Math.round((grossComm * 5) / 100) : 0;
+        const netPayable = grossComm - tds;
+
+        PmsStore.addAgentCommissionBooking({
+          agentId,
+          agentName,
+          agentType,
+          checkInNo,
+          bookingRefNo: selectedBookingRef || undefined,
+          roomNo: selectedRoomNo,
+          guestName,
+          guestMobile: mobile,
+          checkInDate,
+          checkOutDate: new Date(Date.now() + noOfDays * 86400000).toISOString().split('T')[0],
+          numberOfNights: noOfDays,
+          roomTariff: customTariff,
+          grossRoomTariff,
+          commissionType: commType,
+          commissionRate: commRate,
+          grossCommission: grossComm,
+          tdsPercentage: matchedAgent?.panNumber ? 5 : 0,
+          tdsAmount: tds,
+          netPayableCommission: netPayable,
+          status: 'PENDING',
+          remarks: `Attributed to ${agentName} on Check-in ${checkInNo} (Room ${selectedRoomNo})`
+        });
+      } catch (err) {
+        console.error('Error logging agent commission:', err);
+      }
+    }
+
     setCompletedCheckIn(checkInRecord);
     setIsSlipOpen(true);
     onCheckInCompleted(checkInRecord);
@@ -577,8 +630,20 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                     <input type="text" placeholder="7657657..." value={documentNo} onChange={e => setDocumentNo(e.target.value)} className="form-input-pms" />
                   </div>
                   <div className="form-group-pms">
-                    <label className="form-label-pms">Agent</label>
-                    <input type="text" placeholder="Agent Name" value={agent} onChange={e => setAgent(e.target.value)} className="form-input-pms" />
+                    <label className="form-label-pms">Agent / MR (Video 31)</label>
+                    <input 
+                      type="text" 
+                      list="pms-agent-datalist"
+                      placeholder="Select or type Agent / MR" 
+                      value={agent} 
+                      onChange={e => setAgent(e.target.value)} 
+                      className="form-input-pms" 
+                    />
+                    <datalist id="pms-agent-datalist">
+                      {PmsStore.getCommissionAgents().map(ag => (
+                        <option key={ag.id} value={ag.name}>{ag.city} &bull; {ag.defaultRate}{ag.commissionType === 'PERCENTAGE' ? '%' : ' ₹/rm'}</option>
+                      ))}
+                    </datalist>
                   </div>
                 </div>
 

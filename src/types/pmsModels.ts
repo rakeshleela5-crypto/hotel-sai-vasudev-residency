@@ -1176,3 +1176,109 @@ export interface PmsDocumentationChapter {
   moduleUrl: string;
 }
 
+// ==========================================
+// Video 31: MR / Salesman Wise Commission Tracking & Top 15 PMS Features
+// ==========================================
+
+export type PmsAgentType = 
+  | 'Travel_Agent'
+  | 'MR_Corporate'
+  | 'Tour_Operator'
+  | 'Auto_Taxi_Driver'
+  | 'OTA_Broker'
+  | 'Local_Guide';
+
+export type PmsCommissionCalcType = 
+  | 'PERCENTAGE'
+  | 'FIXED_PER_ROOM'
+  | 'FIXED_PER_NIGHT';
+
+export interface PmsCommissionAgent {
+  id: string; // e.g. AGT-101
+  name: string;
+  phone: string;
+  alternatePhone?: string;
+  email?: string;
+  city: string;
+  address?: string;
+  agentType: PmsAgentType;
+  commissionType: PmsCommissionCalcType;
+  defaultRate: number; // e.g. 15 for 15% or 300 for ₹300/room
+  panNumber?: string;
+  gstNumber?: string;
+  bankDetails?: {
+    bankName: string;
+    accountNo: string;
+    ifsc: string;
+    accountHolder: string;
+    upiId?: string;
+  };
+  status: 'ACTIVE' | 'INACTIVE';
+  totalBookings: number;
+  totalRevenueGenerated: number;
+  totalCommissionEarned: number;
+  totalCommissionPaid: number;
+  balancePayable: number;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface PmsAgentCommissionBooking {
+  id: string; // e.g. COMM-2026-001
+  agentId: string;
+  agentName: string;
+  agentType: PmsAgentType;
+  checkInNo: string;
+  bookingRefNo?: string;
+  roomNo: string;
+  guestName: string;
+  guestMobile: string;
+  checkInDate: string;
+  checkOutDate: string;
+  numberOfNights: number;
+  roomTariff: number;
+  grossRoomTariff: number; // Tariff * nights
+  commissionType: PmsCommissionCalcType;
+  commissionRate: number;
+  grossCommission: number;
+  tdsPercentage: number; // default 5% TDS under Sec 194H if PAN available, or 0%
+  tdsAmount: number;
+  netPayableCommission: number;
+  status: 'PENDING' | 'APPROVED' | 'PAID' | 'VOID';
+  payoutVoucherNo?: string;
+  payoutDate?: string;
+  createdAt: string;
+  remarks?: string;
+}
+
+export interface PmsAgentPayoutVoucher {
+  voucherNo: string; // e.g. AGTPAY-1001
+  voucherDate: string;
+  agentId: string;
+  agentName: string;
+  amount: number;
+  paymentMode: 'CASH' | 'BANK_TRANSFER' | 'UPI' | 'CHEQUE';
+  referenceNo?: string; // UTR or Cheque No
+  settledCommissionIds: string[];
+  tdsDeducted: number;
+  grossAmount: number;
+  notes?: string;
+  createdBy: string;
+  printTimestamp: string;
+}
+
+export interface PmsTop15OfficialFeature {
+  id: number;
+  title: string;
+  hindiTitle: string;
+  bulletSummary: string;
+  fullDetail: string;
+  targetModal: string;
+  route: string;
+  icon: string;
+  badge: string;
+  category: 'Front Desk' | 'Billing & Tax' | 'F&B POS' | 'Inventory & Stock' | 'Commissions' | 'Multi-Property' | 'WhatsApp & Security';
+  videoTimestamp: string;
+}
+
+
