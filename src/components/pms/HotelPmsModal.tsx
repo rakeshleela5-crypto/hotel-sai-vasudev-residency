@@ -1746,6 +1746,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         onClose={() => setIsRestaurantKotOpen(false)}
         onOpenKitchenDashboard={() => setIsKitchenDashboardOpen(true)}
         onOpenNewKot={() => setIsKotModalOpen(true)}
+        onOpenTableDashboard={() => setIsTableDashboardOpen(true)}
       />
 
       {/* Video 13: Restaurant Table Matrix Dashboard */}

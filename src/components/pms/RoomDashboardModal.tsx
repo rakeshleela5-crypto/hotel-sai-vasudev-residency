@@ -94,13 +94,15 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
       setSelectedRoomForShift(room.roomNo);
       setIsRoomShiftOpen(true);
     } else {
-      alert(`Room ${room.roomNo} is currently vacant (${room.roomType}).\nTariff: ₹${room.tariff}/night.`);
+      // Direct Walk-In Check In for vacant room
+      setSelectedRoomForCheckIn(room);
+      setIsCheckInOpen(true);
     }
   };
 
   const handlePhoneClick = (room: PmsRoom) => {
-    if (room.currentGuest) {
-      alert(`Calling guest in Room ${room.roomNo}: ${room.currentGuest.phone}`);
+    if (room.currentGuest?.phone) {
+      window.open(`tel:${room.currentGuest.phone}`, '_self');
     } else {
       setSelectedRoomForBooking(room);
       setIsBookingOpen(true);
@@ -108,7 +110,9 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
   };
 
   const handleLaundryClick = (room: PmsRoom) => {
-    alert(`Housekeeping & Laundry service dispatched to Room ${room.roomNo}.`);
+    const nextStatus = room.status === 'dirty' ? 'vacant' : 'dirty';
+    PmsStore.updateRoomStatus(room.roomNo, nextStatus);
+    refreshData();
   };
 
   return (
@@ -231,7 +235,10 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
           <button
             type="button"
             className="pms-search-btn"
-            onClick={() => alert(`Showing advance booking status for: ${advanceDate}`)}
+            title="Open 30-Day Booking Calendar"
+            onClick={() => {
+              if (onOpenCalendar) onOpenCalendar();
+            }}
           >
             🔍
           </button>

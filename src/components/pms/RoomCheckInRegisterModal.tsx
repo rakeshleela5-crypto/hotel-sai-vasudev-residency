@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { PmsCheckIn } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
+import { CheckInSlipModal } from './CheckInSlipModal';
 
 interface RoomCheckInRegisterModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export const RoomCheckInRegisterModal: React.FC<RoomCheckInRegisterModalProps> =
   const [searchTerm, setSearchTerm] = useState('');
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [selectedCheckIn, setSelectedCheckIn] = useState<PmsCheckIn | null>(null);
+  const [printingCheckIn, setPrintingCheckIn] = useState<PmsCheckIn | null>(null);
   const [currentUser, setCurrentUser] = useState(PmsStore.getCurrentUser());
 
   useEffect(() => {
@@ -261,7 +263,7 @@ export const RoomCheckInRegisterModal: React.FC<RoomCheckInRegisterModalProps> =
                           <button
                             type="button"
                             title="Print GRC Slip"
-                            onClick={() => alert(`Printing GRC slip for Check-In ${item.checkInNo} (${item.guestName})`)}
+                            onClick={() => setPrintingCheckIn(item)}
                             style={{
                               background: '#f1f5f9',
                               border: '1px solid #cbd5e1',
@@ -408,6 +410,13 @@ export const RoomCheckInRegisterModal: React.FC<RoomCheckInRegisterModalProps> =
             </div>
           </div>
         )}
+
+        {/* Video 02 & Video 11: Real GRC Check In Slip Print Modal */}
+        <CheckInSlipModal
+          isOpen={!!printingCheckIn}
+          onClose={() => setPrintingCheckIn(null)}
+          checkIn={printingCheckIn}
+        />
       </div>
     </div>
   );

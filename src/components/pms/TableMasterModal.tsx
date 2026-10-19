@@ -17,6 +17,7 @@ export const TableMasterModal: React.FC<TableMasterModalProps> = ({
   const [search, setSearch] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingTable, setEditingTable] = useState<PmsDiningTable | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   // Form fields matching Frame 200
   const [tableName, setTableName] = useState('');
@@ -75,7 +76,8 @@ export const TableMasterModal: React.FC<TableMasterModalProps> = ({
     loadTables();
     setIsAddModalOpen(false);
     if (onTableChange) onTableChange();
-    alert(`Table "${formattedName}" saved successfully in group "${tableGroup}".`);
+    setSuccessMsg(`Table "${formattedName}" saved successfully in group "${tableGroup}".`);
+    setTimeout(() => setSuccessMsg(null), 4000);
   };
 
   const handleDeleteTable = (id: string, name: string) => {
@@ -83,6 +85,8 @@ export const TableMasterModal: React.FC<TableMasterModalProps> = ({
       PmsStore.deleteTable(id);
       loadTables();
       if (onTableChange) onTableChange();
+      setSuccessMsg(`Table "${name}" removed successfully.`);
+      setTimeout(() => setSuccessMsg(null), 4000);
     }
   };
 
@@ -182,6 +186,14 @@ export const TableMasterModal: React.FC<TableMasterModalProps> = ({
             </button>
           </div>
         </div>
+
+        {/* Success Banner */}
+        {successMsg && (
+          <div style={{ background: '#dcfce7', color: '#166534', padding: '8px 20px', fontSize: 13, fontWeight: 600, borderBottom: '1px solid #bbf7d0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>✓ {successMsg}</span>
+            <button type="button" onClick={() => setSuccessMsg(null)} style={{ background: 'none', border: 'none', color: '#166534', cursor: 'pointer', fontWeight: 800 }}>✕</button>
+          </div>
+        )}
 
         {/* Search bar */}
         <div

@@ -172,7 +172,28 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
   };
 
   const handleExport = (type: string) => {
-    alert(`Account list exported as ${type} successfully!`);
+    if (type.toLowerCase().includes('csv') || type.toLowerCase().includes('excel')) {
+      const headers = ['User Name', 'Email ID', 'Role', 'Status', 'Branch Firm ID', 'Department'];
+      const rows = users.map(u => [
+        `"${u.userName}"`,
+        `"${u.emailId}"`,
+        `"${u.roleName}"`,
+        `"${u.status}"`,
+        `"${u.firmId}"`,
+        `"${u.department || 'Front Office'}"`
+      ]);
+      const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `hotel_sai_vasudev_staff_users_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setSuccessBanner(`Staff user list exported as ${type} successfully.`);
+    } else {
+      window.print();
+    }
   };
 
   const filteredUsers = users.filter(u => 

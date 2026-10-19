@@ -9,13 +9,15 @@ interface RestaurantKotRegisterModalProps {
   onClose: () => void;
   onOpenKitchenDashboard: () => void;
   onOpenNewKot: () => void;
+  onOpenTableDashboard?: () => void;
 }
 
 export const RestaurantKotRegisterModal: React.FC<RestaurantKotRegisterModalProps> = ({
   isOpen,
   onClose,
   onOpenKitchenDashboard,
-  onOpenNewKot
+  onOpenNewKot,
+  onOpenTableDashboard
 }) => {
   const [kots, setKots] = useState<PmsKotRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -204,7 +206,14 @@ export const RestaurantKotRegisterModal: React.FC<RestaurantKotRegisterModalProp
             {/* 5. Table Wise Item (Dark) */}
             <button
               type="button"
-              onClick={() => alert('Table Wise Item: Active dining table order consolidation.')}
+              onClick={() => {
+                if (onOpenTableDashboard) {
+                  onClose();
+                  onOpenTableDashboard();
+                } else {
+                  setSearchTerm('Table');
+                }
+              }}
               style={{
                 background: '#1e293b',
                 color: '#ffffff',

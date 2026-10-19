@@ -449,8 +449,15 @@ export const RoomKotRegisterModal: React.FC<RoomKotRegisterModalProps> = ({
                           {/* 3. Edit Icon Button */}
                           <button
                             type="button"
-                            title="Edit KOT"
-                            onClick={() => alert(`Edit KOT ${kot.kotNo}`)}
+                            title="Edit / Re-order KOT"
+                            onClick={() => {
+                              if (onOpenNewKot) {
+                                onClose();
+                                onOpenNewKot();
+                              } else {
+                                setSelectedKotForPrint(kot);
+                              }
+                            }}
                             style={{
                               background: '#0ea5e9',
                               color: '#ffffff',
