@@ -1,8 +1,10 @@
 import os
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(case_sensitive=True, extra="ignore")
+
     PROJECT_NAME: str = "Hotel Sai Vasudev Residency API"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
@@ -16,7 +18,7 @@ class Settings(BaseSettings):
     # Allowed origins for CORS (Cloudflare Pages, localhost)
     ALLOWED_ORIGINS: str = os.getenv(
         "ALLOWED_ORIGINS",
-        "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"
+        "https://hotel-sai-vasudev-residency.pages.dev,http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"
     )
 
     @property
@@ -30,8 +32,5 @@ class Settings(BaseSettings):
     @property
     def parsed_allowed_origins(self) -> List[str]:
         return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
-
-    class Config:
-        case_sensitive = True
 
 settings = Settings()
