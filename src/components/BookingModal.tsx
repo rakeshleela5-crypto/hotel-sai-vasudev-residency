@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import type { Room, BookingResponse } from '../types';
+import React, { useState, useMemo, useEffect } from 'react';
+import type { Room, BookingResponse, AvailabilityCheckResponse } from '../types';
 import { hotelApi } from '../services/api';
 
 interface BookingModalProps {
@@ -25,9 +25,13 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
+  const [idProofType, setIdProofType] = useState('Aadhaar Card');
+  const [paymentMethod, setPaymentMethod] = useState('Pay at Hotel');
   const [specialRequests, setSpecialRequests] = useState('');
   
   const [submitting, setSubmitting] = useState(false);
+  const [checkingAvail, setCheckingAvail] = useState(false);
+  const [availData, setAvailData] = useState<AvailabilityCheckResponse | null>(null);
   const [bookingResult, setBookingResult] = useState<BookingResponse | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -41,15 +45,47 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     return diffDays > 0 ? diffDays : 1;
   }, [checkIn, checkOut]);
 
-  // Price calculations
+  // Check real-time server inventory and tax slabbing
+  useEffect(() => {
+    if (!selectedRoom || !checkIn || !checkOut) return;
+    let isCurrent = true;
+    setCheckingAvail(true);
+    setErrorMsg(null);
+
+    hotelApi.checkRoomAvailability(selectedRoom.id, checkIn, checkOut, adults)
+      .then((res) => {
+        if (isCurrent) {
+          setAvailData(res);
+          if (!res.available) {
+            setErrorMsg(res.message);
+          }
+        }
+      })
+      .catch((err) => {
+        if (isCurrent) console.warn('Could not verify availability live:', err);
+      })
+      .finally(() => {
+        if (isCurrent) setCheckingAvail(false);
+      });
+
+    return () => { isCurrent = false; };
+  }, [selectedRoom, checkIn, checkOut, adults]);
+
+  // Pricing values (from server if available, else accurate client calculation)
   const roomPrice = selectedRoom?.price_per_night || 2499;
-  const subtotal = roomPrice * totalNights;
-  const taxes = Math.round(subtotal * 0.12); // 12% GST
-  const grandTotal = subtotal + taxes;
+  const subtotal = availData?.base_subtotal ?? (roomPrice * totalNights);
+  const extraCharge = availData?.extra_guest_charge ?? (Math.max(0, adults - (selectedRoom?.capacity || 2)) * 500 * totalNights);
+  const taxes = availData?.total_tax ?? Math.round((subtotal + extraCharge) * 0.12);
+  const grandTotal = availData?.grand_total ?? (subtotal + extraCharge + taxes);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedRoom) return;
+    if (availData && !availData.available) {
+      setErrorMsg('This room is currently fully booked for these dates. Please choose another date or category.');
+      return;
+    }
+
     setErrorMsg(null);
     setSubmitting(true);
 
@@ -59,12 +95,13 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         guest_name: guestName,
         guest_email: guestEmail,
         guest_phone: guestPhone,
+        id_proof_type: idProofType,
         check_in_date: checkIn,
         check_out_date: checkOut,
         adults,
         children,
         total_nights: totalNights,
-        total_price: grandTotal,
+        payment_method: paymentMethod,
         special_requests: specialRequests
       });
 
@@ -102,7 +139,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
               <span className="badge badge-gold">DIRECT RESERVATION</span>
               <h2 className="modal-title">Confirm Your Stay</h2>
               <p className="modal-subtitle">
-                Hotel Sai Vasudev Residency &bull; Instant Confirmation via FastAPI & PostgreSQL
+                Hotel Sai Vasudev Residency &bull; Atomic Concurrency & Indian GST Protection
               </p>
             </div>
 
@@ -111,14 +148,19 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 <img src={selectedRoom.image_url} alt={selectedRoom.name} className="modal-room-thumb" />
                 <div className="modal-room-info">
                   <h4>{selectedRoom.name}</h4>
-                  <p>{selectedRoom.bed_type} &bull; {selectedRoom.room_size} &bull; Up to {selectedRoom.capacity} Guests</p>
+                  <p>{selectedRoom.bed_type} &bull; {selectedRoom.room_size} &bull; Standard {selectedRoom.capacity} Guests</p>
                   <span className="modal-rate">₹{selectedRoom.price_per_night.toLocaleString('en-IN')} / night</span>
+                  {availData && (
+                    <div style={{ marginTop: 4, fontSize: 12, color: availData.available ? '#2e7d32' : '#c62828', fontWeight: 700 }}>
+                      {availData.available ? `✓ ${availData.remaining_rooms_count} Room(s) Available` : `✕ Sold Out`}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
             {errorMsg && (
-              <div className="alert-box error">
+              <div className="alert-box error" style={{ background: '#ffebee', color: '#c62828', padding: '10px 14px', borderRadius: 8, margin: '12px 0', border: '1px solid #ef9a9a' }}>
                 ⚠️ {errorMsg}
               </div>
             )}
@@ -159,8 +201,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                   >
                     <option value={1}>1 Adult</option>
                     <option value={2}>2 Adults</option>
-                    <option value={3}>3 Adults</option>
-                    <option value={4}>4 Adults</option>
+                    <option value={3}>3 Adults (Extra Bed)</option>
+                    <option value={4}>4 Adults (Extra Bed)</option>
                   </select>
                 </div>
                 <div className="form-group">
@@ -214,6 +256,34 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 </div>
               </div>
 
+              <div className="form-row-2">
+                <div className="form-group">
+                  <label htmlFor="modal-id-proof">ID Proof Type</label>
+                  <select
+                    id="modal-id-proof"
+                    value={idProofType}
+                    onChange={(e) => setIdProofType(e.target.value)}
+                  >
+                    <option value="Aadhaar Card">Aadhaar Card</option>
+                    <option value="Passport">Passport</option>
+                    <option value="Driving License">Driving License</option>
+                    <option value="Voter ID">Voter ID</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="modal-payment-mode">Payment Option</label>
+                  <select
+                    id="modal-payment-mode"
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                  >
+                    <option value="Pay at Hotel">Pay at Hotel (Cash / UPI / Card)</option>
+                    <option value="UPI QR Code">Instant UPI Transfer / QR</option>
+                    <option value="Credit/Debit Card">Online Card Payment</option>
+                  </select>
+                </div>
+              </div>
+
               <div className="form-group">
                 <label htmlFor="modal-special-requests">Special Requests / Darshan Timings (Optional)</label>
                 <textarea
@@ -225,23 +295,29 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 />
               </div>
 
-              {/* Price Calculation Box */}
+              {/* Server-Side Tax & Price Calculation Box */}
               <div className="price-breakdown-card">
                 <div className="breakdown-line">
-                  <span>Room Rate ({totalNights} night{totalNights > 1 ? 's' : ''})</span>
+                  <span>Room Base ({totalNights} night{totalNights > 1 ? 's' : ''})</span>
                   <span>₹{subtotal.toLocaleString('en-IN')}</span>
                 </div>
+                {extraCharge > 0 && (
+                  <div className="breakdown-line">
+                    <span>Extra Guest Charge (Above capacity)</span>
+                    <span>₹{extraCharge.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
                 <div className="breakdown-line">
-                  <span>GST & Hospitality Taxes (12%)</span>
+                  <span>GST (CGST + SGST - {availData?.gst_rate || 12}%)</span>
                   <span>₹{taxes.toLocaleString('en-IN')}</span>
                 </div>
                 <div className="breakdown-divider"></div>
                 <div className="breakdown-line total">
-                  <span>Total Payable</span>
+                  <span>Total Authoritative Payable</span>
                   <span className="total-gold">₹{grandTotal.toLocaleString('en-IN')}</span>
                 </div>
                 <div className="payment-terms-note">
-                  🔒 Pay during check-in at the front desk or via UPI / Card. Free cancellation up to 24 hours prior.
+                  🔒 Server-backed reservation with atomic conflict locking. Free cancellation up to 24h prior.
                 </div>
               </div>
 
@@ -249,10 +325,14 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 id="submit-booking-reservation-btn"
                 type="submit"
                 className="btn btn-primary modal-submit-btn"
-                disabled={submitting}
+                disabled={submitting || checkingAvail || (availData?.available === false)}
               >
                 {submitting ? (
-                  <span>Connecting to Railway API & Database...</span>
+                  <span>Executing Atomic Booking Transaction...</span>
+                ) : checkingAvail ? (
+                  <span>Verifying Room Inventory...</span>
+                ) : availData?.available === false ? (
+                  <span>Room Category Sold Out</span>
                 ) : (
                   <span>Confirm Reservation Now</span>
                 )}
@@ -264,7 +344,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             <div className="success-icon-badge">✓</div>
             <h2 className="success-title">Reservation Confirmed!</h2>
             <p className="success-subtitle">
-              Thank you for choosing Hotel Sai Vasudev Residency. Your sacred retreat is secured.
+              Thank you for choosing Hotel Sai Vasudev Residency. Your sacred retreat is secured in PostgreSQL.
             </p>
 
             <div className="booking-confirmation-ticket">
@@ -273,13 +353,17 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                   <span className="ticket-label">BOOKING REFERENCE NUMBER</span>
                   <div className="ticket-ref">{bookingResult.booking_ref}</div>
                 </div>
-                <span className="status-pill confirmed">● Confirmed</span>
+                <span className="status-pill confirmed">● {bookingResult.status}</span>
               </div>
 
               <div className="ticket-details-grid">
                 <div>
                   <span className="ticket-label">GUEST NAME</span>
                   <strong>{bookingResult.guest_name}</strong>
+                </div>
+                <div>
+                  <span className="ticket-label">INVOICE NUMBER</span>
+                  <strong>{bookingResult.invoice_number || `INV-${bookingResult.booking_ref}`}</strong>
                 </div>
                 <div>
                   <span className="ticket-label">ROOM CATEGORY</span>
@@ -294,12 +378,12 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                   <strong>{bookingResult.check_out_date} (11:00 AM)</strong>
                 </div>
                 <div>
-                  <span className="ticket-label">TOTAL GUESTS</span>
-                  <strong>{bookingResult.adults} Adults, {bookingResult.children} Children</strong>
+                  <span className="ticket-label">PAYMENT STATUS</span>
+                  <strong>{bookingResult.payment_method} ({bookingResult.payment_status || 'Pending'})</strong>
                 </div>
-                <div>
-                  <span className="ticket-label">TOTAL AMOUNT</span>
-                  <strong className="total-gold">₹{bookingResult.total_price.toLocaleString('en-IN')}</strong>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <span className="ticket-label">TOTAL AUTHORIZED BILL</span>
+                  <strong className="total-gold" style={{ fontSize: 18 }}>₹{bookingResult.total_price.toLocaleString('en-IN')} (incl. GST)</strong>
                 </div>
               </div>
 
@@ -310,17 +394,26 @@ export const BookingModal: React.FC<BookingModalProps> = ({
               </div>
             </div>
 
-            <div className="success-actions">
+            <div className="success-actions" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
               <a
-                href={`https://wa.me/919876543210?text=Hello%20Hotel%20Sai%20Vasudev%20Residency,%20my%20booking%20reference%20is%20${bookingResult.booking_ref}.`}
+                href={hotelApi.getPrintSlipUrl(bookingResult.booking_ref)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-primary"
+                style={{ background: '#8B1E28', color: '#fff' }}
+              >
+                <span>🖨️ View & Print Official Voucher</span>
+              </a>
+              <a
+                href={`https://wa.me/919440289999?text=Hello%20Hotel%20Sai%20Vasudev%20Residency,%20my%20booking%20reference%20is%20${bookingResult.booking_ref}.`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-outline-gold"
               >
                 <span>💬 WhatsApp Front Desk</span>
               </a>
-              <button className="btn btn-outline-gold" onClick={handleResetAndClose}>
-                Close Window
+              <button className="btn btn-outline" onClick={handleResetAndClose}>
+                Close
               </button>
             </div>
           </div>
