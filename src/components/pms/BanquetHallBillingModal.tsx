@@ -474,11 +474,12 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
               {/* Venues Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredVenues.map(venue => {
-                  const statusColors = {
+                  const statusColors: Record<string, string> = {
                     vacant: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40',
                     booked: 'bg-amber-500/20 text-amber-400 border-amber-500/40',
                     occupied: 'bg-blue-500/20 text-blue-400 border-blue-500/40',
-                    dirty: 'bg-rose-500/20 text-rose-400 border-rose-500/40'
+                    dirty: 'bg-rose-500/20 text-rose-400 border-rose-500/40',
+                    blocked: 'bg-purple-500/20 text-purple-400 border-purple-500/40'
                   };
 
                   return (

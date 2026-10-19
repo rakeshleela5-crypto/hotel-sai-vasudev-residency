@@ -431,5 +431,54 @@ export const hotelApi = {
     } catch {
       return { status: 'BRIDGE_OFFLINE', message: 'Local Hardware Bridge not running on port 8080. Start backend/hardware_bridge.py on desk PC.' };
     }
+  },
+
+  // --- Real-Time Front-Desk Synchronization ---
+  async walkInCheckIn(payload: Record<string, unknown>): Promise<BookingResponse> {
+    const res = await fetch(`${API_BASE_URL}/pms/check-in`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Walk-in check-in failed');
+    }
+    return await res.json();
+  },
+
+  async checkOutBooking(payload: { booking_ref: string; settlement_payment_mode?: string; settlement_amount_paid?: number; transaction_ref?: string; processed_by?: string }) {
+    const res = await fetch(`${API_BASE_URL}/pms/check-out`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Check-out settlement failed');
+    }
+    return await res.json();
+  },
+
+  async toggleRoomMaintenance(roomId: number, underMaintenance: boolean, reason?: string) {
+    const res = await fetch(`${API_BASE_URL}/pms/rooms/${roomId}/maintenance`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ room_id: roomId, is_under_maintenance: underMaintenance, reason })
+    });
+    if (!res.ok) throw new Error('Failed to toggle room maintenance');
+    return await res.json();
+  },
+
+  async getPmsDashboardSync() {
+    const res = await fetch(`${API_BASE_URL}/pms/sync/dashboard`);
+    if (!res.ok) throw new Error('Failed to synchronize PMS dashboard');
+    return await res.json();
+  },
+
+  async exportDatabaseBackup() {
+    const res = await fetch(`${API_BASE_URL}/pms/backup/export`);
+    if (!res.ok) throw new Error('Failed to export database backup');
+    return await res.json();
   }
 };

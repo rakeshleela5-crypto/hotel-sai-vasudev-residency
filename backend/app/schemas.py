@@ -348,3 +348,51 @@ class HealthResponse(BaseModel):
     database: str
     engine: str
     timestamp: datetime.datetime
+
+# --- Master PMS Synchronization Schemas ---
+class WalkInCheckInRequest(BaseModel):
+    room_id: int
+    guest_name: str = Field(..., min_length=2)
+    guest_phone: str = Field(..., min_length=7)
+    guest_email: Optional[EmailStr] = "walkin@hotelsai-vasudev.com"
+    id_proof_type: str = "Aadhaar Card"
+    id_proof_number: Optional[str] = "VERIFIED_AT_DESK"
+    check_in_date: Optional[str] = None # Defaults to today YYYY-MM-DD
+    check_out_date: str # YYYY-MM-DD
+    adults: int = Field(default=2, ge=1)
+    children: int = Field(default=0, ge=0)
+    advance_amount: float = Field(default=0.0, ge=0)
+    advance_payment_mode: str = "Cash" # Cash, UPI, Card
+    advance_ref: Optional[str] = None
+    special_requests: Optional[str] = None
+    registered_by: Optional[str] = "Front Desk Officer"
+
+class CheckOutRequest(BaseModel):
+    booking_ref: str
+    settlement_payment_mode: Optional[str] = "Cash" # Cash, Card, UPI, Direct_BTC
+    settlement_amount_paid: Optional[float] = None
+    transaction_ref: Optional[str] = None
+    processed_by: Optional[str] = "Front Desk Officer"
+
+class RoomMaintenanceRequest(BaseModel):
+    room_id: int
+    is_under_maintenance: bool
+    reason: Optional[str] = "Routine sanitization / maintenance"
+    updated_by: Optional[str] = "Property Manager"
+
+class PmsDashboardSyncResponse(BaseModel):
+    last_sync_timestamp: str
+    total_rooms: int
+    occupied_rooms: int
+    dirty_rooms: int
+    clean_rooms: int
+    maintenance_rooms: int
+    today_expected_arrivals: int
+    today_expected_departures: int
+    total_revenue_today: float
+    total_cash_in_drawer: float
+    total_upi_today: float
+    unconfirmed_web_bookings_count: int
+    rooms: List[RoomResponse]
+    active_bookings: List[BookingResponse]
+

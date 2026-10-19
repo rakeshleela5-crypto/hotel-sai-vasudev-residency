@@ -421,3 +421,265 @@ def execute_night_audit(payload: schemas.NightAuditRunRequest, db: Session = Dep
         audit_status=audit_entry.audit_status,
         created_at=audit_entry.created_at
     )
+
+# --- 8. Walk-In Direct Check-In ---
+@router.post("/check-in", response_model=schemas.BookingResponse)
+def execute_walk_in_check_in(payload: schemas.WalkInCheckInRequest, db: Session = Depends(get_db)):
+    """
+    Registers a walk-in guest at the front desk:
+    1. Sets room housekeeping status to 'Occupied'
+    2. Calculates authoritative pricing and Indian GST
+    3. Records advance deposit payment if provided
+    4. Automatically logs domestic/foreign police station register
+    """
+    room = db.query(models.Room).filter(models.Room.id == payload.room_id).first()
+    if not room:
+        raise HTTPException(status_code=404, detail="Selected room not found")
+    if room.housekeeping_status == "Occupied":
+        raise HTTPException(status_code=409, detail=f"Room '{room.name}' is already occupied!")
+    if room.housekeeping_status == "Dirty":
+        raise HTTPException(status_code=400, detail=f"Room '{room.name}' is marked Dirty! Housekeeping must clean and inspect before check-in.")
+
+    today_str = payload.check_in_date or datetime.date.today().isoformat()
+    start_date = datetime.date.fromisoformat(today_str)
+    end_date = datetime.date.fromisoformat(payload.check_out_date)
+    nights = max(1, (end_date - start_date).days)
+
+    # Server pricing
+    base_tariff = float(room.price_per_night)
+    base_amount = round(base_tariff * nights, 2)
+    extra_adults = max(0, payload.adults - room.capacity)
+    extra_charge = round(extra_adults * 500.0 * nights, 2)
+    taxable = round(base_amount + extra_charge, 2)
+    gst_rate = 12.0 if (taxable / nights) <= 7500.0 else 18.0
+    cgst = round(taxable * (gst_rate / 200.0), 2)
+    sgst = cgst
+    total_tax = round(cgst + sgst, 2)
+    total_price = round(taxable + total_tax, 2)
+
+    advance = float(payload.advance_amount or 0.0)
+    balance = max(0.0, round(total_price - advance, 2))
+    payment_status = "Paid" if balance <= 0 else ("Partial" if advance > 0 else "Pending")
+
+    booking = models.Booking(
+        room_id=room.id,
+        guest_name=payload.guest_name.strip(),
+        guest_email=(payload.guest_email or "walkin@hotelsai-vasudev.com").strip().lower(),
+        guest_phone=payload.guest_phone.strip(),
+        id_proof_type=payload.id_proof_type,
+        id_proof_number=payload.id_proof_number,
+        check_in_date=today_str,
+        check_out_date=payload.check_out_date,
+        actual_check_in=datetime.datetime.utcnow(),
+        adults=payload.adults,
+        children=payload.children,
+        total_nights=nights,
+        base_rate=base_tariff,
+        base_amount=base_amount,
+        extra_guest_charge=extra_charge,
+        gst_rate=gst_rate,
+        cgst_amount=cgst,
+        sgst_amount=sgst,
+        total_tax=total_tax,
+        total_price=total_price,
+        total_paid=advance,
+        balance_due=balance,
+        payment_status=payment_status,
+        payment_method=payload.advance_payment_mode or "Cash",
+        status="Checked-In",
+        special_requests=payload.special_requests
+    )
+    db.add(booking)
+    db.flush()
+
+    # If advance paid, record payment receipt
+    if advance > 0:
+        p = models.BookingPayment(
+            booking_id=booking.id,
+            payment_type="Advance",
+            payment_mode=payload.advance_payment_mode or "Cash",
+            amount=advance,
+            transaction_ref=payload.advance_ref,
+            notes="Walk-in advance token",
+            collected_by=payload.registered_by or "Front Desk Officer"
+        )
+        db.add(p)
+
+    # Set room to Occupied
+    room.housekeeping_status = "Occupied"
+
+    # Auto-log domestic police register
+    police_log = models.PoliceStationLog(
+        booking_id=booking.id,
+        guest_name=payload.guest_name.strip(),
+        id_proof_type=payload.id_proof_type,
+        id_proof_number=payload.id_proof_number or "VERIFIED_AT_DESK",
+        permanent_address="Guest Walk-in Record",
+        origin_city="Walk-in",
+        next_destination="Return Journey",
+        purpose_of_visit="Temple Darshan"
+    )
+    db.add(police_log)
+
+    log_audit(db, "CHECK_IN", booking.booking_ref, payload.registered_by or "Front Desk Officer", {
+        "room_name": room.name,
+        "guest_name": payload.guest_name,
+        "advance_collected": advance,
+        "nights": nights
+    })
+
+    db.commit()
+    db.refresh(booking)
+    return booking
+
+# --- 9. Check-Out Settlement & Transition to Dirty ---
+@router.post("/check-out", response_model=schemas.MasterFolioResponse)
+def execute_check_out(payload: schemas.CheckOutRequest, db: Session = Depends(get_db)):
+    """
+    Executes Check-Out:
+    1. Collects remaining balance if paid
+    2. Marks room as 'Dirty' for housekeeping
+    3. Sets booking status to 'Checked-Out'
+    4. Generates and returns final Master Folio Invoice
+    """
+    booking = db.query(models.Booking).filter(
+        models.Booking.booking_ref == payload.booking_ref.upper().strip()
+    ).first()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking reservation not found")
+
+    room = db.query(models.Room).filter(models.Room.id == booking.room_id).first()
+
+    # Record final settlement payment if provided
+    settlement_amt = float(payload.settlement_amount_paid or 0.0)
+    if settlement_amt > 0:
+        p = models.BookingPayment(
+            booking_id=booking.id,
+            payment_type="Settlement",
+            payment_mode=payload.settlement_payment_mode or "Cash",
+            amount=settlement_amt,
+            transaction_ref=payload.transaction_ref,
+            notes="Check-out bill settlement",
+            collected_by=payload.processed_by or "Front Desk Officer"
+        )
+        db.add(p)
+        booking.total_paid = round((booking.total_paid or 0.0) + settlement_amt, 2)
+        booking.balance_due = max(0.0, round(booking.total_price - booking.total_paid, 2))
+
+    if booking.balance_due <= 0:
+        booking.payment_status = "Paid"
+    elif payload.settlement_payment_mode == "Direct_BTC":
+        booking.payment_status = "BTC"
+
+    booking.status = "Checked-Out"
+    booking.actual_check_out = datetime.datetime.utcnow()
+
+    # Room must immediately transition to 'Dirty'
+    if room:
+        room.housekeeping_status = "Dirty"
+
+    log_audit(db, "CHECK_OUT", booking.booking_ref, payload.processed_by or "Front Desk Officer", {
+        "room_name": room.name if room else "Unknown",
+        "settlement_paid": settlement_amt,
+        "final_payment_status": booking.payment_status
+    })
+
+    db.commit()
+    return get_master_room_folio(booking.booking_ref, db)
+
+# --- 10. Room Maintenance / Out-of-Order Blocking ---
+@router.post("/rooms/{room_id}/maintenance")
+def toggle_room_maintenance(
+    room_id: int, 
+    payload: schemas.RoomMaintenanceRequest, 
+    db: Session = Depends(get_db)
+):
+    """Mark a room as Out-of-Order / Under Maintenance or restore it to Clean"""
+    room = db.query(models.Room).filter(models.Room.id == room_id).first()
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+
+    if payload.is_under_maintenance:
+        room.housekeeping_status = "Under_Maintenance"
+        room.is_available = False
+    else:
+        room.housekeeping_status = "Clean"
+        room.is_available = True
+
+    log_audit(db, "MAINTENANCE_TOGGLE", None, payload.updated_by or "Property Manager", {
+        "room_name": room.name,
+        "under_maintenance": payload.is_under_maintenance,
+        "reason": payload.reason
+    })
+
+    db.commit()
+    return {"message": f"Room '{room.name}' status set to {room.housekeeping_status}", "is_available": room.is_available}
+
+# --- 11. Master PMS Dashboard Synchronization Endpoint ---
+@router.get("/sync/dashboard", response_model=schemas.PmsDashboardSyncResponse)
+def get_pms_dashboard_sync(db: Session = Depends(get_db)):
+    """
+    High-Performance Real-Time Synchronizer:
+    Returns complete room statuses, today's arrivals/departures, in-house guests, 
+    and drawer cash/UPI figures in a single HTTP call to eliminate device isolation.
+    """
+    today_str = datetime.date.today().isoformat()
+    rooms = db.query(models.Room).order_by(models.Room.id.asc()).all()
+    active_bookings = db.query(models.Booking).filter(
+        models.Booking.status.in_(["Checked-In", "Confirmed"])
+    ).order_by(models.Booking.created_at.desc()).all()
+
+    total_rooms = len(rooms)
+    occupied = sum(1 for r in rooms if r.housekeeping_status == "Occupied")
+    dirty = sum(1 for r in rooms if r.housekeeping_status == "Dirty")
+    clean = sum(1 for r in rooms if r.housekeeping_status == "Clean")
+    maintenance = sum(1 for r in rooms if r.housekeeping_status == "Under_Maintenance")
+
+    today_arrivals = sum(1 for b in active_bookings if b.check_in_date == today_str and b.status == "Confirmed")
+    today_departures = sum(1 for b in active_bookings if b.check_out_date == today_str and b.status == "Checked-In")
+
+    payments = db.query(models.BookingPayment).all()
+    cash_drawer = sum(p.amount for p in payments if p.payment_mode == "Cash")
+    upi_today = sum(p.amount for p in payments if p.payment_mode == "UPI")
+    total_rev = sum(b.base_amount for b in active_bookings)
+
+    unconfirmed_web = sum(1 for b in active_bookings if b.payment_status == "Pending" and b.status == "Confirmed")
+
+    return schemas.PmsDashboardSyncResponse(
+        last_sync_timestamp=datetime.datetime.utcnow().isoformat(),
+        total_rooms=total_rooms,
+        occupied_rooms=occupied,
+        dirty_rooms=dirty,
+        clean_rooms=clean,
+        maintenance_rooms=maintenance,
+        today_expected_arrivals=today_arrivals,
+        today_expected_departures=today_departures,
+        total_revenue_today=round(total_rev, 2),
+        total_cash_in_drawer=round(cash_drawer, 2),
+        total_upi_today=round(upi_today, 2),
+        unconfirmed_web_bookings_count=unconfirmed_web,
+        rooms=rooms,
+        active_bookings=active_bookings
+    )
+
+# --- 12. Full Database Snapshot Export / Backup ---
+@router.get("/backup/export")
+def export_pms_database_backup(db: Session = Depends(get_db)):
+    """Export complete JSON snapshot of all rooms, bookings, payments, and audits"""
+    rooms = db.query(models.Room).all()
+    bookings = db.query(models.Booking).all()
+    payments = db.query(models.BookingPayment).all()
+    audits = db.query(models.AuditLog).order_by(models.AuditLog.created_at.desc()).limit(100).all()
+
+    return {
+        "export_timestamp": datetime.datetime.utcnow().isoformat(),
+        "hotel": "Hotel Sai Vasudev Residency",
+        "gstin": "37AAACH7409R1ZZ",
+        "total_rooms": len(rooms),
+        "total_bookings": len(bookings),
+        "total_payments": len(payments),
+        "rooms": [{ "id": r.id, "name": r.name, "tariff": r.price_per_night, "status": r.housekeeping_status } for r in rooms],
+        "bookings": [{ "ref": b.booking_ref, "guest": b.guest_name, "room_id": b.room_id, "status": b.status, "total": b.total_price } for b in bookings],
+        "payments": [{ "ref": p.receipt_number, "mode": p.payment_mode, "amount": p.amount } for p in payments]
+    }
+

@@ -3,7 +3,7 @@
  * Derived from Video 01: RoomG PMS Training & Feature Analysis
  */
 
-export type RoomStatus = 'vacant' | 'booked' | 'occupied' | 'dirty';
+export type RoomStatus = 'vacant' | 'booked' | 'occupied' | 'dirty' | 'blocked';
 
 export interface PmsRoom {
   id: string;

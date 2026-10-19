@@ -169,7 +169,55 @@ def run_tests():
     db.commit()
     print(f"   [OK] Night Audit Closed: Date={audit.audit_date}, Revenue=Rs.{audit.total_room_revenue + audit.total_food_revenue}, Cash In Drawer=Rs.{audit.cash_in_drawer}, UPI=Rs.{audit.upi_total}")
 
-    print("\n=== ALL PMS REAL-WORLD ENTERPRISE TESTS PASSED WITH 100% SUCCESS! ===")
+    print("9. Testing Walk-In Direct Front-Desk Check-In Endpoint...")
+    from app.routes.pms import execute_walk_in_check_in, execute_check_out, toggle_room_maintenance, get_pms_dashboard_sync
+    
+    room3 = db.query(models.Room).filter(models.Room.slug == "super-deluxe-family-room").first()
+    checkin_req = schemas.WalkInCheckInRequest(
+        room_id=room3.id,
+        guest_name="Venkatesh Naidu",
+        guest_phone="9876543210",
+        check_out_date="2026-11-03",
+        advance_amount=1000.0,
+        advance_payment_mode="UPI",
+        advance_ref="UPI-VENK-WALKIN-99"
+    )
+    walkin_booking = execute_walk_in_check_in(checkin_req, db)
+    assert walkin_booking.status == "Checked-In"
+    assert room3.housekeeping_status == "Occupied"
+    print(f"   [OK] Walk-In Checked In: Ref={walkin_booking.booking_ref}, Room={room3.name} (Status: {room3.housekeeping_status}), Advance Paid: Rs.{walkin_booking.total_paid}")
+
+    print("10. Testing Check-Out Settlement & Transition to Dirty Room...")
+    checkout_req = schemas.CheckOutRequest(
+        booking_ref=walkin_booking.booking_ref,
+        settlement_payment_mode="Cash",
+        settlement_amount_paid=walkin_booking.balance_due,
+        transaction_ref="CASH-SETTLE-REC-1"
+    )
+    checkout_res = execute_check_out(checkout_req, db)
+    db.refresh(room3)
+    assert room3.housekeeping_status == "Dirty"
+    assert checkout_res.net_balance_due == 0.0
+    print(f"   [OK] Check-Out Settled: Ref={checkout_res.booking_ref}, Net Due=Rs.{checkout_res.net_balance_due}, Room {room3.name} is now: {room3.housekeeping_status}")
+
+    print("11. Testing Room Out-Of-Order Maintenance Blocking...")
+    maint_req = schemas.RoomMaintenanceRequest(
+        room_id=room3.id,
+        is_under_maintenance=True,
+        reason="Geyser replacement and fresh sanitization"
+    )
+    maint_res = toggle_room_maintenance(room3.id, maint_req, db)
+    db.refresh(room3)
+    assert room3.housekeeping_status == "Under_Maintenance"
+    assert room3.is_available is False
+    print(f"   [OK] Room Maintenance Blocked: {room3.name} is now: {room3.housekeeping_status} (Available: {room3.is_available})")
+
+    print("12. Testing Real-Time Master PMS Dashboard Synchronization Payload...")
+    sync_payload = get_pms_dashboard_sync(db)
+    assert sync_payload.total_rooms == len(INITIAL_ROOMS)
+    print(f"   [OK] Real-Time Sync Payload Verified: {sync_payload.total_rooms} rooms total | Occupied: {sync_payload.occupied_rooms} | Maintenance: {sync_payload.maintenance_rooms} | Cash In Drawer: Rs.{sync_payload.total_cash_in_drawer}")
+
+    print("\n=== ALL 12 PMS REAL-WORLD ENTERPRISE TESTS PASSED WITH 100% SUCCESS! ===")
     db.close()
 
 if __name__ == "__main__":

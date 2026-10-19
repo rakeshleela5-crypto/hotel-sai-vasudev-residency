@@ -431,6 +431,33 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
     return () => window.removeEventListener('pms_user_changed', handleUserChanged);
   }, []);
 
+  // Real-Time Cloud Synchronization Bridge (PostgreSQL on Railway)
+  const [syncStatus, setSyncStatus] = useState<{ isSyncing: boolean; text: string; status: 'online' | 'offline' }>({
+    isSyncing: false,
+    text: 'Railway DB Ready',
+    status: 'online'
+  });
+
+  const handleSyncCloud = async () => {
+    setSyncStatus(prev => ({ ...prev, isSyncing: true, text: 'Syncing...' }));
+    const res = await PmsStore.syncWithCloudBackend();
+    setSyncStatus({
+      isSyncing: false,
+      text: res.success ? 'Railway DB: Synced' : 'Offline Mode',
+      status: res.success ? 'online' : 'offline'
+    });
+    setRoomRefreshTrigger(t => t + 1);
+  };
+
+  React.useEffect(() => {
+    if (isOpen) {
+      handleSyncCloud();
+      const interval = setInterval(handleSyncCloud, 30000); // 30s auto sync polling
+      return () => clearInterval(interval);
+    }
+  }, [isOpen]);
+
+
   const handleQuickSwitchUser = (user: PmsUserAccount) => {
     PmsStore.setCurrentUser(user);
     setCurrentUser(user);
@@ -484,6 +511,31 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
             </div>
 
             <div className="pms-header-right">
+              {/* Real-Time Railway Cloud DB Sync Button */}
+              <button
+                type="button"
+                onClick={handleSyncCloud}
+                disabled={syncStatus.isSyncing}
+                title="Synchronize front desk terminal with Railway PostgreSQL & Cloudflare Pages"
+                style={{
+                  background: syncStatus.status === 'online' ? '#15803d' : '#475569',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '3px 10px',
+                  borderRadius: 3,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  cursor: syncStatus.isSyncing ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                }}
+              >
+                <span>🔄</span>
+                <span>{syncStatus.isSyncing ? 'Syncing...' : syncStatus.text}</span>
+              </button>
+
               {/* Quick Action Badges from Video 02 & Video 20 Transcripts */}
               <button
                 type="button"

@@ -72,6 +72,7 @@ import type {
   PmsBanquetKot
 } from '../types/pmsModels';
 import { PMS_ALL_PERMISSIONS } from '../types/pmsModels';
+import { hotelApi } from './api';
 
 export const DEFAULT_BUSINESS_SETTING: PmsBusinessSetting = {
   calculationType: '12hour',
@@ -2363,6 +2364,55 @@ const STORAGE_KEYS = {
 };
 
 export class PmsStore {
+  // --- Real-Time Cloud Synchronization Bridge (PostgreSQL on Railway) ---
+  static async syncWithCloudBackend(): Promise<{ success: boolean; message: string; lastSync: string }> {
+    try {
+      const cloudData = await hotelApi.getPmsDashboardSync();
+      if (!cloudData) return { success: false, message: 'Cloud unreachable', lastSync: new Date().toISOString() };
+
+      const localRooms = this.getRooms();
+      let updatedCount = 0;
+
+      for (const b of cloudData.active_bookings) {
+        const matchingLocal = localRooms.find(r => r.id === String(b.room_id) || r.roomNo === String(b.room_id));
+        if (matchingLocal && b.status === 'Checked-In' && matchingLocal.status !== 'occupied') {
+          matchingLocal.status = 'occupied';
+          matchingLocal.currentGuest = {
+            name: b.guest_name,
+            phone: b.guest_phone,
+            checkInDate: b.check_in_date,
+            checkInTime: '12:00 PM',
+            bookingNo: b.booking_ref,
+            advancePaid: b.total_paid || 0,
+            calculationType: '12hour'
+          };
+          updatedCount++;
+        }
+      }
+
+      for (const r of cloudData.rooms) {
+        const matchingLocal = localRooms.find(lr => lr.id === String(r.id) || lr.roomNo === String(r.id));
+        if (matchingLocal && r.housekeeping_status === 'Under_Maintenance' && matchingLocal.status !== 'blocked') {
+          matchingLocal.status = 'blocked';
+          updatedCount++;
+        }
+      }
+
+      if (updatedCount > 0) {
+        this.saveRooms(localRooms);
+      }
+
+      return {
+        success: true,
+        message: `Synced with Railway PostgreSQL: ${cloudData.occupied_rooms} occupied, ${cloudData.clean_rooms} clean.`,
+        lastSync: cloudData.last_sync_timestamp
+      };
+    } catch (err) {
+      console.warn('[PmsStore] Background cloud sync notice:', err);
+      return { success: false, message: 'Running in offline cached mode', lastSync: new Date().toISOString() };
+    }
+  }
+
   static getRooms(): PmsRoom[] {
     const raw = localStorage.getItem(STORAGE_KEYS.ROOMS);
     if (!raw) {
@@ -3133,6 +3183,23 @@ export class PmsStore {
       advancePaid: checkIn.advancePaid,
       calculationType: '24hour'
     });
+
+    // Cloud sync: mirror to PostgreSQL on Railway
+    const roomId = parseInt(checkIn.roomNo, 10) || 1;
+    hotelApi.walkInCheckIn({
+      room_id: roomId,
+      guest_name: checkIn.guestName,
+      guest_phone: checkIn.mobile,
+      id_proof_type: checkIn.documentName || 'Aadhaar Card',
+      id_proof_number: checkIn.documentNo || 'VERIFIED_AT_DESK',
+      check_in_date: new Date().toISOString().split('T')[0],
+      check_out_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+      adults: checkIn.numberOfGuests || 2,
+      children: 0,
+      advance_amount: checkIn.advancePaid || 0,
+      advance_payment_mode: checkIn.paymentMode || 'Cash',
+      registered_by: 'Reception Desk'
+    }).catch(e => console.warn('[PmsStore] Background cloud check-in sync note:', e));
   }
 
   // Video 22 & 23 Anti-Theft Guard: Delete Check-In Record
@@ -4019,6 +4086,14 @@ export class PmsStore {
 
     // Mark room as dirty upon checkout
     this.updateRoomStatus(checkout.roomNo, 'dirty', undefined);
+
+    // Cloud sync: mirror check-out to Railway PostgreSQL
+    hotelApi.checkOutBooking({
+      booking_ref: checkout.invoiceNo || `SVR-ROOM-${checkout.roomNo}`,
+      settlement_payment_mode: checkout.paymentMode || 'Cash',
+      settlement_amount_paid: checkout.netPayable || 0,
+      processed_by: 'Reception Desk'
+    }).catch(e => console.warn('[PmsStore] Background checkout cloud sync note:', e));
   }
 
   static getAdvanceReceipts(): PmsAdvanceReceipt[] {
@@ -5004,6 +5079,14 @@ export class PmsStore {
     };
     shifts.unshift(shiftRecord);
     localStorage.setItem(STORAGE_KEYS.ROOM_SHIFTS, JSON.stringify(shifts));
+
+    // Cloud sync: mirror Room Shift to Railway PostgreSQL
+    hotelApi.executeRoomShift({
+      booking_ref: activeCheckIn?.bookingRefNo || activeCheckIn?.checkInNo || `SVR-ROOM-${params.fromRoomNo}`,
+      to_room_id: parseInt(toRoom.id, 10) || 1,
+      reason: params.reason || 'Guest Request / Routine Shift',
+      shifted_by: params.shiftedBy || 'Reception Desk (Admin)'
+    }).catch(e => console.warn('[PmsStore] Background room shift cloud sync note:', e));
 
     return {
       success: true,
