@@ -209,3 +209,73 @@ class Inquiry(Base):
     message = Column(Text, nullable=False)
     status = Column(String(50), default="New")
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class DiningTable(Base):
+    __tablename__ = "dining_tables"
+
+    id = Column(Integer, primary_key=True, index=True)
+    table_code = Column(String(50), unique=True, index=True, nullable=False)
+    table_name = Column(String(100), nullable=False)
+    table_group = Column(String(50), default="General") # General, TakeAway, Nc, SelfService
+    capacity = Column(Integer, default=4)
+    status = Column(String(50), default="Vacant") # Vacant, Running, Billed
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class KotTicket(Base):
+    __tablename__ = "kot_tickets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    kot_no = Column(String(100), unique=True, index=True, nullable=False)
+    date = Column(String(50), nullable=False)
+    time = Column(String(50), nullable=False)
+    table_no = Column(String(50), nullable=True, index=True)
+    room_no = Column(String(50), nullable=True, index=True)
+    waiter_name = Column(String(100), default="Captain")
+    guest_name = Column(String(150), nullable=True)
+    pax = Column(Integer, default=2)
+    items_json = Column(Text, nullable=False) # JSON array of {itemName, qty, rate, amount}
+    total_amount = Column(Float, default=0.0)
+    status = Column(String(50), default="Running") # Running, Billed, Cancelled
+    is_printed = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class MasterItem(Base):
+    __tablename__ = "master_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    category = Column(String(50), nullable=False, index=True) # gst, business_source, voucher_type, locker, other_charge, item_group, godown, menu_item
+    code = Column(String(100), unique=True, index=True, nullable=False)
+    name = Column(String(150), nullable=False)
+    payload_json = Column(Text, nullable=False) # Structured data fields
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+class StaffUser(Base):
+    __tablename__ = "staff_users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(100), unique=True, index=True, nullable=False)
+    display_name = Column(String(150), nullable=False)
+    role_name = Column(String(50), default="Front Desk")
+    department = Column(String(50), default="Front Office")
+    phone = Column(String(50), nullable=True)
+    email = Column(String(150), nullable=True)
+    is_active = Column(Boolean, default=True)
+    permissions_json = Column(Text, default="[]")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class InventoryPurchase(Base):
+    __tablename__ = "inventory_purchases"
+
+    id = Column(Integer, primary_key=True, index=True)
+    bill_no = Column(String(100), index=True, nullable=False)
+    bill_date = Column(String(50), nullable=False)
+    godown = Column(String(100), nullable=False)
+    supplier_name = Column(String(150), nullable=False)
+    items_json = Column(Text, nullable=False)
+    total_amount = Column(Float, default=0.0)
+    tax_amount = Column(Float, default=0.0)
+    net_amount = Column(Float, default=0.0)
+    terms = Column(String(50), default="Credit")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+

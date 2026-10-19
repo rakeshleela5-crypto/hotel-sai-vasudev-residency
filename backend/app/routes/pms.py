@@ -1,4 +1,5 @@
 import datetime
+import uuid
 import json
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from fastapi.responses import HTMLResponse
@@ -682,4 +683,270 @@ def export_pms_database_backup(db: Session = Depends(get_db)):
         "bookings": [{ "ref": b.booking_ref, "guest": b.guest_name, "room_id": b.room_id, "status": b.status, "total": b.total_price } for b in bookings],
         "payments": [{ "ref": p.receipt_number, "mode": p.payment_mode, "amount": p.amount } for p in payments]
     }
+
+# --- 13. Dining Tables CRUD ---
+@router.get("/tables")
+def get_dining_tables(db: Session = Depends(get_db)):
+    """Retrieve all dining tables from PostgreSQL"""
+    tables = db.query(models.DiningTable).order_by(models.DiningTable.id.asc()).all()
+    return [{
+        "id": str(t.id),
+        "tableName": t.table_name,
+        "tableCode": t.table_code,
+        "tableGroup": t.table_group,
+        "capacity": t.capacity,
+        "status": t.status
+    } for t in tables]
+
+@router.post("/tables")
+def save_dining_table(payload: dict, db: Session = Depends(get_db)):
+    """Create or update a dining table"""
+    table_code = payload.get("tableCode") or payload.get("tableName", "").replace("Table ", "").strip()
+    existing = db.query(models.DiningTable).filter(models.DiningTable.table_code == table_code).first()
+    if existing:
+        existing.table_name = payload.get("tableName", existing.table_name)
+        existing.table_group = payload.get("tableGroup", existing.table_group)
+        existing.capacity = payload.get("capacity", existing.capacity)
+        existing.status = payload.get("status", existing.status)
+        db.commit()
+        db.refresh(existing)
+        return {"status": "updated", "id": existing.id}
+    
+    t = models.DiningTable(
+        table_code=table_code,
+        table_name=payload.get("tableName", f"Table {table_code}"),
+        table_group=payload.get("tableGroup", "General"),
+        capacity=payload.get("capacity", 4),
+        status=payload.get("status", "Vacant")
+    )
+    db.add(t)
+    db.commit()
+    db.refresh(t)
+    return {"status": "created", "id": t.id}
+
+@router.put("/tables/{table_code}/status")
+def update_table_status(table_code: str, payload: dict, db: Session = Depends(get_db)):
+    """Update dining table status: Vacant, Running, Billed"""
+    t = db.query(models.DiningTable).filter(models.DiningTable.table_code == table_code).first()
+    if not t:
+        raise HTTPException(status_code=404, detail="Table not found")
+    t.status = payload.get("status", "Vacant")
+    db.commit()
+    return {"status": "updated", "table_code": t.table_code, "new_status": t.status}
+
+# --- 14. Kitchen Order Ticket (KOT) CRUD ---
+@router.get("/kots")
+def get_kot_tickets(db: Session = Depends(get_db)):
+    """Retrieve all KOT tickets from PostgreSQL"""
+    kots = db.query(models.KotTicket).order_by(models.KotTicket.created_at.desc()).limit(100).all()
+    results = []
+    for k in kots:
+        try:
+            items = json.loads(k.items_json)
+        except Exception:
+            items = []
+        results.append({
+            "id": str(k.id),
+            "kotNo": k.kot_no,
+            "date": k.date,
+            "time": k.time,
+            "tableNo": k.table_no,
+            "roomNo": k.room_no,
+            "waiterName": k.waiter_name,
+            "guestName": k.guest_name,
+            "pax": k.pax,
+            "items": items,
+            "totalAmount": k.total_amount,
+            "status": k.status,
+            "isPrinted": k.is_printed
+        })
+    return results
+
+@router.post("/kots")
+def create_kot_ticket(payload: dict, db: Session = Depends(get_db)):
+    """
+    Save new KOT ticket to PostgreSQL.
+    If room_no is provided, automatically posts charge to guest's room folio!
+    """
+    kot_no = payload.get("kotNo") or f"KOT/{datetime.datetime.now().strftime('%y%m%d%H%M%S')}"
+    items = payload.get("items", [])
+    total_amount = float(payload.get("totalAmount") or sum(float(i.get("amount", 0)) for i in items))
+    
+    kot = models.KotTicket(
+        kot_no=kot_no,
+        date=payload.get("date") or datetime.date.today().isoformat(),
+        time=payload.get("time") or datetime.datetime.now().strftime("%I:%M %p"),
+        table_no=payload.get("tableNo"),
+        room_no=payload.get("roomNo"),
+        waiter_name=payload.get("waiterName", "Captain"),
+        guest_name=payload.get("guestName"),
+        pax=int(payload.get("pax", 2)),
+        items_json=json.dumps(items),
+        total_amount=total_amount,
+        status=payload.get("status", "Running"),
+        is_printed=payload.get("isPrinted", True)
+    )
+    db.add(kot)
+
+    # If linked to dining table, mark table Running
+    if payload.get("tableNo"):
+        clean_code = payload.get("tableNo", "").replace("Table ", "").strip()
+        tbl = db.query(models.DiningTable).filter(models.DiningTable.table_code == clean_code).first()
+        if tbl:
+            tbl.status = "Running"
+
+    # If linked to room, post directly to guest room folio
+    if payload.get("roomNo"):
+        room_no = str(payload.get("roomNo")).strip()
+        booking = db.query(models.Booking).filter(
+            models.Booking.room_id == int(room_no) if room_no.isdigit() else False,
+            models.Booking.status == "Checked-In"
+        ).first()
+        if booking:
+            folio = models.RoomFolioItem(
+                booking_id=booking.id,
+                item_type="Food_KOT",
+                description=f"KOT {kot_no}: " + ", ".join([f"{i.get('itemName', 'Item')} x{i.get('qty', 1)}" for i in items]),
+                sac_code="996331",
+                kot_number=kot_no,
+                quantity=1,
+                unit_price=total_amount,
+                taxable_amount=round(total_amount / 1.05, 2),
+                gst_rate=5.0,
+                cgst_amount=round((total_amount / 1.05) * 0.025, 2),
+                sgst_amount=round((total_amount / 1.05) * 0.025, 2),
+                total_amount=total_amount,
+                status="Billed"
+            )
+            db.add(folio)
+            booking.total_price = round(booking.total_price + total_amount, 2)
+            booking.balance_due = max(0.0, round(booking.total_price - (booking.total_paid or 0.0), 2))
+
+    db.commit()
+    db.refresh(kot)
+    return {"status": "created", "kot_no": kot.kot_no, "id": kot.id}
+
+# --- 15. Master Items CRUD (GST, OTAs, Vouchers, Lockers, Charges) ---
+@router.get("/masters/{category}")
+def get_master_items_by_category(category: str, db: Session = Depends(get_db)):
+    """Retrieve master items (gst, business_source, voucher_type, locker, other_charge)"""
+    items = db.query(models.MasterItem).filter(models.MasterItem.category == category.lower().strip()).all()
+    results = []
+    for it in items:
+        try:
+            payload = json.loads(it.payload_json)
+        except Exception:
+            payload = {}
+        payload["id"] = it.code
+        payload["name"] = it.name
+        results.append(payload)
+    return results
+
+@router.post("/masters")
+def save_master_item(payload: dict, db: Session = Depends(get_db)):
+    """Create or update a master item in PostgreSQL"""
+    category = payload.get("category", "").lower().strip()
+    code = payload.get("code") or payload.get("id") or f"{category}-{uuid.uuid4().hex[:6]}"
+    name = payload.get("name") or payload.get("chargeName") or payload.get("lockerNumber") or payload.get("voucherTypeName") or code
+
+    existing = db.query(models.MasterItem).filter(models.MasterItem.code == code).first()
+    if existing:
+        existing.name = name
+        existing.payload_json = json.dumps(payload)
+        db.commit()
+        db.refresh(existing)
+        return {"status": "updated", "code": existing.code}
+
+    item = models.MasterItem(
+        category=category,
+        code=code,
+        name=name,
+        payload_json=json.dumps(payload)
+    )
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return {"status": "created", "code": item.code}
+
+@router.delete("/masters/{category}/{code}")
+def delete_master_item(category: str, code: str, db: Session = Depends(get_db)):
+    """Delete a master item from PostgreSQL"""
+    item = db.query(models.MasterItem).filter(
+        models.MasterItem.category == category.lower().strip(),
+        models.MasterItem.code == code
+    ).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Master item not found")
+    db.delete(item)
+    db.commit()
+    return {"status": "deleted", "code": code}
+
+# --- 16. Full Cloud Hydration API ---
+@router.get("/sync/full-state")
+def get_full_cloud_state(db: Session = Depends(get_db)):
+    """
+    Returns entire relational ERP state for instant hydration:
+    Rooms, Active Bookings, Check-Outs, KOTs, Dining Tables, and Masters.
+    """
+    rooms = db.query(models.Room).order_by(models.Room.id.asc()).all()
+    bookings = db.query(models.Booking).order_by(models.Booking.created_at.desc()).limit(150).all()
+    payments = db.query(models.BookingPayment).order_by(models.BookingPayment.created_at.desc()).limit(150).all()
+    tables = db.query(models.DiningTable).all()
+    kots = db.query(models.KotTicket).order_by(models.KotTicket.created_at.desc()).limit(50).all()
+    masters = db.query(models.MasterItem).all()
+
+    masters_by_cat = {}
+    for m in masters:
+        try:
+            p = json.loads(m.payload_json)
+        except Exception:
+            p = {}
+        p["id"] = m.code
+        p["name"] = m.name
+        masters_by_cat.setdefault(m.category, []).append(p)
+
+    return {
+        "sync_timestamp": datetime.datetime.utcnow().isoformat(),
+        "rooms": [{
+            "id": str(r.id),
+            "roomNo": str(r.id),
+            "roomType": r.room_type,
+            "tariff": r.price_per_night,
+            "capacity": r.capacity,
+            "status": "occupied" if r.housekeeping_status == "Occupied" else ("dirty" if r.housekeeping_status == "Dirty" else ("blocked" if r.housekeeping_status == "Under_Maintenance" else "vacant")),
+            "housekeepingStatus": r.housekeeping_status
+        } for r in rooms],
+        "active_bookings": [{
+            "id": b.id,
+            "booking_ref": b.booking_ref,
+            "room_id": b.room_id,
+            "guest_name": b.guest_name,
+            "guest_phone": b.guest_phone,
+            "check_in_date": b.check_in_date,
+            "check_out_date": b.check_out_date,
+            "status": b.status,
+            "total_price": b.total_price,
+            "total_paid": b.total_paid,
+            "balance_due": b.balance_due
+        } for b in bookings],
+        "payments": [{
+            "id": p.id,
+            "receipt_number": p.receipt_number,
+            "booking_id": p.booking_id,
+            "payment_type": p.payment_type,
+            "payment_mode": p.payment_mode,
+            "amount": p.amount,
+            "created_at": p.created_at.isoformat() if p.created_at else None
+        } for p in payments],
+        "tables": [{
+            "id": str(t.id),
+            "tableName": t.table_name,
+            "tableCode": t.table_code,
+            "tableGroup": t.table_group,
+            "capacity": t.capacity,
+            "status": t.status
+        } for t in tables],
+        "masters": masters_by_cat
+    }
+
 

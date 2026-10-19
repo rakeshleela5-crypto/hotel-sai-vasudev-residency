@@ -494,5 +494,68 @@ export const hotelApi = {
     const res = await fetch(`${API_BASE_URL}/pms/backup/export`);
     if (!res.ok) throw new Error('Failed to export database backup');
     return await res.json();
+  },
+
+  // --- Real-Time Relational CRUD API Operations ---
+  async getDiningTables(): Promise<any[]> {
+    const res = await fetch(`${API_BASE_URL}/pms/tables`);
+    if (!res.ok) throw new Error('Failed to fetch dining tables');
+    return await res.json();
+  },
+
+  async saveDiningTable(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/tables`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to save dining table');
+    return await res.json();
+  },
+
+  async getKotTickets(): Promise<any[]> {
+    const res = await fetch(`${API_BASE_URL}/pms/kots`);
+    if (!res.ok) throw new Error('Failed to fetch KOT tickets');
+    return await res.json();
+  },
+
+  async saveKotTicket(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/kots`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to save KOT ticket');
+    return await res.json();
+  },
+
+  async getMasterItems(category: string): Promise<any[]> {
+    const res = await fetch(`${API_BASE_URL}/pms/masters/${category}`);
+    if (!res.ok) throw new Error(`Failed to fetch master items for ${category}`);
+    return await res.json();
+  },
+
+  async saveMasterItem(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/masters`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to save master item');
+    return await res.json();
+  },
+
+  async deleteMasterItem(category: string, code: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/masters/${category}/${code}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete master item');
+    return await res.json();
+  },
+
+  async getFullCloudState(): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/sync/full-state`);
+    if (!res.ok) throw new Error('Failed to fetch full cloud state');
+    return await res.json();
   }
 };

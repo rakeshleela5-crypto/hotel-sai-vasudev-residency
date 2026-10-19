@@ -461,7 +461,9 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
 
   React.useEffect(() => {
     if (isOpen) {
-      handleSyncCloud();
+      PmsStore.initCloudStore().finally(() => {
+        handleSyncCloud();
+      });
       const interval = setInterval(handleSyncCloud, 30000); // 30s auto sync polling
       return () => clearInterval(interval);
     }

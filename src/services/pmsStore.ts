@@ -2447,6 +2447,51 @@ export class PmsStore {
     }
   }
 
+  // --- Real-Time Relational Hydration from Railway PostgreSQL ---
+  static async initCloudStore(): Promise<boolean> {
+    try {
+      const state = await hotelApi.getFullCloudState();
+      if (!state) return false;
+
+      // 1. Hydrate Rooms from PostgreSQL
+      if (state.rooms && state.rooms.length > 0) {
+        const localRooms = this.getRooms();
+        const updated = state.rooms.map((r: any) => {
+          const match = localRooms.find(lr => lr.roomNo === r.roomNo || lr.id === r.id);
+          return {
+            id: r.id,
+            roomNo: r.roomNo,
+            roomType: r.roomType,
+            tariff: r.tariff,
+            capacity: r.capacity || 2,
+            status: r.status,
+            currentGuest: match?.currentGuest,
+            foodAmount: match?.foodAmount || 0
+          };
+        });
+        localStorage.setItem(STORAGE_KEYS.ROOMS, JSON.stringify(updated));
+      }
+
+      // 2. Hydrate Dining Tables from PostgreSQL
+      if (state.tables && state.tables.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.TABLES, JSON.stringify(state.tables));
+      }
+
+      // 3. Hydrate ERP Masters from PostgreSQL
+      if (state.masters) {
+        if (state.masters.gst) localStorage.setItem(STORAGE_KEYS.GST_MASTERS, JSON.stringify(state.masters.gst));
+        if (state.masters.business_source) localStorage.setItem(STORAGE_KEYS.BUSINESS_SOURCES, JSON.stringify(state.masters.business_source));
+        if (state.masters.locker) localStorage.setItem(STORAGE_KEYS.LOCKERS, JSON.stringify(state.masters.locker));
+        if (state.masters.other_charge) localStorage.setItem(STORAGE_KEYS.OTHER_CHARGES, JSON.stringify(state.masters.other_charge));
+      }
+
+      return true;
+    } catch (e) {
+      console.warn('[PmsStore] Cloud hydration running in offline fallback mode:', e);
+      return false;
+    }
+  }
+
   static getRooms(): PmsRoom[] {
     const raw = localStorage.getItem(STORAGE_KEYS.ROOMS);
     if (!raw) {
@@ -2477,6 +2522,18 @@ export class PmsStore {
       return r;
     });
     this.saveRooms(updated);
+
+    // Cloud sync: mirror Housekeeping / Maintenance to Railway PostgreSQL
+    const rId = parseInt(roomNo, 10);
+    if (!isNaN(rId)) {
+      if (status === 'dirty') {
+        hotelApi.updateHousekeeping(rId, 'Dirty').catch(e => console.warn('[PmsStore] Dirty room sync note:', e));
+      } else if (status === 'vacant') {
+        hotelApi.updateHousekeeping(rId, 'Clean').catch(e => console.warn('[PmsStore] Clean room sync note:', e));
+      } else if (status === 'blocked') {
+        hotelApi.toggleRoomMaintenance(rId, true, 'Front Desk Manual Block').catch(e => console.warn('[PmsStore] Block room sync note:', e));
+      }
+    }
   }
 
   static addRoom(room: PmsRoom): void {
