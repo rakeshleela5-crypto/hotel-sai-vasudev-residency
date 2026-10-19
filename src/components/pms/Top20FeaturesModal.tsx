@@ -89,7 +89,7 @@ export const Top20FeaturesModal: React.FC<Top20FeaturesModalProps> = ({
                     fontFamily: 'monospace'
                   }}
                 >
-                  demo.datahouseerp.com/top20_features
+                  pms.hotelsai-vasudev.com/top20_features
                 </span>
               </div>
               <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>

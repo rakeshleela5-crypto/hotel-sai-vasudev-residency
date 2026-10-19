@@ -216,7 +216,7 @@ export const RestaurantTableDashboardModal: React.FC<RestaurantTableDashboardMod
                 fontWeight: 700
               }}
             >
-              demo.datahouseerp.com/table_dashboard
+              pms.hotelsai-vasudev.com/table_dashboard
             </span>
           </div>
 

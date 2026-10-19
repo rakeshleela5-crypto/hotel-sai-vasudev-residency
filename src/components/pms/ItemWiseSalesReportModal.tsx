@@ -68,7 +68,7 @@ export const ItemWiseSalesReportModal: React.FC<ItemWiseSalesReportModalProps> =
                 Item Wise Sales Report
               </h2>
               <div className="text-[11px] text-slate-300">
-                demo.datahouseerp.com/item_wise_sale_report &bull; Restaurant &amp; Room Service Dish Sales
+                pms.hotelsai-vasudev.com/item_wise_sale_report &bull; Restaurant &amp; Room Service Dish Sales
               </div>
             </div>
           </div>

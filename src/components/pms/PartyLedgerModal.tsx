@@ -74,7 +74,7 @@ export const PartyLedgerModal: React.FC<PartyLedgerModalProps> = ({
                 Party & Account Ledger
               </h2>
               <div style={{ fontSize: 11, color: '#94a3b8' }}>
-                demo.datahouseerp.com/ledger_show &bull; Video 17 Double-Entry Statement
+                pms.hotelsai-vasudev.com/ledger_show &bull; Video 17 Double-Entry Statement
               </div>
             </div>
           </div>

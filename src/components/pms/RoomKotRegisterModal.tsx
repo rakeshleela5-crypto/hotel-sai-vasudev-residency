@@ -90,7 +90,7 @@ export const RoomKotRegisterModal: React.FC<RoomKotRegisterModalProps> = ({
         onClick={e => e.stopPropagation()}
         style={{ maxWidth: 1100, width: '96%', maxHeight: '92vh', overflowY: 'auto' }}
       >
-        {/* Banner matching Video 14 Frame 0260 demo.datahouseerp.com/kots */}
+        {/* Banner matching Video 14 Frame 0260 pms.hotelsai-vasudev.com/kots */}
         <div
           className="pms-form-banner"
           style={{

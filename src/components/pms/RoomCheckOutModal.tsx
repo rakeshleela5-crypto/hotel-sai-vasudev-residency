@@ -199,7 +199,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
     e.preventDefault();
 
     if (pendingKots.length > 0) {
-      alert("demo.datahouseerp.com says:\n\nCannot submit the form because Kot amount is greater than 0! Please convert all pending KOTs to Food Bill before checkout (Click '⚡ Clear to Food Bill' on the Pending Kot card).");
+      alert("Hotel Sai Vasudev Residency:\n\nCannot submit the form because Kot amount is greater than 0! Please convert all pending KOTs to Food Bill before checkout (Click '⚡ Clear to Food Bill' on the Pending Kot card).");
       return;
     }
 
@@ -274,12 +274,12 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
         style={{ maxWidth: showInvoicePreview ? 920 : 1150 }}
       >
         {!showInvoicePreview ? (
-          /* Master Checkout Folio Screen matching demo.datahouseerp.com/show_checkin/200 (Video 07 Frame 0080 & 0130) */
+          /* Master Checkout Folio Screen matching pms.hotelsai-vasudev.com/show_checkin/200 (Video 07 Frame 0080 & 0130) */
           <>
             <div className="pms-form-banner" style={{ background: '#84cc16', color: '#000', fontWeight: 800, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>New Room Check Out Ente &bull; Room {targetRoom.roomNo} ({targetRoom.roomType})</span>
               <span style={{ fontSize: 11, background: '#0f172a', color: '#fff', padding: '2px 8px', borderRadius: 2, fontWeight: 800 }}>
-                Inv: {activeInvoiceNo} &bull; demo.datahouseerp.com/show_checkin/200
+                Inv: {activeInvoiceNo} &bull; pms.hotelsai-vasudev.com/show_checkin/200
               </span>
             </div>
 
@@ -341,7 +341,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                       const taxVal = Number((rawRent / 1.12).toFixed(2));
                       const gstVal = Number((rawRent - taxVal).toFixed(2));
                       setIsTaxInclusive(true);
-                      alert(`demo.datahouseerp.com says\n\nTaxable Value: ${taxVal}\nGST /Tax value : ${gstVal}`);
+                      alert(`Hotel Sai Vasudev Residency:\n\nTaxable Value: ₹${taxVal}\nGST / Tax Value: ₹${gstVal}`);
                     }}
                     style={{
                       background: '#0f172a',
@@ -1079,7 +1079,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
             </form>
           </>
         ) : (
-          /* Multi-Format Tax Invoice matching demo.datahouseerp.com/room_checkout_view3/222 (Frame 0420) */
+          /* Multi-Format Tax Invoice matching pms.hotelsai-vasudev.com/room_checkout_view3/222 (Frame 0420) */
           <div>
             {/* Format Switcher Toolbar (Video 04 [13:30 - 14:15]) */}
             <div style={{

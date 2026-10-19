@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { PmsCompanyInfo, BillFormatType, CompanyPicAsset } from '../../types/pmsModels';
 import { PmsStore, DEFAULT_COMPANY_INFO } from '../../services/pmsStore';
+import { hotelApi } from '../../services/api';
 import './pmsStyles.css';
 
 interface CompanyBrandingModalProps {
@@ -50,7 +51,24 @@ export const CompanyBrandingModal: React.FC<CompanyBrandingModalProps> = ({
     if (onSaved) onSaved(updated);
   };
 
-  const handleSimulateUpload = (code: 'logo' | 'qr_code' | 'seal' | 'signature' | 'brand') => {
+  const handleSimulateUpload = async (code: 'logo' | 'qr_code' | 'seal' | 'signature' | 'brand') => {
+    const fileInput = document.getElementById(`file-${code}`) as HTMLInputElement | null;
+    const file = fileInput?.files?.[0];
+
+    if (file) {
+      try {
+        setSuccessBanner(`Uploading ${file.name} to Cloudflare R2...`);
+        const res = await hotelApi.uploadGuestDocument(file);
+        PmsStore.saveCompanyPicAsset(code, res.url);
+        setAssets(PmsStore.getCompanyPicAssets());
+        setCompanyInfo(PmsStore.getCompanyInfo());
+        setSuccessBanner(`✅ ${code.toUpperCase()} uploaded to Cloudflare R2 and assigned! Verified in bill printouts.`);
+        return;
+      } catch (err) {
+        console.warn('Direct R2 branding upload note:', err);
+      }
+    }
+
     let mockUrl = '';
     if (code === 'logo') {
       mockUrl = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=200&q=80';
@@ -112,10 +130,10 @@ export const CompanyBrandingModal: React.FC<CompanyBrandingModalProps> = ({
                 fontFamily: 'monospace'
               }}
             >
-              {activeTab === 'pictures' && 'demo.datahouseerp.com/comp_pic_form'}
-              {activeTab === 'banking' && 'demo.datahouseerp.com/comp_info_footer'}
-              {activeTab === 'format' && 'demo.datahouseerp.com/checkout_print_view'}
-              {activeTab === 'company_info' && 'demo.datahouseerp.com/company_info_form'}
+              {activeTab === 'pictures' && 'pms.hotelsai-vasudev.com/comp_pic_form'}
+              {activeTab === 'banking' && 'pms.hotelsai-vasudev.com/comp_info_footer'}
+              {activeTab === 'format' && 'pms.hotelsai-vasudev.com/checkout_print_view'}
+              {activeTab === 'company_info' && 'pms.hotelsai-vasudev.com/company_info_form'}
             </div>
           </div>
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { PmsCheckIn, PmsRoom, PaymentSplit } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
+import { hotelApi } from '../../services/api';
 import { CheckInSlipModal } from './CheckInSlipModal';
 
 interface NewRoomCheckInModalProps {
@@ -435,12 +436,15 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                     type="file"
                     accept="image/*"
                     style={{ display: 'none' }}
-                    onChange={e => {
+                    onChange={async e => {
                       const f = e.target.files?.[0];
                       if (f) {
-                        const r = new FileReader();
-                        r.onload = ev => setIdPhotoFront(ev.target?.result as string);
-                        r.readAsDataURL(f);
+                        try {
+                          const res = await hotelApi.uploadGuestDocument(f);
+                          setIdPhotoFront(res.url);
+                        } catch (err) {
+                          console.warn('ID Front upload note:', err);
+                        }
                       }
                     }}
                   />
@@ -455,12 +459,15 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                     type="file"
                     accept="image/*"
                     style={{ display: 'none' }}
-                    onChange={e => {
+                    onChange={async e => {
                       const f = e.target.files?.[0];
                       if (f) {
-                        const r = new FileReader();
-                        r.onload = ev => setIdPhotoBack(ev.target?.result as string);
-                        r.readAsDataURL(f);
+                        try {
+                          const res = await hotelApi.uploadGuestDocument(f);
+                          setIdPhotoBack(res.url);
+                        } catch (err) {
+                          console.warn('ID Back upload note:', err);
+                        }
                       }
                     }}
                   />

@@ -95,7 +95,7 @@ export const PaymentRegisterModal: React.FC<PaymentRegisterModalProps> = ({
                   Add Payment
                 </h2>
                 <div className="text-[11px] text-gray-500">
-                  demo.datahouseerp.com/payments &bull; Hotel Expenses, Owner Payouts, Commissions &amp; Vendor Payments
+                  pms.hotelsai-vasudev.com/payments &bull; Hotel Expenses, Owner Payouts, Commissions &amp; Vendor Payments
                 </div>
               </div>
             </div>

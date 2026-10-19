@@ -114,13 +114,13 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
   const getRouteLabel = () => {
     switch (activeFormat) {
       case 'Format_1_DayWise':
-        return `demo.datahouseerp.com/room_checkout_view2/${currentCheckout.invoiceNo.replace(/[^0-9]/g, '').slice(-3) || '252'}`;
+        return `pms.hotelsai-vasudev.com/room_checkout_view2/${currentCheckout.invoiceNo.replace(/[^0-9]/g, '').slice(-3) || '252'}`;
       case 'Format_2_Summary':
-        return `demo.datahouseerp.com/room_checkout_view/${currentCheckout.invoiceNo.replace(/[^0-9]/g, '').slice(-3) || '238'}`;
+        return `pms.hotelsai-vasudev.com/room_checkout_view/${currentCheckout.invoiceNo.replace(/[^0-9]/g, '').slice(-3) || '238'}`;
       case 'Format_3_A4_Standard':
-        return `demo.datahouseerp.com/room_checkout_view3/${currentCheckout.invoiceNo.replace(/[^0-9]/g, '').slice(-3) || '238'}`;
+        return `pms.hotelsai-vasudev.com/room_checkout_view3/${currentCheckout.invoiceNo.replace(/[^0-9]/g, '').slice(-3) || '238'}`;
       case 'Format_4_A5_Compact':
-        return `demo.datahouseerp.com/room_checkout_view4/${currentCheckout.invoiceNo.replace(/[^0-9]/g, '').slice(-3) || '238'}`;
+        return `pms.hotelsai-vasudev.com/room_checkout_view4/${currentCheckout.invoiceNo.replace(/[^0-9]/g, '').slice(-3) || '238'}`;
     }
   };
 

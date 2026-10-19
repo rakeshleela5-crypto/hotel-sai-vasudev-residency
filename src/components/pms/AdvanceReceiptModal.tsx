@@ -136,7 +136,7 @@ export const AdvanceReceiptModal: React.FC<AdvanceReceiptModalProps> = ({
                 ADD Advance Receipt
               </h2>
               <div style={{ fontSize: 11, color: '#94a3b8' }}>
-                demo.datahouseerp.com/advace_receipt &bull; Room Advance Register
+                pms.hotelsai-vasudev.com/advace_receipt &bull; Room Advance Register
               </div>
             </div>
           </div>

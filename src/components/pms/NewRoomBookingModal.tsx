@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { PmsBooking, PmsRoom, PaymentSplit } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
+import { hotelApi } from '../../services/api';
 
 interface NewRoomBookingModalProps {
   isOpen: boolean;
@@ -559,12 +560,15 @@ export const NewRoomBookingModal: React.FC<NewRoomBookingModalProps> = ({
                       type="file"
                       accept="image/*"
                       style={{ display: 'none' }}
-                      onChange={e => {
+                      onChange={async e => {
                         const file = e.target.files?.[0];
                         if (file) {
-                          const reader = new FileReader();
-                          reader.onload = ev => setIdPhoto(ev.target?.result as string);
-                          reader.readAsDataURL(file);
+                          try {
+                            const res = await hotelApi.uploadGuestDocument(file);
+                            setIdPhoto(res.url);
+                          } catch (err) {
+                            console.warn('Booking ID upload note:', err);
+                          }
                         }
                       }}
                     />
@@ -589,12 +593,15 @@ export const NewRoomBookingModal: React.FC<NewRoomBookingModalProps> = ({
                       type="file"
                       accept="image/*"
                       style={{ display: 'none' }}
-                      onChange={e => {
+                      onChange={async e => {
                         const file = e.target.files?.[0];
                         if (file) {
-                          const reader = new FileReader();
-                          reader.onload = ev => setGuestPhoto(ev.target?.result as string);
-                          reader.readAsDataURL(file);
+                          try {
+                            const res = await hotelApi.uploadGuestDocument(file);
+                            setGuestPhoto(res.url);
+                          } catch (err) {
+                            console.warn('Guest photo upload note:', err);
+                          }
                         }
                       }}
                     />

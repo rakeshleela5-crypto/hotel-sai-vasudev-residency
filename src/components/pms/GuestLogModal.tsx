@@ -90,7 +90,7 @@ export const GuestLogModal: React.FC<GuestLogModalProps> = ({
                 Guest Log (VIP &amp; Frequent Guest Register)
               </h2>
               <div className="text-[11px] text-slate-300">
-                demo.datahouseerp.com/guestlog &bull; Video 29 Frame 0350 Lifetime Value Audit
+                pms.hotelsai-vasudev.com/guestlog &bull; Video 29 Frame 0350 Lifetime Value Audit
               </div>
             </div>
           </div>

@@ -481,7 +481,7 @@ export const OtherMasterModal: React.FC<OtherMasterModalProps> = ({
             <div>
               <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ margin: 0, fontSize: 16, color: '#333' }}>GST / VAT / TAX Master</h3>
-                <span style={{ fontSize: 12, color: '#6c757d' }}>Endpoint: demo.datahouseerp.com/gstmasters</span>
+                <span style={{ fontSize: 12, color: '#6c757d' }}>Endpoint: pms.hotelsai-vasudev.com/gstmasters</span>
               </div>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
@@ -536,7 +536,7 @@ export const OtherMasterModal: React.FC<OtherMasterModalProps> = ({
             <div>
               <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ margin: 0, fontSize: 16, color: '#333' }}>Business Source</h3>
-                <span style={{ fontSize: 12, color: '#6c757d' }}>Endpoint: demo.datahouseerp.com/businesssources</span>
+                <span style={{ fontSize: 12, color: '#6c757d' }}>Endpoint: pms.hotelsai-vasudev.com/businesssources</span>
               </div>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
@@ -583,7 +583,7 @@ export const OtherMasterModal: React.FC<OtherMasterModalProps> = ({
             <div>
               <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ margin: 0, fontSize: 16, color: '#333' }}>Voucher Type Configurations</h3>
-                <span style={{ fontSize: 12, color: '#6c757d' }}>Endpoint: demo.datahouseerp.com/voucher_types</span>
+                <span style={{ fontSize: 12, color: '#6c757d' }}>Endpoint: pms.hotelsai-vasudev.com/voucher_types</span>
               </div>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>

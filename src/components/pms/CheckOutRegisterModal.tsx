@@ -141,7 +141,7 @@ export const CheckOutRegisterModal: React.FC<CheckOutRegisterModalProps> = ({
                 fontFamily: 'monospace'
               }}
             >
-              demo.datahouseerp.com/roomcheckouts
+              pms.hotelsai-vasudev.com/roomcheckouts
             </span>
           </div>
 

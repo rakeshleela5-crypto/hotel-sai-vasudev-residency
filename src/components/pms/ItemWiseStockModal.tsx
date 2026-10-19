@@ -56,7 +56,7 @@ export const ItemWiseStockModal: React.FC<ItemWiseStockModalProps> = ({
                 Item Wise Stock Ledger
               </h2>
               <div className="text-[11px] text-slate-300">
-                demo.datahouseerp.com/item_wise_stock &bull; Video 29 Frame 0410 Kitchen Stock Audit
+                pms.hotelsai-vasudev.com/item_wise_stock &bull; Video 29 Frame 0410 Kitchen Stock Audit
               </div>
             </div>
           </div>

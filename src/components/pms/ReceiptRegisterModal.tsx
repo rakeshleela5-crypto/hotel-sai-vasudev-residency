@@ -97,7 +97,7 @@ export const ReceiptRegisterModal: React.FC<ReceiptRegisterModalProps> = ({
                   ADD Reciept
                 </h2>
                 <div className="text-[11px] text-gray-500">
-                  demo.datahouseerp.com/reciepts &bull; General Payment Receipts &amp; Collections
+                  pms.hotelsai-vasudev.com/reciepts &bull; General Payment Receipts &amp; Collections
                 </div>
               </div>
             </div>

@@ -301,7 +301,7 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
               className="pms-form-banner banner-navy"
               style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
             >
-              <span>Restaurant Food Bill Generation &bull; demo.datahouseerp.com/table_facthkot_records/52</span>
+              <span>Restaurant Food Bill Generation &bull; pms.hotelsai-vasudev.com/table_facthkot_records/52</span>
               <button 
                 type="button" 
                 onClick={onClose} 

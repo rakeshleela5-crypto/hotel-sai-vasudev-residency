@@ -213,10 +213,10 @@ export const GstReportsModal: React.FC<GstReportsModalProps> = ({
               </h2>
             </div>
             <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2, fontFamily: 'monospace' }}>
-              {activeTab === 'consolidated' && 'demo.datahouseerp.com/room_food_gstreport_pageshow & /roomfood_gstreport'}
-              {activeTab === 'b2b' && 'demo.datahouseerp.com/b2bsales_pageshow & /b2bsales (GSTR-1 Table 4)'}
-              {activeTab === 'b2c' && 'demo.datahouseerp.com/b2csales (GSTR-1 Table 7)'}
-              {activeTab === 'dashboard' && 'demo.datahouseerp.com/report_dashboard'}
+              {activeTab === 'consolidated' && 'pms.hotelsai-vasudev.com/room_food_gstreport_pageshow & /roomfood_gstreport'}
+              {activeTab === 'b2b' && 'pms.hotelsai-vasudev.com/b2bsales_pageshow & /b2bsales (GSTR-1 Table 4)'}
+              {activeTab === 'b2c' && 'pms.hotelsai-vasudev.com/b2csales (GSTR-1 Table 7)'}
+              {activeTab === 'dashboard' && 'pms.hotelsai-vasudev.com/report_dashboard'}
             </div>
           </div>
 

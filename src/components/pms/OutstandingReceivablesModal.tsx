@@ -63,8 +63,8 @@ export const OutstandingReceivablesModal: React.FC<OutstandingReceivablesModalPr
                 </h2>
                 <div className="text-[11px] text-slate-300">
                   {activeMode === 'receivable' 
-                    ? 'demo.datahouseerp.com/outstanding_receivable &bull; Video 29 Frame 0140' 
-                    : 'demo.datahouseerp.com/outstanding_payable_result &bull; Video 29 Frame 0160'}
+                    ? 'pms.hotelsai-vasudev.com/outstanding_receivable &bull; Video 29 Frame 0140' 
+                    : 'pms.hotelsai-vasudev.com/outstanding_payable_result &bull; Video 29 Frame 0160'}
                 </div>
               </div>
             </div>

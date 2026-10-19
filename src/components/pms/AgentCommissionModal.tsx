@@ -246,7 +246,7 @@ export const AgentCommissionModal: React.FC<AgentCommissionModalProps> = ({
                     fontFamily: 'monospace'
                   }}
                 >
-                  demo.datahouseerp.com/agent_commission
+                  pms.hotelsai-vasudev.com/agent_commission
                 </span>
                 <span
                   style={{

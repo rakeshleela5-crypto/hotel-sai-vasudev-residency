@@ -37,7 +37,7 @@ export const DayEndReportModal: React.FC<DayEndReportModalProps> = ({ isOpen, on
                 Day End Report (Night Audit Paper Ledger)
               </h2>
               <div className="text-[11px] text-slate-300">
-                demo.datahouseerp.com/dayend_report &bull; Video 29 Frame 0240 Audit Register
+                pms.hotelsai-vasudev.com/dayend_report &bull; Video 29 Frame 0240 Audit Register
               </div>
             </div>
           </div>
