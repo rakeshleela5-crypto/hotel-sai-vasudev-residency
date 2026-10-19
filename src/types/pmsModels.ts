@@ -1590,7 +1590,28 @@ export interface PmsBanquetBooking {
   };
 }
 
+// ==========================================
+// Video 08: Safe Deposit Locker & Other Charges Master Contracts
+// ==========================================
+export interface PmsLocker {
+  id: string;
+  lockerNo: string;
+  lockerSize: 'Small' | 'Medium' | 'Large' | 'Executive Vault';
+  dailyRate: number;
+  status: 'Vacant' | 'Occupied' | 'Under Maintenance';
+  assignedGuestName?: string;
+  assignedRoomNo?: string;
+  keyNumber: string;
+  securityDeposit: number;
+}
 
-
-
-
+export interface PmsOtherCharge {
+  id: string;
+  chargeName: string;
+  category: 'Room' | 'F&B' | 'Housekeeping' | 'Travel' | 'Banquet';
+  defaultRate: number;
+  gstRate: number;
+  hsnCode: string;
+  isTaxIncluded: boolean;
+  remark?: string;
+}

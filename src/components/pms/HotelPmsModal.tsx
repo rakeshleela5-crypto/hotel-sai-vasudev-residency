@@ -53,7 +53,9 @@ import { AgentCommissionModal } from './AgentCommissionModal';
 import { LiquorBarManagementModal } from './LiquorBarManagementModal';
 import { NoDiscountMasterModal } from './NoDiscountMasterModal';
 import { BanquetHallBillingModal } from './BanquetHallBillingModal';
-import type { PmsUserAccount, PmsChainProperty, BillFormatType, PmsCheckOutDetail, PmsGstReportTab } from '../../types/pmsModels';
+import { NewRoomBookingModal } from './NewRoomBookingModal';
+import { RoomCheckOutModal } from './RoomCheckOutModal';
+import type { PmsUserAccount, PmsChainProperty, BillFormatType, PmsCheckOutDetail, PmsGstReportTab, PmsRoom } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import './pmsStyles.css';
 
@@ -68,9 +70,17 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   const [masterMenuOpen, setMasterMenuOpen] = useState(false);
   const [entryMenuOpen, setEntryMenuOpen] = useState(true);
   const [reportMenuOpen, setReportMenuOpen] = useState(false);
+  const [hotelMenuOpen, setHotelMenuOpen] = useState(false);
+  const [activityMenuOpen, setActivityMenuOpen] = useState(false);
   const [otherSubmenuOpen, setOtherSubmenuOpen] = useState(false);
   const [settingMenuOpen, setSettingMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Direct Booking & Check Out Modals
+  const [isNewBookingModalOpen, setIsNewBookingModalOpen] = useState(false);
+  const [selectedRoomForNewBooking, setSelectedRoomForNewBooking] = useState<PmsRoom | null>(null);
+  const [isDirectCheckoutOpen, setIsDirectCheckoutOpen] = useState(false);
+  const [selectedRoomForDirectCheckout, setSelectedRoomForDirectCheckout] = useState<PmsRoom | null>(null);
 
   // Calendar & Unconfirmed Bookings Modals
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -88,7 +98,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   const [isTableMasterOpen, setIsTableMasterOpen] = useState(false);
   const [isItemMasterOpen, setIsItemMasterOpen] = useState(false);
   const [isOtherMasterOpen, setIsOtherMasterOpen] = useState(false);
-  const [otherMasterTab, setOtherMasterTab] = useState<'gst' | 'businessSource' | 'voucherType'>('gst');
+  const [otherMasterTab, setOtherMasterTab] = useState<'gst' | 'businessSource' | 'voucherType' | 'locker' | 'otherCharge'>('gst');
 
   // Video 09 Business Setting Modal (12 Hour vs 24 Hour Policy)
   const [isBusinessSettingOpen, setIsBusinessSettingOpen] = useState(false);
@@ -475,6 +485,68 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
     }
   };
 
+  const handleSearch = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return;
+
+    // 1. Direct Room Number Match
+    const allRooms = PmsStore.getRooms();
+    const matchedRoom = allRooms.find(r => r.roomNo.toLowerCase() === query || `room ${r.roomNo.toLowerCase()}` === query);
+    if (matchedRoom) {
+      setActiveTab('matrix');
+      if (matchedRoom.status === 'vacant') {
+        setSelectedRoomForNewBooking(matchedRoom);
+        setIsNewBookingModalOpen(true);
+      } else if (matchedRoom.status === 'occupied') {
+        setSelectedRoomForDirectCheckout(matchedRoom);
+        setIsDirectCheckoutOpen(true);
+      }
+      return;
+    }
+
+    // 2. Keyword Router
+    if (query.includes('book') || query.includes('reserv')) {
+      setSelectedRoomForNewBooking(null);
+      setIsNewBookingModalOpen(true);
+    } else if (query.includes('checkin') || query.includes('check in')) {
+      setIsNewCheckInOpen(true);
+    } else if (query.includes('checkout') || query.includes('check out') || query.includes('billing')) {
+      setIsCheckOutRegisterOpen(true);
+    } else if (query.includes('kot') || query.includes('kitchen')) {
+      setIsKotModalOpen(true);
+    } else if (query.includes('food') || query.includes('fbb') || query.includes('restaurant')) {
+      setIsFoodBillModalOpen(true);
+    } else if (query.includes('police') || query.includes('c-form') || query.includes('c form')) {
+      setIsPoliceReportOpen(true);
+    } else if (query.includes('gst') || query.includes('tax') || query.includes('b2b') || query.includes('b2c')) {
+      setGstReportTab('consolidated');
+      setIsGstReportsOpen(true);
+    } else if (query.includes('locker')) {
+      setOtherMasterTab('locker');
+      setIsOtherMasterOpen(true);
+    } else if (query.includes('charge') || query.includes('extra bed') || query.includes('laundry')) {
+      setOtherMasterTab('otherCharge');
+      setIsOtherMasterOpen(true);
+    } else if (query.includes('banquet') || query.includes('hall') || query.includes('event')) {
+      setIsBanquetOpen(true);
+    } else if (query.includes('bar') || query.includes('liquor')) {
+      setIsLiquorBarOpen(true);
+    } else if (query.includes('user') || query.includes('staff') || query.includes('role')) {
+      setIsUserManagementOpen(true);
+    } else if (query.includes('whatsapp') || query.includes('sms')) {
+      setIsWhatsAppSettingOpen(true);
+    } else if (query.includes('stock') || query.includes('store') || query.includes('inventory')) {
+      setIsStoreWiseStockOpen(true);
+    } else if (query.includes('table')) {
+      setIsTableDashboardOpen(true);
+    } else if (query.includes('calendar')) {
+      setIsCalendarOpen(true);
+    } else {
+      setActiveTab('matrix');
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -496,18 +568,19 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                 HOTEL MANAGEMENT SYSTEM &bull; PMS
               </h2>
 
-              <div className="pms-header-search">
+              <form onSubmit={handleSearch} className="pms-header-search" style={{ display: 'flex', alignItems: 'center' }}>
                 <input
                   type="text"
-                  placeholder="Search room, guest, booking..."
+                  placeholder="Search room (101), guest, kot, gst, booking..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleSearch(); }}
                   className="pms-search-input"
                 />
-                <button type="button" className="pms-search-btn">
+                <button type="submit" className="pms-search-btn" title="Search room or feature">
                   🔍
                 </button>
-              </div>
+              </form>
             </div>
 
             <div className="pms-header-right">
@@ -1131,8 +1204,8 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                         <div className="pms-nav-item" onClick={() => { setItemMasterTab('godowns'); setIsItemMasterOpen(true); }}>
                           <span style={{ color: '#38bdf8', fontWeight: 600 }}>🏬 Godown (Store)</span>
                         </div>
-                        <div className="pms-nav-item" onClick={() => alert('Locker Master: Safe deposit locker management.')}>
-                          <span>🔒 Locker</span>
+                        <div className="pms-nav-item" onClick={() => { setOtherMasterTab('locker'); setIsOtherMasterOpen(true); }}>
+                          <span style={{ color: '#38bdf8', fontWeight: 600 }}>🔒 Locker Master</span>
                         </div>
                         <div className="pms-nav-item" onClick={() => { setOtherMasterTab('gst'); setIsOtherMasterOpen(true); }}>
                           <span>⚖️ GST,TAX,VAT</span>
@@ -1140,8 +1213,8 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                         <div className="pms-nav-item" onClick={() => { setOtherMasterTab('businessSource'); setIsOtherMasterOpen(true); }}>
                           <span>🌐 Business Source</span>
                         </div>
-                        <div className="pms-nav-item" onClick={() => alert('Other Charge: Extra bed, laundry, early check-in charges.')}>
-                          <span>➕ Other Charge</span>
+                        <div className="pms-nav-item" onClick={() => { setOtherMasterTab('otherCharge'); setIsOtherMasterOpen(true); }}>
+                          <span style={{ color: '#a3e635', fontWeight: 600 }}>➕ Other Charge Master</span>
                         </div>
                         <div className="pms-nav-item" onClick={() => { setOtherMasterTab('voucherType'); setIsOtherMasterOpen(true); }}>
                           <span>📄 Voucher Type</span>
@@ -1172,8 +1245,8 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     <div className="pms-nav-item" onClick={() => setIsOnlineGuestBookingOpen(true)}>
                       <span style={{ color: '#38bdf8', fontWeight: 700 }}>🌐 Online Guest Booking Portal (/hotel_room)</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Hotel Module', 'Room Booking', () => setActiveTab('matrix'))}>
-                      <span>🏨 Room Booking</span>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Hotel Module', 'Room Booking', () => { setSelectedRoomForNewBooking(null); setIsNewBookingModalOpen(true); })}>
+                      <span style={{ color: '#fbbf24', fontWeight: 700 }}>🏨 Advance Room Reservation</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('Check-in Register', 'Room Check In Register', () => setIsCheckInRegisterOpen(true))}>
                       <span style={{ color: '#38bdf8', fontWeight: 700 }}>📋 Room Check In Register</span>
@@ -1223,8 +1296,8 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('Stock_Transfer', 'Stock Transfer & Issue', () => { setStockTransferMode('transfer'); setIsStockTransferOpen(true); })}>
                       <span style={{ color: '#a855f7', fontWeight: 700 }}>🔁 Stock Transfer &amp; Issue (Video 19)</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => checkModuleAccess('roomcheckout', 'Room Check Out', () => setActiveTab('matrix'))}>
-                      <span>🧾 Room Check Out</span>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('roomcheckout', 'Room Check Out', () => setIsCheckOutRegisterOpen(true))}>
+                      <span style={{ color: '#f87171', fontWeight: 700 }}>🧾 Room Check Out &amp; Final Billing</span>
                     </div>
                     {/* Video 26: Check Out Register & Bill Formats (Frames 0115, 0150) */}
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('roomcheckout', 'Check Out Register', () => setIsCheckOutRegisterOpen(true))}>
@@ -1263,8 +1336,8 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     <div className="pms-nav-item" onClick={() => setIsStoreWiseStockOpen(true)}>
                       <span style={{ color: '#10b981', fontWeight: 800 }}>📦 Store Wise Stock Report (Video 19)</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => alert('Daily Check-in Report')}>
-                      <span>📋 Check-in Report</span>
+                    <div className="pms-nav-item" onClick={() => setIsCheckInRegisterOpen(true)}>
+                      <span style={{ color: '#38bdf8', fontWeight: 700 }}>📋 Daily Check-in Report (/checkin_report)</span>
                     </div>
                     {/* Video 24: Police Station Report (Frames 0100, 0105, 0110, 0140) */}
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('Police Station Report', 'Police Station Report', () => setIsPoliceReportOpen(true))}>
@@ -1327,21 +1400,83 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                   </div>
                 )}
 
-                <div className="pms-nav-item">
+                {/* Hotel Submenu */}
+                <div 
+                  className="pms-nav-item"
+                  onClick={() => setHotelMenuOpen(!hotelMenuOpen)}
+                  style={{ background: hotelMenuOpen ? '#2c3136' : undefined }}
+                >
                   <div className="pms-nav-item-left">
                     <span>🏨</span>
                     <span>Hotel</span>
                   </div>
-                  <span>›</span>
+                  <span>{hotelMenuOpen ? '▾' : '›'}</span>
                 </div>
 
-                <div className="pms-nav-item">
+                {hotelMenuOpen && (
+                  <div style={{ background: '#1a1e22', paddingLeft: 12, fontSize: 12 }}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Hotel Module', 'Room Dashboard', () => setActiveTab('matrix'))}>
+                      <span style={{ color: '#38bdf8', fontWeight: 700 }}>🏢 Room Status Matrix</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('roomcheckin', 'New Check In', () => setIsNewCheckInOpen(true))}>
+                      <span style={{ color: '#4ade80', fontWeight: 700 }}>🚪 New Room Check-In</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Hotel Module', 'Room Booking', () => { setSelectedRoomForNewBooking(null); setIsNewBookingModalOpen(true); })}>
+                      <span style={{ color: '#fbbf24', fontWeight: 700 }}>🏨 Advance Room Reservation</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('roomcheckout', 'Check Out Register', () => setIsCheckOutRegisterOpen(true))}>
+                      <span style={{ color: '#f87171', fontWeight: 700 }}>🧾 Room Check Out &amp; Billing</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Hotel Module', 'Room Shifting', () => { setSelectedRoomForShift(undefined); setIsRoomShiftOpen(true); })}>
+                      <span style={{ color: '#06b6d4', fontWeight: 700 }}>🔄 Room Shifting (/room_shift)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsCalendarOpen(true)}>
+                      <span style={{ color: '#a78bfa', fontWeight: 700 }}>📅 30-Day Booking Calendar</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsCheckInRegisterOpen(true)}>
+                      <span style={{ color: '#34d399', fontWeight: 700 }}>📋 In-House Guest Register</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Activity Submenu */}
+                <div 
+                  className="pms-nav-item"
+                  onClick={() => setActivityMenuOpen(!activityMenuOpen)}
+                  style={{ background: activityMenuOpen ? '#2c3136' : undefined }}
+                >
                   <div className="pms-nav-item-left">
                     <span>⚡</span>
                     <span>Activity</span>
                   </div>
-                  <span>›</span>
+                  <span>{activityMenuOpen ? '▾' : '›'}</span>
                 </div>
+
+                {activityMenuOpen && (
+                  <div style={{ background: '#1a1e22', paddingLeft: 12, fontSize: 12 }}>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('kot', 'Room Service KOT Entry', () => setIsKotModalOpen(true))}>
+                      <span style={{ color: '#f59e0b', fontWeight: 700 }}>🍴 Room Service KOT Entry</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('foodbills', 'Food Bill (FBB)', () => setIsFoodBillModalOpen(true))}>
+                      <span style={{ color: '#38bdf8', fontWeight: 700 }}>🧾 Food Bill Settlement (FBB)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('advance_reciept', 'Room Advance Receipt', () => setIsAdvanceReceiptOpen(true))}>
+                      <span style={{ color: '#34d399', fontWeight: 700 }}>💵 Room Advance / Deposit</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Stock_Transfer', 'Stock Transfer & Issue', () => { setStockTransferMode('transfer'); setIsStockTransferOpen(true); })}>
+                      <span style={{ color: '#a855f7', fontWeight: 700 }}>📦 Store Stock Requisition</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsDayEndModalOpen(true)}>
+                      <span style={{ color: '#f43f5e', fontWeight: 700 }}>🌅 Night Audit &amp; Day End</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => checkModuleAccess('Police Station Report', 'Police Station Report', () => setIsPoliceReportOpen(true))}>
+                      <span style={{ color: '#fbbf24', fontWeight: 700 }}>👮 Police C-Form Submission</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsShiftHandoverModalOpen(true)}>
+                      <span style={{ color: '#60a5fa', fontWeight: 700 }}>🤝 Cash &amp; Shift Handover</span>
+                    </div>
+                  </div>
+                )}
 
                 {/* Setting Submenu (Video 09 Frame 0120 & 0200) */}
                 <div 
@@ -1398,8 +1533,8 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('Setting', 'Bill Format Selector', () => { setCompanyBrandingTab('format'); setIsCompanyBrandingOpen(true); })}>
                       <span style={{ color: '#a3e635', fontWeight: 800 }}>🧾 Bill Format Selector (/checkout_print_view)</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => alert('Printer & Receipt Template Setup')}>
-                      <span>🖨️ Printer &amp; POS Setup</span>
+                    <div className="pms-nav-item" onClick={() => { setSelectedBillCheckout(null); setActiveBillFormat('Format_3_A4_Standard'); setIsBillFormatOpen(true); }}>
+                      <span style={{ color: '#f59e0b', fontWeight: 700 }}>🖨️ Printer &amp; POS Format Setup</span>
                     </div>
                   </div>
                 )}
@@ -1933,6 +2068,34 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         isOpen={isBanquetOpen}
         onClose={() => setIsBanquetOpen(false)}
       />
+
+      {/* Video 02 & Video 04: New Room Booking Modal */}
+      <NewRoomBookingModal
+        isOpen={isNewBookingModalOpen}
+        onClose={() => setIsNewBookingModalOpen(false)}
+        preselectedRoom={selectedRoomForNewBooking}
+        onBookingCreated={() => {
+          setIsNewBookingModalOpen(false);
+          setRoomRefreshTrigger(prev => prev + 1);
+        }}
+      />
+
+      {/* Video 26: Direct Room Check Out Modal */}
+      {selectedRoomForDirectCheckout && (
+        <RoomCheckOutModal
+          isOpen={isDirectCheckoutOpen}
+          onClose={() => {
+            setIsDirectCheckoutOpen(false);
+            setSelectedRoomForDirectCheckout(null);
+          }}
+          targetRoom={selectedRoomForDirectCheckout}
+          onCheckoutComplete={() => {
+            setIsDirectCheckoutOpen(false);
+            setSelectedRoomForDirectCheckout(null);
+            setRoomRefreshTrigger(prev => prev + 1);
+          }}
+        />
+      )}
     </>
   );
 };

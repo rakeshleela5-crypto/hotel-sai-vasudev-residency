@@ -69,7 +69,9 @@ import type {
   PmsHotelAssetLinenRecord,
   PmsBanquetVenue,
   PmsBanquetBooking,
-  PmsBanquetKot
+  PmsBanquetKot,
+  PmsLocker,
+  PmsOtherCharge
 } from '../types/pmsModels';
 import { PMS_ALL_PERMISSIONS } from '../types/pmsModels';
 import { hotelApi } from './api';
@@ -2360,8 +2362,29 @@ const STORAGE_KEYS = {
   DISCOUNT_AUDIT_LOGS: 'svr_pms_discount_audit_logs',
   HOTEL_ASSETS: 'svr_pms_hotel_assets',
   BANQUET_VENUES: 'svr_pms_banquet_venues',
-  BANQUET_BOOKINGS: 'svr_pms_banquet_bookings'
+  BANQUET_BOOKINGS: 'svr_pms_banquet_bookings',
+  LOCKERS: 'svr_pms_lockers',
+  OTHER_CHARGES: 'svr_pms_other_charges'
 };
+
+export const INITIAL_LOCKERS: PmsLocker[] = [
+  { id: 'loc-1', lockerNo: 'L-101', lockerSize: 'Small', dailyRate: 150, status: 'Vacant', keyNumber: 'K-101', securityDeposit: 500 },
+  { id: 'loc-2', lockerNo: 'L-102', lockerSize: 'Small', dailyRate: 150, status: 'Occupied', assignedGuestName: 'AJUU', assignedRoomNo: '101', keyNumber: 'K-102', securityDeposit: 500 },
+  { id: 'loc-3', lockerNo: 'L-103', lockerSize: 'Medium', dailyRate: 250, status: 'Vacant', keyNumber: 'K-103', securityDeposit: 1000 },
+  { id: 'loc-4', lockerNo: 'L-104', lockerSize: 'Medium', dailyRate: 250, status: 'Vacant', keyNumber: 'K-104', securityDeposit: 1000 },
+  { id: 'loc-5', lockerNo: 'L-201', lockerSize: 'Large', dailyRate: 400, status: 'Vacant', keyNumber: 'K-201', securityDeposit: 1500 },
+  { id: 'loc-6', lockerNo: 'L-202', lockerSize: 'Executive Vault', dailyRate: 600, status: 'Vacant', keyNumber: 'K-202', securityDeposit: 2000 }
+];
+
+export const INITIAL_OTHER_CHARGES: PmsOtherCharge[] = [
+  { id: 'chg-1', chargeName: 'Extra Bed / Rollaway Mattress', category: 'Room', defaultRate: 500, gstRate: 12, hsnCode: '996311', isTaxIncluded: true, remark: 'Standard pilgrim rollaway bed with clean linen' },
+  { id: 'chg-2', chargeName: 'Early Check-In Surcharge', category: 'Room', defaultRate: 400, gstRate: 12, hsnCode: '996311', isTaxIncluded: true, remark: 'Arrival between 06:00 AM - 10:00 AM' },
+  { id: 'chg-3', chargeName: 'Late Check-Out Surcharge', category: 'Room', defaultRate: 500, gstRate: 12, hsnCode: '996311', isTaxIncluded: true, remark: 'Extension up to 04:00 PM' },
+  { id: 'chg-4', chargeName: 'VIP Temple Darshan Escort', category: 'Travel', defaultRate: 350, gstRate: 0, hsnCode: '998555', isTaxIncluded: true, remark: 'Personal front desk escort to Gate No. 2' },
+  { id: 'chg-5', chargeName: 'Airport / Station Chauffeur Pickup', category: 'Travel', defaultRate: 850, gstRate: 5, hsnCode: '996601', isTaxIncluded: true, remark: 'Dedicated AC car pickup from Shirdi Station / Airport' },
+  { id: 'chg-6', chargeName: 'Laundry Express Service (2 Pieces)', category: 'Housekeeping', defaultRate: 120, gstRate: 18, hsnCode: '999711', isTaxIncluded: true, remark: 'Washed, ironed and delivered in 4 hours' },
+  { id: 'chg-7', chargeName: 'Banquet Sound & Cordless Mic Setup', category: 'Banquet', defaultRate: 2500, gstRate: 18, hsnCode: '998313', isTaxIncluded: true, remark: 'Full speaker system with 2 wireless mics for Satsang' }
+];
 
 export class PmsStore {
   // --- Real-Time Cloud Synchronization Bridge (PostgreSQL on Railway) ---
@@ -2646,6 +2669,66 @@ export class PmsStore {
       list.push(voucher);
     }
     localStorage.setItem(STORAGE_KEYS.VOUCHER_TYPES, JSON.stringify(list));
+  }
+
+  // Lockers Master
+  static getLockers(): PmsLocker[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.LOCKERS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.LOCKERS, JSON.stringify(INITIAL_LOCKERS));
+      return INITIAL_LOCKERS;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_LOCKERS;
+    }
+  }
+
+  static saveLocker(locker: PmsLocker): void {
+    const list = this.getLockers();
+    const idx = list.findIndex(l => l.id === locker.id || l.lockerNo.toLowerCase() === locker.lockerNo.toLowerCase());
+    if (idx >= 0) {
+      list[idx] = locker;
+    } else {
+      list.push(locker);
+    }
+    localStorage.setItem(STORAGE_KEYS.LOCKERS, JSON.stringify(list));
+  }
+
+  static deleteLocker(id: string): void {
+    const list = this.getLockers().filter(l => l.id !== id && l.lockerNo !== id);
+    localStorage.setItem(STORAGE_KEYS.LOCKERS, JSON.stringify(list));
+  }
+
+  // Other Charges Master
+  static getOtherCharges(): PmsOtherCharge[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.OTHER_CHARGES);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.OTHER_CHARGES, JSON.stringify(INITIAL_OTHER_CHARGES));
+      return INITIAL_OTHER_CHARGES;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_OTHER_CHARGES;
+    }
+  }
+
+  static saveOtherCharge(charge: PmsOtherCharge): void {
+    const list = this.getOtherCharges();
+    const idx = list.findIndex(c => c.id === charge.id || c.chargeName.toLowerCase() === charge.chargeName.toLowerCase());
+    if (idx >= 0) {
+      list[idx] = charge;
+    } else {
+      list.push(charge);
+    }
+    localStorage.setItem(STORAGE_KEYS.OTHER_CHARGES, JSON.stringify(list));
+  }
+
+  static deleteOtherCharge(id: string): void {
+    const list = this.getOtherCharges().filter(c => c.id !== id && c.chargeName !== id);
+    localStorage.setItem(STORAGE_KEYS.OTHER_CHARGES, JSON.stringify(list));
   }
 
   // Menu Items
