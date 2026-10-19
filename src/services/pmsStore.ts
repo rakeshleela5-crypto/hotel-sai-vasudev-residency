@@ -2396,9 +2396,28 @@ export class PmsStore {
       const localRooms = this.getRooms();
       let updatedCount = 0;
 
-      for (const b of cloudData.active_bookings) {
+      // 1. Synchronize Room Housekeeping & Operational Status from Cloud DB
+      for (const r of (cloudData.rooms || [])) {
+        const matchingLocal = localRooms.find(lr => lr.id === String(r.id) || lr.roomNo === String(r.id));
+        if (matchingLocal) {
+          if (r.housekeeping_status === 'Clean' && matchingLocal.status !== 'vacant') {
+            matchingLocal.status = 'vacant';
+            matchingLocal.currentGuest = undefined;
+            updatedCount++;
+          } else if (r.housekeeping_status === 'Dirty' && matchingLocal.status !== 'dirty') {
+            matchingLocal.status = 'dirty';
+            updatedCount++;
+          } else if (r.housekeeping_status === 'Under_Maintenance' && matchingLocal.status !== 'blocked') {
+            matchingLocal.status = 'blocked';
+            updatedCount++;
+          }
+        }
+      }
+
+      // 2. Synchronize In-House Occupied Bookings from Cloud DB
+      for (const b of (cloudData.active_bookings || [])) {
         const matchingLocal = localRooms.find(r => r.id === String(b.room_id) || r.roomNo === String(b.room_id));
-        if (matchingLocal && b.status === 'Checked-In' && matchingLocal.status !== 'occupied') {
+        if (matchingLocal && b.status === 'Checked-In') {
           matchingLocal.status = 'occupied';
           matchingLocal.currentGuest = {
             name: b.guest_name,
@@ -2413,21 +2432,13 @@ export class PmsStore {
         }
       }
 
-      for (const r of cloudData.rooms) {
-        const matchingLocal = localRooms.find(lr => lr.id === String(r.id) || lr.roomNo === String(r.id));
-        if (matchingLocal && r.housekeeping_status === 'Under_Maintenance' && matchingLocal.status !== 'blocked') {
-          matchingLocal.status = 'blocked';
-          updatedCount++;
-        }
-      }
-
       if (updatedCount > 0) {
         this.saveRooms(localRooms);
       }
 
       return {
         success: true,
-        message: `Synced with Railway PostgreSQL: ${cloudData.occupied_rooms} occupied, ${cloudData.clean_rooms} clean.`,
+        message: `Synced with Railway PostgreSQL: ${cloudData.occupied_rooms} occupied, ${cloudData.clean_rooms} clean, ${cloudData.dirty_rooms} dirty.`,
         lastSync: cloudData.last_sync_timestamp
       };
     } catch (err) {
@@ -3674,6 +3685,18 @@ export class PmsStore {
       });
       localStorage.setItem(STORAGE_KEYS.TABLES, JSON.stringify(updatedTables));
     }
+
+    // Cloud sync: if assigned to a room, mirror to guest room folio on Railway PostgreSQL
+    if (kot.roomNo) {
+      hotelApi.addFolioItem({
+        booking_ref: `SVR-ROOM-${kot.roomNo}`,
+        item_type: 'Food_KOT',
+        description: (kot.items || []).map(i => `${i.itemName} x ${i.qty}`).join(', ') || 'Room Service Food Order',
+        sac_code: '996331',
+        quantity: 1,
+        unit_price: kot.totalAmount || 0
+      }).catch(e => console.warn('[PmsStore] Background KOT folio cloud sync note:', e));
+    }
   }
 
   static shiftTable(fromTable: string, toTable: string, shiftedBy: string = 'Admin'): {
@@ -4258,6 +4281,16 @@ export class PmsStore {
       return r;
     });
     this.saveRooms(updatedRooms);
+
+    // Cloud sync: mirror Advance Receipt to Railway PostgreSQL
+    hotelApi.recordPayment({
+      booking_ref: `SVR-ROOM-${receipt.roomNo}`,
+      payment_type: 'Advance',
+      payment_mode: 'Cash',
+      amount: receipt.amount,
+      notes: receipt.remark || 'Advance Receipt collected at Front Desk',
+      collected_by: 'Front Desk Officer'
+    }).catch(e => console.warn('[PmsStore] Background advance receipt cloud sync note:', e));
   }
 
   static deleteAdvanceReceipt(receiptNo: string): void {

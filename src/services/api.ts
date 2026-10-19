@@ -476,6 +476,20 @@ export const hotelApi = {
     return await res.json();
   },
 
+  async uploadGuestDocument(file: File): Promise<{ status: string; storage: string; url: string; filename: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch(`${API_BASE_URL}/uploads/guest-document`, {
+      method: 'POST',
+      body: formData
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Document upload to Cloudflare R2 failed');
+    }
+    return await res.json();
+  },
+
   async exportDatabaseBackup() {
     const res = await fetch(`${API_BASE_URL}/pms/backup/export`);
     if (!res.ok) throw new Error('Failed to export database backup');

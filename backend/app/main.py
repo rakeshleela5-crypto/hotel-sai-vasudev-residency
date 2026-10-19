@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.config import settings
 from app.database import engine, Base, get_db
-from app.routes import rooms, bookings, inquiries, pms
+from app.routes import rooms, bookings, inquiries, pms, uploads
 
 # Initialize DB tables safely
 try:
@@ -37,6 +37,7 @@ app.include_router(rooms.router, prefix=settings.API_V1_STR)
 app.include_router(bookings.router, prefix=settings.API_V1_STR)
 app.include_router(inquiries.router, prefix=settings.API_V1_STR)
 app.include_router(pms.router, prefix=settings.API_V1_STR)
+app.include_router(uploads.router, prefix=settings.API_V1_STR)
 
 @app.get("/", tags=["Root"])
 def root():
