@@ -39,11 +39,11 @@ export const Footer: React.FC = () => {
             <h4>Quick Navigation</h4>
             <ul>
               <li><a href="#overview">Hotel Overview</a></li>
-              <li><a href="#rooms">Rooms & Suites</a></li>
+              <li><a href="#rooms">Rooms &amp; Suites</a></li>
               <li><a href="#amenities">Hotel Amenities</a></li>
               <li><a href="#dining">Vasudev Rasoi Dining</a></li>
-              <li><a href="#location">Pilgrimage & Directions</a></li>
-              <li><a href="#contact">Contact & Reservations</a></li>
+              <li><a href="#location">Pilgrimage &amp; Directions</a></li>
+              <li><a href="#contact">Contact &amp; Reservations</a></li>
             </ul>
           </div>
 
@@ -55,7 +55,7 @@ export const Footer: React.FC = () => {
               <li><a href="#rooms">Super Deluxe Family Room</a></li>
               <li><a href="#rooms">Sai Presidential Suite</a></li>
               <li><a href="#rooms">Vasudev Divine Comfort</a></li>
-              <li><a href="#contact">Group & Satsang Bookings</a></li>
+              <li><a href="#contact">Group &amp; Satsang Bookings</a></li>
             </ul>
           </div>
 
@@ -64,14 +64,14 @@ export const Footer: React.FC = () => {
             <h4>Deployment Infrastructure</h4>
             <div className="infra-card">
               <div className="infra-item">
-                <span className="infra-icon">☁️</span>
+                <span className="infra-icon" aria-hidden="true">☁️</span>
                 <div>
                   <strong>Cloudflare Pages</strong>
                   <p>Global Edge Frontend CDN</p>
                 </div>
               </div>
               <div className="infra-item">
-                <span className="infra-icon">🚀</span>
+                <span className="infra-icon" aria-hidden="true">🚀</span>
                 <div>
                   <strong>FastAPI + PostgreSQL</strong>
                   <p>Railway Cloud Server</p>
@@ -90,11 +90,11 @@ export const Footer: React.FC = () => {
         <div className="footer-bottom-bar">
           <p>&copy; {new Date().getFullYear()} Hotel Sai Vasudev Residency. All Rights Reserved.</p>
           <div className="footer-bottom-links">
-            <a href="#">Privacy Policy</a>
+            <a href="#overview" title="Verified Hotel Guest Privacy Guarantee">Privacy Guarantee</a>
             <span>•</span>
-            <a href="#">Terms of Stay</a>
+            <a href="#overview" title="Check-In at 12 PM, Check-Out at 11 AM">Terms of Stay</a>
             <span>•</span>
-            <a href="#">Cancellation Policy</a>
+            <a href="#overview" title="Free cancellation up to 24 hours prior to arrival">24h Cancellation Policy</a>
           </div>
         </div>
       </div>

@@ -9,15 +9,19 @@ export const Dining: React.FC = () => {
             <div className="dining-image-frame">
               <img 
                 src="/images/restaurant.jpg" 
-                alt="Vasudev Rasoi Pure Vegetarian Fine Dining" 
+                alt="Vasudev Rasoi Pure Vegetarian Fine Dining Restaurant" 
                 className="dining-img"
                 loading="lazy"
+                decoding="async"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = '/images/hero.jpg';
+                }}
               />
               <div className="dining-badge-overlay">
-                <span className="gold-symbol">🌿</span>
+                <span className="gold-symbol" aria-hidden="true">🌿</span>
                 <div>
                   <strong>100% Pure Vegetarian</strong>
-                  <small>No Onion / Garlic & Jain Food on Request</small>
+                  <small>No Onion / Garlic &amp; Jain Food on Request</small>
                 </div>
               </div>
             </div>
@@ -35,23 +39,23 @@ export const Dining: React.FC = () => {
 
             <div className="dining-highlights-list">
               <div className="dining-highlight-item">
-                <div className="bullet-point">✦</div>
+                <div className="bullet-point" aria-hidden="true">✦</div>
                 <div>
                   <h4>Lavish Morning Buffet</h4>
                   <p>Crispy dosas, fluffy idlis, poha, poori-bhaji, seasonal fruits, and South Indian filter coffee.</p>
                 </div>
               </div>
               <div className="dining-highlight-item">
-                <div className="bullet-point">✦</div>
+                <div className="bullet-point" aria-hidden="true">✦</div>
                 <div>
-                  <h4>Royal North & South Indian Thali</h4>
+                  <h4>Royal North &amp; South Indian Thali</h4>
                   <p>Hand-crafted rotis, rich paneer gravies, dal tadka, aromatic biryani, and regional sweets.</p>
                 </div>
               </div>
               <div className="dining-highlight-item">
-                <div className="bullet-point">✦</div>
+                <div className="bullet-point" aria-hidden="true">✦</div>
                 <div>
-                  <h4>Special Fasting & Jain Menus</h4>
+                  <h4>Special Fasting &amp; Jain Menus</h4>
                   <p>Special prasad delicacies and sattvic meals prepared in a strictly isolated clean kitchen.</p>
                 </div>
               </div>

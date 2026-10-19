@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { hotelApi } from '../services/api';
+import { validateIndianPhone, validateEmail } from '../utils/validation';
 
 export const ContactSection: React.FC = () => {
   const [name, setName] = useState('');
@@ -8,34 +9,77 @@ export const ContactSection: React.FC = () => {
   const [subject, setSubject] = useState('Room Booking & Darshan Guidance');
   const [message, setMessage] = useState('');
 
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  const handlePhoneChange = (val: string) => {
+    setPhone(val);
+    if (val.trim()) {
+      const res = validateIndianPhone(val);
+      setPhoneError(res.isValid ? null : res.error || 'Invalid mobile number');
+    } else {
+      setPhoneError(null);
+    }
+  };
+
+  const handleEmailChange = (val: string) => {
+    setEmail(val);
+    if (val.trim() && !validateEmail(val)) {
+      setEmailError('Please enter a valid email address');
+    } else {
+      setEmailError(null);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (phone.trim()) {
+      const pRes = validateIndianPhone(phone);
+      if (!pRes.isValid) {
+        setPhoneError(pRes.error || 'Invalid phone number');
+        setErrorMsg(pRes.error || 'Please enter a valid 10-digit Indian mobile number.');
+        return;
+      }
+    }
+
+    if (!validateEmail(email)) {
+      setEmailError('Please enter a valid email address');
+      setErrorMsg('Please enter a valid email address.');
+      return;
+    }
+
     setSubmitting(true);
     setErrorMsg(null);
 
     try {
       await hotelApi.submitInquiry({
-        name,
-        email,
-        phone,
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
         subject,
-        message
+        message: message.trim()
       });
       setSubmitted(true);
       setName('');
       setEmail('');
       setPhone('');
       setMessage('');
+      setPhoneError(null);
+      setEmailError(null);
     } catch {
-      setErrorMsg('Failed to submit message. Please call or WhatsApp us directly.');
+      setErrorMsg('Failed to submit message online. Please call +91 94402 89999 or WhatsApp us directly.');
     } finally {
       setSubmitting(false);
     }
   };
+
+  const prefilledWhatsAppUrl = `https://wa.me/919440289999?text=${encodeURIComponent(
+    `Namaste Hotel Sai Vasudev Residency! I would like to inquire about room reservations & darshan guidance.`
+  )}`;
 
   return (
     <section id="contact" className="contact-section">
@@ -53,23 +97,29 @@ export const ContactSection: React.FC = () => {
 
             <div className="contact-channel-list">
               <div className="channel-item">
-                <span className="channel-icon">📞</span>
+                <span className="channel-icon" aria-hidden="true">📞</span>
                 <div>
-                  <strong>Direct Front Desk</strong>
-                  <p><a href="tel:+919876543210">+91 98765 43210</a> / <a href="tel:+919876543211">+91 98765 43211</a></p>
+                  <strong>Direct Front Desk (24/7)</strong>
+                  <p>
+                    <a href="tel:+919440289999">+91 94402 89999</a> &bull; <a href="tel:+919876543210">+91 98765 43210</a>
+                  </p>
                 </div>
               </div>
 
               <div className="channel-item">
-                <span className="channel-icon">💬</span>
+                <span className="channel-icon" aria-hidden="true">💬</span>
                 <div>
-                  <strong>WhatsApp Reservations</strong>
-                  <p><a href="https://wa.me/919876543210" target="_blank" rel="noreferrer">+91 98765 43210 (Instant Chat)</a></p>
+                  <strong>WhatsApp Front Desk</strong>
+                  <p>
+                    <a href={prefilledWhatsAppUrl} target="_blank" rel="noopener noreferrer">
+                      +91 94402 89999 (Instant Chat)
+                    </a>
+                  </p>
                 </div>
               </div>
 
               <div className="channel-item">
-                <span className="channel-icon">✉️</span>
+                <span className="channel-icon" aria-hidden="true">✉️</span>
                 <div>
                   <strong>Email Desk</strong>
                   <p><a href="mailto:stay@saivasudevresidency.com">stay@saivasudevresidency.com</a></p>
@@ -77,10 +127,10 @@ export const ContactSection: React.FC = () => {
               </div>
 
               <div className="channel-item">
-                <span className="channel-icon">📍</span>
+                <span className="channel-icon" aria-hidden="true">📍</span>
                 <div>
-                  <strong>Address</strong>
-                  <p>Plot No. 14-B, VIP Temple Road, Near Gate No. 2, Spiritual City, Pin 423109</p>
+                  <strong>Hotel Address</strong>
+                  <p>Plot No. 14-B, VIP Temple Road, Near Gate No. 2, Shirdi, Maharashtra 423109</p>
                 </div>
               </div>
             </div>
@@ -105,7 +155,9 @@ export const ContactSection: React.FC = () => {
               ) : (
                 <form onSubmit={handleSubmit} className="inquiry-form">
                   {errorMsg && (
-                    <div className="alert-box error">⚠️ {errorMsg}</div>
+                    <div className="alert-box error" style={{ background: '#ffebee', color: '#c62828', padding: '10px 14px', borderRadius: 8, margin: '12px 0', border: '1px solid #ef9a9a' }}>
+                      ⚠️ {errorMsg}
+                    </div>
                   )}
 
                   <div className="form-group">
@@ -128,19 +180,31 @@ export const ContactSection: React.FC = () => {
                         type="email"
                         placeholder="ramesh@gmail.com"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => handleEmailChange(e.target.value)}
                         required
+                        style={emailError ? { borderColor: '#c62828' } : undefined}
                       />
+                      {emailError && (
+                        <small style={{ color: '#c62828', fontSize: '11px', display: 'block', marginTop: '2px' }}>
+                          {emailError}
+                        </small>
+                      )}
                     </div>
                     <div className="form-group">
                       <label htmlFor="inquiry-phone">Phone / WhatsApp</label>
                       <input
                         id="inquiry-phone"
                         type="tel"
-                        placeholder="+91 98765 43210"
+                        placeholder="9440289999 (10-digit Indian mobile)"
                         value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
+                        onChange={(e) => handlePhoneChange(e.target.value)}
+                        style={phoneError ? { borderColor: '#c62828' } : undefined}
                       />
+                      {phoneError && (
+                        <small style={{ color: '#c62828', fontSize: '11px', display: 'block', marginTop: '2px' }}>
+                          {phoneError}
+                        </small>
+                      )}
                     </div>
                   </div>
 
@@ -151,7 +215,7 @@ export const ContactSection: React.FC = () => {
                       value={subject}
                       onChange={(e) => setSubject(e.target.value)}
                     >
-                      <option value="Room Booking & Darshan Guidance">Room Booking & Darshan Guidance</option>
+                      <option value="Room Booking & Darshan Guidance">Room Booking &amp; Darshan Guidance</option>
                       <option value="Family / Group Booking (3+ Rooms)">Family / Group Booking (3+ Rooms)</option>
                       <option value="Airport / Station Pickup Service">Airport / Station Pickup Service</option>
                       <option value="Satsang / Banquet Hall Inquiry">Satsang / Banquet Hall Inquiry</option>
@@ -174,10 +238,10 @@ export const ContactSection: React.FC = () => {
                     id="submit-inquiry-btn"
                     type="submit"
                     className="btn btn-primary"
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', minHeight: '44px' }}
                     disabled={submitting}
                   >
-                    {submitting ? 'Submitting to Railway Backend...' : 'Send Inquiry Message'}
+                    {submitting ? 'Submitting Inquiry Message...' : 'Send Inquiry Message'}
                   </button>
                 </form>
               )}

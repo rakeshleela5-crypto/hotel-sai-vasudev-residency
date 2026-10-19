@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getTodayIST, addDays, calculateNights } from '../utils/validation';
 
 interface HeroProps {
   onCheckAvailability: (searchParams: {
@@ -9,14 +10,30 @@ interface HeroProps {
   }) => void;
 }
 
-const TODAY_STR = new Date().toISOString().split('T')[0];
-const TOMORROW_STR = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-
 export const Hero: React.FC<HeroProps> = ({ onCheckAvailability }) => {
-  const [checkIn, setCheckIn] = useState(TODAY_STR);
-  const [checkOut, setCheckOut] = useState(TOMORROW_STR);
+  const todayIST = getTodayIST();
+  const [checkIn, setCheckIn] = useState<string>(todayIST);
+  const [checkOut, setCheckOut] = useState<string>(addDays(todayIST, 1));
   const [roomType, setRoomType] = useState('All');
   const [guests, setGuests] = useState(2);
+
+  // Auto-advance Check-Out if Check-In is moved to/past Check-Out
+  const handleCheckInChange = (newCheckIn: string) => {
+    setCheckIn(newCheckIn);
+    if (!checkOut || newCheckIn >= checkOut) {
+      setCheckOut(addDays(newCheckIn, 1));
+    }
+  };
+
+  const handleCheckOutChange = (newCheckOut: string) => {
+    if (newCheckOut <= checkIn) {
+      setCheckOut(addDays(checkIn, 1));
+    } else {
+      setCheckOut(newCheckOut);
+    }
+  };
+
+  const nights = calculateNights(checkIn, checkOut);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +52,13 @@ export const Hero: React.FC<HeroProps> = ({ onCheckAvailability }) => {
           src="/images/hero.jpg" 
           alt="Hotel Sai Vasudev Residency Twilight View" 
           className="hero-bg-img"
+          loading="eager"
+          // @ts-expect-error fetchpriority is a modern standard attribute
+          fetchpriority="high"
+          onError={(e) => {
+            // Graceful fallback to rich dark aesthetic background if image fails
+            (e.currentTarget as HTMLImageElement).style.opacity = '0.4';
+          }}
         />
         <div className="hero-overlay"></div>
       </div>
@@ -58,24 +82,24 @@ export const Hero: React.FC<HeroProps> = ({ onCheckAvailability }) => {
 
           <div className="hero-trust-badges animate-fade">
             <div className="trust-badge-item">
-              <span className="trust-icon">⭐</span>
+              <span className="trust-icon" aria-hidden="true">⭐</span>
               <div>
                 <strong>4.9 / 5.0 Rating</strong>
                 <p>1,400+ Verified Pilgrim Reviews</p>
               </div>
             </div>
             <div className="trust-badge-item">
-              <span className="trust-icon">🛕</span>
+              <span className="trust-icon" aria-hidden="true">🛕</span>
               <div>
                 <strong>2-Min Temple Proximity</strong>
                 <p>VIP Darshan Assistance Desk</p>
               </div>
             </div>
             <div className="trust-badge-item">
-              <span className="trust-icon">🍽️</span>
+              <span className="trust-icon" aria-hidden="true">🍽️</span>
               <div>
                 <strong>Pure Veg Dining</strong>
-                <p>Sattvic & Multi-Cuisine Food</p>
+                <p>Sattvic &amp; Multi-Cuisine Food</p>
               </div>
             </div>
           </div>
@@ -84,8 +108,8 @@ export const Hero: React.FC<HeroProps> = ({ onCheckAvailability }) => {
         {/* Live Booking Search Widget */}
         <div className="booking-widget-card animate-fade">
           <div className="widget-header">
-            <h3>Check Availability & Direct Rates</h3>
-            <span className="widget-subtitle">Guaranteed Best Rates & Free Cancellation</span>
+            <h3>Check Availability &amp; Direct Rates</h3>
+            <span className="widget-subtitle">Guaranteed Best Rates &bull; {nights} {nights === 1 ? 'Night' : 'Nights'} Selected</span>
           </div>
 
           <form onSubmit={handleSubmit} className="booking-form-grid">
@@ -95,23 +119,23 @@ export const Hero: React.FC<HeroProps> = ({ onCheckAvailability }) => {
                 <input 
                   id="hero-checkin"
                   type="date" 
-                  min={TODAY_STR}
+                  min={todayIST}
                   value={checkIn}
-                  onChange={(e) => setCheckIn(e.target.value)}
+                  onChange={(e) => handleCheckInChange(e.target.value)}
                   required 
                 />
               </div>
             </div>
 
             <div className="form-group">
-              <label htmlFor="hero-checkout">Check-out Date</label>
+              <label htmlFor="hero-checkout">Check-out Date ({nights} {nights === 1 ? 'Night' : 'Nights'})</label>
               <div className="input-with-icon">
                 <input 
                   id="hero-checkout"
                   type="date" 
-                  min={checkIn || TODAY_STR}
+                  min={addDays(checkIn, 1)}
                   value={checkOut}
-                  onChange={(e) => setCheckOut(e.target.value)}
+                  onChange={(e) => handleCheckOutChange(e.target.value)}
                   required 
                 />
               </div>
@@ -146,9 +170,14 @@ export const Hero: React.FC<HeroProps> = ({ onCheckAvailability }) => {
             </div>
 
             <div className="form-group form-submit-col">
-              <button id="hero-search-availability-btn" type="submit" className="btn btn-primary widget-btn">
-                <span>Check Rates & Book</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <button 
+                id="hero-search-availability-btn" 
+                type="submit" 
+                className="btn btn-primary widget-btn"
+                aria-label="Check rates and book room"
+              >
+                <span>Check Rates &amp; Book</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                   <path d="M5 12h14M12 5l7 7-7 7"/>
                 </svg>
               </button>

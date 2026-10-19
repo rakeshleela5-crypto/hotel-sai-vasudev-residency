@@ -13,12 +13,3 @@ if (fs.existsSync(distDir)) {
     console.warn('[clean] Warning while clearing dist:', err.message);
   }
 }
-
-// Ensure public/_redirects is never present
-const publicRedirects = path.join(projectRoot, 'public', '_redirects');
-if (fs.existsSync(publicRedirects)) {
-  try {
-    fs.rmSync(publicRedirects, { force: true });
-    console.log('[clean] Removed public/_redirects.');
-  } catch (e) {}
-}

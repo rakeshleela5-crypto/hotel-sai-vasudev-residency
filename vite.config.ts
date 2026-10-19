@@ -6,24 +6,22 @@ import { defineConfig } from 'vite'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-function cleanCloudflareAssetsPlugin() {
+function cloudflarePagesPlugin() {
   return {
-    name: 'clean-cloudflare-assets',
+    name: 'cloudflare-pages-spa',
     closeBundle() {
       const distDir = path.resolve(__dirname, 'dist')
       
-      // 1. Permanently remove any _redirects file so Cloudflare never sees it
+      // 1. Ensure dist/_redirects has the standard Cloudflare Pages SPA rewrite
       const redirectsFile = path.join(distDir, '_redirects')
-      if (fs.existsSync(redirectsFile)) {
-        try {
-          fs.rmSync(redirectsFile, { force: true })
-          console.log('[vite-plugin] Removed invalid _redirects file from dist.')
-        } catch (e) {
-          console.warn('[vite-plugin] Could not remove _redirects:', e)
-        }
+      try {
+        fs.writeFileSync(redirectsFile, '/* /index.html 200\n', 'utf8')
+        console.log('[vite-plugin] Verified dist/_redirects for Cloudflare Pages SPA routing.')
+      } catch (e) {
+        console.warn('[vite-plugin] Could not write dist/_redirects:', e)
       }
 
-      // 2. Generate 200.html for native SPA routing
+      // 2. Generate 200.html as supplementary fallback
       const indexHtml = path.join(distDir, 'index.html')
       const fallback200 = path.join(distDir, '200.html')
       if (fs.existsSync(indexHtml)) {
@@ -40,7 +38,7 @@ function cleanCloudflareAssetsPlugin() {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), cleanCloudflareAssetsPlugin()],
+  plugins: [react(), cloudflarePagesPlugin()],
   build: {
     emptyOutDir: true,
   },
