@@ -121,15 +121,17 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     return () => { isCurrent = false; };
   }, [selectedRoom, checkIn, checkOut, adults]);
 
-  // Authoritative Indian GST Pricing Calculation
-  // Room Tariff <= ₹7,500/night is taxed at 12% GST (6% CGST + 6% SGST)
+  // Authoritative Indian GST Pricing Slabs (Statutory Compliance)
+  // Slabs: 12% GST for room tariffs <= ₹7,500/night (6% CGST + 6% SGST)
+  //        18% GST for room tariffs > ₹7,500/night (9% CGST + 9% SGST)
   const roomPrice = selectedRoom?.price_per_night || 2499;
   const standardCapacity = selectedRoom?.capacity || 2;
   const extraAdults = Math.max(0, adults - standardCapacity);
   const extraCharge = availData?.extra_guest_charge ?? (extraAdults * 500 * totalNights);
   const subtotal = availData?.base_subtotal ?? (roomPrice * totalNights);
   const taxableAmount = subtotal + extraCharge;
-  const taxes = availData?.total_tax ?? Math.round(taxableAmount * 0.12);
+  const gstRate = availData?.gst_rate ?? (roomPrice > 7500 ? 18 : 12);
+  const taxes = availData?.total_tax ?? Math.round(taxableAmount * (gstRate / 100));
   const grandTotal = availData?.grand_total ?? (taxableAmount + taxes);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -420,7 +422,7 @@ Please share availability and direct booking assistance.`
                   </div>
                 )}
                 <div className="breakdown-line">
-                  <span>Indian Hotel GST (CGST 6% + SGST 6% = 12%)</span>
+                  <span>Indian Hotel GST ({gstRate === 18 ? 'CGST 9% + SGST 9% = 18%' : 'CGST 6% + SGST 6% = 12%'})</span>
                   <span>₹{taxes.toLocaleString('en-IN')}</span>
                 </div>
                 <div className="breakdown-divider"></div>

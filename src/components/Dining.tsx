@@ -11,6 +11,8 @@ export const Dining: React.FC = () => {
                 src="/images/restaurant.jpg" 
                 alt="Vasudev Rasoi Pure Vegetarian Fine Dining Restaurant" 
                 className="dining-img"
+                width={800}
+                height={600}
                 loading="lazy"
                 decoding="async"
                 onError={(e) => {

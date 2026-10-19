@@ -52,6 +52,8 @@ export const Hero: React.FC<HeroProps> = ({ onCheckAvailability }) => {
           src="/images/hero.jpg" 
           alt="Hotel Sai Vasudev Residency Twilight View" 
           className="hero-bg-img"
+          width={1920}
+          height={1080}
           loading="eager"
           // @ts-expect-error fetchpriority is a modern standard attribute
           fetchpriority="high"

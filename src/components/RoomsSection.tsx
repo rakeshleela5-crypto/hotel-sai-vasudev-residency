@@ -83,6 +83,8 @@ export const RoomsSection: React.FC<RoomsSectionProps> = ({ onSelectRoom, select
                   <img 
                     src={room.image_url} 
                     alt={`${room.name} at Hotel Sai Vasudev Residency`} 
+                    width={600}
+                    height={400}
                     loading="lazy" 
                     decoding="async"
                     onError={(e) => {
