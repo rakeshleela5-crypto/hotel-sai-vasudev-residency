@@ -17,6 +17,7 @@ class RoomBase(BaseModel):
     image_url: str
     badge: Optional[str] = None
     is_available: bool = True
+    housekeeping_status: str = "Clean"
 
 class RoomResponse(RoomBase):
     id: int
@@ -24,6 +25,11 @@ class RoomResponse(RoomBase):
 
     class Config:
         from_attributes = True
+
+class HousekeepingStatusUpdate(BaseModel):
+    room_id: int
+    housekeeping_status: str # Clean, Dirty, Inspected, Under_Maintenance
+    updated_by: Optional[str] = "Head Housekeeper"
 
 # --- Availability Check ---
 class AvailabilityCheckResponse(BaseModel):
@@ -47,6 +53,126 @@ class AvailabilityCheckResponse(BaseModel):
     remaining_rooms_count: int
     message: str
 
+# --- Booking Payment Schemas ---
+class BookingPaymentCreate(BaseModel):
+    booking_ref: str
+    payment_type: str = "Partial" # Advance, Partial, Settlement, Key_Deposit, Refund
+    payment_mode: str = "UPI" # Cash, Card, UPI, Direct_BTC
+    amount: float = Field(..., gt=0)
+    transaction_ref: Optional[str] = None
+    notes: Optional[str] = None
+    collected_by: Optional[str] = "Front Desk Cashier"
+
+class BookingPaymentResponse(BaseModel):
+    id: int
+    booking_id: int
+    receipt_number: str
+    payment_type: str
+    payment_mode: str
+    amount: float
+    transaction_ref: Optional[str]
+    notes: Optional[str]
+    collected_by: str
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+# --- Room Shift Schemas ---
+class RoomShiftCreate(BaseModel):
+    booking_ref: str
+    to_room_id: int
+    reason: str = Field(..., min_length=3)
+    shifted_by: Optional[str] = "Duty Manager"
+
+class RoomShiftResponse(BaseModel):
+    id: int
+    booking_id: int
+    from_room_id: int
+    to_room_id: int
+    shift_date: str
+    reason: str
+    old_rate: float
+    new_rate: float
+    shifted_by: str
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+# --- Room Folio (KOT & Sundry) Schemas ---
+class RoomFolioItemCreate(BaseModel):
+    booking_ref: str
+    item_type: str = "Food_KOT" # Food_KOT, Extra_Mattress, Laundry, Beverage, Banquet
+    description: str = Field(..., min_length=2)
+    quantity: int = Field(default=1, ge=1)
+    unit_price: float = Field(..., gt=0)
+    sac_code: Optional[str] = "996331" # 996331 for Food (5%), 996311 for Hotel (12%)
+    kot_number: Optional[str] = None
+
+class RoomFolioItemResponse(BaseModel):
+    id: int
+    booking_id: int
+    item_type: str
+    description: str
+    sac_code: str
+    kot_number: Optional[str]
+    quantity: int
+    unit_price: float
+    taxable_amount: float
+    gst_rate: float
+    cgst_amount: float
+    sgst_amount: float
+    total_amount: float
+    status: str
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+# --- Police Register & Form C Schemas ---
+class PoliceStationLogCreate(BaseModel):
+    booking_ref: str
+    guest_name: str
+    age: int = 35
+    gender: str = "Male"
+    nationality: str = "Indian"
+    id_proof_type: str = "Aadhaar Card"
+    id_proof_number: str
+    permanent_address: str
+    origin_city: str
+    next_destination: str
+    purpose_of_visit: str = "Temple Darshan"
+    vehicle_number: Optional[str] = None
+    is_foreign_national: bool = False
+    passport_number: Optional[str] = None
+    visa_number: Optional[str] = None
+    visa_validity: Optional[str] = None
+    port_of_arrival: Optional[str] = None
+    date_of_entry_india: Optional[str] = None
+
+class PoliceStationLogResponse(BaseModel):
+    id: int
+    booking_id: int
+    guest_name: str
+    age: int
+    gender: str
+    nationality: str
+    id_proof_type: str
+    id_proof_number: str
+    permanent_address: str
+    origin_city: str
+    next_destination: str
+    purpose_of_visit: str
+    vehicle_number: Optional[str]
+    is_foreign_national: bool
+    passport_number: Optional[str]
+    visa_number: Optional[str]
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
 # --- Booking Schemas ---
 class BookingCreate(BaseModel):
     room_id: int
@@ -64,8 +190,8 @@ class BookingCreate(BaseModel):
     special_requests: Optional[str] = None
 
 class BookingStatusUpdate(BaseModel):
-    status: str # Confirmed, Checked-In, Checked-Out, Cancelled
-    payment_status: Optional[str] = None # Pending, Paid, Pay at Hotel
+    status: str # Confirmed, Checked-In, Checked-Out, Cancelled, No-Show
+    payment_status: Optional[str] = None # Pending, Partial, Paid, BTC
     cancellation_reason: Optional[str] = None
 
 class BookingResponse(BaseModel):
@@ -91,6 +217,9 @@ class BookingResponse(BaseModel):
     sgst_amount: float
     total_tax: float
     total_price: float
+    total_paid: float
+    balance_due: float
+    key_deposit: float
     payment_status: str
     payment_method: str
     status: str
@@ -101,6 +230,60 @@ class BookingResponse(BaseModel):
     class Config:
         from_attributes = True
 
+# --- Master Folio Invoice Schema ---
+class MasterFolioResponse(BaseModel):
+    hotel_name: str = "Hotel Sai Vasudev Residency"
+    hotel_gstin: str = "37AAACH7409R1ZZ"
+    hotel_phone: str = "+91 94402 89999 / +91 98480 12345"
+    invoice_number: str
+    booking_ref: str
+    guest_name: str
+    guest_phone: str
+    id_proof_number: Optional[str]
+    check_in_date: str
+    check_out_date: str
+    total_nights: int
+    current_room: str
+    
+    # Financial Aggregations
+    room_stay_charges: float
+    room_gst_charges: float
+    room_total: float
+    food_kot_charges: float
+    food_gst_charges: float
+    food_total: float
+    gross_bill_amount: float
+    total_paid_amount: float
+    net_balance_due: float
+    
+    # Detailed line items
+    room_shifts: List[RoomShiftResponse]
+    folio_items: List[RoomFolioItemResponse]
+    payments: List[BookingPaymentResponse]
+    payment_status: str
+    status: str
+
+# --- Daily Night Audit Schemas ---
+class NightAuditRunRequest(BaseModel):
+    audit_date: Optional[str] = None # Defaults to today YYYY-MM-DD
+    audited_by: Optional[str] = "Night Auditor / Manager"
+
+class NightAuditResponse(BaseModel):
+    audit_date: str
+    total_rooms_occupied: int
+    total_room_revenue: float
+    total_food_revenue: float
+    total_gst_collected: float
+    no_shows_processed: int
+    cash_in_drawer: float
+    card_total: float
+    upi_total: float
+    btc_credit_total: float
+    total_day_collections: float
+    audited_by: str
+    audit_status: str
+    created_at: datetime.datetime
+
 # --- Tax Invoice & Voucher Details ---
 class TaxInvoiceVoucher(BaseModel):
     hotel_name: str = "Hotel Sai Vasudev Residency"
@@ -109,19 +292,15 @@ class TaxInvoiceVoucher(BaseModel):
     hotel_phone: str = "+91 94402 89999 / +91 98480 12345"
     hotel_email: str = "reservations@hotelsai-vasudev.com"
     hotel_gstin: str = "37AAACH7409R1ZZ"
-    sac_code: str = "996311" # Service Accounting Code for Hotel Accommodation
+    sac_code: str = "996311"
     
     invoice_number: str
     invoice_date: str
     booking_ref: str
-    
-    # Guest
     guest_name: str
     guest_email: str
     guest_phone: str
     id_proof_type: Optional[str]
-    
-    # Stay
     room_name: str
     room_type: str
     check_in_date: str
@@ -129,8 +308,6 @@ class TaxInvoiceVoucher(BaseModel):
     total_nights: int
     adults: int
     children: int
-    
-    # Accounting
     daily_tariff: float
     base_amount: float
     extra_guest_charge: float

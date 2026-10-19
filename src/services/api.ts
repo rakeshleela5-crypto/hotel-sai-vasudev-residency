@@ -309,5 +309,127 @@ export const hotelApi = {
         created_at: new Date().toISOString()
       };
     }
+  },
+
+  // --- PMS Enterprise Operations ---
+  async executeRoomShift(data: { booking_ref: string; to_room_id: number; reason: string; shifted_by?: string }) {
+    const res = await fetch(`${API_BASE_URL}/pms/room-shift`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Room shift failed');
+    }
+    return await res.json();
+  },
+
+  async recordPayment(data: { booking_ref: string; payment_type: string; payment_mode: string; amount: number; transaction_ref?: string; notes?: string; collected_by?: string }) {
+    const res = await fetch(`${API_BASE_URL}/pms/payments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Payment recording failed');
+    }
+    return await res.json();
+  },
+
+  async addFolioItem(data: { booking_ref: string; item_type: string; description: string; quantity: number; unit_price: number; sac_code?: string; kot_number?: string }) {
+    const res = await fetch(`${API_BASE_URL}/pms/folio/add-item`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to add folio item');
+    }
+    return await res.json();
+  },
+
+  async getMasterFolio(bookingRef: string) {
+    const res = await fetch(`${API_BASE_URL}/pms/folio/${bookingRef.trim().toUpperCase()}`);
+    if (!res.ok) throw new Error(`Master folio for ${bookingRef} not found`);
+    return await res.json();
+  },
+
+  async submitPoliceStationLog(data: Record<string, unknown>) {
+    const res = await fetch(`${API_BASE_URL}/pms/police-register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to log police register record');
+    }
+    return await res.json();
+  },
+
+  async getPoliceStationLogs() {
+    const res = await fetch(`${API_BASE_URL}/pms/police-register`);
+    if (!res.ok) throw new Error('Failed to retrieve police station register');
+    return await res.json();
+  },
+
+  async updateHousekeeping(roomId: number, status: string, updatedBy?: string) {
+    const res = await fetch(`${API_BASE_URL}/pms/housekeeping/status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ room_id: roomId, housekeeping_status: status, updated_by: updatedBy })
+    });
+    if (!res.ok) throw new Error('Failed to update housekeeping status');
+    return await res.json();
+  },
+
+  async runNightAudit(auditDate?: string, auditedBy?: string) {
+    const res = await fetch(`${API_BASE_URL}/pms/night-audit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ audit_date: auditDate, audited_by: auditedBy })
+    });
+    if (!res.ok) throw new Error('Failed to run night audit');
+    return await res.json();
+  },
+
+  // --- Local Hardware Bridge (Thermal Printer & RFID Encoder) ---
+  async checkHardwareBridge(): Promise<boolean> {
+    try {
+      const res = await fetch('http://127.0.0.1:8080/status', { method: 'GET' });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  },
+
+  async printThermalReceipt(receiptData: { booking_ref: string; guest_name: string; room_name: string; total_amount: number }) {
+    try {
+      const res = await fetch('http://127.0.0.1:8080/print-receipt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(receiptData)
+      });
+      return await res.json();
+    } catch {
+      window.open(this.getPrintSlipUrl(receiptData.booking_ref), '_blank');
+      return { status: 'FALLBACK_BROWSER_PRINT', message: 'Printed via browser dialog' };
+    }
+  },
+
+  async encodeRfidKeycard(keyData: { room_no: string; guest_name: string; check_out_date: string }) {
+    try {
+      const res = await fetch('http://127.0.0.1:8080/encode-keycard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(keyData)
+      });
+      return await res.json();
+    } catch {
+      return { status: 'BRIDGE_OFFLINE', message: 'Local Hardware Bridge not running on port 8080. Start backend/hardware_bridge.py on desk PC.' };
+    }
   }
 };
