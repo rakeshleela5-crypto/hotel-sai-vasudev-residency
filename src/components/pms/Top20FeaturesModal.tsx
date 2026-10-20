@@ -76,7 +76,7 @@ export const Top20FeaturesModal: React.FC<Top20FeaturesModalProps> = ({
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ fontWeight: 900, fontSize: 16, letterSpacing: '0.5px' }}>
-                  TOP 20 FEATURES OF ROOMG PMS HOTEL MANAGEMENT SOFTWARE
+                  TOP 20 ENTERPRISE FEATURES OF HOTEL SAI VASUDEV RESIDENCY ERP
                 </span>
                 <span
                   style={{
@@ -93,7 +93,7 @@ export const Top20FeaturesModal: React.FC<Top20FeaturesModalProps> = ({
                 </span>
               </div>
               <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
-                Comprehensive 20-Pillar Enterprise Architecture &bull; Spoken Hindi Training Series (Video 27) &bull; Best Hotel Software in India
+                Comprehensive 20-Pillar Enterprise Architecture &bull; Front Desk, Kitchen POS, Accounting & Cloud Sync
               </div>
             </div>
           </div>
@@ -149,7 +149,7 @@ export const Top20FeaturesModal: React.FC<Top20FeaturesModalProps> = ({
               </span>
             </div>
             <div style={{ fontSize: 13, color: '#e2e8f0', maxWidth: 680, lineHeight: 1.5 }}>
-              RoomG PMS integrates front desk guest management, automated KOT kitchen printing, double-entry financial accounting, central warehouse inventory, anti-theft deletion guards, and direct WhatsApp guest marketing into a single real-time platform.
+              Hotel Sai Vasudev Residency ERP integrates front desk guest management, automated KOT kitchen printing, double-entry financial accounting, central warehouse inventory, anti-theft deletion guards, and direct WhatsApp guest marketing into a single real-time platform.
             </div>
           </div>
 
@@ -321,7 +321,7 @@ export const Top20FeaturesModal: React.FC<Top20FeaturesModalProps> = ({
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid #0284c7', paddingBottom: 16 }}>
                 <div>
                   <h2 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#0f172a' }}>
-                    RoomG PMS &bull; Official Software Licensing &amp; Demo Access
+                    Hotel Sai Vasudev Residency ERP &bull; Master Enterprise Architecture
                   </h2>
                   <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
                     Direct Enterprise Package from Data House ERP &bull; Frames 0055 &amp; 0060
@@ -362,7 +362,7 @@ export const Top20FeaturesModal: React.FC<Top20FeaturesModalProps> = ({
               {/* Demo Credentials Box matching Frame 0055 */}
               <div style={{ background: '#f8fafc', border: '1px dashed #0284c7', borderRadius: 8, padding: 20, marginTop: 24 }}>
                 <h3 style={{ margin: '0 0 12px', fontSize: 15, fontWeight: 800, color: '#0369a1', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span>🔑</span> Live Online Demo Access Credentials (Frame 0055)
+                  <span>🔑</span> Live Online Demo Access Credentials
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, fontSize: 13 }}>
                   <div>
@@ -383,7 +383,7 @@ export const Top20FeaturesModal: React.FC<Top20FeaturesModalProps> = ({
               {/* Sales & Engineering Contact details */}
               <div style={{ marginTop: 24, padding: 18, background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8 }}>
                 <h4 style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 800, color: '#92400e' }}>
-                  📞 Data House ERP Sales &amp; Technical Support (Frame 0060)
+                  📞 ERP Technical Support &amp; Helpdesk
                 </h4>
                 <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', fontSize: 13, color: '#78350f' }}>
                   <div>
@@ -613,7 +613,7 @@ export const Top20FeaturesModal: React.FC<Top20FeaturesModalProps> = ({
           }}
         >
           <div>
-            Showing <strong>{filteredFeatures.length}</strong> of <strong>20</strong> Enterprise Features &bull; RoomG PMS Version 27.0
+            Showing <strong>{filteredFeatures.length}</strong> of <strong>20</strong> Enterprise Features &bull; Hotel ERP v27.0
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
             <button

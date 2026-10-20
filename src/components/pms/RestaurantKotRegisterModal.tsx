@@ -102,7 +102,7 @@ export const RestaurantKotRegisterModal: React.FC<RestaurantKotRegisterModalProp
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 20 }}>🍴</span>
             <span style={{ fontWeight: 800, fontSize: 16, color: '#ffffff', letterSpacing: 0.5 }}>
-              Restaurant KOT Register (Video 18 Frame 0420)
+              Restaurant KOT Register
             </span>
           </div>
           <button
@@ -292,7 +292,7 @@ export const RestaurantKotRegisterModal: React.FC<RestaurantKotRegisterModalProp
               <button
                 type="button"
                 onClick={handleExportExcel}
-                title="Export KOT Register to CSV/Excel (Video 18 Transcript [14:15])"
+                title="Export KOT Register to CSV/Excel"
                 style={{
                   background: '#16a34a',
                   color: '#ffffff',

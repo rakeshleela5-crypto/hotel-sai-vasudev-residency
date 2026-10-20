@@ -335,7 +335,7 @@ export const LiquorBarManagementModal: React.FC<LiquorBarManagementModalProps> =
                   Liquor &amp; Bar Management Software
                 </h2>
                 <span style={{ background: '#dc2626', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 4, fontWeight: 800 }}>
-                  Video 32 Full Demo
+                  Bar POS Live Demo
                 </span>
                 <span style={{ background: '#0284c7', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 4, fontWeight: 700 }}>
                   VAT 13% + SUR 10%
@@ -425,7 +425,7 @@ export const LiquorBarManagementModal: React.FC<LiquorBarManagementModalProps> =
             }}
           >
             <span>🧾</span>
-            <span>Bar &amp; Table Billing POS (Frame 0260)</span>
+            <span>Bar &amp; Table Billing POS</span>
           </button>
 
           <button
@@ -446,7 +446,7 @@ export const LiquorBarManagementModal: React.FC<LiquorBarManagementModalProps> =
             }}
           >
             <span>🍾</span>
-            <span>Liquor Item Master (/item - Frame 0210)</span>
+            <span>Liquor Item Master (/item)</span>
           </button>
 
           <button
@@ -488,7 +488,7 @@ export const LiquorBarManagementModal: React.FC<LiquorBarManagementModalProps> =
             }}
           >
             <span>📥</span>
-            <span>Liquor Purchase Inward (Frame 0320)</span>
+            <span>Liquor Purchase Inward</span>
           </button>
         </div>
 
@@ -619,7 +619,7 @@ export const LiquorBarManagementModal: React.FC<LiquorBarManagementModalProps> =
 
               {/* Explanatory Rule Banner matching spoken Hindi narration */}
               <div style={{ marginTop: 16, background: '#1e293b', borderLeft: '4px solid #38bdf8', padding: '10px 14px', borderRadius: 4, fontSize: 12, color: '#cbd5e1' }}>
-                <span style={{ fontWeight: 800, color: '#38bdf8' }}>💡 RoomG Bar Logic (Video 32): </span>
+                <span style={{ fontWeight: 800, color: '#38bdf8' }}>💡 Beverage Billing Logic: </span>
                 When 1 bottle of 750ml is purchased, 750 ML is added to <code style={{ color: '#fbbf24' }}>stock In ML</code>. When drinks are billed at tables/counters in 30ml small pegs or 60ml large pegs, the exact ML sold is automatically deducted. The closing stock dynamically displays both total remaining ML and bottle equivalent (e.g. 22,050 ML ÷ 750 = 29.4 Bottles).
               </div>
             </div>
@@ -817,7 +817,7 @@ export const LiquorBarManagementModal: React.FC<LiquorBarManagementModalProps> =
                       boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                     }}
                   >
-                    💾 Save &amp; Print Bill (Frame 0260)
+                    💾 Save &amp; Print Bill
                   </button>
                 </div>
               </div>
@@ -884,7 +884,7 @@ export const LiquorBarManagementModal: React.FC<LiquorBarManagementModalProps> =
                         cursor: 'pointer'
                       }}
                     >
-                      🖨️ Print Customer Invoice (Frame 0280)
+                      🖨️ Print Customer Invoice
                     </button>
                   </div>
                 )}
@@ -902,7 +902,7 @@ export const LiquorBarManagementModal: React.FC<LiquorBarManagementModalProps> =
                     onClick={() => setIsAddItemOpen(true)}
                     style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: 4, fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
                   >
-                    + Add New Item (Frame 0210)
+                    + Add New Item
                   </button>
                   <button
                     type="button"
@@ -929,7 +929,7 @@ export const LiquorBarManagementModal: React.FC<LiquorBarManagementModalProps> =
               {isAddItemOpen && (
                 <div style={{ background: '#1e293b', border: '1px solid #38bdf8', borderRadius: 6, padding: 16, marginBottom: 16 }}>
                   <h3 style={{ margin: '0 0 12px', fontSize: 14, color: '#38bdf8', fontWeight: 800 }}>
-                    ➕ Edit / Add New Liquor Item (Frame 0180)
+                    ➕ Edit / Add New Liquor Item
                   </h3>
                   <form onSubmit={handleCreateLiquorItem} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
                     <div>
@@ -1096,7 +1096,7 @@ export const LiquorBarManagementModal: React.FC<LiquorBarManagementModalProps> =
               <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 6, padding: 16 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                   <h3 style={{ margin: 0, fontSize: 13, fontWeight: 800, color: '#38bdf8' }}>
-                    Unit Master &amp; ML Conversion (/units - Frame 0120)
+                    Unit Master &amp; ML Conversion (/units)
                   </h3>
                   <button type="button" onClick={() => alert('Add New Unit')} style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: 3, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                     + Add New Unit
@@ -1128,7 +1128,7 @@ export const LiquorBarManagementModal: React.FC<LiquorBarManagementModalProps> =
               <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 6, padding: 16 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                   <h3 style={{ margin: 0, fontSize: 13, fontWeight: 800, color: '#38bdf8' }}>
-                    Company / Brand Master (/company - Frame 0150)
+                    Company / Brand Master (/company)
                   </h3>
                   <button type="button" onClick={() => alert('Add New Company')} style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: 3, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                     + Add New Company
@@ -1160,14 +1160,14 @@ export const LiquorBarManagementModal: React.FC<LiquorBarManagementModalProps> =
             </div>
           )}
 
-          {/* TAB 5: Liquor Purchase Inward (Frame 0320) */}
+          {/* TAB 5: Liquor Purchase Inward */}
           {activeTab === 'purchase' && (
             <div style={{ maxWidth: 800, margin: '0 auto', background: '#1e293b', border: '1px solid #334155', borderRadius: 8, padding: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
                 <span style={{ fontSize: 24 }}>📥</span>
                 <div>
                   <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#f8fafc' }}>
-                    Liquor Inward Purchase to Bar Godown (Frame 0320)
+                    Liquor Inward Purchase to Bar Godown
                   </h3>
                   <div style={{ fontSize: 11, color: '#94a3b8' }}>
                     Recording bulk bottle purchases automatically updates ML stock in the brand ledger
@@ -1299,7 +1299,7 @@ export const LiquorBarManagementModal: React.FC<LiquorBarManagementModalProps> =
           }}
         >
           <div style={{ color: '#94a3b8' }}>
-            <span>Hotel Sai Vasudev Residency &bull; Bar &amp; Lounge POS &bull; RoomG Official License</span>
+            <span>Hotel Sai Vasudev Residency &bull; Bar &amp; Beverage Management</span>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
             {onOpenTableDashboard && (

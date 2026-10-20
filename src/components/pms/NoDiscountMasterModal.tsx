@@ -165,7 +165,7 @@ export const NoDiscountMasterModal: React.FC<NoDiscountMasterModalProps> = ({
                   No-Discount Item &amp; Margin Protection System
                 </h2>
                 <span style={{ background: '#f59e0b', color: '#0f172a', fontSize: 10, padding: '2px 8px', borderRadius: 4, fontWeight: 800 }}>
-                  Video 33 Full Demo
+                  Live Margin Demo
                 </span>
                 <span style={{ background: '#10b981', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 4, fontWeight: 700 }}>
                   Active Margin Guard
@@ -248,7 +248,7 @@ export const NoDiscountMasterModal: React.FC<NoDiscountMasterModalProps> = ({
             }}
           >
             <span>🧮</span>
-            <span>Live Bill Simulator (Frame 0180)</span>
+            <span>Live Bill Simulator</span>
           </button>
 
           <button
@@ -329,7 +329,7 @@ export const NoDiscountMasterModal: React.FC<NoDiscountMasterModalProps> = ({
 
                 <div style={{ borderTop: '1px solid #334155', paddingTop: 16 }}>
                   <h4 style={{ margin: '0 0 10px', fontSize: 13, color: '#38bdf8', fontWeight: 700 }}>
-                    Protected Product Categories &amp; Item Groups (Video 33):
+                    Protected Product Categories &amp; Item Groups:
                   </h4>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
                     {config.protectedGroups.map((grp) => (
@@ -417,7 +417,7 @@ export const NoDiscountMasterModal: React.FC<NoDiscountMasterModalProps> = ({
               {/* Header explanation */}
               <div style={{ background: '#1e293b', borderLeft: '4px solid #f59e0b', padding: '12px 16px', borderRadius: 4, marginBottom: 16 }}>
                 <div style={{ fontSize: 13, fontWeight: 800, color: '#fbbf24' }}>
-                  Exact Video 33 Recreation: Table T-10 Bill (Res/293/24-25 - Frame 0180)
+                  Table T-10 Bill (Res/293/24-25)
                 </div>
                 <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
                   The guest orders Food, Liquor, Soft Drinks, and Desserts. Watch how applying a 10% Bill Discount calculates discount strictly on Food, while saving ₹68 on protected items!
@@ -514,14 +514,14 @@ export const NoDiscountMasterModal: React.FC<NoDiscountMasterModalProps> = ({
               {/* Comparison Card */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div style={{ background: '#450a0a', border: '1px solid #991b1b', borderRadius: 6, padding: 14 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#fca5a5' }}>❌ Without RoomG Protection:</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#fca5a5' }}>❌ Standard Discount Applied:</div>
                   <div style={{ fontSize: 11, color: '#fecaca', marginTop: 4 }}>
                     Naive discount across all items: 10% of ₹920.00 = <strong style={{ color: '#fff' }}>₹92.00 given away</strong>. Hotel gives up margin on fixed MRP cold drinks and government-taxed liquor!
                   </div>
                 </div>
 
                 <div style={{ background: '#064e3b', border: '1px solid #059669', borderRadius: 6, padding: 14 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#6ee7b7' }}>✓ With RoomG No-Discount Rules:</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#6ee7b7' }}>✓ Protected (No-Discount Enforced):</div>
                   <div style={{ fontSize: 11, color: '#a7f3d0', marginTop: 4 }}>
                     Discount applied solely to Burger and Bada Pao = <strong style={{ color: '#fff' }}>₹24.00</strong>. Exact <strong style={{ color: '#fbbf24' }}>₹68.00 retained</strong> in hotel bottom line profit!
                   </div>
@@ -693,7 +693,7 @@ export const NoDiscountMasterModal: React.FC<NoDiscountMasterModalProps> = ({
           }}
         >
           <div style={{ color: '#94a3b8' }}>
-            <span>Hotel Sai Vasudev Residency &bull; Price Integrity &bull; RoomG Video 33 Module</span>
+            <span>Hotel Sai Vasudev Residency &bull; Price Integrity &bull; Margin Protection</span>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
             {onOpenFoodBill && (

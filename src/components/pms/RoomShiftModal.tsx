@@ -155,7 +155,7 @@ export const RoomShiftModal: React.FC<RoomShiftModalProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 18 }}>🔄</span>
             <span style={{ fontWeight: 800, letterSpacing: 0.8, fontSize: 15 }}>
-              ROOM SHIFTING &bull; HOW TO CHANGE GUEST ROOM (VIDEO 11)
+              ROOM SHIFTING &bull; GUEST TRANSFER MANAGEMENT
             </span>
           </div>
           <button 
@@ -343,7 +343,7 @@ export const RoomShiftModal: React.FC<RoomShiftModalProps> = ({
             {/* Tariff Adjustment Rule - Video 11 [06:00] */}
             <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 6, padding: 12, marginBottom: 14 }}>
               <label className="form-label-pms" style={{ color: '#1e40af', fontWeight: 800, fontSize: 12 }}>
-                Per Day Room Tariff Rule (Video 11 Category & Tariff Rule)
+                Per Day Room Tariff Policy (Category & Tariff Rule)
               </label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10, marginTop: 6 }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer' }}>

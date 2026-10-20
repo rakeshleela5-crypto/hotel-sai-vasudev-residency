@@ -255,7 +255,7 @@ export const CompanyBrandingModal: React.FC<CompanyBrandingModalProps> = ({
                   Company Logo, QR Code &amp; Digital Seals (/comp_pic_form)
                 </h3>
                 <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
-                  Upload official graphics to appear automatically on all 4 bill formats, guest registration cards, and WhatsApp PDF invoices (Video 26).
+                  Upload official graphics to appear automatically on all 4 bill formats, guest registration cards, and WhatsApp PDF invoices .
                 </div>
               </div>
 
@@ -868,7 +868,7 @@ export const CompanyBrandingModal: React.FC<CompanyBrandingModalProps> = ({
                     onChange={e => handleInfoChange('makeAllBillLocalGst', e.target.checked)}
                   />
                   <label htmlFor="localGst" style={{ fontSize: 12, fontWeight: 700, color: '#1e293b' }}>
-                    Make All Bill Local GST (Forces SGST + CGST for all guests regardless of state - Video 10 &amp; 26)
+                    Make All Bill Local GST (Forces SGST + CGST for all guests regardless of state)
                   </label>
                 </div>
               </div>

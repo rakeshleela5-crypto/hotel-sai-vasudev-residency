@@ -304,7 +304,7 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
                   Banquet Hall Billing & Event Invoice Master
                 </h2>
                 <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                  Video 35 Verified • RoomG Gold Standard
+                  Verified Enterprise Standard
                 </span>
               </div>
               <p className="text-xs text-emerald-200/80">
@@ -383,7 +383,7 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800 border-transparent'
             }`}
           >
-            <span>🧾</span> Frame 0700 Grand Tax Invoice
+            <span>🧾</span> Grand Banquet Tax Invoice
           </button>
 
           <button
@@ -437,7 +437,7 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
                   <div className="text-2xl font-bold text-rose-400 mt-1">
                     {venues.filter(v => v.status === 'dirty').length} Venue Dirty
                   </div>
-                  <div className="text-[11px] text-rose-300/80 mt-0.5">Frame 0680 Auto-Housekeeping</div>
+                  <div className="text-[11px] text-rose-300/80 mt-0.5">Auto-Housekeeping Schedule</div>
                 </div>
               </div>
 
@@ -569,7 +569,7 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
                     <span>📋</span> New Banquet & Marriage Garden Booking Entery
                   </h3>
                   <p className="text-xs text-slate-400">
-                    Exact replication of RoomG Video 35 (Frames 0250, 0280, 0300) with Multi-Room Group Linkage
+                    Banquet & Event Management with Multi-Room Group Linkage
                   </p>
                 </div>
                 <span className="bg-emerald-950 text-emerald-400 border border-emerald-600 px-3 py-1 rounded text-xs font-mono font-bold">
@@ -650,7 +650,7 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    State / Jurisdiction (Frame 0300)
+                    State / Jurisdiction
                   </label>
                   <input
                     type="text"
@@ -710,7 +710,7 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Venue Tariff (₹) (Frame 0300)
+                    Venue Tariff (₹)
                   </label>
                   <input
                     type="number"
@@ -755,7 +755,7 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
               <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <span>🏨</span> Multi-Room Group Linkage (Video 35 Frame 0280)
+                    <span>🏨</span> Multi-Room Group Linkage
                   </span>
                   <span className="text-[11px] text-slate-400">
                     Complimentary / Bridal Family Rooms billed at ₹0
@@ -877,7 +877,7 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
                       <span>➕</span> Add Running KOT / Additional Food Pax
                     </h4>
                     <p className="text-[11px] text-slate-400">
-                      As demonstrated in Video 35 (Audio 16:30): Host requested +50 extra food plates mid-party!
+                      Live Catering Adjustment: Host requested +50 extra food plates mid-party!
                     </p>
                   </div>
 
@@ -937,7 +937,7 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
                   <div className="border-b border-slate-800 pb-3 flex items-center justify-between">
                     <div>
                       <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                        <span>📜</span> Cumulative Banquet KOTs & Food Bill (Frame 0550)
+                        <span>📜</span> Cumulative Banquet KOTs & Food Bill
                       </h4>
                       <span className="text-[11px] text-slate-400">
                         Bill No: <strong className="text-slate-200">SHRI/290/24-25</strong> • Settle Mode: <strong className="text-emerald-400">Settle To Room</strong>
@@ -992,7 +992,7 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
                       </tbody>
                       <tfoot>
                         <tr className="bg-slate-950 font-bold text-white border-t border-slate-700">
-                          <td colSpan={2} className="py-2.5 px-3 text-slate-300">Total F&B & Services (Frame 0550)</td>
+                          <td colSpan={2} className="py-2.5 px-3 text-slate-300">Total F&B & Services</td>
                           <td className="py-2.5 px-3 text-right font-mono">{selectedBooking.foodPaxCount + selectedBooking.ancillaryServices.length}</td>
                           <td className="py-2.5 px-3"></td>
                           <td className="py-2.5 px-3 text-right font-mono text-amber-300">
@@ -1068,7 +1068,7 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
                 <div className="border-b border-slate-800 pb-3 flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                      <span>💳</span> Payment Settlement Detail (Video 35 Frame 0650 - /show_checkin/235)
+                      <span>💳</span> Payment Settlement Detail (/show_checkin/235)
                     </h4>
                     <p className="text-[11px] text-slate-400">
                       Multi-Mode payment split: Online (₹2,00,000) + State Bank of India (₹1,30,000) + Cash (₹5,000) = ₹3,35,000
@@ -1111,7 +1111,7 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
                   </div>
 
                   <div>
-                    <label className="block text-slate-300 font-semibold mb-1">Billing Officer (Frame 0700)</label>
+                    <label className="block text-slate-300 font-semibold mb-1">Billing Officer</label>
                     <input
                       type="text"
                       value={settleOfficer}
@@ -1130,7 +1130,7 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
                     onClick={handleFinalCheckout}
                     className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs rounded-lg shadow-lg transition-all flex items-center gap-2"
                   >
-                    <span>💾</span> Save &amp; Settle To Room (Frame 0650)
+                    <span>💾</span> Save &amp; Settle To Room
                   </button>
                 </div>
               </div>
@@ -1355,7 +1355,7 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
                   <span>📱</span> WhatsApp Marketing & Anniversary CRM (Audio 23:30)
                 </h3>
                 <p className="text-xs text-slate-400">
-                  As highlighted in Video 35: Dispatch instant confirmation, BEOs, and schedule anniversary greetings to repeat clients
+                  Automated Guest Notification: Dispatch instant confirmation, BEOs, and schedule anniversary greetings to repeat clients
                 </p>
               </div>
 
@@ -1383,7 +1383,7 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
                       onClick={() => handleShareWhatsApp('INVOICE')}
                       className="w-full text-left p-3 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-xs transition-colors"
                     >
-                      <div className="font-bold text-white">3. Final Tax Invoice (Frame 0700)</div>
+                      <div className="font-bold text-white">3. Final Tax Invoice</div>
                       <div className="text-slate-400 text-[11px] mt-0.5">Sends PDF link with SAC 996311 GST summary.</div>
                     </button>
                   </div>
@@ -1423,7 +1423,7 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
         <div className="bg-slate-900 border-t border-slate-800 px-6 py-3 flex flex-wrap items-center justify-between gap-4 text-xs">
           <div className="flex items-center gap-2 text-slate-400">
             <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span>RoomG PMS Video 35 Suite Completed • Cloudflare Production Ready</span>
+            <span>Hotel Sai Vasudev Residency Banquet Billing Suite</span>
           </div>
           <div className="flex items-center gap-2">
             <button

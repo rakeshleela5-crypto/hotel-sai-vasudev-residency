@@ -105,7 +105,7 @@ export const RoomKotRegisterModal: React.FC<RoomKotRegisterModalProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 20 }}>📋</span>
             <span style={{ fontWeight: 800, fontSize: 16, color: '#ffffff', letterSpacing: 0.5 }}>
-              {titleOverride || 'KOT Register & Mobile Order Tracking (Video 14 Frame 0260)'}
+              {titleOverride || 'KOT Register & Mobile Order Tracking'}
             </span>
           </div>
           <button

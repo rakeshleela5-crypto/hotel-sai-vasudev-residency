@@ -126,7 +126,7 @@ export const HelpAndSupportModal: React.FC<HelpAndSupportModalProps> = ({
     
     // Open WhatsApp inquiry
     const waText = encodeURIComponent(
-      `Hello Hansin IT Services! I would like to request a Free Demo of RoomG Hotel Management Software.\n\n` +
+      `Hello! I would like to request technical assistance or setup for Hotel Sai Vasudev Residency ERP.\n\n` +
       `Property: ${demoHotelName}\n` +
       `Contact Person: ${demoContactPerson}\n` +
       `Phone: ${demoPhone}\n` +
@@ -195,7 +195,7 @@ export const HelpAndSupportModal: React.FC<HelpAndSupportModalProps> = ({
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: 24 }}>🎓</span>
               <h2 style={{ margin: 0, fontSize: 20, color: '#f8fafc', fontWeight: 800 }}>
-                RoomG Training &amp; Customer Support Suite
+                ERP Training &amp; Customer Support Suite
               </h2>
               <span style={{ 
                 background: '#0284c7', 
@@ -205,7 +205,7 @@ export const HelpAndSupportModal: React.FC<HelpAndSupportModalProps> = ({
                 borderRadius: 4, 
                 fontWeight: 700 
               }}>
-                Video 30 Master Helpdesk
+                Enterprise Master Helpdesk
               </span>
             </div>
             <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>
@@ -216,7 +216,7 @@ export const HelpAndSupportModal: React.FC<HelpAndSupportModalProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {/* WhatsApp Quick Escalation */}
             <a 
-              href="https://wa.me/917999663696?text=Namaste%20RoomG%20Support%2C%20I%20need%20assistance%20with%20Hotel%20Sai%20Vasudev%20Residency." 
+              href="https://wa.me/917999663696?text=Namaste%20Support%2C%20I%20need%20assistance%20with%20Hotel%20Sai%20Vasudev%20Residency." 
               target="_blank" 
               rel="noreferrer"
               style={{
@@ -451,7 +451,7 @@ export const HelpAndSupportModal: React.FC<HelpAndSupportModalProps> = ({
                       Training Video Help &amp; Tutorials (Package)
                     </h3>
                     <p style={{ margin: '4px 0 0 0', fontSize: 12, color: '#94a3b8' }}>
-                      Official RoomG ERP Hindi video training suite for front desk receptionists, restaurant captains, accountants, and hotel owners.
+                      Comprehensive training suite for front desk receptionists, restaurant captains, accountants, and hotel management.
                     </p>
                   </div>
 
@@ -692,7 +692,7 @@ export const HelpAndSupportModal: React.FC<HelpAndSupportModalProps> = ({
                     }}>
                       <div style={{ fontSize: 48, marginBottom: 8 }}>🎬</div>
                       <h4 style={{ margin: 0, color: '#38bdf8', fontSize: 15 }}>
-                        RoomG Hotel Management Software Step-by-Step Training
+                        Hotel Management Software Step-by-Step System Guides
                       </h4>
                       <p style={{ color: '#cbd5e1', fontSize: 12, maxWidth: 500, margin: '8px auto 16px auto' }}>
                         {selectedVideo.description}
@@ -1239,7 +1239,7 @@ export const HelpAndSupportModal: React.FC<HelpAndSupportModalProps> = ({
                     🔒 Important Security &amp; Remote Access Policy
                   </h4>
                   <p style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.6, margin: '0 0 12px 0' }}>
-                    As emphasized by our training head in Video 30: <em>&ldquo;जब तक आप हमें आईडी और पासवर्ड नहीं देंगे तब तक हम आपके कंप्यूटर को कनेक्ट नहीं कर सकते हैं। यह पूरी तरह से आपकी अनुमति पर आधारित है।&rdquo;</em>
+                    Support Policy: <em>&ldquo;जब तक आप हमें आईडी और पासवर्ड नहीं देंगे तब तक हम आपके कंप्यूटर को कनेक्ट नहीं कर सकते हैं। यह पूरी तरह से आपकी अनुमति पर आधारित है।&rdquo;</em>
                   </p>
                   <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: '#94a3b8', lineHeight: 1.6 }}>
                     <li>The remote support engineer cannot connect in the background without you actively launching the app and giving credentials.</li>
@@ -1337,7 +1337,7 @@ export const HelpAndSupportModal: React.FC<HelpAndSupportModalProps> = ({
               }}>
                 <div>
                   <h3 style={{ margin: 0, fontSize: 16, color: '#f8fafc', fontWeight: 800 }}>
-                    RoomG PMS User Documentation Manual (Roomg PMS - english.pdf)
+                    Hotel PMS User Documentation Manual
                   </h3>
                   <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
                     Comprehensive operational rules, anti-theft controls, inventory movement procedures, and accounting guides.
@@ -1526,7 +1526,7 @@ export const HelpAndSupportModal: React.FC<HelpAndSupportModalProps> = ({
                     Book a Free Demo / Schedule Personalized Training
                   </h3>
                   <p style={{ margin: 0, fontSize: 12, color: '#94a3b8', maxWidth: 500, marginInline: 'auto' }}>
-                    As outlined in Video 30: Connect directly with our Jabalpur Headquarters team for free live software demonstrations, branch onboarding, or license renewal.
+                    Connect directly with our support desk for live software demonstrations, branch onboarding, or assistance.
                   </p>
                 </div>
 
@@ -1728,7 +1728,7 @@ export const HelpAndSupportModal: React.FC<HelpAndSupportModalProps> = ({
             Copyright &copy; Hansin IT Services 2024-26 | Privacy Policy &bull; Terms &amp; Conditions
           </div>
           <div>
-            RoomG Cloud PMS &bull; Enterprise 35-Module Edition
+            Hotel Sai Vasudev Residency PMS &bull; Enterprise Edition
           </div>
         </div>
       </div>

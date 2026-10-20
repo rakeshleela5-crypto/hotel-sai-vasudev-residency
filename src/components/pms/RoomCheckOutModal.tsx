@@ -328,7 +328,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                       fontWeight: 800,
                       cursor: 'pointer'
                     }}
-                    title="Toggle Personal / Non-commercial stay (Video 07 Frame 0080)"
+                    title="Toggle Personal / Non-commercial stay"
                   >
                     {isMyCheckout ? '✓ My Checkout (Personal)' : 'My Checkout'}
                   </button>
@@ -353,7 +353,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                       fontWeight: 700,
                       cursor: 'pointer'
                     }}
-                    title="Calculate Tax Inclusive (Video 07 Frame 0130)"
+                    title="Calculate Tax Inclusive"
                   >
                     Calculate Bill (Tax Inclusive)
                   </button>
@@ -461,7 +461,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                       background: !canChangeDateTime ? '#e2e8f0' : '#ffffff',
                       cursor: !canChangeDateTime ? 'not-allowed' : 'text'
                     }}
-                    title={!canChangeDateTime ? "🔒 Security Guard: Date modification locked to prevent backdating fraud (Video 23)" : undefined}
+                    title={!canChangeDateTime ? "🔒 Security Guard: Date modification locked as per security lock" : undefined}
                   />
                   <input
                     type="text"
@@ -476,7 +476,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                       background: !canChangeDateTime ? '#e2e8f0' : '#ffffff',
                       cursor: !canChangeDateTime ? 'not-allowed' : 'text'
                     }}
-                    title={!canChangeDateTime ? "🔒 Security Guard: Time modification locked to prevent backdating fraud (Video 23)" : undefined}
+                    title={!canChangeDateTime ? "🔒 Security Guard: Time modification locked as per security lock" : undefined}
                   />
                 </div>
 
@@ -497,7 +497,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                       background: !canChangeDateTime ? '#e2e8f0' : '#ffffff',
                       cursor: !canChangeDateTime ? 'not-allowed' : 'text'
                     }}
-                    title={!canChangeDateTime ? "🔒 Security Guard: Date modification locked to prevent backdating fraud (Video 23)" : undefined}
+                    title={!canChangeDateTime ? "🔒 Security Guard: Date modification locked as per security lock" : undefined}
                   />
                   <input
                     type="text"
@@ -512,7 +512,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                       background: !canChangeDateTime ? '#e2e8f0' : '#ffffff',
                       cursor: !canChangeDateTime ? 'not-allowed' : 'text'
                     }}
-                    title={!canChangeDateTime ? "🔒 Security Guard: Time modification locked to prevent backdating fraud (Video 23)" : undefined}
+                    title={!canChangeDateTime ? "🔒 Security Guard: Time modification locked as per security lock" : undefined}
                   />
                 </div>
 
@@ -547,7 +547,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                       background: !canChangeTariff ? '#e2e8f0' : '#ffffff',
                       cursor: !canChangeTariff ? 'not-allowed' : 'text'
                     }}
-                    title={!canChangeTariff ? "🔒 Security Guard: Room Tariff override locked for staff (Video 23)" : undefined}
+                    title={!canChangeTariff ? "🔒 Security Guard: Room Tariff override locked as per staff permissions" : undefined}
                   />
                 </div>
               </div>
@@ -769,7 +769,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                         background: !canChangeTariff ? '#e2e8f0' : '#ffffff',
                         cursor: !canChangeTariff ? 'not-allowed' : 'text'
                       }}
-                      title={!canChangeTariff ? "🔒 Security Guard: Discount modification locked for staff (Video 23)" : undefined}
+                      title={!canChangeTariff ? "🔒 Security Guard: Discount modification locked as per staff permissions" : undefined}
                     />
                   </div>
 
@@ -1009,7 +1009,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                       checked={forceLocalGst}
                       onChange={e => setForceLocalGst(e.target.checked)}
                     />
-                    <span>Make All Bill Local GST (Video 10)</span>
+                    <span>Enforce Local GST (CGST + SGST)</span>
                   </label>
 
                   <div style={{ fontWeight: 800, color: '#0f172a' }}>
@@ -1150,9 +1150,9 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                     setIsFullBillFormatOpen(true);
                   }}
                   style={{ background: '#7c3aed', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: 3, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
-                  title="Open Video 26 Multi-Format Bill Suite (A4 Standard, Day-wise Breakdown, General Invoice, A5 Compact)"
+                  title="Open Multi-Format Bill Suite (A4 Standard, Day-wise Breakdown, General Invoice, A5 Compact)"
                 >
-                  <span>🧾</span> Multi-Format Suite (Video 26)
+                  <span>🧾</span> Multi-Format Bill Suite
                 </button>
                 <button
                   type="button"

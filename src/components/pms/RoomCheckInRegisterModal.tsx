@@ -41,7 +41,7 @@ export const RoomCheckInRegisterModal: React.FC<RoomCheckInRegisterModalProps> =
   const handleDeleteCheckIn = (item: PmsCheckIn) => {
     if (!PmsStore.hasPermission('Delete')) {
       alert(
-        `🔒 Security Alert: Anti-Theft Guard Active (Video 23)\n\n` +
+        `🔒 Security Alert: Security Policy Guard Active\n\n` +
         `Your active staff account "${currentUser.userName}" (${currentUser.roleName}) does NOT have "Delete" permission.\n\n` +
         `Staff is strictly prohibited from deleting check-in bills or registers to prevent pocketing cash.\n\n` +
         `Please contact Super-Admin or Auditor for authorization.`
@@ -90,7 +90,7 @@ export const RoomCheckInRegisterModal: React.FC<RoomCheckInRegisterModalProps> =
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 18 }}>📋</span>
             <span style={{ fontWeight: 800, fontSize: 16, color: '#ffffff', letterSpacing: 0.5 }}>
-              Room Check In Register (Video 11)
+              Room Check In Register
             </span>
           </div>
           <button
@@ -296,7 +296,7 @@ export const RoomCheckInRegisterModal: React.FC<RoomCheckInRegisterModalProps> =
                           {/* Room Shift Icon (Video 11) */}
                           <button
                             type="button"
-                            title="Shift Room (Video 11)"
+                            title="Shift Room"
                             onClick={() => {
                               onClose();
                               onOpenRoomShift(item.roomNo);

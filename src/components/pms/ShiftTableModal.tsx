@@ -285,7 +285,7 @@ export const ShiftTableModal: React.FC<ShiftTableModalProps> = ({
               lineHeight: 1.5
             }}
           >
-            <strong>Video 13 Business Rule:</strong> Shifting moves all open KOT tickets and items from the source table to the new destination table seamlessly. The destination table is automatically marked as Occupied/Running (green) on the Live Table Matrix, and the source table is cleared back to Vacant.
+            <strong>Table Shifting Policy:</strong> Shifting moves all open KOT tickets and items from the source table to the new destination table seamlessly. The destination table is automatically marked as Occupied/Running (green) on the Live Table Matrix, and the source table is cleared back to Vacant.
           </div>
 
           {/* Recent Shift History */}

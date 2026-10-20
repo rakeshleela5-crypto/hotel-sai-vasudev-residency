@@ -138,7 +138,7 @@ export const KitchenDashboardModal: React.FC<KitchenDashboardModalProps> = ({
                 KITCHEN DISPLAY SYSTEM (KDS) &bull; LIVE KOT DASHBOARD
               </div>
               <div style={{ fontSize: 11, color: '#94a3b8' }}>
-                Video 12 Standard &bull; Android TV &amp; Kitchen Touch Terminal Mode
+                Android TV &amp; Kitchen Touch Terminal Mode
               </div>
             </div>
           </div>

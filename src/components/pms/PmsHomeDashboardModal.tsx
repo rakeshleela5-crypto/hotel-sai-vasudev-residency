@@ -314,7 +314,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
     if (PmsStore.hasPermission(permissionKey)) {
       action();
     } else {
-      setBoundaryToast(`⛔ Access Denied (Video 23 Anti-Theft Boundary): Active staff "${currentUser.userName}" (${currentUser.roleName}) is restricted from [${moduleName}]. Contact Super-Admin.`);
+      setBoundaryToast(`⛔ Access Denied (Security Boundary Guard): Active staff "${currentUser.userName}" (${currentUser.roleName}) is restricted from [${moduleName}]. Contact Super-Admin.`);
       setTimeout(() => setBoundaryToast(null), 5000);
     }
   };
@@ -522,7 +522,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           <span style={{ fontSize: 20 }}>🏆</span>
           <div>
             <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.3px' }}>
-              Top 20 Features of RoomG PMS | Best Hotel Software in India
+              Top 20 Enterprise Features | Hotel Sai Vasudev Residency ERP
             </div>
             <div style={{ fontSize: 11, fontWeight: 500, opacity: 0.9 }}>
               Anti-Theft Security &bull; Auto Dirty Status &bull; Instant Bill UPI QR &bull; Multi-Payment Splits &bull; Live Feature Showcase
@@ -658,7 +658,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           type="button"
           className="hub-tile-btn tile-purchase"
           onClick={() => guardAction('purchase', 'Purchase Inward', () => setIsPurchaseOpen(true))}
-          title="Video 19: Purchase Inward to Godown (/purchases/create)"
+          title="Purchase Inward to Godown (/purchases/create)"
         >
           <span className="tile-icon">🛒</span>
           <span>Purchase</span>
@@ -674,7 +674,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
               setIsStockTransferOpen(true);
             });
           }}
-          title="Video 19: Stock Transfer (Main Store -> Kitchen)"
+          title="Stock Transfer (Main Store -> Kitchen)"
         >
           <span className="tile-icon">🔁</span>
           <span>Stock Transfer</span>
@@ -689,7 +689,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
               setIsStockTransferOpen(true);
             });
           }}
-          title="Video 19: Stock Issue & Consumption (Kitchen -> Consume)"
+          title="Stock Issue & Consumption (Kitchen -> Consume)"
         >
           <span className="tile-icon">📦</span>
           <span>Stock Issue</span>
@@ -699,7 +699,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           type="button"
           className="hub-tile-btn tile-report"
           onClick={() => guardAction('Store Wise Stock', 'Store Wise Stock Report', () => setIsStoreWiseStockOpen(true))}
-          title="Video 19: Store Wise Stock Report (/store_wise_stock)"
+          title="Store Wise Stock Report (/store_wise_stock)"
         >
           <span className="tile-icon">📈</span>
           <span>Store Report</span>
@@ -720,7 +720,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => setIsOnlineGuestBookingOpen(true)}
           style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff' }}
-          title="Video 20: Online Public Guest Booking Engine (/hotel_room/DEMO0004)"
+          title="Online Public Guest Booking Engine (/hotel_room/DEMO0004)"
         >
           <span className="tile-icon">🌐</span>
           <span>Guest Web Booking</span>
@@ -731,7 +731,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => guardAction('Unconfirmed Bookings', 'Unconfirmed Bookings', () => setIsUnconfirmedBookingsOpen(true))}
           style={{ background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)', color: '#fff' }}
-          title="Video 20: Unconfirmed Booking Register (/pending_booking)"
+          title="Unconfirmed Booking Register (/pending_booking)"
         >
           <span className="tile-icon">🔔</span>
           <span>Pending ({unconfirmedBookings.length})</span>
@@ -742,7 +742,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           type="button"
           className="hub-tile-btn tile-users"
           onClick={() => guardAction('view user', 'User Accounts & Staff Shift Roster', () => setIsUserManagementOpen(true))}
-          title="Video 21 & 23: Staff Accounts & Duty Roster (/users)"
+          title="Staff Accounts & Duty Roster (/users)"
         >
           <span className="tile-icon">👥</span>
           <span>User Accounts</span>
@@ -752,7 +752,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           type="button"
           className="hub-tile-btn tile-roles"
           onClick={() => guardAction('view role', 'Roles & Permissions Matrix', () => setIsRolesPermissionsOpen(true))}
-          title="Video 21 & 23: Roles & 72 Granular Permissions Matrix (/roles)"
+          title="Roles & 72 Granular Permissions Matrix (/roles)"
         >
           <span className="tile-icon">🛡️</span>
           <span>Roles &amp; Rights</span>
@@ -762,7 +762,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           type="button"
           className="hub-tile-btn tile-properties"
           onClick={() => guardAction('Setting', 'Chain Branches', () => setIsChainPropertyOpen(true))}
-          title="Video 21: Multi-Location Chain Hotels Switcher (/multilocation)"
+          title="Multi-Location Chain Properties Switcher (/multilocation)"
         >
           <span className="tile-icon">🏨</span>
           <span>Chain Branches</span>
@@ -772,7 +772,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           type="button"
           className="hub-tile-btn tile-mobile-preview"
           onClick={() => setIsDevicePreviewOpen(true)}
-          title="Video 21: Mobile Responsive Device Simulator (Frame 0138)"
+          title="Mobile Responsive Device Simulator"
         >
           <span className="tile-icon">📱</span>
           <span>Mobile View</span>
@@ -784,7 +784,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => setIsWhatsAppSettingOpen(true)}
           style={{ background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', color: '#fff' }}
-          title="Video 22: Automated WhatsApp SMS Settings & Templates (/whatsapp_sms)"
+          title="Automated WhatsApp SMS Settings & Templates (/whatsapp_sms)"
         >
           <span className="tile-icon">💬</span>
           <span>Auto WhatsApp</span>
@@ -795,7 +795,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => setIsWhatsAppLogsOpen(true)}
           style={{ background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)', color: '#fff' }}
-          title="Video 22: WhatsApp Message Outbox & Fraud Audit Logs (/whatsapp_logs)"
+          title="WhatsApp Message Outbox & Audit Logs (/whatsapp_logs)"
         >
           <span className="tile-icon">📜</span>
           <span>WhatsApp Logs</span>
@@ -807,7 +807,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => guardAction('Police Station Report', 'Police Station Report', () => setIsPoliceReportOpen(true))}
           style={{ background: 'linear-gradient(135deg, #eab308 0%, #ca8a04 100%)', color: '#1e293b', fontWeight: 800 }}
-          title="Video 24: Police Station Front Office Arrival & Departure Register (/police_station_report)"
+          title="Police Station Front Office Arrival & Departure Register (/police_station_report)"
         >
           <span className="tile-icon">👮</span>
           <span>Police Report</span>
@@ -819,7 +819,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => guardAction('Setting', 'Online vs Offline Architecture', () => setIsOnlineVsOfflineOpen(true))}
           style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff', fontWeight: 800 }}
-          title="Video 25: Online vs Offline Architecture Comparison, Evaluator & Disaster Recovery Tools"
+          title="Cloud vs Offline Architecture Comparison & Disaster Recovery Tools"
         >
           <span className="tile-icon">🌐</span>
           <span>Online/Offline</span>
@@ -831,7 +831,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => { setSelectedBillCheckout(null); setActiveBillFormat('Format_3_A4_Standard'); setIsBillFormatOpen(true); }}
           style={{ background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)', color: '#fff', fontWeight: 800 }}
-          title="Video 26: Multi-Format Hotel Invoice Viewer (A4 Standard, Day-wise, Summary & A5 Compact)"
+          title="Multi-Format Hotel Invoice Viewer (A4 Standard, Day-wise, Summary & A5 Compact)"
         >
           <span className="tile-icon">🧾</span>
           <span>Bill Formats</span>
@@ -843,7 +843,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => guardAction('roomcheckout', 'Check Out Register', () => setIsCheckOutRegisterOpen(true))}
           style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff', fontWeight: 800 }}
-          title="Video 26: Hotel Room Check Out Register Table (/roomcheckouts)"
+          title="Hotel Room Check Out Register Table (/roomcheckouts)"
         >
           <span className="tile-icon">📋</span>
           <span>CheckOut List</span>
@@ -855,7 +855,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => guardAction('Setting', 'Company Logo & Media', () => { setCompanyBrandingTab('pictures'); setIsCompanyBrandingOpen(true); })}
           style={{ background: 'linear-gradient(135deg, #ca8a04 0%, #a16207 100%)', color: '#fff', fontWeight: 800 }}
-          title="Video 26: Company Logo, UPI QR Code, Seal, and Signature Settings (/comp_pic_form)"
+          title="Company Logo, UPI QR Code, Seal, and Signature Settings (/comp_pic_form)"
         >
           <span className="tile-icon">🖼️</span>
           <span>Logo &amp; Assets</span>
@@ -867,7 +867,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => setIsTop20FeaturesOpen(true)}
           style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)', color: '#fff', fontWeight: 800 }}
-          title="Video 27: Top 20 Features of RoomG PMS & Commercial Pricing Suite"
+          title="Top 20 Enterprise Features & Master System Specifications"
         >
           <span className="tile-icon">🏆</span>
           <span>Top 20 Features</span>
@@ -879,7 +879,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => { setGstReportTab('consolidated'); setIsGstReportsOpen(true); }}
           style={{ background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)', color: '#fff', fontWeight: 800 }}
-          title="Video 28: Room & Food Bill GST Report (23-Column Tax Audit Sheet)"
+          title="Room & Food Bill GST Report (23-Column Tax Audit Sheet)"
         >
           <span className="tile-icon">📜</span>
           <span>GST Reports</span>
@@ -891,7 +891,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => { setGstReportTab('b2b'); setIsGstReportsOpen(true); }}
           style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff', fontWeight: 800 }}
-          title="Video 28: B2B Register (Only GST Customer Invoices - GSTR-1 Table 4)"
+          title="B2B Register (Only GST Customer Invoices - GSTR-1 Table 4)"
         >
           <span className="tile-icon">🏢</span>
           <span>B2B GST</span>
@@ -902,7 +902,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => { setGstReportTab('b2c'); setIsGstReportsOpen(true); }}
           style={{ background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)', color: '#fff', fontWeight: 800 }}
-          title="Video 28: B2C Register (Without GST Invoices - GSTR-1 Table 7)"
+          title="B2C Register (Without GST Invoices - GSTR-1 Table 7)"
         >
           <span className="tile-icon">👥</span>
           <span>B2C GST</span>
@@ -914,7 +914,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => { setGstReportTab('dashboard'); setIsGstReportsOpen(true); }}
           style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', color: '#fff', fontWeight: 800 }}
-          title="Video 28: Master Report Dashboard (/report_dashboard - All 28 Reports)"
+          title="Master Report Dashboard (/report_dashboard - All 28 Reports)"
         >
           <span className="tile-icon">📊</span>
           <span>Report Hub</span>
@@ -926,7 +926,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => { setHelpInitialTab('videos'); setIsHelpAndSupportOpen(true); }}
           style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff', fontWeight: 800 }}
-          title="Video 30: RoomG Video Tutorials & Training Hub (/helps)"
+          title="System Guides & Training Hub (/helps)"
         >
           <span className="tile-icon">🎥</span>
           <span>Training Hub</span>
@@ -937,7 +937,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => { setHelpInitialTab('remote'); setIsHelpAndSupportOpen(true); }}
           style={{ background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)', color: '#fff', fontWeight: 800 }}
-          title="Video 30: Remote Desktop Assistance with UltraViewer & AnyDesk"
+          title="Remote Desktop Assistance with UltraViewer & AnyDesk"
         >
           <span className="tile-icon">🖥️</span>
           <span>Remote Support</span>
@@ -948,7 +948,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => { setHelpInitialTab('tickets'); setIsHelpAndSupportOpen(true); }}
           style={{ background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)', color: '#fff', fontWeight: 800 }}
-          title="Video 30: Raise Support Ticket for Hansin IT Engineers"
+          title="Raise Support Ticket for IT Engineers"
         >
           <span className="tile-icon">🎫</span>
           <span>Support Tickets</span>
@@ -960,7 +960,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => setIsAgentCommissionOpen(true)}
           style={{ background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', color: '#fff', fontWeight: 800 }}
-          title="Video 31: MR & Salesman Wise Commission Tracking, Agent Directory & Payout Vouchers (/agent_commission)"
+          title="Agent & Referral Commission Tracking, Directory & Payout Vouchers (/agent_commission)"
         >
           <span className="tile-icon">🤝</span>
           <span>Agent Commissions</span>
@@ -971,7 +971,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => setIsAgentCommissionOpen(true)}
           style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)', color: '#fff', fontWeight: 800 }}
-          title="Video 31: Top 15 PMS Features Official Canonical Architecture & 1-Click Launch Hub"
+          title="Key Enterprise Features Architecture & 1-Click Launch Hub"
         >
           <span className="tile-icon">🏆</span>
           <span>Top 15 Features</span>
@@ -983,7 +983,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => setIsLiquorBarOpen(true)}
           style={{ background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)', color: '#fff', fontWeight: 800 }}
-          title="Video 32: Liquor & Bar POS, Peg Billing, VAT 13% + SUR 10%, ML Inventory & Stock (/liqour_stock_brand_wise)"
+          title="Bar & Beverage POS, Peg Billing, VAT 13% + SUR 10%, ML Inventory & Stock (/liqour_stock_brand_wise)"
         >
           <span className="tile-icon">🍷</span>
           <span>Liquor &amp; Bar</span>
@@ -994,7 +994,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => setIsLiquorBarOpen(true)}
           style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff', fontWeight: 800 }}
-          title="Video 32: Brand-Wise Liquid Stock Ledger in ML and Bottle Equivalents"
+          title="Brand-Wise Beverage Stock Ledger in ML and Bottle Equivalents"
         >
           <span className="tile-icon">🍾</span>
           <span>Bar Stock (ML)</span>
@@ -1006,7 +1006,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => setIsNoDiscountOpen(true)}
           style={{ background: 'linear-gradient(135deg, #b45309 0%, #78350f 100%)', color: '#fff', fontWeight: 800 }}
-          title="Video 33: No-Discount Items, Price Integrity, Exemption Groups & Live Bill Margin Protection (/no_discount_master)"
+          title="No-Discount Items, Price Integrity, Exemption Groups & Live Bill Margin Protection (/no_discount_master)"
         >
           <span className="tile-icon">🛡️</span>
           <span>No-Discount Rules</span>
@@ -1017,7 +1017,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => setIsNoDiscountOpen(true)}
           style={{ background: 'linear-gradient(135deg, #0f766e 0%, #115e59 100%)', color: '#fff', fontWeight: 800 }}
-          title="Video 33: Live Bill Discount Simulator & Profit Margin Auditor (Frame 0180)"
+          title="Live Bill Discount Simulator & Profit Margin Auditor"
         >
           <span className="tile-icon">💰</span>
           <span>Margin Protection</span>
@@ -1029,7 +1029,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => setIsStoreWiseStockOpen(true)}
           style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff', fontWeight: 800 }}
-          title="Video 34: Store-Wise Stock Report, Multi-Godown Balance & Inventory (/store_wise_stock)"
+          title="Store-Wise Stock Report, Multi-Godown Balance & Inventory (/store_wise_stock)"
         >
           <span className="tile-icon">🏬</span>
           <span>Store-Wise Stock</span>
@@ -1040,7 +1040,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => setIsStoreWiseStockOpen(true)}
           style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)', color: '#fff', fontWeight: 800 }}
-          title="Video 34: Consolidated Hotel Inventory & Linen Anti-Theft Ledger (/inventories)"
+          title="Consolidated Hotel Inventory & Linen Asset Ledger (/inventories)"
         >
           <span className="tile-icon">📊</span>
           <span>Stock Report Master</span>
@@ -1052,7 +1052,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => setIsBanquetOpen(true)}
           style={{ background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', color: '#fff', fontWeight: 800 }}
-          title="Video 35: Banquet Hall Billing, Marriage Garden Booking & Event Tax Invoice Demo (/roombookings/create)"
+          title="Banquet Hall Billing, Function Hall Booking & Event Tax Invoice (/roombookings/create)"
         >
           <span className="tile-icon">🏰</span>
           <span>Banquet Billing</span>
@@ -1063,7 +1063,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn"
           onClick={() => setIsBanquetOpen(true)}
           style={{ background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)', color: '#fff', fontWeight: 800 }}
-          title="Video 35: Banquet Tax Invoices, Frame 0700 GST Breakdown & BEO Schedules"
+          title="Banquet Tax Invoices, GST Breakdown & BEO Schedules"
         >
           <span className="tile-icon">🧾</span>
           <span>Event Invoices</span>
@@ -1125,7 +1125,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
             {unprintedRoomKots.length > 0 && (
               <div
                 onClick={() => setIsRoomKotRegisterOpen(true)}
-                title="Click to view and print pending Room KOTs (Video 14)"
+                title="Click to view and print pending Room KOTs"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -1155,7 +1155,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
             {unprintedRestaurantKots.length > 0 && (
               <div
                 onClick={() => setIsRestaurantKotOpen(true)}
-                title="Click to view and print pending Restaurant Table KOTs (Video 14)"
+                title="Click to view and print pending Restaurant Table KOTs"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -1186,7 +1186,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
             {unconfirmedBookings.length > 0 && (
               <div
                 onClick={() => setIsUnconfirmedBookingsOpen(true)}
-                title="Click to review and confirm online guest room bookings (Video 20 Frame 0360)"
+                title="Click to review and confirm online guest room bookings"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -1399,7 +1399,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         onOpenKitchenDashboard={() => setIsKitchenDashboardOpen(true)}
         onOpenNewKot={() => setIsKotOpen(true)}
         filterServiceType="Room"
-        titleOverride="Room KOT Register (Video 14 Frame 0260)"
+        titleOverride="Room KOT Register"
       />
 
       {/* Video 15 General Receipt Register Modal (Frame 0090, 0250) */}

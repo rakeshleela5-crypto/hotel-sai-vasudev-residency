@@ -112,7 +112,7 @@ export const ItemWiseSalesReportModal: React.FC<ItemWiseSalesReportModalProps> =
               onClick={() => { setFromDate('19-07-2025'); setToDate('19-07-2025'); }}
               className="px-2.5 py-1 text-[11px] font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 cursor-pointer"
             >
-              Video 29 Date (19-07-2025)
+              Date (19-07-2025)
             </button>
             <button
               type="button"
@@ -235,7 +235,7 @@ export const ItemWiseSalesReportModal: React.FC<ItemWiseSalesReportModalProps> =
         {/* Footer */}
         <div className="px-6 py-3 bg-slate-100 border-t border-gray-200 flex items-center justify-between shrink-0">
           <div className="text-xs text-gray-500">
-            Showing 1 to {filteredSales.length} of {filteredSales.length} entries &bull; RoomG Frame 0220
+            Showing 1 to {filteredSales.length} of {filteredSales.length} entries
           </div>
           <button
             type="button"

@@ -63,8 +63,8 @@ export const OutstandingReceivablesModal: React.FC<OutstandingReceivablesModalPr
                 </h2>
                 <div className="text-[11px] text-slate-300">
                   {activeMode === 'receivable' 
-                    ? 'pms.hotelsai-vasudev.com/outstanding_receivable &bull; Video 29 Frame 0140' 
-                    : 'pms.hotelsai-vasudev.com/outstanding_payable_result &bull; Video 29 Frame 0160'}
+                    ? 'pms.hotelsai-vasudev.com/outstanding_receivable &bull; Receivables Register' 
+                    : 'pms.hotelsai-vasudev.com/outstanding_payable_result &bull; Payables Register'}
                 </div>
               </div>
             </div>
@@ -109,7 +109,7 @@ export const OutstandingReceivablesModal: React.FC<OutstandingReceivablesModalPr
                   : 'text-slate-300 hover:text-white hover:bg-slate-700'
               }`}
             >
-              💳 Outstanding Payables (Cr - Frame 0160)
+              💳 Outstanding Payables (Creditors)
             </button>
           </div>
 
@@ -237,7 +237,7 @@ export const OutstandingReceivablesModal: React.FC<OutstandingReceivablesModalPr
 
           {/* Footer note */}
           <div className="px-6 py-2.5 bg-gray-50 border-t border-gray-200 flex items-center justify-between text-[11px] text-gray-500 shrink-0">
-            <span>RoomG Hotel Management PMS &bull; Frame 0140 (Receivables) &amp; Frame 0160 (Payables)</span>
+            <span>Hotel Sai Vasudev Residency ERP &bull; Receivables &amp; Payables Master</span>
             <button
               type="button"
               onClick={onClose}

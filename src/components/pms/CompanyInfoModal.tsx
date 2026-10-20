@@ -320,11 +320,11 @@ export const CompanyInfoModal: React.FC<CompanyInfoModalProps> = ({
                 onChange={e => handleChange('makeAllBillLocalGst', e.target.checked)}
                 style={{ width: 16, height: 16 }}
               />
-              <span>Make All Bill Local GST (SGST + CGST for All Bills &bull; Video 10 Core Feature)</span>
+              <span>Make All Bill Local GST (SGST + CGST for All Bills)</span>
             </label>
 
             <div style={{ fontSize: 11, color: '#64748b', background: '#f1f5f9', padding: '8px 12px', borderRadius: 4, marginTop: 4 }}>
-              💡 <strong>Video 10 Rule Explained:</strong> When <em>Make All Bill Local GST</em> is checked, all guest invoices apply <strong>SGST (6%) + CGST (6%)</strong> even if the guest has an out-of-state GSTIN (e.g. MP State 23, UP State 09, Gujarat State 24). When unchecked, out-of-state guests receive an <strong>Interstate IGST (12%)</strong> tax invoice (as shown in Video 10 Frames 0210 vs 0310).
+              💡 <strong>Tax Rule Explanation:</strong> When <em>Make All Bill Local GST</em> is checked, all guest invoices apply <strong>SGST (6%) + CGST (6%)</strong> even if the guest has an out-of-state GSTIN (e.g. MP State 23, UP State 09, Gujarat State 24). When unchecked, out-of-state guests receive an <strong>Interstate IGST (12%)</strong> tax invoice .
             </div>
           </div>
 

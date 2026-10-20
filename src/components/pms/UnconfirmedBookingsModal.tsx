@@ -124,7 +124,7 @@ export const UnconfirmedBookingsModal: React.FC<UnconfirmedBookingsModalProps> =
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 16 }}>📋</span>
             <span style={{ fontWeight: 800, fontSize: 14 }}>
-              Room Booking &bull; Unconfirmed Bookings Register (Frame 0350 &amp; 0360)
+              Room Booking &bull; Unconfirmed Bookings Register
             </span>
             <span style={{
               background: '#e11d48',

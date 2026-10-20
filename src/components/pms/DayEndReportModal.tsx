@@ -37,7 +37,7 @@ export const DayEndReportModal: React.FC<DayEndReportModalProps> = ({ isOpen, on
                 Day End Report (Night Audit Paper Ledger)
               </h2>
               <div className="text-[11px] text-slate-300">
-                pms.hotelsai-vasudev.com/dayend_report &bull; Video 29 Frame 0240 Audit Register
+                pms.hotelsai-vasudev.com/dayend_report &bull; Daily Audit Register
               </div>
             </div>
           </div>
@@ -83,7 +83,7 @@ export const DayEndReportModal: React.FC<DayEndReportModalProps> = ({ isOpen, on
               onClick={() => { setReportDate('19-07-2025'); handleRefresh(); }}
               className="text-[11px] text-blue-700 underline font-medium cursor-pointer"
             >
-              Video 29 Benchmark (19-07-2025)
+              Benchmark (19-07-2025)
             </button>
           </div>
           <div className="text-right">
@@ -91,7 +91,7 @@ export const DayEndReportModal: React.FC<DayEndReportModalProps> = ({ isOpen, on
           </div>
         </div>
 
-        {/* Printable Paper Canvas Area (Matching Video 29 Frame 0240) */}
+        {/* Printable Paper Canvas Area (Matching Frame 0240) */}
         <div className="flex-1 overflow-y-auto p-6 bg-slate-50 print:bg-white print:p-0">
           <div className="max-w-4xl mx-auto bg-white border border-gray-300 shadow-md p-8 rounded-sm text-gray-900 print:border-none print:shadow-none">
             
@@ -222,7 +222,7 @@ export const DayEndReportModal: React.FC<DayEndReportModalProps> = ({ isOpen, on
         {/* Footer */}
         <div className="px-5 py-3 bg-slate-100 border-t border-gray-200 flex items-center justify-between shrink-0">
           <div className="text-xs text-gray-600">
-            Official Day End Report &bull; As shown in RoomG PMS Training Video 29 (Frame 0240)
+            Official Day End Report (Night Audit Register)
           </div>
           <button
             type="button"

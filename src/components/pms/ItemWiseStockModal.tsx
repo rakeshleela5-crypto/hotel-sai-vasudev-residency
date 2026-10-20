@@ -56,7 +56,7 @@ export const ItemWiseStockModal: React.FC<ItemWiseStockModalProps> = ({
                 Item Wise Stock Ledger
               </h2>
               <div className="text-[11px] text-slate-300">
-                pms.hotelsai-vasudev.com/item_wise_stock &bull; Video 29 Frame 0410 Kitchen Stock Audit
+                pms.hotelsai-vasudev.com/item_wise_stock &bull; Kitchen Stock Audit
               </div>
             </div>
           </div>
@@ -110,7 +110,7 @@ export const ItemWiseStockModal: React.FC<ItemWiseStockModalProps> = ({
               onClick={() => { setSelectedItem('Boondi Raita'); setFromDate('01-07-2025'); setToDate('19-07-2025'); handleFetchStock(); }}
               className="px-2.5 py-1 text-[11px] font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 cursor-pointer"
             >
-              Video 29 Boondi Raita Benchmark
+              Boondi Raita Benchmark
             </button>
           </div>
         </div>
@@ -227,7 +227,7 @@ export const ItemWiseStockModal: React.FC<ItemWiseStockModalProps> = ({
         {/* Footer */}
         <div className="px-6 py-3 bg-slate-100 border-t border-gray-200 flex items-center justify-between shrink-0">
           <div className="text-xs text-gray-500">
-            RoomG PMS Inventory &amp; Consumption Stock Ledger &bull; Frame 0410
+            Inventory &amp; Consumption Stock Ledger
           </div>
           <button
             type="button"

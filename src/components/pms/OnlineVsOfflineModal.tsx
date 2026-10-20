@@ -315,7 +315,7 @@ export const OnlineVsOfflineModal: React.FC<OnlineVsOfflineModalProps> = ({ isOp
       const a = document.createElement('a');
       const dateStr = new Date().toISOString().split('T')[0];
       a.href = url;
-      a.download = `RoomG_SaiVasudev_Backup_${dateStr}.json`;
+      a.download = `SaiVasudev_Backup_${dateStr}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -387,7 +387,7 @@ export const OnlineVsOfflineModal: React.FC<OnlineVsOfflineModalProps> = ({ isOp
                 ONLINE VS OFFLINE HOTEL SOFTWARE &bull; ARCHITECTURE MASTER
               </div>
               <div style={{ fontSize: 11, color: '#94a3b8' }}>
-                Video 25: 30-Dimension Feature Matrix, Hoteliers Decision Advisor &amp; Disaster Recovery Tools
+                Cloud vs Offline Architecture Matrix &amp; Disaster Recovery Tools
               </div>
             </div>
           </div>
@@ -462,7 +462,7 @@ export const OnlineVsOfflineModal: React.FC<OnlineVsOfflineModalProps> = ({ isOp
               borderBottom: activeTab === 'advisor' ? '3px solid #2563eb' : '3px solid transparent'
             }}
           >
-            🎯 Hoteliers Decision Advisor (Frame 0350)
+            🎯 Hoteliers Decision Advisor
           </button>
 
           <button
@@ -479,7 +479,7 @@ export const OnlineVsOfflineModal: React.FC<OnlineVsOfflineModalProps> = ({ isOp
               borderBottom: activeTab === 'hybrid_sync' ? '3px solid #2563eb' : '3px solid transparent'
             }}
           >
-            ⚡ RoomG Hybrid Sync &amp; Disaster Recovery
+            ⚡ Cloud Hybrid Sync &amp; Disaster Recovery
           </button>
         </div>
 
@@ -572,7 +572,7 @@ export const OnlineVsOfflineModal: React.FC<OnlineVsOfflineModalProps> = ({ isOp
 
             <div style={{ padding: '8px 18px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', fontSize: 11, color: '#64748b', display: 'flex', justifyContent: 'space-between' }}>
               <div>Showing {filteredItems.length} of 30 architectural dimensions</div>
-              <div>RoomG PMS features a <strong>Hybrid Offline-First Architecture</strong> with zero data loss.</div>
+              <div>Hotel Sai Vasudev Residency ERP features a <strong>Hybrid Cloud-First Architecture</strong> with zero data loss.</div>
             </div>
           </div>
         )}
@@ -587,7 +587,7 @@ export const OnlineVsOfflineModal: React.FC<OnlineVsOfflineModalProps> = ({ isOp
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                 <span style={{ fontSize: 18 }}>✅</span>
                 <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0f172a' }}>
-                  Summary: Which Version Should You Choose? (Frame 0350)
+                  Summary: Architecture Comparison &amp; Recommendation
                 </h3>
               </div>
 
@@ -726,7 +726,7 @@ export const OnlineVsOfflineModal: React.FC<OnlineVsOfflineModalProps> = ({ isOp
                       fontWeight: 800
                     }}
                   >
-                    RoomG Hybrid Engine Recommended 🚀
+                    Enterprise Cloud Sync Active 🚀
                   </span>
                 </div>
               </div>
@@ -798,7 +798,7 @@ export const OnlineVsOfflineModal: React.FC<OnlineVsOfflineModalProps> = ({ isOp
                 Disaster Recovery &amp; Local Database Tools
               </h3>
               <p style={{ margin: '0 0 16px 0', fontSize: 12, color: '#64748b', lineHeight: '1.5' }}>
-                RoomG PMS stores a continuous offline database locally in your browser/desktop storage. You can create an instant snapshot backup or restore an existing backup on any new PC or laptop.
+                The system syncs continuous snapshots with the PostgreSQL Railway Cloud backend. You can create an instant snapshot backup or restore an existing backup on any new PC or laptop.
               </p>
 
               <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
@@ -879,7 +879,7 @@ export const OnlineVsOfflineModal: React.FC<OnlineVsOfflineModalProps> = ({ isOp
             {/* Offline Resilience Blueprint */}
             <div style={{ background: '#f1f5f9', borderRadius: 8, border: '1px solid #cbd5e1', padding: '16px 20px' }}>
               <div style={{ fontWeight: 800, fontSize: 13, color: '#1e293b', marginBottom: 6 }}>
-                💡 RoomG Hybrid Offline Architecture Advantage:
+                💡 Enterprise Cloud & Offline Continuity Advantage:
               </div>
               <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: '#475569', lineHeight: '1.6' }}>
                 <li>Even if your hotel internet cable gets cut or router fails, front desk staff can continue <strong>Check-In, Room Check-Out, KOT generation, and Bill printing without a second of downtime</strong>.</li>

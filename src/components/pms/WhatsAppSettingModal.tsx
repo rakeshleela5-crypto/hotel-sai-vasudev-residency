@@ -436,7 +436,7 @@ export const WhatsAppSettingModal: React.FC<WhatsAppSettingModalProps> = ({
       </div>
 
       {/* ======================================================================
-          SUB-MODAL 1: EDIT / ADD TEMPLATE (Exact RoomG Frame 0180)
+          SUB-MODAL 1: EDIT / ADD TEMPLATE
       ====================================================================== */}
       {isEditModalOpen && editingTemplate && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in font-sans">

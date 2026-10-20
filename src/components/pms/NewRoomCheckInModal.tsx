@@ -486,7 +486,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                   </div>
                   <div className="form-group-pms">
                     <label className="form-label-pms">
-                      <span className="req">*</span> Check In Date {!canChangeDateTime && <span title="Date Locked: Anti-Backdating Guard (Video 23)" style={{ color: '#e11d48' }}>🔒</span>}
+                      <span className="req">*</span> Check In Date {!canChangeDateTime && <span title="Date Locked: Anti-Backdating Guard" style={{ color: '#e11d48' }}>🔒</span>}
                     </label>
                     <input 
                       type="date" 
@@ -494,7 +494,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                       readOnly={!canChangeDateTime}
                       onChange={e => {
                         if (!canChangeDateTime) {
-                          alert('Permission Denied: Standard staff are restricted from altering Date & Time to prevent backdated ledger manipulation (Video 23 Anti-Backdating Protection).');
+                          alert('Permission Denied: Standard staff are restricted from altering Date & Time to prevent backdated ledger manipulation (Anti-Backdating Security Policy).');
                           return;
                         }
                         setCheckInDate(e.target.value);
@@ -506,7 +506,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                   </div>
                   <div className="form-group-pms">
                     <label className="form-label-pms">
-                      <span className="req">*</span> Check In Time {!canChangeDateTime && <span title="Time Locked: Anti-Backdating Guard (Video 23)" style={{ color: '#e11d48' }}>🔒</span>}
+                      <span className="req">*</span> Check In Time {!canChangeDateTime && <span title="Time Locked: Anti-Backdating Guard" style={{ color: '#e11d48' }}>🔒</span>}
                     </label>
                     <input 
                       type="text" 
@@ -514,7 +514,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                       readOnly={!canChangeDateTime}
                       onChange={e => {
                         if (!canChangeDateTime) {
-                          alert('Permission Denied: Standard staff are restricted from altering Date & Time to prevent backdated ledger manipulation (Video 23 Anti-Backdating Protection).');
+                          alert('Permission Denied: Standard staff are restricted from altering Date & Time to prevent backdated ledger manipulation (Anti-Backdating Security Policy).');
                           return;
                         }
                         setCheckInTime(e.target.value);
@@ -637,7 +637,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                     <input type="text" placeholder="7657657..." value={documentNo} onChange={e => setDocumentNo(e.target.value)} className="form-input-pms" />
                   </div>
                   <div className="form-group-pms">
-                    <label className="form-label-pms">Agent / MR (Video 31)</label>
+                    <label className="form-label-pms">Booking Agent / Referral</label>
                     <input 
                       type="text" 
                       list="pms-agent-datalist"
@@ -753,7 +753,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                                     readOnly={!canChangeTariff}
                                     onChange={e => {
                                       if (!canChangeTariff) {
-                                        alert('Permission Denied: Only Super-Admin or General Manager can modify room tariff. Standard staff cannot override rates or offer unauthorized discounts (Video 23 Anti-Theft Guard).');
+                                        alert('Permission Denied: Only Super-Admin or General Manager can modify room tariff. Standard staff cannot override rates or offer unauthorized discounts (Tariff Protection Guard).');
                                         return;
                                       }
                                       setCustomTariff(Number(e.target.value));
@@ -768,10 +768,10 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                                       cursor: !canChangeTariff ? 'not-allowed' : 'auto',
                                       borderColor: !canChangeTariff ? '#cbd5e1' : '#38bdf8'
                                     }}
-                                    title={!canChangeTariff ? 'Room Tariff Locked: "Change_Room_Tariff" permission required to modify rates (Video 23 Anti-Theft Guard)' : 'Tariff is editable'}
+                                    title={!canChangeTariff ? 'Room Tariff Locked: "Change_Room_Tariff" permission required to modify rates (Tariff Protection Guard)' : 'Tariff is editable'}
                                   />
                                   {!canChangeTariff && (
-                                    <span title="Tariff Locked: Standard staff restricted from unauthorized discounts (Video 23)" style={{ fontSize: 11, color: '#e11d48', cursor: 'help' }}>
+                                    <span title="Tariff Locked: Standard staff restricted from unauthorized discounts" style={{ fontSize: 11, color: '#e11d48', cursor: 'help' }}>
                                       🔒
                                     </span>
                                   )}

@@ -254,7 +254,7 @@ export const StockReportMasterModal: React.FC<StockReportMasterModalProps> = ({
                   HOTEL SAI VASUDEV RESIDENCY &bull; STOCK REPORT &amp; INVENTORY CONTROL
                 </h2>
                 <span style={{ background: '#3b82f6', color: '#fff', fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 4 }}>
-                  Video 34 Canonical Suite
+                  Enterprise Inventory Suite
                 </span>
               </div>
               <p style={{ margin: 0, fontSize: 11, color: '#94a3b8' }}>
@@ -396,7 +396,7 @@ export const StockReportMasterModal: React.FC<StockReportMasterModalProps> = ({
             }}
           >
             <span>⚡</span>
-            <span>Live Flow Simulator (Video 34 Demo)</span>
+            <span>Live Flow Simulator</span>
           </button>
 
           <button
@@ -959,7 +959,7 @@ export const StockReportMasterModal: React.FC<StockReportMasterModalProps> = ({
             >
               <div style={{ borderBottom: '2px solid #e2e8f0', paddingBottom: 12, marginBottom: 20 }}>
                 <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0f172a' }}>
-                  Video 34 Canonical Inventory Demonstration &amp; Multi-Godown Lifecycle
+                  Enterprise Multi-Godown Inventory Lifecycle
                 </h3>
                 <p style={{ margin: '4px 0 0', fontSize: 12, color: '#64748b' }}>
                   Walk through the exact 3-step live scenario demonstrated by the speaker: Purchase Inward to Top Floor STORE1 &rarr; Transfer to Main Store &rarr; Issue to Housekeeping.
@@ -1024,7 +1024,7 @@ export const StockReportMasterModal: React.FC<StockReportMasterModalProps> = ({
               {simStep === 1 && (
                 <div style={{ background: '#f8fafc', padding: 20, borderRadius: 6, border: '1px solid #e2e8f0' }}>
                   <h4 style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 800, color: '#0f172a' }}>
-                    Step 1: Purchase Inward (Frame 0140 /purchases/create)
+                    Step 1: Purchase Inward (/purchases/create)
                   </h4>
                   <p style={{ fontSize: 12, color: '#475569', marginBottom: 16 }}>
                     Gupta Jii delivers 100 bottles of packaged water directly to <strong>STORE1 (Top Floor Godown)</strong> at ₹15 per bottle.
@@ -1083,7 +1083,7 @@ export const StockReportMasterModal: React.FC<StockReportMasterModalProps> = ({
               {simStep === 2 && (
                 <div style={{ background: '#f8fafc', padding: 20, borderRadius: 6, border: '1px solid #e2e8f0' }}>
                   <h4 style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 800, color: '#0f172a' }}>
-                    Step 2: Inter-Store Stock Transfer (Frame 0180 /stocktransfers/create)
+                    Step 2: Inter-Store Stock Transfer (/stocktransfers/create)
                   </h4>
                   <p style={{ fontSize: 12, color: '#475569', marginBottom: 16 }}>
                     Hotel moves 40 bottles from <strong>STORE1</strong> down to <strong>Main Store</strong> for operational guest dining availability.

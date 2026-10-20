@@ -557,7 +557,7 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                         <td style={{ padding: '5px 8px', textAlign: 'right' }}>{item.amount.toFixed(2)}</td>
                         <td style={{ padding: '5px 8px', textAlign: 'right' }}>
                           {item.noDiscount ? (
-                            <span style={{ fontSize: 9, background: '#fee2e2', color: '#dc2626', padding: '1px 4px', borderRadius: 2, fontWeight: 800 }} title="No Discount Item (Video 33)">
+                            <span style={{ fontSize: 9, background: '#fee2e2', color: '#dc2626', padding: '1px 4px', borderRadius: 2, fontWeight: 800 }} title="No Discount Item (Protected)">
                               NO DISC
                             </span>
                           ) : (

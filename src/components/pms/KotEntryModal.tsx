@@ -223,7 +223,7 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsMobileMode(!isMobileMode)}
-                  title="Toggle Mobile Waiter Screen (Video 14)"
+                  title="Toggle Mobile Waiter Screen"
                   style={{
                     background: isMobileMode ? '#22c55e' : '#334155',
                     color: '#ffffff',

@@ -90,7 +90,7 @@ export const GuestLogModal: React.FC<GuestLogModalProps> = ({
                 Guest Log (VIP &amp; Frequent Guest Register)
               </h2>
               <div className="text-[11px] text-slate-300">
-                pms.hotelsai-vasudev.com/guestlog &bull; Video 29 Frame 0350 Lifetime Value Audit
+                pms.hotelsai-vasudev.com/guestlog &bull; Guest Lifetime Value Audit
               </div>
             </div>
           </div>
@@ -261,7 +261,7 @@ export const GuestLogModal: React.FC<GuestLogModalProps> = ({
         {/* Footer */}
         <div className="px-6 py-3 bg-slate-100 border-t border-gray-200 flex items-center justify-between shrink-0">
           <div className="text-xs text-gray-500">
-            Showing 1 to {filteredGuests.length} of {filteredGuests.length} entries &bull; RoomG Frame 0350
+            Showing 1 to {filteredGuests.length} of {filteredGuests.length} entries 
           </div>
           <button
             type="button"

@@ -42,7 +42,7 @@ export const ShiftHandoverModal: React.FC<ShiftHandoverModalProps> = ({ isOpen, 
                 Handover (User Shift) Reconciliation Report
               </h2>
               <div className="text-[11px] text-slate-300">
-                pms.hotelsai-vasudev.com/shift_handover &bull; Video 29 Frame 0490 Cash Drawer Handover
+                pms.hotelsai-vasudev.com/shift_handover &bull; Front Office Cash Drawer Handover
               </div>
             </div>
           </div>

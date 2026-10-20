@@ -260,7 +260,7 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ fontSize: 16 }}>🌐</span>
             <span style={{ fontWeight: 800, fontSize: 13, letterSpacing: 0.5 }}>
-              HOTEL SAI VASUDEV RESIDENCY &bull; ONLINE GUEST BOOKING ENGINE (Video 20)
+              HOTEL SAI VASUDEV RESIDENCY &bull; ONLINE GUEST BOOKING ENGINE
             </span>
             <span style={{ 
               background: '#0284c7', 

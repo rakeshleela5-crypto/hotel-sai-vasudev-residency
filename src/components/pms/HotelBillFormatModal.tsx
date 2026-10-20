@@ -1497,7 +1497,7 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
                       onChange={e => setMargins(e.target.value as any)}
                       style={{ width: '100%', padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: 4 }}
                     >
-                      <option value="None">None (Video 26 recommended)</option>
+                      <option value="None">None (Standard Header)</option>
                       <option value="Default">Default</option>
                       <option value="Minimum">Minimum</option>
                     </select>
@@ -1505,7 +1505,7 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
                 </div>
 
                 <div style={{ background: '#f8fafc', padding: 10, borderRadius: 4, border: '1px solid #e2e8f0', fontSize: 11, color: '#475569' }}>
-                  💡 <strong>Video 26 Pro-Tip:</strong> Set <em>Margins: None</em> and <em>Paper Size: {activeFormat === 'Format_4_A5_Compact' ? 'A5' : 'A4'}</em> in print dialog to perfectly fit the bill without page overflow.
+                  💡 <strong>Printing Pro-Tip:</strong> Set <em>Margins: None</em> and <em>Paper Size: {activeFormat === 'Format_4_A5_Compact' ? 'A5' : 'A4'}</em> in print dialog to perfectly fit the bill without page overflow.
                 </div>
               </div>
 

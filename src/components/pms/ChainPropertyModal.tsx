@@ -201,7 +201,7 @@ export const ChainPropertyModal: React.FC<ChainPropertyModalProps> = ({
                 Multi-Location & Chain Property Management
               </div>
               <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                ROOMG Multi-Branch Architecture • Video 21 Clone • Active Property Context Switching
+                Multi-Branch Architecture • Active Property Context Switching
               </div>
             </div>
           </div>
@@ -689,7 +689,7 @@ export const ChainPropertyModal: React.FC<ChainPropertyModalProps> = ({
               }}
             >
               <div>
-                <strong>💡 Multi-Location ROOMG Principle (Video 21):</strong> In a chain hotel operation, each property maintains its own room inventory, KOT orders, food bills, check-in registrations, and cash registers under its distinct <code>Firm ID</code>. A Super-Admin or Auditor can switch between properties at any time without logging out.
+                <strong>💡 Multi-Location Principle:</strong> In a chain hotel operation, each property maintains its own room inventory, KOT orders, food bills, check-in registrations, and cash registers under its distinct <code>Firm ID</code>. A Super-Admin or Auditor can switch between properties at any time without logging out.
               </div>
               <button
                 onClick={refreshData}

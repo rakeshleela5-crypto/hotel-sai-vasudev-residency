@@ -486,7 +486,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
     if (PmsStore.hasPermission(permissionKey)) {
       onAllowed();
     } else {
-      setSecurityBanner(`⛔ ACCESS DENIED (Video 23 Anti-Theft Boundary): Your active staff account "${currentUser.userName}" (${currentUser.roleName}) is restricted from accessing [${moduleName}]. Contact Super-Admin to update permissions in Roles & Rights (/roles).`);
+      setSecurityBanner(`⛔ ACCESS DENIED (Security Boundary Active): Your active staff account "${currentUser.userName}" (${currentUser.roleName}) is restricted from accessing [${moduleName}]. Contact Super-Admin to update permissions in Roles & Rights (/roles).`);
       setTimeout(() => setSecurityBanner(null), 6000);
     }
   };
@@ -623,7 +623,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               <button
                 type="button"
                 onClick={() => setIsUnconfirmedOpen(true)}
-                title="Click to view and confirm pending online guest bookings (Video 20 Frame 0360)"
+                title="Click to view and confirm pending online guest bookings"
                 style={{
                   background: unconfirmedCount > 0 ? '#e11d48' : '#f59e0b',
                   color: '#ffffff',
@@ -716,7 +716,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               <button
                 type="button"
                 onClick={() => setIsChainPropertyOpen(true)}
-                title="Click to switch property / branch (Video 21 Multi-Location)"
+                title="Click to switch property / branch (Multi-Property Network)"
                 style={{
                   background: '#047857',
                   color: '#ffffff',
@@ -739,7 +739,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               <button
                 type="button"
                 onClick={() => setIsDevicePreviewOpen(true)}
-                title="Click to test PMS on mobile / tablet responsive emulator (Video 21 Frame 0138)"
+                title="Click to test PMS on mobile / tablet responsive emulator"
                 style={{
                   background: '#7c3aed',
                   color: '#ffffff',
@@ -762,7 +762,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               <button
                 type="button"
                 onClick={() => setIsWhatsAppSettingOpen(true)}
-                title="Click to manage WhatsApp SMS Gateway & Message Templates (Video 22)"
+                title="Click to manage WhatsApp SMS Gateway & Message Templates"
                 style={{
                   background: '#059669',
                   color: '#ffffff',
@@ -785,7 +785,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               <button
                 type="button"
                 onClick={() => setIsOnlineVsOfflineOpen(true)}
-                title="Click to view 30-Dimension Online vs Offline Matrix & Disaster Recovery Tools (Video 25)"
+                title="Click to view Cloud vs Offline Architecture Matrix & Disaster Recovery Tools"
                 style={{
                   background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
                   color: '#ffffff',
@@ -808,7 +808,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               <button
                 type="button"
                 onClick={() => setIsTop20FeaturesOpen(true)}
-                title="Click to explore all 20 Master Features of RoomG PMS (Video 27)"
+                title="Click to explore all 20 Master Enterprise Features of Hotel ERP"
                 style={{
                   background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
                   color: '#0f172a',
@@ -832,7 +832,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               <button
                 type="button"
                 onClick={() => { setGstReportTab('consolidated'); setIsGstReportsOpen(true); }}
-                title="Click to view Room & Food GST Reports, B2B, B2C and Report Hub (Video 28)"
+                title="Click to view Room & Food GST Reports, B2B, B2C and Report Hub"
                 style={{
                   background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
                   color: '#ffffff',
@@ -856,7 +856,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               <button
                 type="button"
                 onClick={() => { setHelpInitialTab('videos'); setIsHelpAndSupportOpen(true); }}
-                title="Click to access Video Tutorials, Support Tickets, Remote Support & User Manual (Video 30)"
+                title="Click to access System Guides, Support Tickets, Remote Support & User Manual"
                 style={{
                   background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
                   color: '#ffffff',
@@ -880,7 +880,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               <button
                 type="button"
                 onClick={() => setIsAgentCommissionOpen(true)}
-                title="Click to manage MR & Salesman Commissions, Agent Master, and Top 15 PMS Features (Video 31)"
+                title="Click to manage Agent & Referral Commissions, Directory & Key Features"
                 style={{
                   background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
                   color: '#ffffff',
@@ -904,7 +904,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               <button
                 type="button"
                 onClick={() => setIsLiquorBarOpen(true)}
-                title="Click to manage Liquor & Bar Inventory, Peg Billing, VAT 13% + SUR 10%, and ML Stock (Video 32)"
+                title="Click to manage Bar & Beverage Inventory, Peg Billing, VAT 13% + SUR 10%, and ML Stock"
                 style={{
                   background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)',
                   color: '#ffffff',
@@ -928,7 +928,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               <button
                 type="button"
                 onClick={() => setIsNoDiscountOpen(true)}
-                title="Click to configure No-Discount Items, Price Integrity, and Exemption Rules (Video 33)"
+                title="Click to configure No-Discount Items, Price Integrity, and Exemption Rules"
                 style={{
                   background: 'linear-gradient(135deg, #b45309 0%, #78350f 100%)',
                   color: '#ffffff',
@@ -952,7 +952,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               <button
                 type="button"
                 onClick={() => setIsStoreWiseStockOpen(true)}
-                title="Click to view Store Wise Stock, Consolidated Inventories, Simulator & Linen Control (Video 34)"
+                title="Click to view Store Wise Stock, Consolidated Inventories, Simulator & Linen Control"
                 style={{
                   background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
                   color: '#ffffff',
@@ -976,7 +976,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               <button
                 type="button"
                 onClick={() => setIsBanquetOpen(true)}
-                title="Click to manage Banquet Halls, Marriage Gardens, Event Catering, Multi-Room Linking & Tax Invoices (Video 35)"
+                title="Click to manage Banquet Halls, Event Catering, Multi-Room Linking & Tax Invoices"
                 style={{
                   background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
                   color: '#ffffff',
@@ -1052,7 +1052,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     {/* Video 23: Quick Role & Staff Switcher */}
                     <div style={{ padding: '6px 10px', background: '#111827', borderBottom: '1px solid #334155' }}>
                       <div style={{ fontSize: 10, fontWeight: 800, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>
-                        ⚡ Quick Switch Staff (Video 23)
+                        ⚡ Quick Switch Staff
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 3, maxHeight: 160, overflowY: 'auto' }}>
                         {allStaffUsers.slice(0, 8).map(u => {
@@ -1313,28 +1313,28 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                       <span>🚪 New Check In</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('Hotel Module', 'Room Shifting', () => { setSelectedRoomForShift(undefined); setIsRoomShiftOpen(true); })}>
-                      <span style={{ color: '#06b6d4', fontWeight: 800 }}>🔄 Room Shifting (Video 11)</span>
+                      <span style={{ color: '#06b6d4', fontWeight: 800 }}>🔄 Room Shifting</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('kot', 'Room Service KOT Entry', () => setIsKotModalOpen(true))}>
                       <span style={{ color: '#f59e0b', fontWeight: 700 }}>🍴 Room Service (KOT Entry)</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('Kot Register', 'Room KOT Register', () => setIsRoomKotRegisterOpen(true))}>
-                      <span style={{ color: '#22c55e', fontWeight: 800 }}>📋 Room KOT Register (Video 14)</span>
+                      <span style={{ color: '#22c55e', fontWeight: 800 }}>📋 Room KOT Register</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('Kitchen Dash Board', 'Kitchen Dashboard (KDS)', () => setIsKitchenDashboardOpen(true))}>
-                      <span style={{ color: '#eab308', fontWeight: 800 }}>🍳 Kitchen Dashboard (KDS - Video 12)</span>
+                      <span style={{ color: '#eab308', fontWeight: 800 }}>🍳 Kitchen Order Dashboard (KDS)</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('Restaurant Module', 'Restaurant KOT Register', () => setIsRestaurantKotOpen(true))}>
                       <span style={{ color: '#10b981', fontWeight: 700 }}>🍽️ Restaurant KOT Register</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('Restaurant Module', 'Restaurant Table Matrix', () => setIsTableDashboardOpen(true))}>
-                      <span style={{ color: '#84cc16', fontWeight: 800 }}>🏬 Restaurant Table Matrix (Video 13)</span>
+                      <span style={{ color: '#84cc16', fontWeight: 800 }}>🏬 Restaurant Table Matrix</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('Restaurant Module', 'Shift Table', () => setIsShiftTableOpen(true))}>
-                      <span style={{ color: '#f43f5e', fontWeight: 700 }}>🔁 Shift Table (Video 13)</span>
+                      <span style={{ color: '#f43f5e', fontWeight: 700 }}>🔁 Shift Table</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('Restaurant Module', 'NC KOT Register', () => setIsNcKotRegisterOpen(true))}>
-                      <span style={{ color: '#ec4899', fontWeight: 800 }}>🍽️ NC KOT Register (Video 13)</span>
+                      <span style={{ color: '#ec4899', fontWeight: 800 }}>🍽️ NC KOT Register</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('foodbills', 'Food Bill (FBB)', () => setIsFoodBillModalOpen(true))}>
                       <span style={{ color: '#38bdf8', fontWeight: 700 }}>🧾 Food Bill (FBB)</span>
@@ -1343,16 +1343,16 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                       <span style={{ color: '#34d399', fontWeight: 700 }}>💵 Room Advance Receipt</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('receipt', 'Receipt Register', () => setIsReceiptRegisterOpen(true))}>
-                      <span style={{ color: '#60a5fa', fontWeight: 700 }}>📄 Receipt Register (Video 15)</span>
+                      <span style={{ color: '#60a5fa', fontWeight: 700 }}>📄 Receipt Register</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('payment', 'Payment Register', () => setIsPaymentRegisterOpen(true))}>
-                      <span style={{ color: '#06b6d4', fontWeight: 700 }}>💳 Payment Register (Video 16)</span>
+                      <span style={{ color: '#06b6d4', fontWeight: 700 }}>💳 Payment Register</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('purchase', 'Purchase Entry', () => setIsPurchaseOpen(true))}>
-                      <span style={{ color: '#ec4899', fontWeight: 700 }}>🛒 Purchase Entry (Video 19)</span>
+                      <span style={{ color: '#ec4899', fontWeight: 700 }}>🛒 Purchase Entry</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('Stock_Transfer', 'Stock Transfer & Issue', () => { setStockTransferMode('transfer'); setIsStockTransferOpen(true); })}>
-                      <span style={{ color: '#a855f7', fontWeight: 700 }}>🔁 Stock Transfer &amp; Issue (Video 19)</span>
+                      <span style={{ color: '#a855f7', fontWeight: 700 }}>🔁 Stock Transfer &amp; Issue</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('roomcheckout', 'Room Check Out', () => setIsCheckOutRegisterOpen(true))}>
                       <span style={{ color: '#f87171', fontWeight: 700 }}>🧾 Room Check Out &amp; Final Billing</span>
@@ -1362,7 +1362,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                       <span style={{ color: '#38bdf8', fontWeight: 800 }}>📋 Room Check Out Register (/roomcheckouts)</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => { setSelectedBillCheckout(null); setActiveBillFormat('Format_3_A4_Standard'); setIsBillFormatOpen(true); }}>
-                      <span style={{ color: '#4ade80', fontWeight: 700 }}>🧾 Bill Formats &amp; Design (Video 26)</span>
+                      <span style={{ color: '#4ade80', fontWeight: 700 }}>🧾 Bill Formats &amp; Design</span>
                     </div>
                   </div>
                 )}
@@ -1389,17 +1389,17 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                       <span style={{ color: '#fbbf24', fontWeight: 700 }}>📑 Party &amp; Guest Ledger</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsOutstandingReceivablesOpen(true)}>
-                      <span style={{ color: '#fb923c', fontWeight: 700 }}>💰 Outstanding Receivables (Video 15)</span>
+                      <span style={{ color: '#fb923c', fontWeight: 700 }}>💰 Outstanding Receivables</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsStoreWiseStockOpen(true)}>
-                      <span style={{ color: '#10b981', fontWeight: 800 }}>📦 Store Wise Stock Report (Video 19)</span>
+                      <span style={{ color: '#10b981', fontWeight: 800 }}>📦 Store Wise Stock Report</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsCheckInRegisterOpen(true)}>
                       <span style={{ color: '#38bdf8', fontWeight: 700 }}>📋 Daily Check-in Report (/checkin_report)</span>
                     </div>
                     {/* Video 24: Police Station Report (Frames 0100, 0105, 0110, 0140) */}
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('Police Station Report', 'Police Station Report', () => setIsPoliceReportOpen(true))}>
-                      <span style={{ color: '#f59e0b', fontWeight: 800 }}>👮 Police Station Report (Video 24)</span>
+                      <span style={{ color: '#f59e0b', fontWeight: 800 }}>👮 Police Station Report</span>
                     </div>
                     {/* Video 28: GST Tax Reports Suite (Frames 0080-0330) */}
                     <div className="pms-nav-item" onClick={() => { setGstReportTab('consolidated'); setIsGstReportsOpen(true); }}>
@@ -1416,44 +1416,44 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     </div>
                     {/* Video 29: All Hotel Reports Master Suite */}
                     <div className="pms-nav-item" onClick={() => setIsDayEndModalOpen(true)}>
-                      <span style={{ color: '#f43f5e', fontWeight: 800 }}>🌅 Day End Report (Night Audit - Video 29)</span>
+                      <span style={{ color: '#f43f5e', fontWeight: 800 }}>🌅 Day End Report (Night Audit)</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsItemWiseSaleModalOpen(true)}>
-                      <span style={{ color: '#38bdf8', fontWeight: 700 }}>📊 Item Wise Sales Report (Video 29)</span>
+                      <span style={{ color: '#38bdf8', fontWeight: 700 }}>📊 Item Wise Sales Report</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsItemWiseStockModalOpen(true)}>
-                      <span style={{ color: '#a855f7', fontWeight: 700 }}>🏷️ Item Wise Stock Ledger (Video 29)</span>
+                      <span style={{ color: '#a855f7', fontWeight: 700 }}>🏷️ Item Wise Stock Ledger</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsGuestLogModalOpen(true)}>
-                      <span style={{ color: '#fbbf24', fontWeight: 800 }}>📖 Guest Log VIP Register (Video 29)</span>
+                      <span style={{ color: '#fbbf24', fontWeight: 800 }}>📖 Guest Log VIP Register</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsShiftHandoverModalOpen(true)}>
-                      <span style={{ color: '#34d399', fontWeight: 800 }}>🤝 Shift Handover Report (Video 29)</span>
+                      <span style={{ color: '#34d399', fontWeight: 800 }}>🤝 Shift Handover Report</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => { setOutstandingMode('payable'); setIsOutstandingReceivablesOpen(true); }}>
-                      <span style={{ color: '#ef4444', fontWeight: 700 }}>💳 Outstanding Payables (Creditors - Video 29)</span>
+                      <span style={{ color: '#ef4444', fontWeight: 700 }}>💳 Outstanding Payables (Creditors)</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsFbbReportOpen(true)}>
                       <span style={{ color: '#4ade80', fontWeight: 700 }}>🍴 FBB Report (Food &amp; Beverage)</span>
                     </div>
                     {/* Video 31: MR & Salesman Commission Ledger & Top 15 PMS Features */}
                     <div className="pms-nav-item" onClick={() => setIsAgentCommissionOpen(true)}>
-                      <span style={{ color: '#10b981', fontWeight: 800 }}>🤝 MR &amp; Salesman Commission Ledger (Video 31)</span>
+                      <span style={{ color: '#10b981', fontWeight: 800 }}>🤝 Agent &amp; Commission Ledger</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsAgentCommissionOpen(true)}>
-                      <span style={{ color: '#f59e0b', fontWeight: 800 }}>🏆 Top 15 PMS Features Hub (Video 31)</span>
+                      <span style={{ color: '#f59e0b', fontWeight: 800 }}>🏆 Key PMS Features Hub</span>
                     </div>
                     {/* Video 32: Liquor & Bar Management Software */}
                     <div className="pms-nav-item" onClick={() => setIsLiquorBarOpen(true)}>
-                      <span style={{ color: '#f43f5e', fontWeight: 800 }}>🍷 Brand-Wise Liquor Stock &amp; Bar POS (Video 32)</span>
+                      <span style={{ color: '#f43f5e', fontWeight: 800 }}>🍷 Bar &amp; Beverage POS</span>
                     </div>
                     {/* Video 33: No-Discount Item & Margin Protection Control */}
                     <div className="pms-nav-item" onClick={() => setIsNoDiscountOpen(true)}>
-                      <span style={{ color: '#fbbf24', fontWeight: 800 }}>🛡️ No-Discount Items &amp; Margin Rules (Video 33)</span>
+                      <span style={{ color: '#fbbf24', fontWeight: 800 }}>🛡️ No-Discount Items &amp; Margin Rules</span>
                     </div>
                     {/* Video 34: Stock Report & Inventory Control Suite */}
                     <div className="pms-nav-item" onClick={() => setIsStoreWiseStockOpen(true)}>
-                      <span style={{ color: '#38bdf8', fontWeight: 800 }}>🏬 Store-Wise Stock &amp; Inventory Suite (Video 34)</span>
+                      <span style={{ color: '#38bdf8', fontWeight: 800 }}>🏬 Store-Wise Stock &amp; Inventory Suite</span>
                     </div>
                   </div>
                 )}
@@ -1574,7 +1574,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                       <span style={{ color: '#34d399', fontWeight: 700 }}>🏨 Chain Locations (/multilocation)</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsDevicePreviewOpen(true)}>
-                      <span style={{ color: '#f472b6', fontWeight: 700 }}>📱 Multi-Device Simulator (Video 21)</span>
+                      <span style={{ color: '#f472b6', fontWeight: 700 }}>📱 Multi-Device Simulator</span>
                     </div>
                     {/* Video 22: Auto WhatsApp SMS Integration & Logs */}
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('Only_Whatsapp', 'WhatsApp SMS Setting', () => setIsWhatsAppSettingOpen(true))}>
@@ -1585,7 +1585,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     </div>
                     {/* Video 25: Online vs Offline Architecture & Disaster Recovery Tools */}
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('Setting', 'Online vs Offline Architecture', () => setIsOnlineVsOfflineOpen(true))}>
-                      <span style={{ color: '#38bdf8', fontWeight: 800 }}>🌐 Online vs Offline Architecture &amp; Backup (Video 25)</span>
+                      <span style={{ color: '#38bdf8', fontWeight: 800 }}>🌐 Cloud Sync &amp; Offline Continuity</span>
                     </div>
                     {/* Video 26: Company Logo, QR, Banking & Bill Format Selector (Frames 0240, 0250, 0270) */}
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('Setting', 'Company Logo & Media', () => { setCompanyBrandingTab('pictures'); setIsCompanyBrandingOpen(true); })}>
@@ -1866,7 +1866,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         onOpenKitchenDashboard={() => setIsKitchenDashboardOpen(true)}
         onOpenNewKot={() => setIsKotModalOpen(true)}
         filterServiceType="Room"
-        titleOverride="Room KOT Register (Video 14 Frame 0260)"
+        titleOverride="Room KOT Register"
       />
 
       {/* Video 15: General Receipt Register Modal (Frame 0090, 0250) */}

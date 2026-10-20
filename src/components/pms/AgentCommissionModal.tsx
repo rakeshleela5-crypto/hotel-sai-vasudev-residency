@@ -258,7 +258,7 @@ export const AgentCommissionModal: React.FC<AgentCommissionModalProps> = ({
                     fontWeight: 800
                   }}
                 >
-                  Video 31 &bull; 100% Exact Clone
+                  Enterprise Agent Architecture
                 </span>
               </div>
               <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
@@ -703,7 +703,7 @@ export const AgentCommissionModal: React.FC<AgentCommissionModalProps> = ({
                     <div style={{ fontWeight: 800, fontSize: 15, color: '#0f172a' }}>
                       Register New Travel Agent / MR / Tour Operator
                     </div>
-                    <span style={{ fontSize: 11, color: '#64748b' }}>Video 31 Agent Registration Module</span>
+                    <span style={{ fontSize: 11, color: '#64748b' }}>Agent & Referral Registration Module</span>
                   </div>
 
                   <form onSubmit={handleSaveNewAgent}>
@@ -1080,7 +1080,7 @@ export const AgentCommissionModal: React.FC<AgentCommissionModalProps> = ({
                     Top 15 PMS (Property Management System) Features
                   </div>
                   <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>
-                    Canonical Enterprise Feature Set Presented in RoomG Training Video 31 &bull; Complete PMS Solution for Hotels & Resorts
+                    Enterprise Feature Set &bull; Complete PMS Solution for Hotels & Resorts
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>

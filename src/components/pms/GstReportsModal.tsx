@@ -178,7 +178,7 @@ export const GstReportsModal: React.FC<GstReportsModalProps> = ({
       `*3. Total Tax Liability:* CGST: ₹${consolidatedTotals.cgst.toFixed(2)} | SGST: ₹${consolidatedTotals.sgst.toFixed(2)} | IGST: ₹${consolidatedTotals.igst.toFixed(2)}\n` +
       `*Total Tax Payable:* ₹${consolidatedTotals.totalGst.toFixed(2)}\n` +
       `*Total Turnover (Gross):* ₹${consolidatedTotals.billAmount.toFixed(2)}\n\n` +
-      `_Generated via RoomG Hotel Management System (Best PMS in India). Please file GSTR-1 and GSTR-3B accordingly._`;
+      `_Generated via Hotel Sai Vasudev Residency ERP. Please file GSTR-1 and GSTR-3B accordingly._`;
 
     const cleanMobile = caMobile.replace(/\D/g, '');
     const mobileWithCode = cleanMobile.length === 10 ? `91${cleanMobile}` : cleanMobile;

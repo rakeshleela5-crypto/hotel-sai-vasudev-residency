@@ -131,7 +131,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
         regDate: nowStr,
         verifiedDate: formStatus === 'Verified' ? nowStr : undefined,
         mobile: formMobile.trim(),
-        password: formPassword.trim() || 'RoomG@123',
+        password: formPassword.trim() || 'SaiVasudev@123',
         department: formDepartment,
         shift: formShift,
         isOnDuty: formIsOnDuty
@@ -237,7 +237,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
                 Account List (Multi-User Hotel Staff &amp; Device Access)
               </h2>
               <div style={{ fontSize: 11, color: '#94a3b8' }}>
-                Route: /userprofile &bull; Video 21 Frame 0120 &bull; Multi-User Mobile, PC &amp; Laptop Controls
+                Route: /userprofile &bull; Enterprise Multi-User Mobile, PC &amp; Laptop Controls
               </div>
             </div>
           </div>
@@ -362,7 +362,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
               borderTopRightRadius: 4
             }}
           >
-            🛡️ Staff Shift Roster &amp; Boundary Controls (Video 23)
+            🛡️ Staff Shift Roster &amp; Access Controls
           </button>
         </div>
 
@@ -464,7 +464,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
                   <th style={{ padding: '8px 10px', fontWeight: 700 }}>Email (Login ID)</th>
                   <th style={{ padding: '8px 10px', fontWeight: 700, width: 120 }}>Department</th>
                   <th style={{ padding: '8px 10px', fontWeight: 700, width: 140 }}>Shift</th>
-                  <th style={{ padding: '8px 10px', fontWeight: 700, width: 110 }}>Role (Video 23)</th>
+                  <th style={{ padding: '8px 10px', fontWeight: 700, width: 110 }}>Assigned Role</th>
                   <th style={{ padding: '8px 10px', fontWeight: 700, width: 85 }}>Status</th>
                   <th style={{ padding: '8px 10px', fontWeight: 700, width: 115, textAlign: 'center' }}>Active Duty</th>
                   <th style={{ padding: '8px 10px', fontWeight: 700, width: 170, textAlign: 'center' }}>Action</th>
@@ -586,7 +586,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
                             <button
                               type="button"
                               onClick={() => handleToggleVerify(u)}
-                              title="Toggle Verification Status (Frame 0120)"
+                              title="Toggle Verification Status"
                               style={{
                                 background: '#06b6d4',
                                 color: '#ffffff',
@@ -660,10 +660,10 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
               <span style={{ fontSize: 24 }}>🛡️</span>
               <div>
                 <h4 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: '#1e40af' }}>
-                  Video 23: Hotel Staff Management &amp; Anti-Theft Protection Matrix
+                  Hotel Staff Management &amp; Security Protection Matrix
                 </h4>
                 <p style={{ margin: '4px 0 0 0', fontSize: 12, color: '#334155', lineHeight: 1.5 }}>
-                  In RoomG PMS, every staff member is assigned a dedicated User ID tied to a specific Role.
+                  In Hotel Sai Vasudev Residency ERP, every staff member is assigned a dedicated User ID tied to a specific Role.
                   Removing delete rights prevents front desk staff from deleting guest bills to pocket cash.
                   Restricting tariff changes prevents unauthorized discounts, and anti-backdating prevents fraudulent retroactive ledger tampering.
                 </p>
@@ -717,7 +717,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
                 </div>
                 <div style={{ background: '#f8fafc', padding: 8, borderRadius: 4, fontSize: 11 }}>
                   <div style={{ color: '#16a34a', fontWeight: 700, marginBottom: 4 }}>
-                    ✓ Allowed Operations (Frame 0185):
+                    ✓ Allowed Operations:
                   </div>
                   <div>Table Matrix, KOT Generation, Kitchen KDS Dashboard, Food Bills, Item Sales, Stock Inward</div>
                   <div style={{ color: '#dc2626', fontWeight: 700, marginTop: 8, marginBottom: 4 }}>

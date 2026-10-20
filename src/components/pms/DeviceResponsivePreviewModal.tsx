@@ -53,7 +53,7 @@ export const DeviceResponsivePreviewModal: React.FC<DeviceResponsivePreviewModal
 
   // Device dimension definitions
   const deviceDimensions: Record<DeviceType, { width: number; height: number; label: string; icon: string }> = {
-    'iphone-se': { width: 375, height: 667, label: 'iPhone SE (375x667) [Video 21 Exact]', icon: '📱' },
+    'iphone-se': { width: 375, height: 667, label: 'iPhone SE (375x667)', icon: '📱' },
     'iphone-pro': { width: 390, height: 844, label: 'iPhone 14 / Pixel (390x844)', icon: '📱' },
     'ipad': { width: 768, height: 1024, label: 'iPad 10.2" (768x1024) [KDS / Table POS]', icon: '📟' },
     'desktop': { width: 1080, height: 720, label: 'Desktop / PC (1080x720)', icon: '💻' }
@@ -109,10 +109,10 @@ export const DeviceResponsivePreviewModal: React.FC<DeviceResponsivePreviewModal
             <span style={{ fontSize: '22px' }}>📱</span>
             <div>
               <div style={{ fontSize: '16px', fontWeight: 700, letterSpacing: '0.5px', color: '#f8fafc' }}>
-                Multi-Device Mobile Responsive Simulator (Video 21)
+                Multi-Device Mobile Responsive Simulator
               </div>
               <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                Exact Frame 0138-0150 Mobile UI • Live Interactive Preview • Responsive Touch Layout
+                Live Interactive Preview • Responsive Touch Layout
               </div>
             </div>
           </div>
@@ -302,7 +302,7 @@ export const DeviceResponsivePreviewModal: React.FC<DeviceResponsivePreviewModal
                 </button>
                 <div style={{ lineHeight: 1.1 }}>
                   <div style={{ fontSize: '13px', fontWeight: 800, color: '#f8fafc' }}>
-                    ROOMG
+                    SAI VASUDEV
                   </div>
                   <div style={{ fontSize: '9px', color: '#38bdf8' }}>
                     {currentProperty?.firmId || 'DEMO0004'} • {currentProperty?.location || 'Shirdi'}
@@ -372,7 +372,7 @@ export const DeviceResponsivePreviewModal: React.FC<DeviceResponsivePreviewModal
                     cursor: 'pointer'
                   }}
                 >
-                  🏠 Mobile Home Dashboard (Frame 0138)
+                  🏠 Mobile Home Dashboard
                 </button>
                 <button
                   onClick={() => {
@@ -391,7 +391,7 @@ export const DeviceResponsivePreviewModal: React.FC<DeviceResponsivePreviewModal
                     cursor: 'pointer'
                   }}
                 >
-                  🚪 Room Dashboard Cards (Frame 0145)
+                  🚪 Room Dashboard Cards
                 </button>
                 <button
                   onClick={() => {
@@ -1046,7 +1046,7 @@ export const DeviceResponsivePreviewModal: React.FC<DeviceResponsivePreviewModal
           }}
         >
           <div>
-            ROOMG Multi-Device Architecture: Runs on <strong>Mobile, Tablet, Laptop, and Desktop PC</strong> with simultaneous multi-user synchronization.
+            Multi-Device Responsive Architecture: Runs on <strong>Mobile, Tablet, Laptop, and Desktop PC</strong> with simultaneous multi-user synchronization.
           </div>
           <button
             onClick={onClose}

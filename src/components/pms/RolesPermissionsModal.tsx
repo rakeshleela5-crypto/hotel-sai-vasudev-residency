@@ -164,7 +164,7 @@ export const RolesPermissionsModal: React.FC<RolesPermissionsModalProps> = ({
                 Roles &amp; Permissions Manager
               </h2>
               <div style={{ fontSize: 11, color: '#94a3b8' }}>
-                Route: {selectedRoleForPermissions ? `/roles/${selectedRoleForPermissions.id}/give-permissions` : '/roles'} &bull; Video 21 Frames 0130 &amp; 0132
+                Route: {selectedRoleForPermissions ? `/roles/${selectedRoleForPermissions.id}/give-permissions` : '/roles'} 
               </div>
             </div>
           </div>
@@ -494,7 +494,7 @@ export const RolesPermissionsModal: React.FC<RolesPermissionsModalProps> = ({
                           <button
                             type="button"
                             onClick={() => handleOpenGivePermissions(r)}
-                            title="Configure Rights & Permissions (Frame 0132)"
+                            title="Configure Rights & Permissions"
                             style={{
                               background: '#eab308',
                               color: '#ffffff',
