@@ -188,8 +188,16 @@ export interface PmsCheckIn {
   email?: string;
   checkInDate: string;        // DD-MM-YYYY
   checkInTime: string;        // HH:MM AM/PM
+  checkOutDate?: string;       // YYYY-MM-DD
+  checkOutTime?: string;       // HH:MM AM/PM
   numberOfDays: number;
   numberOfGuests: number;
+  adults?: number;
+  children?: number;
+  extraGuests?: number;
+  extraGuestCharge?: number;
+  extraGuestRate?: number;
+  totalStayTariff?: number;
   businessSource: 'Walk-in' | 'OYO' | 'Make My Trip' | 'Goibibo' | 'Direct' | 'Corporate' | 'Other';
   package: string;
   tariffPerDay: number;
@@ -324,6 +332,17 @@ export interface PmsCheckOutDetail {
   isComplimentary?: boolean;
   billingOfficer?: string;    // e.g. DEMO0004
   dayWiseRent?: DayWiseRentItem[];
+  idType?: string;
+  idNumber?: string;
+  comingFrom?: string;
+  proceedingTo?: string;
+  purpose?: string;
+  roomTaxable?: number;
+  foodTaxable?: number;
+  miscTaxable?: number;
+  roomGstAmount?: number;
+  foodGstAmount?: number;
+  miscGstAmount?: number;
 }
 
 export interface DayWiseRentItem {
@@ -358,7 +377,8 @@ export interface MenuItem {
   gstPercent?: number;
   image?: string;
   headGroup?: 'Restaurant_Item' | 'Raw_Material';
-  group?: string;
+  hsnCode?: string;
+  sacCode?: string;
   noDiscount?: boolean; // Video 33: Flag to prohibit bill discounts on protected items
 }
 

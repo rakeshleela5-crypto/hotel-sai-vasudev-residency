@@ -780,6 +780,7 @@
   }
 
   /* 1. Isolated A4 GST Tax Invoice View */
+  #printable-tax-invoice,
   #printable-hotel-bill,
   .printable-a4-invoice {
     display: block !important;
@@ -794,6 +795,7 @@
     page-break-inside: avoid !important;
   }
 
+  #printable-tax-invoice > div,
   #printable-hotel-bill > div,
   .printable-a4-invoice > div {
     width: 100% !important;

@@ -90,18 +90,18 @@ export const DEFAULT_BUSINESS_SETTING: PmsBusinessSetting = {
 
 export const DEFAULT_COMPANY_INFO: PmsCompanyInfo = {
   firmName: 'HOTEL SAI VASUDEV RESIDENCY',
-  address1: 'Plot No. 14-B VIP Temple Road',
-  address2: 'Near Sai Baba Temple Shrine, Shirdi - 423109, Dist. Ahmednagar, Maharashtra',
+  address1: 'Plot No. 14-B, VIP Temple Road, Near Gate No. 2',
+  address2: 'Shirdi, Maharashtra 423109',
   city: 'Shirdi',
   pincode: '423109',
   state: 'MAHARASHTRA',
-  phone: '02423-255000',
-  mobile: '9822000000',
-  email: 'hotelsaivasudevresidency@gmail.com',
+  phone: '+91 94402 89999',
+  mobile: '+91 94402 89999',
+  email: 'reservations@hotelsai-vasudev.com',
   website: 'https://hotel-sai-vasudev-residency.pages.dev',
-  gstNo: '27ABCDE1234F1Z5',
+  gstNo: '27AABCS1429B1Z2',
   companyGstCode: '27',
-  pencardNo: 'ABCDE1234F',
+  pencardNo: 'AABCS1429B',
   regNo2: 'REG-MS-2024-9871',
   gstNotApplicable: false,
   makeAllBillLocalGst: true, // Video 10 local sales default
@@ -594,52 +594,51 @@ export const INITIAL_OTHER_CHARGES: PmsOtherCharge[] = [
 ];
 
 export const INITIAL_MENU_ITEMS: MenuItem[] = [
-  // 1. Morning Breakfast (7:00 AM - 10:30 AM)
-  { id: 'm-101', name: 'Idli Sambar (2 Pcs)', code: '101', barcode: '890101', company: 'Vasudev Rasoi', rate: 90, saleRate: 90, mrp: 90, purchaseRate: 35, unit: 'Plate', gstPercent: 5, category: 'Morning Breakfast', headGroup: 'Restaurant_Item' },
-  { id: 'm-102', name: 'Medu Vada (2 Pcs)', code: '102', barcode: '890102', company: 'Vasudev Rasoi', rate: 110, saleRate: 110, mrp: 110, purchaseRate: 40, unit: 'Plate', gstPercent: 5, category: 'Morning Breakfast', headGroup: 'Restaurant_Item' },
-  { id: 'm-103', name: 'Special Masala Dosa', code: '103', barcode: '890103', company: 'Vasudev Rasoi', rate: 130, saleRate: 130, mrp: 130, purchaseRate: 50, unit: 'Plate', gstPercent: 5, category: 'Morning Breakfast', headGroup: 'Restaurant_Item' },
-  { id: 'm-104', name: 'Poori Bhaji (4 Pcs)', code: '104', barcode: '890104', company: 'Vasudev Rasoi', rate: 120, saleRate: 120, mrp: 120, purchaseRate: 45, unit: 'Plate', gstPercent: 5, category: 'Morning Breakfast', headGroup: 'Restaurant_Item' },
-  { id: 'm-105', name: 'Shirdi Special Poha', code: '105', barcode: '890105', company: 'Vasudev Rasoi', rate: 80, saleRate: 80, mrp: 80, purchaseRate: 25, unit: 'Plate', gstPercent: 5, category: 'Morning Breakfast', headGroup: 'Restaurant_Item' },
-  { id: 'm-106', name: 'Ghee Rava Upma', code: '106', barcode: '890106', company: 'Vasudev Rasoi', rate: 80, saleRate: 80, mrp: 80, purchaseRate: 25, unit: 'Plate', gstPercent: 5, category: 'Morning Breakfast', headGroup: 'Restaurant_Item' },
+  // 1. Morning Breakfast (7:00 AM–10:30 AM)
+  { id: 'm-101', name: 'Shirdi Special Poha', code: '101', barcode: '890101', company: 'Vasudev Rasoi', rate: 80, saleRate: 80, mrp: 80, purchaseRate: 25, unit: 'Plate', gstPercent: 5, category: 'Morning Breakfast (7:00 AM–10:30 AM)', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-102', name: 'Steamed Idli Sambar (2 Pcs)', code: '102', barcode: '890102', company: 'Vasudev Rasoi', rate: 90, saleRate: 90, mrp: 90, purchaseRate: 35, unit: 'Plate', gstPercent: 5, category: 'Morning Breakfast (7:00 AM–10:30 AM)', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-103', name: 'Medu Vada Sambar (2 Pcs)', code: '103', barcode: '890103', company: 'Vasudev Rasoi', rate: 110, saleRate: 110, mrp: 110, purchaseRate: 40, unit: 'Plate', gstPercent: 5, category: 'Morning Breakfast (7:00 AM–10:30 AM)', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-104', name: 'Special Masala Dosa', code: '104', barcode: '890104', company: 'Vasudev Rasoi', rate: 130, saleRate: 130, mrp: 130, purchaseRate: 50, unit: 'Plate', gstPercent: 5, category: 'Morning Breakfast (7:00 AM–10:30 AM)', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-105', name: 'Poori Bhaji (4 Pcs)', code: '105', barcode: '890105', company: 'Vasudev Rasoi', rate: 120, saleRate: 120, mrp: 120, purchaseRate: 45, unit: 'Plate', gstPercent: 5, category: 'Morning Breakfast (7:00 AM–10:30 AM)', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-106', name: 'Sabudana Khichdi (Upvas Special)', code: '106', barcode: '890106', company: 'Vasudev Rasoi', rate: 110, saleRate: 110, mrp: 110, purchaseRate: 40, unit: 'Plate', gstPercent: 5, category: 'Morning Breakfast (7:00 AM–10:30 AM)', headGroup: 'Restaurant_Item', hsnCode: '996331' },
 
-  // 2. Main Course Curries
-  { id: 'm-201', name: 'Paneer Butter Masala', code: '201', barcode: '890201', company: 'Vasudev Rasoi', rate: 240, saleRate: 240, mrp: 260, purchaseRate: 110, unit: 'Portion', gstPercent: 5, category: 'Main Course Curries', headGroup: 'Restaurant_Item' },
-  { id: 'm-202', name: 'Shahi Paneer Royale', code: '202', barcode: '890202', company: 'Vasudev Rasoi', rate: 240, saleRate: 240, mrp: 260, purchaseRate: 110, unit: 'Portion', gstPercent: 5, category: 'Main Course Curries', headGroup: 'Restaurant_Item' },
-  { id: 'm-203', name: 'Kaju Curry (Cashew Gravy)', code: '203', barcode: '890203', company: 'Vasudev Rasoi', rate: 260, saleRate: 260, mrp: 280, purchaseRate: 130, unit: 'Portion', gstPercent: 5, category: 'Main Course Curries', headGroup: 'Restaurant_Item' },
-  { id: 'm-204', name: 'Malai Kofta Creamy Gravy', code: '204', barcode: '890204', company: 'Vasudev Rasoi', rate: 250, saleRate: 250, mrp: 270, purchaseRate: 120, unit: 'Portion', gstPercent: 5, category: 'Main Course Curries', headGroup: 'Restaurant_Item' },
-  { id: 'm-205', name: 'Mix Veg Kolhapuri', code: '205', barcode: '890205', company: 'Vasudev Rasoi', rate: 200, saleRate: 200, mrp: 220, purchaseRate: 90, unit: 'Portion', gstPercent: 5, category: 'Main Course Curries', headGroup: 'Restaurant_Item' },
-  { id: 'm-206', name: 'Aloo Gobi Matar Desi Style', code: '206', barcode: '890206', company: 'Vasudev Rasoi', rate: 180, saleRate: 180, mrp: 200, purchaseRate: 75, unit: 'Portion', gstPercent: 5, category: 'Main Course Curries', headGroup: 'Restaurant_Item' },
+  // 2. Sattvic & Jain Thalis
+  { id: 'm-201', name: 'Sai Prasad Maha Thali (Pure Desi Ghee)', code: '201', barcode: '890201', company: 'Vasudev Rasoi', rate: 280, saleRate: 280, mrp: 300, purchaseRate: 110, unit: 'Thali', gstPercent: 5, category: 'Sattvic & Jain Thalis', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-202', name: 'Jain Special Thali (No Onion/Garlic)', code: '202', barcode: '890202', company: 'Vasudev Rasoi', rate: 260, saleRate: 260, mrp: 280, purchaseRate: 100, unit: 'Thali', gstPercent: 5, category: 'Sattvic & Jain Thalis', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-203', name: 'Gujarati Sattvic Bhojan Thali', code: '203', barcode: '890203', company: 'Vasudev Rasoi', rate: 240, saleRate: 240, mrp: 260, purchaseRate: 90, unit: 'Thali', gstPercent: 5, category: 'Sattvic & Jain Thalis', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-204', name: 'Shirdi Temple Mini Prasad Thali', code: '204', barcode: '890204', company: 'Vasudev Rasoi', rate: 180, saleRate: 180, mrp: 200, purchaseRate: 70, unit: 'Thali', gstPercent: 5, category: 'Sattvic & Jain Thalis', headGroup: 'Restaurant_Item', hsnCode: '996331' },
 
-  // 3. Tandoor & Breads
-  { id: 'm-301', name: 'Butter Tandoori Roti', code: '301', barcode: '890301', company: 'Vasudev Rasoi', rate: 25, saleRate: 25, mrp: 30, purchaseRate: 8, unit: 'Piece', gstPercent: 5, category: 'Tandoor & Breads', headGroup: 'Restaurant_Item' },
-  { id: 'm-302', name: 'Plain Tandoori Naan', code: '302', barcode: '890302', company: 'Vasudev Rasoi', rate: 45, saleRate: 45, mrp: 50, purchaseRate: 15, unit: 'Piece', gstPercent: 5, category: 'Tandoor & Breads', headGroup: 'Restaurant_Item' },
-  { id: 'm-303', name: 'Butter Naan', code: '303', barcode: '890303', company: 'Vasudev Rasoi', rate: 55, saleRate: 55, mrp: 60, purchaseRate: 18, unit: 'Piece', gstPercent: 5, category: 'Tandoor & Breads', headGroup: 'Restaurant_Item' },
-  { id: 'm-304', name: 'Garlic Butter Naan', code: '304', barcode: '890304', company: 'Vasudev Rasoi', rate: 70, saleRate: 70, mrp: 80, purchaseRate: 22, unit: 'Piece', gstPercent: 5, category: 'Tandoor & Breads', headGroup: 'Restaurant_Item' },
-  { id: 'm-305', name: 'Lachedar Tandoori Paratha', code: '305', barcode: '890305', company: 'Vasudev Rasoi', rate: 60, saleRate: 60, mrp: 70, purchaseRate: 20, unit: 'Piece', gstPercent: 5, category: 'Tandoor & Breads', headGroup: 'Restaurant_Item' },
-  { id: 'm-306', name: 'Amritsari Missi Roti', code: '306', barcode: '890306', company: 'Vasudev Rasoi', rate: 40, saleRate: 40, mrp: 45, purchaseRate: 12, unit: 'Piece', gstPercent: 5, category: 'Tandoor & Breads', headGroup: 'Restaurant_Item' },
+  // 3. Main Course Curries & Paneer
+  { id: 'm-301', name: 'Paneer Butter Masala', code: '301', barcode: '890301', company: 'Vasudev Rasoi', rate: 240, saleRate: 240, mrp: 260, purchaseRate: 110, unit: 'Portion', gstPercent: 5, category: 'Main Course Curries & Paneer', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-302', name: 'Shirdi Special Kaju Kari', code: '302', barcode: '890302', company: 'Vasudev Rasoi', rate: 260, saleRate: 260, mrp: 280, purchaseRate: 130, unit: 'Portion', gstPercent: 5, category: 'Main Course Curries & Paneer', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-303', name: 'Dal Tadka Desi Ghee', code: '303', barcode: '890303', company: 'Vasudev Rasoi', rate: 160, saleRate: 160, mrp: 180, purchaseRate: 60, unit: 'Bowl', gstPercent: 5, category: 'Main Course Curries & Paneer', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-304', name: 'Khandeshi Sev Tomato Curry', code: '304', barcode: '890304', company: 'Vasudev Rasoi', rate: 170, saleRate: 170, mrp: 190, purchaseRate: 65, unit: 'Portion', gstPercent: 5, category: 'Main Course Curries & Paneer', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-305', name: 'Palak Paneer (Fresh Cottage Cheese)', code: '305', barcode: '890305', company: 'Vasudev Rasoi', rate: 230, saleRate: 230, mrp: 250, purchaseRate: 95, unit: 'Portion', gstPercent: 5, category: 'Main Course Curries & Paneer', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-306', name: 'Malai Kofta Creamy Gravy', code: '306', barcode: '890306', company: 'Vasudev Rasoi', rate: 250, saleRate: 250, mrp: 270, purchaseRate: 120, unit: 'Portion', gstPercent: 5, category: 'Main Course Curries & Paneer', headGroup: 'Restaurant_Item', hsnCode: '996331' },
 
-  // 4. Dal & Rice
-  { id: 'm-401', name: 'Dal Tadka Desi Ghee', code: '401', barcode: '890401', company: 'Vasudev Rasoi', rate: 160, saleRate: 160, mrp: 180, purchaseRate: 60, unit: 'Bowl', gstPercent: 5, category: 'Dal & Rice', headGroup: 'Restaurant_Item' },
-  { id: 'm-402', name: 'Dal Fry Double Tadka', code: '402', barcode: '890402', company: 'Vasudev Rasoi', rate: 150, saleRate: 150, mrp: 170, purchaseRate: 55, unit: 'Bowl', gstPercent: 5, category: 'Dal & Rice', headGroup: 'Restaurant_Item' },
-  { id: 'm-403', name: 'Jeera Rice Basmati', code: '403', barcode: '890403', company: 'Vasudev Rasoi', rate: 120, saleRate: 120, mrp: 140, purchaseRate: 45, unit: 'Plate', gstPercent: 5, category: 'Dal & Rice', headGroup: 'Restaurant_Item' },
-  { id: 'm-404', name: 'Steamed Basmati Rice', code: '404', barcode: '890404', company: 'Vasudev Rasoi', rate: 100, saleRate: 100, mrp: 120, purchaseRate: 35, unit: 'Plate', gstPercent: 5, category: 'Dal & Rice', headGroup: 'Restaurant_Item' },
-  { id: 'm-405', name: 'Hyderabadi Veg Dum Biryani', code: '405', barcode: '890405', company: 'Vasudev Rasoi', rate: 220, saleRate: 220, mrp: 240, purchaseRate: 85, unit: 'Handi', gstPercent: 5, category: 'Dal & Rice', headGroup: 'Restaurant_Item' },
-  { id: 'm-406', name: 'Royal Veg Pulao', code: '406', barcode: '890406', company: 'Vasudev Rasoi', rate: 160, saleRate: 160, mrp: 180, purchaseRate: 60, unit: 'Plate', gstPercent: 5, category: 'Dal & Rice', headGroup: 'Restaurant_Item' },
+  // 4. Tandoor & Rotis
+  { id: 'm-401', name: 'Tandoori Butter Roti', code: '401', barcode: '890401', company: 'Vasudev Rasoi', rate: 25, saleRate: 25, mrp: 30, purchaseRate: 8, unit: 'Piece', gstPercent: 5, category: 'Tandoor & Rotis', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-402', name: 'Butter Naan', code: '402', barcode: '890402', company: 'Vasudev Rasoi', rate: 55, saleRate: 55, mrp: 60, purchaseRate: 18, unit: 'Piece', gstPercent: 5, category: 'Tandoor & Rotis', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-403', name: 'Garlic Butter Naan', code: '403', barcode: '890403', company: 'Vasudev Rasoi', rate: 70, saleRate: 70, mrp: 80, purchaseRate: 22, unit: 'Piece', gstPercent: 5, category: 'Tandoor & Rotis', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-404', name: 'Laccha Paratha', code: '404', barcode: '890404', company: 'Vasudev Rasoi', rate: 60, saleRate: 60, mrp: 70, purchaseRate: 20, unit: 'Piece', gstPercent: 5, category: 'Tandoor & Rotis', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-405', name: 'Phulka (Desi Ghee - 2 Pcs)', code: '405', barcode: '890405', company: 'Vasudev Rasoi', rate: 40, saleRate: 40, mrp: 45, purchaseRate: 12, unit: 'Pair', gstPercent: 5, category: 'Tandoor & Rotis', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-406', name: 'Amritsari Missi Roti', code: '406', barcode: '890406', company: 'Vasudev Rasoi', rate: 45, saleRate: 45, mrp: 50, purchaseRate: 15, unit: 'Piece', gstPercent: 5, category: 'Tandoor & Rotis', headGroup: 'Restaurant_Item', hsnCode: '996331' },
 
-  // 5. Jain / Sattvic Special (No Onion / No Garlic)
-  { id: 'm-501', name: 'Jain Dal Khichdi (Pure Sattvic)', code: '501', barcode: '890501', company: 'Vasudev Rasoi', rate: 180, saleRate: 180, mrp: 200, purchaseRate: 60, unit: 'Bowl', gstPercent: 5, category: 'Jain / Sattvic Special', headGroup: 'Restaurant_Item' },
-  { id: 'm-502', name: 'Jain Shahi Paneer (No Onion/Garlic)', code: '502', barcode: '890502', company: 'Vasudev Rasoi', rate: 240, saleRate: 240, mrp: 260, purchaseRate: 100, unit: 'Portion', gstPercent: 5, category: 'Jain / Sattvic Special', headGroup: 'Restaurant_Item' },
-  { id: 'm-503', name: 'Jain Yellow Dal Moong', code: '503', barcode: '890503', company: 'Vasudev Rasoi', rate: 150, saleRate: 150, mrp: 160, purchaseRate: 50, unit: 'Bowl', gstPercent: 5, category: 'Jain / Sattvic Special', headGroup: 'Restaurant_Item' },
-  { id: 'm-504', name: 'Jain Methi Malai Matar', code: '504', barcode: '890504', company: 'Vasudev Rasoi', rate: 230, saleRate: 230, mrp: 250, purchaseRate: 90, unit: 'Portion', gstPercent: 5, category: 'Jain / Sattvic Special', headGroup: 'Restaurant_Item' },
-  { id: 'm-505', name: 'Shirdi Temple Sattvic Thali', code: '505', barcode: '890505', company: 'Vasudev Rasoi', rate: 250, saleRate: 250, mrp: 270, purchaseRate: 95, unit: 'Thali', gstPercent: 5, category: 'Jain / Sattvic Special', headGroup: 'Restaurant_Item' },
+  // 5. South Indian Temple Classics
+  { id: 'm-501', name: 'Rava Masala Dosa', code: '501', barcode: '890501', company: 'Vasudev Rasoi', rate: 140, saleRate: 140, mrp: 150, purchaseRate: 55, unit: 'Plate', gstPercent: 5, category: 'South Indian Temple Classics', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-502', name: 'Bisibelebath (Ghee Sambar Rice)', code: '502', barcode: '890502', company: 'Vasudev Rasoi', rate: 160, saleRate: 160, mrp: 180, purchaseRate: 60, unit: 'Plate', gstPercent: 5, category: 'South Indian Temple Classics', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-503', name: 'Ghee Pongal with Coconut Chutney', code: '503', barcode: '890503', company: 'Vasudev Rasoi', rate: 150, saleRate: 150, mrp: 170, purchaseRate: 55, unit: 'Plate', gstPercent: 5, category: 'South Indian Temple Classics', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-504', name: 'Temple Curd Rice (Tadka & Pomegranate)', code: '504', barcode: '890504', company: 'Vasudev Rasoi', rate: 130, saleRate: 130, mrp: 150, purchaseRate: 45, unit: 'Bowl', gstPercent: 5, category: 'South Indian Temple Classics', headGroup: 'Restaurant_Item', hsnCode: '996331' },
 
-  // 6. Beverages & Desserts
-  { id: 'm-601', name: 'Mineral Water 1L', code: '601', barcode: '890601', company: 'Bisleri', rate: 20, saleRate: 20, mrp: 20, purchaseRate: 12, unit: 'Bottle', gstPercent: 5, category: 'Beverages & Desserts', headGroup: 'Restaurant_Item' },
-  { id: 'm-602', name: 'Special Masala Chai (Kulhad)', code: '602', barcode: '890602', company: 'Vasudev Rasoi', rate: 30, saleRate: 30, mrp: 35, purchaseRate: 10, unit: 'Cup', gstPercent: 5, category: 'Beverages & Desserts', headGroup: 'Restaurant_Item' },
-  { id: 'm-603', name: 'Filter Coffee (South Indian)', code: '603', barcode: '890603', company: 'Vasudev Rasoi', rate: 40, saleRate: 40, mrp: 45, purchaseRate: 14, unit: 'Cup', gstPercent: 5, category: 'Beverages & Desserts', headGroup: 'Restaurant_Item' },
-  { id: 'm-604', name: 'Punjabi Sweet Lassi (Clay Pot)', code: '604', barcode: '890604', company: 'Vasudev Rasoi', rate: 70, saleRate: 70, mrp: 80, purchaseRate: 25, unit: 'Glass', gstPercent: 5, category: 'Beverages & Desserts', headGroup: 'Restaurant_Item' },
-  { id: 'm-605', name: 'Warm Gulab Jamun (2 Pcs)', code: '605', barcode: '890605', company: 'Vasudev Rasoi', rate: 80, saleRate: 80, mrp: 90, purchaseRate: 30, unit: 'Portion', gstPercent: 5, category: 'Beverages & Desserts', headGroup: 'Restaurant_Item' },
-  { id: 'm-606', name: 'Kesar Pista Rasmalai (2 Pcs)', code: '606', barcode: '890606', company: 'Vasudev Rasoi', rate: 90, saleRate: 90, mrp: 100, purchaseRate: 35, unit: 'Portion', gstPercent: 5, category: 'Beverages & Desserts', headGroup: 'Restaurant_Item' }
+  // 6. Beverages & Prasadam Sweets
+  { id: 'm-601', name: 'Badam Milk (Kesar Pista)', code: '601', barcode: '890601', company: 'Vasudev Rasoi', rate: 80, saleRate: 80, mrp: 90, purchaseRate: 30, unit: 'Glass', gstPercent: 5, category: 'Beverages & Prasadam Sweets', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-602', name: 'Masala Chaas (Spiced Buttermilk)', code: '602', barcode: '890602', company: 'Vasudev Rasoi', rate: 40, saleRate: 40, mrp: 45, purchaseRate: 15, unit: 'Glass', gstPercent: 5, category: 'Beverages & Prasadam Sweets', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-603', name: 'South Indian Filter Coffee', code: '603', barcode: '890603', company: 'Vasudev Rasoi', rate: 45, saleRate: 45, mrp: 50, purchaseRate: 16, unit: 'Cup', gstPercent: 5, category: 'Beverages & Prasadam Sweets', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-604', name: 'Special Masala Chai (Kulhad)', code: '604', barcode: '890604', company: 'Vasudev Rasoi', rate: 30, saleRate: 30, mrp: 35, purchaseRate: 10, unit: 'Cup', gstPercent: 5, category: 'Beverages & Prasadam Sweets', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-605', name: 'Sweet Boondi Ladoo (Sai Prasadam - 2 Pcs)', code: '605', barcode: '890605', company: 'Vasudev Rasoi', rate: 60, saleRate: 60, mrp: 70, purchaseRate: 20, unit: 'Box', gstPercent: 5, category: 'Beverages & Prasadam Sweets', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-606', name: 'Warm Gulab Jamun (2 Pcs)', code: '606', barcode: '890606', company: 'Vasudev Rasoi', rate: 80, saleRate: 80, mrp: 90, purchaseRate: 30, unit: 'Portion', gstPercent: 5, category: 'Beverages & Prasadam Sweets', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-607', name: 'Moong Dal Halwa (Desi Ghee)', code: '607', barcode: '890607', company: 'Vasudev Rasoi', rate: 100, saleRate: 100, mrp: 120, purchaseRate: 38, unit: 'Bowl', gstPercent: 5, category: 'Beverages & Prasadam Sweets', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-608', name: 'Mineral Water 1L', code: '608', barcode: '890608', company: 'Bisleri', rate: 20, saleRate: 20, mrp: 20, purchaseRate: 12, unit: 'Bottle', gstPercent: 5, category: 'Beverages & Prasadam Sweets', headGroup: 'Restaurant_Item', hsnCode: '996331' }
 ];
 
 // Video 15: Party Accounts & Receivables Seed Data (Frame 0130)
@@ -3001,6 +3000,15 @@ export class PmsStore {
     }
   }
 
+  static updateRoomFoodAmount(roomNo: string, additionalAmount: number): void {
+    const rooms = this.getRooms();
+    const idx = rooms.findIndex(r => r.roomNo === roomNo);
+    if (idx >= 0) {
+      rooms[idx].foodAmount = (rooms[idx].foodAmount || 0) + additionalAmount;
+      this.saveRooms(rooms);
+    }
+  }
+
   static deleteRoom(roomNo: string): void {
     const rooms = this.getRooms().filter(r => r.roomNo !== roomNo && r.id !== roomNo);
     this.saveRooms(rooms);
@@ -3542,7 +3550,7 @@ export class PmsStore {
 
     const checkouts = this.getCheckouts();
     const nextSeq = checkouts.length + 101;
-    const invoiceNo = `INV-2026-${String(nextSeq).padStart(4, '0')}`;
+    const invoiceNo = `SVR/2026-27/INV-${String(nextSeq).padStart(4, '0')}`;
 
     const updatedFolio = this.getFolioSummary(roomNo);
     const checkoutRecord: PmsCheckOutDetail = {
@@ -4582,15 +4590,21 @@ export class PmsStore {
     list.unshift(checkIn);
     localStorage.setItem('hotel_pms_checkins', JSON.stringify(list));
 
-    // Update room status to occupied (Emerald Green)
+    // Update room status to occupied (Royal Blue / Emerald Green)
     this.updateRoomStatus(checkIn.roomNo, 'occupied', {
       name: checkIn.guestName,
       phone: checkIn.mobile,
+      email: checkIn.email,
       checkInDate: checkIn.checkInDate,
       checkInTime: checkIn.checkInTime,
+      checkOutDate: checkIn.checkOutDate,
       bookingNo: checkIn.checkInNo,
       advancePaid: checkIn.advancePaid,
-      calculationType: '24hour'
+      calculationType: '12hour',
+      idProofType: checkIn.documentName,
+      idProofNumber: checkIn.documentNo,
+      companyName: checkIn.companyName,
+      gstin: checkIn.gstNo
     });
 
     // Cloud sync: mirror to PostgreSQL on Railway
@@ -5517,8 +5531,17 @@ export class PmsStore {
     list.unshift(checkout);
     localStorage.setItem(STORAGE_KEYS.CHECKOUTS, JSON.stringify(list));
 
-    // Mark room as dirty upon checkout
+    // Mark room as dirty upon checkout (VACANT_DIRTY)
     this.updateRoomStatus(checkout.roomNo, 'dirty', undefined);
+
+    // Automatically create a high-priority Housekeeping Queue entry (Module 4)
+    this.updateHousekeepingStatus(
+      checkout.roomNo,
+      'Vacant Dirty',
+      'Ramesh',
+      'High - Guest Waiting',
+      `Departure turnover & linen sanitization for Room ${checkout.roomNo} (${checkout.guestName})`
+    );
 
     // Cloud sync: mirror check-out to Railway PostgreSQL
     hotelApi.checkOutBooking({

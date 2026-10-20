@@ -85,52 +85,138 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
   onCheckInCompleted
 }) => {
   const allRooms = PmsStore.getRooms();
-  // Filter out dirty and occupied rooms as per Video 03 verbal rules [02:15, 05:15]
+  // Filter out dirty and occupied rooms
   const availableRooms = allRooms.filter(r => r.status === 'vacant');
 
   const existingBookings = PmsStore.getBookings().filter(b => b.status === 'Confirmed');
 
-  // Check In format from Video 03 (Frame 0070): SR/188/24-25
-  const defaultCheckInNo = `SR/${Math.floor(180 + Math.random() * 20)}/24-25`;
+  // Check In format: SR/188/26-27
+  const defaultCheckInNo = `SR/${Math.floor(180 + Math.random() * 20)}/26-27`;
   const todayStr = new Date().toISOString().split('T')[0];
+  const tomorrowStr = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().split('T')[0];
+  })();
 
   const [checkInNo] = useState(defaultCheckInNo);
   const [selectedBookingRef, setSelectedBookingRef] = useState<string>('');
+
+  // Strict Date & Night Calculation (Module 2 Requirement)
   const [checkInDate, setCheckInDate] = useState(todayStr);
-  const [checkInTime, setCheckInTime] = useState('12:25 AM');
-  const [noOfDays, setNoOfDays] = useState(3);
-  const [noOfGuests, setNoOfGuests] = useState(2);
+  const [checkOutDate, setCheckOutDate] = useState(tomorrowStr);
+  const [checkInTime, setCheckInTime] = useState(() => {
+    const d = new Date();
+    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  });
+  const [noOfDays, setNoOfDays] = useState(1);
+
+  // Extra Guest / Mattress & Occupancy (Module 2 Requirement)
+  const [adults, setAdults] = useState<number>(2);
+  const [children, setChildren] = useState<number>(0);
+  const noOfGuests = adults + children;
+
   const [businessSource, setBusinessSource] = useState<PmsCheckIn['businessSource']>('Direct');
   const [selectedPackage, setSelectedPackage] = useState('WITH BREAKFAST || 0');
   const [remark1, setRemark1] = useState('');
   const [remark2, setRemark2] = useState('');
 
-  // Video 23 Anti-Theft & Boundary Protection: Permission checks
+  // Permission checks
   const canChangeTariff = PmsStore.hasPermission('Change_Room_Tariff');
   const canChangeDateTime = PmsStore.hasPermission('Change_Date&Time');
 
   // Selected Room & Custom Tariff
   const [selectedRoomNo, setSelectedRoomNo] = useState<string>(
-    preselectedRoom ? preselectedRoom.roomNo : (availableRooms[0]?.roomNo || '105')
+    preselectedRoom ? preselectedRoom.roomNo : (availableRooms[0]?.roomNo || '102')
   );
   const [customTariff, setCustomTariff] = useState<number>(
-    preselectedRoom ? preselectedRoom.tariff : (availableRooms[0]?.tariff || 1800)
+    preselectedRoom ? preselectedRoom.tariff : (availableRooms[0]?.tariff || 2499)
   );
 
-  // Guest Details
+  // Sync when preselectedRoom prop changes (e.g. clicked + Walk-In Check-In on Room 102)
+  useEffect(() => {
+    if (preselectedRoom) {
+      setSelectedRoomNo(preselectedRoom.roomNo);
+      setCustomTariff(preselectedRoom.tariff);
+    }
+  }, [preselectedRoom]);
+
+  // Selected Room Type & Base Capacity Rules
+  const selectedRoomObj = allRooms.find(r => r.roomNo === selectedRoomNo) || preselectedRoom;
+  const currentRoomType = selectedRoomObj?.roomType || 'Executive Deluxe';
+
+  const getCapacityRules = (type: string) => {
+    const t = type.toLowerCase();
+    if (t.includes('presidential')) {
+      return { baseCapacity: 4, extraRate: 1000, label: 'Sai Presidential Suite' };
+    }
+    if (t.includes('super deluxe') || t.includes('family') || t.includes('suite')) {
+      return { baseCapacity: 4, extraRate: 800, label: 'Super Deluxe Family' };
+    }
+    return { baseCapacity: 2, extraRate: 600, label: 'Executive Deluxe' };
+  };
+
+  const capacityRule = getCapacityRules(currentRoomType);
+  const extraGuestsCount = Math.max(0, noOfGuests - capacityRule.baseCapacity);
+  const extraGuestChargePerNight = extraGuestsCount * capacityRule.extraRate;
+  const totalExtraGuestCharge = extraGuestChargePerNight * noOfDays;
+  const baseRoomRentTotal = customTariff * noOfDays;
+  const grandAccommodationTotal = baseRoomRentTotal + totalExtraGuestCharge;
+
+  // Strict Calendar Date Difference & Minimum 1-Night Calculation (Module 2)
+  const calculateCalendarNights = (inDate: string, outDate: string): number => {
+    if (!inDate || !outDate) return 1;
+    const dIn = new Date(inDate);
+    const dOut = new Date(outDate);
+    const diffMs = dOut.getTime() - dIn.getTime();
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+    // Same-day pilgrim day-use stays always bill minimum 1 night
+    return Math.max(1, diffDays);
+  };
+
+  const handleCheckInDateChange = (val: string) => {
+    setCheckInDate(val);
+    if (checkOutDate < val) {
+      setCheckOutDate(val);
+      setNoOfDays(1);
+    } else {
+      setNoOfDays(calculateCalendarNights(val, checkOutDate));
+    }
+  };
+
+  const handleCheckOutDateChange = (val: string) => {
+    if (val < checkInDate) {
+      alert('Check-Out date cannot be earlier than Check-In date. For same-day pilgrim day-use darshan stays, select the same date (billed as 1 night).');
+      setCheckOutDate(checkInDate);
+      setNoOfDays(1);
+      return;
+    }
+    setCheckOutDate(val);
+    setNoOfDays(calculateCalendarNights(checkInDate, val));
+  };
+
+  const handleDaysChange = (days: number) => {
+    const valid = Math.max(1, days);
+    setNoOfDays(valid);
+    const d = new Date(checkInDate);
+    d.setDate(d.getDate() + valid);
+    setCheckOutDate(d.toISOString().split('T')[0]);
+  };
+
+  // Guest Details & Mandatory Indian KYC
   const [guestName, setGuestName] = useState('');
   const [mobile, setMobile] = useState('');
   const [addressLine1, setAddressLine1] = useState('');
   const [addressLine2, setAddressLine2] = useState('');
   const [city, setCity] = useState('');
-  const [state, setState] = useState('');
+  const [state, setState] = useState('Maharashtra');
   const [country] = useState('India');
   const [pinCode, setPinCode] = useState('');
   const [nationality, setNationality] = useState('India');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [agent, setAgent] = useState('');
-  const [documentName, setDocumentName] = useState('AADHAR CARD');
+  const [documentName, setDocumentName] = useState('Aadhaar Card');
   const [documentNo, setDocumentNo] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [companyAddress, setCompanyAddress] = useState('');
@@ -141,7 +227,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
   const [idPhotoFront, setIdPhotoFront] = useState<string | null>(null);
   const [idPhotoBack, setIdPhotoBack] = useState<string | null>(null);
 
-  // Co-Travelers KYC (Frame 0260)
+  // Co-Travelers KYC
   const [secondGuestName, setSecondGuestName] = useState('');
   const [secondGuestIdName, setSecondGuestIdName] = useState('Aadhaar Card');
   const [secondGuestIdNo, setSecondGuestIdNo] = useState('');
@@ -149,17 +235,17 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
   const [thirdGuestIdName, setThirdGuestIdName] = useState('Aadhaar Card');
   const [thirdGuestIdNo, setThirdGuestIdNo] = useState('');
 
-  // Police & Tourism Compliance (Frame 0340)
+  // Police & Tourism Compliance (C-Form Fields)
   const [purposeOfVisit, setPurposeOfVisit] = useState<PmsCheckIn['purposeOfVisit']>('Darshan / Pilgrimage');
-  const [comingFrom, setComingFrom] = useState('Renukot');
-  const [goingTo, setGoingTo] = useState('Mumbai');
+  const [comingFrom, setComingFrom] = useState('Mumbai');
+  const [goingTo, setGoingTo] = useState('Shani Shingnapur');
 
-  // Multi-Payment Splits (Frame 0260)
+  // Advance Deposit Receipt (Amount, Payment Mode, Ref No)
   const [paymentSplits, setPaymentSplits] = useState<PaymentSplit[]>([
-    { mode: 'Cash', amount: 800, referenceNo: '', remark: 'Cash on checkin' }
+    { mode: 'UPI', amount: 1000, referenceNo: 'UPI/2026/ADV', remark: 'PhonePe Advance' }
   ]);
   const [paymentReference, setPaymentReference] = useState('');
-  const [paymentRemark, setPaymentRemark] = useState('PHONE PAY');
+  const [paymentRemark, setPaymentRemark] = useState('Advance Deposit');
 
   // Printed GRC Slip
   const [completedCheckIn, setCompletedCheckIn] = useState<PmsCheckIn | null>(null);
@@ -173,7 +259,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
     }
   }, [selectedRoomNo]);
 
-  // Handle Advance Booking Selection (Video 03 [01:30])
+  // Handle Advance Booking Selection
   const handleSelectBooking = (bookingNo: string) => {
     setSelectedBookingRef(bookingNo);
     if (!bookingNo) return;
@@ -183,12 +269,15 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
       setGuestName(b.guestName);
       setMobile(b.mobile);
       setCity(b.city || '');
-      setState(b.state || '');
+      setState(b.state || 'Maharashtra');
       setPinCode(b.pinCode || '');
-      setDocumentName(b.documentName || 'AADHAR CARD');
+      setDocumentName(b.documentName || 'Aadhaar Card');
       setDocumentNo(b.documentNo || '');
-      setNoOfGuests(b.numberOfGuests);
-      setNoOfDays(b.numberOfDays);
+      setAdults(b.adults || b.numberOfGuests || 2);
+      setChildren(b.children || 0);
+      setNoOfDays(b.numberOfDays || 1);
+      if (b.checkInDate) setCheckInDate(b.checkInDate);
+      if (b.checkOutDate) setCheckOutDate(b.checkOutDate);
       if (b.rooms[0]) {
         setSelectedRoomNo(b.rooms[0].roomNo);
         setCustomTariff(b.rooms[0].tariff);
@@ -199,7 +288,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
     }
   };
 
-  // Handle Select Guest Dropdown (Video 03 Frame 0070)
+  // Handle Select Guest Dropdown
   const handleSelectGuest = (mobileKey: string) => {
     const g = EXISTING_GUESTS[mobileKey];
     if (g) {
@@ -223,7 +312,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
   const handleAddPaymentMode = () => {
     setPaymentSplits([
       ...paymentSplits,
-      { mode: 'Online', amount: 200, referenceNo: '', remark: 'PhonePe' }
+      { mode: 'Cash', amount: 500, referenceNo: '', remark: 'Cash deposit' }
     ]);
   };
 
@@ -235,23 +324,57 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
 
   const totalAdvancePaid = paymentSplits.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
+  // Strict Form Validation (Module 2 Requirement)
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!guestName.trim() || !mobile.trim()) {
-      alert('Please enter Guest Name and Mobile Number.');
+
+    // 1. Full Name Validation
+    const cleanName = guestName.trim();
+    if (!cleanName || cleanName.length < 3) {
+      alert('Please enter a valid Guest Full Name (minimum 3 characters).');
       return;
+    }
+
+    // 2. 10-Digit Indian Mobile Number Validation (^[6-9]\d{9}$)
+    const cleanMobile = mobile.trim().replace(/\D/g, '');
+    const mobileRegex = /^[6-9]\d{9}$/;
+    if (!mobileRegex.test(cleanMobile)) {
+      alert(`Invalid Mobile Number "${mobile}". Indian KYC requires a valid 10-digit mobile number starting with 6, 7, 8, or 9 (e.g. 9822000000).`);
+      return;
+    }
+
+    // 3. Indian ID Proof Validation
+    if (!documentNo.trim()) {
+      alert(`Please enter the ${documentName} Number for Indian KYC & Police C-Form verification.`);
+      return;
+    }
+
+    // 4. Police C-Form Origin & Destination Validation
+    if (!comingFrom.trim() || !goingTo.trim()) {
+      alert('Police C-Form & Tourism compliance requires both "Coming From (City)" and "Proceeding To (Destination)".');
+      return;
+    }
+
+    // 5. Optional B2B 15-Character GSTIN Validation
+    if (gstNo.trim()) {
+      const cleanGst = gstNo.trim().toUpperCase();
+      const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+      if (!gstRegex.test(cleanGst) && cleanGst.length !== 15) {
+        alert(`Invalid GSTIN "${gstNo}". Indian B2B Tax Invoices require a 15-character valid GSTIN (e.g. 27AAAAA0000A1Z5).`);
+        return;
+      }
     }
 
     const checkInRecord: PmsCheckIn = {
       checkInNo,
       roomNo: selectedRoomNo,
-      roomType: allRooms.find(r => r.roomNo === selectedRoomNo)?.roomType || 'DELUXE',
-      guestName,
-      mobile,
+      roomType: currentRoomType,
+      guestName: cleanName,
+      mobile: cleanMobile,
       addressLine1,
       addressLine2,
-      city: city || 'Renukot',
-      state: state || 'M.P.',
+      city: city.trim() || 'Renukot',
+      state: state.trim() || 'Maharashtra',
       country,
       pinCode,
       nationality,
@@ -259,18 +382,25 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
       email,
       checkInDate,
       checkInTime,
+      checkOutDate,
       numberOfDays: noOfDays,
       numberOfGuests: noOfGuests,
+      adults,
+      children,
+      extraGuests: extraGuestsCount,
+      extraGuestCharge: totalExtraGuestCharge,
+      extraGuestRate: capacityRule.extraRate,
+      totalStayTariff: grandAccommodationTotal,
       businessSource,
       package: selectedPackage,
       tariffPerDay: customTariff,
       advancePaid: totalAdvancePaid,
       paymentMode: paymentSplits[0]?.mode || 'Cash',
-      paymentReferenceNo: paymentReference,
+      paymentReferenceNo: paymentReference || paymentSplits[0]?.referenceNo || '',
       paymentRemark,
       payments: paymentSplits,
       documentName,
-      documentNo,
+      documentNo: documentNo.trim(),
       documentImage: idPhotoFront || undefined,
       guestImage: guestPhoto || undefined,
       idProofBackImage: idPhotoBack || undefined,
@@ -281,11 +411,11 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
       thirdGuestIdName,
       thirdGuestIdNo,
       purposeOfVisit,
-      comingFrom,
-      goingTo,
-      companyName,
-      companyAddress,
-      gstNo,
+      comingFrom: comingFrom.trim(),
+      goingTo: goingTo.trim(),
+      companyName: companyName.trim(),
+      companyAddress: companyAddress.trim(),
+      gstNo: gstNo.trim().toUpperCase(),
       remark1,
       remark2,
       bookingRefNo: selectedBookingRef || undefined,
@@ -296,7 +426,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
     // Save to PmsStore & update room status to occupied
     PmsStore.saveCheckIn(checkInRecord);
 
-    // Video 31: MR / Salesman Wise Commission Tracking (Frame 0120 & Spoken Hindi)
+    // Salesman / Travel Agent Commission Tracking
     if (agent && agent.trim()) {
       try {
         const allAgents = PmsStore.getCommissionAgents();
@@ -309,7 +439,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
         const commType = matchedAgent ? matchedAgent.commissionType : 'PERCENTAGE';
         const commRate = matchedAgent ? matchedAgent.defaultRate : 10;
         
-        const grossRoomTariff = customTariff * noOfDays;
+        const grossRoomTariff = grandAccommodationTotal;
         let grossComm = 0;
         if (commType === 'PERCENTAGE') {
           grossComm = Math.round((grossRoomTariff * commRate) / 100);
@@ -328,10 +458,10 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
           checkInNo,
           bookingRefNo: selectedBookingRef || undefined,
           roomNo: selectedRoomNo,
-          guestName,
-          guestMobile: mobile,
+          guestName: cleanName,
+          guestMobile: cleanMobile,
           checkInDate,
-          checkOutDate: new Date(Date.now() + noOfDays * 86400000).toISOString().split('T')[0],
+          checkOutDate,
           numberOfNights: noOfDays,
           roomTariff: customTariff,
           grossRoomTariff,
@@ -478,128 +608,210 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
             <div className="pms-grid-2col">
               {/* Left Column: Stay and Guest Details */}
               <div>
-                {/* Row 1 */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr', gap: 10 }}>
-                  <div className="form-group-pms">
-                    <label className="form-label-pms"><span className="req">*</span> Check In No</label>
-                    <input type="text" readOnly value={checkInNo} className="form-input-pms" style={{ background: '#f1f5f9', fontWeight: 800 }} />
+                {/* Stay Dates & Nights (Strict Calendar Calculation - Module 2) */}
+                <div style={{ background: '#f0fdf4', padding: '10px 12px', borderRadius: '6px', border: '1px solid #bbf7d0', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: '#166534', textTransform: 'uppercase' }}>
+                      📅 Stay Schedule &amp; Night Calculation
+                    </span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#047857', background: '#d1fae5', padding: '1px 6px', borderRadius: 4 }}>
+                      {noOfDays} Night{noOfDays > 1 ? 's' : ''} (Min. 1 Night for Day-Use)
+                    </span>
                   </div>
-                  <div className="form-group-pms">
-                    <label className="form-label-pms">
-                      <span className="req">*</span> Check In Date {!canChangeDateTime && <span title="Date Locked: Anti-Backdating Guard" style={{ color: '#e11d48' }}>🔒</span>}
-                    </label>
-                    <input 
-                      type="date" 
-                      value={checkInDate} 
-                      readOnly={!canChangeDateTime}
-                      onChange={e => {
-                        if (!canChangeDateTime) {
-                          alert('Permission Denied: Standard staff are restricted from altering Date & Time to prevent backdated ledger manipulation (Anti-Backdating Security Policy).');
-                          return;
-                        }
-                        setCheckInDate(e.target.value);
-                      }} 
-                      className="form-input-pms" 
-                      style={{ background: !canChangeDateTime ? '#f1f5f9' : '#ffffff', cursor: !canChangeDateTime ? 'not-allowed' : 'auto' }}
-                      title={!canChangeDateTime ? 'Date locked: Anti-backdating protection active' : undefined}
-                    />
-                  </div>
-                  <div className="form-group-pms">
-                    <label className="form-label-pms">
-                      <span className="req">*</span> Check In Time {!canChangeDateTime && <span title="Time Locked: Anti-Backdating Guard" style={{ color: '#e11d48' }}>🔒</span>}
-                    </label>
-                    <input 
-                      type="text" 
-                      value={checkInTime} 
-                      readOnly={!canChangeDateTime}
-                      onChange={e => {
-                        if (!canChangeDateTime) {
-                          alert('Permission Denied: Standard staff are restricted from altering Date & Time to prevent backdated ledger manipulation (Anti-Backdating Security Policy).');
-                          return;
-                        }
-                        setCheckInTime(e.target.value);
-                      }} 
-                      className="form-input-pms" 
-                      style={{ background: !canChangeDateTime ? '#f1f5f9' : '#ffffff', cursor: !canChangeDateTime ? 'not-allowed' : 'auto' }}
-                      title={!canChangeDateTime ? 'Time locked: Anti-backdating protection active' : undefined}
-                    />
-                  </div>
-                  <div className="form-group-pms">
-                    <label className="form-label-pms"><span className="req">*</span> No Of Days</label>
-                    <input type="number" min="1" value={noOfDays} onChange={e => setNoOfDays(Number(e.target.value))} className="form-input-pms" style={{ fontWeight: 800 }} />
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '0.9fr 1.1fr 1fr 1.1fr 0.8fr', gap: 8 }}>
+                    <div className="form-group-pms" style={{ margin: 0 }}>
+                      <label className="form-label-pms"><span className="req">*</span> Check In No</label>
+                      <input type="text" readOnly value={checkInNo} className="form-input-pms" style={{ background: '#f1f5f9', fontWeight: 800 }} />
+                    </div>
+
+                    <div className="form-group-pms" style={{ margin: 0 }}>
+                      <label className="form-label-pms">
+                        <span className="req">*</span> Check In Date {!canChangeDateTime && <span title="Date Locked: Anti-Backdating Guard" style={{ color: '#e11d48' }}>🔒</span>}
+                      </label>
+                      <input 
+                        type="date" 
+                        value={checkInDate} 
+                        readOnly={!canChangeDateTime}
+                        onChange={e => {
+                          if (!canChangeDateTime) {
+                            alert('Permission Denied: Standard staff are restricted from altering Date & Time to prevent backdated ledger manipulation (Anti-Backdating Security Policy).');
+                            return;
+                          }
+                          handleCheckInDateChange(e.target.value);
+                        }} 
+                        className="form-input-pms" 
+                        style={{ background: !canChangeDateTime ? '#f1f5f9' : '#ffffff', cursor: !canChangeDateTime ? 'not-allowed' : 'auto', fontWeight: 700 }}
+                      />
+                    </div>
+
+                    <div className="form-group-pms" style={{ margin: 0 }}>
+                      <label className="form-label-pms">
+                        Check In Time {!canChangeDateTime && <span title="Time Locked" style={{ color: '#e11d48' }}>🔒</span>}
+                      </label>
+                      <input 
+                        type="text" 
+                        value={checkInTime} 
+                        readOnly={!canChangeDateTime}
+                        onChange={e => {
+                          if (!canChangeDateTime) return;
+                          setCheckInTime(e.target.value);
+                        }} 
+                        className="form-input-pms" 
+                        style={{ background: !canChangeDateTime ? '#f1f5f9' : '#ffffff', cursor: !canChangeDateTime ? 'not-allowed' : 'auto', fontWeight: 600 }}
+                      />
+                    </div>
+
+                    <div className="form-group-pms" style={{ margin: 0 }}>
+                      <label className="form-label-pms">
+                        <span className="req">*</span> Check Out Date
+                      </label>
+                      <input 
+                        type="date" 
+                        min={checkInDate}
+                        value={checkOutDate} 
+                        onChange={e => handleCheckOutDateChange(e.target.value)} 
+                        className="form-input-pms" 
+                        style={{ fontWeight: 700, borderColor: '#059669' }}
+                      />
+                    </div>
+
+                    <div className="form-group-pms" style={{ margin: 0 }}>
+                      <label className="form-label-pms"><span className="req">*</span> Nights</label>
+                      <input 
+                        type="number" 
+                        min="1" 
+                        value={noOfDays} 
+                        onChange={e => handleDaysChange(Number(e.target.value))} 
+                        className="form-input-pms" 
+                        style={{ fontWeight: 800, textAlign: 'center', background: '#ecfdf5', color: '#047857' }} 
+                      />
+                    </div>
                   </div>
                 </div>
 
-                {/* Row 2 */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr 1.5fr', gap: 10 }}>
-                  <div className="form-group-pms">
-                    <label className="form-label-pms"><span className="req">*</span> No Of Guest</label>
-                    <input type="number" min="1" value={noOfGuests} onChange={e => setNoOfGuests(Number(e.target.value))} className="form-input-pms" />
+                {/* Occupancy & Extra Guest Mattress Auto-Charge (Module 2) */}
+                <div style={{ background: '#eff6ff', padding: '10px 12px', borderRadius: '6px', border: '1px solid #bfdbfe', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: '#1e40af', textTransform: 'uppercase' }}>
+                      👥 Guest Occupancy &amp; Room Capacity
+                    </span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: extraGuestsCount > 0 ? '#b45309' : '#1d4ed8', background: extraGuestsCount > 0 ? '#fef3c7' : '#dbeafe', padding: '1px 8px', borderRadius: 4 }}>
+                      {currentRoomType} (Base: {capacityRule.baseCapacity} Guests)
+                      {extraGuestsCount > 0 && ` &bull; +${extraGuestsCount} Extra Mattress @ ₹${capacityRule.extraRate}/nt`}
+                    </span>
                   </div>
-                  <div className="form-group-pms">
-                    <label className="form-label-pms"><span className="req">*</span> Business Source</label>
-                    <select value={businessSource} onChange={e => setBusinessSource(e.target.value as any)} className="form-select-pms" style={{ fontWeight: 600 }}>
-                      <option value="Direct">Direct (Walk-in Counter)</option>
-                      <option value="OYO">OYO</option>
-                      <option value="Make My Trip">Make My Trip</option>
-                      <option value="Goibibo">Goibibo</option>
-                      <option value="Corporate">Corporate</option>
-                    </select>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.3fr 1.5fr', gap: 10 }}>
+                    <div className="form-group-pms" style={{ margin: 0 }}>
+                      <label className="form-label-pms"><span className="req">*</span> Adults (12+ Yrs)</label>
+                      <input 
+                        type="number" 
+                        min="1" 
+                        max="8" 
+                        value={adults} 
+                        onChange={e => setAdults(Math.max(1, Number(e.target.value)))} 
+                        className="form-input-pms" 
+                        style={{ fontWeight: 800 }} 
+                      />
+                    </div>
+
+                    <div className="form-group-pms" style={{ margin: 0 }}>
+                      <label className="form-label-pms">Children</label>
+                      <input 
+                        type="number" 
+                        min="0" 
+                        max="6" 
+                        value={children} 
+                        onChange={e => setChildren(Math.max(0, Number(e.target.value)))} 
+                        className="form-input-pms" 
+                      />
+                    </div>
+
+                    <div className="form-group-pms" style={{ margin: 0 }}>
+                      <label className="form-label-pms"><span className="req">*</span> Business Source</label>
+                      <select value={businessSource} onChange={e => setBusinessSource(e.target.value as any)} className="form-select-pms" style={{ fontWeight: 600 }}>
+                        <option value="Direct">Direct (Walk-in Counter)</option>
+                        <option value="OYO">OYO</option>
+                        <option value="Make My Trip">Make My Trip</option>
+                        <option value="Goibibo">Goibibo</option>
+                        <option value="Corporate">Corporate</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group-pms" style={{ margin: 0 }}>
+                      <label className="form-label-pms"><span className="req">*</span> Package</label>
+                      <select value={selectedPackage} onChange={e => setSelectedPackage(e.target.value)} className="form-select-pms" style={{ fontWeight: 600 }}>
+                        <option value="WITH BREAKFAST || 0">WITH BREAKFAST || 0</option>
+                        <option value="ROOM ONLY || 0">ROOM ONLY || 0</option>
+                        <option value="CP">CP (Breakfast Included)</option>
+                        <option value="MAP">MAP (Breakfast + Dinner)</option>
+                      </select>
+                    </div>
                   </div>
-                  <div className="form-group-pms">
-                    <label className="form-label-pms"><span className="req">*</span> Package</label>
-                    <select value={selectedPackage} onChange={e => setSelectedPackage(e.target.value)} className="form-select-pms" style={{ fontWeight: 600 }}>
-                      <option value="WITH BREAKFAST || 0">WITH BREAKFAST || 0</option>
-                      <option value="ROOM ONLY || 0">ROOM ONLY || 0</option>
-                      <option value="CP">CP (Breakfast Included)</option>
-                      <option value="MAP">MAP (Breakfast + Dinner)</option>
-                    </select>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 8 }}>
+                    <div className="form-group-pms" style={{ margin: 0 }}>
+                      <label className="form-label-pms">Special Request (Remark 1)</label>
+                      <input type="text" placeholder="e.g. Ground floor preferred" value={remark1} onChange={e => setRemark1(e.target.value)} className="form-input-pms" />
+                    </div>
+                    <div className="form-group-pms" style={{ margin: 0 }}>
+                      <label className="form-label-pms">Desk Notes (Remark 2)</label>
+                      <input type="text" placeholder="e.g. Verified pilgrim ID" value={remark2} onChange={e => setRemark2(e.target.value)} className="form-input-pms" />
+                    </div>
                   </div>
                 </div>
 
-                {/* Remarks Row */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                  <div className="form-group-pms">
-                    <label className="form-label-pms">Remark 1</label>
-                    <input type="text" placeholder="Special Guest Request" value={remark1} onChange={e => setRemark1(e.target.value)} className="form-input-pms" />
-                  </div>
-                  <div className="form-group-pms">
-                    <label className="form-label-pms">Remark 2</label>
-                    <input type="text" placeholder="Internal Notes" value={remark2} onChange={e => setRemark2(e.target.value)} className="form-input-pms" />
-                  </div>
-                </div>
-
-                {/* Primary Guest Details (Frame 0210) */}
+                {/* Primary Guest Details & Mandatory Indian KYC */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 10 }}>
                   <div className="form-group-pms">
-                    <label className="form-label-pms"><span className="req">*</span> Guest Name</label>
-                    <input type="text" placeholder="sunil agrwal" value={guestName} onChange={e => setGuestName(e.target.value)} className="form-input-pms" required />
+                    <label className="form-label-pms"><span className="req">*</span> Guest Full Name</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Ramesh Chandra Sharma" 
+                      value={guestName} 
+                      onChange={e => setGuestName(e.target.value)} 
+                      className="form-input-pms" 
+                      style={{ fontWeight: 700 }}
+                      required 
+                    />
                   </div>
                   <div className="form-group-pms">
-                    <label className="form-label-pms"><span className="req">*</span> Mobile</label>
-                    <input type="tel" placeholder="7676767674" value={mobile} onChange={e => setMobile(e.target.value)} className="form-input-pms" required />
+                    <label className="form-label-pms">
+                      <span className="req">*</span> 10-Digit Mobile <span style={{ fontSize: 10, color: '#64748b' }}>(^[6-9]\d&#123;9&#125;$)</span>
+                    </label>
+                    <input 
+                      type="tel" 
+                      maxLength={10} 
+                      placeholder="9822000000" 
+                      value={mobile} 
+                      onChange={e => setMobile(e.target.value.replace(/\D/g, ''))} 
+                      className="form-input-pms" 
+                      style={{ fontWeight: 800, letterSpacing: '0.5px' }}
+                      required 
+                    />
                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <div className="form-group-pms">
                     <label className="form-label-pms">Address Line 1</label>
-                    <input type="text" placeholder="main road" value={addressLine1} onChange={e => setAddressLine1(e.target.value)} className="form-input-pms" />
+                    <input type="text" placeholder="Plot / Flat No, Street" value={addressLine1} onChange={e => setAddressLine1(e.target.value)} className="form-input-pms" />
                   </div>
                   <div className="form-group-pms">
-                    <label className="form-label-pms">Address Line 2</label>
+                    <label className="form-label-pms">Address Line 2 / Landmark</label>
                     <input type="text" placeholder="Area / Landmark" value={addressLine2} onChange={e => setAddressLine2(e.target.value)} className="form-input-pms" />
                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8 }}>
                   <div className="form-group-pms">
-                    <label className="form-label-pms">City</label>
-                    <input type="text" placeholder="renukot" value={city} onChange={e => setCity(e.target.value)} className="form-input-pms" />
+                    <label className="form-label-pms"><span className="req">*</span> City</label>
+                    <input type="text" placeholder="Mumbai" value={city} onChange={e => setCity(e.target.value)} className="form-input-pms" required />
                   </div>
                   <div className="form-group-pms">
                     <label className="form-label-pms">State</label>
-                    <input type="text" placeholder="m.p." value={state} onChange={e => setState(e.target.value)} className="form-input-pms" />
+                    <input type="text" placeholder="Maharashtra" value={state} onChange={e => setState(e.target.value)} className="form-input-pms" />
                   </div>
                   <div className="form-group-pms">
                     <label className="form-label-pms">Country</label>
@@ -607,7 +819,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                   </div>
                   <div className="form-group-pms">
                     <label className="form-label-pms">Pin Code</label>
-                    <input type="text" placeholder="76576" value={pinCode} onChange={e => setPinCode(e.target.value)} className="form-input-pms" />
+                    <input type="text" placeholder="400001" value={pinCode} onChange={e => setPinCode(e.target.value)} className="form-input-pms" />
                   </div>
                 </div>
 
@@ -617,31 +829,49 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                     <input type="text" value={nationality} onChange={e => setNationality(e.target.value)} className="form-input-pms" />
                   </div>
                   <div className="form-group-pms">
-                    <label className="form-label-pms">Phone</label>
-                    <input type="tel" placeholder="Landline / Alt" value={phone} onChange={e => setPhone(e.target.value)} className="form-input-pms" />
+                    <label className="form-label-pms">Phone / Alt Mobile</label>
+                    <input type="tel" placeholder="Alt Mobile No." value={phone} onChange={e => setPhone(e.target.value)} className="form-input-pms" />
                   </div>
                   <div className="form-group-pms">
-                    <label className="form-label-pms">Email</label>
-                    <input type="email" placeholder="sunil@email.com" value={email} onChange={e => setEmail(e.target.value)} className="form-input-pms" />
+                    <label className="form-label-pms">Email (For E-Receipt)</label>
+                    <input type="email" placeholder="guest@example.com" value={email} onChange={e => setEmail(e.target.value)} className="form-input-pms" />
                   </div>
                 </div>
 
-                {/* ID Proof & Corporate */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                {/* ID Proof Selection & Number Validation */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.4fr 1fr', gap: 10 }}>
                   <div className="form-group-pms">
-                    <label className="form-label-pms">Document Name</label>
-                    <input type="text" value={documentName} onChange={e => setDocumentName(e.target.value)} className="form-input-pms" />
+                    <label className="form-label-pms"><span className="req">*</span> ID Proof Type</label>
+                    <select 
+                      value={documentName} 
+                      onChange={e => setDocumentName(e.target.value)} 
+                      className="form-select-pms"
+                      style={{ fontWeight: 700 }}
+                    >
+                      <option value="Aadhaar Card">Aadhaar Card (12 Digits)</option>
+                      <option value="Passport">Passport</option>
+                      <option value="Driving License">Driving License</option>
+                      <option value="Voter ID">Voter ID / Election Card</option>
+                    </select>
                   </div>
                   <div className="form-group-pms">
-                    <label className="form-label-pms">Document No</label>
-                    <input type="text" placeholder="7657657..." value={documentNo} onChange={e => setDocumentNo(e.target.value)} className="form-input-pms" />
+                    <label className="form-label-pms"><span className="req">*</span> {documentName} Number</label>
+                    <input 
+                      type="text" 
+                      placeholder={documentName === 'Aadhaar Card' ? 'XXXX XXXX XXXX' : 'ID Number'} 
+                      value={documentNo} 
+                      onChange={e => setDocumentNo(e.target.value)} 
+                      className="form-input-pms" 
+                      style={{ fontWeight: 800 }}
+                      required 
+                    />
                   </div>
                   <div className="form-group-pms">
-                    <label className="form-label-pms">Booking Agent / Referral</label>
+                    <label className="form-label-pms">Agent / Referral</label>
                     <input 
                       type="text" 
                       list="pms-agent-datalist"
-                      placeholder="Select or type Agent / MR" 
+                      placeholder="Select Agent / MR" 
                       value={agent} 
                       onChange={e => setAgent(e.target.value)} 
                       className="form-input-pms" 
@@ -654,23 +884,72 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                   </div>
                 </div>
 
+                {/* B2B GSTIN Corporate Details (Optional 15-character GSTIN) */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr 1fr', gap: 10 }}>
                   <div className="form-group-pms">
-                    <label className="form-label-pms">Company Name</label>
-                    <input type="text" placeholder="hindalko" value={companyName} onChange={e => setCompanyName(e.target.value)} className="form-input-pms" />
+                    <label className="form-label-pms">Company Name (B2B)</label>
+                    <input type="text" placeholder="Corporate / Firm Name" value={companyName} onChange={e => setCompanyName(e.target.value)} className="form-input-pms" />
                   </div>
                   <div className="form-group-pms">
                     <label className="form-label-pms">Company Address</label>
-                    <input type="text" placeholder="renukot" value={companyAddress} onChange={e => setCompanyAddress(e.target.value)} className="form-input-pms" />
+                    <input type="text" placeholder="Registered office address" value={companyAddress} onChange={e => setCompanyAddress(e.target.value)} className="form-input-pms" />
                   </div>
                   <div className="form-group-pms">
-                    <label className="form-label-pms">GST NO</label>
-                    <input type="text" placeholder="23SJDHGSJD..." value={gstNo} onChange={e => setGstNo(e.target.value)} className="form-input-pms" />
+                    <label className="form-label-pms">15-Digit GSTIN (B2B Tax Invoice)</label>
+                    <input 
+                      type="text" 
+                      maxLength={15}
+                      placeholder="27ABCDE1234F1Z5" 
+                      value={gstNo} 
+                      onChange={e => setGstNo(e.target.value.toUpperCase())} 
+                      className="form-input-pms" 
+                      style={{ fontWeight: 700, textTransform: 'uppercase' }}
+                    />
                   </div>
                 </div>
 
-                {/* Co-Travelers KYC (Video 03 Frame 0260) */}
-                <div style={{ background: '#f8fafc', padding: 8, borderRadius: 4, marginTop: 8, border: '1px solid #cbd5e1' }}>
+                {/* Indian Police C-Form Fields (Coming From, Going To, Purpose) */}
+                <div style={{ background: '#fdf4ff', padding: '10px 12px', borderRadius: '6px', border: '1px solid #f0abfc', marginTop: 10 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: '#86198f', marginBottom: 6 }}>
+                    🏛️ Indian Police C-Form &amp; Pilgrim Tourism Compliance:
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: 10 }}>
+                    <div className="form-group-pms" style={{ margin: 0 }}>
+                      <label className="form-label-pms"><span className="req">*</span> Purpose Of Visit</label>
+                      <select value={purposeOfVisit} onChange={e => setPurposeOfVisit(e.target.value as any)} className="form-select-pms" style={{ fontWeight: 700 }}>
+                        <option value="Darshan / Pilgrimage">🕉️ Temple Darshan / Pilgrimage</option>
+                        <option value="Business">💼 Business / Official</option>
+                        <option value="Leisure">👨‍👩‍👧 Family Leisure / Holiday</option>
+                        <option value="Transit">🚆 Transit Stay</option>
+                      </select>
+                    </div>
+                    <div className="form-group-pms" style={{ margin: 0 }}>
+                      <label className="form-label-pms"><span className="req">*</span> Coming From (City)</label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. Hyderabad / Mumbai" 
+                        value={comingFrom} 
+                        onChange={e => setComingFrom(e.target.value)} 
+                        className="form-input-pms" 
+                        required 
+                      />
+                    </div>
+                    <div className="form-group-pms" style={{ margin: 0 }}>
+                      <label className="form-label-pms"><span className="req">*</span> Proceeding To</label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. Shani Shingnapur" 
+                        value={goingTo} 
+                        onChange={e => setGoingTo(e.target.value)} 
+                        className="form-input-pms" 
+                        required 
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Co-Travelers KYC (Police Station Verification) */}
+                <div style={{ background: '#f8fafc', padding: 8, borderRadius: 4, marginTop: 10, border: '1px solid #cbd5e1' }}>
                   <div style={{ fontSize: 11, fontWeight: 800, color: '#334155', marginBottom: 6 }}>
                     Co-Travelers KYC (Police Station Verification):
                   </div>
@@ -685,37 +964,16 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                     <input type="text" placeholder="3rd Guest ID No" value={thirdGuestIdNo} onChange={e => setThirdGuestIdNo(e.target.value)} className="form-input-pms" />
                   </div>
                 </div>
-
-                {/* Police & Tourism Compliance (Frame 0340) */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginTop: 8 }}>
-                  <div className="form-group-pms">
-                    <label className="form-label-pms">Purpose Of Visit</label>
-                    <select value={purposeOfVisit} onChange={e => setPurposeOfVisit(e.target.value as any)} className="form-select-pms">
-                      <option value="Darshan / Pilgrimage">Darshan / Pilgrimage</option>
-                      <option value="Business">Business</option>
-                      <option value="Leisure">Leisure / Holiday</option>
-                      <option value="Transit">Transit</option>
-                    </select>
-                  </div>
-                  <div className="form-group-pms">
-                    <label className="form-label-pms">Coming From</label>
-                    <input type="text" value={comingFrom} onChange={e => setComingFrom(e.target.value)} className="form-input-pms" />
-                  </div>
-                  <div className="form-group-pms">
-                    <label className="form-label-pms">Going To</label>
-                    <input type="text" value={goingTo} onChange={e => setGoingTo(e.target.value)} className="form-input-pms" />
-                  </div>
-                </div>
               </div>
 
               {/* Right Column: Room Selection & Negotiated Tariff & Payment Box */}
               <div>
-                {/* Available Rooms Table with In-line Editable Tariff (Video 03 Frame 0210) */}
+                {/* Available Rooms Table with In-line Editable Tariff */}
                 <div style={{ border: '2px solid #38bdf8', borderRadius: 4, padding: 8, marginBottom: 12 }}>
                   <div style={{ fontWeight: 800, fontSize: 13, marginBottom: 6, color: '#0369a1', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>Available Vacant Rooms ({availableRooms.length}):</span>
                     <span style={{ fontSize: 11, color: canChangeTariff ? '#64748b' : '#dc2626', fontWeight: !canChangeTariff ? 700 : 400 }}>
-                      {canChangeTariff ? 'Tariff is Negotiable' : '🔒 Published Tariff Enforced (Staff Locked)'}
+                      {canChangeTariff ? 'Tariff is Negotiable' : '🔒 Published Tariff Enforced'}
                     </span>
                   </div>
                   <div style={{ maxHeight: 180, overflowY: 'auto' }}>
@@ -753,7 +1011,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                                     readOnly={!canChangeTariff}
                                     onChange={e => {
                                       if (!canChangeTariff) {
-                                        alert('Permission Denied: Only Super-Admin or General Manager can modify room tariff. Standard staff cannot override rates or offer unauthorized discounts (Tariff Protection Guard).');
+                                        alert('Permission Denied: Only Super-Admin or General Manager can modify room tariff.');
                                         return;
                                       }
                                       setCustomTariff(Number(e.target.value));
@@ -768,10 +1026,10 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                                       cursor: !canChangeTariff ? 'not-allowed' : 'auto',
                                       borderColor: !canChangeTariff ? '#cbd5e1' : '#38bdf8'
                                     }}
-                                    title={!canChangeTariff ? 'Room Tariff Locked: "Change_Room_Tariff" permission required to modify rates (Tariff Protection Guard)' : 'Tariff is editable'}
+                                    title={!canChangeTariff ? 'Room Tariff Locked' : 'Tariff is editable'}
                                   />
                                   {!canChangeTariff && (
-                                    <span title="Tariff Locked: Standard staff restricted from unauthorized discounts" style={{ fontSize: 11, color: '#e11d48', cursor: 'help' }}>
+                                    <span title="Tariff Locked" style={{ fontSize: 11, color: '#e11d48', cursor: 'help' }}>
                                       🔒
                                     </span>
                                   )}
@@ -787,38 +1045,43 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                   </div>
                 </div>
 
-                {/* Payment Detail Box with Split Payments (Video 03 Frame 0260) */}
-                <div style={{ border: '2px solid #84cc16', borderRadius: 4, padding: 12, background: '#f8fafc' }}>
+                {/* Payment Detail Box with Split Payments & Auto Extra Guest Charge */}
+                <div style={{ border: '2px solid #84cc16', borderRadius: 6, padding: 12, background: '#f8fafc' }}>
                   <div style={{ fontWeight: 800, fontSize: 13, color: '#15803d', marginBottom: 8, borderBottom: '1px solid #cbd5e1', paddingBottom: 4 }}>
-                    Payment Detail
+                    💳 Tariff &amp; Advance Deposit Receipt
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                    <span style={{ fontSize: 12, fontWeight: 600 }}>Per Day Room Tariff</span>
-                    <input
-                      type="text"
-                      readOnly
-                      value={customTariff.toFixed(2)}
-                      className="form-input-pms"
-                      style={{ width: 110, textAlign: 'right', background: '#f1f5f9', fontWeight: 800 }}
-                    />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600 }}>Per Night Base Tariff:</span>
+                    <span style={{ fontSize: 13, fontWeight: 800 }}>₹{customTariff.toFixed(2)}</span>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                    <span style={{ fontSize: 12, fontWeight: 600 }}>Total Room Rent ({noOfDays} Days)</span>
-                    <input
-                      type="text"
-                      readOnly
-                      value={`₹${(customTariff * noOfDays).toFixed(2)}`}
-                      className="form-input-pms"
-                      style={{ width: 110, textAlign: 'right', background: '#dcfce7', fontWeight: 800, color: '#15803d' }}
-                    />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600 }}>Base Room Rent ({noOfDays} Night{noOfDays > 1 ? 's' : ''}):</span>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: '#15803d' }}>₹{baseRoomRentTotal.toFixed(2)}</span>
+                  </div>
+
+                  {/* Extra Guest Auto Charge Breakdown */}
+                  {extraGuestsCount > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, background: '#fef3c7', padding: '4px 8px', borderRadius: 4, border: '1px solid #fde68a' }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#92400e' }}>
+                        Extra Bed ({extraGuestsCount} extra @ ₹{capacityRule.extraRate}/nt x {noOfDays} nt):
+                      </span>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: '#b45309' }}>
+                        +₹{totalExtraGuestCharge.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, padding: '6px 8px', background: '#dcfce7', borderRadius: 4 }}>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: '#166534' }}>Total Stay Accommodation:</span>
+                    <span style={{ fontSize: 14, fontWeight: 900, color: '#15803d' }}>₹{grandAccommodationTotal.toFixed(2)}</span>
                   </div>
 
                   {/* Split Payment Rows */}
                   <div style={{ marginBottom: 8 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 4 }}>
-                      Check-in Advance Modes:
+                      Advance Payment Modes:
                     </div>
                     {paymentSplits.map((split, idx) => (
                       <div key={idx} style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 6 }}>
@@ -829,10 +1092,10 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                           style={{ width: 110, fontWeight: 600 }}
                         >
                           <option value="Cash">Cash</option>
-                          <option value="Online">Online / PhonePe</option>
                           <option value="UPI">UPI / QR</option>
                           <option value="Card">Card</option>
-                          <option value="Bank Transfer">Bank</option>
+                          <option value="Bank Transfer">Bank Transfer</option>
+                          <option value="Online">Online</option>
                         </select>
 
                         <input
@@ -882,10 +1145,10 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
                     <div className="form-group-pms" style={{ margin: 0 }}>
-                      <label className="form-label-pms">Payment Reference</label>
+                      <label className="form-label-pms">UTR / Ref No.</label>
                       <input
                         type="text"
-                        placeholder="e.g. 5454353 / UTR"
+                        placeholder="e.g. 4239849283 / UTR"
                         value={paymentReference}
                         onChange={e => setPaymentReference(e.target.value)}
                         className="form-input-pms"
@@ -895,12 +1158,19 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                       <label className="form-label-pms">Payment Remark</label>
                       <input
                         type="text"
-                        placeholder="PHONE PAY"
+                        placeholder="e.g. Google Pay / Cash"
                         value={paymentRemark}
                         onChange={e => setPaymentRemark(e.target.value)}
                         className="form-input-pms"
                       />
                     </div>
+                  </div>
+
+                  <div style={{ marginTop: 8, padding: '4px 8px', background: '#f1f5f9', borderRadius: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#475569' }}>Balance Due at Checkout:</span>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: '#dc2626' }}>
+                      ₹{Math.max(0, grandAccommodationTotal - totalAdvancePaid).toFixed(2)}
+                    </span>
                   </div>
                 </div>
               </div>
