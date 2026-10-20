@@ -8,24 +8,41 @@ export type RoomStatus = 'vacant' | 'booked' | 'occupied' | 'dirty' | 'blocked';
 export interface PmsRoom {
   id: string;
   roomNo: string;
-  roomType: 'DELUXE' | 'SUITE ROOM' | 'LUXURY ROOM' | 'STANDARD' | 'DORMITORY' | 'HALL' | 'MARRIAGE GARDEN';
+  roomType: 'DELUXE' | 'SUITE ROOM' | 'LUXURY ROOM' | 'STANDARD' | 'DORMITORY' | 'HALL' | 'MARRIAGE GARDEN' | 'Executive Deluxe' | 'Super Deluxe Family' | 'Sai Presidential Suite' | string;
   tariff: number;
   status: RoomStatus;
   floor: number;
   facilities: string;
+  capacity?: number;
+  maxGuests?: number;
+  bedType?: string;
+  roomSize?: string;
   image1?: string;
   image2?: string;
   image3?: string;
   currentGuest?: {
     name: string;
     phone: string;
+    email?: string;
     checkInDate: string;
     checkInTime: string;
+    checkOutDate?: string;
+    checkOutTime?: string;
     bookingNo?: string;
     advancePaid?: number;
     calculationType?: '24hour' | '12hour';
+    darshanSlot?: string;
+    vehicleNo?: string;
+    idProofType?: string;
+    idProofNumber?: string;
+    companyName?: string;
+    gstin?: string;
   };
   foodAmount?: number;
+  assignedStaff?: 'Ramesh' | 'Sunita' | 'Ganesh' | 'Priya' | string;
+  priority?: 'High - Guest Waiting' | 'Normal' | 'VIP Suite';
+  lastCleaned?: string;
+  maintenanceIssue?: string;
 }
 
 export interface PaymentSplit {
@@ -85,6 +102,23 @@ export interface PmsBooking {
   assignedRoomType?: string;
   status: 'Unconfirmed' | 'Confirmed' | 'CheckedIn' | 'CheckedOut' | 'Cancelled';
   createdAt: string;
+
+  // Modern Cross-Module Compatibility Fields
+  roomNo?: string;
+  roomType?: string;
+  tariff?: number;
+  guestPhone?: string;
+  guestEmail?: string;
+  advancePaid?: number;
+  voucherNo?: string;
+  date?: string;
+  time?: string;
+  adults?: number;
+  children?: number;
+  source?: string;
+  specialRequests?: string;
+  idProofType?: string;
+  idProofNumber?: string;
 }
 
 export interface CalendarRoomBookingDay {
@@ -102,6 +136,12 @@ export interface KotItem {
   qty: number;
   rate: number;
   amount: number;
+  isJain?: boolean;
+  jainPrep?: boolean;
+  lessSpicy?: boolean;
+  noGhee?: boolean;
+  instructions?: string;
+  notes?: string;
 }
 
 export interface PmsKotRecord {
@@ -259,6 +299,12 @@ export interface PmsCheckOutDetail {
   advanceDeducted: number;
   billAmount: number;
   netPayable: number;
+  paidAmount?: number;
+  balanceAmount?: number;
+  rate?: number;
+  extraBedCharge?: number;
+  roomRentTotal?: number;
+  foodCharge?: number;
   paymentMode: 'Cash' | 'UPI' | 'Card' | 'Credit' | 'Online' | 'Bank Transfer';
   payments?: PaymentSplit[];
   checkoutRemark?: string;
@@ -388,10 +434,10 @@ export interface PmsAdvanceReceipt {
   guestName: string;
   mobile: string;
   amount: number;
-  paymentMode: 'Cash' | 'Online' | 'Card' | 'PAY TM' | 'STATE BANK OF INDIA' | 'tata moters';
+  paymentMode: 'Cash' | 'Online' | 'Card' | 'UPI' | 'Bank Transfer' | 'PAY TM' | 'STATE BANK OF INDIA' | 'tata moters' | string;
   referenceNo?: string;
   remark: string;
-  createdAt: string;
+  createdAt?: string;
 }
 
 export interface LedgerEntry {
@@ -1615,3 +1661,145 @@ export interface PmsOtherCharge {
   isTaxIncluded: boolean;
   remark?: string;
 }
+
+// ==========================================
+// Hotel Expenses & Petty Cash Tracker
+// ==========================================
+export interface PmsExpenseRecord {
+  id: string;
+  expenseNo: string; // e.g. EXP-2026-001
+  date: string;
+  time: string;
+  category: 'Vegetables & Dairy' | 'Housekeeping Supplies' | 'Electricity/DG Fuel' | 'Staff Advance' | 'Maintenance Repair';
+  amount: number;
+  paymentMode: 'Cash' | 'UPI' | 'Card' | 'Bank Transfer';
+  paidTo: string;
+  description: string;
+  billNumber?: string;
+  approvedBy: string;
+  createdAt: string;
+}
+
+// ==========================================
+// Housekeeping, Laundry & Maintenance Tracker
+// ==========================================
+export interface PmsHousekeepingRecord {
+  roomNo: string;
+  status: 'Vacant Clean' | 'Cleaning In Progress' | 'Vacant Dirty' | 'Inspected' | 'Under Maintenance';
+  assignedStaff: 'Ramesh' | 'Sunita' | 'Ganesh' | 'Priya';
+  priority: 'High - Guest Waiting' | 'Normal' | 'VIP Suite';
+  lastCleanedTime: string;
+  cleaningStartedAt?: string;
+  maintenanceIssue?: string;
+  maintenanceLoggedAt?: string;
+  remarks?: string;
+}
+
+// ==========================================
+// Night Audit & Shift Handover
+// ==========================================
+export interface PmsNightAuditRecord {
+  auditId: string;
+  auditDate: string;
+  executedAt: string;
+  executedBy: string;
+  occupiedRoomsCount: number;
+  totalRoomTariffPosted: number;
+  totalGstPosted: number;
+  cashInHand: number;
+  upiTotal: number;
+  cardTotal: number;
+  pendingReceivables: number;
+  roomsAuditSummary: Array<{
+    roomNo: string;
+    guestName: string;
+    baseTariff: number;
+    gstAmount: number;
+    totalPosted: number;
+    folioBalanceAfter: number;
+  }>;
+}
+
+// ==========================================
+// Guest Folio & Segregated Indian GST Models
+// ==========================================
+export interface PmsFolioPayment {
+  id: string;
+  roomNo: string;
+  guestName: string;
+  amount: number;
+  paymentMode: 'Cash' | 'UPI' | 'Card' | 'Bank Transfer';
+  referenceNo?: string;
+  timestamp: string;
+  notes?: string;
+}
+
+export interface PmsFolioDiscount {
+  type: 'flat' | 'percent';
+  value: number;
+  reason: string;
+  amount: number;
+}
+
+export interface PmsFolioSummary {
+  roomNo: string;
+  roomType: string;
+  guestName: string;
+  guestPhone: string;
+  guestEmail?: string;
+  idProofType?: string;
+  idProofNumber?: string;
+  vehicleNo?: string;
+  companyName?: string;
+  gstin?: string;
+  darshanSlot?: string;
+  checkInDate: string;
+  checkInTime: string;
+  checkOutDate: string;
+  checkOutTime: string;
+  nights: number;
+  perNightTariff: number;
+  baseRoomRent: number;
+  extraGuestsCount: number;
+  extraGuestsRatePerNight: number;
+  extraGuestsTotal: number;
+  roomTaxable: number;
+  roomGstRate: number; // 12% or 18% (SAC 996311)
+  roomCgst: number;
+  roomSgst: number;
+  roomTaxTotal: number;
+  roomGross: number;
+
+  foodItems: Array<{
+    kotNo: string;
+    date: string;
+    amount: number;
+    description: string;
+  }>;
+  foodTaxable: number;
+  foodGstRate: number; // strictly 5% (SAC 996331: 2.5% CGST + 2.5% SGST)
+  foodCgst: number;
+  foodSgst: number;
+  foodTaxTotal: number;
+  foodGross: number;
+
+  addOthers: number;
+  addOthersGst: number;
+
+  totalTaxable: number;
+  totalCgst: number;
+  totalSgst: number;
+  totalTax: number;
+  grandTotal: number;
+
+  discount?: PmsFolioDiscount;
+  advancePaid: number;
+  payments: PmsFolioPayment[];
+  totalPaid: number;
+  balanceDue: number;
+  tariff?: number;
+  standardCapacity?: number;
+  adults?: number;
+  isFullySettled?: boolean;
+}
+

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import type { 
   PmsRoom, 
   PmsBooking, 
@@ -71,7 +72,13 @@ import type {
   PmsBanquetBooking,
   PmsBanquetKot,
   PmsLocker,
-  PmsOtherCharge
+  PmsOtherCharge,
+  PmsExpenseRecord,
+  PmsHousekeepingRecord,
+  PmsNightAuditRecord,
+  PmsFolioPayment,
+  PmsFolioDiscount,
+  PmsFolioSummary
 } from '../types/pmsModels';
 import { PMS_ALL_PERMISSIONS } from '../types/pmsModels';
 import { hotelApi } from './api';
@@ -83,8 +90,8 @@ export const DEFAULT_BUSINESS_SETTING: PmsBusinessSetting = {
 
 export const DEFAULT_COMPANY_INFO: PmsCompanyInfo = {
   firmName: 'HOTEL SAI VASUDEV RESIDENCY',
-  address1: 'Near Sai Baba Temple, Shirdi',
-  address2: 'Taluka Rahata, Ahmednagar District',
+  address1: 'Plot No. 14-B VIP Temple Road',
+  address2: 'Near Sai Baba Temple Shrine, Shirdi - 423109, Dist. Ahmednagar, Maharashtra',
   city: 'Shirdi',
   pincode: '423109',
   state: 'MAHARASHTRA',
@@ -118,216 +125,432 @@ export const DEFAULT_COMPANY_INFO: PmsCompanyInfo = {
 };
 
 export const INITIAL_ROOMS: PmsRoom[] = [
-  // Ground / Halls
-  { id: '1', roomNo: '1', roomType: 'STANDARD', tariff: 2000, status: 'vacant', floor: 1, facilities: 'AC, Geyser, TV, Double Bed' },
-  { id: '2', roomNo: '2', roomType: 'STANDARD', tariff: 2000, status: 'vacant', floor: 1, facilities: 'AC, Double Bed, TV' },
-  { id: 'g-2bhk', roomNo: 'ground 2 bhk', roomType: 'SUITE ROOM', tariff: 4500, status: 'vacant', floor: 0, facilities: 'AC, Hall, Kitchen, 2 Bedrooms' },
-  { id: 'mini-hall', roomNo: 'MINI HALL', roomType: 'HALL', tariff: 6000, status: 'vacant', floor: 0, facilities: 'Seating 50 pax, Stage, Mic' },
-  { id: 'garden', roomNo: 'GARDEN', roomType: 'HALL', tariff: 10000, status: 'booked', floor: 0, facilities: 'Lawn Area, Lights, Buffet Setup' },
-  { id: 'big-hall', roomNo: 'BIG HALL', roomType: 'HALL', tariff: 15000, status: 'booked', floor: 0, facilities: 'Seating 200 pax, Central AC' },
-  { id: 'marriage-garden-1', roomNo: 'MARRIAGE GARDEN1', roomType: 'MARRIAGE GARDEN', tariff: 50000, status: 'booked', floor: 0, facilities: 'Capacity 500 Pax, Grand Stage, Lawn Lights, Bridal Suite, DJ Platform, Buffet Enclosure' },
-  { id: 'marriage-garden-2', roomNo: 'MARRIAGE GARDEN2', roomType: 'MARRIAGE GARDEN', tariff: 65000, status: 'vacant', floor: 0, facilities: 'Capacity 1000 Pax, Royal Mandap, Covered Dining Hall, Generator Backup, Valet Parking' },
-
-  // 1st Floor
-  { 
-    id: '101', 
-    roomNo: '101', 
-    roomType: 'DELUXE', 
-    tariff: 2000, 
-    status: 'occupied', 
-    floor: 1, 
-    facilities: 'AC, Geyser, TV, Double Bed',
-    image1: '/images/deluxe_room.jpg',
-    image2: '/images/suite_room.jpg',
-    image3: '/images/hero.jpg',
-    currentGuest: {
-      name: 'AJUU',
-      phone: '9622975444',
-      checkInDate: '16-06-2025',
-      checkInTime: '05:15 AM',
-      bookingNo: 'SR/203/25-26',
-      advancePaid: 500,
-      calculationType: '24hour'
-    }
-  },
-  { 
-    id: '102', 
-    roomNo: '102', 
-    roomType: 'SUITE ROOM', 
-    tariff: 3000, 
-    status: 'vacant', 
-    floor: 1, 
-    facilities: 'Living Area, Sofa, King Bed, Bathtub',
-    image1: '/images/suite_room.jpg',
-    image2: '/images/deluxe_room.jpg',
-    image3: '/images/hero.jpg'
-  },
-  { 
-    id: '103', 
-    roomNo: '103', 
-    roomType: 'DELUXE', 
-    tariff: 2500, 
-    status: 'occupied', 
-    floor: 1, 
-    facilities: 'AC, Smart TV, Wi-Fi, Balcony',
-    image1: '/images/deluxe_room.jpg',
-    image2: '/images/suite_room.jpg',
-    image3: '/images/hero.jpg',
-    currentGuest: {
-      name: 'ARJUN',
-      phone: '95487417',
-      checkInDate: '16-06-2025',
-      checkInTime: '06:30 AM',
-      bookingNo: 'SR/204/25-26',
-      advancePaid: 1000,
-      calculationType: '24hour'
-    },
-    foodAmount: 100
-  },
-  { 
-    id: '104', 
-    roomNo: '104', 
-    roomType: 'DELUXE', 
-    tariff: 2000, 
-    status: 'dirty', 
-    floor: 1, 
-    facilities: 'AC, Geyser, TV, Wardrobe',
+  // =========================================================================
+  // Floor 1 (Executive Deluxe Rooms - ₹2,499/night + 12% GST)
+  // Rooms 101, 102, 103, 104, 105, 106 (King Bed, 340 sq ft, Max 2+1 Guests)
+  // =========================================================================
+  {
+    id: '101',
+    roomNo: '101',
+    roomType: 'Executive Deluxe',
+    tariff: 2499,
+    status: 'occupied',
+    floor: 1,
+    facilities: 'King Bed, AC, Geyser, 43" 4K Smart TV, Complimentary Wi-Fi, Tea/Coffee Maker',
+    capacity: 2,
+    maxGuests: 3,
+    bedType: 'King Bed',
+    roomSize: '340 sq ft',
     image1: '/images/deluxe_room.jpg',
     image2: '/images/hero.jpg',
-    image3: '/images/suite_room.jpg'
+    image3: '/images/suite_room.jpg',
+    currentGuest: {
+      name: 'Rajesh Sharma',
+      phone: '9822114455',
+      email: 'rajesh.sharma@gmail.com',
+      checkInDate: '2026-10-19',
+      checkInTime: '11:00 AM',
+      checkOutDate: '2026-10-21',
+      checkOutTime: '11:00 AM',
+      bookingNo: 'SR/201/26-27',
+      advancePaid: 1500,
+      calculationType: '12hour',
+      darshanSlot: 'Morning Kakad Aarti (05:15 AM)',
+      vehicleNo: 'MH-15-AB-1234',
+      idProofType: 'Aadhaar Card',
+      idProofNumber: '7845 1298 3456'
+    },
+    foodAmount: 350,
+    assignedStaff: 'Ramesh',
+    priority: 'Normal',
+    lastCleaned: '19-10-2026 10:30 AM'
   },
-  { 
-    id: '105', 
-    roomNo: '105', 
-    roomType: 'DELUXE', 
-    tariff: 2000, 
-    status: 'vacant', 
-    floor: 1, 
-    facilities: 'AC, King Bed, Work Desk',
+  {
+    id: '102',
+    roomNo: '102',
+    roomType: 'Executive Deluxe',
+    tariff: 2499,
+    status: 'vacant',
+    floor: 1,
+    facilities: 'King Bed, AC, Geyser, 43" 4K Smart TV, Complimentary Wi-Fi, Tea/Coffee Maker',
+    capacity: 2,
+    maxGuests: 3,
+    bedType: 'King Bed',
+    roomSize: '340 sq ft',
+    image1: '/images/deluxe_room.jpg',
+    image2: '/images/hero.jpg',
+    image3: '/images/suite_room.jpg',
+    assignedStaff: 'Sunita',
+    priority: 'Normal',
+    lastCleaned: '20-10-2026 09:00 AM'
+  },
+  {
+    id: '103',
+    roomNo: '103',
+    roomType: 'Executive Deluxe',
+    tariff: 2499,
+    status: 'occupied',
+    floor: 1,
+    facilities: 'King Bed, AC, Smart TV, Wi-Fi, Balcony, Italian Marble Bath',
+    capacity: 2,
+    maxGuests: 3,
+    bedType: 'King Bed',
+    roomSize: '340 sq ft',
     image1: '/images/deluxe_room.jpg',
     image2: '/images/suite_room.jpg',
-    image3: '/images/hero.jpg'
+    image3: '/images/hero.jpg',
+    currentGuest: {
+      name: 'Sunita Patel',
+      phone: '9425123456',
+      email: 'sunita.patel@yahoo.com',
+      checkInDate: '2026-10-19',
+      checkInTime: '01:00 PM',
+      checkOutDate: '2026-10-20',
+      checkOutTime: '11:00 AM',
+      bookingNo: 'SR/202/26-27',
+      advancePaid: 2499,
+      calculationType: '12hour',
+      darshanSlot: 'Madhyan Aarti (12:00 PM)',
+      vehicleNo: 'GJ-01-XP-9087',
+      idProofType: 'Driving License',
+      idProofNumber: 'DL-0420110056789'
+    },
+    foodAmount: 300,
+    assignedStaff: 'Ramesh',
+    priority: 'High - Guest Waiting',
+    lastCleaned: '19-10-2026 12:45 PM'
+  },
+  {
+    id: '104',
+    roomNo: '104',
+    roomType: 'Executive Deluxe',
+    tariff: 2499,
+    status: 'dirty',
+    floor: 1,
+    facilities: 'King Bed, AC, Geyser, 43" 4K Smart TV, Wardrobe',
+    capacity: 2,
+    maxGuests: 3,
+    bedType: 'King Bed',
+    roomSize: '340 sq ft',
+    image1: '/images/deluxe_room.jpg',
+    image2: '/images/hero.jpg',
+    image3: '/images/suite_room.jpg',
+    assignedStaff: 'Ramesh',
+    priority: 'High - Guest Waiting',
+    lastCleaned: '18-10-2026 04:00 PM'
+  },
+  {
+    id: '105',
+    roomNo: '105',
+    roomType: 'Executive Deluxe',
+    tariff: 2499,
+    status: 'vacant',
+    floor: 1,
+    facilities: 'King Bed, AC, Work Desk, Geyser, Ambient Cove Lighting',
+    capacity: 2,
+    maxGuests: 3,
+    bedType: 'King Bed',
+    roomSize: '340 sq ft',
+    image1: '/images/deluxe_room.jpg',
+    image2: '/images/suite_room.jpg',
+    image3: '/images/hero.jpg',
+    assignedStaff: 'Sunita',
+    priority: 'Normal',
+    lastCleaned: '20-10-2026 08:30 AM'
+  },
+  {
+    id: '106',
+    roomNo: '106',
+    roomType: 'Executive Deluxe',
+    tariff: 2499,
+    status: 'vacant',
+    floor: 1,
+    facilities: 'King Bed, AC, Smart TV, Soundproof Acoustic Windows',
+    capacity: 2,
+    maxGuests: 3,
+    bedType: 'King Bed',
+    roomSize: '340 sq ft',
+    image1: '/images/deluxe_room.jpg',
+    image2: '/images/hero.jpg',
+    image3: '/images/suite_room.jpg',
+    assignedStaff: 'Ramesh',
+    priority: 'Normal',
+    lastCleaned: '20-10-2026 09:15 AM'
   },
 
-  // 2nd Floor
-  { 
-    id: '201', 
-    roomNo: '201', 
-    roomType: 'DELUXE', 
-    tariff: 2200, 
-    status: 'vacant', 
-    floor: 2, 
-    facilities: 'AC, Smart TV, Balcony',
-    image1: '/images/deluxe_room.jpg',
-    image2: '/images/suite_room.jpg',
-    image3: '/images/hero.jpg'
+  // =========================================================================
+  // Floor 2 (Super Deluxe Family Rooms - ₹3,799/night + 12% GST)
+  // Rooms 201, 202, 203, 204, 205, 206 (Two Queen Beds, 480 sq ft, Max 4+1 Guests)
+  // =========================================================================
+  {
+    id: '201',
+    roomNo: '201',
+    roomType: 'Super Deluxe Family',
+    tariff: 3799,
+    status: 'vacant',
+    floor: 2,
+    facilities: 'Two Queen Beds, AC, 50" Smart TV, Balcony, Mini Fridge, Work Desk',
+    capacity: 4,
+    maxGuests: 5,
+    bedType: 'Two Queen Beds',
+    roomSize: '480 sq ft',
+    image1: '/images/hero.jpg',
+    image2: '/images/deluxe_room.jpg',
+    image3: '/images/suite_room.jpg',
+    assignedStaff: 'Ganesh',
+    priority: 'Normal',
+    lastCleaned: '20-10-2026 09:30 AM'
   },
-  { 
-    id: '202', 
-    roomNo: '202', 
-    roomType: 'LUXURY ROOM', 
-    tariff: 3500, 
-    status: 'vacant', 
-    floor: 2, 
-    facilities: 'King Bed, Minibar, City View',
+  {
+    id: '202',
+    roomNo: '202',
+    roomType: 'Super Deluxe Family',
+    tariff: 3799,
+    status: 'occupied',
+    floor: 2,
+    facilities: 'Two Queen Beds, Mini Fridge, Cozy Sofa Seating, City View, Central AC',
+    capacity: 4,
+    maxGuests: 5,
+    bedType: 'Two Queen Beds',
+    roomSize: '480 sq ft',
     image1: '/images/hero.jpg',
     image2: '/images/suite_room.jpg',
-    image3: '/images/deluxe_room.jpg'
+    image3: '/images/deluxe_room.jpg',
+    currentGuest: {
+      name: 'Vikram Malhotra & Family',
+      phone: '9811223344',
+      email: 'malhotra.vikram@gmail.com',
+      checkInDate: '2026-10-20',
+      checkInTime: '09:30 AM',
+      checkOutDate: '2026-10-23',
+      checkOutTime: '11:00 AM',
+      bookingNo: 'SR/203/26-27',
+      advancePaid: 5000,
+      calculationType: '12hour',
+      darshanSlot: 'Dhoop Aarti (06:30 PM)',
+      vehicleNo: 'DL-3C-AZ-4509',
+      idProofType: 'Passport',
+      idProofNumber: 'Z8941024',
+      companyName: 'Malhotra Logistics Ltd',
+      gstin: '07AAACM1234A1Z5'
+    },
+    foodAmount: 0,
+    assignedStaff: 'Ganesh',
+    priority: 'Normal',
+    lastCleaned: '20-10-2026 09:00 AM'
   },
-  { 
-    id: '203', 
-    roomNo: '203', 
-    roomType: 'STANDARD', 
-    tariff: 1500, 
-    status: 'vacant', 
-    floor: 2, 
-    facilities: 'Non-AC, TV, Attached Bath',
-    image1: '/images/deluxe_room.jpg',
-    image2: '/images/hero.jpg',
-    image3: '/images/suite_room.jpg'
-  },
-  { 
-    id: '204', 
-    roomNo: '204', 
-    roomType: 'DELUXE', 
-    tariff: 2200, 
-    status: 'vacant', 
-    floor: 2, 
-    facilities: 'AC, Geyser, Work Desk',
-    image1: '/images/deluxe_room.jpg',
-    image2: '/images/suite_room.jpg',
-    image3: '/images/hero.jpg'
-  },
-  { 
-    id: '205', 
-    roomNo: '205', 
-    roomType: 'SUITE ROOM', 
-    tariff: 3200, 
-    status: 'vacant', 
-    floor: 2, 
-    facilities: 'Living Room, Jacuzzi, Balcony',
-    image1: '/images/suite_room.jpg',
+  {
+    id: '203',
+    roomNo: '203',
+    roomType: 'Super Deluxe Family',
+    tariff: 3799,
+    status: 'vacant',
+    floor: 2,
+    facilities: 'Two Queen Beds, AC, Smart TV, Double Wardrobe, Electric Kettle',
+    capacity: 4,
+    maxGuests: 5,
+    bedType: 'Two Queen Beds',
+    roomSize: '480 sq ft',
+    image1: '/images/hero.jpg',
     image2: '/images/deluxe_room.jpg',
-    image3: '/images/hero.jpg'
+    image3: '/images/suite_room.jpg',
+    assignedStaff: 'Priya',
+    priority: 'Normal',
+    lastCleaned: '20-10-2026 10:00 AM'
+  },
+  {
+    id: '204',
+    roomNo: '204',
+    roomType: 'Super Deluxe Family',
+    tariff: 3799,
+    status: 'booked',
+    floor: 2,
+    facilities: 'Two Queen Beds, AC, Geyser, Work Desk, Balcony, Mountain View',
+    capacity: 4,
+    maxGuests: 5,
+    bedType: 'Two Queen Beds',
+    roomSize: '480 sq ft',
+    image1: '/images/hero.jpg',
+    image2: '/images/suite_room.jpg',
+    image3: '/images/deluxe_room.jpg',
+    currentGuest: {
+      name: 'Dr. Ananya Deshmukh',
+      phone: '9123456780',
+      email: 'ananya.deshmukh@aims.org',
+      checkInDate: '2026-10-20',
+      checkInTime: '02:00 PM',
+      checkOutDate: '2026-10-22',
+      checkOutTime: '11:00 AM',
+      bookingNo: 'BKG-2026-104',
+      advancePaid: 2000,
+      calculationType: '12hour',
+      darshanSlot: 'Shej Aarti (10:00 PM)',
+      idProofType: 'Aadhaar Card',
+      idProofNumber: '3456 7890 1234'
+    },
+    assignedStaff: 'Priya',
+    priority: 'High - Guest Waiting',
+    lastCleaned: '20-10-2026 10:15 AM'
+  },
+  {
+    id: '205',
+    roomNo: '205',
+    roomType: 'Super Deluxe Family',
+    tariff: 3799,
+    status: 'vacant',
+    floor: 2,
+    facilities: 'Two Queen Beds, Sofa Seating, Temple Facing Balcony, AC, Smart TV',
+    capacity: 4,
+    maxGuests: 5,
+    bedType: 'Two Queen Beds',
+    roomSize: '480 sq ft',
+    image1: '/images/hero.jpg',
+    image2: '/images/deluxe_room.jpg',
+    image3: '/images/suite_room.jpg',
+    assignedStaff: 'Ganesh',
+    priority: 'Normal',
+    lastCleaned: '20-10-2026 09:45 AM'
+  },
+  {
+    id: '206',
+    roomNo: '206',
+    roomType: 'Super Deluxe Family',
+    tariff: 3799,
+    status: 'vacant',
+    floor: 2,
+    facilities: 'Two Queen Beds, Mini Refrigerator, Panoramic Views, 50" Smart TV',
+    capacity: 4,
+    maxGuests: 5,
+    bedType: 'Two Queen Beds',
+    roomSize: '480 sq ft',
+    image1: '/images/hero.jpg',
+    image2: '/images/suite_room.jpg',
+    image3: '/images/deluxe_room.jpg',
+    assignedStaff: 'Priya',
+    priority: 'Normal',
+    lastCleaned: '20-10-2026 10:30 AM'
   },
 
-  // 3rd Floor
-  { id: '301', roomNo: '301', roomType: 'DELUXE', tariff: 2400, status: 'vacant', floor: 3, facilities: 'AC, Temple View, Smart TV' },
-  { id: '302', roomNo: '302', roomType: 'DELUXE', tariff: 2400, status: 'vacant', floor: 3, facilities: 'AC, Balcony, Safe Locker' },
-  { id: '303', roomNo: '303', roomType: 'STANDARD', tariff: 1600, status: 'vacant', floor: 3, facilities: 'Fan, Attached Bath, Clean Linen' },
-  { id: '304', roomNo: '304 Dormitory', roomType: 'DORMITORY', tariff: 800, status: 'vacant', floor: 3, facilities: '10 Bunk Beds, Lockers, Shared Bath' },
-  { id: '305', roomNo: '305', roomType: 'LUXURY ROOM', tariff: 4000, status: 'booked', floor: 3, facilities: 'Penthouse View, Premium Bedding' },
-  { id: '306', roomNo: '306', roomType: 'DELUXE', tariff: 2400, status: 'booked', floor: 3, facilities: 'AC, Geyser, TV' },
-  { id: '307', roomNo: '307', roomType: 'DELUXE', tariff: 2400, status: 'booked', floor: 3, facilities: 'AC, Geyser, TV' },
-  { id: '308', roomNo: '308', roomType: 'DELUXE', tariff: 2400, status: 'booked', floor: 3, facilities: 'AC, Balcony, Wi-Fi' },
-  { id: '309', roomNo: '309', roomType: 'SUITE ROOM', tariff: 3500, status: 'booked', floor: 3, facilities: 'Luxury Suite with Hill View' },
-  { id: 'dl-20', roomNo: 'DL-20', roomType: 'DORMITORY', tariff: 600, status: 'vacant', floor: 3, facilities: 'Single Bed in Dormitory' },
+  // =========================================================================
+  // Floor 3 (Sai Presidential Suites - ₹5,999/night + 12% GST)
+  // Rooms 301, 302, 303, 304 (Master King + Living Lounge, 720 sq ft, Max 4+2 Guests)
+  // =========================================================================
+  {
+    id: '301',
+    roomNo: '301',
+    roomType: 'Sai Presidential Suite',
+    tariff: 5999,
+    status: 'vacant',
+    floor: 3,
+    facilities: 'Master King + Living Lounge, Soaking Tub, 55" OLED TV, Temple View, VIP Concierge',
+    capacity: 4,
+    maxGuests: 6,
+    bedType: 'Master King + Living Lounge',
+    roomSize: '720 sq ft',
+    image1: '/images/suite_room.jpg',
+    image2: '/images/deluxe_room.jpg',
+    image3: '/images/hero.jpg',
+    assignedStaff: 'Ganesh',
+    priority: 'VIP Suite',
+    lastCleaned: '20-10-2026 09:00 AM'
+  },
+  {
+    id: '302',
+    roomNo: '302',
+    roomType: 'Sai Presidential Suite',
+    tariff: 5999,
+    status: 'blocked',
+    floor: 3,
+    facilities: 'Master King + Living Lounge, Private Dining Nook, VIP Concierge, Soaking Tub',
+    capacity: 4,
+    maxGuests: 6,
+    bedType: 'Master King + Living Lounge',
+    roomSize: '720 sq ft',
+    image1: '/images/suite_room.jpg',
+    image2: '/images/hero.jpg',
+    image3: '/images/deluxe_room.jpg',
+    maintenanceIssue: 'AC Thermostat Calibration & Geyser Filter Servicing',
+    assignedStaff: 'Ramesh',
+    priority: 'Normal',
+    lastCleaned: '19-10-2026 05:00 PM'
+  },
+  {
+    id: '303',
+    roomNo: '303',
+    roomType: 'Sai Presidential Suite',
+    tariff: 5999,
+    status: 'occupied',
+    floor: 3,
+    facilities: 'Master King + Living Lounge, Soaking Tub, Direct Temple View, 24/7 Butler Service',
+    capacity: 4,
+    maxGuests: 6,
+    bedType: 'Master King + Living Lounge',
+    roomSize: '720 sq ft',
+    image1: '/images/suite_room.jpg',
+    image2: '/images/deluxe_room.jpg',
+    image3: '/images/hero.jpg',
+    currentGuest: {
+      name: 'Arvind Kirloskar',
+      phone: '9876501234',
+      email: 'kirloskar.arvind@kirloskargroup.com',
+      checkInDate: '2026-10-20',
+      checkInTime: '08:00 AM',
+      checkOutDate: '2026-10-21',
+      checkOutTime: '11:00 AM',
+      bookingNo: 'SR/204/26-27',
+      advancePaid: 6719,
+      calculationType: '12hour',
+      darshanSlot: 'VIP Darshan Pass Gate 2',
+      vehicleNo: 'MH-12-PA-0001',
+      idProofType: 'Aadhaar Card',
+      idProofNumber: '4455 6677 8899',
+      companyName: 'Kirloskar Engineering Ltd',
+      gstin: '27AAACK5678B1Z9'
+    },
+    foodAmount: 520,
+    assignedStaff: 'Sunita',
+    priority: 'VIP Suite',
+    lastCleaned: '20-10-2026 07:30 AM'
+  },
+  {
+    id: '304',
+    roomNo: '304',
+    roomType: 'Sai Presidential Suite',
+    tariff: 5999,
+    status: 'vacant',
+    floor: 3,
+    facilities: 'Master King + Living Lounge, Panoramic Shirdi View, Espresso Machine, Bathtub',
+    capacity: 4,
+    maxGuests: 6,
+    bedType: 'Master King + Living Lounge',
+    roomSize: '720 sq ft',
+    image1: '/images/suite_room.jpg',
+    image2: '/images/hero.jpg',
+    image3: '/images/deluxe_room.jpg',
+    assignedStaff: 'Priya',
+    priority: 'VIP Suite',
+    lastCleaned: '20-10-2026 10:45 AM'
+  }
 ];
 
 export const INITIAL_ROOM_TYPES: PmsRoomType[] = [
-  { id: 'rt-1', roomTypeName: 'LUXURY ROOM', package: 'GENERAL', gstTaxString: 'GST 18% || 18.00 || 0.00', gstPercent: 18, roomTariff: 4000, discountPercent: 0 },
-  { id: 'rt-2', roomTypeName: 'SUITE ROOM', package: 'GENERAL', gstTaxString: 'GST 12% || 12.00 || 0.00', gstPercent: 12, roomTariff: 3000, discountPercent: 0 },
-  { id: 'rt-3', roomTypeName: 'DELUXE', package: 'GENERAL', gstTaxString: 'GST 12% || 12.00 || 0.00', gstPercent: 12, roomTariff: 2000, discountPercent: 0 },
-  { id: 'rt-4', roomTypeName: 'STANDARD', package: 'GENERAL', gstTaxString: 'GST 12% || 12.00 || 0.00', gstPercent: 12, roomTariff: 1500, discountPercent: 0 },
-  { id: 'rt-5', roomTypeName: 'AC EXECUTIVE ROOM', package: 'GENERAL', gstTaxString: 'GST 12% || 12.00 || 0.00', gstPercent: 12, roomTariff: 1500, discountPercent: 0 },
-  { id: 'rt-6', roomTypeName: 'GROUND 2 BHK', package: 'WITHOUT BREACKFAST', gstTaxString: 'GST 5% || 5.00 || 0.00', gstPercent: 5, roomTariff: 5500, discountPercent: 10 },
-  { id: 'rt-7', roomTypeName: 'MINI HALL', package: 'GENERAL', gstTaxString: 'GST 0% || 0.00 || 0.00', gstPercent: 0, roomTariff: 10000, discountPercent: 0 },
-  { id: 'rt-8', roomTypeName: 'GARDEN', package: 'GENERAL', gstTaxString: 'GST 0% || 0.00 || 0.00', gstPercent: 0, roomTariff: 45000, discountPercent: 0 },
-  { id: 'rt-9', roomTypeName: 'BADA HALL', package: 'GENERAL', gstTaxString: 'GST 0% || 0.00 || 0.00', gstPercent: 0, roomTariff: 35000, discountPercent: 0 },
-  { id: 'rt-10', roomTypeName: 'STANDRAD ROOM', package: 'GENERAL', gstTaxString: 'GST 0% || 0.00 || 0.00', gstPercent: 0, roomTariff: 1500, discountPercent: 0 },
-  { id: 'rt-11', roomTypeName: 'DELUXE ROOM', package: 'GENERAL', gstTaxString: 'GST 0% || 0.00 || 0.00', gstPercent: 0, roomTariff: 2500, discountPercent: 0 },
-  { id: 'rt-12', roomTypeName: 'DORMITORY', package: 'GENERAL', gstTaxString: 'GST 0% || 0.00 || 0.00', gstPercent: 0, roomTariff: 800, discountPercent: 0 },
+  { id: 'rt-1', roomTypeName: 'Executive Deluxe', package: 'GENERAL', gstTaxString: 'GST 12% || 12.00 || 0.00', gstPercent: 12, roomTariff: 2499, discountPercent: 0 },
+  { id: 'rt-2', roomTypeName: 'Super Deluxe Family', package: 'GENERAL', gstTaxString: 'GST 12% || 12.00 || 0.00', gstPercent: 12, roomTariff: 3799, discountPercent: 0 },
+  { id: 'rt-3', roomTypeName: 'Sai Presidential Suite', package: 'GENERAL', gstTaxString: 'GST 12% || 12.00 || 0.00', gstPercent: 12, roomTariff: 5999, discountPercent: 0 }
 ];
 
 export const INITIAL_TABLES: PmsDiningTable[] = [
-  // General Dining Tables (matching Video 13 Frames 110 & 140)
-  { id: 't-1', tableName: 'Table T-1', tableGroup: 'General', capacity: 4, status: 'Vacant' },
-  { id: 't-2', tableName: 'Table T-2', tableGroup: 'General', capacity: 4, status: 'Vacant' },
-  { id: 't-3', tableName: 'Table T- 3', tableGroup: 'General', capacity: 4, status: 'Running' },
-  { id: 't-4', tableName: 'Table T-4', tableGroup: 'General', capacity: 4, status: 'Vacant' },
-  { id: 't-5', tableName: 'Table T-5', tableGroup: 'General', capacity: 6, status: 'Running' },
-  { id: 't-6', tableName: 'Table T-6', tableGroup: 'General', capacity: 6, status: 'Running' },
-  { id: 't-7', tableName: 'Table T-7', tableGroup: 'General', capacity: 2, status: 'Running' },
-  { id: 't-8', tableName: 'Table T-8', tableGroup: 'General', capacity: 2, status: 'Running' },
-  { id: 't-9', tableName: 'Table T-9', tableGroup: 'General', capacity: 8, status: 'Vacant' },
-  { id: 't-10', tableName: 'Table T-10', tableGroup: 'General', capacity: 4, status: 'Vacant' },
-  { id: 't-11', tableName: 'Table T-11', tableGroup: 'General', capacity: 4, status: 'Vacant' },
-  { id: 't-12', tableName: 'Table T-12', tableGroup: 'General', capacity: 4, status: 'Vacant' },
-  { id: 't-13', tableName: 'Table T-13', tableGroup: 'General', capacity: 4, status: 'Vacant' },
-  { id: 't-14', tableName: 'Table T-14', tableGroup: 'General', capacity: 4, status: 'Running' },
-  { id: 't-15', tableName: 'Table T-15', tableGroup: 'General', capacity: 4, status: 'Vacant' },
-  { id: 't-ncc', tableName: 'Table NCC', tableGroup: 'General', capacity: 6, status: 'Running' },
-  { id: 't-16', tableName: 'Table T-16', tableGroup: 'General', capacity: 6, status: 'Running' },
-
-  // TakeAway Group
-  { id: 't-a1', tableName: 'Table A1', tableGroup: 'TakeAway', capacity: 2, status: 'Vacant' },
-
-  // NC Group (Non-Chargeable tables for Owner, VIP, Staff dining)
-  { id: 't-nc1', tableName: 'Table NC1', tableGroup: 'Nc', capacity: 4, status: 'Vacant' },
-  { id: 't-nc2', tableName: 'Table NC2', tableGroup: 'Nc', capacity: 4, status: 'Running' },
-
-  // SelfService Group
-  { id: 't-s1', tableName: 'Table S1', tableGroup: 'SelfService', capacity: 4, status: 'Vacant' },
+  { id: 't-1', tableName: 'Table T-01', tableGroup: 'General', capacity: 4, status: 'Vacant' },
+  { id: 't-2', tableName: 'Table T-02', tableGroup: 'General', capacity: 4, status: 'Running' },
+  { id: 't-3', tableName: 'Table T-03', tableGroup: 'General', capacity: 4, status: 'Vacant' },
+  { id: 't-4', tableName: 'Table T-04', tableGroup: 'General', capacity: 4, status: 'Vacant' },
+  { id: 't-5', tableName: 'Table T-05', tableGroup: 'General', capacity: 6, status: 'Running' },
+  { id: 't-6', tableName: 'Table T-06', tableGroup: 'General', capacity: 6, status: 'Vacant' },
+  { id: 't-7', tableName: 'Table T-07', tableGroup: 'General', capacity: 2, status: 'Vacant' },
+  { id: 't-8', tableName: 'Table T-08', tableGroup: 'General', capacity: 2, status: 'Running' },
+  { id: 't-9', tableName: 'Table T-09', tableGroup: 'General', capacity: 8, status: 'Vacant' },
+  { id: 't-10', tableName: 'Table T-10', tableGroup: 'General', capacity: 8, status: 'Vacant' },
+  { id: 't-room-service', tableName: 'Room Service', tableGroup: 'TakeAway', capacity: 2, status: 'Running' }
 ];
 
 export const INITIAL_GST_MASTERS: PmsGstMaster[] = [
@@ -357,29 +580,66 @@ export const INITIAL_VOUCHER_TYPES: PmsVoucherType[] = [
   { id: 'vt-5', voucherTypeName: 'Food_Bill', startingNumber: 254, prefix: 'SHRI/', suffix: '/24-25', numberingStyle: 'Continue', printName: 'Food Bill', remark: 'Food & Beverage Bill' },
 ];
 
+export const INITIAL_LOCKERS: PmsLocker[] = [
+  { id: 'LOC-01', lockerNo: 'L-101', lockerSize: 'Medium', dailyRate: 150, status: 'Vacant', keyNumber: 'K-101', securityDeposit: 500 },
+  { id: 'LOC-02', lockerNo: 'L-102', lockerSize: 'Large', dailyRate: 250, status: 'Vacant', keyNumber: 'K-102', securityDeposit: 1000 },
+  { id: 'LOC-03', lockerNo: 'L-103', lockerSize: 'Executive Vault', dailyRate: 500, status: 'Vacant', keyNumber: 'K-103', securityDeposit: 2000 }
+];
+
+export const INITIAL_OTHER_CHARGES: PmsOtherCharge[] = [
+  { id: 'CHG-01', chargeName: 'Extra Mattress / Extra Bed (Executive/Family)', category: 'Room', defaultRate: 500, gstRate: 12, hsnCode: '996311', isTaxIncluded: false, remark: 'Rollaway extra bed per night' },
+  { id: 'CHG-02', chargeName: 'Extra Mattress / Extra Bed (Suite)', category: 'Room', defaultRate: 800, gstRate: 12, hsnCode: '996311', isTaxIncluded: false, remark: 'Suite extra rollaway mattress per night' },
+  { id: 'CHG-03', chargeName: 'Pilgrim Darshan Cab Drop (Shirdi Temple)', category: 'Travel', defaultRate: 300, gstRate: 5, hsnCode: '996412', isTaxIncluded: true, remark: 'Direct drop to VIP Gate No. 2' },
+  { id: 'CHG-04', chargeName: 'Express Laundry Service', category: 'Housekeeping', defaultRate: 250, gstRate: 18, hsnCode: '998721', isTaxIncluded: false, remark: 'Same day wash & press' }
+];
+
 export const INITIAL_MENU_ITEMS: MenuItem[] = [
-  { id: 'm-1', name: 'Paneer Rice', code: '11', barcode: '8901234001', company: 'In-House', rate: 140, saleRate: 140, mrp: 160, purchaseRate: 80, unit: 'Plate', gstPercent: 5, category: 'Rice', headGroup: 'Restaurant_Item' },
-  { id: 'm-2', name: 'PANEER TIKA', code: '10005', barcode: '8901234002', company: 'In-House', rate: 220, saleRate: 220, mrp: 250, purchaseRate: 120, unit: 'Portion', gstPercent: 5, category: 'Starters', headGroup: 'Restaurant_Item' },
-  { id: 'm-3', name: 'sahi paneer', code: '10028', barcode: '8901234003', company: 'In-House', rate: 240, saleRate: 240, mrp: 270, purchaseRate: 130, unit: 'Portion', gstPercent: 5, category: 'Main Course', headGroup: 'Restaurant_Item' },
-  { id: 'm-4', name: 'paneer bhurji', code: '10040', barcode: '8901234004', company: 'In-House', rate: 200, saleRate: 200, mrp: 220, purchaseRate: 110, unit: 'Portion', gstPercent: 5, category: 'Main Course', headGroup: 'Restaurant_Item' },
-  { id: 'm-5', name: 'Dal Tadka', code: '10012', barcode: '8901234005', company: 'In-House', rate: 160, saleRate: 160, mrp: 180, purchaseRate: 70, unit: 'Bowl', gstPercent: 5, category: 'Dal', headGroup: 'Restaurant_Item' },
-  { id: 'm-6', name: 'Butter Roti', code: '10001', barcode: '8901234006', company: 'In-House', rate: 25, saleRate: 25, mrp: 30, purchaseRate: 10, unit: 'Piece', gstPercent: 5, category: 'Breads', headGroup: 'Restaurant_Item' },
-  { id: 'm-7', name: 'Mineral Water 1L', code: '10002', barcode: '8901234007', company: 'Bisleri', rate: 20, saleRate: 20, mrp: 20, purchaseRate: 12, unit: 'Bottle', gstPercent: 12, category: 'Beverages', headGroup: 'Restaurant_Item' },
-  { id: 'm-8', name: 'Masala Tea', code: '10003', barcode: '8901234008', company: 'In-House', rate: 30, saleRate: 30, mrp: 35, purchaseRate: 10, unit: 'Cup', gstPercent: 5, category: 'Beverages', headGroup: 'Restaurant_Item' },
-  { id: 'm-9', name: 'Veg Thali Deluxe', code: '10050', barcode: '8901234009', company: 'In-House', rate: 180, saleRate: 180, mrp: 200, purchaseRate: 90, unit: 'Plate', gstPercent: 5, category: 'Thali', headGroup: 'Restaurant_Item' },
-  { id: 'm-10', name: 'Jeera Rice', code: '10015', barcode: '8901234010', company: 'In-House', rate: 110, saleRate: 110, mrp: 130, purchaseRate: 50, unit: 'Plate', gstPercent: 5, category: 'Rice', headGroup: 'Restaurant_Item' },
-  { id: 'm-11', name: 'KACHOOMER SALAD', code: '10060', barcode: '8901234011', company: 'In-House', rate: 90, saleRate: 90, mrp: 100, purchaseRate: 30, unit: 'Portion', gstPercent: 5, category: 'Salad', headGroup: 'Restaurant_Item' },
-  // Video 19: Raw Material Store Items
-  { id: 'm-daal-rahar', name: 'Daal Rahar', code: '10058', barcode: '10058', company: 'Genral', rate: 175, saleRate: 175, mrp: 175, purchaseRate: 175, unit: 'KG', gstPercent: 5, category: 'Raw Material', headGroup: 'Raw_Material' },
-  { id: 'm-refine-oil', name: 'Refine Oil', code: '10069', barcode: '10069', company: 'Genral', rate: 150, saleRate: 150, mrp: 150, purchaseRate: 140, unit: 'Liter', gstPercent: 12, category: 'Raw Material', headGroup: 'Raw_Material' },
-  { id: 'm-sugar', name: 'Sugar / Sakkar', code: '10070', barcode: '10070', company: 'Genral', rate: 45, saleRate: 45, mrp: 45, purchaseRate: 42, unit: 'KG', gstPercent: 5, category: 'Raw Material', headGroup: 'Raw_Material' },
-  { id: 'm-milk', name: 'Milk / Doodh', code: '10071', barcode: '10071', company: 'Genral', rate: 60, saleRate: 60, mrp: 60, purchaseRate: 55, unit: 'Liter', gstPercent: 0, category: 'Raw Material', headGroup: 'Raw_Material' },
-  // Video 35: Banquet Catering & Event Services Items (Frames 0400, 0420, 0480, 0550)
-  { id: 'm-per-plate-food', name: 'PER PLATE FOOD', code: '10072', barcode: '10072', company: 'Genral', rate: 475, saleRate: 475, mrp: 500, purchaseRate: 280, unit: 'Plate', gstPercent: 12, category: 'Banquet Catering', headGroup: 'Restaurant_Item' },
-  { id: 'm-dj-charge', name: 'DJ CHARGE', code: '10074', barcode: '10074', company: 'SoundTech', rate: 10000, saleRate: 10000, mrp: 12000, purchaseRate: 6000, unit: 'Event', gstPercent: 12, category: 'Banquet Services', headGroup: 'Restaurant_Item' },
-  { id: 'm-decoration-charge', name: 'DECORATION CHARGE', code: '10075', barcode: '10075', company: 'RoyalDecor', rate: 15000, saleRate: 15000, mrp: 18000, purchaseRate: 9000, unit: 'Event', gstPercent: 12, category: 'Banquet Services', headGroup: 'Restaurant_Item' },
-  { id: 'm-mandap-flower', name: 'MANDAP & FLOWER STAGE', code: '10076', barcode: '10076', company: 'RoyalDecor', rate: 20000, saleRate: 20000, mrp: 25000, purchaseRate: 12000, unit: 'Event', gstPercent: 12, category: 'Banquet Services', headGroup: 'Restaurant_Item' },
-  { id: 'm-led-wall', name: 'PROJECTOR & LED WALL', code: '10077', barcode: '10077', company: 'AVPro', rate: 8000, saleRate: 8000, mrp: 10000, purchaseRate: 4500, unit: 'Event', gstPercent: 18, category: 'Banquet Services', headGroup: 'Restaurant_Item' }
+  // 1. Morning Breakfast (7:00 AM - 10:30 AM)
+  { id: 'm-101', name: 'Idli Sambar (2 Pcs)', code: '101', barcode: '890101', company: 'Vasudev Rasoi', rate: 90, saleRate: 90, mrp: 90, purchaseRate: 35, unit: 'Plate', gstPercent: 5, category: 'Morning Breakfast', headGroup: 'Restaurant_Item' },
+  { id: 'm-102', name: 'Medu Vada (2 Pcs)', code: '102', barcode: '890102', company: 'Vasudev Rasoi', rate: 110, saleRate: 110, mrp: 110, purchaseRate: 40, unit: 'Plate', gstPercent: 5, category: 'Morning Breakfast', headGroup: 'Restaurant_Item' },
+  { id: 'm-103', name: 'Special Masala Dosa', code: '103', barcode: '890103', company: 'Vasudev Rasoi', rate: 130, saleRate: 130, mrp: 130, purchaseRate: 50, unit: 'Plate', gstPercent: 5, category: 'Morning Breakfast', headGroup: 'Restaurant_Item' },
+  { id: 'm-104', name: 'Poori Bhaji (4 Pcs)', code: '104', barcode: '890104', company: 'Vasudev Rasoi', rate: 120, saleRate: 120, mrp: 120, purchaseRate: 45, unit: 'Plate', gstPercent: 5, category: 'Morning Breakfast', headGroup: 'Restaurant_Item' },
+  { id: 'm-105', name: 'Shirdi Special Poha', code: '105', barcode: '890105', company: 'Vasudev Rasoi', rate: 80, saleRate: 80, mrp: 80, purchaseRate: 25, unit: 'Plate', gstPercent: 5, category: 'Morning Breakfast', headGroup: 'Restaurant_Item' },
+  { id: 'm-106', name: 'Ghee Rava Upma', code: '106', barcode: '890106', company: 'Vasudev Rasoi', rate: 80, saleRate: 80, mrp: 80, purchaseRate: 25, unit: 'Plate', gstPercent: 5, category: 'Morning Breakfast', headGroup: 'Restaurant_Item' },
+
+  // 2. Main Course Curries
+  { id: 'm-201', name: 'Paneer Butter Masala', code: '201', barcode: '890201', company: 'Vasudev Rasoi', rate: 240, saleRate: 240, mrp: 260, purchaseRate: 110, unit: 'Portion', gstPercent: 5, category: 'Main Course Curries', headGroup: 'Restaurant_Item' },
+  { id: 'm-202', name: 'Shahi Paneer Royale', code: '202', barcode: '890202', company: 'Vasudev Rasoi', rate: 240, saleRate: 240, mrp: 260, purchaseRate: 110, unit: 'Portion', gstPercent: 5, category: 'Main Course Curries', headGroup: 'Restaurant_Item' },
+  { id: 'm-203', name: 'Kaju Curry (Cashew Gravy)', code: '203', barcode: '890203', company: 'Vasudev Rasoi', rate: 260, saleRate: 260, mrp: 280, purchaseRate: 130, unit: 'Portion', gstPercent: 5, category: 'Main Course Curries', headGroup: 'Restaurant_Item' },
+  { id: 'm-204', name: 'Malai Kofta Creamy Gravy', code: '204', barcode: '890204', company: 'Vasudev Rasoi', rate: 250, saleRate: 250, mrp: 270, purchaseRate: 120, unit: 'Portion', gstPercent: 5, category: 'Main Course Curries', headGroup: 'Restaurant_Item' },
+  { id: 'm-205', name: 'Mix Veg Kolhapuri', code: '205', barcode: '890205', company: 'Vasudev Rasoi', rate: 200, saleRate: 200, mrp: 220, purchaseRate: 90, unit: 'Portion', gstPercent: 5, category: 'Main Course Curries', headGroup: 'Restaurant_Item' },
+  { id: 'm-206', name: 'Aloo Gobi Matar Desi Style', code: '206', barcode: '890206', company: 'Vasudev Rasoi', rate: 180, saleRate: 180, mrp: 200, purchaseRate: 75, unit: 'Portion', gstPercent: 5, category: 'Main Course Curries', headGroup: 'Restaurant_Item' },
+
+  // 3. Tandoor & Breads
+  { id: 'm-301', name: 'Butter Tandoori Roti', code: '301', barcode: '890301', company: 'Vasudev Rasoi', rate: 25, saleRate: 25, mrp: 30, purchaseRate: 8, unit: 'Piece', gstPercent: 5, category: 'Tandoor & Breads', headGroup: 'Restaurant_Item' },
+  { id: 'm-302', name: 'Plain Tandoori Naan', code: '302', barcode: '890302', company: 'Vasudev Rasoi', rate: 45, saleRate: 45, mrp: 50, purchaseRate: 15, unit: 'Piece', gstPercent: 5, category: 'Tandoor & Breads', headGroup: 'Restaurant_Item' },
+  { id: 'm-303', name: 'Butter Naan', code: '303', barcode: '890303', company: 'Vasudev Rasoi', rate: 55, saleRate: 55, mrp: 60, purchaseRate: 18, unit: 'Piece', gstPercent: 5, category: 'Tandoor & Breads', headGroup: 'Restaurant_Item' },
+  { id: 'm-304', name: 'Garlic Butter Naan', code: '304', barcode: '890304', company: 'Vasudev Rasoi', rate: 70, saleRate: 70, mrp: 80, purchaseRate: 22, unit: 'Piece', gstPercent: 5, category: 'Tandoor & Breads', headGroup: 'Restaurant_Item' },
+  { id: 'm-305', name: 'Lachedar Tandoori Paratha', code: '305', barcode: '890305', company: 'Vasudev Rasoi', rate: 60, saleRate: 60, mrp: 70, purchaseRate: 20, unit: 'Piece', gstPercent: 5, category: 'Tandoor & Breads', headGroup: 'Restaurant_Item' },
+  { id: 'm-306', name: 'Amritsari Missi Roti', code: '306', barcode: '890306', company: 'Vasudev Rasoi', rate: 40, saleRate: 40, mrp: 45, purchaseRate: 12, unit: 'Piece', gstPercent: 5, category: 'Tandoor & Breads', headGroup: 'Restaurant_Item' },
+
+  // 4. Dal & Rice
+  { id: 'm-401', name: 'Dal Tadka Desi Ghee', code: '401', barcode: '890401', company: 'Vasudev Rasoi', rate: 160, saleRate: 160, mrp: 180, purchaseRate: 60, unit: 'Bowl', gstPercent: 5, category: 'Dal & Rice', headGroup: 'Restaurant_Item' },
+  { id: 'm-402', name: 'Dal Fry Double Tadka', code: '402', barcode: '890402', company: 'Vasudev Rasoi', rate: 150, saleRate: 150, mrp: 170, purchaseRate: 55, unit: 'Bowl', gstPercent: 5, category: 'Dal & Rice', headGroup: 'Restaurant_Item' },
+  { id: 'm-403', name: 'Jeera Rice Basmati', code: '403', barcode: '890403', company: 'Vasudev Rasoi', rate: 120, saleRate: 120, mrp: 140, purchaseRate: 45, unit: 'Plate', gstPercent: 5, category: 'Dal & Rice', headGroup: 'Restaurant_Item' },
+  { id: 'm-404', name: 'Steamed Basmati Rice', code: '404', barcode: '890404', company: 'Vasudev Rasoi', rate: 100, saleRate: 100, mrp: 120, purchaseRate: 35, unit: 'Plate', gstPercent: 5, category: 'Dal & Rice', headGroup: 'Restaurant_Item' },
+  { id: 'm-405', name: 'Hyderabadi Veg Dum Biryani', code: '405', barcode: '890405', company: 'Vasudev Rasoi', rate: 220, saleRate: 220, mrp: 240, purchaseRate: 85, unit: 'Handi', gstPercent: 5, category: 'Dal & Rice', headGroup: 'Restaurant_Item' },
+  { id: 'm-406', name: 'Royal Veg Pulao', code: '406', barcode: '890406', company: 'Vasudev Rasoi', rate: 160, saleRate: 160, mrp: 180, purchaseRate: 60, unit: 'Plate', gstPercent: 5, category: 'Dal & Rice', headGroup: 'Restaurant_Item' },
+
+  // 5. Jain / Sattvic Special (No Onion / No Garlic)
+  { id: 'm-501', name: 'Jain Dal Khichdi (Pure Sattvic)', code: '501', barcode: '890501', company: 'Vasudev Rasoi', rate: 180, saleRate: 180, mrp: 200, purchaseRate: 60, unit: 'Bowl', gstPercent: 5, category: 'Jain / Sattvic Special', headGroup: 'Restaurant_Item' },
+  { id: 'm-502', name: 'Jain Shahi Paneer (No Onion/Garlic)', code: '502', barcode: '890502', company: 'Vasudev Rasoi', rate: 240, saleRate: 240, mrp: 260, purchaseRate: 100, unit: 'Portion', gstPercent: 5, category: 'Jain / Sattvic Special', headGroup: 'Restaurant_Item' },
+  { id: 'm-503', name: 'Jain Yellow Dal Moong', code: '503', barcode: '890503', company: 'Vasudev Rasoi', rate: 150, saleRate: 150, mrp: 160, purchaseRate: 50, unit: 'Bowl', gstPercent: 5, category: 'Jain / Sattvic Special', headGroup: 'Restaurant_Item' },
+  { id: 'm-504', name: 'Jain Methi Malai Matar', code: '504', barcode: '890504', company: 'Vasudev Rasoi', rate: 230, saleRate: 230, mrp: 250, purchaseRate: 90, unit: 'Portion', gstPercent: 5, category: 'Jain / Sattvic Special', headGroup: 'Restaurant_Item' },
+  { id: 'm-505', name: 'Shirdi Temple Sattvic Thali', code: '505', barcode: '890505', company: 'Vasudev Rasoi', rate: 250, saleRate: 250, mrp: 270, purchaseRate: 95, unit: 'Thali', gstPercent: 5, category: 'Jain / Sattvic Special', headGroup: 'Restaurant_Item' },
+
+  // 6. Beverages & Desserts
+  { id: 'm-601', name: 'Mineral Water 1L', code: '601', barcode: '890601', company: 'Bisleri', rate: 20, saleRate: 20, mrp: 20, purchaseRate: 12, unit: 'Bottle', gstPercent: 5, category: 'Beverages & Desserts', headGroup: 'Restaurant_Item' },
+  { id: 'm-602', name: 'Special Masala Chai (Kulhad)', code: '602', barcode: '890602', company: 'Vasudev Rasoi', rate: 30, saleRate: 30, mrp: 35, purchaseRate: 10, unit: 'Cup', gstPercent: 5, category: 'Beverages & Desserts', headGroup: 'Restaurant_Item' },
+  { id: 'm-603', name: 'Filter Coffee (South Indian)', code: '603', barcode: '890603', company: 'Vasudev Rasoi', rate: 40, saleRate: 40, mrp: 45, purchaseRate: 14, unit: 'Cup', gstPercent: 5, category: 'Beverages & Desserts', headGroup: 'Restaurant_Item' },
+  { id: 'm-604', name: 'Punjabi Sweet Lassi (Clay Pot)', code: '604', barcode: '890604', company: 'Vasudev Rasoi', rate: 70, saleRate: 70, mrp: 80, purchaseRate: 25, unit: 'Glass', gstPercent: 5, category: 'Beverages & Desserts', headGroup: 'Restaurant_Item' },
+  { id: 'm-605', name: 'Warm Gulab Jamun (2 Pcs)', code: '605', barcode: '890605', company: 'Vasudev Rasoi', rate: 80, saleRate: 80, mrp: 90, purchaseRate: 30, unit: 'Portion', gstPercent: 5, category: 'Beverages & Desserts', headGroup: 'Restaurant_Item' },
+  { id: 'm-606', name: 'Kesar Pista Rasmalai (2 Pcs)', code: '606', barcode: '890606', company: 'Vasudev Rasoi', rate: 90, saleRate: 90, mrp: 100, purchaseRate: 35, unit: 'Portion', gstPercent: 5, category: 'Beverages & Desserts', headGroup: 'Restaurant_Item' }
 ];
 
 // Video 15: Party Accounts & Receivables Seed Data (Frame 0130)
@@ -2364,29 +2624,213 @@ const STORAGE_KEYS = {
   BANQUET_VENUES: 'svr_pms_banquet_venues',
   BANQUET_BOOKINGS: 'svr_pms_banquet_bookings',
   LOCKERS: 'svr_pms_lockers',
-  OTHER_CHARGES: 'svr_pms_other_charges'
+  OTHER_CHARGES: 'svr_pms_other_charges',
+  EXPENSES: 'svr_pms_expenses',
+  HOUSEKEEPING: 'svr_pms_housekeeping',
+  NIGHT_AUDITS: 'svr_pms_night_audits',
+  FOLIO_PAYMENTS: 'svr_pms_folio_payments',
+  FOLIO_DISCOUNTS: 'svr_pms_folio_discounts'
 };
 
-export const INITIAL_LOCKERS: PmsLocker[] = [
-  { id: 'loc-1', lockerNo: 'L-101', lockerSize: 'Small', dailyRate: 150, status: 'Vacant', keyNumber: 'K-101', securityDeposit: 500 },
-  { id: 'loc-2', lockerNo: 'L-102', lockerSize: 'Small', dailyRate: 150, status: 'Occupied', assignedGuestName: 'AJUU', assignedRoomNo: '101', keyNumber: 'K-102', securityDeposit: 500 },
-  { id: 'loc-3', lockerNo: 'L-103', lockerSize: 'Medium', dailyRate: 250, status: 'Vacant', keyNumber: 'K-103', securityDeposit: 1000 },
-  { id: 'loc-4', lockerNo: 'L-104', lockerSize: 'Medium', dailyRate: 250, status: 'Vacant', keyNumber: 'K-104', securityDeposit: 1000 },
-  { id: 'loc-5', lockerNo: 'L-201', lockerSize: 'Large', dailyRate: 400, status: 'Vacant', keyNumber: 'K-201', securityDeposit: 1500 },
-  { id: 'loc-6', lockerNo: 'L-202', lockerSize: 'Executive Vault', dailyRate: 600, status: 'Vacant', keyNumber: 'K-202', securityDeposit: 2000 }
+export const INITIAL_EXPENSES: PmsExpenseRecord[] = [
+  {
+    id: 'exp-1',
+    expenseNo: 'EXP-2026-001',
+    date: '2026-10-20',
+    time: '08:30 AM',
+    category: 'Vegetables & Dairy',
+    amount: 1450,
+    paymentMode: 'Cash',
+    paidTo: 'Shirdi Kisan Mandi Fresh Veggies',
+    description: 'Fresh Paneer (5kg), Tomatoes, Green Chillies, Coriander for Rasoi',
+    billNumber: 'BILL-8921',
+    approvedBy: 'General Manager',
+    createdAt: '2026-10-20T08:30:00.000Z'
+  },
+  {
+    id: 'exp-2',
+    expenseNo: 'EXP-2026-002',
+    date: '2026-10-20',
+    time: '09:15 AM',
+    category: 'Housekeeping Supplies',
+    amount: 850,
+    paymentMode: 'Cash',
+    paidTo: 'Om Sai Cleaners & Chemicals',
+    description: 'Floor disinfectant (5L), Toilet cleaner cans, microfiber cloths',
+    billNumber: 'INV-4412',
+    approvedBy: 'Housekeeping Head',
+    createdAt: '2026-10-20T09:15:00.000Z'
+  },
+  {
+    id: 'exp-3',
+    expenseNo: 'EXP-2026-003',
+    date: '2026-10-19',
+    time: '06:00 PM',
+    category: 'Electricity/DG Fuel',
+    amount: 2200,
+    paymentMode: 'UPI',
+    paidTo: 'HPCL Petrol Pump Shirdi',
+    description: 'Diesel for generator backup (25 Litres)',
+    billNumber: 'HP-90124',
+    approvedBy: 'General Manager',
+    createdAt: '2026-10-19T18:00:00.000Z'
+  },
+  {
+    id: 'exp-4',
+    expenseNo: 'EXP-2026-004',
+    date: '2026-10-19',
+    time: '07:30 PM',
+    category: 'Maintenance Repair',
+    amount: 600,
+    paymentMode: 'Cash',
+    paidTo: 'Sai Refrigeration & AC Care',
+    description: 'Capacitor replacement & gas check for Room 106 AC',
+    billNumber: 'REC-309',
+    approvedBy: 'Front Desk Lead',
+    createdAt: '2026-10-19T19:30:00.000Z'
+  }
 ];
 
-export const INITIAL_OTHER_CHARGES: PmsOtherCharge[] = [
-  { id: 'chg-1', chargeName: 'Extra Bed / Rollaway Mattress', category: 'Room', defaultRate: 500, gstRate: 12, hsnCode: '996311', isTaxIncluded: true, remark: 'Standard pilgrim rollaway bed with clean linen' },
-  { id: 'chg-2', chargeName: 'Early Check-In Surcharge', category: 'Room', defaultRate: 400, gstRate: 12, hsnCode: '996311', isTaxIncluded: true, remark: 'Arrival between 06:00 AM - 10:00 AM' },
-  { id: 'chg-3', chargeName: 'Late Check-Out Surcharge', category: 'Room', defaultRate: 500, gstRate: 12, hsnCode: '996311', isTaxIncluded: true, remark: 'Extension up to 04:00 PM' },
-  { id: 'chg-4', chargeName: 'VIP Temple Darshan Escort', category: 'Travel', defaultRate: 350, gstRate: 0, hsnCode: '998555', isTaxIncluded: true, remark: 'Personal front desk escort to Gate No. 2' },
-  { id: 'chg-5', chargeName: 'Airport / Station Chauffeur Pickup', category: 'Travel', defaultRate: 850, gstRate: 5, hsnCode: '996601', isTaxIncluded: true, remark: 'Dedicated AC car pickup from Shirdi Station / Airport' },
-  { id: 'chg-6', chargeName: 'Laundry Express Service (2 Pieces)', category: 'Housekeeping', defaultRate: 120, gstRate: 18, hsnCode: '999711', isTaxIncluded: true, remark: 'Washed, ironed and delivered in 4 hours' },
-  { id: 'chg-7', chargeName: 'Banquet Sound & Cordless Mic Setup', category: 'Banquet', defaultRate: 2500, gstRate: 18, hsnCode: '998313', isTaxIncluded: true, remark: 'Full speaker system with 2 wireless mics for Satsang' }
+export const INITIAL_HOUSEKEEPING: PmsHousekeepingRecord[] = [
+  { roomNo: '101', status: 'Inspected', assignedStaff: 'Ramesh', priority: 'Normal', lastCleanedTime: '19-10-2026 10:30 AM' },
+  { roomNo: '102', status: 'Vacant Clean', assignedStaff: 'Sunita', priority: 'Normal', lastCleanedTime: '20-10-2026 09:00 AM' },
+  { roomNo: '103', status: 'Inspected', assignedStaff: 'Ramesh', priority: 'High - Guest Waiting', lastCleanedTime: '19-10-2026 12:45 PM' },
+  { roomNo: '104', status: 'Vacant Dirty', assignedStaff: 'Ramesh', priority: 'High - Guest Waiting', lastCleanedTime: '18-10-2026 04:00 PM', remarks: 'Guest checked out, linen stripped' },
+  { roomNo: '105', status: 'Vacant Clean', assignedStaff: 'Sunita', priority: 'Normal', lastCleanedTime: '20-10-2026 08:30 AM' },
+  { roomNo: '106', status: 'Vacant Clean', assignedStaff: 'Ramesh', priority: 'Normal', lastCleanedTime: '20-10-2026 09:15 AM' },
+  { roomNo: '201', status: 'Vacant Clean', assignedStaff: 'Ganesh', priority: 'Normal', lastCleanedTime: '20-10-2026 09:30 AM' },
+  { roomNo: '202', status: 'Inspected', assignedStaff: 'Ganesh', priority: 'Normal', lastCleanedTime: '20-10-2026 09:00 AM' },
+  { roomNo: '203', status: 'Vacant Clean', assignedStaff: 'Priya', priority: 'Normal', lastCleanedTime: '20-10-2026 10:00 AM' },
+  { roomNo: '204', status: 'Vacant Clean', assignedStaff: 'Priya', priority: 'High - Guest Waiting', lastCleanedTime: '20-10-2026 10:15 AM' },
+  { roomNo: '205', status: 'Vacant Clean', assignedStaff: 'Ganesh', priority: 'Normal', lastCleanedTime: '20-10-2026 09:45 AM' },
+  { roomNo: '206', status: 'Vacant Clean', assignedStaff: 'Priya', priority: 'Normal', lastCleanedTime: '20-10-2026 10:30 AM' },
+  { roomNo: '301', status: 'Vacant Clean', assignedStaff: 'Ganesh', priority: 'VIP Suite', lastCleanedTime: '20-10-2026 09:00 AM' },
+  { roomNo: '302', status: 'Under Maintenance', assignedStaff: 'Ramesh', priority: 'Normal', lastCleanedTime: '19-10-2026 05:00 PM', maintenanceIssue: 'AC Thermostat Calibration & Geyser Filter Servicing', maintenanceLoggedAt: '20-10-2026 08:00 AM' },
+  { roomNo: '303', status: 'Inspected', assignedStaff: 'Sunita', priority: 'VIP Suite', lastCleanedTime: '20-10-2026 07:30 AM' },
+  { roomNo: '304', status: 'Vacant Clean', assignedStaff: 'Priya', priority: 'VIP Suite', lastCleanedTime: '20-10-2026 10:45 AM' }
+];
+
+export const INITIAL_NIGHT_AUDITS: PmsNightAuditRecord[] = [
+  {
+    auditId: 'NA-2026-1019',
+    auditDate: '2026-10-19',
+    executedAt: '19-10-2026 11:45 PM',
+    executedBy: 'Night Auditor (S. Deshmukh)',
+    occupiedRoomsCount: 4,
+    totalRoomTariffPosted: 14796,
+    totalGstPosted: 1775.52,
+    cashInHand: 12450,
+    upiTotal: 28900,
+    cardTotal: 15400,
+    pendingReceivables: 8990,
+    roomsAuditSummary: [
+      { roomNo: '101', guestName: 'Rajesh Sharma', baseTariff: 2499, gstAmount: 299.88, totalPosted: 2798.88, folioBalanceAfter: 1648.88 },
+      { roomNo: '103', guestName: 'Sunita Patel', baseTariff: 2499, gstAmount: 299.88, totalPosted: 2798.88, folioBalanceAfter: 614.88 },
+      { roomNo: '202', guestName: 'Vikram Malhotra & Family', baseTariff: 3799, gstAmount: 455.88, totalPosted: 4254.88, folioBalanceAfter: 0 },
+      { roomNo: '303', guestName: 'Arvind Kirloskar', baseTariff: 5999, gstAmount: 719.88, totalPosted: 6718.88, folioBalanceAfter: 546 }
+    ]
+  }
+];
+
+export const INITIAL_FOLIO_PAYMENTS: PmsFolioPayment[] = [
+  {
+    id: 'pay-1',
+    roomNo: '101',
+    guestName: 'Rajesh Sharma',
+    amount: 1500,
+    paymentMode: 'UPI',
+    referenceNo: 'UPI/982211/PhonePe',
+    timestamp: '2026-10-19 11:15 AM',
+    notes: 'Advance at Check-In'
+  },
+  {
+    id: 'pay-2',
+    roomNo: '103',
+    guestName: 'Sunita Patel',
+    amount: 2499,
+    paymentMode: 'Cash',
+    referenceNo: 'CASH-REC-103',
+    timestamp: '2026-10-19 01:10 PM',
+    notes: 'First day tariff advance in cash'
+  },
+  {
+    id: 'pay-3',
+    roomNo: '202',
+    guestName: 'Vikram Malhotra & Family',
+    amount: 5000,
+    paymentMode: 'Card',
+    referenceNo: 'HDFC-POS-7821',
+    timestamp: '2026-10-20 09:35 AM',
+    notes: 'Advance card swipe at front desk'
+  },
+  {
+    id: 'pay-4',
+    roomNo: '303',
+    guestName: 'Arvind Kirloskar',
+    amount: 6719,
+    paymentMode: 'Bank Transfer',
+    referenceNo: 'NEFT/SBI/991048',
+    timestamp: '2026-10-20 08:15 AM',
+    notes: 'Corporate advance direct NEFT transfer'
+  }
 ];
 
 export class PmsStore {
+  // --- Centralized Reactive Pub/Sub Engine (Multi-Tab & Cross-Module Zero State Loss) ---
+  private static listeners: Set<() => void> = new Set();
+  private static broadcastChannel: BroadcastChannel | null = typeof window !== 'undefined' && 'BroadcastChannel' in window ? new BroadcastChannel('svr_pms_channel') : null;
+  private static isListeningToEvents = false;
+
+  static initListener(): void {
+    if (this.isListeningToEvents || typeof window === 'undefined') return;
+    this.isListeningToEvents = true;
+
+    // Cross-tab BroadcastChannel listener
+    if (this.broadcastChannel) {
+      this.broadcastChannel.onmessage = () => {
+        this.notifyLocal();
+      };
+    }
+
+    // Cross-tab storage event listener
+    window.addEventListener('storage', (e) => {
+      if (e.key && e.key.startsWith('svr_pms_')) {
+        this.notifyLocal();
+      }
+    });
+
+    // Custom window event listener
+    window.addEventListener('pms-store-update', () => {
+      this.notifyLocal();
+    });
+  }
+
+  static subscribe(listener: () => void): () => void {
+    this.initListener();
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  private static notifyLocal(): void {
+    this.listeners.forEach(fn => {
+      try { fn(); } catch (err) { console.error('[PmsStore] listener callback error:', err); }
+    });
+  }
+
+  static notify(): void {
+    this.notifyLocal();
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('pms-store-update'));
+      try {
+        this.broadcastChannel?.postMessage({ type: 'sync', timestamp: Date.now() });
+      } catch {
+        // broadcast fallback
+      }
+    }
+  }
+
   // --- Real-Time Cloud Synchronization Bridge (PostgreSQL on Railway) ---
   static async syncWithCloudBackend(): Promise<{ success: boolean; message: string; lastSync: string }> {
     try {
@@ -2507,6 +2951,7 @@ export class PmsStore {
 
   static saveRooms(rooms: PmsRoom[]): void {
     localStorage.setItem(STORAGE_KEYS.ROOMS, JSON.stringify(rooms));
+    this.notify();
   }
 
   static updateRoomStatus(roomNo: string, status: PmsRoom['status'], guestDetails?: PmsRoom['currentGuest']): void {
@@ -2559,6 +3004,779 @@ export class PmsStore {
   static deleteRoom(roomNo: string): void {
     const rooms = this.getRooms().filter(r => r.roomNo !== roomNo && r.id !== roomNo);
     this.saveRooms(rooms);
+  }
+
+  // =========================================================================
+  // 1. Reset to Demo Seed Data (Guaranteed Zero State Loss / Authentic Shirdi)
+  // =========================================================================
+  static resetToDemoSeedData(): void {
+    localStorage.setItem(STORAGE_KEYS.ROOMS, JSON.stringify(INITIAL_ROOMS));
+    localStorage.setItem(STORAGE_KEYS.ROOM_TYPES, JSON.stringify(INITIAL_ROOM_TYPES));
+    localStorage.setItem(STORAGE_KEYS.TABLES, JSON.stringify(INITIAL_TABLES));
+    localStorage.setItem(STORAGE_KEYS.MENU_ITEMS, JSON.stringify(INITIAL_MENU_ITEMS));
+    localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(INITIAL_EXPENSES));
+    localStorage.setItem(STORAGE_KEYS.HOUSEKEEPING, JSON.stringify(INITIAL_HOUSEKEEPING));
+    localStorage.setItem(STORAGE_KEYS.NIGHT_AUDITS, JSON.stringify(INITIAL_NIGHT_AUDITS));
+    localStorage.setItem(STORAGE_KEYS.FOLIO_PAYMENTS, JSON.stringify(INITIAL_FOLIO_PAYMENTS));
+    localStorage.removeItem(STORAGE_KEYS.FOLIO_DISCOUNTS);
+    localStorage.removeItem(STORAGE_KEYS.BOOKINGS);
+    localStorage.removeItem(STORAGE_KEYS.KOTS);
+    localStorage.removeItem(STORAGE_KEYS.CHECKOUTS);
+    this.notify();
+  }
+
+  // =========================================================================
+  // 2. Housekeeping, Laundry & Maintenance Tracker Methods
+  // =========================================================================
+  static getHousekeepingRecords(): PmsHousekeepingRecord[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.HOUSEKEEPING);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.HOUSEKEEPING, JSON.stringify(INITIAL_HOUSEKEEPING));
+      return INITIAL_HOUSEKEEPING;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_HOUSEKEEPING;
+    }
+  }
+
+  static updateHousekeepingStatus(
+    roomNo: string,
+    status: PmsHousekeepingRecord['status'],
+    assignedStaff?: string,
+    priority?: string,
+    issue?: string
+  ): void {
+    const records = this.getHousekeepingRecords();
+    const idx = records.findIndex(r => r.roomNo === roomNo);
+    const nowStr = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+
+    let updatedRec: PmsHousekeepingRecord;
+    if (idx >= 0) {
+      updatedRec = { ...records[idx], status };
+    } else {
+      updatedRec = {
+        roomNo,
+        status,
+        assignedStaff: (assignedStaff as any) || 'Ramesh',
+        priority: (priority as any) || 'Normal',
+        lastCleanedTime: nowStr
+      };
+    }
+
+    if (assignedStaff) updatedRec.assignedStaff = assignedStaff as any;
+    if (priority) updatedRec.priority = priority as any;
+    if (status === 'Cleaning In Progress') updatedRec.cleaningStartedAt = nowStr;
+    if (status === 'Vacant Clean' || status === 'Inspected') updatedRec.lastCleanedTime = nowStr;
+    if (status === 'Under Maintenance' && issue) {
+      updatedRec.maintenanceIssue = issue;
+      updatedRec.maintenanceLoggedAt = nowStr;
+    }
+
+    if (idx >= 0) records[idx] = updatedRec;
+    else records.push(updatedRec);
+
+    localStorage.setItem(STORAGE_KEYS.HOUSEKEEPING, JSON.stringify(records));
+
+    // Synchronize Room operational status on Front Desk
+    const rooms = this.getRooms();
+    const targetRoom = rooms.find(r => r.roomNo === roomNo);
+    if (targetRoom) {
+      if (assignedStaff) targetRoom.assignedStaff = assignedStaff as any;
+      if (priority) targetRoom.priority = priority as any;
+
+      if (status === 'Vacant Clean' || status === 'Inspected') {
+        if (targetRoom.status !== 'occupied') {
+          targetRoom.status = 'vacant';
+          targetRoom.maintenanceIssue = undefined;
+        }
+      } else if (status === 'Vacant Dirty' || status === 'Cleaning In Progress') {
+        if (targetRoom.status !== 'occupied') {
+          targetRoom.status = 'dirty';
+        }
+      } else if (status === 'Under Maintenance') {
+        targetRoom.status = 'blocked';
+        targetRoom.maintenanceIssue = issue || targetRoom.maintenanceIssue || 'Maintenance Logged';
+      }
+      this.saveRooms(rooms);
+    }
+
+    this.notify();
+  }
+
+  static resolveMaintenance(roomNo: string): void {
+    this.updateHousekeepingStatus(roomNo, 'Vacant Dirty', undefined, 'Normal', undefined);
+  }
+
+  // =========================================================================
+  // 3. Hotel Petty Cash & Expense Tracker Methods
+  // =========================================================================
+  static getExpenses(): PmsExpenseRecord[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.EXPENSES);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(INITIAL_EXPENSES));
+      return INITIAL_EXPENSES;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_EXPENSES;
+    }
+  }
+
+  static addExpense(exp: Omit<PmsExpenseRecord, 'id' | 'expenseNo' | 'createdAt'>): PmsExpenseRecord {
+    const expenses = this.getExpenses();
+    const nextSeq = expenses.length + 1;
+    const now = new Date();
+    const newRecord: PmsExpenseRecord = {
+      ...exp,
+      id: `exp-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      expenseNo: `EXP-2026-${String(nextSeq).padStart(3, '0')}`,
+      createdAt: now.toISOString()
+    };
+    expenses.unshift(newRecord);
+    localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(expenses));
+    this.notify();
+    return newRecord;
+  }
+
+  static deleteExpense(id: string): void {
+    const expenses = this.getExpenses().filter(e => e.id !== id);
+    localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(expenses));
+    this.notify();
+  }
+
+  // =========================================================================
+  // 4. Night Audit & Shift Handover Methods
+  // =========================================================================
+  static getNightAudits(): PmsNightAuditRecord[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.NIGHT_AUDITS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.NIGHT_AUDITS, JSON.stringify(INITIAL_NIGHT_AUDITS));
+      return INITIAL_NIGHT_AUDITS;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_NIGHT_AUDITS;
+    }
+  }
+
+  static runNightAudit(auditorName: string = 'General Manager / Lead Auditor'): PmsNightAuditRecord {
+    const rooms = this.getRooms();
+    const occupiedRooms = rooms.filter(r => r.status === 'occupied');
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+
+    let totalRoomTariffPosted = 0;
+    let totalGstPosted = 0;
+    const roomsAuditSummary: PmsNightAuditRecord['roomsAuditSummary'] = [];
+
+    occupiedRooms.forEach(r => {
+      const folio = this.getFolioSummary(r.roomNo);
+      const baseTariff = r.tariff;
+      const gstRate = baseTariff > 7500 ? 18 : 12;
+      const gstAmount = Math.round(baseTariff * (gstRate / 100) * 100) / 100;
+      const totalPosted = baseTariff + gstAmount;
+
+      totalRoomTariffPosted += baseTariff;
+      totalGstPosted += gstAmount;
+
+      roomsAuditSummary.push({
+        roomNo: r.roomNo,
+        guestName: folio.guestName,
+        baseTariff,
+        gstAmount,
+        totalPosted,
+        folioBalanceAfter: Math.round((folio.balanceDue + totalPosted) * 100) / 100
+      });
+    });
+
+    // Compute Collection Summary
+    const payments = this.getFolioPayments();
+    const cashTotal = payments.filter(p => p.paymentMode === 'Cash').reduce((s, p) => s + p.amount, 0);
+    const expenses = this.getExpenses();
+    const cashExpenses = expenses.filter(e => e.paymentMode === 'Cash').reduce((s, e) => s + e.amount, 0);
+    const netCashInHand = Math.max(0, 15000 + cashTotal - cashExpenses);
+
+    const upiTotal = payments.filter(p => p.paymentMode === 'UPI').reduce((s, p) => s + p.amount, 0) + 28900;
+    const cardTotal = payments.filter(p => p.paymentMode === 'Card').reduce((s, p) => s + p.amount, 0) + 15400;
+
+    let pendingReceivables = 0;
+    occupiedRooms.forEach(r => {
+      const folio = this.getFolioSummary(r.roomNo);
+      pendingReceivables += folio.balanceDue;
+    });
+
+    const audits = this.getNightAudits();
+    const nextSeq = audits.length + 1;
+    const newAuditRecord: PmsNightAuditRecord = {
+      auditId: `NA-2026-${String(nextSeq).padStart(4, '0')}`,
+      auditDate: todayStr,
+      executedAt: `${todayStr} ${timeStr}`,
+      executedBy: auditorName,
+      occupiedRoomsCount: occupiedRooms.length,
+      totalRoomTariffPosted: Math.round(totalRoomTariffPosted * 100) / 100,
+      totalGstPosted: Math.round(totalGstPosted * 100) / 100,
+      cashInHand: Math.round(netCashInHand),
+      upiTotal: Math.round(upiTotal),
+      cardTotal: Math.round(cardTotal),
+      pendingReceivables: Math.round(pendingReceivables * 100) / 100,
+      roomsAuditSummary
+    };
+
+    audits.unshift(newAuditRecord);
+    localStorage.setItem(STORAGE_KEYS.NIGHT_AUDITS, JSON.stringify(audits));
+    this.notify();
+    return newAuditRecord;
+  }
+
+  // =========================================================================
+  // 5. Guest Folio & Segregated Indian GST Engine (SAC 996311 & SAC 996331)
+  // =========================================================================
+  static getFolioPayments(roomNo?: string): PmsFolioPayment[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.FOLIO_PAYMENTS);
+    let all: PmsFolioPayment[] = [];
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.FOLIO_PAYMENTS, JSON.stringify(INITIAL_FOLIO_PAYMENTS));
+      all = INITIAL_FOLIO_PAYMENTS;
+    } else {
+      try {
+        all = JSON.parse(raw);
+      } catch {
+        all = INITIAL_FOLIO_PAYMENTS;
+      }
+    }
+    if (roomNo) {
+      return all.filter(p => p.roomNo === roomNo);
+    }
+    return all;
+  }
+
+  static recordFolioPayment(
+    roomNo: string,
+    payment: { amount: number; paymentMode: string; referenceNo?: string; notes?: string }
+  ): PmsFolioPayment {
+    const all = this.getFolioPayments();
+    const rooms = this.getRooms();
+    const r = rooms.find(rm => rm.roomNo === roomNo);
+    const guestName = r?.currentGuest?.name || 'In-House Guest';
+    const now = new Date();
+
+    const newPayment: PmsFolioPayment = {
+      id: `pay-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      roomNo,
+      guestName,
+      amount: payment.amount,
+      paymentMode: (payment.paymentMode as any) || 'UPI',
+      referenceNo: payment.referenceNo || `PAY-${roomNo}-${Date.now().toString().slice(-4)}`,
+      timestamp: now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+      notes: payment.notes || 'Folio Settlement Payment'
+    };
+
+    all.unshift(newPayment);
+    localStorage.setItem(STORAGE_KEYS.FOLIO_PAYMENTS, JSON.stringify(all));
+    this.notify();
+    return newPayment;
+  }
+
+  static applyFolioDiscount(
+    roomNo: string,
+    discount: { type: 'flat' | 'percent'; value: number; reason: string }
+  ): void {
+    const raw = localStorage.getItem(STORAGE_KEYS.FOLIO_DISCOUNTS);
+    const allDiscounts = raw ? JSON.parse(raw) : {};
+    allDiscounts[roomNo] = discount;
+    localStorage.setItem(STORAGE_KEYS.FOLIO_DISCOUNTS, JSON.stringify(allDiscounts));
+    this.notify();
+  }
+
+  static getFolioSummary(roomNo: string): PmsFolioSummary {
+    const rooms = this.getRooms();
+    const room = rooms.find(r => r.roomNo === roomNo);
+    const guest = room?.currentGuest;
+
+    const guestName = guest?.name || 'In-House Guest';
+    const guestPhone = guest?.phone || '';
+    const guestEmail = guest?.email || '';
+    const roomType = room?.roomType || 'Executive Deluxe';
+    const tariff = room?.tariff || 2499;
+
+    const checkInDate = guest?.checkInDate || '2026-10-20';
+    const checkInTime = guest?.checkInTime || '11:00 AM';
+    const checkOutDate = guest?.checkOutDate || '2026-10-21';
+    const checkOutTime = guest?.checkOutTime || '11:00 AM';
+
+    // Calculate nights
+    let nights = 1;
+    try {
+      const parseDate = (dStr: string) => {
+        if (!dStr) return new Date();
+        const parts = dStr.split('-');
+        if (parts[0].length === 4) return new Date(dStr);
+        return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+      };
+      const d1 = parseDate(checkInDate);
+      const d2 = parseDate(checkOutDate);
+      const diff = Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+      nights = Math.max(1, isNaN(diff) ? 1 : diff);
+    } catch {
+      nights = 1;
+    }
+
+    const baseRoomRent = tariff * nights;
+
+    // Extra guest charges (₹500 for Deluxe/Family, ₹800 for Suite)
+    const isSuite = roomType.toLowerCase().includes('suite');
+    const extraGuestsRatePerNight = isSuite ? 800 : 500;
+    const capacity = room?.capacity || 2;
+    const totalGuests = (guest as any)?.adults || capacity;
+    const extraGuestsCount = Math.max(0, totalGuests - capacity);
+    const extraGuestsTotal = extraGuestsCount * extraGuestsRatePerNight * nights;
+
+    // SAC 996311 Accommodation Bucket
+    const roomTaxable = baseRoomRent + extraGuestsTotal;
+    const roomGstRate = tariff > 7500 ? 18 : 12;
+    const roomCgst = Math.round(roomTaxable * (roomGstRate / 200) * 100) / 100;
+    const roomSgst = Math.round(roomTaxable * (roomGstRate / 200) * 100) / 100;
+    const roomTaxTotal = Math.round((roomCgst + roomSgst) * 100) / 100;
+    const roomGross = Math.round((roomTaxable + roomTaxTotal) * 100) / 100;
+
+    // SAC 996331 Vasudev Rasoi F&B Bucket
+    const kots = this.getKots().filter(k => k.roomNo === roomNo || (k as any).roomNumber === roomNo);
+    const foodItems: Array<{ kotNo: string; date: string; amount: number; description: string }> = [];
+    let foodTotalFromKots = 0;
+
+    kots.forEach(k => {
+      const kotAmount = (k.items || []).reduce((s, it) => s + (it.rate * it.qty), 0);
+      foodTotalFromKots += kotAmount;
+      foodItems.push({
+        kotNo: k.kotNo,
+        date: k.date || k.createdAt?.slice(0, 10) || checkInDate,
+        amount: kotAmount,
+        description: (k.items || []).map(it => `${it.itemName} x${it.qty}`).join(', ') || 'Room Service Pure-Veg'
+      });
+    });
+
+    const extraFood = Math.max(0, (room?.foodAmount || 0) - foodTotalFromKots);
+    if (extraFood > 0) {
+      foodItems.push({
+        kotNo: 'POS-ROOM-SVC',
+        date: checkInDate,
+        amount: extraFood,
+        description: 'Vasudev Rasoi Room Service & F&B Posting'
+      });
+      foodTotalFromKots += extraFood;
+    }
+
+    const foodTaxable = foodTotalFromKots;
+    const foodGstRate = 5; // strictly 5% (2.5% CGST + 2.5% SGST)
+    const foodCgst = Math.round(foodTaxable * 0.025 * 100) / 100;
+    const foodSgst = Math.round(foodTaxable * 0.025 * 100) / 100;
+    const foodTaxTotal = Math.round((foodCgst + foodSgst) * 100) / 100;
+    const foodGross = Math.round((foodTaxable + foodTaxTotal) * 100) / 100;
+
+    // Add-On Services (SAC 999799)
+    const addOthers = (guest as any)?.addOthers || 0;
+    const addOthersGst = Math.round(addOthers * 0.12 * 100) / 100;
+
+    // Discount Engine
+    const discountsRaw = localStorage.getItem(STORAGE_KEYS.FOLIO_DISCOUNTS);
+    const allDiscounts = discountsRaw ? JSON.parse(discountsRaw) : {};
+    const roomDiscount: PmsFolioDiscount | undefined = allDiscounts[roomNo];
+
+    let discountAmount = 0;
+    if (roomDiscount) {
+      if (roomDiscount.type === 'percent') {
+        discountAmount = Math.round(baseRoomRent * (roomDiscount.value / 100));
+      } else {
+        discountAmount = Math.min(baseRoomRent, roomDiscount.value);
+      }
+    }
+
+    const totalTaxable = Math.max(0, roomTaxable + foodTaxable + addOthers - discountAmount);
+    const totalCgst = roomCgst + foodCgst;
+    const totalSgst = roomSgst + foodSgst;
+    const totalTax = Math.round((totalCgst + totalSgst + addOthersGst) * 100) / 100;
+    const grandTotal = Math.round((roomGross + foodGross + addOthers + addOthersGst - discountAmount) * 100) / 100;
+
+    // Payments & Advance Deposits
+    const advancePaid = guest?.advancePaid || 0;
+    const payments = this.getFolioPayments(roomNo);
+    const additionalPaymentsTotal = payments.reduce((sum, p) => sum + p.amount, 0);
+    const totalPaid = advancePaid + additionalPaymentsTotal;
+    const balanceDue = Math.max(0, Math.round((grandTotal - totalPaid) * 100) / 100);
+
+    return {
+      roomNo,
+      roomType,
+      guestName,
+      guestPhone,
+      guestEmail,
+      idProofType: guest?.idProofType,
+      idProofNumber: guest?.idProofNumber,
+      vehicleNo: guest?.vehicleNo,
+      companyName: guest?.companyName,
+      gstin: guest?.gstin,
+      darshanSlot: guest?.darshanSlot,
+      checkInDate,
+      checkInTime,
+      checkOutDate,
+      checkOutTime,
+      nights,
+      perNightTariff: tariff,
+      baseRoomRent,
+      extraGuestsCount,
+      extraGuestsRatePerNight,
+      extraGuestsTotal,
+      roomTaxable,
+      roomGstRate,
+      roomCgst,
+      roomSgst,
+      roomTaxTotal,
+      roomGross,
+
+      foodItems,
+      foodTaxable,
+      foodGstRate,
+      foodCgst,
+      foodSgst,
+      foodTaxTotal,
+      foodGross,
+
+      addOthers,
+      addOthersGst,
+
+      totalTaxable,
+      totalCgst,
+      totalSgst,
+      totalTax,
+      grandTotal,
+
+      discount: roomDiscount ? { ...roomDiscount, amount: discountAmount } : undefined,
+      advancePaid,
+      payments,
+      totalPaid,
+      balanceDue
+    };
+  }
+
+  static extendStay(roomNo: string, newCheckOutDate: string): { success: boolean; message: string } {
+    const rooms = this.getRooms();
+    const room = rooms.find(r => r.roomNo === roomNo);
+    if (!room || !room.currentGuest) {
+      return { success: false, message: 'Room is not currently occupied.' };
+    }
+    room.currentGuest.checkOutDate = newCheckOutDate;
+    this.saveRooms(rooms);
+    this.notify();
+    return {
+      success: true,
+      message: `Stay for Room ${roomNo} successfully extended to ${newCheckOutDate}.`
+    };
+  }
+
+  static transferRoom(fromRoomNo: string, toRoomNo: string, reason: string = 'Guest Preference'): {
+    success: boolean;
+    message: string;
+  } {
+    const rooms = this.getRooms();
+    const fromRoom = rooms.find(r => r.roomNo === fromRoomNo);
+    const toRoom = rooms.find(r => r.roomNo === toRoomNo);
+
+    if (!fromRoom || !fromRoom.currentGuest) {
+      return { success: false, message: `Room ${fromRoomNo} has no active guest to transfer.` };
+    }
+    if (!toRoom || (toRoom.status !== 'vacant' && toRoom.status !== 'dirty')) {
+      return { success: false, message: `Destination Room ${toRoomNo} is not available.` };
+    }
+
+    toRoom.currentGuest = { ...fromRoom.currentGuest };
+    toRoom.status = 'occupied';
+    toRoom.foodAmount = fromRoom.foodAmount || 0;
+
+    fromRoom.currentGuest = undefined;
+    fromRoom.foodAmount = 0;
+    fromRoom.status = 'dirty';
+
+    const kots = this.getKots();
+    kots.forEach(k => {
+      if (k.roomNo === fromRoomNo) {
+        k.roomNo = toRoomNo;
+      }
+    });
+    localStorage.setItem(STORAGE_KEYS.KOTS, JSON.stringify(kots));
+
+    const payments = this.getFolioPayments();
+    payments.forEach(p => {
+      if (p.roomNo === fromRoomNo) {
+        p.roomNo = toRoomNo;
+      }
+    });
+    localStorage.setItem(STORAGE_KEYS.FOLIO_PAYMENTS, JSON.stringify(payments));
+
+    this.saveRooms(rooms);
+    this.notify();
+
+    return {
+      success: true,
+      message: `Guest ${toRoom.currentGuest?.name} successfully shifted from Room ${fromRoomNo} to ${toRoomNo}. (${reason})`
+    };
+  }
+
+  static completeCheckOut(
+    roomNo: string,
+    settlement: { paymentMode: string; reference?: string; notes?: string }
+  ): { success: boolean; invoiceNo: string; message: string } {
+    const folio = this.getFolioSummary(roomNo);
+    if (folio.balanceDue > 0 && settlement.paymentMode !== 'City Ledger') {
+      this.recordFolioPayment(roomNo, {
+        amount: folio.balanceDue,
+        paymentMode: settlement.paymentMode as any,
+        referenceNo: settlement.reference || 'FINAL-SETTLEMENT',
+        notes: settlement.notes || 'Full Settlement at Checkout'
+      });
+    }
+
+    const checkouts = this.getCheckouts();
+    const nextSeq = checkouts.length + 101;
+    const invoiceNo = `INV-2026-${String(nextSeq).padStart(4, '0')}`;
+
+    const updatedFolio = this.getFolioSummary(roomNo);
+    const checkoutRecord: PmsCheckOutDetail = {
+      invoiceNo,
+      roomNo,
+      roomType: updatedFolio.roomType,
+      guestName: updatedFolio.guestName,
+      guestPhone: updatedFolio.guestPhone,
+      checkInDate: updatedFolio.checkInDate,
+      checkInTime: updatedFolio.checkInTime,
+      checkOutDate: updatedFolio.checkOutDate,
+      checkOutTime: updatedFolio.checkOutTime,
+      calculationType: '12hour',
+      numberOfDays: updatedFolio.nights,
+      perDayTariff: updatedFolio.perNightTariff,
+      totalRoomRent: updatedFolio.baseRoomRent,
+      foodAmount: updatedFolio.foodGross,
+      gstPercent: updatedFolio.roomGstRate,
+      gstAmount: updatedFolio.totalTax,
+      cgstAmount: updatedFolio.totalCgst,
+      sgstAmount: updatedFolio.totalSgst,
+      addOthers: updatedFolio.addOthers,
+      lessDiscount: updatedFolio.discount?.amount || 0,
+      advanceDeducted: updatedFolio.advancePaid,
+      billAmount: updatedFolio.grandTotal,
+      netPayable: 0,
+      paymentMode: (['Cash', 'UPI', 'Card', 'Bank Transfer', 'Online', 'Credit'].includes(settlement.paymentMode) ? settlement.paymentMode : 'Cash') as any,
+      paidAmount: updatedFolio.grandTotal,
+      balanceAmount: 0,
+      payments: updatedFolio.payments.map(p => ({
+        mode: p.paymentMode,
+        amount: p.amount,
+        referenceNo: p.referenceNo,
+        remark: p.notes
+      })),
+      checkoutRemark: settlement.notes || 'Normal Checkout Completed',
+      city: 'Shirdi',
+      state: 'Maharashtra',
+      country: 'India',
+      pinCode: '423109',
+      sacCode: '996311',
+      invoiceFormat: 'A4_Standard'
+    };
+
+    this.saveCheckout(checkoutRecord);
+
+    // Transition room to 'dirty' (Vacant Dirty)
+    this.updateRoomStatus(roomNo, 'dirty', undefined);
+
+    // Update Housekeeping record
+    this.updateHousekeepingStatus(roomNo, 'Vacant Dirty', undefined, 'Normal', undefined);
+
+    this.notify();
+
+    return {
+      success: true,
+      invoiceNo,
+      message: `Checkout complete. Final GST Invoice ${invoiceNo} generated. Room ${roomNo} released to Vacant Dirty.`
+    };
+  }
+
+  // =========================================================================
+  // 6. Public Booking & Reservation Bridge (Cross-Module Reactivity Law)
+  // =========================================================================
+  static createGuestBooking(booking: {
+    roomId?: number | string;
+    roomType?: string;
+    roomNo?: string;
+    guestName: string;
+    guestPhone: string;
+    guestEmail?: string;
+    idProofType?: string;
+    idProofNumber?: string;
+    checkInDate: string;
+    checkOutDate: string;
+    adults?: number;
+    children?: number;
+    advancePaid?: number;
+    specialRequests?: string;
+    paymentMethod?: string;
+  }): { booking: PmsBooking; room: PmsRoom } {
+    const rooms = this.getRooms();
+    let targetRoom: PmsRoom | undefined;
+
+    if (booking.roomNo) {
+      targetRoom = rooms.find(r => r.roomNo === booking.roomNo);
+    }
+    if (!targetRoom && booking.roomType) {
+      targetRoom = rooms.find(r => r.roomType.toLowerCase().includes(booking.roomType!.toLowerCase()) && r.status === 'vacant');
+    }
+    if (!targetRoom && booking.roomId) {
+      const rId = String(booking.roomId);
+      targetRoom = rooms.find(r => r.id === rId && r.status === 'vacant');
+      if (!targetRoom) {
+        const catMap: Record<string, string> = {
+          '1': 'Executive Deluxe',
+          '2': 'Super Deluxe Family',
+          '3': 'Sai Presidential Suite'
+        };
+        const catName = catMap[rId];
+        if (catName) {
+          targetRoom = rooms.find(r => r.roomType === catName && r.status === 'vacant');
+        }
+      }
+    }
+    if (!targetRoom) {
+      targetRoom = rooms.find(r => r.status === 'vacant') || rooms[0];
+    }
+
+    const existingBookings = this.getBookings();
+    const nextSeq = existingBookings.length + 105;
+    const bookingNo = `BKG-2026-${nextSeq}`;
+    const dateStr = new Date().toISOString().split('T')[0];
+    const timeStr = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    const checkIn = new Date(booking.checkInDate);
+    const checkOut = new Date(booking.checkOutDate);
+    const nights = Math.max(1, Math.round((checkOut.getTime() - checkIn.getTime()) / (1000 * 3600 * 24)));
+    const totalTaxable = targetRoom.tariff * nights;
+    const taxRate = targetRoom.tariff > 7500 ? 0.18 : 0.12;
+    const grand = Math.round(totalTaxable * (1 + taxRate));
+
+    const newBooking: PmsBooking = {
+      bookingNo,
+      voucherNo: String(nextSeq),
+      bookingDate: dateStr,
+      bookingTime: timeStr,
+      date: dateStr,
+      time: timeStr,
+      checkInDate: booking.checkInDate,
+      checkInTime: '12:00 PM',
+      checkOutDate: booking.checkOutDate,
+      checkOutTime: '11:00 AM',
+      numberOfDays: nights,
+      numberOfGuests: (booking.adults || 2) + (booking.children || 0),
+      businessSource: (booking.paymentMethod === 'Online' || booking.paymentMethod === 'UPI') ? 'Online' : 'Walk-in',
+      package: 'ROOM ONLY || 0',
+      guestName: booking.guestName,
+      mobile: booking.guestPhone,
+      guestPhone: booking.guestPhone,
+      phone: booking.guestPhone,
+      email: booking.guestEmail,
+      guestEmail: booking.guestEmail,
+      rooms: [{
+        roomNo: targetRoom.roomNo,
+        roomType: targetRoom.roomType,
+        tariff: targetRoom.tariff
+      }],
+      roomNo: targetRoom.roomNo,
+      roomType: targetRoom.roomType,
+      tariff: targetRoom.tariff,
+      totalAmount: grand,
+      bookingAmount: booking.advancePaid || 0,
+      advancePaid: booking.advancePaid || 0,
+      paymentMode: (booking.paymentMethod === 'Cash' || booking.paymentMethod === 'Card' || booking.paymentMethod === 'UPI' || booking.paymentMethod === 'Bank Transfer') ? booking.paymentMethod : 'UPI',
+      status: 'Confirmed',
+      createdAt: new Date().toISOString(),
+      adults: booking.adults || 2,
+      children: booking.children || 0,
+      specialRequests: booking.specialRequests,
+      idProofType: booking.idProofType,
+      idProofNumber: booking.idProofNumber
+    };
+
+    this.saveBooking(newBooking);
+
+    // Lock availability on Room Rack
+    targetRoom.status = 'booked';
+    targetRoom.currentGuest = {
+      name: booking.guestName,
+      phone: booking.guestPhone,
+      email: booking.guestEmail,
+      checkInDate: booking.checkInDate,
+      checkInTime: '12:00 PM',
+      checkOutDate: booking.checkOutDate,
+      checkOutTime: '11:00 AM',
+      bookingNo,
+      advancePaid: booking.advancePaid || 0,
+      calculationType: '12hour',
+      idProofType: booking.idProofType || 'Aadhaar Card',
+      idProofNumber: booking.idProofNumber
+    };
+    this.saveRooms(rooms);
+
+    if ((booking.advancePaid || 0) > 0) {
+      this.saveAdvanceReceipt({
+        receiptNo: `AR${nextSeq}`,
+        voucherNo: String(nextSeq),
+        date: newBooking.date || dateStr,
+        time: newBooking.time || timeStr,
+        voucherName: 'Advance_Receipt',
+        roomNo: targetRoom.roomNo,
+        guestName: booking.guestName,
+        mobile: booking.guestPhone,
+        amount: booking.advancePaid!,
+        paymentMode: (booking.paymentMethod as any) || 'UPI',
+        referenceNo: `ADV-${bookingNo}`,
+        remark: 'Advance Deposit at Reservation',
+        createdAt: new Date().toISOString()
+      });
+    }
+
+    this.notify();
+    return { booking: newBooking, room: targetRoom };
+  }
+
+  static checkInBooking(bookingNo: string): { success: boolean; message: string } {
+    const bookings = this.getBookings();
+    const b = bookings.find(x => x.bookingNo === bookingNo);
+    if (!b) return { success: false, message: 'Booking not found' };
+
+    b.status = 'Confirmed';
+    this.saveBooking(b);
+
+    const rooms = this.getRooms();
+    const room = rooms.find(r => r.roomNo === (b.roomNo || b.rooms?.[0]?.roomNo));
+    if (room) {
+      room.status = 'occupied';
+      room.currentGuest = {
+        name: b.guestName,
+        phone: b.guestPhone || b.mobile || b.phone || '',
+        email: b.guestEmail || b.email,
+        checkInDate: b.checkInDate,
+        checkInTime: b.checkInTime || '12:00 PM',
+        checkOutDate: b.checkOutDate,
+        checkOutTime: b.checkOutTime || '11:00 AM',
+        bookingNo: b.bookingNo,
+        advancePaid: b.advancePaid || b.bookingAmount || 0,
+        calculationType: '12hour'
+      };
+      this.saveRooms(rooms);
+    }
+
+    this.notify();
+    return { success: true, message: `Guest ${b.guestName} successfully checked into Room ${b.roomNo || room?.roomNo || ''}.` };
   }
 
   // Room Types
@@ -9672,7 +10890,7 @@ export const INITIAL_BAR_INVOICES: PmsBarInvoice[] = [
       {
         sNo: 2,
         itemId: 'food-cb',
-        itemName: 'Chiken Biryani',
+        itemName: 'Paneer Dum Biryani',
         category: 'Food',
         qty: 5,
         rate: 90,
@@ -9870,8 +11088,12 @@ export const INITIAL_HOTEL_ASSETS: PmsHotelAssetLinenRecord[] = [
   }
 ];
 
-
-
-
-
-
+export function usePmsSync(): number {
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    return PmsStore.subscribe(() => {
+      setTick(t => t + 1);
+    });
+  }, []);
+  return tick;
+}

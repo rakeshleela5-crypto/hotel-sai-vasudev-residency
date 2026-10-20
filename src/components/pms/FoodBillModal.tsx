@@ -153,7 +153,7 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
         },
         {
           sNo: 3,
-          itemName: 'Chiken Biryani',
+          itemName: 'Paneer Dum Biryani',
           itemCode: '10018',
           qty: 1.0,
           rate: 90.0,
@@ -161,11 +161,11 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
           discountPercent: 5,
           discountAmount: 4.50,
           taxable: 85.50,
-          gstPercent: 0.0,
-          gstAmount: 0.0,
+          gstPercent: 5.0,
+          gstAmount: 4.28,
           vatPercent: 0,
           surPercent: 0,
-          value: 85.50
+          value: 89.78
         },
         {
           sNo: 4,
@@ -768,6 +768,8 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
           /* Thermal POS Food Bill Print Slip matching Frame 0370 */
           <div style={{ padding: 16 }}>
             <div
+              id="food-bill-print-slip"
+              className="printable-thermal-receipt"
               style={{
                 background: '#fff',
                 border: '1px solid #334155',
@@ -786,10 +788,10 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                   {companyInfo.firmName || 'HOTEL SAI VASUDEV RESIDENCY'}
                 </h3>
                 <p style={{ margin: '2px 0', fontSize: 10 }}>
-                  {companyInfo.address1 || 'NEAR RAILWAY STATION, MAIN ROAD, BILASPUR CHHATTISGARH 495220'}
+                  {companyInfo.address1 || 'Plot No. 14-B VIP Temple Road, Shirdi - 423109'}
                 </p>
                 <p style={{ margin: '2px 0', fontSize: 10 }}>
-                  GSTIN: {companyInfo.gstNo || '22AAAAA0000A1Z5'} &bull; SAC: 996331
+                  GSTIN: {companyInfo.gstNo || '27ABCDE1234F1Z5'} &bull; SAC: 996331
                 </p>
                 <div
                   style={{

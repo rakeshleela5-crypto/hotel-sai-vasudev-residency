@@ -68,6 +68,11 @@ export const KitchenDashboardModal: React.FC<KitchenDashboardModalProps> = ({
     };
   };
 
+  const handleStartPrep = (kotNo: string) => {
+    PmsStore.updateKotStatus(kotNo, 'Cooking');
+    refreshKots();
+  };
+
   const handleReadyToServe = (kotNo: string) => {
     PmsStore.updateKotStatus(kotNo, 'Ready To Serve');
     refreshKots();
@@ -521,55 +526,112 @@ export const KitchenDashboardModal: React.FC<KitchenDashboardModalProps> = ({
                       </table>
                     </div>
 
-                    {/* Action Buttons matching Video 12 Frame 0225:
-                        [Ready To Serve] (Green) & [Serve & Print] (Yellow) */}
+                    {/* Action Buttons: Start Prep -> Mark Food Ready -> Served */}
                     <div
                       style={{
                         display: 'grid',
-                        gridTemplateColumns: '1fr 1fr',
+                        gridTemplateColumns: kot.status === 'Ready To Serve' || kot.status === 'Served' ? '1fr' : '1fr 1fr',
                         gap: 6,
                         padding: '8px 10px',
                         background: '#f8fafc',
                         borderTop: '1px solid #e2e8f0'
                       }}
                     >
-                      <button
-                        type="button"
-                        onClick={() => handleReadyToServe(kot.kotNo)}
-                        disabled={kot.status === 'Ready To Serve' || kot.status === 'Served'}
-                        style={{
-                          background: kot.status === 'Ready To Serve' ? '#15803d' : '#16a34a',
-                          color: '#ffffff',
-                          border: 'none',
-                          padding: '7px 4px',
-                          borderRadius: 4,
-                          fontWeight: 800,
-                          fontSize: 11,
-                          cursor: (kot.status === 'Ready To Serve' || kot.status === 'Served') ? 'default' : 'pointer',
-                          opacity: kot.status === 'Served' ? 0.6 : 1,
-                          textAlign: 'center'
-                        }}
-                      >
-                        {kot.status === 'Ready To Serve' ? '✓ Ready' : 'Ready To Serve'}
-                      </button>
+                      {kot.status === 'Pending' && (
+                        <button
+                          type="button"
+                          onClick={() => handleStartPrep(kot.kotNo)}
+                          style={{
+                            background: '#0284c7',
+                            color: '#ffffff',
+                            border: 'none',
+                            padding: '7px 4px',
+                            borderRadius: 4,
+                            fontWeight: 800,
+                            fontSize: 11,
+                            cursor: 'pointer',
+                            textAlign: 'center'
+                          }}
+                        >
+                          👨‍🍳 Start Prep
+                        </button>
+                      )}
 
-                      <button
-                        type="button"
-                        onClick={() => handleServeAndPrint(kot)}
-                        style={{
-                          background: '#eab308',
-                          color: '#0f172a',
-                          border: 'none',
-                          padding: '7px 4px',
-                          borderRadius: 4,
-                          fontWeight: 800,
-                          fontSize: 11,
-                          cursor: 'pointer',
-                          textAlign: 'center'
-                        }}
-                      >
-                        Serve &amp; Print
-                      </button>
+                      {kot.status === 'Cooking' && (
+                        <div
+                          style={{
+                            background: '#e0f2fe',
+                            color: '#0369a1',
+                            padding: '6px 4px',
+                            borderRadius: 4,
+                            fontWeight: 800,
+                            fontSize: 10,
+                            textAlign: 'center',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          🔥 Prep in Progress
+                        </div>
+                      )}
+
+                      {(kot.status === 'Pending' || kot.status === 'Cooking') && (
+                        <button
+                          type="button"
+                          onClick={() => handleReadyToServe(kot.kotNo)}
+                          style={{
+                            background: '#16a34a',
+                            color: '#ffffff',
+                            border: 'none',
+                            padding: '7px 4px',
+                            borderRadius: 4,
+                            fontWeight: 800,
+                            fontSize: 11,
+                            cursor: 'pointer',
+                            textAlign: 'center'
+                          }}
+                        >
+                          ✓ Mark Food Ready
+                        </button>
+                      )}
+
+                      {kot.status === 'Ready To Serve' && (
+                        <button
+                          type="button"
+                          onClick={() => handleServeAndPrint(kot)}
+                          style={{
+                            background: '#eab308',
+                            color: '#0f172a',
+                            border: 'none',
+                            padding: '8px 4px',
+                            borderRadius: 4,
+                            fontWeight: 900,
+                            fontSize: 12,
+                            cursor: 'pointer',
+                            textAlign: 'center',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
+                          }}
+                        >
+                          🍽️ Food Ready &bull; Click to Mark Served &amp; Print
+                        </button>
+                      )}
+
+                      {kot.status === 'Served' && (
+                        <div
+                          style={{
+                            background: '#f1f5f9',
+                            color: '#64748b',
+                            padding: '6px 4px',
+                            borderRadius: 4,
+                            fontWeight: 800,
+                            fontSize: 11,
+                            textAlign: 'center'
+                          }}
+                        >
+                          ✓ Order Served &amp; Fulfilled
+                        </div>
+                      )}
                     </div>
                   </div>
                 );

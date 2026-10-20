@@ -693,3 +693,143 @@
   background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
 }
 
+/* ========================================================================= */
+/* MODULE 8: DEDICATED PRINT ENGINE (@media print)                           */
+/* ========================================================================= */
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
+  }
+
+  /* Reset body and background */
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    width: 100% !important;
+  }
+
+  /* Hide all ERP navigation, sidebars, buttons, headers, search bars, toolbars, and background site sections */
+  .site-header,
+  .main-nav,
+  .top-banner,
+  .erp-mode-switcher-bar,
+  .pms-header,
+  .pms-sidebar,
+  .pms-sidebar-footer,
+  .pms-nav-item,
+  .pms-header-search,
+  .pms-close-btn,
+  .pms-search-btn,
+  .pms-action-drawer,
+  .pms-action-drawer-overlay,
+  .room-filter-tabs,
+  .mobile-toggle,
+  .nav-actions,
+  button,
+  .btn,
+  .no-print,
+  .hero-section,
+  .rooms-section,
+  .amenities-section,
+  .dining-section,
+  .location-section,
+  .testimonials-section,
+  .contact-section,
+  .site-footer {
+    display: none !important;
+  }
+
+  /* Overlay resets so only the active printable card/modal is rendered */
+  .pms-overlay,
+  .pms-submodal-overlay {
+    position: static !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    box-shadow: none !important;
+  }
+
+  .pms-window,
+  .pms-form-box {
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  .pms-body {
+    display: block !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* 1. Isolated A4 GST Tax Invoice View */
+  #printable-hotel-bill,
+  .printable-a4-invoice {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    page-break-inside: avoid !important;
+  }
+
+  #printable-hotel-bill > div,
+  .printable-a4-invoice > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* 2. Isolated 80mm Thermal KOT & POS Receipt */
+  #kot-print-area,
+  #food-bill-print-slip,
+  .printable-thermal-receipt {
+    display: block !important;
+    position: static !important;
+    width: 80mm !important;
+    max-width: 80mm !important;
+    margin: 0 auto !important;
+    padding: 2mm !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border: 1px dashed #000000 !important;
+    page-break-inside: avoid !important;
+    font-family: 'Courier New', Courier, monospace !important;
+  }
+
+  /* Force borders and tables to print clearly */
+  table {
+    border-collapse: collapse !important;
+  }
+
+  th, td {
+    color: #000000 !important;
+  }
+}
+
+

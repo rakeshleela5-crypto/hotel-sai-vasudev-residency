@@ -28,6 +28,11 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [idProofType, setIdProofType] = useState('Aadhaar Card');
+  const [idProofNumber, setIdProofNumber] = useState('');
+  const [vehicleNumber, setVehicleNumber] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [gstin, setGstin] = useState('');
+  const [advanceDeposit, setAdvanceDeposit] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState('Pay at Hotel');
   const [specialRequests, setSpecialRequests] = useState('');
   
@@ -127,12 +132,15 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   const roomPrice = selectedRoom?.price_per_night || 2499;
   const standardCapacity = selectedRoom?.capacity || 2;
   const extraAdults = Math.max(0, adults - standardCapacity);
-  const extraCharge = availData?.extra_guest_charge ?? (extraAdults * 500 * totalNights);
+  const isSuite = selectedRoom?.room_type?.toLowerCase().includes('suite') || (selectedRoom?.price_per_night || 0) > 5000;
+  const extraBedRatePerNight = isSuite ? 800 : 500;
+  const extraCharge = availData?.extra_guest_charge ?? (extraAdults * extraBedRatePerNight * totalNights);
   const subtotal = availData?.base_subtotal ?? (roomPrice * totalNights);
   const taxableAmount = subtotal + extraCharge;
   const gstRate = availData?.gst_rate ?? (roomPrice > 7500 ? 18 : 12);
   const taxes = availData?.total_tax ?? Math.round(taxableAmount * (gstRate / 100));
   const grandTotal = availData?.grand_total ?? (taxableAmount + taxes);
+  const netDue = Math.max(0, grandTotal - advanceDeposit);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,6 +176,11 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         guest_email: guestEmail.trim(),
         guest_phone: phoneVal.sanitized,
         id_proof_type: idProofType,
+        id_proof_number: idProofNumber.trim() || undefined,
+        vehicle_number: vehicleNumber.trim() || undefined,
+        company_name: companyName.trim() || undefined,
+        gstin: gstin.trim() || undefined,
+        advance_paid: advanceDeposit > 0 ? advanceDeposit : undefined,
         check_in_date: checkIn,
         check_out_date: checkOut,
         adults,
@@ -378,12 +391,74 @@ Please share availability and direct booking assistance.`
                     value={idProofType}
                     onChange={(e) => setIdProofType(e.target.value)}
                   >
-                    <option value="Aadhaar Card">Aadhaar Card</option>
-                    <option value="Passport">Passport</option>
+                    <option value="Aadhaar Card">Aadhaar Card (UIDAI)</option>
+                    <option value="Passport">Passport (Indian / International)</option>
                     <option value="Driving License">Driving License</option>
-                    <option value="Voter ID">Voter ID</option>
+                    <option value="Voter ID">Voter ID Card</option>
                   </select>
                 </div>
+                <div className="form-group">
+                  <label htmlFor="modal-id-number">ID Proof Number</label>
+                  <input
+                    id="modal-id-number"
+                    type="text"
+                    placeholder="e.g. 7654 8923 1234"
+                    value={idProofNumber}
+                    onChange={(e) => setIdProofNumber(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="form-row-2">
+                <div className="form-group">
+                  <label htmlFor="modal-vehicle">Vehicle Number (Free Parking Log)</label>
+                  <input
+                    id="modal-vehicle"
+                    type="text"
+                    placeholder="e.g. MH 17 AB 1234"
+                    value={vehicleNumber}
+                    onChange={(e) => setVehicleNumber(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="modal-advance">Advance Deposit Amount (₹)</label>
+                  <input
+                    id="modal-advance"
+                    type="number"
+                    min="0"
+                    placeholder="e.g. 1000"
+                    value={advanceDeposit || ''}
+                    onChange={(e) => setAdvanceDeposit(Math.max(0, Number(e.target.value)))}
+                  />
+                </div>
+              </div>
+
+              {/* B2B GST Fields (Optional) */}
+              <div className="form-row-2">
+                <div className="form-group">
+                  <label htmlFor="modal-company">Company / Firm Name (Optional)</label>
+                  <input
+                    id="modal-company"
+                    type="text"
+                    placeholder="For corporate GST invoice"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="modal-gstin">15-Digit GSTIN (Optional)</label>
+                  <input
+                    id="modal-gstin"
+                    type="text"
+                    maxLength={15}
+                    placeholder="e.g. 27ABCDE1234F1Z5"
+                    value={gstin}
+                    onChange={(e) => setGstin(e.target.value.toUpperCase())}
+                  />
+                </div>
+              </div>
+
+              <div className="form-row-2">
                 <div className="form-group">
                   <label htmlFor="modal-payment-mode">Payment Option</label>
                   <select
@@ -394,6 +469,25 @@ Please share availability and direct booking assistance.`
                     <option value="Pay at Hotel">Pay at Hotel (Cash / UPI / Card)</option>
                     <option value="UPI QR Code">Instant UPI Transfer / QR</option>
                     <option value="Credit/Debit Card">Online Card Payment</option>
+                    <option value="Net Banking">Net Banking</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="modal-darshan-slot">Pilgrim Darshan Time Slot</label>
+                  <select
+                    id="modal-darshan-slot"
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setSpecialRequests(prev => prev ? `${prev} | Darshan Slot: ${e.target.value}` : `Darshan Slot: ${e.target.value}`);
+                      }
+                    }}
+                  >
+                    <option value="">Select Darshan Timing (Optional)</option>
+                    <option value="Kakad Aarti (4:30 AM)">Kakad Aarti (4:30 AM)</option>
+                    <option value="Madhyan Aarti (12:00 PM)">Madhyan Aarti (12:00 PM)</option>
+                    <option value="Dhoop Aarti (Sunset 6:30 PM)">Dhoop Aarti (Sunset 6:30 PM)</option>
+                    <option value="Shej Aarti (10:30 PM)">Shej Aarti (10:30 PM)</option>
+                    <option value="Regular Darshan (General Queue)">Regular Darshan (General Queue)</option>
                   </select>
                 </div>
               </div>
@@ -430,6 +524,18 @@ Please share availability and direct booking assistance.`
                   <span>Total Authoritative Payable</span>
                   <span className="total-gold">₹{grandTotal.toLocaleString('en-IN')}</span>
                 </div>
+                {advanceDeposit > 0 && (
+                  <>
+                    <div className="breakdown-line" style={{ color: '#16a34a' }}>
+                      <span>Advance Deposit Paid Now</span>
+                      <span>-₹{advanceDeposit.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="breakdown-line" style={{ fontWeight: 800 }}>
+                      <span>Net Balance Due at Check-In</span>
+                      <span style={{ color: '#dc2626' }}>₹{netDue.toLocaleString('en-IN')}</span>
+                    </div>
+                  </>
+                )}
                 <div className="payment-terms-note">
                   🔒 Verified reservation with atomic inventory lock. Free cancellation up to 24h prior to arrival.
                 </div>

@@ -65,6 +65,12 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
   const [savedKotRecord, setSavedKotRecord] = useState<PmsKotRecord | null>(null);
   const [isMobileMode, setIsMobileMode] = useState<boolean>(false);
 
+  // Pure-Veg Dietary Modifiers
+  const [isJain, setIsJain] = useState<boolean>(false);
+  const [lessSpicy, setLessSpicy] = useState<boolean>(false);
+  const [noGhee, setNoGhee] = useState<boolean>(false);
+  const [chefInstructions, setChefInstructions] = useState<string>('');
+
   const handleItemSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = e.target.value;
     setSelectedItemId(id);
@@ -89,22 +95,38 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
   };
 
   const handleAddItem = () => {
-    const found = INITIAL_MENU_ITEMS.find(m => m.id === selectedItemId);
+    const found = menuItems.find(m => m.id === selectedItemId) || INITIAL_MENU_ITEMS.find(m => m.id === selectedItemId);
     const itemName = found?.name || 'Item';
     const itemCode = found?.code || '10001';
 
+    const tags: string[] = [];
+    if (isJain) tags.push('Jain');
+    if (lessSpicy) tags.push('Less Spicy');
+    if (noGhee) tags.push('No Ghee');
+    if (chefInstructions.trim()) tags.push(chefInstructions.trim());
+
+    const displayName = tags.length > 0 ? `${itemName} [${tags.join(', ')}]` : itemName;
+
     const newItem: KotItem = {
       sNo: kotItems.length + 1,
-      itemName,
+      itemName: displayName,
       itemCode,
       qty: itemQty,
       rate: itemRate,
-      amount: itemAmount
+      amount: itemAmount,
+      isJain,
+      lessSpicy,
+      noGhee,
+      instructions: chefInstructions.trim() || undefined
     };
 
     setKotItems([...kotItems, newItem]);
     setItemQty(1);
     setItemAmount(itemRate);
+    setIsJain(false);
+    setLessSpicy(false);
+    setNoGhee(false);
+    setChefInstructions('');
   };
 
   const handleDeleteItem = (index: number) => {
@@ -418,6 +440,43 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
                 >
                   +
                 </button>
+              </div>
+
+              {/* Dietary Modifiers on Every Item */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 16,
+                padding: '6px 12px',
+                background: '#f1f5f9',
+                borderRadius: 4,
+                marginBottom: 12,
+                flexWrap: 'wrap',
+                fontSize: 12
+              }}>
+                <span style={{ fontWeight: 800, color: '#0369a1', fontSize: 11, textTransform: 'uppercase' }}>
+                  Pure-Veg Modifiers:
+                </span>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontWeight: 700, color: '#15803d', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={isJain} onChange={e => setIsJain(e.target.checked)} />
+                  <span>🌿 Jain Prep (No Onion/Garlic)</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontWeight: 700, color: '#b91c1c', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={lessSpicy} onChange={e => setLessSpicy(e.target.checked)} />
+                  <span>🌶️ Less Spicy</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontWeight: 700, color: '#b45309', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={noGhee} onChange={e => setNoGhee(e.target.checked)} />
+                  <span>🧈 No Ghee</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Special instructions for kitchen (e.g. extra crisp, serve hot)"
+                  value={chefInstructions}
+                  onChange={e => setChefInstructions(e.target.value)}
+                  className="form-input-pms"
+                  style={{ flex: 1, minWidth: 200, fontSize: 11, height: 26, padding: '2px 8px' }}
+                />
               </div>
 
               {/* Items Table matching Frame 0150 */}

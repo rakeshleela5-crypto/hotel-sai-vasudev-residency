@@ -1,12 +1,32 @@
 import React, { useState, useEffect } from 'react';
 
-interface NavbarProps {
+export interface NavbarProps {
+  portalMode?: 'public' | 'erp';
+  onModeChange?: (mode: 'public' | 'erp') => void;
+  activeRole?: 'admin' | 'reception' | 'steward' | 'housekeeping';
+  onRoleChange?: (role: 'admin' | 'reception' | 'steward' | 'housekeeping') => void;
+  onOpenRoleView?: (role: 'admin' | 'reception' | 'steward' | 'housekeeping') => void;
   onOpenBooking: (roomType?: string) => void;
   onOpenPms?: () => void;
   onOpenGuestEngine?: () => void;
+  onOpenHousekeeping?: () => void;
+  onOpenPettyCash?: () => void;
+  onOpenPos?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenPms, onOpenGuestEngine }) => {
+export const Navbar: React.FC<NavbarProps> = ({
+  portalMode = 'public',
+  onModeChange,
+  activeRole = 'admin',
+  onRoleChange,
+  onOpenRoleView,
+  onOpenBooking,
+  onOpenPms,
+  onOpenGuestEngine,
+  onOpenHousekeeping,
+  onOpenPettyCash,
+  onOpenPos
+}) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -30,100 +50,371 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenPms, onOpen
   }, [mobileMenuOpen]);
 
   const whatsappDirectUrl = `https://wa.me/919440289999?text=${encodeURIComponent(
-    'Namaste Hotel Sai Vasudev Residency! I would like assistance with room booking and darshan information.'
+    'Namaste Hotel Sai Vasudev Residency! I would like assistance with room booking, darshan information, and tariff details.'
   )}`;
 
+  // Precise smooth scrolling with dynamic navbar offset compensation
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    setMobileMenuOpen(false);
+    const element = document.getElementById(id);
+    if (element) {
+      const navOffset = 100;
+      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+      window.scrollTo({
+        top: Math.max(0, elementPosition - navOffset),
+        behavior: 'smooth'
+      });
+      try {
+        window.history.replaceState(null, '', `#${id}`);
+      } catch {
+        // Safe fallback
+      }
+    }
+  };
+
   return (
-    <header className="site-header">
-      {/* Top Announcement Bar */}
-      <div className="top-banner">
-        <div className="container top-banner-content">
-          <div className="banner-left">
-            <span>✨ Best Rate Guarantee for Direct Bookings</span>
-            <span className="banner-divider">•</span>
-            <span>📍 2-Minute Walk to Sacred Temple &amp; Main Shrine</span>
+    <header className="site-header" style={{ position: 'sticky', top: 0, zIndex: 1000, boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
+      {/* ========================================================================= */}
+      {/* 1. PROMINENT STICKY PUBLIC-TO-ERP MODE SWITCHER & STAFF ROLE SWITCHER BAR */}
+      {/* ========================================================================= */}
+      <div 
+        className="erp-mode-switcher-bar"
+        style={{
+          background: portalMode === 'erp' 
+            ? 'linear-gradient(90deg, #091220 0%, #0f1e36 50%, #07111f 100%)' 
+            : 'linear-gradient(90deg, #0b1324 0%, #111d33 50%, #0d1627 100%)',
+          borderBottom: portalMode === 'erp' ? '2px solid #38bdf8' : '1px solid #1e293b',
+          color: '#f8fafc',
+          padding: '6px 0',
+          fontSize: '12px'
+        }}
+      >
+        <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+          {/* Left: Interactive Mode Toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Portal View:
+            </span>
+            <div 
+              style={{
+                display: 'inline-flex',
+                background: '#0a0f1d',
+                borderRadius: '6px',
+                padding: '2px',
+                border: '1px solid #1e2e4a'
+              }}
+              role="radiogroup"
+              aria-label="Portal Mode"
+            >
+              <button
+                type="button"
+                id="mode-toggle-public"
+                onClick={() => onModeChange && onModeChange('public')}
+                style={{
+                  background: portalMode === 'public' ? 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)' : 'transparent',
+                  color: portalMode === 'public' ? '#ffffff' : '#94a3b8',
+                  border: 'none',
+                  padding: '5px 12px',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s ease',
+                  boxShadow: portalMode === 'public' ? '0 1px 4px rgba(2,132,199,0.4)' : 'none'
+                }}
+              >
+                <span>🏨</span>
+                <span>Public Guest Website</span>
+              </button>
+
+              <button
+                type="button"
+                id="mode-toggle-erp"
+                onClick={() => onModeChange && onModeChange('erp')}
+                style={{
+                  background: portalMode === 'erp' ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' : 'transparent',
+                  color: portalMode === 'erp' ? '#0f172a' : '#cbd5e1',
+                  border: 'none',
+                  padding: '5px 12px',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  fontWeight: 900,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s ease',
+                  boxShadow: portalMode === 'erp' ? '0 1px 6px rgba(245,158,11,0.5)' : 'none'
+                }}
+              >
+                <span>🔑</span>
+                <span>Staff ERP / PMS Portal</span>
+              </button>
+            </div>
           </div>
-          <div className="banner-right">
-            <button 
-              type="button" 
-              onClick={onOpenGuestEngine}
-              title="Open Online Guest Web Booking Engine"
-              style={{
-                background: '#0284c7',
-                color: '#ffffff',
-                border: 'none',
-                padding: '4px 10px',
-                borderRadius: '4px',
-                fontSize: '11px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-            >
-              🌐 Online Booking Engine
-            </button>
-            <span className="banner-divider">•</span>
-            <button 
-              type="button" 
-              onClick={onOpenPms}
-              title="Receptionist Cloud PMS"
-              style={{
-                background: '#ca8a04',
-                color: '#ffffff',
-                border: 'none',
-                padding: '4px 10px',
-                borderRadius: '4px',
-                fontSize: '11px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-            >
-              🔑 Receptionist PMS
-            </button>
-            <span className="banner-divider">•</span>
-            <a href="tel:+919440289999" className="banner-contact" aria-label="Call Front Desk">
-              📞 +91 94402 89999
-            </a>
-            <span className="banner-divider">•</span>
-            <a 
-              href={whatsappDirectUrl} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="banner-whatsapp"
-              aria-label="Chat on WhatsApp"
-            >
-              💬 WhatsApp Assistance
-            </a>
+
+          {/* Right: Role Switcher & Contextual Quick Action Buttons */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            {portalMode === 'erp' ? (
+              <>
+                {/* Staff Role Switcher */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#fbbf24' }}>Staff Role:</span>
+                  <select
+                    id="staff-role-switcher"
+                    value={activeRole}
+                    onChange={(e) => onRoleChange && onRoleChange(e.target.value as any)}
+                    style={{
+                      background: '#1e293b',
+                      color: '#f8fafc',
+                      border: '1px solid #38bdf8',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      cursor: 'pointer'
+                    }}
+                    title="Select Staff Login Persona"
+                  >
+                    <option value="admin">👑 Admin / General Manager</option>
+                    <option value="reception">🛎️ Front Desk Receptionist</option>
+                    <option value="steward">🍽️ Vasudev Rasoi POS Steward</option>
+                    <option value="housekeeping">🧹 Housekeeping Staff</option>
+                  </select>
+                </div>
+
+                {/* Direct Role Action Launchers */}
+                <button
+                  type="button"
+                  id="erp-quick-rack-btn"
+                  onClick={() => onOpenRoleView ? onOpenRoleView('reception') : (onOpenPms && onOpenPms())}
+                  style={{
+                    background: '#0284c7',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '4px 9px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                  title="Open 16-Room Visual Rack"
+                >
+                  <span>🏢</span>
+                  <span>Room Rack</span>
+                </button>
+
+                <button
+                  type="button"
+                  id="erp-quick-pos-btn"
+                  onClick={() => onOpenPos ? onOpenPos() : (onOpenRoleView ? onOpenRoleView('steward') : (onOpenPms && onOpenPms()))}
+                  style={{
+                    background: '#15803d',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '4px 9px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                  title="Open Vasudev Rasoi POS / Table Map"
+                >
+                  <span>🍽️</span>
+                  <span>Rasoi POS</span>
+                </button>
+
+                <button
+                  type="button"
+                  id="erp-quick-hk-btn"
+                  onClick={() => onOpenHousekeeping ? onOpenHousekeeping() : (onOpenRoleView ? onOpenRoleView('housekeeping') : (onOpenPms && onOpenPms()))}
+                  style={{
+                    background: '#7c3aed',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '4px 9px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                  title="Open 16-Room Housekeeping Kanban Board"
+                >
+                  <span>🧹</span>
+                  <span>Housekeeping</span>
+                </button>
+
+                <button
+                  type="button"
+                  id="erp-quick-cash-btn"
+                  onClick={() => onOpenPettyCash ? onOpenPettyCash() : (onOpenPms && onOpenPms())}
+                  style={{
+                    background: '#ca8a04',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '4px 9px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                  title="Open Petty Cash & Night Audit Ledger"
+                >
+                  <span>💰</span>
+                  <span>Night Audit</span>
+                </button>
+
+                <button
+                  type="button"
+                  id="erp-launch-full-btn"
+                  onClick={onOpenPms}
+                  style={{
+                    background: '#ea580c',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '4px 10px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                  title="Open Full Enterprise PMS Terminal"
+                >
+                  <span>⚡</span>
+                  <span>Launch PMS Terminal</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <button 
+                  type="button" 
+                  id="nav-online-booking-engine-btn"
+                  onClick={onOpenGuestEngine}
+                  title="Open Online Guest Web Booking Engine"
+                  style={{
+                    background: '#0284c7',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '4px 10px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  🌐 Online Booking Engine
+                </button>
+
+                <span style={{ color: '#475569' }}>•</span>
+
+                <button 
+                  type="button" 
+                  id="nav-receptionist-pms-btn"
+                  onClick={onOpenPms}
+                  title="Receptionist Cloud PMS"
+                  style={{
+                    background: '#ca8a04',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '4px 10px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  🔑 Receptionist PMS
+                </button>
+
+                <span style={{ color: '#475569' }}>•</span>
+
+                <a href="tel:+919440289999" className="banner-contact" aria-label="Call Front Desk" style={{ color: '#38bdf8', textDecoration: 'none', fontWeight: 700, fontSize: '11px' }}>
+                  📞 +91 94402 89999
+                </a>
+
+                <span style={{ color: '#475569' }}>•</span>
+
+                <a 
+                  href={whatsappDirectUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="banner-whatsapp"
+                  aria-label="Chat on WhatsApp"
+                  style={{ color: '#4ade80', textDecoration: 'none', fontWeight: 700, fontSize: '11px' }}
+                >
+                  💬 WhatsApp
+                </a>
+              </>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Main Navbar */}
+      {/* ========================================================================= */}
+      {/* 2. MAIN BRAND NAVIGATION BAR WITH SMOOTH SCROLL ANCHORS & DIRECT BOOKING */}
+      {/* ========================================================================= */}
       <nav className={`main-nav ${isScrolled ? 'scrolled' : ''}`} aria-label="Main Navigation">
         <div className="container nav-container">
-          <a href="#overview" className="brand-logo" aria-label="Hotel Sai Vasudev Residency Homepage">
+          <a 
+            href="#overview" 
+            className="brand-logo" 
+            aria-label="Hotel Sai Vasudev Residency Homepage"
+            onClick={(e) => scrollToSection(e, 'overview')}
+          >
             <div className="logo-emblem">
               <span className="emblem-text">SVR</span>
             </div>
             <div className="brand-text-block">
               <span className="brand-title">SAI VASUDEV</span>
-              <span className="brand-subtitle">RESIDENCY &bull; BOUTIQUE HOTEL</span>
+              <span className="brand-subtitle">RESIDENCY &bull; BOUTIQUE HOTEL &bull; SHIRDI</span>
             </div>
           </a>
 
-          {/* Desktop Nav Items */}
+          {/* Desktop Nav Items with Guaranteed Smooth Scrolling */}
           <ul className="nav-links">
-            <li><a href="#overview">Overview</a></li>
-            <li><a href="#rooms">Rooms &amp; Rates</a></li>
-            <li><a href="#amenities">Amenities</a></li>
-            <li><a href="#dining">Dining</a></li>
-            <li><a href="#location">Pilgrimage &amp; Map</a></li>
-            <li><a href="#contact">Contact</a></li>
+            <li>
+              <a href="#overview" onClick={(e) => scrollToSection(e, 'overview')}>Overview</a>
+            </li>
+            <li>
+              <a href="#rooms" onClick={(e) => scrollToSection(e, 'rooms')}>Rooms &amp; Rates</a>
+            </li>
+            <li>
+              <a href="#amenities" onClick={(e) => scrollToSection(e, 'amenities')}>Amenities</a>
+            </li>
+            <li>
+              <a href="#dining" onClick={(e) => scrollToSection(e, 'dining')}>Dining</a>
+            </li>
+            <li>
+              <a href="#location" onClick={(e) => scrollToSection(e, 'location')}>Pilgrimage &amp; Map</a>
+            </li>
+            <li>
+              <a href="#contact" onClick={(e) => scrollToSection(e, 'contact')}>Contact</a>
+            </li>
           </ul>
 
           {/* Action Button */}
@@ -131,9 +422,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenPms, onOpen
             <button 
               id="nav-book-now-btn" 
               className="btn btn-primary nav-book-btn"
-              onClick={() => (onOpenGuestEngine ? onOpenGuestEngine() : onOpenBooking())}
+              onClick={() => onOpenBooking()}
               aria-label="Book your stay"
-              style={{ minHeight: '44px' }}
+              style={{ minHeight: '44px', fontWeight: 800 }}
             >
               <span>Book Your Stay</span>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -162,24 +453,90 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenPms, onOpen
         {/* Mobile Dropdown */}
         {mobileMenuOpen && (
           <div className="mobile-menu-drawer" role="dialog" aria-modal="true" aria-label="Mobile Navigation Menu">
+            <div style={{ padding: '10px 16px', background: '#0f172a', borderBottom: '1px solid #334155', display: 'flex', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  onModeChange && onModeChange('public');
+                  setMobileMenuOpen(false);
+                }}
+                style={{
+                  flex: 1,
+                  padding: '8px',
+                  background: portalMode === 'public' ? '#0284c7' : '#1e293b',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  fontWeight: 800
+                }}
+              >
+                🏨 Public Website
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onModeChange && onModeChange('erp');
+                  setMobileMenuOpen(false);
+                  if (onOpenPms) onOpenPms();
+                }}
+                style={{
+                  flex: 1,
+                  padding: '8px',
+                  background: portalMode === 'erp' ? '#f59e0b' : '#1e293b',
+                  color: portalMode === 'erp' ? '#0f172a' : '#cbd5e1',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  fontWeight: 900
+                }}
+              >
+                🔑 Staff ERP
+              </button>
+            </div>
+
             <ul className="mobile-links">
-              <li><a href="#overview" onClick={() => setMobileMenuOpen(false)}>Overview</a></li>
-              <li><a href="#rooms" onClick={() => setMobileMenuOpen(false)}>Rooms &amp; Rates</a></li>
-              <li><a href="#amenities" onClick={() => setMobileMenuOpen(false)}>Amenities</a></li>
-              <li><a href="#dining" onClick={() => setMobileMenuOpen(false)}>Dining</a></li>
-              <li><a href="#location" onClick={() => setMobileMenuOpen(false)}>Pilgrimage &amp; Map</a></li>
-              <li><a href="#contact" onClick={() => setMobileMenuOpen(false)}>Contact</a></li>
+              <li><a href="#overview" onClick={(e) => scrollToSection(e, 'overview')}>Overview</a></li>
+              <li><a href="#rooms" onClick={(e) => scrollToSection(e, 'rooms')}>Rooms &amp; Rates</a></li>
+              <li><a href="#amenities" onClick={(e) => scrollToSection(e, 'amenities')}>Amenities</a></li>
+              <li><a href="#dining" onClick={(e) => scrollToSection(e, 'dining')}>Dining</a></li>
+              <li><a href="#location" onClick={(e) => scrollToSection(e, 'location')}>Pilgrimage &amp; Map</a></li>
+              <li><a href="#contact" onClick={(e) => scrollToSection(e, 'contact')}>Contact</a></li>
+              
+              <li style={{ padding: '8px 16px', borderTop: '1px solid #334155' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      if (onOpenHousekeeping) onOpenHousekeeping();
+                      else if (onOpenPms) onOpenPms();
+                    }}
+                    style={{ padding: '8px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 700 }}
+                  >
+                    🧹 Housekeeping
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      if (onOpenPettyCash) onOpenPettyCash();
+                      else if (onOpenPms) onOpenPms();
+                    }}
+                    style={{ padding: '8px', background: '#ca8a04', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 700 }}
+                  >
+                    💰 Night Audit
+                  </button>
+                </div>
+              </li>
+
               <li className="mobile-cta-item">
                 <button 
                   className="btn btn-primary"
-                  style={{ width: '100%', minHeight: '44px' }}
+                  style={{ width: '100%', minHeight: '44px', fontWeight: 800 }}
                   onClick={() => {
                     setMobileMenuOpen(false);
-                    if (onOpenGuestEngine) {
-                      onOpenGuestEngine();
-                    } else {
-                      onOpenBooking();
-                    }
+                    onOpenBooking();
                   }}
                 >
                   Book Your Stay Now

@@ -55,6 +55,8 @@ import { NoDiscountMasterModal } from './NoDiscountMasterModal';
 import { BanquetHallBillingModal } from './BanquetHallBillingModal';
 import { NewRoomBookingModal } from './NewRoomBookingModal';
 import { RoomCheckOutModal } from './RoomCheckOutModal';
+import { HousekeepingTrackerModal } from './HousekeepingTrackerModal';
+import { PettyExpenseModal } from './PettyExpenseModal';
 import type { PmsUserAccount, PmsChainProperty, BillFormatType, PmsCheckOutDetail, PmsGstReportTab, PmsRoom } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import './pmsStyles.css';
@@ -85,6 +87,8 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   // Calendar & Unconfirmed Bookings Modals
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isUnconfirmedOpen, setIsUnconfirmedOpen] = useState(false);
+  const [isHousekeepingOpen, setIsHousekeepingOpen] = useState(false);
+  const [isPettyExpenseOpen, setIsPettyExpenseOpen] = useState(false);
   const [isFbbReportOpen, setIsFbbReportOpen] = useState(false);
   const [isKotModalOpen, setIsKotModalOpen] = useState(false);
   const [selectedKotTable, setSelectedKotTable] = useState<string | undefined>(undefined);
@@ -542,6 +546,10 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       setIsStoreWiseStockOpen(true);
     } else if (query.includes('table')) {
       setIsTableDashboardOpen(true);
+    } else if (query.includes('housekeep') || query.includes('clean') || query.includes('dirty') || query.includes('maid')) {
+      setIsHousekeepingOpen(true);
+    } else if (query.includes('petty') || query.includes('expense') || query.includes('night audit') || query.includes('cash in hand')) {
+      setIsPettyExpenseOpen(true);
     } else if (query.includes('calendar')) {
       setIsCalendarOpen(true);
     } else {
@@ -654,6 +662,54 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               >
                 <span>📅</span>
                 <span>Calendar</span>
+              </button>
+
+              {/* 16-Room Live Housekeeping Tracker */}
+              <button
+                type="button"
+                onClick={() => setIsHousekeepingOpen(true)}
+                title="Click to view 16-Room Live Housekeeping & Maintenance Kanban Board"
+                style={{
+                  background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '3px 10px',
+                  borderRadius: 3,
+                  fontSize: 11,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                }}
+              >
+                <span>🧹</span>
+                <span>Housekeeping</span>
+              </button>
+
+              {/* Petty Cash & Daily Night Audit Ledger */}
+              <button
+                type="button"
+                onClick={() => setIsPettyExpenseOpen(true)}
+                title="Click to view Petty Cash float & Run 1-Click Night Audit"
+                style={{
+                  background: 'linear-gradient(135deg, #ca8a04 0%, #a16207 100%)',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '3px 10px',
+                  borderRadius: 3,
+                  fontSize: 11,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                }}
+              >
+                <span>💰</span>
+                <span>Petty Cash &amp; Night Audit</span>
               </button>
 
               {/* Video 21: Active Chain Property Selector */}
@@ -1438,6 +1494,12 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     <div className="pms-nav-item" onClick={() => setIsCheckInRegisterOpen(true)}>
                       <span style={{ color: '#34d399', fontWeight: 700 }}>📋 In-House Guest Register</span>
                     </div>
+                    <div className="pms-nav-item" onClick={() => setIsHousekeepingOpen(true)}>
+                      <span style={{ color: '#c084fc', fontWeight: 800 }}>🧹 Housekeeping Kanban (16 Rooms)</span>
+                    </div>
+                    <div className="pms-nav-item" onClick={() => setIsPettyExpenseOpen(true)}>
+                      <span style={{ color: '#fbbf24', fontWeight: 800 }}>💰 Petty Cash &amp; Daily Night Audit</span>
+                    </div>
                   </div>
                 )}
 
@@ -2099,6 +2161,24 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
           }}
         />
       )}
+
+      {/* 16-Room Housekeeping Kanban Board Modal */}
+      <HousekeepingTrackerModal
+        isOpen={isHousekeepingOpen}
+        onClose={() => {
+          setIsHousekeepingOpen(false);
+          setRoomRefreshTrigger(prev => prev + 1);
+        }}
+      />
+
+      {/* Petty Cash & Daily Night Audit Ledger Modal */}
+      <PettyExpenseModal
+        isOpen={isPettyExpenseOpen}
+        onClose={() => {
+          setIsPettyExpenseOpen(false);
+          setRoomRefreshTrigger(prev => prev + 1);
+        }}
+      />
     </>
   );
 };

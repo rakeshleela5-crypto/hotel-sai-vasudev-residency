@@ -44,6 +44,10 @@ export interface BookingPayload {
   guest_phone: string;
   id_proof_type?: string;
   id_proof_number?: string;
+  vehicle_number?: string;
+  company_name?: string;
+  gstin?: string;
+  advance_paid?: number;
   check_in_date: string;
   check_out_date: string;
   adults: number;

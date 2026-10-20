@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Room } from '../types';
 import { hotelApi } from '../services/api';
+import { usePmsSync } from '../services/pmsStore';
 
 interface RoomsSectionProps {
   onSelectRoom: (room: Room) => void;
@@ -8,6 +9,7 @@ interface RoomsSectionProps {
 }
 
 export const RoomsSection: React.FC<RoomsSectionProps> = ({ onSelectRoom, selectedCategory = 'All' }) => {
+  const syncTick = usePmsSync();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [userFilter, setUserFilter] = useState<string | null>(null);
@@ -37,7 +39,7 @@ export const RoomsSection: React.FC<RoomsSectionProps> = ({ onSelectRoom, select
     return () => {
       isMounted = false;
     };
-  }, [activeFilter]);
+  }, [activeFilter, syncTick]);
 
   const categories = ['All', 'Deluxe', 'Super Deluxe', 'Suite'];
 
@@ -148,10 +150,10 @@ export const RoomsSection: React.FC<RoomsSectionProps> = ({ onSelectRoom, select
                       id={`book-room-btn-${room.id}`}
                       className="btn btn-primary room-book-btn"
                       onClick={() => onSelectRoom(room)}
-                      aria-label={`Reserve ${room.name}`}
-                      style={{ minHeight: '44px' }}
+                      aria-label={`Book Now or Check Live Availability for ${room.name}`}
+                      style={{ minHeight: '44px', fontWeight: 700 }}
                     >
-                      <span>Reserve Now</span>
+                      <span>Book Now / Check Live Availability</span>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                         <polyline points="12 5 19 12 12 19"></polyline>

@@ -7,10 +7,11 @@ import type {
   AvailabilityCheckResponse,
   TaxInvoice 
 } from '../types';
+import { PmsStore } from './pmsStore';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
 
-// Fallback initial rooms if backend is offline or during preview
+// Authentic 16-Room Categories for Hotel Sai Vasudev Residency (Shirdi)
 const FALLBACK_ROOMS: Room[] = [
   {
     id: 1,
@@ -22,7 +23,7 @@ const FALLBACK_ROOMS: Room[] = [
     total_inventory: 6,
     bed_type: "King Bed",
     room_size: "340 sq ft",
-    description: "Sophisticated modern room designed for ultimate relaxation after a sacred visit or business day. Features soundproof windows, premium posture-pedic mattress, ambient warm cove lighting, and an Italian marble bathroom.",
+    description: "Sophisticated modern room on Floor 1 (Rooms 101-106). Features soundproof windows, premium posture-pedic King bed, ambient warm cove lighting, 43\" 4K Smart TV, and Italian marble bathroom. Max 2+1 Guests.",
     amenities: "High-Speed Wi-Fi, 43\" 4K Smart TV, Central AC, 24/7 Room Service, Complimentary Tea/Coffee Maker, Luxurious Toiletries, Daily Housekeeping",
     image_url: "/images/deluxe_room.jpg",
     badge: "Best Value",
@@ -35,10 +36,10 @@ const FALLBACK_ROOMS: Room[] = [
     room_type: "Super Deluxe",
     price_per_night: 3799,
     capacity: 4,
-    total_inventory: 4,
+    total_inventory: 6,
     bed_type: "Two Queen Beds",
     room_size: "480 sq ft",
-    description: "Ideal for families and groups visiting for temple darshan or leisure. Spacious layout with two queen beds, cozy sofa seating, double wardrobe, mini refrigerator, and panoramic views.",
+    description: "Spacious pilgrim haven on Floor 2 (Rooms 201-206). Two queen beds, cozy sofa seating, double wardrobe, mini refrigerator, and temple-facing balconies. Max 4+1 Guests.",
     amenities: "High-Speed Wi-Fi, 50\" 4K Smart TV, Central AC, Mini Fridge, 24/7 Room Service, Temple Darshan Assistance, Dedicated Work Desk",
     image_url: "/images/hero.jpg",
     badge: "Family Favorite",
@@ -51,29 +52,13 @@ const FALLBACK_ROOMS: Room[] = [
     room_type: "Suite",
     price_per_night: 5999,
     capacity: 4,
-    total_inventory: 2,
+    total_inventory: 4,
     bed_type: "Master King + Living Lounge",
     room_size: "720 sq ft",
-    description: "The pinnacle of divine hospitality. Featuring a private master bedroom, separate luxurious living lounge with marble coffee table, private dining nook, soaking bathtub, and VIP concierge service.",
+    description: "The pinnacle of divine hospitality on Floor 3 (Rooms 301-304). Private master bedroom, separate luxurious living lounge, marble coffee table, soaking bathtub, and 24/7 VIP concierge service. Max 4+2 Guests.",
     amenities: "High-Speed Wi-Fi, 55\" OLED Smart TV, Luxury Bathrobe & Slippers, Soaking Bathtub, Express Check-In, Complimentary Buffet Breakfast, 24/7 Butler on Call",
     image_url: "/images/suite_room.jpg",
     badge: "Luxury Suite",
-    is_available: true
-  },
-  {
-    id: 4,
-    name: "Vasudev Divine Comfort",
-    slug: "vasudev-divine-comfort",
-    room_type: "Standard Deluxe",
-    price_per_night: 1999,
-    capacity: 2,
-    total_inventory: 8,
-    bed_type: "Queen Bed",
-    room_size: "290 sq ft",
-    description: "A quiet and peaceful haven offering divine tranquility. Impeccably clean, air-conditioned, with complimentary Wi-Fi and 24-hour hot water, perfect for solo travelers and couples.",
-    amenities: "High-Speed Wi-Fi, 32\" HD TV, Air Conditioning, 24h Hot Water, Electric Kettle, Mineral Water Bottles, Room Service",
-    image_url: "/images/restaurant.jpg",
-    badge: "Pocket Friendly",
     is_available: true
   }
 ];
@@ -98,21 +83,42 @@ export const hotelApi = {
 
   async getRooms(roomType?: string, maxPrice?: number): Promise<Room[]> {
     try {
-      const params = new URLSearchParams();
-      if (roomType && roomType !== 'All') params.append('room_type', roomType);
-      if (maxPrice) params.append('max_price', maxPrice.toString());
+      const localRooms = typeof window !== 'undefined' ? PmsStore.getRooms() : [];
+      const deluxeAvailable = localRooms.filter(r => r.roomType === 'Executive Deluxe' && r.status === 'vacant').length;
+      const familyAvailable = localRooms.filter(r => r.roomType === 'Super Deluxe Family' && r.status === 'vacant').length;
+      const suiteAvailable = localRooms.filter(r => r.roomType === 'Sai Presidential Suite' && r.status === 'vacant').length;
 
-      const url = `${API_BASE_URL}/rooms?${params.toString()}`;
-      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      return data.length > 0 ? data : FALLBACK_ROOMS;
-    } catch (err) {
-      console.warn('FastAPI backend not reachable, using cached room inventory:', err);
+      const liveRooms: Room[] = FALLBACK_ROOMS.map(r => {
+        let availCount = 0;
+        if (r.id === 1) availCount = deluxeAvailable;
+        else if (r.id === 2) availCount = familyAvailable;
+        else if (r.id === 3) availCount = suiteAvailable;
+
+        return {
+          ...r,
+          is_available: availCount > 0,
+          badge: availCount > 0 ? `${availCount} Available Now` : 'Sold Out'
+        };
+      });
+
+      let results = liveRooms;
       if (roomType && roomType !== 'All') {
-        return FALLBACK_ROOMS.filter(r => r.room_type.toLowerCase().includes(roomType.toLowerCase()));
+        results = results.filter(r => r.room_type.toLowerCase().includes(roomType.toLowerCase()));
       }
-      return FALLBACK_ROOMS;
+      if (maxPrice !== undefined && maxPrice > 0) {
+        results = results.filter(r => r.price_per_night <= maxPrice);
+      }
+      return results;
+    } catch (err) {
+      console.warn('Using fallback room inventory:', err);
+      let results = FALLBACK_ROOMS;
+      if (roomType && roomType !== 'All') {
+        results = results.filter(r => r.room_type.toLowerCase().includes(roomType.toLowerCase()));
+      }
+      if (maxPrice !== undefined && maxPrice > 0) {
+        results = results.filter(r => r.price_per_night <= maxPrice);
+      }
+      return results;
     }
   },
 
@@ -122,99 +128,97 @@ export const hotelApi = {
     checkOut: string, 
     adults: number = 2
   ): Promise<AvailabilityCheckResponse> {
-    try {
-      const params = new URLSearchParams({
-        check_in: checkIn,
-        check_out: checkOut,
-        adults: adults.toString()
-      });
-      const res = await fetch(`${API_BASE_URL}/rooms/${roomId}/availability?${params.toString()}`);
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.detail || `Availability check failed: HTTP ${res.status}`);
-      }
-      return await res.json();
-    } catch (err) {
-      // Local fallback calculation for preview
-      const room = FALLBACK_ROOMS.find(r => r.id === roomId) || FALLBACK_ROOMS[0];
-      const start = new Date(checkIn);
-      const end = new Date(checkOut);
-      const nights = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
-      const baseSubtotal = room.price_per_night * nights;
-      const extraGuests = Math.max(0, adults - room.capacity);
-      const extraCharge = extraGuests * 500 * nights;
-      const taxable = baseSubtotal + extraCharge;
-      const gstRate = taxable / nights <= 7500 ? 12 : 18;
-      const halfRate = gstRate / 200;
-      const cgst = Math.round(taxable * halfRate * 100) / 100;
-      const sgst = Math.round(taxable * halfRate * 100) / 100;
-      const totalTax = cgst + sgst;
-      const grandTotal = taxable + totalTax;
+    const room = FALLBACK_ROOMS.find(r => r.id === roomId) || FALLBACK_ROOMS[0];
+    const localRooms = typeof window !== 'undefined' ? PmsStore.getRooms() : [];
+    
+    let matchedCategoryRooms = localRooms.filter(r => {
+      if (roomId === 1) return r.roomType === 'Executive Deluxe';
+      if (roomId === 2) return r.roomType === 'Super Deluxe Family';
+      return r.roomType === 'Sai Presidential Suite';
+    });
+    if (matchedCategoryRooms.length === 0) matchedCategoryRooms = localRooms;
 
-      return {
-        available: true,
-        room_id: room.id,
-        room_name: room.name,
-        check_in_date: checkIn,
-        check_out_date: checkOut,
-        nights,
-        capacity: room.capacity,
-        adults,
-        base_rate_per_night: room.price_per_night,
-        base_subtotal: baseSubtotal,
-        extra_guest_charge: extraCharge,
-        taxable_amount: taxable,
-        gst_rate: gstRate,
-        cgst_amount: cgst,
-        sgst_amount: sgst,
-        total_tax: totalTax,
-        grand_total: grandTotal,
-        remaining_rooms_count: 5,
-        message: 'Available for reservation.'
-      };
-    }
+    const vacantRooms = matchedCategoryRooms.filter(r => r.status === 'vacant');
+    const remainingRoomsCount = vacantRooms.length;
+
+    const start = new Date(checkIn);
+    const end = new Date(checkOut);
+    const nights = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+    const baseSubtotal = room.price_per_night * nights;
+    
+    // Extra guest charge (₹500 for Deluxe/Family, ₹800 for Suite)
+    const extraRatePerGuest = roomId === 3 ? 800 : 500;
+    const extraGuests = Math.max(0, adults - room.capacity);
+    const extraCharge = extraGuests * extraRatePerGuest * nights;
+    
+    // SAC 996311 GST Engine: 12% if <= ₹7,500/night else 18%
+    const taxable = baseSubtotal + extraCharge;
+    const gstRate = taxable / nights <= 7500 ? 12 : 18;
+    const halfRate = gstRate / 200;
+    const cgst = Math.round(taxable * halfRate * 100) / 100;
+    const sgst = Math.round(taxable * halfRate * 100) / 100;
+    const totalTax = cgst + sgst;
+    const grandTotal = taxable + totalTax;
+
+    return {
+      available: remainingRoomsCount > 0,
+      room_id: room.id,
+      room_name: room.name,
+      check_in_date: checkIn,
+      check_out_date: checkOut,
+      nights,
+      capacity: room.capacity,
+      adults,
+      base_rate_per_night: room.price_per_night,
+      base_subtotal: baseSubtotal,
+      extra_guest_charge: extraCharge,
+      taxable_amount: taxable,
+      gst_rate: gstRate,
+      cgst_amount: cgst,
+      sgst_amount: sgst,
+      total_tax: totalTax,
+      grand_total: grandTotal,
+      remaining_rooms_count: remainingRoomsCount,
+      message: remainingRoomsCount > 0 ? `${remainingRoomsCount} room(s) available for reservation.` : 'Selected category is sold out for these dates.'
+    };
   },
 
   async createBooking(payload: BookingPayload): Promise<BookingResponse> {
     try {
-      const res = await fetch(`${API_BASE_URL}/bookings`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || `Booking failed with status ${res.status}`);
-      }
-      return await res.json();
-    } catch (err: unknown) {
-      const errMessage = err instanceof Error ? err.message : String(err);
-      if (errMessage.includes('Conflict') || errMessage.includes('already reserved')) {
-        throw err; // Re-throw concurrency conflict so UI can alert guest
-      }
-
-      console.warn('FastAPI unavailable, generating client confirmation for preview:', err);
-      // Simulate confirmed reservation for client preview
-      const simulatedRef = `SVR-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
       const matchedRoom = FALLBACK_ROOMS.find(r => r.id === payload.room_id) || FALLBACK_ROOMS[0];
       const start = new Date(payload.check_in_date);
       const end = new Date(payload.check_out_date);
       const nights = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
       const baseSubtotal = matchedRoom.price_per_night * nights;
+      const extraRatePerGuest = matchedRoom.id === 3 ? 800 : 500;
       const extraGuests = Math.max(0, payload.adults - matchedRoom.capacity);
-      const extraCharge = extraGuests * 500 * nights;
+      const extraCharge = extraGuests * extraRatePerGuest * nights;
       const taxable = baseSubtotal + extraCharge;
       const gstRate = taxable / nights <= 7500 ? 12 : 18;
       const cgst = Math.round(taxable * (gstRate / 200) * 100) / 100;
       const sgst = cgst;
 
+      // 1. Cross-Module Reactivity Law: Immediately create booking in PmsStore
+      const { booking, room } = PmsStore.createGuestBooking({
+        roomId: payload.room_id,
+        roomType: matchedRoom.name,
+        guestName: payload.guest_name,
+        guestPhone: payload.guest_phone,
+        guestEmail: payload.guest_email,
+        idProofType: payload.id_proof_type,
+        checkInDate: payload.check_in_date,
+        checkOutDate: payload.check_out_date,
+        adults: payload.adults,
+        children: payload.children,
+        advancePaid: payload.payment_method === 'Pay at Hotel' ? 0 : Math.round((taxable + cgst + sgst) * 0.25),
+        specialRequests: payload.special_requests,
+        paymentMethod: payload.payment_method
+      });
+
       return {
         id: Math.floor(Math.random() * 1000) + 1,
-        booking_ref: simulatedRef,
-        invoice_number: `INV-${simulatedRef}`,
+        booking_ref: booking.bookingNo,
+        invoice_number: `INV-${booking.bookingNo}`,
         room_id: payload.room_id,
         guest_name: payload.guest_name,
         guest_email: payload.guest_email,
@@ -238,8 +242,11 @@ export const hotelApi = {
         status: 'Confirmed',
         special_requests: payload.special_requests,
         created_at: new Date().toISOString(),
-        room: matchedRoom
+        room: { ...matchedRoom, name: `${matchedRoom.name} (Room ${room.roomNo})` }
       };
+    } catch (err: unknown) {
+      console.error('[hotelApi.createBooking] Error:', err);
+      throw err;
     }
   },
 
