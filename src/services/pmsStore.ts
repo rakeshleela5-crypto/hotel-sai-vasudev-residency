@@ -3744,6 +3744,28 @@ export class PmsStore {
       });
     }
 
+    // Enterprise Cloud Sync: Post Booking to FastAPI PostgreSQL Database
+    hotelApi.createBooking({
+      room_id: Number(targetRoom.id) || Number(targetRoom.roomNo) || 1,
+      guest_name: booking.guestName,
+      guest_email: booking.guestEmail || `${booking.guestPhone}@saivasudevresidency.com`,
+      guest_phone: booking.guestPhone,
+      id_proof_type: booking.idProofType || 'Aadhaar Card',
+      id_proof_number: booking.idProofNumber,
+      check_in_date: booking.checkInDate,
+      check_out_date: booking.checkOutDate,
+      adults: booking.adults || 2,
+      children: booking.children || 0,
+      payment_method: booking.paymentMethod || 'Pay at Hotel',
+      advance_paid: booking.advancePaid || 0,
+      special_requests: booking.specialRequests,
+      vehicle_number: (booking as any).vehicleNumber,
+      company_name: (booking as any).companyName,
+      gstin: (booking as any).gstin
+    }).catch(err => {
+      console.warn('[PmsStore] Background FastAPI PostgreSQL booking sync notice:', err);
+    });
+
     this.notify();
     return { booking: newBooking, room: targetRoom };
   }
@@ -3774,6 +3796,24 @@ export class PmsStore {
       };
       this.saveRooms(rooms);
     }
+
+    // Enterprise Cloud Sync: Post Check-In to FastAPI PostgreSQL Database
+    hotelApi.walkInCheckIn({
+      room_id: Number(room?.id) || Number(b.roomNo) || 101,
+      guest_name: b.guestName,
+      guest_email: b.guestEmail || b.email || `${b.guestPhone || b.mobile}@saivasudevresidency.com`,
+      guest_phone: b.guestPhone || b.mobile || '',
+      id_proof_type: b.idProofType || 'Aadhaar Card',
+      id_proof_number: b.idProofNumber,
+      check_in_date: b.checkInDate,
+      check_out_date: b.checkOutDate,
+      adults: b.adults || 2,
+      children: b.children || 0,
+      payment_method: b.paymentMode || 'Cash',
+      advance_paid: b.advancePaid || b.bookingAmount || 0
+    }).catch(err => {
+      console.warn('[PmsStore] Background FastAPI PostgreSQL check-in sync notice:', err);
+    });
 
     this.notify();
     return { success: true, message: `Guest ${b.guestName} successfully checked into Room ${b.roomNo || room?.roomNo || ''}.` };
@@ -4972,6 +5012,18 @@ export class PmsStore {
         unit_price: kot.totalAmount || 0
       }).catch(e => console.warn('[PmsStore] Background KOT folio cloud sync note:', e));
     }
+
+    // Enterprise Cloud Sync: Post KOT Ticket to FastAPI PostgreSQL Database
+    hotelApi.saveKotTicket({
+      kot_no: kot.kotNo,
+      service_type: kot.serviceType,
+      room_no: kot.roomNo,
+      table_no: kot.tableNo,
+      guest_name: kot.guestName,
+      total_amount: kot.totalAmount,
+      status: kot.status,
+      items_json: JSON.stringify(kot.items)
+    }).catch(e => console.warn('[PmsStore] Background KOT ticket cloud sync note:', e));
   }
 
   static shiftTable(fromTable: string, toTable: string, shiftedBy: string = 'Admin'): {

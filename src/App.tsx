@@ -51,6 +51,18 @@ export function App() {
     ) {
       setIsGuestEngineOpen(true);
     }
+
+    // Connect to FastAPI & PostgreSQL on Railway Cloud immediately
+    PmsStore.initCloudStore()
+      .then(() => PmsStore.syncWithCloudBackend())
+      .catch(err => console.warn('[App] Railway Cloud PostgreSQL connection notice:', err));
+
+    // Continuous 15-second background cloud sync polling
+    const syncInterval = setInterval(() => {
+      PmsStore.syncWithCloudBackend().catch(() => {});
+    }, 15000);
+
+    return () => clearInterval(syncInterval);
   }, []);
 
   const handleModeChange = (mode: 'public' | 'erp') => {
