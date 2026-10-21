@@ -44,6 +44,12 @@
   padding: 0;
 }
 
+html, body, #root, #app {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 html {
   scroll-behavior: smooth;
   font-family: var(--font-sans);
@@ -55,6 +61,19 @@ html {
 body {
   line-height: 1.6;
   overflow-x: hidden;
+}
+
+/* Strict full-screen viewport reset when ERP / PMS is mounted */
+html:has(.pms-overlay),
+body:has(.pms-overlay),
+body.erp-active,
+#root:has(.pms-overlay),
+.hotel-app:has(.pms-overlay) {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
 }
 
 a {

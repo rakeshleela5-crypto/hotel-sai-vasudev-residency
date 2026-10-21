@@ -563,21 +563,23 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       <div className="pms-overlay" onClick={onClose}>
         <div className="pms-window" onClick={e => e.stopPropagation()}>
           {/* Master Header matching Video 01 & 02 */}
+          {/* Master Header matching Video 01 & 02 */}
           <header className="pms-header">
             <div className="pms-header-left">
               <button
                 type="button"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                style={{ background: 'none', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer' }}
+                className="pms-menu-toggle-btn"
                 title="Toggle Menu"
               >
                 ☰
               </button>
-              <h2 className="pms-brand-title">
-                HOTEL MANAGEMENT SYSTEM &bull; PMS
-              </h2>
+              <div className="pms-brand-col">
+                <span className="pms-brand-main">HOTEL MANAGEMENT</span>
+                <span className="pms-brand-sub">SYSTEM PMS</span>
+              </div>
 
-              <form onSubmit={handleSearch} className="pms-header-search" style={{ display: 'flex', alignItems: 'center' }}>
+              <form onSubmit={handleSearch} className="pms-header-search">
                 <input
                   type="text"
                   placeholder="Search room (101), guest, kot, gst, booking..."
@@ -599,19 +601,11 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                 onClick={handleSyncCloud}
                 disabled={syncStatus.isSyncing}
                 title="Synchronize front desk terminal with Railway PostgreSQL & Cloudflare Pages"
+                className="pms-header-btn"
                 style={{
                   background: syncStatus.status === 'online' ? '#15803d' : '#475569',
                   color: '#ffffff',
-                  border: 'none',
-                  padding: '3px 10px',
-                  borderRadius: 3,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  cursor: syncStatus.isSyncing ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 5,
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                  cursor: syncStatus.isSyncing ? 'not-allowed' : 'pointer'
                 }}
               >
                 <span>🔄</span>
@@ -623,18 +617,10 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                 type="button"
                 onClick={() => setIsUnconfirmedOpen(true)}
                 title="Click to view and confirm pending online guest bookings"
+                className="pms-header-btn"
                 style={{
                   background: unconfirmedCount > 0 ? '#e11d48' : '#f59e0b',
                   color: '#ffffff',
-                  border: 'none',
-                  padding: '3px 10px',
-                  borderRadius: 3,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
                   boxShadow: unconfirmedCount > 0 ? '0 0 8px rgba(225, 29, 72, 0.5)' : undefined
                 }}
               >
@@ -645,43 +631,21 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               <button
                 type="button"
                 onClick={() => setIsCalendarOpen(true)}
-                style={{
-                  background: '#0284c7',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '3px 10px',
-                  borderRadius: 3,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4
-                }}
+                title="Reservation Calendar"
+                className="pms-header-btn"
+                style={{ background: '#0284c7', color: '#ffffff' }}
               >
                 <span>📅</span>
                 <span>Calendar</span>
               </button>
 
-              {/* 16-Room Live Housekeeping Tracker */}
+              {/* 18-Room Live Housekeeping Tracker */}
               <button
                 type="button"
                 onClick={() => setIsHousekeepingOpen(true)}
-                title="Click to view 16-Room Live Housekeeping & Maintenance Kanban Board"
-                style={{
-                  background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '3px 10px',
-                  borderRadius: 3,
-                  fontSize: 11,
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
-                }}
+                title="Click to view 18-Room Live Housekeeping & Maintenance Kanban Board"
+                className="pms-header-btn"
+                style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)', color: '#ffffff' }}
               >
                 <span>🧹</span>
                 <span>Housekeeping</span>
@@ -691,47 +655,24 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               <button
                 type="button"
                 onClick={() => setIsPettyExpenseOpen(true)}
-                title="Click to view Petty Cash float & Run 1-Click Night Audit"
-                style={{
-                  background: 'linear-gradient(135deg, #ca8a04 0%, #a16207 100%)',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '3px 10px',
-                  borderRadius: 3,
-                  fontSize: 11,
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
-                }}
+                title="Petty Cash float & Run 1-Click Night Audit"
+                className="pms-header-btn"
+                style={{ background: 'linear-gradient(135deg, #ca8a04 0%, #a16207 100%)', color: '#ffffff' }}
               >
                 <span>💰</span>
-                <span>Petty Cash &amp; Night Audit</span>
+                <span>Cash &amp; Night Audit</span>
               </button>
 
               {/* Video 21: Active Chain Property Selector */}
               <button
                 type="button"
                 onClick={() => setIsChainPropertyOpen(true)}
-                title="Click to switch property / branch (Multi-Property Network)"
-                style={{
-                  background: '#047857',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '3px 10px',
-                  borderRadius: 3,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4
-                }}
+                title={`${currentProperty.firmName} — ${currentProperty.location} (Click to switch branch)`}
+                className="pms-header-btn"
+                style={{ background: '#047857', color: '#ffffff' }}
               >
-                <span>🏨</span>
-                <span>{currentProperty.firmId} ({currentProperty.location})</span>
+                <span>📍</span>
+                <span>Shirdi (Main)</span>
               </button>
 
               {/* Video 21: Mobile Responsive View Emulator Toggle */}
@@ -739,68 +680,35 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                 type="button"
                 onClick={() => setIsDevicePreviewOpen(true)}
                 title="Click to test PMS on mobile / tablet responsive emulator"
-                style={{
-                  background: '#7c3aed',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '3px 10px',
-                  borderRadius: 3,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4
-                }}
+                className="pms-header-btn"
+                style={{ background: '#7c3aed', color: '#ffffff' }}
               >
                 <span>📱</span>
                 <span>Mobile View</span>
               </button>
 
-              {/* Video 22: WhatsApp Validity & Gateway Status Badge (Frame 0110) */}
+              {/* Video 22: WhatsApp Validity & Gateway Status Badge */}
               <button
                 type="button"
                 onClick={() => setIsWhatsAppSettingOpen(true)}
-                title="Click to manage WhatsApp SMS Gateway & Message Templates"
-                style={{
-                  background: '#059669',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '3px 10px',
-                  borderRadius: 3,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4
-                }}
+                title="WhatsApp SMS Gateway: Active & Valid until 29-06-2026 (Click to manage)"
+                className="pms-header-btn"
+                style={{ background: '#059669', color: '#ffffff' }}
               >
-                <span>💬</span>
-                <span>WhatsApp: Valid (29-06-2026)</span>
+                <span>🟢</span>
+                <span>WhatsApp Active</span>
               </button>
 
-              {/* Video 25: Online vs Offline Architecture & Disaster Recovery Badge (Frames 0070, 0120, 0350) */}
+              {/* Video 25: Online vs Offline Architecture & Disaster Recovery Badge */}
               <button
                 type="button"
                 onClick={() => setIsOnlineVsOfflineOpen(true)}
                 title="Click to view Cloud vs Offline Architecture Matrix & Disaster Recovery Tools"
-                style={{
-                  background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '3px 10px',
-                  borderRadius: 3,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4
-                }}
+                className="pms-header-btn"
+                style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#ffffff' }}
               >
                 <span>🌐</span>
-                <span>Online / Hybrid Sync</span>
+                <span>Hybrid Sync</span>
               </button>
 
               {/* Video 27: Top 20 Features of RoomG PMS Master Navigator */}
@@ -808,19 +716,11 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                 type="button"
                 onClick={() => setIsTop20FeaturesOpen(true)}
                 title="Click to explore all 20 Master Enterprise Features of Hotel ERP"
+                className="pms-header-btn"
                 style={{
                   background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
                   color: '#0f172a',
-                  border: '1px solid #fef08a',
-                  padding: '3px 10px',
-                  borderRadius: 3,
-                  fontSize: 11,
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
+                  border: '1px solid #fef08a'
                 }}
               >
                 <span>🏆</span>
@@ -832,20 +732,8 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                 type="button"
                 onClick={() => { setGstReportTab('consolidated'); setIsGstReportsOpen(true); }}
                 title="Click to view Room & Food GST Reports, B2B, B2C and Report Hub"
-                style={{
-                  background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '3px 10px',
-                  borderRadius: 3,
-                  fontSize: 11,
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
-                }}
+                className="pms-header-btn"
+                style={{ background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)', color: '#ffffff' }}
               >
                 <span>📜</span>
                 <span>GST Reports</span>
@@ -856,20 +744,8 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                 type="button"
                 onClick={() => { setHelpInitialTab('videos'); setIsHelpAndSupportOpen(true); }}
                 title="Click to access System Guides, Support Tickets, Remote Support & User Manual"
-                style={{
-                  background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '3px 10px',
-                  borderRadius: 3,
-                  fontSize: 11,
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
-                }}
+                className="pms-header-btn"
+                style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#ffffff' }}
               >
                 <span>🎓</span>
                 <span>Training &amp; Support</span>
@@ -880,19 +756,11 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                 type="button"
                 onClick={() => setIsAgentCommissionOpen(true)}
                 title="Click to manage Agent & Referral Commissions, Directory & Key Features"
+                className="pms-header-btn"
                 style={{
                   background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
                   color: '#ffffff',
-                  border: '1px solid #6ee7b7',
-                  padding: '3px 10px',
-                  borderRadius: 3,
-                  fontSize: 11,
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
+                  border: '1px solid #6ee7b7'
                 }}
               >
                 <span>🤝</span>
@@ -904,19 +772,11 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                 type="button"
                 onClick={() => setIsLiquorBarOpen(true)}
                 title="Click to manage Bar & Beverage Inventory, Peg Billing, VAT 13% + SUR 10%, and ML Stock"
+                className="pms-header-btn"
                 style={{
                   background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)',
                   color: '#ffffff',
-                  border: '1px solid #f87171',
-                  padding: '3px 10px',
-                  borderRadius: 3,
-                  fontSize: 11,
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
+                  border: '1px solid #f87171'
                 }}
               >
                 <span>🍷</span>
@@ -928,19 +788,11 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                 type="button"
                 onClick={() => setIsNoDiscountOpen(true)}
                 title="Click to configure No-Discount Items, Price Integrity, and Exemption Rules"
+                className="pms-header-btn"
                 style={{
                   background: 'linear-gradient(135deg, #b45309 0%, #78350f 100%)',
                   color: '#ffffff',
-                  border: '1px solid #fde68a',
-                  padding: '3px 10px',
-                  borderRadius: 3,
-                  fontSize: 11,
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
+                  border: '1px solid #fde68a'
                 }}
               >
                 <span>🛡️</span>
@@ -952,19 +804,11 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                 type="button"
                 onClick={() => setIsStoreWiseStockOpen(true)}
                 title="Click to view Store Wise Stock, Consolidated Inventories, Simulator & Linen Control"
+                className="pms-header-btn"
                 style={{
                   background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
                   color: '#ffffff',
-                  border: '1px solid #7dd3fc',
-                  padding: '3px 10px',
-                  borderRadius: 3,
-                  fontSize: 11,
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
+                  border: '1px solid #7dd3fc'
                 }}
               >
                 <span>🏬</span>
@@ -976,19 +820,11 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                 type="button"
                 onClick={() => setIsBanquetOpen(true)}
                 title="Click to manage Banquet Halls, Event Catering, Multi-Room Linking & Tax Invoices"
+                className="pms-header-btn"
                 style={{
                   background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
                   color: '#ffffff',
-                  border: '1px solid #6ee7b7',
-                  padding: '3px 10px',
-                  borderRadius: 3,
-                  fontSize: 11,
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
+                  border: '1px solid #6ee7b7'
                 }}
               >
                 <span>🏰</span>

@@ -26,7 +26,21 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
   const companyInfo = PmsStore.getCompanyInfo();
 
   // Basic Stay Details
-  const [checkInDate, setCheckInDate] = useState(guest?.checkInDate || '06-06-2025');
+  const normalizeDateDDMMYYYY = (dStr?: string) => {
+    if (!dStr) {
+      const today = new Date();
+      const dd = String(today.getDate()).padStart(2, '0');
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      return `${dd}-${mm}-${today.getFullYear()}`;
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dStr)) {
+      const [y, m, d] = dStr.split('-');
+      return `${d}-${m}-${y}`;
+    }
+    return dStr;
+  };
+
+  const [checkInDate, setCheckInDate] = useState(() => normalizeDateDDMMYYYY(guest?.checkInDate || '19-10-2026'));
   const [checkInTime, setCheckInTime] = useState(guest?.checkInTime || '12:25 AM');
   const [checkOutDate, setCheckOutDate] = useState(() => {
     const today = new Date();
@@ -35,6 +49,12 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
     const yyyy = today.getFullYear();
     return `${dd}-${mm}-${yyyy}`;
   });
+
+  useEffect(() => {
+    if (guest?.checkInDate) {
+      setCheckInDate(normalizeDateDDMMYYYY(guest.checkInDate));
+    }
+  }, [guest?.checkInDate]);
   const [checkOutTime, setCheckOutTime] = useState(() => {
     const now = new Date();
     return now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
@@ -449,7 +469,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
       <div 
         className="pms-form-box" 
         onClick={e => e.stopPropagation()} 
-        style={{ maxWidth: showInvoicePreview ? 920 : 1150 }}
+        style={{ maxWidth: showInvoicePreview ? 920 : 1180, maxHeight: '95vh' }}
       >
         {!showInvoicePreview ? (
           /* Master Checkout Folio Screen */
@@ -461,14 +481,14 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
               </span>
             </div>
 
-            <form onSubmit={handleCheckoutSubmit} className="pms-form-body">
+            <form onSubmit={handleCheckoutSubmit} className="pms-form-body" style={{ padding: '10px 14px' }}>
               {/* Header Info Banner */}
               <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                paddingBottom: 8,
-                marginBottom: 12,
+                paddingBottom: 6,
+                marginBottom: 8,
                 borderBottom: '1px solid #cbd5e1'
               }}>
                 <div>
@@ -651,7 +671,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                 padding: '6px 10px',
                 border: '1px solid #e2e8f0',
                 borderRadius: 4,
-                marginBottom: 10
+                marginBottom: 8
               }}>
                 <div>
                   <label style={{ fontSize: 10, color: '#1d4ed8', fontWeight: 800, display: 'block' }}>Guest Name</label>
@@ -706,7 +726,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                 padding: '6px 10px',
                 borderRadius: 4,
                 border: '1px solid #cbd5e1',
-                marginBottom: 10
+                marginBottom: 8
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
                   <span style={{ fontWeight: 800, color: '#334155', display: 'flex', alignItems: 'center', gap: 3 }}>
@@ -812,52 +832,54 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
               </div>
 
               {/* 4 Multi-Card Inspection Grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.35fr 1.45fr', gap: 8, marginBottom: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.3fr 1.2fr', gap: 10, alignItems: 'stretch', marginBottom: 10 }}>
                 {/* Card 1: Pending Kot List */}
-                <div style={{ border: '1px solid #38bdf8', borderRadius: 2, background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
-                  <div style={{
-                    background: '#bef264',
-                    color: '#000000',
-                    fontWeight: 800,
-                    fontSize: 11,
-                    padding: '4px 8px',
-                    borderBottom: '1px solid #a3e635'
-                  }}>
-                    Pending Kot List (Vasudev Rasoi)
-                  </div>
-                  <div style={{ overflowX: 'auto', minHeight: 110, maxHeight: 130, flex: 1, padding: 2 }}>
-                    <table style={{ width: '100%', fontSize: 10, borderCollapse: 'collapse', textAlign: 'left' }}>
-                      <thead>
-                        <tr style={{ background: '#f1f5f9', color: '#334155', borderBottom: '1px solid #cbd5e1' }}>
-                          <th style={{ padding: '2px 4px' }}>S.No</th>
-                          <th style={{ padding: '2px 4px' }}>Date</th>
-                          <th style={{ padding: '2px 4px' }}>KOT #</th>
-                          <th style={{ padding: '2px 4px' }}>Qty</th>
-                          <th style={{ padding: '2px 4px', textAlign: 'right' }}>Total</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {pendingKots.length > 0 ? (
-                          pendingKots.map((k, idx) => (
-                            <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                              <td style={{ padding: '2px 4px' }}>{idx + 1}</td>
-                              <td style={{ padding: '2px 4px' }}>{k.date || k.createdAt?.slice(0, 10) || 'Today'}</td>
-                              <td style={{ padding: '2px 4px', fontWeight: 700 }}>{k.kotNo}</td>
-                              <td style={{ padding: '2px 4px' }}>{k.items.reduce((s, i) => s + i.qty, 0)}</td>
-                              <td style={{ padding: '2px 4px', textAlign: 'right', fontWeight: 700 }}>₹{k.totalAmount.toFixed(2)}</td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan={5} style={{ padding: '14px 4px', textAlign: 'center', color: '#94a3b8', fontStyle: 'italic' }}>
-                              No Pending KOTs
-                            </td>
+                <div style={{ border: '1px solid #38bdf8', borderRadius: 3, background: '#ffffff', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
+                  <div>
+                    <div style={{
+                      background: '#bef264',
+                      color: '#000000',
+                      fontWeight: 800,
+                      fontSize: 11,
+                      padding: '4px 8px',
+                      borderBottom: '1px solid #a3e635'
+                    }}>
+                      Pending Kot List (Vasudev Rasoi)
+                    </div>
+                    <div style={{ overflowX: 'auto', minHeight: 95, maxHeight: 115, padding: 2 }}>
+                      <table style={{ width: '100%', fontSize: 10, borderCollapse: 'collapse', textAlign: 'left' }}>
+                        <thead>
+                          <tr style={{ background: '#f1f5f9', color: '#334155', borderBottom: '1px solid #cbd5e1' }}>
+                            <th style={{ padding: '2px 4px' }}>S.No</th>
+                            <th style={{ padding: '2px 4px' }}>Date</th>
+                            <th style={{ padding: '2px 4px' }}>KOT #</th>
+                            <th style={{ padding: '2px 4px' }}>Qty</th>
+                            <th style={{ padding: '2px 4px', textAlign: 'right' }}>Total</th>
                           </tr>
-                        )}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {pendingKots.length > 0 ? (
+                            pendingKots.map((k, idx) => (
+                              <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                <td style={{ padding: '2px 4px' }}>{idx + 1}</td>
+                                <td style={{ padding: '2px 4px' }}>{k.date || k.createdAt?.slice(0, 10) || 'Today'}</td>
+                                <td style={{ padding: '2px 4px', fontWeight: 700 }}>{k.kotNo}</td>
+                                <td style={{ padding: '2px 4px' }}>{k.items.reduce((s, i) => s + i.qty, 0)}</td>
+                                <td style={{ padding: '2px 4px', textAlign: 'right', fontWeight: 700 }}>₹{k.totalAmount.toFixed(2)}</td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={5} style={{ padding: '14px 4px', textAlign: 'center', color: '#94a3b8', fontStyle: 'italic' }}>
+                                No Pending KOTs
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                  <div style={{ padding: '4px 6px', borderTop: '1px solid #e2e8f0', background: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ height: 32, padding: '4px 6px', borderTop: '1px solid #e2e8f0', background: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxSizing: 'border-box' }}>
                     <input
                       type="text"
                       readOnly
@@ -880,48 +902,50 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                 </div>
 
                 {/* Card 2: Posted Food Bill (SAC 996331 @ 5% GST) */}
-                <div style={{ border: '1px solid #38bdf8', borderRadius: 2, background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
-                  <div style={{
-                    background: '#bef264',
-                    color: '#000000',
-                    fontWeight: 800,
-                    fontSize: 11,
-                    padding: '4px 8px',
-                    borderBottom: '1px solid #a3e635'
-                  }}>
-                    Posted Food Bills (SAC 996331)
-                  </div>
-                  <div style={{ overflowX: 'auto', minHeight: 110, maxHeight: 130, flex: 1, padding: 2 }}>
-                    <table style={{ width: '100%', fontSize: 10, borderCollapse: 'collapse', textAlign: 'left' }}>
-                      <thead>
-                        <tr style={{ background: '#f1f5f9', color: '#334155', borderBottom: '1px solid #cbd5e1' }}>
-                          <th style={{ padding: '2px 4px' }}>S.No</th>
-                          <th style={{ padding: '2px 4px' }}>Bill #</th>
-                          <th style={{ padding: '2px 4px' }}>Items</th>
-                          <th style={{ padding: '2px 4px', textAlign: 'right' }}>Amount</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {foodBills.length > 0 ? (
-                          foodBills.map((fb, idx) => (
-                            <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                              <td style={{ padding: '2px 4px' }}>{idx + 1}</td>
-                              <td style={{ padding: '2px 4px', fontWeight: 700 }}>{fb.billNo}</td>
-                              <td style={{ padding: '2px 4px' }}>{fb.items.reduce((s, i) => s + i.qty, 0)} items</td>
-                              <td style={{ padding: '2px 4px', textAlign: 'right', fontWeight: 700 }}>₹{fb.netBillAmount.toFixed(2)}</td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan={4} style={{ padding: '14px 4px', textAlign: 'center', color: '#94a3b8', fontStyle: 'italic' }}>
-                              {foodAmount > 0 ? `Posted Food: ₹${foodAmount.toFixed(2)}` : 'No Food Orders'}
-                            </td>
+                <div style={{ border: '1px solid #38bdf8', borderRadius: 3, background: '#ffffff', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
+                  <div>
+                    <div style={{
+                      background: '#bef264',
+                      color: '#000000',
+                      fontWeight: 800,
+                      fontSize: 11,
+                      padding: '4px 8px',
+                      borderBottom: '1px solid #a3e635'
+                    }}>
+                      Posted Food Bills (SAC 996331)
+                    </div>
+                    <div style={{ overflowX: 'auto', minHeight: 95, maxHeight: 115, padding: 2 }}>
+                      <table style={{ width: '100%', fontSize: 10, borderCollapse: 'collapse', textAlign: 'left' }}>
+                        <thead>
+                          <tr style={{ background: '#f1f5f9', color: '#334155', borderBottom: '1px solid #cbd5e1' }}>
+                            <th style={{ padding: '2px 4px' }}>S.No</th>
+                            <th style={{ padding: '2px 4px' }}>Bill #</th>
+                            <th style={{ padding: '2px 4px' }}>Items</th>
+                            <th style={{ padding: '2px 4px', textAlign: 'right' }}>Amount</th>
                           </tr>
-                        )}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {foodBills.length > 0 ? (
+                            foodBills.map((fb, idx) => (
+                              <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                <td style={{ padding: '2px 4px' }}>{idx + 1}</td>
+                                <td style={{ padding: '2px 4px', fontWeight: 700 }}>{fb.billNo}</td>
+                                <td style={{ padding: '2px 4px' }}>{fb.items.reduce((s, i) => s + i.qty, 0)} items</td>
+                                <td style={{ padding: '2px 4px', textAlign: 'right', fontWeight: 700 }}>₹{fb.netBillAmount.toFixed(2)}</td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={4} style={{ padding: '14px 4px', textAlign: 'center', color: '#94a3b8', fontStyle: 'italic' }}>
+                                {foodAmount > 0 ? `Posted Food: ₹${foodAmount.toFixed(2)}` : 'No Food Orders'}
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                  <div style={{ padding: '4px 6px', borderTop: '1px solid #e2e8f0', background: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 10 }}>
+                  <div style={{ height: 32, padding: '4px 6px', borderTop: '1px solid #e2e8f0', background: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 10, boxSizing: 'border-box' }}>
                     <span>Food Taxable: <strong>₹{foodTaxable.toFixed(2)}</strong></span>
                     <input
                       type="text"
@@ -935,53 +959,57 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                 </div>
 
                 {/* Card 3: Day Wise Rent (SAC 996311 @ 12% GST) */}
-                <div style={{ border: '1px solid #38bdf8', borderRadius: 2, background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
-                  <div style={{
-                    background: '#bef264',
-                    color: '#000000',
-                    fontWeight: 800,
-                    fontSize: 11,
-                    padding: '4px 8px',
-                    borderBottom: '1px solid #a3e635',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}>
-                    <span>Day Wise Rent (SAC 996311)</span>
-                    <span style={{ fontSize: 9, background: '#0f172a', color: '#fff', padding: '1px 4px', borderRadius: 2 }}>
-                      {calculationType === '12hour' ? '12-Hour' : '24-Hour'}
-                    </span>
-                  </div>
-                  <div style={{ overflowX: 'auto', minHeight: 110, maxHeight: 130, flex: 1, padding: 2 }}>
-                    <table style={{ width: '100%', fontSize: 10, borderCollapse: 'collapse', textAlign: 'left' }}>
-                      <thead>
-                        <tr style={{ background: '#f1f5f9', color: '#334155', borderBottom: '1px solid #cbd5e1' }}>
-                          <th style={{ padding: '2px 4px' }}>Start</th>
-                          <th style={{ padding: '2px 4px' }}>End</th>
-                          <th style={{ padding: '2px 4px', textAlign: 'center' }}>Nights</th>
-                          <th style={{ padding: '2px 4px', textAlign: 'right' }}>Rent</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {dayWiseRent.map((slab, idx) => (
-                          <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                            <td style={{ padding: '2px 4px', whiteSpace: 'nowrap' }}>{slab.startDate}</td>
-                            <td style={{ padding: '2px 4px', whiteSpace: 'nowrap' }}>{slab.endDate}</td>
-                            <td style={{ padding: '2px 4px', textAlign: 'center', fontWeight: 700 }}>{slab.dayCount}</td>
-                            <td style={{ padding: '2px 4px', textAlign: 'right', fontWeight: 700 }}>₹{slab.rent.toFixed(2)}</td>
+                <div style={{ border: '1px solid #38bdf8', borderRadius: 3, background: '#ffffff', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
+                  <div>
+                    <div style={{
+                      background: '#bef264',
+                      color: '#000000',
+                      fontWeight: 800,
+                      fontSize: 11,
+                      padding: '4px 8px',
+                      borderBottom: '1px solid #a3e635',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <span>Day Wise Rent (SAC 996311)</span>
+                      <span style={{ fontSize: 9, background: '#0f172a', color: '#fff', padding: '1px 4px', borderRadius: 2 }}>
+                        {calculationType === '12hour' ? '12-Hour' : '24-Hour'}
+                      </span>
+                    </div>
+                    <div style={{ overflowX: 'auto', minHeight: 95, maxHeight: 115, padding: 2 }}>
+                      <table style={{ width: '100%', fontSize: 10, borderCollapse: 'collapse', textAlign: 'left' }}>
+                        <thead>
+                          <tr style={{ background: '#f1f5f9', color: '#334155', borderBottom: '1px solid #cbd5e1' }}>
+                            <th style={{ padding: '2px 4px' }}>Start</th>
+                            <th style={{ padding: '2px 4px' }}>End</th>
+                            <th style={{ padding: '2px 4px', textAlign: 'center' }}>Nights</th>
+                            <th style={{ padding: '2px 4px', textAlign: 'right' }}>Rent</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {dayWiseRent.map((slab, idx) => (
+                            <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                              <td style={{ padding: '2px 4px', whiteSpace: 'nowrap' }}>{slab.startDate}</td>
+                              <td style={{ padding: '2px 4px', whiteSpace: 'nowrap' }}>{slab.endDate}</td>
+                              <td style={{ padding: '2px 4px', textAlign: 'center', fontWeight: 700 }}>{slab.dayCount}</td>
+                              <td style={{ padding: '2px 4px', textAlign: 'right', fontWeight: 700 }}>₹{slab.rent.toFixed(2)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                   <div style={{
+                    height: 32,
                     padding: '4px 6px',
                     borderTop: '1px solid #e2e8f0',
                     background: '#f8fafc',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    fontSize: 10
+                    fontSize: 10,
+                    boxSizing: 'border-box'
                   }}>
                     <span>Nights: <strong>{noOfDays}</strong></span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -999,65 +1027,27 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
 
                 {/* Card 4: Right Settlement & Split Payment Box */}
                 <div style={{
-                  border: '2px solid #84cc16',
-                  borderRadius: 4,
-                  background: '#f8fafc',
-                  padding: '8px 10px',
+                  border: '1px solid #84cc16',
+                  borderRadius: 3,
+                  background: '#ffffff',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 4
+                  justifyContent: 'space-between',
+                  height: '100%'
                 }}>
-                  {/* Less Pre-tax Discount (-) */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 11, color: '#334155', display: 'flex', alignItems: 'center', gap: 3 }}>
-                      Less Discount (-) {!canChangeTariff && <span title="Discount locked for staff">🔒</span>}
-                    </span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={lessDiscount}
-                      onChange={e => setLessDiscount(Number(e.target.value))}
-                      readOnly={!canChangeTariff}
-                      className="form-input-pms"
-                      style={{
-                        width: 85,
-                        fontSize: 10,
-                        padding: '2px 4px',
-                        textAlign: 'right',
-                        background: !canChangeTariff ? '#e2e8f0' : '#ffffff',
-                        cursor: !canChangeTariff ? 'not-allowed' : 'text'
-                      }}
-                    />
-                  </div>
-
-                  {/* Grand Bill Amount */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: '#334155' }}>Grand Bill Total (Round)</span>
-                    <input
-                      type="text"
-                      readOnly
-                      value={`₹${netBillAmount.toFixed(2)}`}
-                      className="form-input-pms"
-                      style={{ width: 85, fontSize: 10, padding: '2px 4px', textAlign: 'right', fontWeight: 800, background: '#fff' }}
-                    />
-                  </div>
-
-                  {/* Total Advance Paid */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 11, color: '#334155' }}>Advance Deducted (-)</span>
-                    <input
-                      type="number"
-                      value={advanceDeducted}
-                      onChange={e => setAdvanceDeducted(Number(e.target.value))}
-                      className="form-input-pms"
-                      style={{ width: 85, fontSize: 10, padding: '2px 4px', textAlign: 'right', color: '#b91c1c', fontWeight: 700 }}
-                    />
-                  </div>
-
-                  {/* Net Balance To Pay + Auto Settle Button */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: '#15803d' }}>Net Balance To Pay</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <div>
+                    <div style={{
+                      background: '#bef264',
+                      color: '#000000',
+                      fontWeight: 800,
+                      fontSize: 11,
+                      padding: '4px 8px',
+                      borderBottom: '1px solid #a3e635',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <span>Bill Summary &amp; Payment Allocation</span>
                       <button
                         type="button"
                         onClick={handleAutoSettle}
@@ -1075,93 +1065,148 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                       >
                         ⚡ Settle Full
                       </button>
-                      <input
-                        type="text"
-                        readOnly
-                        value={`₹${netPayable.toFixed(2)}`}
-                        className="form-input-pms"
-                        style={{ width: 75, fontSize: 10, padding: '2px 4px', textAlign: 'right', fontWeight: 800, background: '#dcfce7', color: '#166534' }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Split Payment Rows */}
-                  <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 4, marginTop: 2 }}>
-                    <div style={{ fontSize: 10, fontWeight: 800, color: '#475569', marginBottom: 3, display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Payment Allocation:</span>
-                      <button
-                        type="button"
-                        onClick={handleAddPaymentMode}
-                        style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '1px 5px', borderRadius: 2, fontSize: 9, fontWeight: 700, cursor: 'pointer' }}
-                      >
-                        + Split Mode
-                      </button>
                     </div>
 
-                    {paymentSplits.map((split, idx) => (
-                      <div key={idx} style={{ display: 'flex', gap: 3, alignItems: 'center', marginBottom: 3 }}>
-                        <select
-                          value={split.mode}
-                          onChange={e => handleUpdateSplit(idx, 'mode', e.target.value)}
-                          className="form-select-pms"
-                          style={{ fontSize: 9, padding: '1px 2px', width: 70 }}
-                        >
-                          <option value="Cash">Cash</option>
-                          <option value="UPI">UPI</option>
-                          <option value="Card">Card</option>
-                          <option value="Online">Online</option>
-                          <option value="Credit">Credit</option>
-                        </select>
+                    <div style={{ padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      {/* Less Pre-tax Discount (-) */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 11, color: '#334155', display: 'flex', alignItems: 'center', gap: 3 }}>
+                          Less Discount (-) {!canChangeTariff && <span title="Discount locked for staff">🔒</span>}
+                        </span>
                         <input
                           type="number"
-                          value={split.amount || 0}
-                          onChange={e => handleUpdateSplit(idx, 'amount', Number(e.target.value))}
+                          min="0"
+                          value={lessDiscount}
+                          onChange={e => setLessDiscount(Number(e.target.value))}
+                          readOnly={!canChangeTariff}
                           className="form-input-pms"
-                          style={{ width: 65, fontSize: 10, padding: '1px 4px', textAlign: 'right', fontWeight: 700 }}
+                          style={{
+                            width: 85,
+                            fontSize: 10,
+                            padding: '1px 4px',
+                            textAlign: 'right',
+                            background: !canChangeTariff ? '#e2e8f0' : '#ffffff',
+                            cursor: !canChangeTariff ? 'not-allowed' : 'text'
+                          }}
                         />
+                      </div>
+
+                      {/* Grand Bill Amount */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: '#334155' }}>Grand Bill Total (Round)</span>
                         <input
                           type="text"
-                          placeholder="Ref / UTR"
-                          value={split.referenceNo || ''}
-                          onChange={e => handleUpdateSplit(idx, 'referenceNo', e.target.value)}
+                          readOnly
+                          value={`₹${netBillAmount.toFixed(2)}`}
                           className="form-input-pms"
-                          style={{ flex: 1, fontSize: 9, padding: '1px 3px' }}
+                          style={{ width: 85, fontSize: 10, padding: '1px 4px', textAlign: 'right', fontWeight: 800, background: '#fff' }}
                         />
-                        {paymentSplits.length > 1 && (
+                      </div>
+
+                      {/* Total Advance Paid */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 11, color: '#334155' }}>Advance Deducted (-)</span>
+                        <input
+                          type="number"
+                          value={advanceDeducted}
+                          onChange={e => setAdvanceDeducted(Number(e.target.value))}
+                          className="form-input-pms"
+                          style={{ width: 85, fontSize: 10, padding: '1px 4px', textAlign: 'right', color: '#b91c1c', fontWeight: 700 }}
+                        />
+                      </div>
+
+                      {/* Net Balance To Pay */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
+                        <span style={{ fontSize: 11, fontWeight: 800, color: '#15803d' }}>Net Balance To Pay</span>
+                        <input
+                          type="text"
+                          readOnly
+                          value={`₹${netPayable.toFixed(2)}`}
+                          className="form-input-pms"
+                          style={{ width: 85, fontSize: 10, padding: '1px 4px', textAlign: 'right', fontWeight: 800, background: '#dcfce7', color: '#166534' }}
+                        />
+                      </div>
+
+                      {/* Split Payment Rows */}
+                      <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 3, marginTop: 1 }}>
+                        <div style={{ fontSize: 10, fontWeight: 800, color: '#475569', marginBottom: 2, display: 'flex', justifyContent: 'space-between' }}>
+                          <span>Payment Allocation:</span>
                           <button
                             type="button"
-                            onClick={() => handleRemoveSplit(idx)}
-                            style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '0 4px', borderRadius: 2, fontSize: 10, cursor: 'pointer' }}
-                            title="Remove split"
+                            onClick={handleAddPaymentMode}
+                            style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '1px 5px', borderRadius: 2, fontSize: 9, fontWeight: 700, cursor: 'pointer' }}
                           >
-                            ×
+                            + Split Mode
                           </button>
-                        )}
+                        </div>
+
+                        {paymentSplits.map((split, idx) => (
+                          <div key={idx} style={{ display: 'flex', gap: 3, alignItems: 'center', marginBottom: 2 }}>
+                            <select
+                              value={split.mode}
+                              onChange={e => handleUpdateSplit(idx, 'mode', e.target.value)}
+                              className="form-select-pms"
+                              style={{ fontSize: 9, padding: '1px 2px', width: 68 }}
+                            >
+                              <option value="Cash">Cash</option>
+                              <option value="UPI">UPI</option>
+                              <option value="Card">Card</option>
+                              <option value="Online">Online</option>
+                              <option value="Credit">Credit</option>
+                            </select>
+                            <input
+                              type="number"
+                              value={split.amount || 0}
+                              onChange={e => handleUpdateSplit(idx, 'amount', Number(e.target.value))}
+                              className="form-input-pms"
+                              style={{ width: 62, fontSize: 10, padding: '1px 3px', textAlign: 'right', fontWeight: 700 }}
+                            />
+                            <input
+                              type="text"
+                              placeholder="Ref / UTR"
+                              value={split.referenceNo || ''}
+                              onChange={e => handleUpdateSplit(idx, 'referenceNo', e.target.value)}
+                              className="form-input-pms"
+                              style={{ flex: 1, fontSize: 9, padding: '1px 3px' }}
+                            />
+                            {paymentSplits.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveSplit(idx)}
+                                style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '0 4px', borderRadius: 2, fontSize: 10, cursor: 'pointer' }}
+                                title="Remove split"
+                              >
+                                ×
+                              </button>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                    ))}
+
+                      {/* Corporate Ledger Approval Checkbox */}
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 700, color: '#0369a1', cursor: 'pointer', marginTop: 1 }}>
+                        <input
+                          type="checkbox"
+                          checked={isCityLedgerApproved}
+                          onChange={e => setIsCityLedgerApproved(e.target.checked)}
+                        />
+                        <span>Corporate Credit / City Ledger Approved</span>
+                      </label>
+                    </div>
                   </div>
 
-                  {/* Corporate Ledger Approval Checkbox */}
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 700, color: '#0369a1', cursor: 'pointer', marginTop: 2 }}>
-                    <input
-                      type="checkbox"
-                      checked={isCityLedgerApproved}
-                      onChange={e => setIsCityLedgerApproved(e.target.checked)}
-                    />
-                    <span>Corporate Credit / City Ledger Approved</span>
-                  </label>
-
-                  {/* Live Settlement Status */}
+                  {/* Live Settlement Status Footer Bar (32px Matching Aligned Height) */}
                   <div style={{
-                    padding: '3px 6px',
-                    borderRadius: 3,
+                    height: 32,
+                    padding: '4px 8px',
+                    borderTop: `1px solid ${remainingToSettle === 0 || isCityLedgerApproved ? '#86efac' : '#fca5a5'}`,
                     background: remainingToSettle === 0 || isCityLedgerApproved ? '#dcfce7' : '#fee2e2',
-                    border: `1px solid ${remainingToSettle === 0 || isCityLedgerApproved ? '#86efac' : '#fca5a5'}`,
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     fontSize: 10,
-                    fontWeight: 800
+                    fontWeight: 800,
+                    boxSizing: 'border-box'
                   }}>
                     <span>Allocated: ₹{totalPaidAtCheckout.toFixed(2)}</span>
                     <span style={{ color: remainingToSettle === 0 || isCityLedgerApproved ? '#166534' : '#b91c1c' }}>
@@ -1250,7 +1295,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                 border: `1px solid ${isComplimentary ? '#cbd5e1' : isLocalGst ? '#86efac' : '#fde68a'}`,
                 padding: '6px 12px',
                 borderRadius: 4,
-                marginBottom: 10,
+                marginBottom: 8,
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
@@ -1292,7 +1337,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
               </div>
 
               {/* Company Address & Remark */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: 8, marginBottom: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: 8, marginBottom: 8 }}>
                 <div className="form-group-pms" style={{ margin: 0 }}>
                   <label className="form-label-pms">Company Address / Billing Address</label>
                   <input
@@ -1316,7 +1361,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
               </div>
 
               {/* Financial Summary */}
-              <div style={{ background: '#f1f5f9', padding: '8px 12px', borderRadius: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ background: '#f1f5f9', padding: '6px 12px', borderRadius: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: 12 }}>
                   Taxable Room: <strong>₹{netRoomTaxable.toFixed(2)}</strong> (SAC 996311) &bull;
                   Food: <strong>₹{foodAmount.toFixed(2)}</strong> (SAC 996331 @ 5%) &bull;
@@ -1330,7 +1375,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
               </div>
 
               {/* Action Buttons */}
-              <div className="pms-btn-group" style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <div className="pms-btn-group" style={{ marginTop: 8, paddingTop: 8, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
                 <button
                   type="button"
                   onClick={onClose}
