@@ -1,0 +1,298 @@
+{
+  "timestamp": "2026-10-21T02:58:40.787Z",
+  "targetUrl": "https://hotel-sai-vasudev-residency.pages.dev",
+  "totalDurationMs": 55404,
+  "metrics": {
+    "consoleErrors": [
+      {
+        "text": "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/health' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "location": {
+          "url": "https://hotel-sai-vasudev-residency.pages.dev/",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Failed to load resource: net::ERR_FAILED",
+        "location": {
+          "url": "https://hotel-sai-vasudev-residency-production.up.railway.app/health",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/full-state' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "location": {
+          "url": "https://hotel-sai-vasudev-residency.pages.dev/",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Failed to load resource: net::ERR_FAILED",
+        "location": {
+          "url": "https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/full-state",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/dashboard' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "location": {
+          "url": "https://hotel-sai-vasudev-residency.pages.dev/",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Failed to load resource: net::ERR_FAILED",
+        "location": {
+          "url": "https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/dashboard",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/full-state' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "location": {
+          "url": "https://hotel-sai-vasudev-residency.pages.dev/erp",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Failed to load resource: net::ERR_FAILED",
+        "location": {
+          "url": "https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/full-state",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/health' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "location": {
+          "url": "https://hotel-sai-vasudev-residency.pages.dev/erp",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Failed to load resource: net::ERR_FAILED",
+        "location": {
+          "url": "https://hotel-sai-vasudev-residency-production.up.railway.app/health",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/full-state' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "location": {
+          "url": "https://hotel-sai-vasudev-residency.pages.dev/erp",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Failed to load resource: net::ERR_FAILED",
+        "location": {
+          "url": "https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/full-state",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/dashboard' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "location": {
+          "url": "https://hotel-sai-vasudev-residency.pages.dev/erp",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Failed to load resource: net::ERR_FAILED",
+        "location": {
+          "url": "https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/dashboard",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/dashboard' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "location": {
+          "url": "https://hotel-sai-vasudev-residency.pages.dev/erp",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Failed to load resource: net::ERR_FAILED",
+        "location": {
+          "url": "https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/dashboard",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/dashboard' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "location": {
+          "url": "https://hotel-sai-vasudev-residency.pages.dev/erp",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Failed to load resource: net::ERR_FAILED",
+        "location": {
+          "url": "https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/dashboard",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/dashboard' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "location": {
+          "url": "https://hotel-sai-vasudev-residency.pages.dev/erp",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Failed to load resource: net::ERR_FAILED",
+        "location": {
+          "url": "https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/dashboard",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/dashboard' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "location": {
+          "url": "https://hotel-sai-vasudev-residency.pages.dev/erp",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Failed to load resource: net::ERR_FAILED",
+        "location": {
+          "url": "https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/dashboard",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "consoleWarnings": [
+      {
+        "text": "[PmsStore] Cloud hydration running in offline fallback mode: TypeError: Failed to fetch\n    at Object.getFullCloudState (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:9:69252)\n    at Y.initCloudStore (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:12:86699)\n    at https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:45:354672\n    at fl (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:95204)\n    at Nu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118499)\n    at Mu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118272)\n    at Nu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:119716)\n    at Mu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118272)\n    at Nu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118545)\n    at lf (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:133119)"
+      },
+      {
+        "text": "[PmsStore] Background cloud sync notice: TypeError: Failed to fetch\n    at Object.getPmsDashboardSync (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:9:67426)\n    at Y.syncWithCloudBackend (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:12:85454)\n    at https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:45:354700"
+      },
+      {
+        "text": "[PmsStore] Cloud hydration running in offline fallback mode: TypeError: Failed to fetch\n    at Object.getFullCloudState (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:9:69252)\n    at Y.initCloudStore (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:12:86699)\n    at https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:45:354672\n    at fl (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:95204)\n    at Nu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118499)\n    at Mu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118272)\n    at Nu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:119716)\n    at Mu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118272)\n    at Nu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118545)\n    at lf (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:133119)"
+      },
+      {
+        "text": "[PmsStore] Cloud hydration running in offline fallback mode: TypeError: Failed to fetch\n    at Object.getFullCloudState (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:9:69252)\n    at Y.initCloudStore (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:12:86699)\n    at https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:45:311256\n    at fl (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:95204)\n    at Nu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118499)\n    at Mu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118272)\n    at Nu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:119716)\n    at Mu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118272)\n    at Nu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118479)\n    at Mu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118272)"
+      },
+      {
+        "text": "[PmsStore] Background cloud sync notice: TypeError: Failed to fetch\n    at Object.getPmsDashboardSync (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:9:67426)\n    at Y.syncWithCloudBackend (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:12:85454)\n    at https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:45:354700"
+      },
+      {
+        "text": "[PmsStore] Background cloud sync notice: TypeError: Failed to fetch\n    at Object.getPmsDashboardSync (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:9:67426)\n    at Y.syncWithCloudBackend (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:12:85454)\n    at Dr (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:45:311090)\n    at https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:45:311286\n    at <anonymous>"
+      },
+      {
+        "text": "[PmsStore] Background cloud sync notice: TypeError: Failed to fetch\n    at Object.getPmsDashboardSync (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:9:67426)\n    at Y.syncWithCloudBackend (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:12:85454)\n    at https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:45:354827"
+      },
+      {
+        "text": "[PmsStore] Background cloud sync notice: TypeError: Failed to fetch\n    at Object.getPmsDashboardSync (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:9:67426)\n    at Y.syncWithCloudBackend (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:12:85454)\n    at https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:45:354827"
+      },
+      {
+        "text": "[PmsStore] Background cloud sync notice: TypeError: Failed to fetch\n    at Object.getPmsDashboardSync (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:9:67426)\n    at Y.syncWithCloudBackend (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:12:85454)\n    at Dr (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:45:311090)"
+      }
+    ],
+    "networkFailures": [],
+    "apiLatencies": []
+  },
+  "phases": {
+    "phase1_discovery": {
+      "passed": false,
+      "checks": [
+        {
+          "name": "Initial Landing Page Load",
+          "status": "PASS",
+          "httpStatus": 200,
+          "loadTimeMs": 9616
+        },
+        {
+          "name": "PMS Master Modal Mount",
+          "status": "PASS",
+          "details": "PMS window rendered"
+        },
+        {
+          "name": "16-Room Visual Rack Rendered",
+          "status": "FAIL",
+          "count": 0
+        }
+      ]
+    },
+    "phase2_business_logic": {
+      "passed": false,
+      "checks": []
+    },
+    "phase3_ui_ux_telemetry": {
+      "passed": false,
+      "checks": []
+    }
+  },
+  "bugs": [
+    {
+      "severity": "CRITICAL",
+      "message": "elementHandle.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m    - element is visible, enabled and stable\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n\u001b[2m    - done scrolling\u001b[22m\n\u001b[2m    - <div title=\"Click to open Room Action Drawer\">…</div> from <div class=\"pms-overlay\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m  - retrying click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m    - element is visible, enabled and stable\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n\u001b[2m    - done scrolling\u001b[22m\n\u001b[2m    - <div class=\"pms-overlay\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m  - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m    - element is visible, enabled and stable\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n\u001b[2m    - done scrolling\u001b[22m\n\u001b[2m    - <div title=\"Click to open Room Action Drawer\">…</div> from <div class=\"pms-overlay\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m  2 × retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m      - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"pms-overlay\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m  13 × retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\u001b[2m       - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div class=\"pms-overlay\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\u001b[2m       - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div title=\"Click to open Room Action Drawer\">…</div> from <div class=\"pms-overlay\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\u001b[2m       - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div class=\"pms-overlay\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\u001b[2m       - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div class=\"pms-overlay\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m  - retrying click action\u001b[22m\n\u001b[2m    - waiting 500ms\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m    - element is visible, enabled and stable\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n\u001b[2m    - done scrolling\u001b[22m\n\u001b[2m    - <div class=\"pms-overlay\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m  - retrying click action\u001b[22m\n\u001b[2m    - waiting 500ms\u001b[22m\n",
+      "stack": "elementHandle.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m    - element is visible, enabled and stable\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n\u001b[2m    - done scrolling\u001b[22m\n\u001b[2m    - <div title=\"Click to open Room Action Drawer\">…</div> from <div class=\"pms-overlay\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m  - retrying click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m    - element is visible, enabled and stable\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n\u001b[2m    - done scrolling\u001b[22m\n\u001b[2m    - <div class=\"pms-overlay\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m  - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m    - element is visible, enabled and stable\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n\u001b[2m    - done scrolling\u001b[22m\n\u001b[2m    - <div title=\"Click to open Room Action Drawer\">…</div> from <div class=\"pms-overlay\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m  2 × retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m      - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"pms-overlay\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m  13 × retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\u001b[2m       - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div class=\"pms-overlay\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\u001b[2m       - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div title=\"Click to open Room Action Drawer\">…</div> from <div class=\"pms-overlay\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\u001b[2m       - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div class=\"pms-overlay\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\u001b[2m       - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div class=\"pms-overlay\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m  - retrying click action\u001b[22m\n\u001b[2m    - waiting 500ms\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m    - element is visible, enabled and stable\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n\u001b[2m    - done scrolling\u001b[22m\n\u001b[2m    - <div class=\"pms-overlay\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m  - retrying click action\u001b[22m\n\u001b[2m    - waiting 500ms\u001b[22m\n\n    at runAudit (C:\\Users\\rakes\\hotel SAI VASUDEV RESIDENCY\\scripts\\e2e_full_audit.mjs:136:24)"
+    }
+  ]
+}

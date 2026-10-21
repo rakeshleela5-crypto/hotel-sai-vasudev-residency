@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { 
   PmsRoom, 
+  RoomStatus,
   PmsBooking, 
   PmsKotRecord, 
   KotItem,
@@ -277,6 +278,44 @@ export const INITIAL_ROOMS: PmsRoom[] = [
     priority: 'Normal',
     lastCleaned: '20-10-2026 09:15 AM'
   },
+  {
+    id: '107',
+    roomNo: '107',
+    roomType: 'Executive Deluxe',
+    tariff: 2499,
+    status: 'vacant',
+    floor: 1,
+    facilities: 'King Bed, AC, Geyser, 43" 4K Smart TV, High-speed Wi-Fi, Coffee Maker',
+    capacity: 2,
+    maxGuests: 3,
+    bedType: 'King Bed',
+    roomSize: '340 sq ft',
+    image1: '/images/deluxe_room.jpg',
+    image2: '/images/hero.jpg',
+    image3: '/images/suite_room.jpg',
+    assignedStaff: 'Sunita',
+    priority: 'Normal',
+    lastCleaned: '20-10-2026 10:00 AM'
+  },
+  {
+    id: '108',
+    roomNo: '108',
+    roomType: 'Executive Deluxe',
+    tariff: 2499,
+    status: 'vacant',
+    floor: 1,
+    facilities: 'King Bed, AC, Soundproof Acoustic Windows, Geyser, Work Desk',
+    capacity: 2,
+    maxGuests: 3,
+    bedType: 'King Bed',
+    roomSize: '340 sq ft',
+    image1: '/images/deluxe_room.jpg',
+    image2: '/images/hero.jpg',
+    image3: '/images/suite_room.jpg',
+    assignedStaff: 'Ramesh',
+    priority: 'Normal',
+    lastCleaned: '20-10-2026 10:15 AM'
+  },
 
   // =========================================================================
   // Floor 2 (Super Deluxe Family Rooms - ₹3,799/night + 12% GST)
@@ -540,16 +579,21 @@ export const INITIAL_ROOM_TYPES: PmsRoomType[] = [
 ];
 
 export const INITIAL_TABLES: PmsDiningTable[] = [
-  { id: 't-1', tableName: 'Table T-01', tableGroup: 'General', capacity: 4, status: 'Vacant' },
-  { id: 't-2', tableName: 'Table T-02', tableGroup: 'General', capacity: 4, status: 'Running' },
-  { id: 't-3', tableName: 'Table T-03', tableGroup: 'General', capacity: 4, status: 'Vacant' },
-  { id: 't-4', tableName: 'Table T-04', tableGroup: 'General', capacity: 4, status: 'Vacant' },
-  { id: 't-5', tableName: 'Table T-05', tableGroup: 'General', capacity: 6, status: 'Running' },
-  { id: 't-6', tableName: 'Table T-06', tableGroup: 'General', capacity: 6, status: 'Vacant' },
-  { id: 't-7', tableName: 'Table T-07', tableGroup: 'General', capacity: 2, status: 'Vacant' },
-  { id: 't-8', tableName: 'Table T-08', tableGroup: 'General', capacity: 2, status: 'Running' },
-  { id: 't-9', tableName: 'Table T-09', tableGroup: 'General', capacity: 8, status: 'Vacant' },
-  { id: 't-10', tableName: 'Table T-10', tableGroup: 'General', capacity: 8, status: 'Vacant' },
+  // 12 Restaurant Tables: T1–T8 Main Hall + VIP-1–VIP-4 AC Family Lounge
+  { id: 't-1', tableName: 'Table T-01', tableGroup: 'Main Hall', capacity: 4, status: 'Vacant' },
+  { id: 't-2', tableName: 'Table T-02', tableGroup: 'Main Hall', capacity: 4, status: 'Running' },
+  { id: 't-3', tableName: 'Table T-03', tableGroup: 'Main Hall', capacity: 4, status: 'Vacant' },
+  { id: 't-4', tableName: 'Table T-04', tableGroup: 'Main Hall', capacity: 4, status: 'Vacant' },
+  { id: 't-5', tableName: 'Table T-05', tableGroup: 'Main Hall', capacity: 6, status: 'Running' },
+  { id: 't-6', tableName: 'Table T-06', tableGroup: 'Main Hall', capacity: 6, status: 'Vacant' },
+  { id: 't-7', tableName: 'Table T-07', tableGroup: 'Main Hall', capacity: 4, status: 'Vacant' },
+  { id: 't-8', tableName: 'Table T-08', tableGroup: 'Main Hall', capacity: 4, status: 'Vacant' },
+  { id: 'vip-1', tableName: 'Table VIP-01', tableGroup: 'AC Family Lounge', capacity: 6, status: 'Vacant' },
+  { id: 'vip-2', tableName: 'Table VIP-02', tableGroup: 'AC Family Lounge', capacity: 6, status: 'Vacant' },
+  { id: 'vip-3', tableName: 'Table VIP-03', tableGroup: 'AC Family Lounge', capacity: 8, status: 'Vacant' },
+  { id: 'vip-4', tableName: 'Table VIP-04', tableGroup: 'AC Family Lounge', capacity: 8, status: 'Vacant' },
+  // Special Service Modes
+  { id: 't-takeaway', tableName: 'Takeaway / Parcel', tableGroup: 'TakeAway', capacity: 2, status: 'Vacant' },
   { id: 't-room-service', tableName: 'Room Service', tableGroup: 'TakeAway', capacity: 2, status: 'Running' }
 ];
 
@@ -2628,7 +2672,12 @@ const STORAGE_KEYS = {
   HOUSEKEEPING: 'svr_pms_housekeeping',
   NIGHT_AUDITS: 'svr_pms_night_audits',
   FOLIO_PAYMENTS: 'svr_pms_folio_payments',
-  FOLIO_DISCOUNTS: 'svr_pms_folio_discounts'
+  FOLIO_DISCOUNTS: 'svr_pms_folio_discounts',
+  BUSINESS_DATE: 'svr_pms_business_date',
+  JOURNAL_ENTRIES: 'svr_pms_journal_entries',
+  KOT_VOID_AUDIT: 'svr_pms_kot_void_audit',
+  SCHEMA_VERSION: 'svr_pms_schema_version',
+  NIGHT_AUDIT_ACCRUALS: 'svr_pms_night_audit_accruals'
 };
 
 export const INITIAL_EXPENSES: PmsExpenseRecord[] = [
@@ -3015,8 +3064,370 @@ export class PmsStore {
   }
 
   // =========================================================================
-  // 1. Reset to Demo Seed Data (Guaranteed Zero State Loss / Authentic Shirdi)
+  // 1. Double-Entry Accounting Ledger, Business Date & Master Seed Engine
   // =========================================================================
+  static readonly SCHEMA_VERSION = '20261020_v2';
+
+  // Strict 6-State Room Status Machine Helpers
+  static normalizeRoomStatus(status: string): RoomStatus {
+    const s = (status || '').toUpperCase().trim();
+    if (s === 'VACANT_CLEAN' || s === 'VACANT' || s === 'VC') return 'VACANT_CLEAN';
+    if (s === 'VACANT_DIRTY' || s === 'DIRTY' || s === 'VD') return 'VACANT_DIRTY';
+    if (s === 'OCCUPIED_CLEAN' || s === 'OC') return 'OCCUPIED_CLEAN';
+    if (s === 'OCCUPIED_DIRTY' || s === 'OD') return 'OCCUPIED_DIRTY';
+    if (s === 'OCCUPIED') return 'OCCUPIED_CLEAN';
+    if (s === 'UNDER_MAINTENANCE' || s === 'MAINTENANCE' || s === 'BLOCKED' || s === 'OOO') return 'UNDER_MAINTENANCE';
+    if (s === 'MANAGEMENT_BLOCK' || s === 'MB') return 'MANAGEMENT_BLOCK';
+    if (s === 'BOOKED' || s === 'RESERVED') return 'booked';
+    return 'VACANT_CLEAN';
+  }
+
+  static isRoomVacantClean(room: PmsRoom | null | undefined): boolean {
+    if (!room) return false;
+    const s = room.status;
+    return s === 'vacant' || s === 'VACANT_CLEAN';
+  }
+
+  static isRoomVacantDirty(room: PmsRoom | null | undefined): boolean {
+    if (!room) return false;
+    const s = room.status;
+    return s === 'dirty' || s === 'VACANT_DIRTY';
+  }
+
+  static isRoomOccupied(room: PmsRoom | null | undefined): boolean {
+    if (!room) return false;
+    const s = room.status;
+    return s === 'occupied' || s === 'OCCUPIED_CLEAN' || s === 'OCCUPIED_DIRTY';
+  }
+
+  static isRoomUnderMaintenance(room: PmsRoom | null | undefined): boolean {
+    if (!room) return false;
+    const s = room.status;
+    return s === 'blocked' || s === 'UNDER_MAINTENANCE' || s === 'MANAGEMENT_BLOCK';
+  }
+
+  // Business Date Management
+  static getBusinessDate(): string {
+    const raw = localStorage.getItem(STORAGE_KEYS.BUSINESS_DATE);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.BUSINESS_DATE, '2026-10-20');
+      return '2026-10-20';
+    }
+    return raw;
+  }
+
+  static setBusinessDate(d: string): void {
+    localStorage.setItem(STORAGE_KEYS.BUSINESS_DATE, d);
+    this.notify();
+  }
+
+  static advanceBusinessDate(): string {
+    const current = this.getBusinessDate();
+    const [y, m, d] = current.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    dateObj.setDate(dateObj.getDate() + 1);
+    const nextY = dateObj.getFullYear();
+    const nextM = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const nextD = String(dateObj.getDate()).padStart(2, '0');
+    const nextStr = `${nextY}-${nextM}-${nextD}`;
+    this.setBusinessDate(nextStr);
+    return nextStr;
+  }
+
+  // Integer-Paise Arithmetic & Section 170 CGST Act Round-Off
+  static toPaise(rupees: number): number {
+    return Math.round(Number(rupees || 0) * 100);
+  }
+
+  static fromPaise(paise: number): number {
+    return Number((Number(paise || 0) / 100).toFixed(2));
+  }
+
+  static computeSection170Gst(baseRupees: number, ratePercent: number): {
+    taxableRupees: number;
+    cgstRupees: number;
+    sgstRupees: number;
+    totalTaxRupees: number;
+    grossRupees: number;
+    roundOffRupees: number;
+    netBillAmount: number;
+  } {
+    const basePaise = Math.round(baseRupees * 100);
+    const halfRate = ratePercent / 2;
+    const cgstPaise = Math.round((basePaise * halfRate) / 100);
+    const sgstPaise = cgstPaise; // Exact equality under Indian GST
+    const totalTaxPaise = cgstPaise + sgstPaise;
+    const grossPaise = basePaise + totalTaxPaise;
+    const netBillAmount = Math.round(grossPaise / 100);
+    const roundOffRupees = Number(((netBillAmount * 100 - grossPaise) / 100).toFixed(2));
+
+    return {
+      taxableRupees: Number((basePaise / 100).toFixed(2)),
+      cgstRupees: Number((cgstPaise / 100).toFixed(2)),
+      sgstRupees: Number((sgstPaise / 100).toFixed(2)),
+      totalTaxRupees: Number((totalTaxPaise / 100).toFixed(2)),
+      grossRupees: Number((grossPaise / 100).toFixed(2)),
+      roundOffRupees,
+      netBillAmount
+    };
+  }
+
+  // Double-Entry Journal Ledger
+  static getJournalEntries(): import('../types/pmsModels').PmsJournalEntry[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.JOURNAL_ENTRIES);
+    if (!raw) {
+      const initial: import('../types/pmsModels').PmsJournalEntry[] = [
+        {
+          entryId: 'JV-2026-0001',
+          date: '2026-10-19',
+          time: '11:00 AM',
+          voucherType: 'Advance',
+          referenceNo: 'AR/201/26-27',
+          narration: 'Advance deposit received from Rajesh Sharma for Room 101',
+          debitAccount: 'HDFC Bank / UPI Settlement A/c',
+          creditAccount: 'Guest Advance Deposit Liability',
+          amountPaise: 150000,
+          amountRupees: 1500,
+          postedBy: 'Front Desk'
+        },
+        {
+          entryId: 'JV-2026-0002',
+          date: '2026-10-19',
+          time: '01:00 PM',
+          voucherType: 'Advance',
+          referenceNo: 'AR/202/26-27',
+          narration: 'Advance deposit received from Sunita Patel for Room 103',
+          debitAccount: 'Cash in Hand (Reception)',
+          creditAccount: 'Guest Advance Deposit Liability',
+          amountPaise: 249900,
+          amountRupees: 2499,
+          postedBy: 'Front Desk'
+        },
+        {
+          entryId: 'JV-2026-0003',
+          date: '2026-10-20',
+          time: '09:30 AM',
+          voucherType: 'Advance',
+          referenceNo: 'AR/203/26-27',
+          narration: 'Advance received from Vikram Malhotra for Room 202',
+          debitAccount: 'HDFC Bank / UPI Settlement A/c',
+          creditAccount: 'Guest Advance Deposit Liability',
+          amountPaise: 500000,
+          amountRupees: 5000,
+          postedBy: 'Front Desk'
+        },
+        {
+          entryId: 'JV-2026-0004',
+          date: '2026-10-20',
+          time: '08:00 AM',
+          voucherType: 'Advance',
+          referenceNo: 'AR/204/26-27',
+          narration: 'Full advance received from Arvind Kirloskar for Suite 303',
+          debitAccount: 'HDFC Bank / UPI Settlement A/c',
+          creditAccount: 'Guest Advance Deposit Liability',
+          amountPaise: 671900,
+          amountRupees: 6719,
+          postedBy: 'Front Desk'
+        },
+        {
+          entryId: 'JV-2026-0005',
+          date: '2026-10-20',
+          time: '08:30 AM',
+          voucherType: 'Expense',
+          referenceNo: 'EXP-2026-001',
+          narration: 'Purchased Fresh Paneer & Veggies for Vasudev Rasoi',
+          debitAccount: 'Petty Cash / Housekeeping Expense',
+          creditAccount: 'Cash in Hand (Reception)',
+          amountPaise: 145000,
+          amountRupees: 1450,
+          postedBy: 'General Manager'
+        }
+      ];
+      localStorage.setItem(STORAGE_KEYS.JOURNAL_ENTRIES, JSON.stringify(initial));
+      return initial;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+
+  static postJournalEntry(entry: Omit<import('../types/pmsModels').PmsJournalEntry, 'entryId'>): import('../types/pmsModels').PmsJournalEntry {
+    const list = this.getJournalEntries();
+    const nextSeq = list.length + 1;
+    const fullEntry: import('../types/pmsModels').PmsJournalEntry = {
+      ...entry,
+      entryId: `JV-2026-${String(nextSeq).padStart(4, '0')}`
+    };
+    list.unshift(fullEntry);
+    localStorage.setItem(STORAGE_KEYS.JOURNAL_ENTRIES, JSON.stringify(list));
+    this.notify();
+    return fullEntry;
+  }
+
+  static getTrialBalance(): {
+    accounts: Array<{ name: string; type: 'Asset' | 'Liability' | 'Income' | 'Expense'; debit: number; credit: number; balance: number }>;
+    totalDebit: number;
+    totalCredit: number;
+    isBalanced: boolean;
+  } {
+    const entries = this.getJournalEntries();
+    const accountMap: Record<string, { debitPaise: number; creditPaise: number }> = {};
+
+    entries.forEach(e => {
+      if (!accountMap[e.debitAccount]) accountMap[e.debitAccount] = { debitPaise: 0, creditPaise: 0 };
+      if (!accountMap[e.creditAccount]) accountMap[e.creditAccount] = { debitPaise: 0, creditPaise: 0 };
+      accountMap[e.debitAccount].debitPaise += e.amountPaise;
+      accountMap[e.creditAccount].creditPaise += e.amountPaise;
+    });
+
+    const getAccountType = (acc: string): 'Asset' | 'Liability' | 'Income' | 'Expense' => {
+      const lower = acc.toLowerCase();
+      if (lower.includes('cash') || lower.includes('bank') || lower.includes('receivable') || lower.includes('card')) return 'Asset';
+      if (lower.includes('liability') || lower.includes('output') || lower.includes('gst')) return 'Liability';
+      if (lower.includes('revenue') || lower.includes('income')) return 'Income';
+      return 'Expense';
+    };
+
+    let totalDebitPaise = 0;
+    let totalCreditPaise = 0;
+    const accounts = Object.keys(accountMap).sort().map(accName => {
+      const d = accountMap[accName].debitPaise;
+      const c = accountMap[accName].creditPaise;
+      totalDebitPaise += d;
+      totalCreditPaise += c;
+      const net = d - c;
+      return {
+        name: accName,
+        type: getAccountType(accName),
+        debit: Number((d / 100).toFixed(2)),
+        credit: Number((c / 100).toFixed(2)),
+        balance: Number((net / 100).toFixed(2))
+      };
+    });
+
+    return {
+      accounts,
+      totalDebit: Number((totalDebitPaise / 100).toFixed(2)),
+      totalCredit: Number((totalCreditPaise / 100).toFixed(2)),
+      isBalanced: totalDebitPaise === totalCreditPaise
+    };
+  }
+
+  // KOT Void Item & Anti-Pilferage Audit
+  static getKotVoidAuditLogs(): import('../types/pmsModels').KotVoidAuditLog[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.KOT_VOID_AUDIT);
+    if (!raw) return [];
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+
+  static voidKotItem(
+    kotNo: string,
+    itemCode: string,
+    voidReason: string,
+    foodStatus: 'Prepared/Wasted' | 'Unprepared',
+    voidedBy: string = 'Kitchen Supervisor'
+  ): boolean {
+    const kots = this.getKots();
+    const kot = kots.find(k => k.kotNo === kotNo);
+    if (!kot) return false;
+
+    const itemIdx = kot.items.findIndex(it => it.itemCode === itemCode);
+    if (itemIdx < 0) return false;
+
+    const item = kot.items[itemIdx];
+    const logs = this.getKotVoidAuditLogs();
+    const newLog: import('../types/pmsModels').KotVoidAuditLog = {
+      id: `VOID-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      kotNo,
+      itemCode: item.itemCode || 'ITEM',
+      itemName: item.itemName,
+      qty: item.qty,
+      rate: item.rate,
+      amount: item.amount,
+      voidReason,
+      foodStatus,
+      voidedAt: new Date().toISOString(),
+      voidedBy
+    };
+    logs.unshift(newLog);
+    localStorage.setItem(STORAGE_KEYS.KOT_VOID_AUDIT, JSON.stringify(logs));
+
+    // Remove item from KOT
+    kot.items.splice(itemIdx, 1);
+    kot.totalQty = kot.items.reduce((s, it) => s + it.qty, 0);
+    kot.totalAmount = Number(kot.items.reduce((s, it) => s + it.amount, 0).toFixed(2));
+    if (kot.items.length === 0) {
+      kot.status = 'Cancelled';
+    }
+    this.saveKot(kot);
+    this.notify();
+    return true;
+  }
+
+  // JSON Database Export / Import
+  static exportDatabaseAsJson(): string {
+    const payload = {
+      schemaVersion: this.SCHEMA_VERSION,
+      exportedAt: new Date().toISOString(),
+      property: 'Hotel Sai Vasudev Residency & Vasudev Rasoi Dining',
+      data: {
+        rooms: this.getRooms(),
+        roomTypes: this.getRoomTypes(),
+        tables: this.getTables(),
+        menuItems: this.getMenuItems(),
+        bookings: this.getBookings(),
+        checkouts: this.getCheckouts(),
+        kots: this.getKots(),
+        expenses: this.getExpenses(),
+        housekeeping: this.getHousekeepingRecords(),
+        nightAudits: this.getNightAudits(),
+        folioPayments: this.getFolioPayments(),
+        advanceReceipts: this.getAdvanceReceipts(),
+        journalEntries: this.getJournalEntries(),
+        kotVoidAudit: this.getKotVoidAuditLogs(),
+        businessDate: this.getBusinessDate()
+      }
+    };
+    return JSON.stringify(payload, null, 2);
+  }
+
+  static importDatabaseFromJson(jsonStr: string): { success: boolean; message: string } {
+    try {
+      const parsed = JSON.parse(jsonStr);
+      if (!parsed || !parsed.data) {
+        return { success: false, message: 'Invalid ERP backup JSON format. Missing "data" payload.' };
+      }
+      const d = parsed.data;
+      if (Array.isArray(d.rooms)) localStorage.setItem(STORAGE_KEYS.ROOMS, JSON.stringify(d.rooms));
+      if (Array.isArray(d.roomTypes)) localStorage.setItem(STORAGE_KEYS.ROOM_TYPES, JSON.stringify(d.roomTypes));
+      if (Array.isArray(d.tables)) localStorage.setItem(STORAGE_KEYS.TABLES, JSON.stringify(d.tables));
+      if (Array.isArray(d.menuItems)) localStorage.setItem(STORAGE_KEYS.MENU_ITEMS, JSON.stringify(d.menuItems));
+      if (Array.isArray(d.bookings)) localStorage.setItem(STORAGE_KEYS.BOOKINGS, JSON.stringify(d.bookings));
+      if (Array.isArray(d.checkouts)) localStorage.setItem(STORAGE_KEYS.CHECKOUTS, JSON.stringify(d.checkouts));
+      if (Array.isArray(d.kots)) localStorage.setItem(STORAGE_KEYS.KOTS, JSON.stringify(d.kots));
+      if (Array.isArray(d.expenses)) localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(d.expenses));
+      if (Array.isArray(d.housekeeping)) localStorage.setItem(STORAGE_KEYS.HOUSEKEEPING, JSON.stringify(d.housekeeping));
+      if (Array.isArray(d.nightAudits)) localStorage.setItem(STORAGE_KEYS.NIGHT_AUDITS, JSON.stringify(d.nightAudits));
+      if (Array.isArray(d.folioPayments)) localStorage.setItem(STORAGE_KEYS.FOLIO_PAYMENTS, JSON.stringify(d.folioPayments));
+      if (Array.isArray(d.advanceReceipts)) localStorage.setItem(STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify(d.advanceReceipts));
+      if (Array.isArray(d.journalEntries)) localStorage.setItem(STORAGE_KEYS.JOURNAL_ENTRIES, JSON.stringify(d.journalEntries));
+      if (Array.isArray(d.kotVoidAudit)) localStorage.setItem(STORAGE_KEYS.KOT_VOID_AUDIT, JSON.stringify(d.kotVoidAudit));
+      if (d.businessDate) localStorage.setItem(STORAGE_KEYS.BUSINESS_DATE, d.businessDate);
+      localStorage.setItem(STORAGE_KEYS.SCHEMA_VERSION, parsed.schemaVersion || this.SCHEMA_VERSION);
+      this.notify();
+      return { success: true, message: `Successfully imported ERP backup (Version: ${parsed.schemaVersion || 'Legacy'}). All modules synchronized.` };
+    } catch (err: any) {
+      return { success: false, message: `Failed to parse JSON backup: ${err.message}` };
+    }
+  }
+
+  // 1. Reset to Demo Seed Data (Guaranteed Zero State Loss / Authentic Shirdi)
   static resetToDemoSeedData(): void {
     localStorage.setItem(STORAGE_KEYS.ROOMS, JSON.stringify(INITIAL_ROOMS));
     localStorage.setItem(STORAGE_KEYS.ROOM_TYPES, JSON.stringify(INITIAL_ROOM_TYPES));
@@ -3026,6 +3437,11 @@ export class PmsStore {
     localStorage.setItem(STORAGE_KEYS.HOUSEKEEPING, JSON.stringify(INITIAL_HOUSEKEEPING));
     localStorage.setItem(STORAGE_KEYS.NIGHT_AUDITS, JSON.stringify(INITIAL_NIGHT_AUDITS));
     localStorage.setItem(STORAGE_KEYS.FOLIO_PAYMENTS, JSON.stringify(INITIAL_FOLIO_PAYMENTS));
+    localStorage.setItem(STORAGE_KEYS.BUSINESS_DATE, '2026-10-20');
+    localStorage.setItem(STORAGE_KEYS.SCHEMA_VERSION, this.SCHEMA_VERSION);
+    localStorage.removeItem(STORAGE_KEYS.JOURNAL_ENTRIES);
+    localStorage.removeItem(STORAGE_KEYS.KOT_VOID_AUDIT);
+    localStorage.removeItem(STORAGE_KEYS.NIGHT_AUDIT_ACCRUALS);
     localStorage.removeItem(STORAGE_KEYS.FOLIO_DISCOUNTS);
     localStorage.removeItem(STORAGE_KEYS.BOOKINGS);
     localStorage.removeItem(STORAGE_KEYS.KOTS);
@@ -3171,26 +3587,137 @@ export class PmsStore {
     }
   }
 
-  static runNightAudit(auditorName: string = 'General Manager / Lead Auditor'): PmsNightAuditRecord {
+  // =========================================================================
+  // 4-Step Night Audit Wizard Engine (Indian Hospitality Standard)
+  // =========================================================================
+  static getNightAuditPreCheck(): {
+    businessDate: string;
+    pendingArrivalsCount: number;
+    overdueDeparturesCount: number;
+    openKotsCount: number;
+    occupiedRoomsCount: number;
+    totalTariffAccruable: number;
+    totalGstAccruable: number;
+    canProceed: boolean;
+    blockers: string[];
+  } {
+    const bDate = this.getBusinessDate();
     const rooms = this.getRooms();
-    const occupiedRooms = rooms.filter(r => r.status === 'occupied');
+    const occupiedRooms = rooms.filter(r => this.isRoomOccupied(r));
+
+    // Pending arrivals (due on or before bDate that haven't checked in)
+    const bookings = this.getBookings();
+    const pendingArrivals = bookings.filter(b => b.status === 'Confirmed' && b.checkInDate <= bDate);
+
+    // Overdue departures (stays where checkoutDate <= bDate)
+    const checkIns = this.getCheckIns();
+    const overdueDepartures = checkIns.filter(c => c.status === 'CheckedIn' && c.checkOutDate && c.checkOutDate <= bDate);
+
+    // Open Restaurant KOTs (in kitchen queue)
+    const kots = this.getKots();
+    const openKots = kots.filter(k => k.status === 'Pending' || k.status === 'Cooking' || k.status === 'Ready To Serve');
+
+    let totalTariffAccruable = 0;
+    let totalGstAccruable = 0;
+    occupiedRooms.forEach(r => {
+      const tariff = r.tariff;
+      const gstRate = tariff > 7500 ? 18 : 12;
+      const gst = Math.round(tariff * (gstRate / 100));
+      totalTariffAccruable += tariff;
+      totalGstAccruable += gst;
+    });
+
+    const blockers: string[] = [];
+    if (openKots.length > 0) {
+      blockers.push(`${openKots.length} open Vasudev Rasoi KOT(s) pending in Kitchen Display System (KDS). Please settle or void them before running Night Audit.`);
+    }
+
+    return {
+      businessDate: bDate,
+      pendingArrivalsCount: pendingArrivals.length,
+      overdueDeparturesCount: overdueDepartures.length,
+      openKotsCount: openKots.length,
+      occupiedRoomsCount: occupiedRooms.length,
+      totalTariffAccruable,
+      totalGstAccruable,
+      canProceed: blockers.length === 0,
+      blockers
+    };
+  }
+
+  static runNightAudit(auditorName: string = 'General Manager / Lead Auditor'): PmsNightAuditRecord {
+    const bDate = this.getBusinessDate();
+    const rawAccruals = localStorage.getItem(STORAGE_KEYS.NIGHT_AUDIT_ACCRUALS);
+    const accrualMap: Record<string, boolean> = rawAccruals ? JSON.parse(rawAccruals) : {};
+
+    const rooms = this.getRooms();
+    const occupiedRooms = rooms.filter(r => this.isRoomOccupied(r));
     const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
     const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
 
     let totalRoomTariffPosted = 0;
     let totalGstPosted = 0;
     const roomsAuditSummary: PmsNightAuditRecord['roomsAuditSummary'] = [];
 
+    // Step 2: Idempotent room tariff and GST accrual posting
     occupiedRooms.forEach(r => {
+      const accrualKey = `${bDate}_${r.roomNo}`;
       const folio = this.getFolioSummary(r.roomNo);
       const baseTariff = r.tariff;
       const gstRate = baseTariff > 7500 ? 18 : 12;
       const gstAmount = Math.round(baseTariff * (gstRate / 100) * 100) / 100;
       const totalPosted = baseTariff + gstAmount;
 
-      totalRoomTariffPosted += baseTariff;
-      totalGstPosted += gstAmount;
+      if (!accrualMap[accrualKey]) {
+        totalRoomTariffPosted += baseTariff;
+        totalGstPosted += gstAmount;
+        accrualMap[accrualKey] = true;
+
+        // Post Double-Entry Journal Entry: Room Accommodation Revenue
+        this.postJournalEntry({
+          date: bDate,
+          time: timeStr,
+          voucherType: 'NightAudit',
+          referenceNo: `NA-${bDate}-RM${r.roomNo}`,
+          narration: `Nightly room tariff accrual for Room ${r.roomNo} (${folio.guestName || 'In-House Guest'})`,
+          debitAccount: 'In-House Guest Folio Receivable',
+          creditAccount: 'Room Accommodation Revenue',
+          amountPaise: Math.round(baseTariff * 100),
+          amountRupees: baseTariff,
+          postedBy: auditorName
+        });
+
+        // Output GST Journal Postings
+        const cgstAcc = gstRate === 18 ? 'Output CGST @ 9%' : 'Output CGST @ 6%';
+        const sgstAcc = gstRate === 18 ? 'Output SGST @ 9%' : 'Output SGST @ 6%';
+        const halfGstPaise = Math.round((gstAmount / 2) * 100);
+
+        this.postJournalEntry({
+          date: bDate,
+          time: timeStr,
+          voucherType: 'NightAudit',
+          referenceNo: `NA-CGST-${bDate}-RM${r.roomNo}`,
+          narration: `Output CGST (${gstRate / 2}%) on Room ${r.roomNo}`,
+          debitAccount: 'In-House Guest Folio Receivable',
+          creditAccount: cgstAcc,
+          amountPaise: halfGstPaise,
+          amountRupees: Number((halfGstPaise / 100).toFixed(2)),
+          postedBy: auditorName
+        });
+
+        this.postJournalEntry({
+          date: bDate,
+          time: timeStr,
+          voucherType: 'NightAudit',
+          referenceNo: `NA-SGST-${bDate}-RM${r.roomNo}`,
+          narration: `Output SGST (${gstRate / 2}%) on Room ${r.roomNo}`,
+          debitAccount: 'In-House Guest Folio Receivable',
+          creditAccount: sgstAcc,
+          amountPaise: halfGstPaise,
+          amountRupees: Number((halfGstPaise / 100).toFixed(2)),
+          postedBy: auditorName
+        });
+      }
 
       roomsAuditSummary.push({
         roomNo: r.roomNo,
@@ -3201,6 +3728,17 @@ export class PmsStore {
         folioBalanceAfter: Math.round((folio.balanceDue + totalPosted) * 100) / 100
       });
     });
+
+    localStorage.setItem(STORAGE_KEYS.NIGHT_AUDIT_ACCRUALS, JSON.stringify(accrualMap));
+
+    // Step 3: Flip all OCCUPIED_CLEAN rooms to OCCUPIED_DIRTY for next-morning housekeeping
+    const updatedRooms = rooms.map(rm => {
+      if (rm.status === 'OCCUPIED_CLEAN' || rm.status === 'occupied') {
+        return { ...rm, status: 'OCCUPIED_DIRTY' as RoomStatus };
+      }
+      return rm;
+    });
+    this.saveRooms(updatedRooms);
 
     // Compute Collection Summary
     const payments = this.getFolioPayments();
@@ -3222,8 +3760,8 @@ export class PmsStore {
     const nextSeq = audits.length + 1;
     const newAuditRecord: PmsNightAuditRecord = {
       auditId: `NA-2026-${String(nextSeq).padStart(4, '0')}`,
-      auditDate: todayStr,
-      executedAt: `${todayStr} ${timeStr}`,
+      auditDate: bDate,
+      executedAt: `${bDate} ${timeStr}`,
       executedBy: auditorName,
       occupiedRoomsCount: occupiedRooms.length,
       totalRoomTariffPosted: Math.round(totalRoomTariffPosted * 100) / 100,
@@ -3237,6 +3775,10 @@ export class PmsStore {
 
     audits.unshift(newAuditRecord);
     localStorage.setItem(STORAGE_KEYS.NIGHT_AUDITS, JSON.stringify(audits));
+
+    // Step 4: Advance Business Date forward by +1 day
+    this.advanceBusinessDate();
+
     this.notify();
     return newAuditRecord;
   }
@@ -3524,6 +4066,34 @@ export class PmsStore {
       }
     });
     localStorage.setItem(STORAGE_KEYS.FOLIO_PAYMENTS, JSON.stringify(payments));
+
+    // Migrate Folio Discounts
+    const discountsRaw = localStorage.getItem(STORAGE_KEYS.FOLIO_DISCOUNTS);
+    if (discountsRaw) {
+      try {
+        const allDiscounts = JSON.parse(discountsRaw);
+        if (allDiscounts[fromRoomNo]) {
+          allDiscounts[toRoomNo] = allDiscounts[fromRoomNo];
+          delete allDiscounts[fromRoomNo];
+          localStorage.setItem(STORAGE_KEYS.FOLIO_DISCOUNTS, JSON.stringify(allDiscounts));
+        }
+      } catch (err) {
+        console.error('[PmsStore] Error migrating folio discount:', err);
+      }
+    }
+
+    // Migrate Advance Receipts
+    const advanceReceipts = this.getAdvanceReceipts();
+    let advUpdated = false;
+    advanceReceipts.forEach(ar => {
+      if (ar.roomNo === fromRoomNo) {
+        ar.roomNo = toRoomNo;
+        advUpdated = true;
+      }
+    });
+    if (advUpdated) {
+      localStorage.setItem(STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify(advanceReceipts));
+    }
 
     this.saveRooms(rooms);
     this.notify();
@@ -6482,6 +7052,34 @@ export class PmsStore {
       localStorage.setItem(STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify(updatedAdvances));
     }
 
+    // Migrate Folio Payments
+    const payments = this.getFolioPayments();
+    let paymentsUpdated = false;
+    payments.forEach(p => {
+      if (p.roomNo === params.fromRoomNo) {
+        p.roomNo = params.toRoomNo;
+        paymentsUpdated = true;
+      }
+    });
+    if (paymentsUpdated) {
+      localStorage.setItem(STORAGE_KEYS.FOLIO_PAYMENTS, JSON.stringify(payments));
+    }
+
+    // Migrate Folio Discounts
+    const discountsRaw = localStorage.getItem(STORAGE_KEYS.FOLIO_DISCOUNTS);
+    if (discountsRaw) {
+      try {
+        const allDiscounts = JSON.parse(discountsRaw);
+        if (allDiscounts[params.fromRoomNo]) {
+          allDiscounts[params.toRoomNo] = allDiscounts[params.fromRoomNo];
+          delete allDiscounts[params.fromRoomNo];
+          localStorage.setItem(STORAGE_KEYS.FOLIO_DISCOUNTS, JSON.stringify(allDiscounts));
+        }
+      } catch (err) {
+        console.error('[PmsStore] Error migrating folio discount in shiftRoom:', err);
+      }
+    }
+
     // Update Room statuses
     // 1. Source Room: Marked as DIRTY (Video 11 rule: frame 204 & speech [06:45])
     // 2. Destination Room: Marked as OCCUPIED (frame 209)
@@ -6559,6 +7157,16 @@ export class PmsStore {
       message: `Room shifted successfully from ${params.fromRoomNo} to ${params.toRoomNo}. Room ${params.fromRoomNo} is now marked as Dirty for housekeeping.`,
       record: shiftRecord
     };
+  }
+
+  static postChargeToRoom(roomNo: string, charge: { chargeName: string; amount: number; sacCode?: string; gstPercent?: number }): void {
+    const rooms = this.getRooms();
+    const room = rooms.find(r => r.roomNo === roomNo);
+    if (room && room.currentGuest) {
+      (room.currentGuest as any).addOthers = ((room.currentGuest as any).addOthers || 0) + charge.amount;
+      this.saveRooms(rooms);
+      this.notify();
+    }
   }
 
   // ==========================================

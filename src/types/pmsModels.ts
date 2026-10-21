@@ -3,7 +3,46 @@
  * Derived from Video 01: RoomG PMS Training & Feature Analysis
  */
 
-export type RoomStatus = 'vacant' | 'booked' | 'occupied' | 'dirty' | 'blocked';
+export type RoomStatus =
+  | 'vacant'
+  | 'booked'
+  | 'occupied'
+  | 'dirty'
+  | 'blocked'
+  | 'VACANT_CLEAN'
+  | 'VACANT_DIRTY'
+  | 'OCCUPIED_CLEAN'
+  | 'OCCUPIED_DIRTY'
+  | 'UNDER_MAINTENANCE'
+  | 'MANAGEMENT_BLOCK';
+
+export interface PmsJournalEntry {
+  entryId: string;
+  date: string;
+  time: string;
+  voucherType: 'Advance' | 'NightAudit' | 'PosBill' | 'RoomPosting' | 'CheckOut' | 'Expense' | 'Manual';
+  referenceNo: string;
+  narration: string;
+  debitAccount: string;
+  creditAccount: string;
+  amountPaise: number;
+  amountRupees: number;
+  postedBy?: string;
+}
+
+export interface KotVoidAuditLog {
+  id: string;
+  kotNo: string;
+  itemCode: string;
+  itemName: string;
+  qty: number;
+  rate: number;
+  amount: number;
+  voidReason: 'Guest Changed Mind' | 'Kitchen Out of Stock' | 'Wrong Entry' | string;
+  foodStatus: 'Prepared/Wasted' | 'Unprepared';
+  voidedAt: string;
+  voidedBy: string;
+}
 
 export interface PmsRoom {
   id: string;

@@ -1,0 +1,352 @@
+{
+  "timestamp": "2026-10-21T03:16:14.356Z",
+  "durationMs": 16071,
+  "summary": {
+    "total": 27,
+    "passed": 18,
+    "failed": 1,
+    "warned": 8
+  },
+  "telemetry": {
+    "consoleErrors": [
+      "Failed to load resource: net::ERR_FAILED",
+      "Failed to load resource: net::ERR_FAILED",
+      "Failed to load resource: net::ERR_FAILED",
+      "Failed to load resource: net::ERR_FAILED",
+      "Failed to load resource: net::ERR_FAILED",
+      "Failed to load resource: net::ERR_FAILED",
+      "Failed to load resource: net::ERR_FAILED",
+      "Failed to load resource: net::ERR_FAILED",
+      "Failed to load resource: net::ERR_FAILED",
+      "Failed to load resource: net::ERR_FAILED",
+      "Failed to load resource: net::ERR_FAILED",
+      "Failed to load resource: net::ERR_FAILED",
+      "Failed to load resource: net::ERR_FAILED"
+    ],
+    "consoleWarnings": [
+      "[PmsStore] Cloud hydration running in offline fallback mode: TypeError: Failed to fetch\n    at Object.getFullCloudState (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:9:69252)\n    at Y.initCloudStore (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:12:86699)\n    at https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:45:354672\n    at fl (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:95204)\n    at Nu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118499)\n    at Mu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118272)\n    at Nu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:119716)\n    at Mu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118272)\n    at Nu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118545)\n    at lf (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:133119)",
+      "[PmsStore] Background cloud sync notice: TypeError: Failed to fetch\n    at Object.getPmsDashboardSync (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:9:67426)\n    at Y.syncWithCloudBackend (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:12:85454)\n    at https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:45:354700",
+      "[PmsStore] Cloud hydration running in offline fallback mode: TypeError: Failed to fetch\n    at Object.getFullCloudState (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:9:69252)\n    at Y.initCloudStore (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:12:86699)\n    at https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:45:354672\n    at fl (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:95204)\n    at Nu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118499)\n    at Mu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118272)\n    at Nu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:119716)\n    at Mu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118272)\n    at Nu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118545)\n    at lf (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:133119)",
+      "[PmsStore] Background cloud sync notice: TypeError: Failed to fetch\n    at Object.getPmsDashboardSync (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:9:67426)\n    at Y.syncWithCloudBackend (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:12:85454)\n    at https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:45:354700",
+      "[PmsStore] Cloud hydration running in offline fallback mode: TypeError: Failed to fetch\n    at Object.getFullCloudState (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:9:69252)\n    at Y.initCloudStore (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:12:86699)\n    at https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:45:311256\n    at fl (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:95204)\n    at Nu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118499)\n    at Mu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118272)\n    at Nu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:119716)\n    at Mu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118272)\n    at Nu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118479)\n    at Mu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118272)",
+      "[PmsStore] Background cloud sync notice: TypeError: Failed to fetch\n    at Object.getPmsDashboardSync (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:9:67426)\n    at Y.syncWithCloudBackend (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:12:85454)\n    at Dr (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:45:311090)\n    at https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:45:311286\n    at <anonymous>",
+      "[PmsStore] Cloud hydration running in offline fallback mode: TypeError: Failed to fetch\n    at Object.getFullCloudState (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:9:69252)\n    at Y.initCloudStore (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:12:86699)\n    at https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:45:354672\n    at fl (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:95204)\n    at Nu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118499)\n    at Mu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118272)\n    at Nu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:119716)\n    at Mu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118272)\n    at Nu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118545)\n    at lf (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:133119)",
+      "[PmsStore] Cloud hydration running in offline fallback mode: TypeError: Failed to fetch\n    at Object.getFullCloudState (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:9:69252)\n    at Y.initCloudStore (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:12:86699)\n    at https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:45:311256\n    at fl (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:95204)\n    at Nu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118499)\n    at Mu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118272)\n    at Nu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:119716)\n    at Mu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118272)\n    at Nu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118479)\n    at Mu (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:8:118272)",
+      "[PmsStore] Background cloud sync notice: TypeError: Failed to fetch\n    at Object.getPmsDashboardSync (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:9:67426)\n    at Y.syncWithCloudBackend (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:12:85454)\n    at https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:45:354700",
+      "[PmsStore] Background cloud sync notice: TypeError: Failed to fetch\n    at Object.getPmsDashboardSync (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:9:67426)\n    at Y.syncWithCloudBackend (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:12:85454)\n    at Dr (https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:45:311090)\n    at https://hotel-sai-vasudev-residency.pages.dev/assets/index-CrKHnba0.js:45:311286\n    at <anonymous>"
+    ],
+    "networkFailures": [],
+    "corsViolations": [
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/full-state' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/health' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/dashboard' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/health' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/full-state' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/dashboard' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/full-state' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/dashboard' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/health' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/full-state' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/full-state' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/dashboard' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/dashboard' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+    ],
+    "latencies": {
+      "Public Landing Page": 2532,
+      "ERP Portal Load": 1670,
+      "F5 Reload": 1784
+    }
+  },
+  "matrix": [
+    {
+      "id": "PUB-01",
+      "name": "Public Landing Page Title & 200 OK",
+      "phase": "Phase 1",
+      "status": "PASS",
+      "details": {
+        "title": "Hotel Sai Vasudev Residency | Comfortable & Luxury Stay",
+        "latencyMs": 2532
+      }
+    },
+    {
+      "id": "PUB-02",
+      "name": "Navbar Navigation Links Anchor Mapping",
+      "phase": "Phase 1",
+      "status": "PASS",
+      "details": {
+        "count": 9
+      }
+    },
+    {
+      "id": "PUB-03",
+      "name": "Public Booking Modal Trigger & Render",
+      "phase": "Phase 1",
+      "status": "PASS",
+      "details": {}
+    },
+    {
+      "id": "HDR-01",
+      "name": "PMS Master Window Mount on /erp",
+      "phase": "Phase 1",
+      "status": "PASS",
+      "details": {
+        "latencyMs": 1670
+      }
+    },
+    {
+      "id": "HDR-02",
+      "name": "PMS Master Header Quick Badges (12+ Buttons)",
+      "phase": "Phase 1",
+      "status": "PASS",
+      "details": {
+        "totalFound": 20,
+        "buttons": [
+          "☰",
+          "🔍",
+          "🔄 Offline Mode",
+          "🔔 Unconfirmed (2)",
+          "📅 Calendar",
+          "🧹 Housekeeping",
+          "💰 Petty Cash & Night Audit",
+          "🏨 DEMO0004 (Shirdi (Main Temple Shrine))",
+          "📱 Mobile View",
+          "💬 WhatsApp: Valid (29-06-2026)",
+          "🌐 Online / Hybrid Sync",
+          "🏆 Top 20 Features",
+          "📜 GST Reports",
+          "🎓 Training & Support",
+          "🤝 Agent Commissions",
+          "🍷 Liquor & Bar",
+          "🛡️ No-Discount Control",
+          "🏬 Stock Report",
+          "🏰 Banquet & Events",
+          "✕"
+        ]
+      }
+    },
+    {
+      "id": "HDR-03",
+      "name": "Omni-Search Query Routing & Submodal Dismiss",
+      "phase": "Phase 1",
+      "status": "PASS",
+      "details": {}
+    },
+    {
+      "id": "RM-01",
+      "name": "16-Room Visual Rack Rendered",
+      "phase": "Phase 1",
+      "status": "PASS",
+      "details": {
+        "roomCount": 18
+      }
+    },
+    {
+      "id": "RM-02",
+      "name": "Live KPI Ribbon Calculations (Total, Occupancy, Vacant Clean, Dirty, ARR, RevPAR)",
+      "phase": "Phase 1",
+      "status": "PASS",
+      "details": {
+        "kpiCount": 7,
+        "kpis": [
+          "TOTAL ROOMS 18 Sai Vasudev Residency",
+          "OCCUPANCY 4 (22.2%) Active In-House Stays",
+          "VACANT CLEAN 11 Rooms Ready for Check-In",
+          "VACANT DIRTY 1 Rooms Needs Housekeeping",
+          "TODAY'S MOVEMENT Arr: 0 • Dep: 2 Expected Arrivals/Dep",
+          "ARR (AVG RATE) ₹3,699 Average Room Rate",
+          "REVPAR ₹822 Rev Per Available Room"
+        ]
+      }
+    },
+    {
+      "id": "HUB-01",
+      "name": "Home Hub (16 Interactive Tiles) View Switch",
+      "phase": "Phase 1",
+      "status": "PASS",
+      "details": {
+        "hubTiles": 98
+      }
+    },
+    {
+      "id": "LOG-01",
+      "name": "GST Math & Decimal Precision (SAC 996311 12% + SAC 996331 5%)",
+      "phase": "Phase 2",
+      "status": "PASS",
+      "details": {
+        "tariff": 2499,
+        "gstPercent": 12,
+        "cgst": 149.94,
+        "sgst": 149.94,
+        "totalRoomTax": 299.88,
+        "roomGross": 2798.88,
+        "extraBedGross": 672,
+        "foodGross": 357,
+        "grandTotal": 3827.88,
+        "advancePaid": 1000,
+        "netPayable": 2827.88,
+        "splitCash": 1500,
+        "splitUpi": 1327.88,
+        "isSplitBalanced": true,
+        "mathAccurate": true
+      }
+    },
+    {
+      "id": "LOG-02",
+      "name": "Split Settlement Multi-Mode Exact Penny Balancing",
+      "phase": "Phase 2",
+      "status": "PASS",
+      "details": {
+        "netPayable": 2827.88,
+        "splitCash": 1500,
+        "splitUpi": 1327.88
+      }
+    },
+    {
+      "id": "LOG-03",
+      "name": "ERP Inventory Store State Synchronization",
+      "phase": "Phase 2",
+      "status": "PASS",
+      "details": {
+        "directStoreAvailable": false,
+        "roomsCount": 18,
+        "vacantRooms": 11,
+        "occupiedRooms": 4
+      }
+    },
+    {
+      "id": "LOG-04",
+      "name": "Slide-Over Action Drawer & Folio Summary Open",
+      "phase": "Phase 2",
+      "status": "FAIL",
+      "details": {}
+    },
+    {
+      "id": "LOG-05",
+      "name": "Post Charge (Extra Bed / SAC 996311) Sub-Panel Form",
+      "phase": "Phase 2",
+      "status": "PASS",
+      "details": {}
+    },
+    {
+      "id": "MOD-01",
+      "name": "Housekeeping Kanban Modal Mount & Render",
+      "phase": "Phase 2",
+      "status": "WARN",
+      "details": {
+        "note": "Header button not visible"
+      }
+    },
+    {
+      "id": "MOD-02",
+      "name": "Petty Cash & Night Audit Modal Mount & Render",
+      "phase": "Phase 2",
+      "status": "WARN",
+      "details": {
+        "note": "Header button not visible"
+      }
+    },
+    {
+      "id": "MOD-03",
+      "name": "GST Reports Hub Modal Mount & Render",
+      "phase": "Phase 2",
+      "status": "WARN",
+      "details": {
+        "note": "Header button not visible"
+      }
+    },
+    {
+      "id": "MOD-04",
+      "name": "Calendar Occupancy Grid Modal Mount & Render",
+      "phase": "Phase 2",
+      "status": "WARN",
+      "details": {
+        "note": "Header button not visible"
+      }
+    },
+    {
+      "id": "MOD-05",
+      "name": "Top 20 Features Hub Modal Mount & Render",
+      "phase": "Phase 2",
+      "status": "WARN",
+      "details": {
+        "note": "Header button not visible"
+      }
+    },
+    {
+      "id": "MOD-06",
+      "name": "Liquor & Bar POS Modal Mount & Render",
+      "phase": "Phase 2",
+      "status": "WARN",
+      "details": {
+        "note": "Header button not visible"
+      }
+    },
+    {
+      "id": "MOD-07",
+      "name": "No-Discount Control Modal Mount & Render",
+      "phase": "Phase 2",
+      "status": "WARN",
+      "details": {
+        "note": "Header button not visible"
+      }
+    },
+    {
+      "id": "MOD-08",
+      "name": "Banquet & Events Modal Mount & Render",
+      "phase": "Phase 2",
+      "status": "WARN",
+      "details": {
+        "note": "Header button not visible"
+      }
+    },
+    {
+      "id": "RESP-1920",
+      "name": "Viewport Layout Test: Desktop HD (1920x1080)",
+      "phase": "Phase 3",
+      "status": "PASS",
+      "details": {
+        "horizontalOverflow": false,
+        "screenshot": "./extracted_frames/viewport_1920x1080.png"
+      }
+    },
+    {
+      "id": "RESP-1366",
+      "name": "Viewport Layout Test: Standard Laptop (1366x768)",
+      "phase": "Phase 3",
+      "status": "PASS",
+      "details": {
+        "horizontalOverflow": false,
+        "screenshot": "./extracted_frames/viewport_1366x768.png"
+      }
+    },
+    {
+      "id": "RESP-768",
+      "name": "Viewport Layout Test: Tablet Portrait (768x1024)",
+      "phase": "Phase 3",
+      "status": "PASS",
+      "details": {
+        "horizontalOverflow": false,
+        "screenshot": "./extracted_frames/viewport_768x1024.png"
+      }
+    },
+    {
+      "id": "RESP-375",
+      "name": "Viewport Layout Test: Mobile Handset (375x812)",
+      "phase": "Phase 3",
+      "status": "PASS",
+      "details": {
+        "horizontalOverflow": false,
+        "screenshot": "./extracted_frames/viewport_375x812.png"
+      }
+    },
+    {
+      "id": "PER-01",
+      "name": "Route URL & State Persistence on F5 Page Reload",
+      "phase": "Phase 3",
+      "status": "PASS",
+      "details": {
+        "latencyMs": 1784
+      }
+    }
+  ]
+}

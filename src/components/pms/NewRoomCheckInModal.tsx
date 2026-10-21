@@ -85,22 +85,23 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
   onCheckInCompleted
 }) => {
   const allRooms = PmsStore.getRooms();
-  // Filter out dirty and occupied rooms
-  const availableRooms = allRooms.filter(r => r.status === 'vacant');
+  // Filter out dirty, maintenance and occupied rooms (strict 6-state VACANT_CLEAN)
+  const availableRooms = allRooms.filter(r => PmsStore.isRoomVacantClean(r));
 
   const existingBookings = PmsStore.getBookings().filter(b => b.status === 'Confirmed');
 
   // Check In format: SR/188/26-27
   const defaultCheckInNo = `SR/${Math.floor(180 + Math.random() * 20)}/26-27`;
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = PmsStore.getBusinessDate();
   const tomorrowStr = (() => {
-    const d = new Date();
+    const d = new Date(todayStr);
     d.setDate(d.getDate() + 1);
     return d.toISOString().split('T')[0];
   })();
 
   const [checkInNo] = useState(defaultCheckInNo);
   const [selectedBookingRef, setSelectedBookingRef] = useState<string>('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Strict Date & Night Calculation (Module 2 Requirement)
   const [checkInDate, setCheckInDate] = useState(todayStr);
@@ -127,11 +128,53 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
 
   // Selected Room & Custom Tariff
   const [selectedRoomNo, setSelectedRoomNo] = useState<string>(
-    preselectedRoom ? preselectedRoom.roomNo : (availableRooms[0]?.roomNo || '102')
+    preselectedRoom ? preselectedRoom.roomNo : (availableRooms[0]?.roomNo || '101')
   );
   const [customTariff, setCustomTariff] = useState<number>(
     preselectedRoom ? preselectedRoom.tariff : (availableRooms[0]?.tariff || 2499)
   );
+
+  // 6-State Room Status Machine & Supervisor Override Gate
+  const selectedRoomObj = allRooms.find(r => r.roomNo === selectedRoomNo) || preselectedRoom;
+  const currentRoomType = selectedRoomObj?.roomType || 'Executive Deluxe';
+  const roomNormStatus = PmsStore.normalizeRoomStatus(selectedRoomObj?.status || 'VACANT_CLEAN');
+  const isRoomClean = roomNormStatus === 'VACANT_CLEAN';
+  const isRoomDirty = roomNormStatus === 'VACANT_DIRTY';
+
+  const [supervisorOverride, setSupervisorOverride] = useState(false);
+  const [overrideReason, setOverrideReason] = useState('');
+  const [housekeepingAlertSent, setHousekeepingAlertSent] = useState(false);
+
+  // Early Check-In Policy Engine (< 6 AM Full Day, 6-9 AM Half Day, 9-12 PM Complimentary)
+  const parseArrivalHour = (timeStr: string): number => {
+    try {
+      const isPm = /pm/i.test(timeStr);
+      const isAm = /am/i.test(timeStr);
+      const parts = timeStr.replace(/[^\d:]/g, '').split(':');
+      let h = parseInt(parts[0] || '12', 10);
+      if (isPm && h < 12) h += 12;
+      if (isAm && h === 12) h = 0;
+      return h;
+    } catch {
+      return 12;
+    }
+  };
+
+  const arrivalHour = parseArrivalHour(checkInTime);
+  const isEarlyArrival = arrivalHour < 12;
+  const defaultEarlyPolicy = arrivalHour < 6 ? 'full' : arrivalHour < 9 ? 'half' : 'complimentary';
+  const [earlyCheckInPolicy, setEarlyCheckInPolicy] = useState<'standard' | 'full' | 'half' | 'complimentary' | 'custom'>(
+    isEarlyArrival ? defaultEarlyPolicy : 'standard'
+  );
+  const [customEarlyCharge, setCustomEarlyCharge] = useState<number>(0);
+
+  const earlyCheckInCharge = (() => {
+    if (!isEarlyArrival || earlyCheckInPolicy === 'standard' || earlyCheckInPolicy === 'complimentary') return 0;
+    if (earlyCheckInPolicy === 'full') return customTariff;
+    if (earlyCheckInPolicy === 'half') return Math.round(customTariff * 0.5);
+    if (earlyCheckInPolicy === 'custom') return customEarlyCharge;
+    return 0;
+  })();
 
   // Sync when preselectedRoom prop changes (e.g. clicked + Walk-In Check-In on Room 102)
   useEffect(() => {
@@ -141,17 +184,13 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
     }
   }, [preselectedRoom]);
 
-  // Selected Room Type & Base Capacity Rules
-  const selectedRoomObj = allRooms.find(r => r.roomNo === selectedRoomNo) || preselectedRoom;
-  const currentRoomType = selectedRoomObj?.roomType || 'Executive Deluxe';
-
   const getCapacityRules = (type: string) => {
     const t = type.toLowerCase();
     if (t.includes('presidential')) {
-      return { baseCapacity: 4, extraRate: 1000, label: 'Sai Presidential Suite' };
+      return { baseCapacity: 4, extraRate: 900, label: 'Sai Presidential Suite' };
     }
     if (t.includes('super deluxe') || t.includes('family') || t.includes('suite')) {
-      return { baseCapacity: 4, extraRate: 800, label: 'Super Deluxe Family' };
+      return { baseCapacity: 4, extraRate: 750, label: 'Super Deluxe Family' };
     }
     return { baseCapacity: 2, extraRate: 600, label: 'Executive Deluxe' };
   };
@@ -161,7 +200,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
   const extraGuestChargePerNight = extraGuestsCount * capacityRule.extraRate;
   const totalExtraGuestCharge = extraGuestChargePerNight * noOfDays;
   const baseRoomRentTotal = customTariff * noOfDays;
-  const grandAccommodationTotal = baseRoomRentTotal + totalExtraGuestCharge;
+  const grandAccommodationTotal = baseRoomRentTotal + totalExtraGuestCharge + earlyCheckInCharge;
 
   // Strict Calendar Date Difference & Minimum 1-Night Calculation (Module 2)
   const calculateCalendarNights = (inDate: string, outDate: string): number => {
@@ -213,6 +252,10 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
   const [country] = useState('India');
   const [pinCode, setPinCode] = useState('');
   const [nationality, setNationality] = useState('India');
+  const [passportNo, setPassportNo] = useState('');
+  const [visaNo, setVisaNo] = useState('');
+  const [visaExpiry, setVisaExpiry] = useState('');
+  const [cFormAcknowledged, setCFormAcknowledged] = useState(false);
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [agent, setAgent] = useState('');
@@ -328,6 +371,28 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // 0. Hard Room Status Machine Check: Block if not clean unless supervisor override
+    if (!isRoomClean && !supervisorOverride) {
+      alert(`Hard Check-In Block:\n\nRoom ${selectedRoomNo} is currently in ${roomNormStatus} state.\n\nOnly VACANT_CLEAN rooms may be checked in. If the room has been cleaned and inspected, please use "Supervisor Inspection Override" or alert Housekeeping.`);
+      return;
+    }
+
+    // 0.1 Foreign National C-Form & Passport Validation
+    if (nationality.trim().toLowerCase() !== 'india') {
+      if (!passportNo.trim()) {
+        alert("Mandatory Foreign National KYC:\n\nPlease enter the guest's valid Passport Number.");
+        return;
+      }
+      if (!visaNo.trim()) {
+        alert("Mandatory Foreign National KYC:\n\nPlease enter the guest's Indian Visa Number.");
+        return;
+      }
+      if (!cFormAcknowledged) {
+        alert("Mandatory Police / Bureau of Immigration Compliance:\n\nPlease check the C-Form verification checkbox.");
+        return;
+      }
+    }
+
     // 1. Full Name Validation
     const cleanName = guestName.trim();
     if (!cleanName || cleanName.length < 3) {
@@ -426,6 +491,54 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
     // Save to PmsStore & update room status to occupied
     PmsStore.saveCheckIn(checkInRecord);
 
+    // Post Early Check-In Charge to Room Account if applicable
+    if (earlyCheckInCharge > 0) {
+      PmsStore.postChargeToRoom(selectedRoomNo, {
+        chargeName: `Early Check-In Surcharge (${earlyCheckInPolicy.toUpperCase()})`,
+        sacCode: '996311',
+        amount: earlyCheckInCharge,
+        gstPercent: customTariff > 7500 ? 18 : 12
+      });
+    }
+
+    // Post Double-Entry Journal entries for Advance Payment
+    if (totalAdvancePaid > 0) {
+      const mode = paymentSplits[0]?.mode || 'Cash';
+      const debitAccount = mode === 'Cash'
+        ? 'Cash in Hand (Reception)'
+        : mode === 'Card'
+        ? 'Card EDC Receivable'
+        : 'HDFC Bank / UPI Settlement A/c';
+
+      // 1. Advance Receipt Voucher Entry: Dr Cash/Bank, Cr Guest Advance Deposit Liability
+      PmsStore.postJournalEntry({
+        date: checkInDate,
+        time: checkInTime,
+        referenceNo: `ARV-2026-${checkInNo.replace(/[^\d]/g, '').slice(-4) || '1001'}`,
+        voucherType: 'Advance',
+        debitAccount,
+        creditAccount: 'Guest Advance Deposit Liability',
+        amountPaise: Math.round(totalAdvancePaid * 100),
+        amountRupees: totalAdvancePaid,
+        narration: `Advance received for Check-in ${checkInNo} (Room ${selectedRoomNo}, ${cleanName}) via ${mode}`,
+        postedBy: 'Front Desk'
+      });
+
+      // 2. Transfer from Guest Advance Deposit Liability into In-House Guest Folio Receivable
+      PmsStore.postJournalEntry({
+        date: checkInDate,
+        time: checkInTime,
+        referenceNo: `ADV-FOLIO-${selectedRoomNo}`,
+        voucherType: 'Advance',
+        debitAccount: 'Guest Advance Deposit Liability',
+        creditAccount: 'In-House Guest Folio Receivable',
+        amountPaise: Math.round(totalAdvancePaid * 100),
+        amountRupees: totalAdvancePaid,
+        narration: `Advance credit transferred into In-House Folio for Room ${selectedRoomNo}`,
+        postedBy: 'Front Desk'
+      });
+    }
+
     // Salesman / Travel Agent Commission Tracking
     if (agent && agent.trim()) {
       try {
@@ -479,6 +592,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
       }
     }
 
+    setIsProcessing(false);
     setCompletedCheckIn(checkInRecord);
     setIsSlipOpen(true);
     onCheckInCompleted(checkInRecord);
@@ -494,6 +608,83 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
           <div className="pms-form-banner">
             New Room CheckIn Entry
           </div>
+
+          {/* 6-State Status Alert & Hard Interlock Banner */}
+          {!isRoomClean && (
+            <div style={{
+              background: isRoomDirty ? '#fef3c7' : '#fee2e2',
+              border: `2px solid ${isRoomDirty ? '#f59e0b' : '#ef4444'}`,
+              borderRadius: 6,
+              padding: '10px 14px',
+              margin: '12px 14px 0 14px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 12,
+              flexWrap: 'wrap'
+            }}>
+              <div>
+                <div style={{ fontWeight: 900, color: isRoomDirty ? '#92400e' : '#b91c1c', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span>{isRoomDirty ? '⚠️ ROOM NOT CLEANED (VACANT_DIRTY)' : '⛔ ROOM BLOCKED / OCCUPIED'}</span>
+                  <span style={{ background: '#0f172a', color: '#fff', padding: '1px 6px', borderRadius: 3, fontSize: 11 }}>
+                    Status: {roomNormStatus}
+                  </span>
+                </div>
+                <div style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>
+                  {isRoomDirty 
+                    ? `Room ${selectedRoomNo} is currently dirty from previous guest departure. Check-in is restricted to prevent guest dissatisfaction.`
+                    : `Room ${selectedRoomNo} is currently in ${roomNormStatus} state. Check-in is blocked. Please select another clean room.`}
+                </div>
+              </div>
+
+              {isRoomDirty && (
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setHousekeepingAlertSent(true);
+                      alert(`🧹 Housekeeping Dispatched!\n\nExpress cleaning alert sent for Room ${selectedRoomNo}. Housekeeping priority elevated.`);
+                    }}
+                    style={{
+                      background: housekeepingAlertSent ? '#16a34a' : '#d97706',
+                      color: '#fff',
+                      border: 'none',
+                      padding: '6px 12px',
+                      borderRadius: 4,
+                      fontWeight: 800,
+                      fontSize: 11,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {housekeepingAlertSent ? '✓ Housekeeping Alerted' : '🧹 1-Click Alert Housekeeping'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const reason = prompt('Enter Supervisor Override Authorization Note (e.g., Quick Darshan inspection passed):', 'Supervisor inspected - Guest arrived early for Shirdi Darshan');
+                      if (reason) {
+                        setSupervisorOverride(true);
+                        setOverrideReason(reason);
+                      }
+                    }}
+                    style={{
+                      background: supervisorOverride ? '#059669' : '#1e293b',
+                      color: '#fff',
+                      border: 'none',
+                      padding: '6px 12px',
+                      borderRadius: 4,
+                      fontWeight: 800,
+                      fontSize: 11,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {supervisorOverride ? `✓ Override Granted (${overrideReason.slice(0, 15)}...)` : '🛡️ Supervisor Inspection Override'}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="pms-form-body">
             {/* Top Bar matching Video 03 Frame 0070 */}
@@ -690,6 +881,94 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                   </div>
                 </div>
 
+                {/* Early Check-In Policy Engine (Arrival before 12:00 PM) */}
+                {isEarlyArrival && (
+                  <div style={{ background: '#fefce8', padding: '10px 12px', borderRadius: '6px', border: '1px solid #fef08a', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: '#854d0e', textTransform: 'uppercase' }}>
+                        🌅 Early Check-In Policy Engine &bull; Arrival Time: {checkInTime}
+                      </span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#b45309', background: '#fef3c7', padding: '1px 8px', borderRadius: 4 }}>
+                        Standard Check-In: 12:00 PM &bull; Surcharge: ₹{earlyCheckInCharge}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                      <button
+                        type="button"
+                        onClick={() => setEarlyCheckInPolicy('complimentary')}
+                        style={{
+                          background: earlyCheckInPolicy === 'complimentary' ? '#15803d' : '#ffffff',
+                          color: earlyCheckInPolicy === 'complimentary' ? '#ffffff' : '#334155',
+                          border: '1px solid #cbd5e1',
+                          padding: '6px 8px',
+                          borderRadius: 4,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        9 AM - 12 PM<br /><strong>Complimentary (₹0)</strong>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setEarlyCheckInPolicy('half')}
+                        style={{
+                          background: earlyCheckInPolicy === 'half' ? '#d97706' : '#ffffff',
+                          color: earlyCheckInPolicy === 'half' ? '#ffffff' : '#334155',
+                          border: '1px solid #cbd5e1',
+                          padding: '6px 8px',
+                          borderRadius: 4,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        6 AM - 9 AM<br /><strong>Half Day (₹{Math.round(customTariff * 0.5)})</strong>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setEarlyCheckInPolicy('full')}
+                        style={{
+                          background: earlyCheckInPolicy === 'full' ? '#b91c1c' : '#ffffff',
+                          color: earlyCheckInPolicy === 'full' ? '#ffffff' : '#334155',
+                          border: '1px solid #cbd5e1',
+                          padding: '6px 8px',
+                          borderRadius: 4,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        &lt; 6 AM<br /><strong>Full Day (₹{customTariff})</strong>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEarlyCheckInPolicy('custom');
+                          const val = prompt('Enter custom early check-in charge (₹):', String(customEarlyCharge || 500));
+                          if (val) setCustomEarlyCharge(Number(val));
+                        }}
+                        style={{
+                          background: earlyCheckInPolicy === 'custom' ? '#4338ca' : '#ffffff',
+                          color: earlyCheckInPolicy === 'custom' ? '#ffffff' : '#334155',
+                          border: '1px solid #cbd5e1',
+                          padding: '6px 8px',
+                          borderRadius: 4,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Custom Override<br /><strong>₹{customEarlyCharge}</strong>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Occupancy & Extra Guest Mattress Auto-Charge (Module 2) */}
                 <div style={{ background: '#eff6ff', padding: '10px 12px', borderRadius: '6px', border: '1px solid #bfdbfe', marginBottom: '12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
@@ -837,6 +1116,59 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                     <input type="email" placeholder="guest@example.com" value={email} onChange={e => setEmail(e.target.value)} className="form-input-pms" />
                   </div>
                 </div>
+
+                {/* Foreign National Mandatory C-Form Details */}
+                {nationality.trim().toLowerCase() !== 'india' && (
+                  <div style={{ background: '#fff1f2', padding: '10px 12px', borderRadius: '6px', border: '1px solid #fecdd3', margin: '10px 0' }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: '#be123c', marginBottom: 6 }}>
+                      🌍 Foreign National Compliance &bull; Bureau of Immigration C-Form:
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
+                      <div>
+                        <label className="form-label-pms"><span className="req">*</span> Passport Number</label>
+                        <input 
+                          type="text" 
+                          placeholder="e.g. A12345678" 
+                          value={passportNo} 
+                          onChange={e => setPassportNo(e.target.value.toUpperCase())} 
+                          className="form-input-pms" 
+                          style={{ fontWeight: 800 }} 
+                          required 
+                        />
+                      </div>
+                      <div>
+                        <label className="form-label-pms"><span className="req">*</span> Indian Visa Number</label>
+                        <input 
+                          type="text" 
+                          placeholder="e.g. V987654321" 
+                          value={visaNo} 
+                          onChange={e => setVisaNo(e.target.value.toUpperCase())} 
+                          className="form-input-pms" 
+                          style={{ fontWeight: 800 }} 
+                          required 
+                        />
+                      </div>
+                      <div>
+                        <label className="form-label-pms">Visa Expiry Date</label>
+                        <input 
+                          type="date" 
+                          value={visaExpiry} 
+                          onChange={e => setVisaExpiry(e.target.value)} 
+                          className="form-input-pms" 
+                        />
+                      </div>
+                    </div>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, fontWeight: 700, color: '#9f1239', cursor: 'pointer' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={cFormAcknowledged} 
+                        onChange={e => setCFormAcknowledged(e.target.checked)} 
+                        style={{ width: 16, height: 16 }} 
+                      />
+                      <span>I certify that Foreign Guest Passport and Indian Visa have been verified for Bureau of Immigration C-Form filing.</span>
+                    </label>
+                  </div>
+                )}
 
                 {/* ID Proof Selection & Number Validation */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.4fr 1fr', gap: 10 }}>
@@ -1073,6 +1405,18 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                     </div>
                   )}
 
+                  {/* Early Check-In Surcharge Breakdown */}
+                  {earlyCheckInCharge > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, background: '#fefce8', padding: '4px 8px', borderRadius: 4, border: '1px solid #fef08a' }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#854d0e' }}>
+                        Early Check-In Surcharge ({earlyCheckInPolicy.toUpperCase()}):
+                      </span>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: '#b45309' }}>
+                        +₹{earlyCheckInCharge.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, padding: '6px 8px', background: '#dcfce7', borderRadius: 4 }}>
                     <span style={{ fontSize: 12, fontWeight: 800, color: '#166534' }}>Total Stay Accommodation:</span>
                     <span style={{ fontSize: 14, fontWeight: 900, color: '#15803d' }}>₹{grandAccommodationTotal.toFixed(2)}</span>
@@ -1196,18 +1540,19 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
               </button>
               <button
                 type="submit"
+                disabled={isProcessing || (!isRoomClean && !supervisorOverride)}
                 style={{
-                  background: '#2563eb',
+                  background: isProcessing || (!isRoomClean && !supervisorOverride) ? '#94a3b8' : '#2563eb',
                   color: '#ffffff',
                   border: 'none',
                   padding: '7px 24px',
                   borderRadius: 4,
                   fontSize: 13,
                   fontWeight: 800,
-                  cursor: 'pointer'
+                  cursor: isProcessing || (!isRoomClean && !supervisorOverride) ? 'not-allowed' : 'pointer'
                 }}
               >
-                Save
+                {isProcessing ? 'Saving Check-In...' : 'Save CheckIn'}
               </button>
             </div>
           </form>

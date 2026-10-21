@@ -30,8 +30,11 @@ const RESTAURANT_TABLES = [
   'Table T-6',
   'Table T-7',
   'Table T-8',
-  'Table T-9',
-  'Table T-10'
+  'VIP-1 AC Family Lounge',
+  'VIP-2 AC Family Lounge',
+  'VIP-3 AC Family Lounge',
+  'VIP-4 AC Family Lounge',
+  'Takeaway / Parcel Counter'
 ];
 
 export const KotEntryModal: React.FC<KotEntryModalProps> = ({
@@ -68,10 +71,29 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>('All Categories');
   const [menuSearch, setMenuSearch] = useState<string>('');
 
-  // Dietary Modifiers (Module 3)
+  // Pure Veg / Jain / Sattvic Modifiers Engine
   const [isJain, setIsJain] = useState<boolean>(false);
   const [isSattvic, setIsSattvic] = useState<boolean>(false);
+  const [isLessSpicy, setIsLessSpicy] = useState<boolean>(false);
   const [chefInstructions, setChefInstructions] = useState<string>('');
+
+  // CP Plan Breakfast Detection (7:00 AM - 10:30 AM)
+  const isBreakfastWindow = (() => {
+    const h = new Date().getHours();
+    const m = new Date().getMinutes();
+    const totalMins = h * 60 + m;
+    return totalMins >= (7 * 60) && totalMins <= (10 * 60 + 30);
+  })();
+
+  const selectedRoomObj = occupiedRooms.find(r => r.roomNo === selectedRoomNo);
+  const isCpRoom = Boolean(selectedRoomObj && (
+    selectedRoomObj.roomType.toLowerCase().includes('presidential') ||
+    (selectedRoomObj.currentGuest as any)?.package?.toLowerCase().includes('cp') ||
+    (selectedRoomObj.currentGuest as any)?.package?.toLowerCase().includes('breakfast')
+  ));
+
+  const [isCpBreakfast, setIsCpBreakfast] = useState<boolean>(isCpRoom);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   // Active Cart State (Module 3)
   const [cartItems, setCartItems] = useState<KotItem[]>([
@@ -127,16 +149,23 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
     });
   }, [allMenuItems, selectedCategory, menuSearch]);
 
-  // Cart Operations (Module 3: [+], [-], and [🗑️ Remove] buttons with 0-removal)
+  // Cart Operations with CP Plan Breakfast Rule and Modifiers
   const handleAddToCart = (menuItem: MenuItem) => {
     const existingIndex = cartItems.findIndex(ci => ci.itemCode === menuItem.code);
 
     const tags: string[] = [];
     if (isJain) tags.push('Jain');
     if (isSattvic) tags.push('Sattvic');
+    if (isLessSpicy) tags.push('Less Spicy');
     if (chefInstructions.trim()) tags.push(chefInstructions.trim());
 
+    // CP Plan Breakfast check: If breakfast item for CP In-House Guest
+    const isBreakfastItem = menuItem.category.includes('Breakfast') || menuItem.category.includes('South Indian');
+    const isCpEligible = serviceType === 'Room' && isCpBreakfast && isBreakfastItem;
+    if (isCpEligible) tags.push('CP Plan Included (₹0)');
+
     const note = tags.length > 0 ? ` [${tags.join(', ')}]` : '';
+    const itemRate = isCpEligible ? 0 : (menuItem.saleRate || menuItem.rate);
 
     if (existingIndex >= 0) {
       const updated = [...cartItems];
@@ -149,9 +178,9 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
         itemName: `${menuItem.name}${note}`,
         itemCode: menuItem.code,
         qty: 1,
-        rate: menuItem.saleRate || menuItem.rate,
-        amount: menuItem.saleRate || menuItem.rate,
-        isJain,
+        rate: itemRate,
+        amount: itemRate,
+        isJain: isJain,
         instructions: chefInstructions.trim() || undefined
       };
       setCartItems([...cartItems, newItem]);
@@ -199,44 +228,51 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
 
   // Workflow 1: [🔥 Punch KOT to Kitchen]
   const handlePunchKot = () => {
+    if (isProcessing) return;
     if (cartItems.length === 0) {
       alert('Cart is empty! Please add at least one item from the Vasudev Rasoi menu.');
       return;
     }
 
-    const targetRoomOrTable = serviceType === 'Restaurant' ? selectedTableNo : selectedRoomNo;
-    const nowTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    setIsProcessing(true);
+    try {
+      const targetRoomOrTable = serviceType === 'Restaurant' ? selectedTableNo : selectedRoomNo;
+      const nowTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
-    const kotRecord: PmsKotRecord = {
-      kotNo,
-      serviceType,
-      roomNo: targetRoomOrTable,
-      tableNo: serviceType === 'Restaurant' ? selectedTableNo : undefined,
-      guestName: currentGuestName,
-      kotRemark: kotRemark + (isJain ? ' (Jain Prep)' : '') + (isSattvic ? ' (Sattvic Prep)' : ''),
-      operatorName: 'DEMO0004',
-      items: cartItems,
-      totalAmount: taxableAmount,
-      totalQty,
-      date: new Date().toLocaleDateString('en-GB').replace(/\//g, '-'),
-      time: nowTime,
-      createdAt: new Date().toISOString(),
-      status: 'Pending',
-      serveStatus: 'Pending',
-      isPrinted: true,
-      orderSource: 'Desktop'
-    };
+      const kotRecord: PmsKotRecord = {
+        kotNo,
+        serviceType,
+        roomNo: targetRoomOrTable,
+        tableNo: serviceType === 'Restaurant' ? selectedTableNo : undefined,
+        guestName: currentGuestName,
+        kotRemark: kotRemark + (isJain ? ' (Jain Prep)' : '') + (isSattvic ? ' (Sattvic Prep)' : '') + (isLessSpicy ? ' (Less Spicy)' : ''),
+        operatorName: 'DEMO0004',
+        items: cartItems,
+        totalAmount: taxableAmount,
+        totalQty,
+        date: new Date().toLocaleDateString('en-GB').replace(/\//g, '-'),
+        time: nowTime,
+        createdAt: new Date().toISOString(),
+        status: 'Pending',
+        serveStatus: 'Pending',
+        isPrinted: true,
+        orderSource: 'Desktop'
+      };
 
-    PmsStore.saveKot(kotRecord);
-    setSavedKotRecord(kotRecord);
-    if (onKotSaved) onKotSaved(kotRecord);
+      PmsStore.saveKot(kotRecord);
+      setSavedKotRecord(kotRecord);
+      if (onKotSaved) onKotSaved(kotRecord);
 
-    showToast(`🔥 KOT ${kotNo} punched to live Kitchen Display System (KDS)!`);
-    setShowSlipPreview(true);
+      showToast(`🔥 KOT ${kotNo} punched to live Kitchen Display System (KDS)!`);
+      setShowSlipPreview(true);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   // Workflow 2: [🛎️ Post to Room Folio]
   const handlePostToRoomFolio = () => {
+    if (isProcessing) return;
     if (cartItems.length === 0) {
       alert('Cart is empty! Please add items to post to the room folio.');
       return;
@@ -254,64 +290,75 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
       return;
     }
 
-    const targetGuest = matchedRoom.currentGuest?.name || 'In-House Guest';
-    const nowTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    setIsProcessing(true);
+    try {
+      const targetGuest = matchedRoom.currentGuest?.name || 'In-House Guest';
+      const nowTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
-    const kotRecord: PmsKotRecord = {
-      kotNo,
-      serviceType: 'Room',
-      roomNo: selectedRoomNo,
-      guestName: targetGuest,
-      kotRemark: `Room Service &bull; ${kotRemark}` + (isJain ? ' [Jain Prep]' : '') + (isSattvic ? ' [Sattvic]' : ''),
-      operatorName: 'Front Desk',
-      items: cartItems,
-      totalAmount: taxableAmount,
-      totalQty,
-      date: new Date().toLocaleDateString('en-GB').replace(/\//g, '-'),
-      time: nowTime,
-      createdAt: new Date().toISOString(),
-      status: 'Ready To Serve',
-      serveStatus: 'Ready To Serve',
-      isPrinted: true,
-      orderSource: 'Desktop'
-    };
+      const kotRecord: PmsKotRecord = {
+        kotNo,
+        serviceType: 'Room',
+        roomNo: selectedRoomNo,
+        guestName: targetGuest,
+        kotRemark: `Room Service • ${kotRemark}` + (isJain ? ' [Jain Prep]' : '') + (isSattvic ? ' [Sattvic]' : '') + (isLessSpicy ? ' [Less Spicy]' : ''),
+        operatorName: 'Front Desk',
+        items: cartItems,
+        totalAmount: taxableAmount,
+        totalQty,
+        date: new Date().toLocaleDateString('en-GB').replace(/\//g, '-'),
+        time: nowTime,
+        createdAt: new Date().toISOString(),
+        status: 'Ready To Serve',
+        serveStatus: 'Ready To Serve',
+        isPrinted: true,
+        orderSource: 'Desktop'
+      };
 
-    // Save KOT
-    PmsStore.saveKot(kotRecord);
+      // Save KOT
+      PmsStore.saveKot(kotRecord);
 
-    // Update room foodAmount in store
-    PmsStore.updateRoomFoodAmount(selectedRoomNo, taxableAmount);
+      // Update room foodAmount in store
+      PmsStore.updateRoomFoodAmount(selectedRoomNo, taxableAmount);
 
-    if (onKotSaved) onKotSaved(kotRecord);
+      if (onKotSaved) onKotSaved(kotRecord);
 
-    alert(`✅ Food Charge Posted to Room ${selectedRoomNo} (${targetGuest})!\n\nTaxable Amount: ₹${taxableAmount.toFixed(2)} (SAC 996331 @ 5% GST: ₹${totalTaxAmount.toFixed(2)})\nTotal Posted: ₹${grandTotal.toFixed(2)}\nLive Folio Balance updated successfully.`);
-    onClose();
+      alert(`✅ Food Charge Posted to Room ${selectedRoomNo} (${targetGuest})!\n\nTaxable Amount: ₹${taxableAmount.toFixed(2)} (SAC 996331 @ 5% GST: ₹${totalTaxAmount.toFixed(2)})\nTotal Posted: ₹${grandTotal.toFixed(2)}\nLive Folio Balance updated successfully.`);
+      onClose();
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   // Workflow 3: [💳 Instant Counter Bill]
   const handleSettleCounterBill = () => {
+    if (isProcessing) return;
     if (cartItems.length === 0) {
       alert('Cart is empty! Please add items before generating a counter bill.');
       return;
     }
 
-    const billNo = `VR/2026-27/BILL-${Math.floor(1000 + Math.random() * 9000)}`;
-    const billRecord = {
-      billNo,
-      orderType: serviceType,
-      destination: serviceType === 'Restaurant' ? selectedTableNo : `Room ${selectedRoomNo}`,
-      guestName: currentGuestName,
-      items: cartItems,
-      subtotal: taxableAmount,
-      cgst: cgstAmount,
-      sgst: sgstAmount,
-      grandTotal,
-      paymentMode: counterPaymentMode,
-      timestamp: new Date().toLocaleString('en-IN')
-    };
+    setIsProcessing(true);
+    try {
+      const billNo = `VR/2026-27/BILL-${Math.floor(1000 + Math.random() * 9000)}`;
+      const billRecord = {
+        billNo,
+        orderType: serviceType,
+        destination: serviceType === 'Restaurant' ? selectedTableNo : `Room ${selectedRoomNo}`,
+        guestName: currentGuestName,
+        items: cartItems,
+        subtotal: taxableAmount,
+        cgst: cgstAmount,
+        sgst: sgstAmount,
+        grandTotal,
+        paymentMode: counterPaymentMode,
+        timestamp: new Date().toLocaleString('en-IN')
+      };
 
-    setBillReceiptRecord(billRecord);
-    setShowCounterBillModal(true);
+      setBillReceiptRecord(billRecord);
+      setShowCounterBillModal(true);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -713,6 +760,40 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
                   />
                   <span>🕉️ Sattvic / Low Spice</span>
                 </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 800, color: '#ea580c', cursor: 'pointer', fontSize: 12 }}>
+                  <input
+                    type="checkbox"
+                    checked={isLessSpicy}
+                    onChange={e => setIsLessSpicy(e.target.checked)}
+                    style={{ accentColor: '#ea580c', width: 16, height: 16 }}
+                  />
+                  <span>🌶️ Less Spicy</span>
+                </label>
+                {isCpRoom && (
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      fontWeight: 800,
+                      color: isBreakfastWindow ? '#0284c7' : '#64748b',
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      background: isBreakfastWindow ? '#e0f2fe' : '#f1f5f9',
+                      padding: '2px 8px',
+                      borderRadius: 4
+                    }}
+                    title={isBreakfastWindow ? 'Breakfast window active (7:00 AM - 10:30 AM)' : 'Complimentary breakfast window is 7:00 AM - 10:30 AM'}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isCpBreakfast}
+                      onChange={e => setIsCpBreakfast(e.target.checked)}
+                      style={{ accentColor: '#0284c7', width: 16, height: 16 }}
+                    />
+                    <span>☕ CP Breakfast Included {isBreakfastWindow ? '(Active 7:00-10:30)' : '(Off-Hours)'}</span>
+                  </label>
+                )}
                 <input
                   type="text"
                   placeholder="Special instructions (e.g. extra crispy dosa, mild sambar, no green chillies)"
@@ -984,70 +1065,76 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
                       {/* Button 1: [🔥 Punch KOT to Kitchen] */}
                       <button
                         type="button"
+                        disabled={isProcessing}
                         onClick={handlePunchKot}
                         style={{
-                          background: '#ea580c',
+                          background: isProcessing ? '#9a3412' : '#ea580c',
                           color: '#ffffff',
                           border: 'none',
                           padding: '8px 12px',
                           borderRadius: 4,
                           fontSize: 12,
                           fontWeight: 800,
-                          cursor: 'pointer',
+                          cursor: isProcessing ? 'not-allowed' : 'pointer',
+                          opacity: isProcessing ? 0.7 : 1,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           gap: 6
                         }}
                       >
-                        🔥 Punch KOT to Kitchen
+                        {isProcessing ? '⏳ Processing...' : '🔥 Punch KOT to Kitchen'}
                       </button>
 
                       <div style={{ display: 'flex', gap: 6 }}>
                         {/* Button 2: [🛎️ Post to Room Folio] */}
                         <button
                           type="button"
+                          disabled={isProcessing}
                           onClick={handlePostToRoomFolio}
                           style={{
                             flex: 1,
-                            background: '#059669',
+                            background: isProcessing ? '#065f46' : '#059669',
                             color: '#ffffff',
                             border: 'none',
                             padding: '7px 8px',
                             borderRadius: 4,
                             fontSize: 11,
                             fontWeight: 800,
-                            cursor: 'pointer',
+                            cursor: isProcessing ? 'not-allowed' : 'pointer',
+                            opacity: isProcessing ? 0.7 : 1,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             gap: 4
                           }}
                         >
-                          🛎️ Post to Room Folio
+                          {isProcessing ? '⏳ Posting...' : '🛎️ Post to Room Folio'}
                         </button>
 
                         {/* Button 3: [💳 Instant Counter Bill] */}
                         <button
                           type="button"
+                          disabled={isProcessing}
                           onClick={handleSettleCounterBill}
                           style={{
                             flex: 1,
-                            background: '#2563eb',
+                            background: isProcessing ? '#1e40af' : '#2563eb',
                             color: '#ffffff',
                             border: 'none',
                             padding: '7px 8px',
                             borderRadius: 4,
                             fontSize: 11,
                             fontWeight: 800,
-                            cursor: 'pointer',
+                            cursor: isProcessing ? 'not-allowed' : 'pointer',
+                            opacity: isProcessing ? 0.7 : 1,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             gap: 4
                           }}
                         >
-                          💳 Instant Counter Bill
+                          {isProcessing ? '⏳ Processing...' : '💳 Instant Counter Bill'}
                         </button>
                       </div>
 

@@ -1,0 +1,165 @@
+{
+  "startedAt": "2026-10-21T03:07:56.980Z",
+  "completedAt": "2026-10-21T03:08:34.743Z",
+  "totalDurationMs": 37461,
+  "testsExecuted": 10,
+  "testsPassed": 8,
+  "testsFailed": 1,
+  "testsWarning": 1,
+  "telemetry": {
+    "consoleErrors": [
+      "Failed to load resource: net::ERR_FAILED",
+      "Failed to load resource: net::ERR_FAILED",
+      "Failed to load resource: net::ERR_FAILED",
+      "Failed to load resource: net::ERR_FAILED",
+      "Failed to load resource: net::ERR_FAILED",
+      "Failed to load resource: net::ERR_FAILED",
+      "Failed to load resource: net::ERR_FAILED",
+      "Failed to load resource: net::ERR_FAILED",
+      "Failed to load resource: net::ERR_FAILED",
+      "Failed to load resource: net::ERR_FAILED",
+      "Failed to load resource: net::ERR_FAILED"
+    ],
+    "networkFailures": [],
+    "corsViolations": [
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/health' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/full-state' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/dashboard' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/health' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/full-state' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/full-state' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/dashboard' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/dashboard' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/dashboard' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/dashboard' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/dashboard' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+    ],
+    "performance": [
+      {
+        "page": "Public Home",
+        "loadTimeMs": 2622
+      }
+    ]
+  },
+  "results": [
+    {
+      "testId": "PUB-01",
+      "name": "Public Landing Page 200 OK & Title",
+      "category": "Public Portal",
+      "status": "PASS",
+      "details": {
+        "title": "Hotel Sai Vasudev Residency | Comfortable & Luxury Stay",
+        "loadTimeMs": 2622
+      }
+    },
+    {
+      "testId": "PUB-02",
+      "name": "Public Navigation Links Anchor Mapping",
+      "category": "Public Portal",
+      "status": "PASS",
+      "details": {
+        "navLinks": [
+          "📞 +91 94402 89999",
+          "💬 WhatsApp",
+          "SVR\nSAI VASUDEV\nRESIDENCY • BOUTIQUE HOTEL • SHIRDI",
+          "Overview",
+          "Rooms & Rates",
+          "Amenities",
+          "Dining",
+          "Pilgrimage & Map",
+          "Contact"
+        ]
+      }
+    },
+    {
+      "testId": "PUB-03",
+      "name": "Hero Availability Search Controls",
+      "category": "Public Portal",
+      "status": "WARN",
+      "details": {}
+    },
+    {
+      "testId": "PUB-04",
+      "name": "Rooms Catalog Category Filter Tabs",
+      "category": "Public Portal",
+      "status": "PASS",
+      "details": {
+        "categoryTabs": [
+          "All Accommodations",
+          "Deluxe",
+          "Super Deluxe",
+          "Suite"
+        ]
+      }
+    },
+    {
+      "testId": "PUB-05",
+      "name": "Public Booking Modal Launch",
+      "category": "Public Portal",
+      "status": "PASS",
+      "details": {}
+    },
+    {
+      "testId": "HDR-01",
+      "name": "PMS Master Window Mount on /erp",
+      "category": "PMS Core",
+      "status": "PASS",
+      "details": {}
+    },
+    {
+      "testId": "HDR-02",
+      "name": "Omni-Search Bar Presence",
+      "category": "PMS Header",
+      "status": "PASS",
+      "details": {}
+    },
+    {
+      "testId": "HDR-03",
+      "name": "Omni-Search Room 101 Routing",
+      "category": "PMS Header",
+      "status": "PASS",
+      "details": {}
+    },
+    {
+      "testId": "HDR-04",
+      "name": "Header Action Badges Inventory",
+      "category": "PMS Header",
+      "status": "PASS",
+      "details": {
+        "count": 20,
+        "buttons": [
+          "☰",
+          "🔍",
+          "🔄 Offline Mode",
+          "🔔 Unconfirmed (2)",
+          "📅 Calendar",
+          "🧹 Housekeeping",
+          "💰 Petty Cash & Night Audit",
+          "🏨 DEMO0004 (Shirdi (Main Temple Shrine))",
+          "📱 Mobile View",
+          "💬 WhatsApp: Valid (29-06-2026)",
+          "🌐 Online / Hybrid Sync",
+          "🏆 Top 20 Features",
+          "📜 GST Reports",
+          "🎓 Training & Support",
+          "🤝 Agent Commissions",
+          "🍷 Liquor & Bar",
+          "🛡️ No-Discount Control",
+          "🏬 Stock Report",
+          "🏰 Banquet & Events",
+          "✕"
+        ]
+      }
+    },
+    {
+      "testId": "FATAL",
+      "name": "Unexpected Test Execution Crash",
+      "category": "Core",
+      "status": "FAIL",
+      "details": {
+        "error": "elementHandle.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"pms-submodal-overlay\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"pms-submodal-overlay\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    55 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div class=\"pms-submodal-overlay\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n",
+        "stack": "elementHandle.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"pms-submodal-overlay\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"pms-submodal-overlay\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    55 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div class=\"pms-submodal-overlay\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\n    at runDeepAudit (C:\\Users\\rakes\\hotel SAI VASUDEV RESIDENCY\\scripts\\e2e_deep_audit.mjs:145:21)"
+      }
+    }
+  ]
+}

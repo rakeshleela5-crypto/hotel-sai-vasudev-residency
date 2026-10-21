@@ -37,8 +37,14 @@ export function App() {
   const [searchDates, setSearchDates] = useState<{ checkIn: string; checkOut: string; guests: number } | undefined>(undefined);
 
   useEffect(() => {
-    // Automatically open PMS if URL has #pms or ?pms
-    if (window.location.hash === '#pms' || window.location.search.includes('pms')) {
+    // Automatically open PMS if URL has /erp, #erp, #pms, or ?pms
+    if (
+      window.location.pathname.startsWith('/erp') ||
+      window.location.hash === '#erp' ||
+      window.location.hash === '#pms' ||
+      window.location.search.includes('pms') ||
+      window.location.search.includes('erp')
+    ) {
       setPortalMode('erp');
       setIsPmsOpen(true);
     }
@@ -69,6 +75,14 @@ export function App() {
     setPortalMode(mode);
     if (mode === 'erp') {
       setIsPmsOpen(true);
+      try {
+        window.history.pushState(null, '', '/erp');
+      } catch {}
+    } else {
+      setIsPmsOpen(false);
+      try {
+        window.history.pushState(null, '', '/');
+      } catch {}
     }
   };
 

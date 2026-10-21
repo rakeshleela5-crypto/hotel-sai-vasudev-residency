@@ -478,9 +478,19 @@ export const hotelApi = {
   },
 
   async getPmsDashboardSync() {
-    const res = await fetch(`${API_BASE_URL}/pms/sync/dashboard`);
-    if (!res.ok) throw new Error('Failed to synchronize PMS dashboard');
-    return await res.json();
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      const res = await fetch(`${API_BASE_URL}/pms/sync/dashboard`, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      const contentType = res.headers.get('content-type') || '';
+      if (!res.ok || !contentType.includes('application/json')) {
+        return null;
+      }
+      return await res.json();
+    } catch {
+      return null;
+    }
   },
 
   async uploadGuestDocument(file: File): Promise<{ status: string; storage: string; url: string; filename: string }> {
@@ -561,8 +571,18 @@ export const hotelApi = {
   },
 
   async getFullCloudState(): Promise<any> {
-    const res = await fetch(`${API_BASE_URL}/pms/sync/full-state`);
-    if (!res.ok) throw new Error('Failed to fetch full cloud state');
-    return await res.json();
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      const res = await fetch(`${API_BASE_URL}/pms/sync/full-state`, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      const contentType = res.headers.get('content-type') || '';
+      if (!res.ok || !contentType.includes('application/json')) {
+        return null;
+      }
+      return await res.json();
+    } catch {
+      return null;
+    }
   }
 };

@@ -135,12 +135,40 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
     alert(`Pending KOTs cleared into Food Bill ${billRecord.billNo} and posted to Room Account!`);
   };
 
-  const [forceLocalGst, setForceLocalGst] = useState<boolean>(companyInfo.makeAllBillLocalGst);
+  const [isSezUnitWithLut, setIsSezUnitWithLut] = useState<boolean>(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Late check-out detection (Standard checkout: 11:00 AM with 30-min grace period till 11:30 AM)
+  const parseCheckoutHour = (timeStr: string): number => {
+    try {
+      const isPm = /pm/i.test(timeStr);
+      const isAm = /am/i.test(timeStr);
+      const parts = timeStr.replace(/[^\d:]/g, '').split(':');
+      let h = parseInt(parts[0] || '11', 10);
+      const m = parseInt(parts[1] || '0', 10);
+      if (isPm && h < 12) h += 12;
+      if (isAm && h === 12) h = 0;
+      return h + m / 60;
+    } catch {
+      return 11.0;
+    }
+  };
+
+  const checkoutDecimalHour = parseCheckoutHour(checkOutTime);
+  const isLateCheckout = checkoutDecimalHour > 11.5;
+  const [lateCheckoutApplied, setLateCheckoutApplied] = useState<'none' | 'half' | 'full' | 'waived'>('none');
+  const [lateCheckoutWaiverNote, setLateCheckoutWaiverNote] = useState('');
+
+  const lateCheckoutFee = (() => {
+    if (lateCheckoutApplied === 'half') return Math.round(perDayTariff * 0.5);
+    if (lateCheckoutApplied === 'full') return perDayTariff;
+    return 0;
+  })();
 
   // Computations
-  const rawRent = dayWiseRent.length > 0
+  const rawRent = (dayWiseRent.length > 0
     ? dayWiseRent.reduce((s, r) => s + r.rent, 0)
-    : perDayTariff * noOfDays;
+    : perDayTariff * noOfDays) + lateCheckoutFee;
 
   // Base Room Taxable (Gross Room minus Pre-Tax Discount)
   const baseRoomRent = isComplimentary
@@ -150,16 +178,24 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
     : rawRent;
   const netRoomTaxable = Math.max(0, baseRoomRent - lessDiscount);
 
-  // GST Calculation Engine & State determination
-  const cleanPartyGstin = (gstNumber || '').trim();
-  const partyStateCode = cleanPartyGstin.length >= 2 ? cleanPartyGstin.slice(0, 2) : '';
-  const hotelStateCode = (companyInfo.companyGstCode || '27').trim();
-  const isLocalGst = forceLocalGst || !partyStateCode || partyStateCode === hotelStateCode;
+  // Place of Supply Rule (Section 12(3)(c) of IGST Act 2017):
+  // Immovable property accommodation (SAC 996311) and dining (SAC 996331) in Shirdi (MH)
+  // always have Place of Supply = 27 (Maharashtra).
+  // CGST + SGST is ALWAYS levied for both domestic and out-of-state guests, UNLESS SEZ Unit with LUT.
+  const isLocalGst = !isSezUnitWithLut;
 
-  // 1. SAC 996311 (Accommodation & Extra Bed @ 12%)
-  const roomCgst = isComplimentary || !isLocalGst ? 0 : Number((netRoomTaxable * 0.06).toFixed(2));
-  const roomSgst = isComplimentary || !isLocalGst ? 0 : Number((netRoomTaxable * 0.06).toFixed(2));
-  const roomIgst = isComplimentary || isLocalGst ? 0 : Number((netRoomTaxable * 0.12).toFixed(2));
+  // Dynamic Room GST Slab:
+  // If tariff per night <= ₹7,500: 12% (6% CGST + 6% SGST)
+  // If tariff per night > ₹7,500: 18% (9% CGST + 9% SGST)
+  const effectivePerNight = noOfDays > 0 ? (netRoomTaxable / noOfDays) : netRoomTaxable;
+  const roomGstRate = effectivePerNight > 7500 ? 0.18 : 0.12;
+  const roomCgstRate = roomGstRate / 2;
+  const roomSgstRate = roomGstRate / 2;
+
+  // 1. SAC 996311 (Accommodation & Extra Bed @ 12% or 18%)
+  const roomCgst = isComplimentary || !isLocalGst ? 0 : Number((netRoomTaxable * roomCgstRate).toFixed(2));
+  const roomSgst = isComplimentary || !isLocalGst ? 0 : Number((netRoomTaxable * roomSgstRate).toFixed(2));
+  const roomIgst = isComplimentary || isLocalGst ? 0 : Number((netRoomTaxable * roomGstRate).toFixed(2));
   const roomTotalGst = isComplimentary ? 0 : isLocalGst ? Number((roomCgst + roomSgst).toFixed(2)) : roomIgst;
 
   // 2. SAC 996331 (Vasudev Rasoi Food & Room Service @ 5%)
@@ -185,7 +221,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
   const igstAmount = Number((roomIgst + foodIgst + miscIgst).toFixed(2));
   const gstAmount = isLocalGst ? Number((cgstAmount + sgstAmount).toFixed(2)) : igstAmount;
 
-  // Grand Invoice Total (Rounded to nearest ₹)
+  // Grand Invoice Total (Rounded to nearest ₹ per Section 170 CGST Act)
   const netBillAmount = Math.round(totalTaxableValue + gstAmount);
   const netPayable = Math.max(0, netBillAmount - advanceDeducted);
 
@@ -232,14 +268,21 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
     e.preventDefault();
 
     if (pendingKots.length > 0) {
-      alert("Hotel Sai Vasudev Residency:\n\nCannot submit checkout because KOT amount is greater than ₹0! Please convert all pending KOTs to Food Bill before checkout (Click '⚡ Clear to Food Bill').");
+      alert("Hard Interlock 1: Pending Kitchen Orders Block:\n\nCannot submit checkout because KOT amount is greater than ₹0! Please convert all pending KOTs to Food Bill before checkout (Click '⚡ Clear to Food Bill').");
       return;
     }
 
-    if (!isCityLedgerApproved && remainingToSettle > 0.5) {
-      alert(`Hotel Sai Vasudev Residency Settlement Policy:\n\nNet Payable Balance is ₹${netPayable.toFixed(2)}, but payment allocated across Cash/UPI/Card is ₹${totalPaidAtCheckout.toFixed(2)} (Remaining Unsettled: ₹${remainingToSettle.toFixed(2)}).\n\nPlease allocate the full payment (or check 'Corporate Credit / City Ledger Approved') to complete checkout.`);
+    if (isLateCheckout && lateCheckoutApplied === 'none') {
+      alert(`Hard Interlock 2: Late Check-Out Detection:\n\nGuest is departing after the 11:30 AM grace window (Check-Out Time: ${checkOutTime}).\n\nPlease select a Late Check-Out option (Half-Day charge, Full-Day charge, or apply Manager Waiver) before proceeding.`);
       return;
     }
+
+    if (!isCityLedgerApproved && remainingToSettle > 0.01) {
+      alert(`Hard Interlock 3: Zero-Balance Settlement Policy:\n\nNet Payable Balance is ₹${netPayable.toFixed(2)}, but payment allocated across Cash/UPI/Card is ₹${totalPaidAtCheckout.toFixed(2)} (Remaining Unsettled: ₹${remainingToSettle.toFixed(2)}).\n\nCheck-out cannot complete unless Net Payable Balance === ₹0.00. Please allocate the full payment (or check 'Corporate Credit / City Ledger Approved') to complete checkout.`);
+      return;
+    }
+
+    setIsProcessing(true);
 
     const checkoutData: PmsCheckOutDetail = {
       invoiceNo: activeInvoiceNo,
@@ -258,7 +301,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
       roomRentTotal: rawRent,
       foodAmount,
       foodBillNo,
-      gstPercent: isComplimentary ? 0 : 12,
+      gstPercent: isComplimentary ? 0 : (roomGstRate * 100),
       gstAmount,
       cgstAmount,
       sgstAmount,
@@ -272,7 +315,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
       balanceAmount: isCityLedgerApproved ? remainingToSettle : 0,
       paymentMode: paymentSplits[0]?.mode || 'Cash',
       payments: paymentSplits,
-      checkoutRemark,
+      checkoutRemark: checkoutRemark + (lateCheckoutFee > 0 ? ` [Late Check-Out: ₹${lateCheckoutFee}]` : lateCheckoutApplied === 'waived' ? ` [Late Check-Out Waived: ${lateCheckoutWaiverNote}]` : ''),
       gstNumber,
       companyName,
       companyAddress,
@@ -302,6 +345,80 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
     // Save checkout & automatically mark room as Dirty (VACANT_DIRTY) and enqueue high-priority housekeeping
     PmsStore.saveCheckout(checkoutData);
 
+    // Double-Entry Journal Vouchers upon Final Checkout Settlement
+    try {
+      // 1. Post Receipt Vouchers for payments collected at checkout
+      paymentSplits.forEach(split => {
+        if (split.amount > 0) {
+          const debitAcc = split.mode === 'Cash'
+            ? 'Cash in Hand (Reception)'
+            : split.mode === 'Card'
+            ? 'Card EDC Receivable'
+            : (split.mode as string) === 'Credit'
+            ? 'Corporate City Ledger (Sundry Debtors)'
+            : 'HDFC Bank / UPI Settlement A/c';
+          
+          PmsStore.postJournalEntry({
+            date: checkOutDate,
+            time: checkOutTime,
+            referenceNo: activeInvoiceNo,
+            voucherType: 'CheckOut',
+            debitAccount: debitAcc,
+            creditAccount: 'In-House Guest Folio Receivable',
+            amountPaise: Math.round(split.amount * 100),
+            amountRupees: split.amount,
+            narration: `Checkout settlement for Room ${targetRoom.roomNo} (${guestName}) via ${split.mode}`,
+            postedBy: 'Front Desk Mgr'
+          });
+        }
+      });
+
+      // 2. Room Revenue & Output Tax Journal
+      if (netRoomTaxable > 0) {
+        PmsStore.postJournalEntry({
+          date: checkOutDate,
+          time: checkOutTime,
+          referenceNo: activeInvoiceNo,
+          voucherType: 'CheckOut',
+          debitAccount: 'In-House Guest Folio Receivable',
+          creditAccount: 'Room Accommodation Revenue',
+          amountPaise: Math.round(netRoomTaxable * 100),
+          amountRupees: netRoomTaxable,
+          narration: `Room accommodation revenue finalized on checkout for Room ${targetRoom.roomNo}`,
+          postedBy: 'Front Desk Mgr'
+        });
+      }
+
+      if (isLocalGst && roomCgst > 0) {
+        PmsStore.postJournalEntry({
+          date: checkOutDate,
+          time: checkOutTime,
+          referenceNo: activeInvoiceNo,
+          voucherType: 'CheckOut',
+          debitAccount: 'In-House Guest Folio Receivable',
+          creditAccount: 'Output CGST @ 6%',
+          amountPaise: Math.round(roomCgst * 100),
+          amountRupees: roomCgst,
+          narration: `Output CGST levied on Room ${targetRoom.roomNo} invoice ${activeInvoiceNo}`,
+          postedBy: 'Front Desk Mgr'
+        });
+        PmsStore.postJournalEntry({
+          date: checkOutDate,
+          time: checkOutTime,
+          referenceNo: activeInvoiceNo,
+          voucherType: 'CheckOut',
+          debitAccount: 'In-House Guest Folio Receivable',
+          creditAccount: 'Output SGST @ 6%',
+          amountPaise: Math.round(roomSgst * 100),
+          amountRupees: roomSgst,
+          narration: `Output SGST levied on Room ${targetRoom.roomNo} invoice ${activeInvoiceNo}`,
+          postedBy: 'Front Desk Mgr'
+        });
+      }
+    } catch (jErr) {
+      console.error('Error posting checkout journal entries:', jErr);
+    }
+
     // Auto WhatsApp on checkout
     const waConfig = PmsStore.getWhatsAppConfig();
     if (waConfig.autoSendOnCheckOut && guestPhone) {
@@ -318,6 +435,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
       });
     }
 
+    setIsProcessing(false);
     onCheckoutComplete(checkoutData);
     setShowInvoicePreview(true);
   };
@@ -431,6 +549,94 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                   </label>
                 </div>
               </div>
+
+              {/* Hard Interlock 2: Late Check-Out Detection Banner */}
+              {isLateCheckout && (
+                <div style={{
+                  background: lateCheckoutApplied === 'waived' ? '#f0fdf4' : '#fffbeb',
+                  border: `2px solid ${lateCheckoutApplied === 'waived' ? '#16a34a' : '#f59e0b'}`,
+                  borderRadius: 6,
+                  padding: '8px 12px',
+                  marginBottom: 10,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: 12,
+                  flexWrap: 'wrap'
+                }}>
+                  <div>
+                    <div style={{ fontWeight: 800, color: lateCheckoutApplied === 'waived' ? '#15803d' : '#b45309', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span>⚠️ LATE CHECK-OUT DETECTED &bull; Time: {checkOutTime}</span>
+                      <span style={{ fontSize: 11, background: '#0f172a', color: '#fff', padding: '1px 6px', borderRadius: 3 }}>
+                        Std: 11:00 AM (30m Grace)
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>
+                      {lateCheckoutApplied === 'none' && 'Departure is past the 11:30 AM grace window. Please select late checkout tariff or apply manager waiver.'}
+                      {lateCheckoutApplied === 'half' && `Half-Day Late Checkout applied: +₹${lateCheckoutFee} (11:30 AM–4:00 PM).`}
+                      {lateCheckoutApplied === 'full' && `Full-Day Late Checkout applied: +₹${lateCheckoutFee} (>4:00 PM).`}
+                      {lateCheckoutApplied === 'waived' && `Manager Waiver applied: ${lateCheckoutWaiverNote || 'Waived per GM approval'}.`}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                    <button
+                      type="button"
+                      onClick={() => setLateCheckoutApplied('half')}
+                      style={{
+                        background: lateCheckoutApplied === 'half' ? '#d97706' : '#ffffff',
+                        color: lateCheckoutApplied === 'half' ? '#ffffff' : '#334155',
+                        border: '1px solid #cbd5e1',
+                        padding: '4px 10px',
+                        borderRadius: 3,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Half Day (+₹{Math.round(perDayTariff * 0.5)})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLateCheckoutApplied('full')}
+                      style={{
+                        background: lateCheckoutApplied === 'full' ? '#b91c1c' : '#ffffff',
+                        color: lateCheckoutApplied === 'full' ? '#ffffff' : '#334155',
+                        border: '1px solid #cbd5e1',
+                        padding: '4px 10px',
+                        borderRadius: 3,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Full Day (+₹{perDayTariff})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const note = prompt('Enter Manager Waiver Reason (e.g. VIP Pilgrim / Delayed Darshan Aarti):', 'Complimentary extension for temple darshan aarti');
+                        if (note) {
+                          setLateCheckoutApplied('waived');
+                          setLateCheckoutWaiverNote(note);
+                        }
+                      }}
+                      style={{
+                        background: lateCheckoutApplied === 'waived' ? '#16a34a' : '#ffffff',
+                        color: lateCheckoutApplied === 'waived' ? '#ffffff' : '#334155',
+                        border: '1px solid #cbd5e1',
+                        padding: '4px 10px',
+                        borderRadius: 3,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Manager Waiver (₹0)
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Guest Profile & Police C-Form KYC Details */}
               <div style={{
@@ -974,6 +1180,14 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                 <div className="form-group-pms" style={{ margin: 0 }}>
                   <label className="form-label-pms">Party GSTIN (15 Chars)</label>
                   <input type="text" value={gstNumber} onChange={e => setGstNumber(e.target.value.toUpperCase())} placeholder="e.g. 27AABCT3518Q1ZP" className="form-input-pms" />
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 700, color: '#4338ca', cursor: 'pointer', marginTop: 2 }}>
+                    <input
+                      type="checkbox"
+                      checked={isSezUnitWithLut}
+                      onChange={e => setIsSezUnitWithLut(e.target.checked)}
+                    />
+                    <span>SEZ Unit with LUT (Zero-Rated IGST)</span>
+                  </label>
                 </div>
                 <div className="form-group-pms" style={{ margin: 0 }}>
                   <label className="form-label-pms">Laundry / Other (₹) (SAC 9997)</label>
@@ -1023,24 +1237,13 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                       : `INTERSTATE SALES (IGST ${gstPercent}%)`}
                   </span>
                   <span style={{ color: '#475569', fontSize: 10 }}>
-                    {forceLocalGst
-                      ? '✓ Local GST Forced by Hotel Settings (Make All Bill Local GST = True)'
-                      : partyStateCode && partyStateCode !== hotelStateCode
-                      ? `Interstate Party: State ${partyStateCode} != Maharashtra ${hotelStateCode}`
-                      : `Intrastate Party: Maharashtra State Code 27`}
+                    {isSezUnitWithLut
+                      ? '✓ Zero-Rated IGST per SEZ Unit with LUT filing'
+                      : '✓ Sec 12(3)(c) IGST Act: Hotel Immovable Property Place of Supply = 27 Maharashtra (Intrastate CGST + SGST)'}
                   </span>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', fontWeight: 700, color: '#0369a1', fontSize: 11 }}>
-                    <input
-                      type="checkbox"
-                      checked={forceLocalGst}
-                      onChange={e => setForceLocalGst(e.target.checked)}
-                    />
-                    <span>Enforce Local GST (CGST + SGST)</span>
-                  </label>
-
                   <div style={{ fontWeight: 800, color: '#0f172a' }}>
                     {isLocalGst ? (
                       <span>SGST: ₹{sgstAmount.toFixed(2)} | CGST: ₹{cgstAmount.toFixed(2)}</span>
@@ -1100,9 +1303,19 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                 </button>
                 <button
                   type="submit"
-                  style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '8px 24px', borderRadius: 3, fontWeight: 800, fontSize: 13, cursor: 'pointer' }}
+                  disabled={isProcessing || (!isCityLedgerApproved && remainingToSettle > 0.01)}
+                  style={{
+                    background: isProcessing || (!isCityLedgerApproved && remainingToSettle > 0.01) ? '#94a3b8' : '#16a34a',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '8px 24px',
+                    borderRadius: 3,
+                    fontWeight: 800,
+                    fontSize: 13,
+                    cursor: isProcessing || (!isCityLedgerApproved && remainingToSettle > 0.01) ? 'not-allowed' : 'pointer'
+                  }}
                 >
-                  ✓ Complete Checkout &amp; Generate Final Tax Invoice
+                  {isProcessing ? 'Processing Settlement...' : '✓ Complete Checkout & Generate Final Tax Invoice'}
                 </button>
               </div>
             </form>

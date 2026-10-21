@@ -20,10 +20,38 @@ export const KitchenDashboardModal: React.FC<KitchenDashboardModalProps> = ({
   const [nowTime, setNowTime] = useState(Date.now());
   const [selectedKotForPrint, setSelectedKotForPrint] = useState<PmsKotRecord | null>(null);
 
+  // KOT Anti-Pilferage & Void Modal State
+  const [voidTargetKot, setVoidTargetKot] = useState<PmsKotRecord | null>(null);
+  const [selectedItemIndex, setSelectedItemIndex] = useState<number>(0);
+  const [voidReason, setVoidReason] = useState<string>('Guest Changed Mind');
+  const [foodStatus, setFoodStatus] = useState<'Unprepared' | 'Prepared/Wasted'>('Unprepared');
+  const [voidManagerPin, setVoidManagerPin] = useState<string>('Restaurant Mgr');
+  const [showAuditLogModal, setShowAuditLogModal] = useState<boolean>(false);
+
   const refreshKots = () => {
     setKots(PmsStore.getKots());
     setNowTime(Date.now());
     setCountdown(30);
+  };
+
+  const handleConfirmVoid = () => {
+    if (!voidTargetKot) return;
+    const item = voidTargetKot.items[selectedItemIndex];
+    if (!item) return;
+    const ok = PmsStore.voidKotItem(
+      voidTargetKot.kotNo,
+      item.itemCode || item.itemName,
+      voidReason,
+      foodStatus,
+      voidManagerPin
+    );
+    if (ok) {
+      alert(`Item successfully voided from KOT ${voidTargetKot.kotNo} and logged to Anti-Pilferage Audit Report!`);
+      setVoidTargetKot(null);
+      refreshKots();
+    } else {
+      alert('Unable to void item: KOT not found or invalid item.');
+    }
   };
 
   useEffect(() => {
@@ -278,6 +306,26 @@ export const KitchenDashboardModal: React.FC<KitchenDashboardModalProps> = ({
               }}
             >
               <span>All Tickets</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowAuditLogModal(true)}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 4,
+                border: 'none',
+                background: '#475569',
+                color: '#ffffff',
+                fontWeight: 800,
+                fontSize: 12,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
+              }}
+            >
+              <span>📋 Void Audit Log ({PmsStore.getKotVoidAuditLogs().length})</span>
             </button>
 
             {unprintedCount > 0 && (
@@ -633,6 +681,34 @@ export const KitchenDashboardModal: React.FC<KitchenDashboardModalProps> = ({
                         </div>
                       )}
                     </div>
+
+                    {/* Anti-Pilferage Lock: Void Item Action */}
+                    {kot.status !== 'Served' && kot.status !== 'Billed' && kot.status !== 'Cancelled' && (
+                      <div style={{ padding: '0 10px 8px 10px', background: '#f8fafc' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setVoidTargetKot(kot);
+                            setSelectedItemIndex(0);
+                            setVoidReason('Guest Changed Mind');
+                            setFoodStatus('Unprepared');
+                          }}
+                          style={{
+                            width: '100%',
+                            background: '#fee2e2',
+                            color: '#b91c1c',
+                            border: '1px solid #fca5a5',
+                            padding: '4px 6px',
+                            borderRadius: 3,
+                            fontWeight: 700,
+                            fontSize: 10,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          🚫 Void Item (Anti-Pilferage Lock)
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -759,6 +835,207 @@ export const KitchenDashboardModal: React.FC<KitchenDashboardModalProps> = ({
                 >
                   Restaurant
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Void Item Modal (Anti-Pilferage Lock) */}
+        {voidTargetKot && (
+          <div className="pms-submodal-overlay" onClick={() => setVoidTargetKot(null)} style={{ zIndex: 12500 }}>
+            <div
+              className="pms-form-box"
+              onClick={e => e.stopPropagation()}
+              style={{ maxWidth: 480, padding: '16px 20px', background: '#ffffff', borderRadius: 8 }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, borderBottom: '2px solid #ef4444', paddingBottom: 8 }}>
+                <div style={{ fontWeight: 900, color: '#b91c1c', fontSize: 15, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span>🚫</span>
+                  <span>Void Item &bull; Anti-Pilferage Lock</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setVoidTargetKot(null)}
+                  style={{ background: 'transparent', border: 'none', fontSize: 18, cursor: 'pointer', color: '#64748b' }}
+                >
+                  &times;
+                </button>
+              </div>
+
+              <div style={{ fontSize: 12, color: '#475569', marginBottom: 12, background: '#fef2f2', padding: 8, borderRadius: 4, border: '1px solid #fecdd3' }}>
+                <strong>Strict Internal Audit Rule:</strong> Fired kitchen items cannot be silently removed. Voiding requires a documented reason, food waste status, and authorizing manager credential for statutory anti-fraud compliance.
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div>
+                  <label className="form-label-pms" style={{ fontWeight: 800 }}>KOT Number</label>
+                  <input type="text" readOnly value={`${voidTargetKot.kotNo} (${voidTargetKot.tableNo ? voidTargetKot.tableNo : `Room ${voidTargetKot.roomNo}`})`} className="form-input-pms" style={{ background: '#f1f5f9', fontWeight: 700 }} />
+                </div>
+
+                <div>
+                  <label className="form-label-pms" style={{ fontWeight: 800 }}><span className="req">*</span> Select Item to Void</label>
+                  <select
+                    value={selectedItemIndex}
+                    onChange={e => setSelectedItemIndex(Number(e.target.value))}
+                    className="form-select-pms"
+                    style={{ fontWeight: 700 }}
+                  >
+                    {voidTargetKot.items.map((item, idx) => (
+                      <option key={idx} value={idx}>
+                        {item.itemName} &bull; Qty: {item.qty} &bull; ₹{item.amount.toFixed(2)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <div>
+                    <label className="form-label-pms" style={{ fontWeight: 800 }}><span className="req">*</span> Void Reason</label>
+                    <select
+                      value={voidReason}
+                      onChange={e => setVoidReason(e.target.value)}
+                      className="form-select-pms"
+                      style={{ fontWeight: 600 }}
+                    >
+                      <option value="Guest Changed Mind">Guest Changed Mind</option>
+                      <option value="Kitchen Out of Stock">Kitchen Out of Stock</option>
+                      <option value="Wrong Order Entry">Wrong Order Entry</option>
+                      <option value="Excessive Wait Time">Excessive Wait Time</option>
+                      <option value="Quality Concern">Quality Concern</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="form-label-pms" style={{ fontWeight: 800 }}><span className="req">*</span> Food Waste Status</label>
+                    <select
+                      value={foodStatus}
+                      onChange={e => setFoodStatus(e.target.value as any)}
+                      className="form-select-pms"
+                      style={{ fontWeight: 600 }}
+                    >
+                      <option value="Unprepared">Unprepared (Zero Waste)</option>
+                      <option value="Prepared/Wasted">Prepared (Wasted Food Cost)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="form-label-pms" style={{ fontWeight: 800 }}><span className="req">*</span> Authorizing Manager PIN / Name</label>
+                  <input
+                    type="text"
+                    value={voidManagerPin}
+                    onChange={e => setVoidManagerPin(e.target.value)}
+                    className="form-input-pms"
+                    placeholder="e.g. GM / Restaurant Lead"
+                    required
+                  />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 10 }}>
+                  <button
+                    type="button"
+                    onClick={() => setVoidTargetKot(null)}
+                    style={{ background: '#e2e8f0', color: '#334155', border: 'none', padding: '7px 16px', borderRadius: 4, fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmVoid}
+                    style={{ background: '#b91c1c', color: '#ffffff', border: 'none', padding: '7px 20px', borderRadius: 4, fontWeight: 800, cursor: 'pointer' }}
+                  >
+                    Confirm Void &amp; Log Audit
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Anti-Pilferage Audit Log Report Dialog */}
+        {showAuditLogModal && (
+          <div className="pms-submodal-overlay" onClick={() => setShowAuditLogModal(false)} style={{ zIndex: 12500 }}>
+            <div
+              className="pms-form-box"
+              onClick={e => e.stopPropagation()}
+              style={{ maxWidth: 840, padding: 0, overflow: 'hidden', background: '#ffffff', borderRadius: 8 }}
+            >
+              <div style={{ background: '#0f172a', color: '#ffffff', padding: '12px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ fontWeight: 900, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span>📋</span>
+                  <span>KOT Anti-Pilferage &amp; Void Audit Register</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAuditLogModal(false)}
+                  style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 20, cursor: 'pointer' }}
+                >
+                  &times;
+                </button>
+              </div>
+
+              <div style={{ padding: 16 }}>
+                <div style={{ fontSize: 12, color: '#475569', marginBottom: 12 }}>
+                  Immutable audit trail of all voided food items, waste classifications, and supervisor authorizations.
+                </div>
+
+                {PmsStore.getKotVoidAuditLogs().length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '30px 0', color: '#94a3b8', fontStyle: 'italic' }}>
+                    No voided items recorded. Restaurant kitchen operates with 100% item integrity!
+                  </div>
+                ) : (
+                  <div style={{ maxHeight: 380, overflowY: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, textAlign: 'left' }}>
+                      <thead>
+                        <tr style={{ background: '#f1f5f9', color: '#334155', borderBottom: '2px solid #cbd5e1' }}>
+                          <th style={{ padding: '6px 8px' }}>Timestamp</th>
+                          <th style={{ padding: '6px 8px' }}>KOT #</th>
+                          <th style={{ padding: '6px 8px' }}>Room / Table</th>
+                          <th style={{ padding: '6px 8px' }}>Voided Item</th>
+                          <th style={{ padding: '6px 8px', textAlign: 'right' }}>Amount</th>
+                          <th style={{ padding: '6px 8px' }}>Reason</th>
+                          <th style={{ padding: '6px 8px' }}>Food Waste</th>
+                          <th style={{ padding: '6px 8px' }}>Voided By</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {PmsStore.getKotVoidAuditLogs().map(log => (
+                          <tr key={log.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                            <td style={{ padding: '6px 8px', color: '#64748b' }}>{new Date(log.voidedAt).toLocaleString()}</td>
+                            <td style={{ padding: '6px 8px', fontWeight: 700 }}>{log.kotNo}</td>
+                            <td style={{ padding: '6px 8px' }}>{log.kotNo}</td>
+                            <td style={{ padding: '6px 8px', fontWeight: 700, color: '#0f172a' }}>{log.itemName} (x{log.qty})</td>
+                            <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: 800, color: '#b91c1c' }}>₹{log.amount.toFixed(2)}</td>
+                            <td style={{ padding: '6px 8px' }}>{log.voidReason}</td>
+                            <td style={{ padding: '6px 8px' }}>
+                              <span style={{
+                                background: log.foodStatus === 'Prepared/Wasted' ? '#fee2e2' : '#f0fdf4',
+                                color: log.foodStatus === 'Prepared/Wasted' ? '#b91c1c' : '#166534',
+                                padding: '1px 6px',
+                                borderRadius: 3,
+                                fontSize: 10,
+                                fontWeight: 700
+                              }}>
+                                {log.foodStatus === 'Prepared/Wasted' ? 'Wasted Food' : 'Unprepared'}
+                              </span>
+                            </td>
+                            <td style={{ padding: '6px 8px', fontWeight: 600 }}>{log.voidedBy}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowAuditLogModal(false)}
+                    style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: 4, fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
           </div>

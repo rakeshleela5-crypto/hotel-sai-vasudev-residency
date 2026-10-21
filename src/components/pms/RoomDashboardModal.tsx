@@ -52,6 +52,18 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
 
   const [proformaOpen, setProformaOpen] = useState(false);
 
+  // Post Charge Sub-Action
+  const [isPostingCharge, setIsPostingCharge] = useState(false);
+  const [chargeName, setChargeName] = useState('Extra Bed / Mattress');
+  const [chargeAmount, setChargeAmount] = useState('600');
+  const [chargeSac, setChargeSac] = useState('996311');
+  const [chargeGstPercent, setChargeGstPercent] = useState(12);
+
+  // Split Folio Modal
+  const [isSplitFolioOpen, setIsSplitFolioOpen] = useState(false);
+  const [splitFolioA, setSplitFolioA] = useState<string[]>(['Room Accommodation (SAC 996311)']);
+  const [splitFolioB, setSplitFolioB] = useState<string[]>(['Vasudev Rasoi Dining (SAC 996331)', 'Laundry & Extras (SAC 9997)']);
+
   // Submodals state
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [selectedRoomForBooking, setSelectedRoomForBooking] = useState<PmsRoom | null>(null);
@@ -217,6 +229,62 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
       PmsStore.updateRoomStatus(drawerRoom.roomNo, 'vacant', undefined);
       setSelectedDrawerRoomNo(null);
     }
+  };
+
+  const handleExportJson = () => {
+    const json = PmsStore.exportDatabaseAsJson();
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `SVR-ERP-Backup-${PmsStore.getBusinessDate()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportJson = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const content = evt.target?.result as string;
+      if (content) {
+        const res = PmsStore.importDatabaseFromJson(content);
+        alert(res.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handlePostCharge = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!drawerRoom) return;
+    const num = parseFloat(chargeAmount);
+    if (isNaN(num) || num <= 0) {
+      alert('Please enter a valid charge amount.');
+      return;
+    }
+    PmsStore.postChargeToRoom(drawerRoom.roomNo, {
+      chargeName,
+      amount: num,
+      sacCode: chargeSac,
+      gstPercent: chargeGstPercent
+    });
+    PmsStore.postJournalEntry({
+      date: PmsStore.getBusinessDate(),
+      time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+      voucherType: 'RoomPosting',
+      referenceNo: `CHG-${drawerRoom.roomNo}-${Date.now().toString().slice(-4)}`,
+      narration: `Posted ${chargeName} (SAC ${chargeSac}) to Room ${drawerRoom.roomNo}`,
+      debitAccount: 'In-House Guest Folio Receivable',
+      creditAccount: chargeSac === '996311' ? 'Extra Bed & Early/Late Check-in Revenue' : 'Petty Cash / Housekeeping Expense',
+      amountPaise: Math.round(num * 100),
+      amountRupees: num,
+      postedBy: 'Front Desk'
+    });
+    alert(`✓ Successfully posted ₹${num} for ${chargeName} (SAC ${chargeSac}) to Room ${drawerRoom.roomNo} Folio!`);
+    setIsPostingCharge(false);
+    setChargeAmount('');
   };
 
   return (
@@ -429,6 +497,52 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
 
           <button
             type="button"
+            onClick={handleExportJson}
+            style={{
+              background: '#0284c7',
+              color: '#ffffff',
+              border: 'none',
+              padding: '5px 10px',
+              borderRadius: '5px',
+              fontSize: '11px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+            title="Export complete ERP database backup as JSON"
+          >
+            📥 Export Backup
+          </button>
+
+          <label
+            style={{
+              background: '#0891b2',
+              color: '#ffffff',
+              border: 'none',
+              padding: '5px 10px',
+              borderRadius: '5px',
+              fontSize: '11px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+            title="Import ERP database backup from JSON file"
+          >
+            📤 Import Backup
+            <input
+              type="file"
+              accept=".json"
+              style={{ display: 'none' }}
+              onChange={handleImportJson}
+            />
+          </label>
+
+          <button
+            type="button"
             onClick={handleResetToDemoSeed}
             style={{
               background: '#dc2626',
@@ -443,9 +557,9 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
               alignItems: 'center',
               gap: '4px'
             }}
-            title="Reset All 16 Rooms, Bookings & Folios to Demo Seed Data"
+            title="Reset All 18 Rooms, Inventory & Folios to Authentic Shirdi Demo Seed Data"
           >
-            ↺ Reset Seed
+            ↺ Reset Seed (18 Rms)
           </button>
         </div>
       </div>
@@ -1124,6 +1238,49 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
                   </div>
                 )}
 
+                {isPostingCharge && (
+                  <div style={{ background: '#fdf4ff', border: '1px solid #f0abfc', borderRadius: '8px', padding: '12px', marginBottom: '14px' }}>
+                    <h4 style={{ margin: '0 0 8px', fontSize: '13px', fontWeight: 800, color: '#86198f' }}>Post Incidental Service Charge (SAC Code)</h4>
+                    <form onSubmit={handlePostCharge} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '8px' }}>
+                        <select
+                          value={chargeName}
+                          onChange={e => {
+                            const val = e.target.value;
+                            setChargeName(val);
+                            if (val.includes('Extra Bed')) { setChargeSac('996311'); setChargeAmount('600'); setChargeGstPercent(12); }
+                            else if (val.includes('Cab')) { setChargeSac('996412'); setChargeAmount('300'); setChargeGstPercent(5); }
+                            else if (val.includes('Laundry')) { setChargeSac('999799'); setChargeAmount('250'); setChargeGstPercent(18); }
+                            else { setChargeSac('999799'); setChargeAmount('500'); setChargeGstPercent(18); }
+                          }}
+                          style={{ padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '12px', fontWeight: 700 }}
+                        >
+                          <option value="Extra Bed / Mattress">Extra Bed / Mattress (SAC 996311 @ 12%)</option>
+                          <option value="Express Laundry Service">Express Laundry Service (SAC 999799 @ 18%)</option>
+                          <option value="Temple Darshan Cab Assistance">Temple Darshan Cab Drop (SAC 996412 @ 5%)</option>
+                          <option value="Early / Late Stay Adjustment">Early / Late Stay Adjustment (SAC 996311 @ 12%)</option>
+                          <option value="Misc Concierge Service">Misc Concierge Service (SAC 999799 @ 18%)</option>
+                        </select>
+                        <input
+                          type="number"
+                          placeholder="Amount (₹)"
+                          required
+                          value={chargeAmount}
+                          onChange={e => setChargeAmount(e.target.value)}
+                          style={{ padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '12px', fontWeight: 800 }}
+                        />
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#701a75' }}>
+                        SAC Code: <strong>{chargeSac}</strong> &bull; Tax Rate: <strong>{chargeGstPercent}% GST</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px' }}>
+                        <button type="button" onClick={() => setIsPostingCharge(false)} style={{ padding: '4px 8px', fontSize: '11px', borderRadius: '4px', border: '1px solid #cbd5e1' }}>Cancel</button>
+                        <button type="submit" style={{ padding: '4px 12px', fontSize: '11px', borderRadius: '4px', border: 'none', background: '#c026d3', color: '#ffffff', fontWeight: 700 }}>Post to Folio</button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
                 {/* OCCUPIED BUTTON ACTIONS GRID */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                   <button
@@ -1143,6 +1300,14 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
                     style={{ padding: '9px 10px', background: '#2563eb', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
                   >
                     💳 Record Payment (UPI/Cash)
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsPostingCharge(!isPostingCharge)}
+                    style={{ padding: '9px 10px', background: '#c026d3', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    ➕ Post Charge (SAC)
                   </button>
 
                   <button
@@ -1181,6 +1346,14 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
                     style={{ padding: '9px 10px', background: '#ea580c', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
                   >
                     🧾 Add POS Food Bill
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsSplitFolioOpen(true)}
+                    style={{ padding: '9px 10px', background: '#0891b2', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    ⚖️ Split Folio (B2B / Personal)
                   </button>
 
                   <button
@@ -1528,7 +1701,118 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
         onClose={() => setIsHousekeepingOpen(false)}
       />
 
-      {/* Petty Expense Modal */}
+      {/* Split Folio (B2B Company Invoice vs Personal Invoice) Modal */}
+      {isSplitFolioOpen && drawerRoom && (
+        <div className="pms-submodal-overlay" onClick={() => setIsSplitFolioOpen(false)}>
+          <div className="pms-form-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 680, padding: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #cbd5e1', paddingBottom: 10, marginBottom: 16 }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 16, color: '#0f172a', fontWeight: 800 }}>
+                  ⚖️ Split Guest Folio: Room {drawerRoom.roomNo} ({drawerRoom.currentGuest?.name})
+                </h3>
+                <p style={{ margin: '2px 0 0', fontSize: 11, color: '#64748b' }}>
+                  Segregate line items between Company GST Invoice (Folio A) and Personal Guest Invoice (Folio B)
+                </p>
+              </div>
+              <button type="button" onClick={() => setIsSplitFolioOpen(false)} style={{ border: 'none', background: 'transparent', fontSize: 22, cursor: 'pointer' }}>&times;</button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              {/* Folio A: Company B2B Tax Invoice */}
+              <div style={{ border: '2px solid #2563eb', borderRadius: 8, padding: 12, background: '#eff6ff' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <strong style={{ color: '#1e40af', fontSize: 12 }}>🏢 Folio A: Company B2B Invoice</strong>
+                  <span style={{ fontSize: 10, background: '#2563eb', color: '#fff', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>GSTIN</span>
+                </div>
+                <div style={{ fontSize: 11, color: '#475569', marginBottom: 8 }}>
+                  Company: {drawerRoom.currentGuest?.companyName || 'Corporate Account'}
+                </div>
+                <div style={{ minHeight: 120, background: '#fff', border: '1px solid #cbd5e1', borderRadius: 6, padding: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {splitFolioA.map((item, idx) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', padding: '5px 8px', borderRadius: 4, fontSize: 11 }}>
+                      <span>{item}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSplitFolioA(splitFolioA.filter((_, i) => i !== idx));
+                          setSplitFolioB([...splitFolioB, item]);
+                        }}
+                        style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 4, padding: '2px 6px', fontSize: 10, cursor: 'pointer' }}
+                        title="Move to Personal Folio B"
+                      >
+                        👉 To Folio B
+                      </button>
+                    </div>
+                  ))}
+                  {splitFolioA.length === 0 && (
+                    <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 11, marginTop: 40 }}>No items in Company Folio</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Folio B: Personal Guest Invoice */}
+              <div style={{ border: '2px solid #059669', borderRadius: 8, padding: 12, background: '#f0fdf4' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <strong style={{ color: '#166534', fontSize: 12 }}>👤 Folio B: Personal Invoice</strong>
+                  <span style={{ fontSize: 10, background: '#059669', color: '#fff', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>Personal</span>
+                </div>
+                <div style={{ fontSize: 11, color: '#475569', marginBottom: 8 }}>
+                  Guest: {drawerRoom.currentGuest?.name}
+                </div>
+                <div style={{ minHeight: 120, background: '#fff', border: '1px solid #cbd5e1', borderRadius: 6, padding: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {splitFolioB.map((item, idx) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', padding: '5px 8px', borderRadius: 4, fontSize: 11 }}>
+                      <span>{item}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSplitFolioB(splitFolioB.filter((_, i) => i !== idx));
+                          setSplitFolioA([...splitFolioA, item]);
+                        }}
+                        style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 4, padding: '2px 6px', fontSize: 10, cursor: 'pointer' }}
+                        title="Move to Company Folio A"
+                      >
+                        👈 To Folio A
+                      </button>
+                    </div>
+                  ))}
+                  {splitFolioB.length === 0 && (
+                    <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 11, marginTop: 40 }}>No items in Personal Folio</div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
+              <button
+                type="button"
+                onClick={() => setIsSplitFolioOpen(false)}
+                style={{ padding: '8px 14px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  alert(`✓ Folio Split Saved!\n\nFolio A (Company Invoice): ${splitFolioA.join(', ')}\nFolio B (Personal Invoice): ${splitFolioB.join(', ')}`);
+                  setIsSplitFolioOpen(false);
+                }}
+                style={{ padding: '8px 16px', background: '#0f172a', color: '#fff', border: 'none', borderRadius: 4, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+              >
+                💾 Confirm &amp; Save Split Folios
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Housekeeping Kanban Tracker Modal */}
+      <HousekeepingTrackerModal
+        isOpen={isHousekeepingOpen}
+        onClose={() => setIsHousekeepingOpen(false)}
+      />
+
+      {/* Petty Cash & Daily Night Audit Modal */}
       <PettyExpenseModal
         isOpen={isPettyExpenseOpen}
         onClose={() => setIsPettyExpenseOpen(false)}

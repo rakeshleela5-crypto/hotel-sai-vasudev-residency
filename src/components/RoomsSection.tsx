@@ -12,20 +12,22 @@ export const RoomsSection: React.FC<RoomsSectionProps> = ({ onSelectRoom, select
   const syncTick = usePmsSync();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userFilter, setUserFilter] = useState<string | null>(null);
-  const [prevSelectedCategory, setPrevSelectedCategory] = useState(selectedCategory);
+  const [activeFilter, setActiveFilter] = useState<string>(selectedCategory || 'All');
 
-  if (prevSelectedCategory !== selectedCategory) {
-    setPrevSelectedCategory(selectedCategory);
-    setUserFilter(null);
-  }
-
-  const activeFilter = userFilter ?? selectedCategory;
+  // Sync if external hero search passes a specific category
+  useEffect(() => {
+    if (selectedCategory && selectedCategory !== 'All') {
+      setActiveFilter(selectedCategory);
+    }
+  }, [selectedCategory]);
 
   useEffect(() => {
     let isMounted = true;
     const fetchRooms = async () => {
-      setLoading(true);
+      // Only show spinner on initial blank load
+      if (rooms.length === 0) {
+        setLoading(true);
+      }
       try {
         const data = await hotelApi.getRooms(activeFilter === 'All' ? undefined : activeFilter);
         if (isMounted) setRooms(data);
@@ -60,10 +62,11 @@ export const RoomsSection: React.FC<RoomsSectionProps> = ({ onSelectRoom, select
             {categories.map((cat) => (
               <button
                 key={cat}
+                type="button"
                 role="tab"
                 aria-selected={activeFilter === cat}
                 className={`filter-pill ${activeFilter === cat ? 'active' : ''}`}
-                onClick={() => setUserFilter(cat)}
+                onClick={() => setActiveFilter(cat)}
                 style={{ minHeight: '44px', minWidth: '44px' }}
               >
                 {cat === 'All' ? 'All Accommodations' : cat}

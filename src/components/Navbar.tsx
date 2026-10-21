@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { PmsStore } from '../services/pmsStore';
 
 export interface NavbarProps {
   portalMode?: 'public' | 'erp';
@@ -29,6 +30,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [businessDate, setBusinessDate] = useState(() => PmsStore.getBusinessDate());
+
+  useEffect(() => {
+    const unsub = PmsStore.subscribe(() => {
+      setBusinessDate(PmsStore.getBusinessDate());
+    });
+    return unsub;
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -159,6 +168,29 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right: Role Switcher & Contextual Quick Action Buttons */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            {/* Live ERP Business Date Badge */}
+            <div 
+              id="erp-business-date-badge"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                background: '#0f172a',
+                border: '1px solid #38bdf8',
+                borderRadius: '4px',
+                padding: '3px 8px',
+                fontSize: '11px',
+                color: '#38bdf8',
+                fontWeight: 800,
+                boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
+              }}
+              title="Current ERP Accounting Business Date (Controlled by Night Audit)"
+            >
+              <span>📅</span>
+              <span>Biz Date:</span>
+              <strong style={{ color: '#f8fafc' }}>{businessDate}</strong>
+            </div>
+
             {portalMode === 'erp' ? (
               <>
                 {/* Staff Role Switcher */}

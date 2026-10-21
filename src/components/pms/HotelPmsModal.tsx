@@ -109,7 +109,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
 
   // Video 10 Company Info Modal (Local vs Interstate GST & State Codes)
   const [isCompanyInfoOpen, setIsCompanyInfoOpen] = useState(false);
-  const [roomRefreshTrigger, setRoomRefreshTrigger] = useState(0);
+  const [, setRoomRefreshTrigger] = useState(0);
 
   // Video 11 Room Shifting & Check In Register Modals
   const [isRoomShiftOpen, setIsRoomShiftOpen] = useState(false);
@@ -460,7 +460,6 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       text: res.success ? 'Railway DB: Synced' : 'Offline Mode',
       status: res.success ? 'online' : 'offline'
     });
-    setRoomRefreshTrigger(t => t + 1);
   };
 
   React.useEffect(() => {
@@ -1658,7 +1657,6 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
             {/* Main Dynamic View: Matrix Grid vs Home Hub */}
             {activeTab === 'matrix' ? (
               <RoomDashboardModal 
-                key={roomRefreshTrigger}
                 onSwitchToHomeHub={() => setActiveTab('hub')}
                 onOpenCalendar={() => setIsCalendarOpen(true)}
               />
