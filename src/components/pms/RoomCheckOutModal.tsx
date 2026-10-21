@@ -86,7 +86,8 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
   // Tax and Special Toggles
   const [isMyCheckout, setIsMyCheckout] = useState(false);
   const activeInvoiceNo = isMyCheckout ? `SVR/2026-27/PERS-${targetRoom.roomNo}` : defaultInvoiceNo;
-  const [isTaxInclusive, setIsTaxInclusive] = useState(false);
+  const [isTaxInclusive, setIsTaxInclusive] = useState(true); // Default True: Published tariffs are strictly GST-inclusive
+  const [splitFolioMode, setSplitFolioMode] = useState<'single' | 'split'>('single');
   const [isComplimentary, setIsComplimentary] = useState(false);
   const [gstPercent, setGstPercent] = useState<number>(12);
   const [addOthers, setAddOthers] = useState<number>(0);
@@ -166,9 +167,12 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
   })();
 
   // Computations
-  const rawRent = (dayWiseRent.length > 0
-    ? dayWiseRent.reduce((s, r) => s + r.rent, 0)
-    : perDayTariff * noOfDays) + lateCheckoutFee;
+  // Base Room Rent: If lateCheckout fee is explicitly applied ('half' or 'full'), prevent charging an extra full day from dayWiseRent
+  const baseRoomDaysRent = (calculationType === '12hour' && (lateCheckoutApplied === 'half' || lateCheckoutApplied === 'full') && dayWiseRent.length > 1)
+    ? (dayWiseRent.length - 1) * perDayTariff
+    : (dayWiseRent.length > 0 ? dayWiseRent.reduce((s, r) => s + r.rent, 0) : perDayTariff * noOfDays);
+
+  const rawRent = baseRoomDaysRent + lateCheckoutFee;
 
   // Base Room Taxable (Gross Room minus Pre-Tax Discount)
   const baseRoomRent = isComplimentary
@@ -1172,7 +1176,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
               </div>
 
               {/* Corporate GST & Discount Row */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr 1fr', gap: 8, marginBottom: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
                 <div className="form-group-pms" style={{ margin: 0 }}>
                   <label className="form-label-pms">Company Name (B2B)</label>
                   <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="e.g. Tata Motors Ltd" className="form-input-pms" />
@@ -1180,14 +1184,24 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                 <div className="form-group-pms" style={{ margin: 0 }}>
                   <label className="form-label-pms">Party GSTIN (15 Chars)</label>
                   <input type="text" value={gstNumber} onChange={e => setGstNumber(e.target.value.toUpperCase())} placeholder="e.g. 27AABCT3518Q1ZP" className="form-input-pms" />
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 700, color: '#4338ca', cursor: 'pointer', marginTop: 2 }}>
-                    <input
-                      type="checkbox"
-                      checked={isSezUnitWithLut}
-                      onChange={e => setIsSezUnitWithLut(e.target.checked)}
-                    />
-                    <span>SEZ Unit with LUT (Zero-Rated IGST)</span>
-                  </label>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 3 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 9, fontWeight: 700, color: '#4338ca', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={isSezUnitWithLut}
+                        onChange={e => setIsSezUnitWithLut(e.target.checked)}
+                      />
+                      <span>SEZ Unit (LUT)</span>
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 9, fontWeight: 800, color: '#047857', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={splitFolioMode === 'split'}
+                        onChange={e => setSplitFolioMode(e.target.checked ? 'split' : 'single')}
+                      />
+                      <span>⚡ Split B2B Folio</span>
+                    </label>
+                  </div>
                 </div>
                 <div className="form-group-pms" style={{ margin: 0 }}>
                   <label className="form-label-pms">Laundry / Other (₹) (SAC 9997)</label>
@@ -1206,6 +1220,29 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                   </select>
                 </div>
               </div>
+
+              {splitFolioMode === 'split' && (
+                <div style={{
+                  background: '#f0fdf4',
+                  border: '1px solid #86efac',
+                  padding: '6px 12px',
+                  borderRadius: 4,
+                  fontSize: 11,
+                  marginBottom: 10,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: 8
+                }}>
+                  <div>
+                    <strong style={{ color: '#166534' }}>🏢 Folio A (Corporate B2B):</strong> Room Tariff ₹{rawRent.toFixed(2)} (Net Taxable ₹{netRoomTaxable.toFixed(2)} + 12% GST ₹{roomTotalGst.toFixed(2)}) &bull; Billed to: <strong>{companyName || 'Corporate Entity'}</strong> ({gstNumber || 'B2B GSTIN'})
+                  </div>
+                  <div>
+                    <strong style={{ color: '#0369a1' }}>👤 Folio B (Personal Extras):</strong> Food & Extras ₹{(foodAmount + addOthers).toFixed(2)} &bull; Paid Personally by Guest ({guestName})
+                  </div>
+                </div>
+              )}
 
               {/* GST Calculation Status & Local Policy Banner */}
               <div style={{

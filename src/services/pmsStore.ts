@@ -4894,11 +4894,37 @@ export class PmsStore {
     }
     localStorage.setItem(STORAGE_KEYS.BOOKINGS, JSON.stringify(list));
 
-    // If confirmed or checked-in, update room status
-    if (booking.status === 'Confirmed' || booking.status === 'CheckedIn') {
-      const targetStatus = booking.status === 'CheckedIn' ? 'occupied' : 'booked';
+    // Video 20 Real-Time Date Availability Engine:
+    // Only update room operational status to 'booked' if the booking is arriving TODAY (same business date)
+    // Future advance bookings (e.g. tomorrow or next month) do NOT lock out today's room rack,
+    // allowing reception to check in walk-in guests tonight without false blockage.
+    const businessDate = this.getBusinessDate();
+    const normalizeDate = (d: string) => {
+      if (!d) return '';
+      const clean = d.trim().split('T')[0].replace(/\//g, '-');
+      const parts = clean.split('-');
+      if (parts.length === 3 && parts[0].length === 2) {
+        return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+      }
+      return clean;
+    };
+
+    const isTodayArrival = normalizeDate(booking.checkInDate) === businessDate;
+
+    if (booking.status === 'CheckedIn') {
       booking.rooms.forEach(rm => {
-        this.updateRoomStatus(rm.roomNo, targetStatus, {
+        this.updateRoomStatus(rm.roomNo, 'occupied', {
+          name: booking.guestName,
+          phone: booking.mobile,
+          checkInDate: booking.checkInDate,
+          checkInTime: booking.checkInTime,
+          bookingNo: booking.bookingNo,
+          advancePaid: booking.bookingAmount
+        });
+      });
+    } else if (booking.status === 'Confirmed' && isTodayArrival) {
+      booking.rooms.forEach(rm => {
+        this.updateRoomStatus(rm.roomNo, 'booked', {
           name: booking.guestName,
           phone: booking.mobile,
           checkInDate: booking.checkInDate,
@@ -4936,7 +4962,7 @@ export class PmsStore {
   static isRoomAvailable(roomNo: string, checkInDateStr: string, checkOutDateStr: string): boolean {
     const parseDt = (dStr: string): number => {
       if (!dStr) return 0;
-      const clean = dStr.trim();
+      const clean = dStr.trim().split('T')[0].replace(/\//g, '-');
       if (clean.includes('-')) {
         const parts = clean.split('-');
         if (parts[0].length === 4) {
@@ -5171,16 +5197,6 @@ export class PmsStore {
     if (raw) {
       try {
         const parsed: import('../types/pmsModels').PmsCheckIn[] = JSON.parse(raw);
-        let updated = false;
-        for (const seed of defaultCheckIns) {
-          if (!parsed.some(c => c.checkInNo === seed.checkInNo)) {
-            parsed.push(seed);
-            updated = true;
-          }
-        }
-        if (updated) {
-          localStorage.setItem('hotel_pms_checkins', JSON.stringify(parsed));
-        }
         return parsed;
       } catch {
         // fallback
@@ -6137,10 +6153,27 @@ export class PmsStore {
     list.unshift(checkout);
     localStorage.setItem(STORAGE_KEYS.CHECKOUTS, JSON.stringify(list));
 
-    // Mark room as dirty upon checkout (VACANT_DIRTY)
-    this.updateRoomStatus(checkout.roomNo, 'dirty', undefined);
+    // 1. Mark active check-in record as 'CheckedOut' so date availability engine releases the room
+    const checkIns = this.getCheckIns();
+    const cIdx = checkIns.findIndex(c => c.roomNo === checkout.roomNo && c.status === 'CheckedIn');
+    if (cIdx >= 0) {
+      checkIns[cIdx].status = 'CheckedOut';
+      localStorage.setItem('hotel_pms_checkins', JSON.stringify(checkIns));
+    }
 
-    // Automatically create a high-priority Housekeeping Queue entry (Module 4)
+    // 2. Mark room as dirty upon checkout (VACANT_DIRTY) & reset active guest & food amount
+    const rooms = this.getRooms();
+    const rIdx = rooms.findIndex(r => r.roomNo === checkout.roomNo);
+    if (rIdx >= 0) {
+      rooms[rIdx].status = 'dirty';
+      rooms[rIdx].currentGuest = undefined;
+      rooms[rIdx].foodAmount = 0;
+      this.saveRooms(rooms);
+    } else {
+      this.updateRoomStatus(checkout.roomNo, 'dirty', undefined);
+    }
+
+    // 3. Automatically create a high-priority Housekeeping Queue entry (Module 4)
     this.updateHousekeepingStatus(
       checkout.roomNo,
       'Vacant Dirty',
@@ -6148,6 +6181,19 @@ export class PmsStore {
       'High - Guest Waiting',
       `Departure turnover & linen sanitization for Room ${checkout.roomNo} (${checkout.guestName})`
     );
+
+    // 4. Archive/settle any open food bills for this room so the next guest starts with a clean folio
+    const allFoodBills = this.getFoodBills();
+    let fbUpdated = false;
+    allFoodBills.forEach(fb => {
+      if (fb.roomNo === checkout.roomNo && fb.status !== 'Settled') {
+        fb.status = 'Settled';
+        fbUpdated = true;
+      }
+    });
+    if (fbUpdated) {
+      localStorage.setItem('hotel_pms_foodbills', JSON.stringify(allFoodBills));
+    }
 
     // Cloud sync: mirror check-out to Railway PostgreSQL
     hotelApi.checkOutBooking({
@@ -7056,6 +7102,19 @@ export class PmsStore {
       if (transferredKotsCount > 0) {
         localStorage.setItem(STORAGE_KEYS.KOTS, JSON.stringify(updatedKots));
       }
+    }
+
+    // Migrate food bills to destination room so final checkout folio has complete dining history
+    const allFoodBills = this.getFoodBills();
+    let foodBillsMigrated = false;
+    allFoodBills.forEach(fb => {
+      if (fb.roomNo === params.fromRoomNo) {
+        fb.roomNo = params.toRoomNo;
+        foodBillsMigrated = true;
+      }
+    });
+    if (foodBillsMigrated) {
+      localStorage.setItem('hotel_pms_foodbills', JSON.stringify(allFoodBills));
     }
 
     // Update Check-In records

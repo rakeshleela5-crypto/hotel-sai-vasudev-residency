@@ -303,7 +303,7 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
         kotRemark: `Room Service • ${kotRemark}` + (isJain ? ' [Jain Prep]' : '') + (isSattvic ? ' [Sattvic]' : '') + (isLessSpicy ? ' [Less Spicy]' : ''),
         operatorName: 'Front Desk',
         items: cartItems,
-        totalAmount: taxableAmount,
+        totalAmount: grandTotal,
         totalQty,
         date: new Date().toLocaleDateString('en-GB').replace(/\//g, '-'),
         time: nowTime,
@@ -317,8 +317,8 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
       // Save KOT
       PmsStore.saveKot(kotRecord);
 
-      // Update room foodAmount in store
-      PmsStore.updateRoomFoodAmount(selectedRoomNo, taxableAmount);
+      // Update room foodAmount in store with gross bill amount (so checkout inverse 5% GST math matches POS exactly)
+      PmsStore.updateRoomFoodAmount(selectedRoomNo, grandTotal);
 
       if (onKotSaved) onKotSaved(kotRecord);
 
@@ -689,7 +689,7 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
                       style={{ fontWeight: 700, borderColor: '#059669' }}
                     >
                       {occupiedRooms.length === 0 ? (
-                        <option value="101">No Occupied Rooms (Demo Room 101)</option>
+                        <option value="">-- No Occupied Rooms (Cannot Post Room Service) --</option>
                       ) : (
                         occupiedRooms.map(r => (
                           <option key={r.roomNo} value={r.roomNo}>
