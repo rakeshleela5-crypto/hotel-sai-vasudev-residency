@@ -87,7 +87,7 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
 
   const selectedRoomObj = occupiedRooms.find(r => r.roomNo === selectedRoomNo);
   const isCpRoom = Boolean(selectedRoomObj && (
-    selectedRoomObj.roomType.toLowerCase().includes('presidential') ||
+    selectedRoomObj.roomType.toLowerCase().includes('premium') ||
     (selectedRoomObj.currentGuest as any)?.package?.toLowerCase().includes('cp') ||
     (selectedRoomObj.currentGuest as any)?.package?.toLowerCase().includes('breakfast')
   ));

@@ -14,7 +14,7 @@ export const Testimonials: React.FC = () => {
       city: "Bengaluru",
       rating: 5,
       date: "September 2026",
-      text: "We booked the Super Deluxe Family room for our parents and kids. Very spacious, clean bathrooms with hot water, and delicious South Indian filter coffee & idlis at their Vasudev Rasoi restaurant. Highly recommended!"
+      text: "We booked the Classic Studio room for our parents and kids. Very spacious, clean bathrooms with hot water, and delicious South Indian filter coffee & idlis at their Vasudev Rasoi restaurant. Highly recommended!"
     },
     {
       name: "Meenakshi Kulkarni",

@@ -15,7 +15,7 @@ export const HousekeepingTrackerModal: React.FC<HousekeepingTrackerModalProps> =
 }) => {
   usePmsSync();
   const [activeTab, setActiveTab] = useState<'kanban' | 'table'>('kanban');
-  const [filterFloor, setFilterFloor] = useState<'all' | '1' | '2' | '3'>('all');
+  const [filterFloor, setFilterFloor] = useState<'all' | '0' | '1'>('all');
   const [filterStaff, setFilterStaff] = useState<string>('all');
   const [maintenanceModalRoom, setMaintenanceModalRoom] = useState<string | null>(null);
   const [maintenanceIssueText, setMaintenanceIssueText] = useState('');
@@ -144,7 +144,7 @@ export const HousekeepingTrackerModal: React.FC<HousekeepingTrackerModalProps> =
         <div style={{ padding: '12px 18px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>Floor:</span>
-            {(['all', '1', '2', '3'] as const).map(fl => (
+            {(['all', '0', '1'] as const).map(fl => (
               <button
                 key={fl}
                 type="button"
@@ -160,7 +160,7 @@ export const HousekeepingTrackerModal: React.FC<HousekeepingTrackerModalProps> =
                   cursor: 'pointer'
                 }}
               >
-                {fl === 'all' ? 'All Floors (16 Rooms)' : `Floor ${fl}`}
+                {fl === 'all' ? 'All Floors (18 Rooms)' : fl === '0' ? 'Ground Floor (101–107)' : '1st Floor (201–211)'}
               </button>
             ))}
           </div>
@@ -173,10 +173,10 @@ export const HousekeepingTrackerModal: React.FC<HousekeepingTrackerModalProps> =
               style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '12px', fontWeight: 600 }}
             >
               <option value="all">All Staff Members</option>
-              <option value="Ramesh">Ramesh (Floor 1 Lead)</option>
-              <option value="Sunita">Sunita (Floor 1/3)</option>
-              <option value="Ganesh">Ganesh (Floor 2/3)</option>
-              <option value="Priya">Priya (Floor 2)</option>
+              <option value="Ramesh">Ramesh (Ground Floor Lead)</option>
+              <option value="Sunita">Sunita (Ground Floor)</option>
+              <option value="Ganesh">Ganesh (1st Floor Lead)</option>
+              <option value="Priya">Priya (1st Floor)</option>
             </select>
           </div>
 
@@ -216,7 +216,7 @@ export const HousekeepingTrackerModal: React.FC<HousekeepingTrackerModalProps> =
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <strong style={{ fontSize: '15px', color: '#1e293b' }}>Room {item.roomNo}</strong>
                         <span style={{ fontSize: '11px', background: '#fee2e2', color: '#991b1b', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>
-                          Floor {item.floor}
+                          {item.floor === 0 ? 'Ground Floor' : '1st Floor'}
                         </span>
                       </div>
                       <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>{item.roomType}</div>
@@ -259,7 +259,7 @@ export const HousekeepingTrackerModal: React.FC<HousekeepingTrackerModalProps> =
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <strong style={{ fontSize: '15px', color: '#1e293b' }}>Room {item.roomNo}</strong>
                         <span style={{ fontSize: '11px', background: '#fef3c7', color: '#92400e', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>
-                          Floor {item.floor}
+                          {item.floor === 0 ? 'Ground Floor' : '1st Floor'}
                         </span>
                       </div>
                       <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>{item.roomType}</div>
@@ -381,7 +381,7 @@ export const HousekeepingTrackerModal: React.FC<HousekeepingTrackerModalProps> =
                     <tr key={item.roomNo} style={{ borderBottom: '1px solid #e2e8f0' }}>
                       <td style={{ padding: '8px', fontWeight: 800 }}>{item.roomNo}</td>
                       <td style={{ padding: '8px' }}>{item.roomType}</td>
-                      <td style={{ padding: '8px' }}>Floor {item.floor}</td>
+                      <td style={{ padding: '8px' }}>{item.floor === 0 ? 'Ground Floor' : '1st Floor'}</td>
                       <td style={{ padding: '8px' }}>
                         <span style={{
                           padding: '2px 8px',
