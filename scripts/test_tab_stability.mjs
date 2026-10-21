@@ -44,8 +44,8 @@ async function testTabStability() {
   const initialFloor = await page.$eval('.status-btn.active', el => el.textContent.trim()).catch(() => 'None');
   console.log(`Initial Active Floor Tab: "${initialFloor}"`);
 
-  console.log('Clicking "Floor 2" filter button...');
-  await page.locator('button:has-text("Floor 2")').first().click();
+  console.log('Clicking "1st Floor (11)" filter button...');
+  await page.locator('button:has-text("1st Floor")').first().click();
 
   let test2Passed = true;
   for (let i = 1; i <= 10; i++) {
@@ -56,14 +56,14 @@ async function testTabStability() {
       return floorBtn ? floorBtn.textContent.trim() : 'None';
     });
     console.log(`[+${i * 500}ms] Active Floor Tab: "${floorNow}"`);
-    if (floorNow !== 'Floor 2') {
+    if (!floorNow.includes('1st Floor')) {
       test2Passed = false;
       console.error(`❌ REGRESSION: Floor tab fell back to "${floorNow}" at +${i * 500}ms!`);
     }
   }
 
   if (test2Passed) {
-    console.log('✅ TEST 2 PASSED: Floor filter tab stayed on "Floor 2" continuously for 5.0 seconds with zero fallback!');
+    console.log('✅ TEST 2 PASSED: Floor filter tab stayed on "1st Floor" continuously for 5.0 seconds with zero fallback!');
   }
 
   console.log('\n=== TEST 3: PMS Room Status Filter Tabs (Vacant Clean / Occupied) ===');

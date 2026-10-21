@@ -1,7 +1,7 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "NIXPACKS"
+    "builder": "DOCKERFILE"
   },
   "deploy": {
     "startCommand": "test -d app && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} || (cd backend && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000})",
