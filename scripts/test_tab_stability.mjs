@@ -1,7 +1,8 @@
 import { chromium } from 'playwright';
 
 async function testTabStability() {
-  console.log('Launching browser to test tab stability on http://localhost:4173 ...');
+  const baseUrl = process.env.TEST_URL || 'https://hotel-sai-vasudev-residency.pages.dev';
+  console.log(`Launching browser to test tab stability on ${baseUrl} ...`);
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext();
   const page = await context.newPage();
@@ -10,7 +11,7 @@ async function testTabStability() {
   page.on('console', msg => logs.push(`[${msg.type()}] ${msg.text()}`));
   page.on('pageerror', err => logs.push(`[PAGE_ERROR] ${err.message}`));
 
-  await page.goto('http://localhost:4173/', { waitUntil: 'domcontentloaded' });
+  await page.goto(`${baseUrl}/`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1500);
 
   console.log('\n=== TEST 1: Public Rooms Category Filter Tabs ===');
@@ -36,7 +37,7 @@ async function testTabStability() {
   }
 
   console.log('\n=== TEST 2: PMS Room Dashboard Floor Filter Tabs ===');
-  await page.goto('http://localhost:4173/erp', { waitUntil: 'domcontentloaded' });
+  await page.goto(`${baseUrl}/erp`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1500);
 
   // Check initial floor
