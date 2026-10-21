@@ -145,10 +145,10 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
 
   // Reset to Demo Seed Data
   const handleResetToDemoSeed = () => {
-    if (window.confirm('⚠️ Are you sure you want to reset Hotel Sai Vasudev Residency to authentic Demo Seed Data?\n\nThis will re-initialize all 16 rooms, bookings, restaurant menu, housekeeping records, and financial ledger.')) {
+    if (window.confirm('⚠️ Are you sure you want to reset Hotel Sai Vasudev Residency to authentic Demo Seed Data?\n\nThis will re-initialize all 18 rooms, bookings, restaurant menu, housekeeping records, and financial ledger.')) {
       PmsStore.resetToDemoSeedData();
       setSelectedDrawerRoomNo(null);
-      alert('✓ Data reset to demo seed inventory (16 rooms) successfully!');
+      alert('✓ Data reset to demo seed inventory (18 rooms) successfully!');
     }
   };
 

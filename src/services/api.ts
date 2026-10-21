@@ -37,9 +37,9 @@ const FALLBACK_ROOMS: Room[] = [
     room_type: "Classic Studio",
     price_per_night: 2000,
     capacity: 2,
-    total_inventory: 5,   // Rooms: 103, 106, 208, 209, 210
-    bed_type: "King Size",
-    room_size: "250–280 sq ft",
+    total_inventory: 6,   // Rooms: 103, 104, 105, 203, 204, 205
+    bed_type: "Queen Bed",
+    room_size: "280 sq ft",
     description: "Spacious classic rooms with modern comforts. Free Wi-Fi, TV, 24/7 Hot Water, Coffee Maker, Sofa, Hair Dryer, and Mini Fridge. Max 2 Adults + 2 Children (0–6 free). GST inclusive.",
     amenities: "Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge",
     image_url: "/images/deluxe_room.jpg",
@@ -53,9 +53,9 @@ const FALLBACK_ROOMS: Room[] = [
     room_type: "Executive",
     price_per_night: 2500,
     capacity: 2,
-    total_inventory: 7,   // Rooms: 104, 105, 107, 204, 205, 206, 207
+    total_inventory: 7,   // Rooms: 106, 107, 201, 206, 207, 208, 209
     bed_type: "King Size",
-    room_size: "300 sq ft",
+    room_size: "340 sq ft",
     description: "Premium executive rooms with elevated amenities. Free Wi-Fi, TV, 24/7 Hot Water, Coffee Maker, Sofa, Hair Dryer, and Mini Fridge. Max 2 Adults + 2 Children (0–6 free). GST inclusive.",
     amenities: "Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge",
     image_url: "/images/hero.jpg",
@@ -69,9 +69,9 @@ const FALLBACK_ROOMS: Room[] = [
     room_type: "Premium",
     price_per_night: 3000,
     capacity: 2,
-    total_inventory: 3,   // Rooms: 201, 203, 211
+    total_inventory: 2,   // Rooms: 210, 211
     bed_type: "King Size",
-    room_size: "350 sq ft",
+    room_size: "400 sq ft",
     description: "Top-of-the-range rooms with luxury finishes. Free Wi-Fi, TV, 24/7 Hot Water, Coffee Maker, Sofa, Hair Dryer, and Mini Fridge. Max 2 Adults + 2 Children (0–6 free). GST inclusive.",
     amenities: "Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge",
     image_url: "/images/hero.jpg",

@@ -188,15 +188,15 @@ export const INITIAL_ROOMS: PmsRoom[] = [
   {
     id: '103',
     roomNo: '103',
-    roomType: 'Deluxe',
+    roomType: 'Classic Studio',
     tariff: 2000,
     status: 'vacant',
     floor: 0,
     facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker',
     capacity: 2,
     maxGuests: 4,
-    bedType: 'King Size',
-    roomSize: '250 sq ft',
+    bedType: 'Queen Size',
+    roomSize: '280 sq ft',
     image1: '/images/deluxe_room.jpg',
     image2: '/images/hero.jpg',
     image3: '/images/suite_room.jpg',
@@ -207,15 +207,15 @@ export const INITIAL_ROOMS: PmsRoom[] = [
   {
     id: '104',
     roomNo: '104',
-    roomType: 'Executive',
-    tariff: 2500,
+    roomType: 'Classic Studio',
+    tariff: 2000,
     status: 'dirty',
     floor: 0,
-    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Queen Bed',
     capacity: 2,
     maxGuests: 4,
-    bedType: 'King Size',
-    roomSize: '300 sq ft',
+    bedType: 'Queen Size',
+    roomSize: '280 sq ft',
     image1: '/images/deluxe_room.jpg',
     image2: '/images/hero.jpg',
     image3: '/images/suite_room.jpg',
@@ -226,15 +226,15 @@ export const INITIAL_ROOMS: PmsRoom[] = [
   {
     id: '105',
     roomNo: '105',
-    roomType: 'Executive',
-    tariff: 2500,
+    roomType: 'Classic Studio',
+    tariff: 2000,
     status: 'vacant',
     floor: 0,
-    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Queen Bed',
     capacity: 2,
     maxGuests: 4,
-    bedType: 'King Size',
-    roomSize: '300 sq ft',
+    bedType: 'Queen Size',
+    roomSize: '280 sq ft',
     image1: '/images/deluxe_room.jpg',
     image2: '/images/hero.jpg',
     image3: '/images/suite_room.jpg',
@@ -245,15 +245,15 @@ export const INITIAL_ROOMS: PmsRoom[] = [
   {
     id: '106',
     roomNo: '106',
-    roomType: 'Deluxe',
-    tariff: 2000,
+    roomType: 'Executive',
+    tariff: 2500,
     status: 'vacant',
     floor: 0,
-    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker',
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Mini Fridge, Work Desk',
     capacity: 2,
     maxGuests: 4,
     bedType: 'King Size',
-    roomSize: '250 sq ft',
+    roomSize: '340 sq ft',
     image1: '/images/deluxe_room.jpg',
     image2: '/images/hero.jpg',
     image3: '/images/suite_room.jpg',
@@ -288,15 +288,15 @@ export const INITIAL_ROOMS: PmsRoom[] = [
   {
     id: '201',
     roomNo: '201',
-    roomType: 'Premium',
-    tariff: 3000,
+    roomType: 'Executive',
+    tariff: 2500,
     status: 'vacant',
     floor: 1,
-    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge, Work Desk',
     capacity: 2,
     maxGuests: 4,
     bedType: 'King Size',
-    roomSize: '350 sq ft',
+    roomSize: '340 sq ft',
     image1: '/images/hero.jpg',
     image2: '/images/deluxe_room.jpg',
     image3: '/images/suite_room.jpg',
@@ -314,8 +314,8 @@ export const INITIAL_ROOMS: PmsRoom[] = [
     facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker',
     capacity: 1,
     maxGuests: 1,
-    bedType: 'Small / Queen Size',
-    roomSize: '200 sq ft',
+    bedType: 'Single Bed',
+    roomSize: '220 sq ft',
     image1: '/images/hero.jpg',
     image2: '/images/suite_room.jpg',
     image3: '/images/deluxe_room.jpg',
@@ -343,15 +343,15 @@ export const INITIAL_ROOMS: PmsRoom[] = [
   {
     id: '203',
     roomNo: '203',
-    roomType: 'Premium',
-    tariff: 3000,
+    roomType: 'Classic Studio',
+    tariff: 2000,
     status: 'vacant',
     floor: 1,
-    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Queen Bed',
     capacity: 2,
     maxGuests: 4,
-    bedType: 'King Size',
-    roomSize: '350 sq ft',
+    bedType: 'Queen Bed',
+    roomSize: '280 sq ft',
     image1: '/images/hero.jpg',
     image2: '/images/deluxe_room.jpg',
     image3: '/images/suite_room.jpg',
@@ -362,15 +362,15 @@ export const INITIAL_ROOMS: PmsRoom[] = [
   {
     id: '204',
     roomNo: '204',
-    roomType: 'Executive',
-    tariff: 2500,
+    roomType: 'Classic Studio',
+    tariff: 2000,
     status: 'booked',
     floor: 1,
-    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Queen Bed',
     capacity: 2,
     maxGuests: 4,
-    bedType: 'King Size',
-    roomSize: '300 sq ft',
+    bedType: 'Queen Bed',
+    roomSize: '280 sq ft',
     image1: '/images/hero.jpg',
     image2: '/images/suite_room.jpg',
     image3: '/images/deluxe_room.jpg',
@@ -396,15 +396,15 @@ export const INITIAL_ROOMS: PmsRoom[] = [
   {
     id: '205',
     roomNo: '205',
-    roomType: 'Executive',
-    tariff: 2500,
+    roomType: 'Classic Studio',
+    tariff: 2000,
     status: 'vacant',
     floor: 1,
-    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Queen Bed',
     capacity: 2,
     maxGuests: 4,
-    bedType: 'King Size',
-    roomSize: '300 sq ft',
+    bedType: 'Queen Bed',
+    roomSize: '280 sq ft',
     image1: '/images/hero.jpg',
     image2: '/images/deluxe_room.jpg',
     image3: '/images/suite_room.jpg',
@@ -419,11 +419,11 @@ export const INITIAL_ROOMS: PmsRoom[] = [
     tariff: 2500,
     status: 'vacant',
     floor: 1,
-    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Mini Fridge, Work Desk',
     capacity: 2,
     maxGuests: 4,
     bedType: 'King Size',
-    roomSize: '300 sq ft',
+    roomSize: '340 sq ft',
     image1: '/images/hero.jpg',
     image2: '/images/suite_room.jpg',
     image3: '/images/deluxe_room.jpg',
@@ -438,11 +438,11 @@ export const INITIAL_ROOMS: PmsRoom[] = [
     tariff: 2500,
     status: 'vacant',
     floor: 1,
-    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Mini Fridge, Work Desk',
     capacity: 2,
     maxGuests: 4,
     bedType: 'King Size',
-    roomSize: '300 sq ft',
+    roomSize: '340 sq ft',
     image1: '/images/hero.jpg',
     image2: '/images/deluxe_room.jpg',
     image3: '/images/suite_room.jpg',
@@ -453,15 +453,15 @@ export const INITIAL_ROOMS: PmsRoom[] = [
   {
     id: '208',
     roomNo: '208',
-    roomType: 'Classic Studio',
-    tariff: 2000,
+    roomType: 'Executive',
+    tariff: 2500,
     status: 'vacant',
     floor: 1,
-    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Mini Fridge, Work Desk',
     capacity: 2,
     maxGuests: 4,
     bedType: 'King Size',
-    roomSize: '280 sq ft',
+    roomSize: '340 sq ft',
     image1: '/images/deluxe_room.jpg',
     image2: '/images/hero.jpg',
     image3: '/images/suite_room.jpg',
@@ -472,15 +472,15 @@ export const INITIAL_ROOMS: PmsRoom[] = [
   {
     id: '209',
     roomNo: '209',
-    roomType: 'Classic Studio',
-    tariff: 2000,
+    roomType: 'Executive',
+    tariff: 2500,
     status: 'vacant',
     floor: 1,
-    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Mini Fridge, Work Desk',
     capacity: 2,
     maxGuests: 4,
     bedType: 'King Size',
-    roomSize: '280 sq ft',
+    roomSize: '340 sq ft',
     image1: '/images/deluxe_room.jpg',
     image2: '/images/hero.jpg',
     image3: '/images/suite_room.jpg',
@@ -491,15 +491,15 @@ export const INITIAL_ROOMS: PmsRoom[] = [
   {
     id: '210',
     roomNo: '210',
-    roomType: 'Classic Studio',
-    tariff: 2000,
+    roomType: 'Premium',
+    tariff: 3000,
     status: 'vacant',
     floor: 1,
-    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Mini Fridge, Work Desk, VIP Darshan Assistance',
     capacity: 2,
     maxGuests: 4,
     bedType: 'King Size',
-    roomSize: '280 sq ft',
+    roomSize: '400 sq ft',
     image1: '/images/deluxe_room.jpg',
     image2: '/images/hero.jpg',
     image3: '/images/suite_room.jpg',
@@ -2810,7 +2810,46 @@ export class PmsStore {
   private static broadcastChannel: BroadcastChannel | null = typeof window !== 'undefined' && 'BroadcastChannel' in window ? new BroadcastChannel('svr_pms_channel') : null;
   private static isListeningToEvents = false;
 
+  static readonly SCHEMA_VERSION = '20261021_v18_final';
+
+  static checkAndMigrateSchema(): void {
+    if (typeof window === 'undefined') return;
+    const version = localStorage.getItem(STORAGE_KEYS.SCHEMA_VERSION);
+    const raw = localStorage.getItem(STORAGE_KEYS.ROOMS);
+    let needsReset = false;
+
+    if (version !== this.SCHEMA_VERSION || !raw) {
+      needsReset = true;
+    } else {
+      try {
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed) || parsed.length !== 18) {
+          needsReset = true;
+        } else {
+          const hasInvalid = parsed.some((r: any) => 
+            !r.roomNo ||
+            typeof r.roomNo !== 'string' ||
+            r.roomNo.toUpperCase().includes('HALL') || 
+            r.roomNo.toUpperCase().includes('GARDEN') || 
+            r.roomNo.toLowerCase().includes('bhk')
+          );
+          if (hasInvalid) needsReset = true;
+        }
+      } catch {
+        needsReset = true;
+      }
+    }
+
+    if (needsReset) {
+      console.info('[PmsStore] Auto-migrating client storage to official 18-room inventory:', this.SCHEMA_VERSION);
+      this.resetToDemoSeedData();
+    }
+  }
+
   static initListener(): void {
+    if (typeof window !== 'undefined') {
+      this.checkAndMigrateSchema();
+    }
     if (this.isListeningToEvents || typeof window === 'undefined') return;
     this.isListeningToEvents = true;
 
@@ -2966,13 +3005,27 @@ export class PmsStore {
   }
 
   static getRooms(): PmsRoom[] {
-    const raw = localStorage.getItem(STORAGE_KEYS.ROOMS);
+    if (typeof window !== 'undefined') {
+      const version = localStorage.getItem(STORAGE_KEYS.SCHEMA_VERSION);
+      if (version !== this.SCHEMA_VERSION) {
+        this.checkAndMigrateSchema();
+      }
+    }
+    const raw = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.ROOMS) : null;
     if (!raw) {
-      localStorage.setItem(STORAGE_KEYS.ROOMS, JSON.stringify(INITIAL_ROOMS));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEYS.ROOMS, JSON.stringify(INITIAL_ROOMS));
+        localStorage.setItem(STORAGE_KEYS.SCHEMA_VERSION, this.SCHEMA_VERSION);
+      }
       return INITIAL_ROOMS;
     }
     try {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed) || parsed.length !== 18) {
+        this.checkAndMigrateSchema();
+        return INITIAL_ROOMS;
+      }
+      return parsed;
     } catch {
       return INITIAL_ROOMS;
     }
@@ -3047,7 +3100,6 @@ export class PmsStore {
   // =========================================================================
   // 1. Double-Entry Accounting Ledger, Business Date & Master Seed Engine
   // =========================================================================
-  static readonly SCHEMA_VERSION = '20261020_v2';
 
   // Strict 6-State Room Status Machine Helpers
   static normalizeRoomStatus(status: string): RoomStatus {
