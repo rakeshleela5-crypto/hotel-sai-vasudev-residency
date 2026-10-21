@@ -126,20 +126,14 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     return () => { isCurrent = false; };
   }, [selectedRoom, checkIn, checkOut, adults]);
 
-  // Authoritative Indian GST Pricing Slabs (Statutory Compliance)
-  // Slabs: 12% GST for room tariffs <= ₹7,500/night (6% CGST + 6% SGST)
-  //        18% GST for room tariffs > ₹7,500/night (9% CGST + 9% SGST)
-  const roomPrice = selectedRoom?.price_per_night || 2499;
+  // PRD Business Rule: All listed room tariffs (₹1,500 to ₹3,000) are Inclusive of GST (12% slab for SAC 996311)
+  // Pre-GST taxable base is extracted via gross / 1.12 for GSTR-1 reporting rather than adding tax on top.
+  const roomPrice = selectedRoom?.price_per_night || 2000;
   const standardCapacity = selectedRoom?.capacity || 2;
   const extraAdults = Math.max(0, adults - standardCapacity);
-  const isSuite = selectedRoom?.room_type?.toLowerCase().includes('suite') || (selectedRoom?.price_per_night || 0) > 5000;
-  const extraBedRatePerNight = isSuite ? 800 : 500;
-  const extraCharge = availData?.extra_guest_charge ?? (extraAdults * extraBedRatePerNight * totalNights);
-  const subtotal = availData?.base_subtotal ?? (roomPrice * totalNights);
-  const taxableAmount = subtotal + extraCharge;
-  const gstRate = availData?.gst_rate ?? (roomPrice > 7500 ? 18 : 12);
-  const taxes = availData?.total_tax ?? Math.round(taxableAmount * (gstRate / 100));
-  const grandTotal = availData?.grand_total ?? (taxableAmount + taxes);
+  const grandTotal = availData?.grand_total ?? (roomPrice * totalNights);
+  const taxableAmount = availData?.taxable_amount ?? (Math.round((grandTotal / 1.12) * 100) / 100);
+  const taxes = availData?.total_tax ?? (Math.round((grandTotal - taxableAmount) * 100) / 100);
   const netDue = Math.max(0, grandTotal - advanceDeposit);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -505,23 +499,29 @@ Please share availability and direct booking assistance.`
 
               {/* Server-Side Tax & Price Calculation Box */}
               <div className="price-breakdown-card">
-                <div className="breakdown-line">
-                  <span>Room Base ({totalNights} {totalNights === 1 ? 'night' : 'nights'} × ₹{roomPrice.toLocaleString('en-IN')})</span>
-                  <span>₹{subtotal.toLocaleString('en-IN')}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#15803d', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    ✓ Inclusive of GST (12%)
+                  </span>
+                  <span style={{ fontSize: '10px', background: '#dcfce7', color: '#166534', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>
+                    SAC 996311
+                  </span>
                 </div>
-                {extraCharge > 0 && (
-                  <div className="breakdown-line">
-                    <span>Extra Guest Charge ({extraAdults} guest × ₹500 × {totalNights} nights)</span>
-                    <span>₹{extraCharge.toLocaleString('en-IN')}</span>
-                  </div>
-                )}
                 <div className="breakdown-line">
-                  <span>Indian Hotel GST ({gstRate === 18 ? 'CGST 9% + SGST 9% = 18%' : 'CGST 6% + SGST 6% = 12%'})</span>
+                  <span>Room Tariff ({totalNights} {totalNights === 1 ? 'night' : 'nights'} × ₹{roomPrice.toLocaleString('en-IN')})</span>
+                  <span>₹{grandTotal.toLocaleString('en-IN')}</span>
+                </div>
+                <div className="breakdown-line" style={{ color: '#64748b', fontSize: '12px' }}>
+                  <span>&emsp;↳ Pre-GST Taxable Base (GSTR-1)</span>
+                  <span>₹{taxableAmount.toLocaleString('en-IN')}</span>
+                </div>
+                <div className="breakdown-line" style={{ color: '#64748b', fontSize: '12px' }}>
+                  <span>&emsp;↳ GST 12% (CGST 6% + SGST 6% Included)</span>
                   <span>₹{taxes.toLocaleString('en-IN')}</span>
                 </div>
                 <div className="breakdown-divider"></div>
                 <div className="breakdown-line total">
-                  <span>Total Authoritative Payable</span>
+                  <span>Total Authoritative Payable (Incl. of GST)</span>
                   <span className="total-gold">₹{grandTotal.toLocaleString('en-IN')}</span>
                 </div>
                 {advanceDeposit > 0 && (

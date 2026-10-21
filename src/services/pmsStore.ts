@@ -127,21 +127,21 @@ export const DEFAULT_COMPANY_INFO: PmsCompanyInfo = {
 
 export const INITIAL_ROOMS: PmsRoom[] = [
   // =========================================================================
-  // Floor 1 (Executive Deluxe Rooms - ₹2,499/night + 12% GST)
-  // Rooms 101, 102, 103, 104, 105, 106 (King Bed, 340 sq ft, Max 2+1 Guests)
+  // GROUND FLOOR (Rooms 101–107) — Official 7-Room Inventory
+  // Tariffs are INCLUSIVE of GST as per property specification sheets
   // =========================================================================
   {
     id: '101',
     roomNo: '101',
-    roomType: 'Executive Deluxe',
-    tariff: 2499,
+    roomType: 'Deluxe',
+    tariff: 1500,
     status: 'occupied',
-    floor: 1,
-    facilities: 'King Bed, AC, Geyser, 43" 4K Smart TV, Complimentary Wi-Fi, Tea/Coffee Maker',
-    capacity: 2,
+    floor: 0,
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker',
+    capacity: 1,
     maxGuests: 3,
-    bedType: 'King Bed',
-    roomSize: '340 sq ft',
+    bedType: 'Single / Queen Size',
+    roomSize: '200 sq ft',
     image1: '/images/deluxe_room.jpg',
     image2: '/images/hero.jpg',
     image3: '/images/suite_room.jpg',
@@ -161,7 +161,7 @@ export const INITIAL_ROOMS: PmsRoom[] = [
       idProofType: 'Aadhaar Card',
       idProofNumber: '7845 1298 3456'
     },
-    foodAmount: 350,
+    foodAmount: 0,
     assignedStaff: 'Ramesh',
     priority: 'Normal',
     lastCleaned: '19-10-2026 10:30 AM'
@@ -169,15 +169,15 @@ export const INITIAL_ROOMS: PmsRoom[] = [
   {
     id: '102',
     roomNo: '102',
-    roomType: 'Executive Deluxe',
-    tariff: 2499,
+    roomType: 'Deluxe',
+    tariff: 1500,
     status: 'vacant',
-    floor: 1,
-    facilities: 'King Bed, AC, Geyser, 43" 4K Smart TV, Complimentary Wi-Fi, Tea/Coffee Maker',
-    capacity: 2,
+    floor: 0,
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker',
+    capacity: 1,
     maxGuests: 3,
-    bedType: 'King Bed',
-    roomSize: '340 sq ft',
+    bedType: 'Queen Size',
+    roomSize: '200 sq ft',
     image1: '/images/deluxe_room.jpg',
     image2: '/images/hero.jpg',
     image3: '/images/suite_room.jpg',
@@ -188,51 +188,34 @@ export const INITIAL_ROOMS: PmsRoom[] = [
   {
     id: '103',
     roomNo: '103',
-    roomType: 'Executive Deluxe',
-    tariff: 2499,
-    status: 'occupied',
-    floor: 1,
-    facilities: 'King Bed, AC, Smart TV, Wi-Fi, Balcony, Italian Marble Bath',
+    roomType: 'Deluxe',
+    tariff: 2000,
+    status: 'vacant',
+    floor: 0,
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker',
     capacity: 2,
-    maxGuests: 3,
-    bedType: 'King Bed',
-    roomSize: '340 sq ft',
+    maxGuests: 4,
+    bedType: 'King Size',
+    roomSize: '250 sq ft',
     image1: '/images/deluxe_room.jpg',
-    image2: '/images/suite_room.jpg',
-    image3: '/images/hero.jpg',
-    currentGuest: {
-      name: 'Sunita Patel',
-      phone: '9425123456',
-      email: 'sunita.patel@yahoo.com',
-      checkInDate: '2026-10-19',
-      checkInTime: '01:00 PM',
-      checkOutDate: '2026-10-20',
-      checkOutTime: '11:00 AM',
-      bookingNo: 'SR/202/26-27',
-      advancePaid: 2499,
-      calculationType: '12hour',
-      darshanSlot: 'Madhyan Aarti (12:00 PM)',
-      vehicleNo: 'GJ-01-XP-9087',
-      idProofType: 'Driving License',
-      idProofNumber: 'DL-0420110056789'
-    },
-    foodAmount: 300,
+    image2: '/images/hero.jpg',
+    image3: '/images/suite_room.jpg',
     assignedStaff: 'Ramesh',
-    priority: 'High - Guest Waiting',
-    lastCleaned: '19-10-2026 12:45 PM'
+    priority: 'Normal',
+    lastCleaned: '20-10-2026 09:30 AM'
   },
   {
     id: '104',
     roomNo: '104',
-    roomType: 'Executive Deluxe',
-    tariff: 2499,
+    roomType: 'Executive',
+    tariff: 2500,
     status: 'dirty',
-    floor: 1,
-    facilities: 'King Bed, AC, Geyser, 43" 4K Smart TV, Wardrobe',
+    floor: 0,
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
     capacity: 2,
-    maxGuests: 3,
-    bedType: 'King Bed',
-    roomSize: '340 sq ft',
+    maxGuests: 4,
+    bedType: 'King Size',
+    roomSize: '300 sq ft',
     image1: '/images/deluxe_room.jpg',
     image2: '/images/hero.jpg',
     image3: '/images/suite_room.jpg',
@@ -243,18 +226,18 @@ export const INITIAL_ROOMS: PmsRoom[] = [
   {
     id: '105',
     roomNo: '105',
-    roomType: 'Executive Deluxe',
-    tariff: 2499,
+    roomType: 'Executive',
+    tariff: 2500,
     status: 'vacant',
-    floor: 1,
-    facilities: 'King Bed, AC, Work Desk, Geyser, Ambient Cove Lighting',
+    floor: 0,
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
     capacity: 2,
-    maxGuests: 3,
-    bedType: 'King Bed',
-    roomSize: '340 sq ft',
+    maxGuests: 4,
+    bedType: 'King Size',
+    roomSize: '300 sq ft',
     image1: '/images/deluxe_room.jpg',
-    image2: '/images/suite_room.jpg',
-    image3: '/images/hero.jpg',
+    image2: '/images/hero.jpg',
+    image3: '/images/suite_room.jpg',
     assignedStaff: 'Sunita',
     priority: 'Normal',
     lastCleaned: '20-10-2026 08:30 AM'
@@ -262,15 +245,15 @@ export const INITIAL_ROOMS: PmsRoom[] = [
   {
     id: '106',
     roomNo: '106',
-    roomType: 'Executive Deluxe',
-    tariff: 2499,
+    roomType: 'Deluxe',
+    tariff: 2000,
     status: 'vacant',
-    floor: 1,
-    facilities: 'King Bed, AC, Smart TV, Soundproof Acoustic Windows',
+    floor: 0,
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker',
     capacity: 2,
-    maxGuests: 3,
-    bedType: 'King Bed',
-    roomSize: '340 sq ft',
+    maxGuests: 4,
+    bedType: 'King Size',
+    roomSize: '250 sq ft',
     image1: '/images/deluxe_room.jpg',
     image2: '/images/hero.jpg',
     image3: '/images/suite_room.jpg',
@@ -281,15 +264,15 @@ export const INITIAL_ROOMS: PmsRoom[] = [
   {
     id: '107',
     roomNo: '107',
-    roomType: 'Executive Deluxe',
-    tariff: 2499,
+    roomType: 'Executive',
+    tariff: 2500,
     status: 'vacant',
-    floor: 1,
-    facilities: 'King Bed, AC, Geyser, 43" 4K Smart TV, High-speed Wi-Fi, Coffee Maker',
+    floor: 0,
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
     capacity: 2,
-    maxGuests: 3,
-    bedType: 'King Bed',
-    roomSize: '340 sq ft',
+    maxGuests: 4,
+    bedType: 'King Size',
+    roomSize: '300 sq ft',
     image1: '/images/deluxe_room.jpg',
     image2: '/images/hero.jpg',
     image3: '/images/suite_room.jpg',
@@ -297,42 +280,23 @@ export const INITIAL_ROOMS: PmsRoom[] = [
     priority: 'Normal',
     lastCleaned: '20-10-2026 10:00 AM'
   },
-  {
-    id: '108',
-    roomNo: '108',
-    roomType: 'Executive Deluxe',
-    tariff: 2499,
-    status: 'vacant',
-    floor: 1,
-    facilities: 'King Bed, AC, Soundproof Acoustic Windows, Geyser, Work Desk',
-    capacity: 2,
-    maxGuests: 3,
-    bedType: 'King Bed',
-    roomSize: '340 sq ft',
-    image1: '/images/deluxe_room.jpg',
-    image2: '/images/hero.jpg',
-    image3: '/images/suite_room.jpg',
-    assignedStaff: 'Ramesh',
-    priority: 'Normal',
-    lastCleaned: '20-10-2026 10:15 AM'
-  },
 
   // =========================================================================
-  // Floor 2 (Super Deluxe Family Rooms - ₹3,799/night + 12% GST)
-  // Rooms 201, 202, 203, 204, 205, 206 (Two Queen Beds, 480 sq ft, Max 4+1 Guests)
+  // 1ST FLOOR (Rooms 201–211) — Official 11-Room Inventory
+  // Tariffs are INCLUSIVE of GST as per property specification sheets
   // =========================================================================
   {
     id: '201',
     roomNo: '201',
-    roomType: 'Super Deluxe Family',
-    tariff: 3799,
+    roomType: 'Premium',
+    tariff: 3000,
     status: 'vacant',
-    floor: 2,
-    facilities: 'Two Queen Beds, AC, 50" Smart TV, Balcony, Mini Fridge, Work Desk',
-    capacity: 4,
-    maxGuests: 5,
-    bedType: 'Two Queen Beds',
-    roomSize: '480 sq ft',
+    floor: 1,
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
+    capacity: 2,
+    maxGuests: 4,
+    bedType: 'King Size',
+    roomSize: '350 sq ft',
     image1: '/images/hero.jpg',
     image2: '/images/deluxe_room.jpg',
     image3: '/images/suite_room.jpg',
@@ -343,20 +307,20 @@ export const INITIAL_ROOMS: PmsRoom[] = [
   {
     id: '202',
     roomNo: '202',
-    roomType: 'Super Deluxe Family',
-    tariff: 3799,
+    roomType: 'Deluxe',
+    tariff: 1500,
     status: 'occupied',
-    floor: 2,
-    facilities: 'Two Queen Beds, Mini Fridge, Cozy Sofa Seating, City View, Central AC',
-    capacity: 4,
-    maxGuests: 5,
-    bedType: 'Two Queen Beds',
-    roomSize: '480 sq ft',
+    floor: 1,
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker',
+    capacity: 1,
+    maxGuests: 1,
+    bedType: 'Small / Queen Size',
+    roomSize: '200 sq ft',
     image1: '/images/hero.jpg',
     image2: '/images/suite_room.jpg',
     image3: '/images/deluxe_room.jpg',
     currentGuest: {
-      name: 'Vikram Malhotra & Family',
+      name: 'Vikram Malhotra',
       phone: '9811223344',
       email: 'malhotra.vikram@gmail.com',
       checkInDate: '2026-10-20',
@@ -364,14 +328,12 @@ export const INITIAL_ROOMS: PmsRoom[] = [
       checkOutDate: '2026-10-23',
       checkOutTime: '11:00 AM',
       bookingNo: 'SR/203/26-27',
-      advancePaid: 5000,
+      advancePaid: 1500,
       calculationType: '12hour',
       darshanSlot: 'Dhoop Aarti (06:30 PM)',
       vehicleNo: 'DL-3C-AZ-4509',
       idProofType: 'Passport',
-      idProofNumber: 'Z8941024',
-      companyName: 'Malhotra Logistics Ltd',
-      gstin: '07AAACM1234A1Z5'
+      idProofNumber: 'Z8941024'
     },
     foodAmount: 0,
     assignedStaff: 'Ganesh',
@@ -381,15 +343,15 @@ export const INITIAL_ROOMS: PmsRoom[] = [
   {
     id: '203',
     roomNo: '203',
-    roomType: 'Super Deluxe Family',
-    tariff: 3799,
+    roomType: 'Premium',
+    tariff: 3000,
     status: 'vacant',
-    floor: 2,
-    facilities: 'Two Queen Beds, AC, Smart TV, Double Wardrobe, Electric Kettle',
-    capacity: 4,
-    maxGuests: 5,
-    bedType: 'Two Queen Beds',
-    roomSize: '480 sq ft',
+    floor: 1,
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
+    capacity: 2,
+    maxGuests: 4,
+    bedType: 'King Size',
+    roomSize: '350 sq ft',
     image1: '/images/hero.jpg',
     image2: '/images/deluxe_room.jpg',
     image3: '/images/suite_room.jpg',
@@ -400,15 +362,15 @@ export const INITIAL_ROOMS: PmsRoom[] = [
   {
     id: '204',
     roomNo: '204',
-    roomType: 'Super Deluxe Family',
-    tariff: 3799,
+    roomType: 'Executive',
+    tariff: 2500,
     status: 'booked',
-    floor: 2,
-    facilities: 'Two Queen Beds, AC, Geyser, Work Desk, Balcony, Mountain View',
-    capacity: 4,
-    maxGuests: 5,
-    bedType: 'Two Queen Beds',
-    roomSize: '480 sq ft',
+    floor: 1,
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
+    capacity: 2,
+    maxGuests: 4,
+    bedType: 'King Size',
+    roomSize: '300 sq ft',
     image1: '/images/hero.jpg',
     image2: '/images/suite_room.jpg',
     image3: '/images/deluxe_room.jpg',
@@ -434,15 +396,15 @@ export const INITIAL_ROOMS: PmsRoom[] = [
   {
     id: '205',
     roomNo: '205',
-    roomType: 'Super Deluxe Family',
-    tariff: 3799,
+    roomType: 'Executive',
+    tariff: 2500,
     status: 'vacant',
-    floor: 2,
-    facilities: 'Two Queen Beds, Sofa Seating, Temple Facing Balcony, AC, Smart TV',
-    capacity: 4,
-    maxGuests: 5,
-    bedType: 'Two Queen Beds',
-    roomSize: '480 sq ft',
+    floor: 1,
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
+    capacity: 2,
+    maxGuests: 4,
+    bedType: 'King Size',
+    roomSize: '300 sq ft',
     image1: '/images/hero.jpg',
     image2: '/images/deluxe_room.jpg',
     image3: '/images/suite_room.jpg',
@@ -453,15 +415,15 @@ export const INITIAL_ROOMS: PmsRoom[] = [
   {
     id: '206',
     roomNo: '206',
-    roomType: 'Super Deluxe Family',
-    tariff: 3799,
+    roomType: 'Executive',
+    tariff: 2500,
     status: 'vacant',
-    floor: 2,
-    facilities: 'Two Queen Beds, Mini Refrigerator, Panoramic Views, 50" Smart TV',
-    capacity: 4,
-    maxGuests: 5,
-    bedType: 'Two Queen Beds',
-    roomSize: '480 sq ft',
+    floor: 1,
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
+    capacity: 2,
+    maxGuests: 4,
+    bedType: 'King Size',
+    roomSize: '300 sq ft',
     image1: '/images/hero.jpg',
     image2: '/images/suite_room.jpg',
     image3: '/images/deluxe_room.jpg',
@@ -469,65 +431,97 @@ export const INITIAL_ROOMS: PmsRoom[] = [
     priority: 'Normal',
     lastCleaned: '20-10-2026 10:30 AM'
   },
-
-  // =========================================================================
-  // Floor 3 (Sai Presidential Suites - ₹5,999/night + 12% GST)
-  // Rooms 301, 302, 303, 304 (Master King + Living Lounge, 720 sq ft, Max 4+2 Guests)
-  // =========================================================================
   {
-    id: '301',
-    roomNo: '301',
-    roomType: 'Sai Presidential Suite',
-    tariff: 5999,
+    id: '207',
+    roomNo: '207',
+    roomType: 'Executive',
+    tariff: 2500,
     status: 'vacant',
-    floor: 3,
-    facilities: 'Master King + Living Lounge, Soaking Tub, 55" OLED TV, Temple View, VIP Concierge',
-    capacity: 4,
-    maxGuests: 6,
-    bedType: 'Master King + Living Lounge',
-    roomSize: '720 sq ft',
-    image1: '/images/suite_room.jpg',
+    floor: 1,
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
+    capacity: 2,
+    maxGuests: 4,
+    bedType: 'King Size',
+    roomSize: '300 sq ft',
+    image1: '/images/hero.jpg',
     image2: '/images/deluxe_room.jpg',
-    image3: '/images/hero.jpg',
-    assignedStaff: 'Ganesh',
-    priority: 'VIP Suite',
+    image3: '/images/suite_room.jpg',
+    assignedStaff: 'Sunita',
+    priority: 'Normal',
+    lastCleaned: '20-10-2026 10:45 AM'
+  },
+  {
+    id: '208',
+    roomNo: '208',
+    roomType: 'Classic Studio',
+    tariff: 2000,
+    status: 'vacant',
+    floor: 1,
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
+    capacity: 2,
+    maxGuests: 4,
+    bedType: 'King Size',
+    roomSize: '280 sq ft',
+    image1: '/images/deluxe_room.jpg',
+    image2: '/images/hero.jpg',
+    image3: '/images/suite_room.jpg',
+    assignedStaff: 'Ramesh',
+    priority: 'Normal',
     lastCleaned: '20-10-2026 09:00 AM'
   },
   {
-    id: '302',
-    roomNo: '302',
-    roomType: 'Sai Presidential Suite',
-    tariff: 5999,
-    status: 'blocked',
-    floor: 3,
-    facilities: 'Master King + Living Lounge, Private Dining Nook, VIP Concierge, Soaking Tub',
-    capacity: 4,
-    maxGuests: 6,
-    bedType: 'Master King + Living Lounge',
-    roomSize: '720 sq ft',
-    image1: '/images/suite_room.jpg',
+    id: '209',
+    roomNo: '209',
+    roomType: 'Classic Studio',
+    tariff: 2000,
+    status: 'vacant',
+    floor: 1,
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
+    capacity: 2,
+    maxGuests: 4,
+    bedType: 'King Size',
+    roomSize: '280 sq ft',
+    image1: '/images/deluxe_room.jpg',
     image2: '/images/hero.jpg',
-    image3: '/images/deluxe_room.jpg',
-    maintenanceIssue: 'AC Thermostat Calibration & Geyser Filter Servicing',
-    assignedStaff: 'Ramesh',
+    image3: '/images/suite_room.jpg',
+    assignedStaff: 'Ganesh',
     priority: 'Normal',
-    lastCleaned: '19-10-2026 05:00 PM'
+    lastCleaned: '20-10-2026 09:15 AM'
   },
   {
-    id: '303',
-    roomNo: '303',
-    roomType: 'Sai Presidential Suite',
-    tariff: 5999,
+    id: '210',
+    roomNo: '210',
+    roomType: 'Classic Studio',
+    tariff: 2000,
+    status: 'vacant',
+    floor: 1,
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
+    capacity: 2,
+    maxGuests: 4,
+    bedType: 'King Size',
+    roomSize: '280 sq ft',
+    image1: '/images/deluxe_room.jpg',
+    image2: '/images/hero.jpg',
+    image3: '/images/suite_room.jpg',
+    assignedStaff: 'Priya',
+    priority: 'Normal',
+    lastCleaned: '20-10-2026 09:30 AM'
+  },
+  {
+    id: '211',
+    roomNo: '211',
+    roomType: 'Premium',
+    tariff: 3000,
     status: 'occupied',
-    floor: 3,
-    facilities: 'Master King + Living Lounge, Soaking Tub, Direct Temple View, 24/7 Butler Service',
-    capacity: 4,
-    maxGuests: 6,
-    bedType: 'Master King + Living Lounge',
-    roomSize: '720 sq ft',
-    image1: '/images/suite_room.jpg',
+    floor: 1,
+    facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
+    capacity: 2,
+    maxGuests: 4,
+    bedType: 'King Size',
+    roomSize: '350 sq ft',
+    image1: '/images/hero.jpg',
     image2: '/images/deluxe_room.jpg',
-    image3: '/images/hero.jpg',
+    image3: '/images/suite_room.jpg',
     currentGuest: {
       name: 'Arvind Kirloskar',
       phone: '9876501234',
@@ -537,7 +531,7 @@ export const INITIAL_ROOMS: PmsRoom[] = [
       checkOutDate: '2026-10-21',
       checkOutTime: '11:00 AM',
       bookingNo: 'SR/204/26-27',
-      advancePaid: 6719,
+      advancePaid: 3000,
       calculationType: '12hour',
       darshanSlot: 'VIP Darshan Pass Gate 2',
       vehicleNo: 'MH-12-PA-0001',
@@ -546,36 +540,19 @@ export const INITIAL_ROOMS: PmsRoom[] = [
       companyName: 'Kirloskar Engineering Ltd',
       gstin: '27AAACK5678B1Z9'
     },
-    foodAmount: 520,
+    foodAmount: 0,
     assignedStaff: 'Sunita',
-    priority: 'VIP Suite',
+    priority: 'Normal',
     lastCleaned: '20-10-2026 07:30 AM'
-  },
-  {
-    id: '304',
-    roomNo: '304',
-    roomType: 'Sai Presidential Suite',
-    tariff: 5999,
-    status: 'vacant',
-    floor: 3,
-    facilities: 'Master King + Living Lounge, Panoramic Shirdi View, Espresso Machine, Bathtub',
-    capacity: 4,
-    maxGuests: 6,
-    bedType: 'Master King + Living Lounge',
-    roomSize: '720 sq ft',
-    image1: '/images/suite_room.jpg',
-    image2: '/images/hero.jpg',
-    image3: '/images/deluxe_room.jpg',
-    assignedStaff: 'Priya',
-    priority: 'VIP Suite',
-    lastCleaned: '20-10-2026 10:45 AM'
   }
 ];
 
 export const INITIAL_ROOM_TYPES: PmsRoomType[] = [
-  { id: 'rt-1', roomTypeName: 'Executive Deluxe', package: 'GENERAL', gstTaxString: 'GST 12% || 12.00 || 0.00', gstPercent: 12, roomTariff: 2499, discountPercent: 0 },
-  { id: 'rt-2', roomTypeName: 'Super Deluxe Family', package: 'GENERAL', gstTaxString: 'GST 12% || 12.00 || 0.00', gstPercent: 12, roomTariff: 3799, discountPercent: 0 },
-  { id: 'rt-3', roomTypeName: 'Sai Presidential Suite', package: 'GENERAL', gstTaxString: 'GST 12% || 12.00 || 0.00', gstPercent: 12, roomTariff: 5999, discountPercent: 0 }
+  // All tariffs are GST-INCLUSIVE per the official property specification sheets
+  { id: 'rt-1', roomTypeName: 'Deluxe', package: 'GENERAL', gstTaxString: 'GST 12% Inclusive || 12.00 || 0.00', gstPercent: 12, roomTariff: 1500, discountPercent: 0 },
+  { id: 'rt-2', roomTypeName: 'Classic Studio', package: 'GENERAL', gstTaxString: 'GST 12% Inclusive || 12.00 || 0.00', gstPercent: 12, roomTariff: 2000, discountPercent: 0 },
+  { id: 'rt-3', roomTypeName: 'Executive', package: 'GENERAL', gstTaxString: 'GST 12% Inclusive || 12.00 || 0.00', gstPercent: 12, roomTariff: 2500, discountPercent: 0 },
+  { id: 'rt-4', roomTypeName: 'Premium', package: 'GENERAL', gstTaxString: 'GST 12% Inclusive || 12.00 || 0.00', gstPercent: 12, roomTariff: 3000, discountPercent: 0 }
 ];
 
 export const INITIAL_TABLES: PmsDiningTable[] = [
@@ -2740,22 +2717,26 @@ export const INITIAL_EXPENSES: PmsExpenseRecord[] = [
 ];
 
 export const INITIAL_HOUSEKEEPING: PmsHousekeepingRecord[] = [
-  { roomNo: '101', status: 'Inspected', assignedStaff: 'Ramesh', priority: 'Normal', lastCleanedTime: '19-10-2026 10:30 AM' },
+  // Ground Floor (101–107)
+  { roomNo: '101', status: 'Inspected', assignedStaff: 'Ramesh', priority: 'Normal', lastCleanedTime: '19-10-2026 10:30 AM', remarks: 'Room occupied – Rajesh Sharma' },
   { roomNo: '102', status: 'Vacant Clean', assignedStaff: 'Sunita', priority: 'Normal', lastCleanedTime: '20-10-2026 09:00 AM' },
-  { roomNo: '103', status: 'Inspected', assignedStaff: 'Ramesh', priority: 'High - Guest Waiting', lastCleanedTime: '19-10-2026 12:45 PM' },
+  { roomNo: '103', status: 'Vacant Clean', assignedStaff: 'Ramesh', priority: 'Normal', lastCleanedTime: '20-10-2026 09:30 AM' },
   { roomNo: '104', status: 'Vacant Dirty', assignedStaff: 'Ramesh', priority: 'High - Guest Waiting', lastCleanedTime: '18-10-2026 04:00 PM', remarks: 'Guest checked out, linen stripped' },
   { roomNo: '105', status: 'Vacant Clean', assignedStaff: 'Sunita', priority: 'Normal', lastCleanedTime: '20-10-2026 08:30 AM' },
   { roomNo: '106', status: 'Vacant Clean', assignedStaff: 'Ramesh', priority: 'Normal', lastCleanedTime: '20-10-2026 09:15 AM' },
+  { roomNo: '107', status: 'Vacant Clean', assignedStaff: 'Sunita', priority: 'Normal', lastCleanedTime: '20-10-2026 10:00 AM' },
+  // 1st Floor (201–211)
   { roomNo: '201', status: 'Vacant Clean', assignedStaff: 'Ganesh', priority: 'Normal', lastCleanedTime: '20-10-2026 09:30 AM' },
-  { roomNo: '202', status: 'Inspected', assignedStaff: 'Ganesh', priority: 'Normal', lastCleanedTime: '20-10-2026 09:00 AM' },
+  { roomNo: '202', status: 'Inspected', assignedStaff: 'Ganesh', priority: 'Normal', lastCleanedTime: '20-10-2026 09:00 AM', remarks: 'Room occupied – Vikram Malhotra' },
   { roomNo: '203', status: 'Vacant Clean', assignedStaff: 'Priya', priority: 'Normal', lastCleanedTime: '20-10-2026 10:00 AM' },
   { roomNo: '204', status: 'Vacant Clean', assignedStaff: 'Priya', priority: 'High - Guest Waiting', lastCleanedTime: '20-10-2026 10:15 AM' },
   { roomNo: '205', status: 'Vacant Clean', assignedStaff: 'Ganesh', priority: 'Normal', lastCleanedTime: '20-10-2026 09:45 AM' },
   { roomNo: '206', status: 'Vacant Clean', assignedStaff: 'Priya', priority: 'Normal', lastCleanedTime: '20-10-2026 10:30 AM' },
-  { roomNo: '301', status: 'Vacant Clean', assignedStaff: 'Ganesh', priority: 'VIP Suite', lastCleanedTime: '20-10-2026 09:00 AM' },
-  { roomNo: '302', status: 'Under Maintenance', assignedStaff: 'Ramesh', priority: 'Normal', lastCleanedTime: '19-10-2026 05:00 PM', maintenanceIssue: 'AC Thermostat Calibration & Geyser Filter Servicing', maintenanceLoggedAt: '20-10-2026 08:00 AM' },
-  { roomNo: '303', status: 'Inspected', assignedStaff: 'Sunita', priority: 'VIP Suite', lastCleanedTime: '20-10-2026 07:30 AM' },
-  { roomNo: '304', status: 'Vacant Clean', assignedStaff: 'Priya', priority: 'VIP Suite', lastCleanedTime: '20-10-2026 10:45 AM' }
+  { roomNo: '207', status: 'Vacant Clean', assignedStaff: 'Sunita', priority: 'Normal', lastCleanedTime: '20-10-2026 10:45 AM' },
+  { roomNo: '208', status: 'Vacant Clean', assignedStaff: 'Ramesh', priority: 'Normal', lastCleanedTime: '20-10-2026 09:00 AM' },
+  { roomNo: '209', status: 'Vacant Clean', assignedStaff: 'Ganesh', priority: 'Normal', lastCleanedTime: '20-10-2026 09:15 AM' },
+  { roomNo: '210', status: 'Vacant Clean', assignedStaff: 'Priya', priority: 'Normal', lastCleanedTime: '20-10-2026 09:30 AM' },
+  { roomNo: '211', status: 'Inspected', assignedStaff: 'Sunita', priority: 'Normal', lastCleanedTime: '20-10-2026 07:30 AM', remarks: 'Room occupied – Arvind Kirloskar' }
 ];
 
 export const INITIAL_NIGHT_AUDITS: PmsNightAuditRecord[] = [
@@ -3878,21 +3859,24 @@ export class PmsStore {
 
     const baseRoomRent = tariff * nights;
 
-    // Extra guest charges (₹500 for Deluxe/Family, ₹800 for Suite)
-    const isSuite = roomType.toLowerCase().includes('suite');
-    const extraGuestsRatePerNight = isSuite ? 800 : 500;
+    // Extra guest charges (standard per room type)
+    const extraGuestsRatePerNight = 0; // All tariffs are GST-inclusive; extra guests not billed separately
     const capacity = room?.capacity || 2;
     const totalGuests = (guest as any)?.adults || capacity;
     const extraGuestsCount = Math.max(0, totalGuests - capacity);
     const extraGuestsTotal = extraGuestsCount * extraGuestsRatePerNight * nights;
 
     // SAC 996311 Accommodation Bucket
-    const roomTaxable = baseRoomRent + extraGuestsTotal;
-    const roomGstRate = tariff > 7500 ? 18 : 12;
-    const roomCgst = Math.round(roomTaxable * (roomGstRate / 200) * 100) / 100;
-    const roomSgst = Math.round(roomTaxable * (roomGstRate / 200) * 100) / 100;
+    // IMPORTANT: All room tariffs (₹1,500 / ₹2,000 / ₹2,500 / ₹3,000) are GST-INCLUSIVE.
+    // We extract the GST component from the tariff — we do NOT add GST on top.
+    const roomGross = Math.round((baseRoomRent + extraGuestsTotal) * 100) / 100;
+    const roomGstRate = 12; // All property tariffs are ≤ ₹7,500/night → 12% GST slab
+    // Extract pre-GST base: base = gross / 1.12
+    const exGstBase = Math.round((roomGross / 1.12) * 100) / 100;
+    const roomCgst = Math.round(((roomGross - exGstBase) / 2) * 100) / 100;
+    const roomSgst = roomCgst;
     const roomTaxTotal = Math.round((roomCgst + roomSgst) * 100) / 100;
-    const roomGross = Math.round((roomTaxable + roomTaxTotal) * 100) / 100;
+    const roomTaxable = exGstBase; // pre-GST taxable value for GSTR-1 reporting
 
     // SAC 996331 Vasudev Rasoi F&B Bucket
     const kots = this.getKots().filter(k => k.roomNo === roomNo || (k as any).roomNumber === roomNo);
@@ -4217,8 +4201,9 @@ export class PmsStore {
       if (!targetRoom) {
         const catMap: Record<string, string> = {
           '1': 'Executive Deluxe',
-          '2': 'Super Deluxe Family',
-          '3': 'Sai Presidential Suite'
+          '2': 'Classic Studio',
+          '3': 'Executive',
+          '4': 'Premium'
         };
         const catName = catMap[rId];
         if (catName) {
@@ -4238,9 +4223,8 @@ export class PmsStore {
     const checkIn = new Date(booking.checkInDate);
     const checkOut = new Date(booking.checkOutDate);
     const nights = Math.max(1, Math.round((checkOut.getTime() - checkIn.getTime()) / (1000 * 3600 * 24)));
-    const totalTaxable = targetRoom.tariff * nights;
-    const taxRate = targetRoom.tariff > 7500 ? 0.18 : 0.12;
-    const grand = Math.round(totalTaxable * (1 + taxRate));
+    // Tariffs are GST-inclusive — grand total equals tariff × nights (no additional GST)
+    const grand = targetRoom.tariff * nights;
 
     const newBooking: PmsBooking = {
       bookingNo,

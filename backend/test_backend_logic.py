@@ -21,12 +21,15 @@ def run_tests():
         db.add(room)
     db.commit()
 
-    room1 = db.query(models.Room).filter(models.Room.slug == "executive-deluxe-room").first()
-    room2 = db.query(models.Room).filter(models.Room.slug == "sai-presidential-suite").first()
+    room1 = db.query(models.Room).filter(models.Room.slug == "executive-room").first()
+    room2 = db.query(models.Room).filter(models.Room.slug == "premium-room").first()
     assert room1 is not None and room2 is not None
     print(f"   [OK] Room 1: {room1.name} (Rs.{room1.price_per_night}) | Room 2: {room2.name} (Rs.{room2.price_per_night})")
 
-    print("3. Creating a real Reservation with Indian GST Tax Engine...")
+    print("3. Creating a real Reservation with Indian GST Tax Engine (Inclusive of GST)...")
+    total_gross = round(room1.price_per_night * 3, 2)
+    taxable_val = round(total_gross / 1.12, 2)
+    tax_amt = round(total_gross - taxable_val, 2)
     booking = models.Booking(
         room_id=room1.id,
         guest_name="Srinivas Rao",
@@ -37,15 +40,15 @@ def run_tests():
         adults=2,
         total_nights=3,
         base_rate=room1.price_per_night,
-        base_amount=round(room1.price_per_night * 3, 2),
+        base_amount=taxable_val,
         extra_guest_charge=0.0,
         gst_rate=12.0,
-        cgst_amount=round(room1.price_per_night * 3 * 0.06, 2),
-        sgst_amount=round(room1.price_per_night * 3 * 0.06, 2),
-        total_tax=round(room1.price_per_night * 3 * 0.12, 2),
-        total_price=round(room1.price_per_night * 3 * 1.12, 2),
+        cgst_amount=round(tax_amt / 2, 2),
+        sgst_amount=round(tax_amt / 2, 2),
+        total_tax=tax_amt,
+        total_price=total_gross,
         total_paid=0.0,
-        balance_due=round(room1.price_per_night * 3 * 1.12, 2),
+        balance_due=total_gross,
         payment_status="Pending",
         status="Checked-In"
     )
@@ -172,7 +175,7 @@ def run_tests():
     print("9. Testing Walk-In Direct Front-Desk Check-In Endpoint...")
     from app.routes.pms import execute_walk_in_check_in, execute_check_out, toggle_room_maintenance, get_pms_dashboard_sync
     
-    room3 = db.query(models.Room).filter(models.Room.slug == "super-deluxe-family-room").first()
+    room3 = db.query(models.Room).filter(models.Room.slug == "classic-studio").first()
     checkin_req = schemas.WalkInCheckInRequest(
         room_id=room3.id,
         guest_name="Venkatesh Naidu",

@@ -294,7 +294,7 @@ export const RoomShiftModal: React.FC<RoomShiftModalProps> = ({
                     ) : (
                       vacantRooms.map(r => (
                         <option key={r.id} value={r.roomNo}>
-                          Room {r.roomNo} &bull; {r.roomType} &bull; ₹{r.tariff}/day (Floor {r.floor})
+                          Room {r.roomNo} &bull; {r.roomType} &bull; ₹{r.tariff}/day ({r.floor === 0 ? 'Ground Floor' : '1st Floor'})
                         </option>
                       ))
                     )}
@@ -304,8 +304,8 @@ export const RoomShiftModal: React.FC<RoomShiftModalProps> = ({
                 {selectedToRoom && (
                   <div style={{ fontSize: 11, background: '#ffffff', padding: 8, borderRadius: 4, border: '1px solid #e2e8f0', lineHeight: 1.6 }}>
                     <div><strong>Category:</strong> {selectedToRoom.roomType}</div>
-                    <div><strong>Standard Tariff:</strong> ₹{selectedToRoom.tariff}/day</div>
-                    <div><strong>Floor:</strong> Floor {selectedToRoom.floor}</div>
+                    <div><strong>Standard Tariff:</strong> ₹{selectedToRoom.tariff}/day (Incl. GST)</div>
+                    <div><strong>Floor:</strong> {selectedToRoom.floor === 0 ? 'Ground Floor' : '1st Floor'}</div>
                     <div><strong>Facilities:</strong> {selectedToRoom.facilities}</div>
                   </div>
                 )}

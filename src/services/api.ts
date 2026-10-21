@@ -11,54 +11,71 @@ import { PmsStore } from './pmsStore';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
 
-// Authentic 16-Room Categories for Hotel Sai Vasudev Residency (Shirdi)
+// Official 18-Room Inventory for Hotel Sai Vasudev Residency (Shirdi)
+// Tariffs listed are INCLUSIVE of GST per the property specification sheets
 const FALLBACK_ROOMS: Room[] = [
   {
     id: 1,
-    name: "Executive Deluxe Room",
-    slug: "executive-deluxe-room",
+    name: "Deluxe Room",
+    slug: "deluxe-room",
     room_type: "Deluxe",
-    price_per_night: 2499,
-    capacity: 2,
-    total_inventory: 6,
-    bed_type: "King Bed",
-    room_size: "340 sq ft",
-    description: "Sophisticated modern room on Floor 1 (Rooms 101-106). Features soundproof windows, premium posture-pedic King bed, ambient warm cove lighting, 43\" 4K Smart TV, and Italian marble bathroom. Max 2+1 Guests.",
-    amenities: "High-Speed Wi-Fi, 43\" 4K Smart TV, Central AC, 24/7 Room Service, Complimentary Tea/Coffee Maker, Luxurious Toiletries, Daily Housekeeping",
+    price_per_night: 1500,
+    capacity: 1,          // Single-occupancy (rooms 101, 102, 202 are 1-adult max)
+    total_inventory: 3,   // Rooms: 101, 102, 202
+    bed_type: "Single / Queen Size",
+    room_size: "200 sq ft",
+    description: "Comfortable and affordable pilgrimage rooms. Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, and Coffee Maker. Single-occupancy. Up to 2 children (0–6 yrs) stay free. GST inclusive.",
+    amenities: "Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker",
     image_url: "/images/deluxe_room.jpg",
     badge: "Best Value",
     is_available: true
   },
   {
     id: 2,
-    name: "Super Deluxe Family Room",
-    slug: "super-deluxe-family-room",
-    room_type: "Super Deluxe",
-    price_per_night: 3799,
-    capacity: 4,
-    total_inventory: 6,
-    bed_type: "Two Queen Beds",
-    room_size: "480 sq ft",
-    description: "Spacious pilgrim haven on Floor 2 (Rooms 201-206). Two queen beds, cozy sofa seating, double wardrobe, mini refrigerator, and temple-facing balconies. Max 4+1 Guests.",
-    amenities: "High-Speed Wi-Fi, 50\" 4K Smart TV, Central AC, Mini Fridge, 24/7 Room Service, Temple Darshan Assistance, Dedicated Work Desk",
-    image_url: "/images/hero.jpg",
-    badge: "Family Favorite",
+    name: "Classic Studio Room",
+    slug: "classic-studio-room",
+    room_type: "Classic Studio",
+    price_per_night: 2000,
+    capacity: 2,
+    total_inventory: 5,   // Rooms: 103, 106, 208, 209, 210
+    bed_type: "King Size",
+    room_size: "250–280 sq ft",
+    description: "Spacious classic rooms with modern comforts. Free Wi-Fi, TV, 24/7 Hot Water, Coffee Maker, Sofa, Hair Dryer, and Mini Fridge. Max 2 Adults + 2 Children (0–6 free). GST inclusive.",
+    amenities: "Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge",
+    image_url: "/images/deluxe_room.jpg",
+    badge: "Popular",
     is_available: true
   },
   {
     id: 3,
-    name: "Sai Presidential Suite",
-    slug: "sai-presidential-suite",
-    room_type: "Suite",
-    price_per_night: 5999,
-    capacity: 4,
-    total_inventory: 4,
-    bed_type: "Master King + Living Lounge",
-    room_size: "720 sq ft",
-    description: "The pinnacle of divine hospitality on Floor 3 (Rooms 301-304). Private master bedroom, separate luxurious living lounge, marble coffee table, soaking bathtub, and 24/7 VIP concierge service. Max 4+2 Guests.",
-    amenities: "High-Speed Wi-Fi, 55\" OLED Smart TV, Luxury Bathrobe & Slippers, Soaking Bathtub, Express Check-In, Complimentary Buffet Breakfast, 24/7 Butler on Call",
-    image_url: "/images/suite_room.jpg",
-    badge: "Luxury Suite",
+    name: "Executive Room",
+    slug: "executive-room",
+    room_type: "Executive",
+    price_per_night: 2500,
+    capacity: 2,
+    total_inventory: 7,   // Rooms: 104, 105, 107, 204, 205, 206, 207
+    bed_type: "King Size",
+    room_size: "300 sq ft",
+    description: "Premium executive rooms with elevated amenities. Free Wi-Fi, TV, 24/7 Hot Water, Coffee Maker, Sofa, Hair Dryer, and Mini Fridge. Max 2 Adults + 2 Children (0–6 free). GST inclusive.",
+    amenities: "Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge",
+    image_url: "/images/hero.jpg",
+    badge: "Recommended",
+    is_available: true
+  },
+  {
+    id: 4,
+    name: "Premium Room",
+    slug: "premium-room",
+    room_type: "Premium",
+    price_per_night: 3000,
+    capacity: 2,
+    total_inventory: 3,   // Rooms: 201, 203, 211
+    bed_type: "King Size",
+    room_size: "350 sq ft",
+    description: "Top-of-the-range rooms with luxury finishes. Free Wi-Fi, TV, 24/7 Hot Water, Coffee Maker, Sofa, Hair Dryer, and Mini Fridge. Max 2 Adults + 2 Children (0–6 free). GST inclusive.",
+    amenities: "Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge",
+    image_url: "/images/hero.jpg",
+    badge: "Luxury Pick",
     is_available: true
   }
 ];
@@ -84,15 +101,17 @@ export const hotelApi = {
   async getRooms(roomType?: string, maxPrice?: number): Promise<Room[]> {
     try {
       const localRooms = typeof window !== 'undefined' ? PmsStore.getRooms() : [];
-      const deluxeAvailable = localRooms.filter(r => r.roomType === 'Executive Deluxe' && r.status === 'vacant').length;
-      const familyAvailable = localRooms.filter(r => r.roomType === 'Super Deluxe Family' && r.status === 'vacant').length;
-      const suiteAvailable = localRooms.filter(r => r.roomType === 'Sai Presidential Suite' && r.status === 'vacant').length;
+      const deluxeAvail    = localRooms.filter(r => r.roomType === 'Deluxe'       && r.status === 'vacant').length;
+      const studioAvail    = localRooms.filter(r => r.roomType === 'Classic Studio' && r.status === 'vacant').length;
+      const executiveAvail = localRooms.filter(r => r.roomType === 'Executive'    && r.status === 'vacant').length;
+      const premiumAvail   = localRooms.filter(r => r.roomType === 'Premium'      && r.status === 'vacant').length;
 
       const liveRooms: Room[] = FALLBACK_ROOMS.map(r => {
         let availCount = 0;
-        if (r.id === 1) availCount = deluxeAvailable;
-        else if (r.id === 2) availCount = familyAvailable;
-        else if (r.id === 3) availCount = suiteAvailable;
+        if (r.id === 1) availCount = deluxeAvail;
+        else if (r.id === 2) availCount = studioAvail;
+        else if (r.id === 3) availCount = executiveAvail;
+        else if (r.id === 4) availCount = premiumAvail;
 
         return {
           ...r,
@@ -128,14 +147,14 @@ export const hotelApi = {
     checkOut: string, 
     adults: number = 2
   ): Promise<AvailabilityCheckResponse> {
-    const room = FALLBACK_ROOMS.find(r => r.id === roomId) || FALLBACK_ROOMS[0];
+    const room = FALLBACK_ROOMS.find(r => r.id === roomId) || FALLBACK_ROOMS[2]; // default Executive
     const localRooms = typeof window !== 'undefined' ? PmsStore.getRooms() : [];
     
-    let matchedCategoryRooms = localRooms.filter(r => {
-      if (roomId === 1) return r.roomType === 'Executive Deluxe';
-      if (roomId === 2) return r.roomType === 'Super Deluxe Family';
-      return r.roomType === 'Sai Presidential Suite';
-    });
+    // Map public room-card ID → PMS roomType name
+    const typeMap: Record<number, string> = {
+      1: 'Deluxe', 2: 'Classic Studio', 3: 'Executive', 4: 'Premium'
+    };
+    let matchedCategoryRooms = localRooms.filter(r => r.roomType === (typeMap[roomId] || 'Executive'));
     if (matchedCategoryRooms.length === 0) matchedCategoryRooms = localRooms;
 
     const vacantRooms = matchedCategoryRooms.filter(r => r.status === 'vacant');
@@ -144,21 +163,18 @@ export const hotelApi = {
     const start = new Date(checkIn);
     const end = new Date(checkOut);
     const nights = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
-    const baseSubtotal = room.price_per_night * nights;
-    
-    // Extra guest charge (₹500 for Deluxe/Family, ₹800 for Suite)
-    const extraRatePerGuest = roomId === 3 ? 800 : 500;
-    const extraGuests = Math.max(0, adults - room.capacity);
-    const extraCharge = extraGuests * extraRatePerGuest * nights;
-    
-    // SAC 996311 GST Engine: 12% if <= ₹7,500/night else 18%
-    const taxable = baseSubtotal + extraCharge;
-    const gstRate = taxable / nights <= 7500 ? 12 : 18;
-    const halfRate = gstRate / 200;
-    const cgst = Math.round(taxable * halfRate * 100) / 100;
-    const sgst = Math.round(taxable * halfRate * 100) / 100;
-    const totalTax = cgst + sgst;
-    const grandTotal = taxable + totalTax;
+
+    // -----------------------------------------------------------------------
+    // GST-INCLUSIVE PRICING: Tariff already contains 12% GST (all rooms ≤ ₹7,500)
+    // We extract CGST + SGST from the tariff — we do NOT add them on top.
+    // -----------------------------------------------------------------------
+    const grandTotal = room.price_per_night * nights;  // what the guest pays
+    const gstRate = 12;  // always 12% (all tariffs ≤ ₹7,500/night)
+    const exGstBase = Math.round((grandTotal / 1.12) * 100) / 100;
+    const cgst = Math.round(((grandTotal - exGstBase) / 2) * 100) / 100;
+    const sgst = cgst;
+    const totalTax = Math.round((cgst + sgst) * 100) / 100;
+    const taxable = exGstBase; // pre-GST amount for GSTR-1
 
     return {
       available: remainingRoomsCount > 0,
@@ -170,8 +186,8 @@ export const hotelApi = {
       capacity: room.capacity,
       adults,
       base_rate_per_night: room.price_per_night,
-      base_subtotal: baseSubtotal,
-      extra_guest_charge: extraCharge,
+      base_subtotal: grandTotal,
+      extra_guest_charge: 0,  // included in tariff
       taxable_amount: taxable,
       gst_rate: gstRate,
       cgst_amount: cgst,
@@ -185,17 +201,15 @@ export const hotelApi = {
 
   async createBooking(payload: BookingPayload): Promise<BookingResponse> {
     try {
-      const matchedRoom = FALLBACK_ROOMS.find(r => r.id === payload.room_id) || FALLBACK_ROOMS[0];
+      const matchedRoom = FALLBACK_ROOMS.find(r => r.id === payload.room_id) || FALLBACK_ROOMS[2];
       const start = new Date(payload.check_in_date);
       const end = new Date(payload.check_out_date);
       const nights = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
-      const baseSubtotal = matchedRoom.price_per_night * nights;
-      const extraRatePerGuest = matchedRoom.id === 3 ? 800 : 500;
-      const extraGuests = Math.max(0, payload.adults - matchedRoom.capacity);
-      const extraCharge = extraGuests * extraRatePerGuest * nights;
-      const taxable = baseSubtotal + extraCharge;
-      const gstRate = taxable / nights <= 7500 ? 12 : 18;
-      const cgst = Math.round(taxable * (gstRate / 200) * 100) / 100;
+      // GST-inclusive: grand total = tariff × nights
+      const grandTotal = matchedRoom.price_per_night * nights;
+      const gstRate = 12;
+      const exGstBase = Math.round((grandTotal / 1.12) * 100) / 100;
+      const cgst = Math.round(((grandTotal - exGstBase) / 2) * 100) / 100;
       const sgst = cgst;
 
       // 1. Cross-Module Reactivity Law: Immediately create booking in PmsStore
@@ -210,7 +224,7 @@ export const hotelApi = {
         checkOutDate: payload.check_out_date,
         adults: payload.adults,
         children: payload.children,
-        advancePaid: payload.payment_method === 'Pay at Hotel' ? 0 : Math.round((taxable + cgst + sgst) * 0.25),
+        advancePaid: payload.payment_method === 'Pay at Hotel' ? 0 : Math.round(grandTotal * 0.25),
         specialRequests: payload.special_requests,
         paymentMethod: payload.payment_method
       });
@@ -230,13 +244,13 @@ export const hotelApi = {
         children: payload.children,
         total_nights: nights,
         base_rate: matchedRoom.price_per_night,
-        base_amount: baseSubtotal,
-        extra_guest_charge: extraCharge,
+        base_amount: grandTotal,
+        extra_guest_charge: 0,
         gst_rate: gstRate,
         cgst_amount: cgst,
         sgst_amount: sgst,
         total_tax: cgst + sgst,
-        total_price: taxable + cgst + sgst,
+        total_price: grandTotal,
         payment_status: payload.payment_method === 'Pay at Hotel' ? 'Pending' : 'Paid',
         payment_method: payload.payment_method || 'Pay at Hotel',
         status: 'Confirmed',

@@ -151,9 +151,10 @@ export const Hero: React.FC<HeroProps> = ({ onCheckAvailability }) => {
                 onChange={(e) => setRoomType(e.target.value)}
               >
                 <option value="All">All Room Categories</option>
-                <option value="Deluxe">Executive Deluxe Room</option>
-                <option value="Super Deluxe">Super Deluxe Family</option>
-                <option value="Suite">Sai Presidential Suite</option>
+                <option value="Deluxe">Deluxe (₹1,500 - Incl. GST)</option>
+                <option value="Classic Studio">Classic Studio (₹2,000 - Incl. GST)</option>
+                <option value="Executive">Executive (₹2,500 - Incl. GST)</option>
+                <option value="Premium">Premium (₹3,000 - Incl. GST)</option>
               </select>
             </div>
 

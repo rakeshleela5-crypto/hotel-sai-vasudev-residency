@@ -25,7 +25,7 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
   const rooms = PmsStore.getRooms();
 
   // Filters & Search
-  const [floorFilter, setFloorFilter] = useState<'all' | '1' | '2' | '3'>('all');
+  const [floorFilter, setFloorFilter] = useState<'all' | '0' | '1'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'vacant' | 'occupied' | 'booked' | 'dirty' | 'blocked'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -351,7 +351,7 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
         {/* Floor Filter Tabs */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span style={{ fontSize: '11px', fontWeight: 800, color: '#475569', textTransform: 'uppercase' }}>Floor:</span>
-          {(['all', '1', '2', '3'] as const).map(fl => (
+          {(['all', '0', '1'] as const).map(fl => (
             <button
               key={fl}
               type="button"
@@ -368,7 +368,7 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
               }}
               onClick={() => setFloorFilter(fl)}
             >
-              {fl === 'all' ? 'All (16 Rooms)' : `Floor ${fl}`}
+              {fl === 'all' ? 'All (18 Rooms)' : fl === '0' ? 'Ground Floor (7)' : '1st Floor (11)'}
             </button>
           ))}
         </div>
@@ -645,7 +645,7 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
                           Room {room.roomNo}
                         </span>
                         <span style={{ fontSize: '10px', background: '#f1f5f9', color: '#64748b', padding: '1px 5px', borderRadius: '4px', fontWeight: 700 }}>
-                          Floor {room.floor}
+                          {room.floor === 0 ? 'Ground Floor' : '1st Floor'}
                         </span>
                       </div>
                       <span style={{ fontSize: '11px', background: badgeBg, color: badgeColor, padding: '2px 7px', borderRadius: '4px', fontWeight: 800 }}>
@@ -1007,7 +1007,7 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 900 }}>Room {drawerRoom.roomNo}</h3>
                 <span style={{ background: '#f59e0b', color: '#000000', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 800 }}>
-                  Floor {drawerRoom.floor}
+                  {drawerRoom.floor === 0 ? 'Ground Floor' : '1st Floor'}
                 </span>
               </div>
               <p style={{ margin: '2px 0 0', fontSize: '12px', opacity: 0.9 }}>

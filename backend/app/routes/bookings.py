@@ -30,31 +30,21 @@ def parse_dates_and_nights(check_in_str: str, check_out_str: str) -> tuple[datet
     return start_date, end_date, max(1, diff)
 
 def compute_tax_and_pricing(room: models.Room, nights: int, adults: int):
+    # PRD Business Rule: All room tariffs (₹1,500 - ₹3,000) are strictly INCLUSIVE of GST (12% slab for SAC 996311)
     base_tariff = float(room.price_per_night)
-    base_amount = round(base_tariff * nights, 2)
+    grand_total = round(base_tariff * nights, 2)
     
-    # Extra adults above standard capacity (₹500 per extra adult per night)
-    extra_adults = max(0, adults - room.capacity)
-    extra_guest_charge = round(extra_adults * 500.0 * nights, 2)
-    
-    taxable_value = round(base_amount + extra_guest_charge, 2)
-    daily_effective_rate = taxable_value / nights
-    
-    # Indian GST Hotel Slabbing:
-    # Up to ₹7,500/night: 12% (6% CGST + 6% SGST)
-    # Above ₹7,500/night: 18% (9% CGST + 9% SGST)
-    gst_rate = 12.0 if daily_effective_rate <= 7500.0 else 18.0
-    half_rate = gst_rate / 200.0
-    
-    cgst_amount = round(taxable_value * half_rate, 2)
-    sgst_amount = round(taxable_value * half_rate, 2)
-    total_tax = round(cgst_amount + sgst_amount, 2)
-    grand_total = round(taxable_value + total_tax, 2)
+    # Extract pre-GST taxable base via gross / 1.12 for GSTR-1 reporting
+    gst_rate = 12.0
+    taxable_value = round(grand_total / 1.12, 2)
+    total_tax = round(grand_total - taxable_value, 2)
+    cgst_amount = round(total_tax / 2.0, 2)
+    sgst_amount = round(total_tax - cgst_amount, 2)
     
     return {
         "base_tariff": base_tariff,
-        "base_amount": base_amount,
-        "extra_guest_charge": extra_guest_charge,
+        "base_amount": taxable_value,
+        "extra_guest_charge": 0.0,
         "taxable_value": taxable_value,
         "gst_rate": gst_rate,
         "cgst_amount": cgst_amount,
@@ -341,8 +331,8 @@ def get_printable_slip(booking_ref: str, db: Session = Depends(get_db)):
     <h1 class="hotel-title">Hotel Sai Vasudev Residency</h1>
     <p class="hotel-sub">Near Temple Main Road, Holy Town</p>
     <p class="hotel-sub">Tel: +91 94402 89999 / +91 98480 12345</p>
-    <div class="gstin">GSTIN: 37AAACH7409R1ZZ | SAC: 996311</div>
-    <div class="badge">{booking.status.upper()} RESERVATION</div>
+    <div class="gstin">GSTIN: 37AAACH7409R1ZZ | SAC: 996311 (Accommodation)</div>
+    <div class="badge">{booking.status.upper()} RESERVATION &bull; INCLUSIVE OF GST (12%)</div>
   </div>
 
   <div class="row">
@@ -399,10 +389,9 @@ def get_printable_slip(booking_ref: str, db: Session = Depends(get_db)):
   <div class="divider"></div>
 
   <div class="row">
-    <span class="row-label">Base Tariff:</span>
+    <span class="row-label">Taxable Base (Pre-GST for GSTR-1):</span>
     <span class="row-val">₹{booking.base_amount:,.2f}</span>
   </div>
-  {f'<div class="row"><span class="row-label">Extra Guest Chg:</span><span class="row-val">₹{booking.extra_guest_charge:,.2f}</span></div>' if booking.extra_guest_charge > 0 else ''}
   <div class="row">
     <span class="row-label">CGST ({booking.gst_rate / 2:.1f}%):</span>
     <span class="row-val">₹{booking.cgst_amount:,.2f}</span>
@@ -413,7 +402,7 @@ def get_printable_slip(booking_ref: str, db: Session = Depends(get_db)):
   </div>
 
   <div class="row total-row">
-    <span>TOTAL PAYABLE:</span>
+    <span>TOTAL PAYABLE (INCLUSIVE OF GST):</span>
     <span>₹{booking.total_price:,.2f}</span>
   </div>
 

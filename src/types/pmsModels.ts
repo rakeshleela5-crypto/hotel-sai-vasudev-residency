@@ -47,7 +47,7 @@ export interface KotVoidAuditLog {
 export interface PmsRoom {
   id: string;
   roomNo: string;
-  roomType: 'DELUXE' | 'SUITE ROOM' | 'LUXURY ROOM' | 'STANDARD' | 'DORMITORY' | 'HALL' | 'MARRIAGE GARDEN' | 'Executive Deluxe' | 'Super Deluxe Family' | 'Sai Presidential Suite' | string;
+  roomType: 'Deluxe' | 'Classic Studio' | 'Executive' | 'Premium' | string;
   tariff: number;
   status: RoomStatus;
   floor: number;

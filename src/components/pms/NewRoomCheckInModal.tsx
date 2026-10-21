@@ -186,13 +186,17 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
 
   const getCapacityRules = (type: string) => {
     const t = type.toLowerCase();
-    if (t.includes('presidential')) {
-      return { baseCapacity: 4, extraRate: 900, label: 'Sai Presidential Suite' };
+    if (t.includes('premium')) {
+      return { baseCapacity: 2, extraRate: 0, label: 'Premium' };
     }
-    if (t.includes('super deluxe') || t.includes('family') || t.includes('suite')) {
-      return { baseCapacity: 4, extraRate: 750, label: 'Super Deluxe Family' };
+    if (t.includes('executive')) {
+      return { baseCapacity: 2, extraRate: 0, label: 'Executive' };
     }
-    return { baseCapacity: 2, extraRate: 600, label: 'Executive Deluxe' };
+    if (t.includes('classic') || t.includes('studio')) {
+      return { baseCapacity: 2, extraRate: 0, label: 'Classic Studio' };
+    }
+    // Deluxe (rooms 101, 102, 202) — single-occupancy
+    return { baseCapacity: 1, extraRate: 0, label: 'Deluxe' };
   };
 
   const capacityRule = getCapacityRules(currentRoomType);

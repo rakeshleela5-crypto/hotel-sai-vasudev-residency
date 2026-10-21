@@ -43,7 +43,7 @@ export const RoomsSection: React.FC<RoomsSectionProps> = ({ onSelectRoom, select
     };
   }, [activeFilter, syncTick]);
 
-  const categories = ['All', 'Deluxe', 'Super Deluxe', 'Suite'];
+  const categories = ['All', 'Deluxe', 'Classic Studio', 'Executive', 'Premium'];
 
   return (
     <section id="rooms" className="rooms-section">
@@ -103,6 +103,9 @@ export const RoomsSection: React.FC<RoomsSectionProps> = ({ onSelectRoom, select
                     <span className="price-currency">₹</span>
                     <span className="price-amount">{room.price_per_night.toLocaleString('en-IN')}</span>
                     <span className="price-period">/ night</span>
+                    <span style={{ display: 'block', fontSize: '9px', fontWeight: 800, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: '2px' }}>
+                      Inclusive of GST
+                    </span>
                   </div>
                 </div>
 

@@ -51,10 +51,10 @@ export const Footer: React.FC = () => {
           <div className="footer-links-col">
             <h4>Room Categories</h4>
             <ul>
-              <li><a href="#rooms">Executive Deluxe Room</a></li>
-              <li><a href="#rooms">Super Deluxe Family Room</a></li>
-              <li><a href="#rooms">Sai Presidential Suite</a></li>
-              <li><a href="#rooms">Vasudev Divine Comfort</a></li>
+              <li><a href="#rooms">Deluxe (₹1,500/night)</a></li>
+              <li><a href="#rooms">Classic Studio (₹2,000/night)</a></li>
+              <li><a href="#rooms">Executive (₹2,500/night)</a></li>
+              <li><a href="#rooms">Premium (₹3,000/night)</a></li>
               <li><a href="#contact">Group &amp; Satsang Bookings</a></li>
             </ul>
           </div>
