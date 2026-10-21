@@ -663,10 +663,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
               )}
 
               {/* Guest Profile & Police C-Form KYC Details */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1.2fr 1.2fr 1.2fr 1.5fr',
-                gap: 8,
+              <div className="pms-checkout-kyc-grid" style={{
                 background: '#f8fafc',
                 padding: '6px 10px',
                 border: '1px solid #e2e8f0',
@@ -832,7 +829,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
               </div>
 
               {/* 4 Multi-Card Inspection Grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.3fr 1.2fr', gap: 10, alignItems: 'stretch', marginBottom: 10 }}>
+              <div className="pms-checkout-4cards-grid" style={{ marginBottom: 10 }}>
                 {/* Card 1: Pending Kot List */}
                 <div style={{ border: '1px solid #38bdf8', borderRadius: 3, background: '#ffffff', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
                   <div>
@@ -1221,7 +1218,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
               </div>
 
               {/* Corporate GST & Discount Row */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
+              <div className="pms-checkout-corporate-grid" style={{ marginBottom: 8 }}>
                 <div className="form-group-pms" style={{ margin: 0 }}>
                   <label className="form-label-pms">Company Name (B2B)</label>
                   <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="e.g. Tata Motors Ltd" className="form-input-pms" />

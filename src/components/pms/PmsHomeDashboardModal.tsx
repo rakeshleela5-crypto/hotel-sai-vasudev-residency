@@ -551,8 +551,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn tile-room-dash"
           onClick={() => guardAction('Hotel Module', 'Room Dashboard', onOpenRoomMatrix)}
         >
-          <span className="tile-icon">🏠</span>
-          <span>Room Dashboard</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🏠</span>
+            <span className="tile-badge">{vacantCount} Vacant</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Room Dashboard</span>
+            <span className="tile-subtitle">Visual Rack &amp; Live Status</span>
+          </div>
         </button>
 
         <button
@@ -560,8 +566,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn tile-room-booking"
           onClick={() => guardAction('roombooking', 'Room Booking', () => setIsBookingOpen(true))}
         >
-          <span className="tile-icon">📅</span>
-          <span>Room Booking</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">📅</span>
+            <span className="tile-badge">F2</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Room Booking</span>
+            <span className="tile-subtitle">Advance &amp; Group Bookings</span>
+          </div>
         </button>
 
         <button
@@ -569,8 +581,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn tile-check-in"
           onClick={() => guardAction('roomcheckin', 'Room Check In', () => setIsCheckInOpen(true))}
         >
-          <span className="tile-icon">🚪➡️</span>
-          <span>Room Check In</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🚪➡️</span>
+            <span className="tile-badge">F3</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Room Check In</span>
+            <span className="tile-subtitle">Walk-In / Fast KYC</span>
+          </div>
         </button>
 
         <button
@@ -585,8 +603,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
             });
           }}
         >
-          <span className="tile-icon">🚪⬅️</span>
-          <span>Room Checkout</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🚪⬅️</span>
+            <span className="tile-badge">{occupiedCount} Occ</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Room Checkout</span>
+            <span className="tile-subtitle">Settlement &amp; Invoicing</span>
+          </div>
         </button>
 
         {/* Row 2 */}
@@ -595,8 +619,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn tile-new-kot"
           onClick={() => guardAction('kot', 'New Kot Entry', () => setIsKotOpen(true))}
         >
-          <span className="tile-icon">🍴</span>
-          <span>New Kot</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🍴</span>
+            <span className="tile-badge">{unprintedRoomKots.length + unprintedRestaurantKots.length} New</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">New Kot</span>
+            <span className="tile-subtitle">Kitchen Order Ticket</span>
+          </div>
         </button>
 
         <button
@@ -604,8 +634,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn tile-new-food-bill"
           onClick={() => guardAction('foodbills', 'New Food Bill', () => setIsFoodBillOpen(true))}
         >
-          <span className="tile-icon">🧾</span>
-          <span>New Food Bill</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🧾</span>
+            <span className="tile-badge">F6</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">New Food Bill</span>
+            <span className="tile-subtitle">Room &amp; Table POS Bill</span>
+          </div>
         </button>
 
         <button
@@ -613,8 +649,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn tile-advance-receipt"
           onClick={() => guardAction('advance_reciept', 'Room Advance Receipt', () => setIsAdvanceReceiptOpen(true))}
         >
-          <span className="tile-icon">💵</span>
-          <span>Room Advance Receipt</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">💵</span>
+            <span className="tile-badge">F7</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Advance Receipt</span>
+            <span className="tile-subtitle">Guest Booking Deposit</span>
+          </div>
         </button>
 
         <button
@@ -622,8 +664,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn tile-receipt"
           onClick={() => guardAction('receipt', 'Receipt Register', () => setIsReceiptRegisterOpen(true))}
         >
-          <span className="tile-icon">📄</span>
-          <span>Receipt</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">📄</span>
+            <span className="tile-badge">F8</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Receipt Register</span>
+            <span className="tile-subtitle">Payment Collection Log</span>
+          </div>
         </button>
 
         {/* Row 3 */}
@@ -632,8 +680,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn tile-payment"
           onClick={() => guardAction('payment', 'Payment Register', () => setIsPaymentRegisterOpen(true))}
         >
-          <span className="tile-icon">💳</span>
-          <span>Payment</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">💳</span>
+            <span className="tile-badge">F9</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Payment Register</span>
+            <span className="tile-subtitle">Vendor &amp; Expense Outflow</span>
+          </div>
         </button>
 
         <button
@@ -641,8 +695,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn tile-ledger"
           onClick={() => guardAction('ledger', 'Party & Guest Ledger', () => setIsLedgerOpen(true))}
         >
-          <span className="tile-icon">📑</span>
-          <span>Ledger</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">📑</span>
+            <span className="tile-badge">F10</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Guest &amp; Party Ledger</span>
+            <span className="tile-subtitle">Account Balance &amp; SOA</span>
+          </div>
         </button>
 
         <button
@@ -650,8 +710,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn tile-restaurant"
           onClick={() => guardAction('Restaurant Module', 'Restaurant Table Matrix', () => setIsTableDashboardOpen(true))}
         >
-          <span className="tile-icon">🏬</span>
-          <span>Restaurant</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🏬</span>
+            <span className="tile-badge">Table POS</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Restaurant POS</span>
+            <span className="tile-subtitle">Dine-In, Bar &amp; Takeaway</span>
+          </div>
         </button>
 
         <button
@@ -660,8 +726,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           onClick={() => guardAction('purchase', 'Purchase Inward', () => setIsPurchaseOpen(true))}
           title="Purchase Inward to Godown (/purchases/create)"
         >
-          <span className="tile-icon">🛒</span>
-          <span>Purchase</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🛒</span>
+            <span className="tile-badge">Inward</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Purchase Inward</span>
+            <span className="tile-subtitle">Vendor Bills &amp; Godown Entry</span>
+          </div>
         </button>
 
         {/* Row 4 */}
@@ -676,8 +748,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           }}
           title="Stock Transfer (Main Store -> Kitchen)"
         >
-          <span className="tile-icon">🔁</span>
-          <span>Stock Transfer</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🔁</span>
+            <span className="tile-badge">Transfer</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Stock Transfer</span>
+            <span className="tile-subtitle">Main Godown to Kitchen</span>
+          </div>
         </button>
 
         <button
@@ -691,8 +769,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           }}
           title="Stock Issue & Consumption (Kitchen -> Consume)"
         >
-          <span className="tile-icon">📦</span>
-          <span>Stock Issue</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">📦</span>
+            <span className="tile-badge">Consume</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Stock Issue</span>
+            <span className="tile-subtitle">Kitchen Consumption Log</span>
+          </div>
         </button>
 
         <button
@@ -701,8 +785,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           onClick={() => guardAction('Store Wise Stock', 'Store Wise Stock Report', () => setIsStoreWiseStockOpen(true))}
           title="Store Wise Stock Report (/store_wise_stock)"
         >
-          <span className="tile-icon">📈</span>
-          <span>Store Report</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">📈</span>
+            <span className="tile-badge">Stock Log</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Store Wise Stock</span>
+            <span className="tile-subtitle">Godown Balance &amp; Reorder</span>
+          </div>
         </button>
 
         <button
@@ -710,10 +800,36 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           className="hub-tile-btn tile-room-dash"
           onClick={() => guardAction('Hotel Module', 'All 24 Rooms', onOpenRoomMatrix)}
         >
-          <span className="tile-icon">🏢</span>
-          <span>All 24 Rooms</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🏢</span>
+            <span className="tile-badge">24 Keys</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">All 24 Rooms</span>
+            <span className="tile-subtitle">Floor &amp; Category Matrix</span>
+          </div>
         </button>
+      </div>
 
+      {/* Extended Enterprise Operations & Compliance Modules Header */}
+      <div style={{
+        maxWidth: 1100,
+        margin: '24px auto 12px auto',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 4px',
+        borderBottom: '2px solid #e2e8f0',
+        paddingBottom: 6
+      }}>
+        <div style={{ fontSize: 13, fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span>⚙️</span>
+          <span>Extended Enterprise Operations &amp; Statutory Suite</span>
+        </div>
+        <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>1-Click Fast Launch</span>
+      </div>
+
+      <div className="home-tiles-grid">
         {/* Video 20: Online Booking Engine & Unconfirmed Bookings Tiles */}
         <button
           type="button"
@@ -722,8 +838,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff' }}
           title="Online Public Guest Booking Engine (/hotel_room/DEMO0004)"
         >
-          <span className="tile-icon">🌐</span>
-          <span>Guest Web Booking</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🌐</span>
+            <span className="tile-badge">Direct Engine</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Guest Web Booking</span>
+            <span className="tile-subtitle">Public Portal /hotel_room</span>
+          </div>
         </button>
 
         <button
@@ -733,8 +855,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)', color: '#fff' }}
           title="Unconfirmed Booking Register (/pending_booking)"
         >
-          <span className="tile-icon">🔔</span>
-          <span>Pending ({unconfirmedBookings.length})</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🔔</span>
+            <span className="tile-badge">{unconfirmedBookings.length} Pending</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Pending Bookings</span>
+            <span className="tile-subtitle">Online Approval Pipeline</span>
+          </div>
         </button>
 
         {/* Video 21 & 23: Multi-User, Roles & Permissions, Multi-Location & Mobile Tiles */}
@@ -744,8 +872,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           onClick={() => guardAction('view user', 'User Accounts & Staff Shift Roster', () => setIsUserManagementOpen(true))}
           title="Staff Accounts & Duty Roster (/users)"
         >
-          <span className="tile-icon">👥</span>
-          <span>User Accounts</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">👥</span>
+            <span className="tile-badge">Staff</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">User Accounts</span>
+            <span className="tile-subtitle">Duty Roster &amp; Shifts</span>
+          </div>
         </button>
 
         <button
@@ -754,8 +888,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           onClick={() => guardAction('view role', 'Roles & Permissions Matrix', () => setIsRolesPermissionsOpen(true))}
           title="Roles & 72 Granular Permissions Matrix (/roles)"
         >
-          <span className="tile-icon">🛡️</span>
-          <span>Roles &amp; Rights</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🛡️</span>
+            <span className="tile-badge">72 Rights</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Roles &amp; Rights</span>
+            <span className="tile-subtitle">Granular Permission Matrix</span>
+          </div>
         </button>
 
         <button
@@ -764,8 +904,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           onClick={() => guardAction('Setting', 'Chain Branches', () => setIsChainPropertyOpen(true))}
           title="Multi-Location Chain Properties Switcher (/multilocation)"
         >
-          <span className="tile-icon">🏨</span>
-          <span>Chain Branches</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🏨</span>
+            <span className="tile-badge">Multi-Prop</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Chain Branches</span>
+            <span className="tile-subtitle">Multi-Location Switcher</span>
+          </div>
         </button>
 
         <button
@@ -774,8 +920,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           onClick={() => setIsDevicePreviewOpen(true)}
           title="Mobile Responsive Device Simulator"
         >
-          <span className="tile-icon">📱</span>
-          <span>Mobile View</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">📱</span>
+            <span className="tile-badge">Emulator</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Mobile View</span>
+            <span className="tile-subtitle">Responsive Device Simulator</span>
+          </div>
         </button>
 
         {/* Video 22: Auto WhatsApp SMS Integration & Outbox Tiles */}
@@ -786,8 +938,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', color: '#fff' }}
           title="Automated WhatsApp SMS Settings & Templates (/whatsapp_sms)"
         >
-          <span className="tile-icon">💬</span>
-          <span>Auto WhatsApp</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">💬</span>
+            <span className="tile-badge">API Active</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Auto WhatsApp</span>
+            <span className="tile-subtitle">Guest SMS &amp; PDF Invoices</span>
+          </div>
         </button>
 
         <button
@@ -797,8 +955,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)', color: '#fff' }}
           title="WhatsApp Message Outbox & Audit Logs (/whatsapp_logs)"
         >
-          <span className="tile-icon">📜</span>
-          <span>WhatsApp Logs</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">📜</span>
+            <span className="tile-badge">Outbox</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">WhatsApp Logs</span>
+            <span className="tile-subtitle">Transmission Audit Trail</span>
+          </div>
         </button>
 
         {/* Video 24: Police Station Front Office Report Tile (Frame 0100) */}
@@ -809,8 +973,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #eab308 0%, #ca8a04 100%)', color: '#1e293b', fontWeight: 800 }}
           title="Police Station Front Office Arrival & Departure Register (/police_station_report)"
         >
-          <span className="tile-icon">👮</span>
-          <span>Police Report</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">👮</span>
+            <span className="tile-badge">C-Form</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Police Report</span>
+            <span className="tile-subtitle">Guest In/Out Register</span>
+          </div>
         </button>
 
         {/* Video 25: Online vs Offline Architecture & Disaster Recovery Tile (Frame 0070, 0120) */}
@@ -821,8 +991,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff', fontWeight: 800 }}
           title="Cloud vs Offline Architecture Comparison & Disaster Recovery Tools"
         >
-          <span className="tile-icon">🌐</span>
-          <span>Online/Offline</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🌐</span>
+            <span className="tile-badge">Hybrid</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Online vs Offline</span>
+            <span className="tile-subtitle">Disaster Recovery &amp; Sync</span>
+          </div>
         </button>
 
         {/* Video 26: Bill Format Engine & Print Viewer (Frames 0115, 0170, 0195, 0215) */}
@@ -833,8 +1009,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)', color: '#fff', fontWeight: 800 }}
           title="Multi-Format Hotel Invoice Viewer (A4 Standard, Day-wise, Summary & A5 Compact)"
         >
-          <span className="tile-icon">🧾</span>
-          <span>Bill Formats</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🧾</span>
+            <span className="tile-badge">4 Formats</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Bill Formats</span>
+            <span className="tile-subtitle">A4, Day-Wise &amp; A5 Print</span>
+          </div>
         </button>
 
         {/* Video 26: Room Check Out Register (/roomcheckouts - Frame 0150) */}
@@ -845,8 +1027,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff', fontWeight: 800 }}
           title="Hotel Room Check Out Register Table (/roomcheckouts)"
         >
-          <span className="tile-icon">📋</span>
-          <span>CheckOut List</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">📋</span>
+            <span className="tile-badge">Archive</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">CheckOut List</span>
+            <span className="tile-subtitle">Historical Folio Archive</span>
+          </div>
         </button>
 
         {/* Video 26: Company Logo, UPI QR & Digital Assets (/comp_pic_form - Frame 0240) */}
@@ -857,8 +1045,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #ca8a04 0%, #a16207 100%)', color: '#fff', fontWeight: 800 }}
           title="Company Logo, UPI QR Code, Seal, and Signature Settings (/comp_pic_form)"
         >
-          <span className="tile-icon">🖼️</span>
-          <span>Logo &amp; Assets</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🖼️</span>
+            <span className="tile-badge">Branding</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Logo &amp; Assets</span>
+            <span className="tile-subtitle">UPI QR &amp; Digital Seal</span>
+          </div>
         </button>
 
         {/* Video 27: Top 20 Features Showcase Tile (Frames 0005-0815) */}
@@ -869,8 +1063,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)', color: '#fff', fontWeight: 800 }}
           title="Top 20 Enterprise Features & Master System Specifications"
         >
-          <span className="tile-icon">🏆</span>
-          <span>Top 20 Features</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🏆</span>
+            <span className="tile-badge">Features</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Top 20 Features</span>
+            <span className="tile-subtitle">PMS Capabilities Tour</span>
+          </div>
         </button>
 
         {/* Video 28: Room & Food Bill GST Report Tile (Frames 0200, 0210, 0270) */}
@@ -881,8 +1081,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)', color: '#fff', fontWeight: 800 }}
           title="Room & Food Bill GST Report (23-Column Tax Audit Sheet)"
         >
-          <span className="tile-icon">📜</span>
-          <span>GST Reports</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">📜</span>
+            <span className="tile-badge">CA Audit</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">GST Reports</span>
+            <span className="tile-subtitle">23-Col GSTR-1 Audit Sheet</span>
+          </div>
         </button>
 
         {/* Video 28: B2B & B2C GST Register Tiles (Frames 0110, 0170) */}
@@ -893,8 +1099,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff', fontWeight: 800 }}
           title="B2B Register (Only GST Customer Invoices - GSTR-1 Table 4)"
         >
-          <span className="tile-icon">🏢</span>
-          <span>B2B GST</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🏢</span>
+            <span className="tile-badge">Table 4</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">B2B GST</span>
+            <span className="tile-subtitle">Corporate Invoices With GST</span>
+          </div>
         </button>
 
         <button
@@ -904,8 +1116,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)', color: '#fff', fontWeight: 800 }}
           title="B2C Register (Without GST Invoices - GSTR-1 Table 7)"
         >
-          <span className="tile-icon">👥</span>
-          <span>B2C GST</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">👥</span>
+            <span className="tile-badge">Table 7</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">B2C GST</span>
+            <span className="tile-subtitle">Retail Guest Invoices</span>
+          </div>
         </button>
 
         {/* Video 28: Master 28-Report Dashboard Tile (Frame 0100) */}
@@ -916,8 +1134,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', color: '#fff', fontWeight: 800 }}
           title="Master Report Dashboard (/report_dashboard - All 28 Reports)"
         >
-          <span className="tile-icon">📊</span>
-          <span>Report Hub</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">📊</span>
+            <span className="tile-badge">28 Reports</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Report Hub</span>
+            <span className="tile-subtitle">Executive Hotel KPI Analytics</span>
+          </div>
         </button>
 
         {/* Video 30: RoomG Training & Support Helpdesk Suite Tiles */}
@@ -928,8 +1152,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff', fontWeight: 800 }}
           title="System Guides & Training Hub (/helps)"
         >
-          <span className="tile-icon">🎥</span>
-          <span>Training Hub</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🎥</span>
+            <span className="tile-badge">Video</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Training Hub</span>
+            <span className="tile-subtitle">Interactive Video Guides</span>
+          </div>
         </button>
 
         <button
@@ -939,8 +1169,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)', color: '#fff', fontWeight: 800 }}
           title="Remote Desktop Assistance with UltraViewer & AnyDesk"
         >
-          <span className="tile-icon">🖥️</span>
-          <span>Remote Support</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🖥️</span>
+            <span className="tile-badge">Helpdesk</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Remote Support</span>
+            <span className="tile-subtitle">AnyDesk &amp; UltraViewer</span>
+          </div>
         </button>
 
         <button
@@ -950,8 +1186,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)', color: '#fff', fontWeight: 800 }}
           title="Raise Support Ticket for IT Engineers"
         >
-          <span className="tile-icon">🎫</span>
-          <span>Support Tickets</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🎫</span>
+            <span className="tile-badge">IT Help</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Support Tickets</span>
+            <span className="tile-subtitle">Engineer Service Desk</span>
+          </div>
         </button>
 
         {/* Video 31: MR & Salesman Wise Commission Tracking & Top 15 PMS Features Tiles */}
@@ -962,8 +1204,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', color: '#fff', fontWeight: 800 }}
           title="Agent & Referral Commission Tracking, Directory & Payout Vouchers (/agent_commission)"
         >
-          <span className="tile-icon">🤝</span>
-          <span>Agent Commissions</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🤝</span>
+            <span className="tile-badge">Referrals</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Agent Commissions</span>
+            <span className="tile-subtitle">Broker Ledger &amp; Payouts</span>
+          </div>
         </button>
 
         <button
@@ -973,8 +1221,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)', color: '#fff', fontWeight: 800 }}
           title="Key Enterprise Features Architecture & 1-Click Launch Hub"
         >
-          <span className="tile-icon">🏆</span>
-          <span>Top 15 Features</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🏆</span>
+            <span className="tile-badge">Core PMS</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Top 15 Features</span>
+            <span className="tile-subtitle">Architecture Launchpad</span>
+          </div>
         </button>
 
         {/* Video 32: Liquor & Bar Management Software Suite Tiles */}
@@ -985,8 +1239,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)', color: '#fff', fontWeight: 800 }}
           title="Bar & Beverage POS, Peg Billing, VAT 13% + SUR 10%, ML Inventory & Stock (/liqour_stock_brand_wise)"
         >
-          <span className="tile-icon">🍷</span>
-          <span>Liquor &amp; Bar</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🍷</span>
+            <span className="tile-badge">Peg POS</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Liquor &amp; Bar</span>
+            <span className="tile-subtitle">VAT 13% + SUR 10% Peg Bill</span>
+          </div>
         </button>
 
         <button
@@ -996,8 +1256,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff', fontWeight: 800 }}
           title="Brand-Wise Beverage Stock Ledger in ML and Bottle Equivalents"
         >
-          <span className="tile-icon">🍾</span>
-          <span>Bar Stock (ML)</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🍾</span>
+            <span className="tile-badge">ML Ledger</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Bar Stock (ML)</span>
+            <span className="tile-subtitle">Brand-Wise ML Inventory</span>
+          </div>
         </button>
 
         {/* Video 33: No-Discount Item & Margin Protection Rules Tiles */}
@@ -1008,8 +1274,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #b45309 0%, #78350f 100%)', color: '#fff', fontWeight: 800 }}
           title="No-Discount Items, Price Integrity, Exemption Groups & Live Bill Margin Protection (/no_discount_master)"
         >
-          <span className="tile-icon">🛡️</span>
-          <span>No-Discount Rules</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🛡️</span>
+            <span className="tile-badge">Integrity</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">No-Discount Rules</span>
+            <span className="tile-subtitle">Margin &amp; Price Guard</span>
+          </div>
         </button>
 
         <button
@@ -1019,8 +1291,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #0f766e 0%, #115e59 100%)', color: '#fff', fontWeight: 800 }}
           title="Live Bill Discount Simulator & Profit Margin Auditor"
         >
-          <span className="tile-icon">💰</span>
-          <span>Margin Protection</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">💰</span>
+            <span className="tile-badge">Auditor</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Margin Protection</span>
+            <span className="tile-subtitle">Bill Discount Simulator</span>
+          </div>
         </button>
 
         {/* Video 34: Stock Report & Inventory Control Tiles */}
@@ -1031,8 +1309,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff', fontWeight: 800 }}
           title="Store-Wise Stock Report, Multi-Godown Balance & Inventory (/store_wise_stock)"
         >
-          <span className="tile-icon">🏬</span>
-          <span>Store-Wise Stock</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🏬</span>
+            <span className="tile-badge">Godowns</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Store-Wise Stock</span>
+            <span className="tile-subtitle">Multi-Godown Balance</span>
+          </div>
         </button>
 
         <button
@@ -1042,8 +1326,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)', color: '#fff', fontWeight: 800 }}
           title="Consolidated Hotel Inventory & Linen Asset Ledger (/inventories)"
         >
-          <span className="tile-icon">📊</span>
-          <span>Stock Report Master</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">📊</span>
+            <span className="tile-badge">Assets</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Stock Report Master</span>
+            <span className="tile-subtitle">Hotel Linen &amp; Inventory</span>
+          </div>
         </button>
 
         {/* Video 35: Banquet Hall Billing & Event/Party Hall Invoice Demo */}
@@ -1054,8 +1344,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', color: '#fff', fontWeight: 800 }}
           title="Banquet Hall Billing, Function Hall Booking & Event Tax Invoice (/roombookings/create)"
         >
-          <span className="tile-icon">🏰</span>
-          <span>Banquet Billing</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🏰</span>
+            <span className="tile-badge">Events</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Banquet Billing</span>
+            <span className="tile-subtitle">Event Invoices &amp; BEO</span>
+          </div>
         </button>
 
         <button
@@ -1065,8 +1361,14 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           style={{ background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)', color: '#fff', fontWeight: 800 }}
           title="Banquet Tax Invoices, GST Breakdown & BEO Schedules"
         >
-          <span className="tile-icon">🧾</span>
-          <span>Event Invoices</span>
+          <div className="tile-top-row">
+            <span className="tile-icon">🧾</span>
+            <span className="tile-badge">BEO Tax</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Event Invoices</span>
+            <span className="tile-subtitle">Function Hall GST Receipts</span>
+          </div>
         </button>
       </div>
 

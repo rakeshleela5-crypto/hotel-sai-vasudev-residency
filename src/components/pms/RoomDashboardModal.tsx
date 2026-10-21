@@ -374,54 +374,54 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
         </div>
 
         {/* Status Filter Badges */}
-        <div className="status-pills-group" style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+        <div className="status-pills-group" style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap', overflowX: 'auto', paddingBottom: '8px' }}>
           <button
             type="button"
             className={`status-btn ${statusFilter === 'all' ? 'active' : ''}`}
             onClick={() => setStatusFilter('all')}
-            style={{ fontSize: '11px', fontWeight: 700, padding: '4px 8px' }}
+            style={{ fontSize: '11px', fontWeight: 700, padding: '4px 8px', whiteSpace: 'nowrap' }}
           >
-            All Statuses ({rooms.length})
+            All Rooms ({rooms.length})
           </button>
           <button
             type="button"
             className={`status-btn btn-vacant ${statusFilter === 'vacant' ? 'active' : ''}`}
             onClick={() => setStatusFilter(statusFilter === 'vacant' ? 'all' : 'vacant')}
-            style={{ fontSize: '11px', fontWeight: 700, padding: '4px 8px', background: statusFilter === 'vacant' ? '#059669' : '#dcfce7', color: statusFilter === 'vacant' ? '#ffffff' : '#15803d' }}
+            style={{ fontSize: '11px', fontWeight: 700, padding: '4px 8px', background: statusFilter === 'vacant' ? '#059669' : '#dcfce7', color: statusFilter === 'vacant' ? '#ffffff' : '#15803d', whiteSpace: 'nowrap' }}
           >
-            🟢 Vacant Clean ({vacantCleanCount})
+            🟢 Vacant / Ready ({vacantCleanCount})
           </button>
           <button
             type="button"
             className={`status-btn btn-check ${statusFilter === 'occupied' ? 'active' : ''}`}
             onClick={() => setStatusFilter(statusFilter === 'occupied' ? 'all' : 'occupied')}
-            style={{ fontSize: '11px', fontWeight: 700, padding: '4px 8px', background: statusFilter === 'occupied' ? '#2563eb' : '#dbeafe', color: statusFilter === 'occupied' ? '#ffffff' : '#1d4ed8' }}
+            style={{ fontSize: '11px', fontWeight: 700, padding: '4px 8px', background: statusFilter === 'occupied' ? '#2563eb' : '#dbeafe', color: statusFilter === 'occupied' ? '#ffffff' : '#1d4ed8', whiteSpace: 'nowrap' }}
           >
             🔵 Occupied ({occupiedCount})
           </button>
           <button
             type="button"
-            className={`status-btn btn-booked ${statusFilter === 'booked' ? 'active' : ''}`}
-            onClick={() => setStatusFilter(statusFilter === 'booked' ? 'all' : 'booked')}
-            style={{ fontSize: '11px', fontWeight: 700, padding: '4px 8px', background: statusFilter === 'booked' ? '#d97706' : '#fef3c7', color: statusFilter === 'booked' ? '#ffffff' : '#b45309' }}
+            className={`status-btn btn-dirty ${statusFilter === 'dirty' ? 'active' : ''}`}
+            onClick={() => setStatusFilter(statusFilter === 'dirty' ? 'all' : 'dirty')}
+            style={{ fontSize: '11px', fontWeight: 700, padding: '4px 8px', background: statusFilter === 'dirty' ? '#dc2626' : '#fee2e2', color: statusFilter === 'dirty' ? '#ffffff' : '#b91c1c', whiteSpace: 'nowrap' }}
           >
-            🟡 Reserved ({reservedCount})
+            🔴 Dirty / Housekeeping ({dirtyCount})
           </button>
           <button
             type="button"
-            className={`status-btn btn-dirty ${statusFilter === 'dirty' ? 'active' : ''}`}
-            onClick={() => setStatusFilter(statusFilter === 'dirty' ? 'all' : 'dirty')}
-            style={{ fontSize: '11px', fontWeight: 700, padding: '4px 8px', background: statusFilter === 'dirty' ? '#dc2626' : '#fee2e2', color: statusFilter === 'dirty' ? '#ffffff' : '#b91c1c' }}
+            className={`status-btn btn-booked ${statusFilter === 'booked' ? 'active' : ''}`}
+            onClick={() => setStatusFilter(statusFilter === 'booked' ? 'all' : 'booked')}
+            style={{ fontSize: '11px', fontWeight: 700, padding: '4px 8px', background: statusFilter === 'booked' ? '#d97706' : '#fef3c7', color: statusFilter === 'booked' ? '#ffffff' : '#b45309', whiteSpace: 'nowrap' }}
           >
-            🔴 Vacant Dirty ({dirtyCount})
+            🟡 Late Checkout / Reserved ({reservedCount})
           </button>
           <button
             type="button"
             className={`status-btn ${statusFilter === 'blocked' ? 'active' : ''}`}
             onClick={() => setStatusFilter(statusFilter === 'blocked' ? 'all' : 'blocked')}
-            style={{ fontSize: '11px', fontWeight: 700, padding: '4px 8px', background: statusFilter === 'blocked' ? '#475569' : '#f1f5f9', color: statusFilter === 'blocked' ? '#ffffff' : '#334155', border: '1px solid #cbd5e1' }}
+            style={{ fontSize: '11px', fontWeight: 700, padding: '4px 8px', background: statusFilter === 'blocked' ? '#475569' : '#f1f5f9', color: statusFilter === 'blocked' ? '#ffffff' : '#334155', border: '1px solid #cbd5e1', whiteSpace: 'nowrap' }}
           >
-            ⚙️ Maintenance ({maintenanceCount})
+            ⚙️ Maintenance / Unconfirmed ({maintenanceCount})
           </button>
         </div>
 
@@ -578,7 +578,7 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
             </button>
           </div>
         ) : (
-          <div className="room-matrix-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '14px' }}>
+          <div className="room-matrix-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: '12px', alignContent: 'start' }}>
             {filteredRooms.map(room => {
               const isOccupied = room.status === 'occupied';
               const isBooked = room.status === 'booked';
@@ -590,30 +590,35 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
 
               // Border and Badge Color
               let borderColor = '#059669'; // Emerald Green
-              let statusLabel = 'Vacant Clean';
+              let statusLabel = 'Ready';
               let badgeBg = '#dcfce7';
               let badgeColor = '#15803d';
+              let statusDot = '#059669';
 
               if (isOccupied) {
                 borderColor = '#2563eb'; // Royal Blue
                 statusLabel = 'Occupied';
                 badgeBg = '#dbeafe';
                 badgeColor = '#1d4ed8';
+                statusDot = '#2563eb';
               } else if (isBooked) {
                 borderColor = '#d97706'; // Amber
-                statusLabel = 'Reserved / Arriving';
+                statusLabel = 'Reserved';
                 badgeBg = '#fef3c7';
                 badgeColor = '#b45309';
+                statusDot = '#d97706';
               } else if (isDirty) {
                 borderColor = '#dc2626'; // Crimson Red
-                statusLabel = 'Vacant Dirty';
+                statusLabel = 'Dirty';
                 badgeBg = '#fee2e2';
                 badgeColor = '#b91c1c';
+                statusDot = '#dc2626';
               } else if (isBlocked) {
                 borderColor = '#475569'; // Slate Grey
-                statusLabel = 'Under Maintenance';
+                statusLabel = 'Blocked';
                 badgeBg = '#f1f5f9';
                 badgeColor = '#334155';
+                statusDot = '#475569';
               }
 
               const isSelected = selectedDrawerRoomNo === room.roomNo;
@@ -626,90 +631,141 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
                     background: '#ffffff',
                     border: `2px solid ${isSelected ? '#f59e0b' : borderColor}`,
                     borderRadius: '8px',
-                    padding: '12px',
+                    padding: '10px',
                     cursor: 'pointer',
                     boxShadow: isSelected ? '0 0 0 3px rgba(245, 158, 11, 0.4)' : '0 2px 5px rgba(0,0,0,0.04)',
                     transition: 'all 0.15s ease-in-out',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    minHeight: '145px'
+                    minHeight: '142px',
+                    boxSizing: 'border-box'
                   }}
                   title="Click to open Room Action Drawer"
                 >
-                  {/* Card Header */}
+                  {/* Header: Room Number (16px bold) + Room Type badge (AC / Non-AC / Suite) + Status Dot */}
                   <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '18px', fontWeight: 900, color: '#1e293b' }}>
-                          Room {room.roomNo}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '4px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <span style={{ fontSize: '16px', fontWeight: 800, color: '#1e293b' }}>
+                          {room.roomNo}
                         </span>
-                        <span style={{ fontSize: '10px', background: '#f1f5f9', color: '#64748b', padding: '1px 5px', borderRadius: '4px', fontWeight: 700 }}>
-                          {room.floor === 0 ? 'Ground Floor' : '1st Floor'}
+                        <span style={{
+                          fontSize: '10px',
+                          background: '#f1f5f9',
+                          color: '#475569',
+                          padding: '1px 5px',
+                          borderRadius: '4px',
+                          fontWeight: 700,
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {room.roomType.replace('Room', '').trim()}
                         </span>
                       </div>
-                      <span style={{ fontSize: '11px', background: badgeBg, color: badgeColor, padding: '2px 7px', borderRadius: '4px', fontWeight: 800 }}>
-                        {statusLabel}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ fontSize: '11px', color: statusDot, lineHeight: 1 }}>●</span>
+                        <span style={{
+                          fontSize: '10px',
+                          background: badgeBg,
+                          color: badgeColor,
+                          padding: '1px 5px',
+                          borderRadius: '4px',
+                          fontWeight: 800,
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {statusLabel}
+                        </span>
+                      </div>
                     </div>
+                  </div>
 
-                    <div style={{ fontSize: '12px', color: '#64748b', marginTop: '3px', fontWeight: 600 }}>
-                      {room.roomType} &bull; ₹{room.tariff.toLocaleString('en-IN')}/nt
-                    </div>
-
-                    {/* Guest Information */}
-                    {isOccupied && room.currentGuest && (
-                      <div style={{ marginTop: '8px', background: '#eff6ff', padding: '6px 8px', borderRadius: '6px', fontSize: '12px', border: '1px solid #bfdbfe' }}>
-                        <div style={{ fontWeight: 800, color: '#1e40af' }}>
+                  {/* Body: Guest Name or Available placeholder, plus Check-In / Checkout time or tariff / KOT balance */}
+                  <div style={{ margin: '6px 0', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    {isOccupied && room.currentGuest ? (
+                      <div style={{ background: '#eff6ff', padding: '5px 7px', borderRadius: '5px', border: '1px solid #bfdbfe' }}>
+                        <div style={{
+                          fontWeight: 800,
+                          color: '#1e40af',
+                          fontSize: '12px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }} title={room.currentGuest.name}>
                           👤 {room.currentGuest.name}
                         </div>
-                        <div style={{ fontSize: '11px', color: '#3b82f6', display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
+                        <div style={{ fontSize: '10px', color: '#3b82f6', display: 'flex', justifyContent: 'space-between', marginTop: '2px', whiteSpace: 'nowrap' }}>
                           <span>Out: {room.currentGuest.checkOutDate}</span>
-                          <span>Ph: {room.currentGuest.phone}</span>
+                          <span>₹{room.tariff}/nt</span>
                         </div>
                         {folio && (
-                          <div style={{ marginTop: '4px', fontWeight: 800, color: folio.balanceDue > 0 ? '#dc2626' : '#059669', fontSize: '11px', display: 'flex', justifyContent: 'space-between' }}>
-                            <span>Balance Due:</span>
+                          <div style={{
+                            marginTop: '2px',
+                            fontWeight: 800,
+                            color: folio.balanceDue > 0 ? '#dc2626' : '#059669',
+                            fontSize: '10px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            <span>Bal Due:</span>
                             <span>₹{folio.balanceDue.toLocaleString('en-IN')}</span>
                           </div>
                         )}
                       </div>
-                    )}
-
-                    {isBooked && room.currentGuest && (
-                      <div style={{ marginTop: '8px', background: '#fffbeb', padding: '6px 8px', borderRadius: '6px', fontSize: '12px', border: '1px solid #fde68a' }}>
-                        <div style={{ fontWeight: 800, color: '#92400e' }}>
+                    ) : isBooked && room.currentGuest ? (
+                      <div style={{ background: '#fffbeb', padding: '5px 7px', borderRadius: '5px', border: '1px solid #fde68a' }}>
+                        <div style={{
+                          fontWeight: 800,
+                          color: '#92400e',
+                          fontSize: '12px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }} title={room.currentGuest.name}>
                           📅 {room.currentGuest.name}
                         </div>
-                        <div style={{ fontSize: '11px', color: '#b45309', marginTop: '2px' }}>
-                          In: {room.currentGuest.checkInDate} &bull; Adv: ₹{room.currentGuest.advancePaid || 0}
+                        <div style={{ fontSize: '10px', color: '#b45309', marginTop: '2px', display: 'flex', justifyContent: 'space-between', whiteSpace: 'nowrap' }}>
+                          <span>In: {room.currentGuest.checkInDate}</span>
+                          <span>Adv: ₹{room.currentGuest.advancePaid || 0}</span>
                         </div>
                       </div>
-                    )}
-
-                    {isDirty && (
-                      <div style={{ marginTop: '8px', background: '#fef2f2', padding: '6px 8px', borderRadius: '6px', fontSize: '11px', color: '#991b1b', border: '1px solid #fecaca' }}>
-                        🧹 Needs Housekeeping &amp; Linen Change (Attendant: {room.assignedStaff || 'Ramesh'})
+                    ) : isDirty ? (
+                      <div style={{ background: '#fef2f2', padding: '5px 7px', borderRadius: '5px', border: '1px solid #fecaca', fontSize: '11px', color: '#991b1b' }}>
+                        <div style={{ fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          🧹 Needs Housekeeping
+                        </div>
+                        <div style={{ fontSize: '10px', color: '#b91c1c', marginTop: '2px', display: 'flex', justifyContent: 'space-between', whiteSpace: 'nowrap' }}>
+                          <span>Linen / Cleaning</span>
+                          <span>₹{room.tariff}/nt</span>
+                        </div>
                       </div>
-                    )}
-
-                    {isBlocked && (
-                      <div style={{ marginTop: '8px', background: '#f8fafc', padding: '6px 8px', borderRadius: '6px', fontSize: '11px', color: '#475569', border: '1px solid #cbd5e1' }}>
-                        ⚙️ {room.maintenanceIssue || 'Blocked for Maintenance'}
+                    ) : isBlocked ? (
+                      <div style={{ background: '#f8fafc', padding: '5px 7px', borderRadius: '5px', border: '1px solid #cbd5e1', fontSize: '11px', color: '#475569' }}>
+                        <div style={{ fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={room.maintenanceIssue || 'Under Maintenance'}>
+                          ⚙️ {room.maintenanceIssue || 'Under Maintenance'}
+                        </div>
+                        <div style={{ fontSize: '10px', color: '#64748b', marginTop: '2px', display: 'flex', justifyContent: 'space-between', whiteSpace: 'nowrap' }}>
+                          <span>Blocked</span>
+                          <span>₹{room.tariff}/nt</span>
+                        </div>
                       </div>
-                    )}
-
-                    {isVacant && (
-                      <div style={{ marginTop: '8px', background: '#f0fdf4', padding: '6px 8px', borderRadius: '6px', fontSize: '11px', color: '#166534', border: '1px solid #bbf7d0' }}>
-                        ✨ Ready for Walk-In or Online Check-In ({room.bedType})
+                    ) : (
+                      <div style={{ background: '#f0fdf4', padding: '5px 7px', borderRadius: '5px', border: '1px solid #bbf7d0', fontSize: '11px', color: '#166534' }}>
+                        <div style={{ fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          ✨ Available
+                        </div>
+                        <div style={{ fontSize: '10px', color: '#15803d', display: 'flex', justifyContent: 'space-between', marginTop: '2px', whiteSpace: 'nowrap' }}>
+                          <span>Ready Clean</span>
+                          <span style={{ fontWeight: 700 }}>₹{room.tariff}/nt</span>
+                        </div>
                       </div>
                     )}
                   </div>
 
-                  {/* Module 1: Context-Aware Direct Room Card Action Buttons */}
-                  <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                  {/* Footer: Quick-action mini buttons (Check-In, KOT, Bill, Clean) with height: 26px; font-size: 11px; white-space: nowrap; */}
+                  <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '4px' }}>
                     {isVacant && (
-                      <div style={{ display: 'flex', gap: '4px' }}>
+                      <>
                         <button
                           type="button"
                           onClick={(e) => {
@@ -719,158 +775,134 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
                           }}
                           style={{
                             flex: 2,
-                            padding: '6px 8px',
+                            height: '26px',
+                            fontSize: '11px',
+                            whiteSpace: 'nowrap',
+                            padding: '0 6px',
                             background: '#059669',
                             color: '#ffffff',
                             border: 'none',
                             borderRadius: '4px',
-                            fontSize: '11px',
                             fontWeight: 800,
                             cursor: 'pointer',
-                            display: 'flex',
+                            display: 'inline-flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            gap: '3px'
+                            gap: '2px'
                           }}
                         >
-                          <span>+</span> Walk-In Check-In
+                          + Check-In
                         </button>
                         <button
                           type="button"
-                          title="Mark room as Dirty (Linen Change)"
+                          title="Mark room as Dirty"
                           onClick={(e) => {
                             e.stopPropagation();
                             PmsStore.updateRoomStatus(room.roomNo, 'dirty');
                           }}
                           style={{
                             flex: 1,
-                            padding: '6px 5px',
+                            height: '26px',
+                            fontSize: '11px',
+                            whiteSpace: 'nowrap',
+                            padding: '0 4px',
                             background: '#fee2e2',
                             color: '#dc2626',
                             border: '1px solid #fca5a5',
                             borderRadius: '4px',
-                            fontSize: '10px',
                             fontWeight: 700,
-                            cursor: 'pointer'
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
                           }}
                         >
-                          Mark Dirty
+                          Dirty
                         </button>
-                        <button
-                          type="button"
-                          title="Block room for maintenance"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const reason = window.prompt(`Enter maintenance issue for Room ${room.roomNo}:`, 'AC & plumbing maintenance');
-                            if (reason) {
-                              PmsStore.updateHousekeepingStatus(room.roomNo, 'Under Maintenance', undefined, undefined, reason);
-                            }
-                          }}
-                          style={{
-                            padding: '6px 7px',
-                            background: '#f1f5f9',
-                            color: '#475569',
-                            border: '1px solid #cbd5e1',
-                            borderRadius: '4px',
-                            fontSize: '10px',
-                            fontWeight: 700,
-                            cursor: 'pointer'
-                          }}
-                        >
-                          Block
-                        </button>
-                      </div>
+                      </>
                     )}
 
                     {isOccupied && (
                       <>
-                        <div style={{ display: 'flex', gap: '4px' }}>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedDrawerRoomNo(room.roomNo);
-                            }}
-                            style={{
-                              flex: 1,
-                              padding: '5px 6px',
-                              background: '#2563eb',
-                              color: '#ffffff',
-                              border: 'none',
-                              borderRadius: '4px',
-                              fontSize: '10px',
-                              fontWeight: 800,
-                              cursor: 'pointer'
-                            }}
-                          >
-                            📂 Open Folio
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedRoomForKot(room);
-                              setIsKotOpen(true);
-                            }}
-                            style={{
-                              flex: 1,
-                              padding: '5px 6px',
-                              background: '#ea580c',
-                              color: '#ffffff',
-                              border: 'none',
-                              borderRadius: '4px',
-                              fontSize: '10px',
-                              fontWeight: 800,
-                              cursor: 'pointer'
-                            }}
-                          >
-                            🍴 + Add Food
-                          </button>
-                        </div>
-                        <div style={{ display: 'flex', gap: '4px' }}>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedRoomForShift(room.roomNo);
-                              setIsRoomShiftOpen(true);
-                            }}
-                            style={{
-                              flex: 1,
-                              padding: '5px 6px',
-                              background: '#0891b2',
-                              color: '#ffffff',
-                              border: 'none',
-                              borderRadius: '4px',
-                              fontSize: '10px',
-                              fontWeight: 800,
-                              cursor: 'pointer'
-                            }}
-                          >
-                            🔄 Swap Room
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedRoomForCheckout(room);
-                              setIsCheckoutOpen(true);
-                            }}
-                            style={{
-                              flex: 1,
-                              padding: '5px 6px',
-                              background: '#dc2626',
-                              color: '#ffffff',
-                              border: 'none',
-                              borderRadius: '4px',
-                              fontSize: '10px',
-                              fontWeight: 800,
-                              cursor: 'pointer'
-                            }}
-                          >
-                            🧾 Check-Out &amp; Bill
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedRoomForKot(room);
+                            setIsKotOpen(true);
+                          }}
+                          style={{
+                            flex: 1,
+                            height: '26px',
+                            fontSize: '11px',
+                            whiteSpace: 'nowrap',
+                            padding: '0 4px',
+                            background: '#ea580c',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          title="Add KOT / Food Order"
+                        >
+                          + KOT
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedRoomForCheckout(room);
+                            setIsCheckoutOpen(true);
+                          }}
+                          style={{
+                            flex: 1,
+                            height: '26px',
+                            fontSize: '11px',
+                            whiteSpace: 'nowrap',
+                            padding: '0 4px',
+                            background: '#dc2626',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          title="Checkout & Bill"
+                        >
+                          Bill
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedDrawerRoomNo(room.roomNo);
+                          }}
+                          style={{
+                            height: '26px',
+                            fontSize: '11px',
+                            whiteSpace: 'nowrap',
+                            padding: '0 5px',
+                            background: '#2563eb',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          title="Open Room Folio Details"
+                        >
+                          Folio
+                        </button>
                       </>
                     )}
 
@@ -888,21 +920,23 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
                         }}
                         style={{
                           width: '100%',
-                          padding: '6px 8px',
+                          height: '26px',
+                          fontSize: '11px',
+                          whiteSpace: 'nowrap',
+                          padding: '0 6px',
                           background: '#059669',
                           color: '#ffffff',
                           border: 'none',
                           borderRadius: '4px',
-                          fontSize: '11px',
                           fontWeight: 800,
                           cursor: 'pointer',
-                          display: 'flex',
+                          display: 'inline-flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           gap: '4px'
                         }}
                       >
-                        ✨ Mark Cleaned &amp; Inspected
+                        ✨ Clean Room
                       </button>
                     )}
 
@@ -915,63 +949,52 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
                         }}
                         style={{
                           width: '100%',
-                          padding: '6px 8px',
+                          height: '26px',
+                          fontSize: '11px',
+                          whiteSpace: 'nowrap',
+                          padding: '0 6px',
                           background: '#0284c7',
                           color: '#ffffff',
                           border: 'none',
                           borderRadius: '4px',
-                          fontSize: '11px',
                           fontWeight: 800,
-                          cursor: 'pointer'
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
                         }}
                       >
-                        🔧 Release Block &amp; Mark Clean
+                        🔧 Release / Clean
                       </button>
                     )}
 
                     {isBooked && (
-                      <div style={{ display: 'flex', gap: '4px' }}>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedRoomForCheckIn(room);
-                            setIsCheckInOpen(true);
-                          }}
-                          style={{
-                            flex: 1,
-                            padding: '6px 6px',
-                            background: '#d97706',
-                            color: '#ffffff',
-                            border: 'none',
-                            borderRadius: '4px',
-                            fontSize: '10px',
-                            fontWeight: 800,
-                            cursor: 'pointer'
-                          }}
-                        >
-                          🚪 Check-In Guest
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedDrawerRoomNo(room.roomNo);
-                          }}
-                          style={{
-                            padding: '6px 8px',
-                            background: '#f1f5f9',
-                            color: '#334155',
-                            border: '1px solid #cbd5e1',
-                            borderRadius: '4px',
-                            fontSize: '10px',
-                            fontWeight: 700,
-                            cursor: 'pointer'
-                          }}
-                        >
-                          Folio
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedRoomForCheckIn(room);
+                          setIsCheckInOpen(true);
+                        }}
+                        style={{
+                          width: '100%',
+                          height: '26px',
+                          fontSize: '11px',
+                          whiteSpace: 'nowrap',
+                          padding: '0 6px',
+                          background: '#d97706',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '4px',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        + Check-In Guest
+                      </button>
                     )}
                   </div>
                 </div>

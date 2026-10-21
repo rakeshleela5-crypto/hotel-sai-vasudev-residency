@@ -258,6 +258,20 @@
   flex-direction: column;
   border-right: 1px solid #343a40;
   box-sizing: border-box;
+  transition: transform 0.25s ease, width 0.25s ease, padding 0.25s ease, left 0.25s ease;
+}
+
+@media (min-width: 1025px) {
+  .pms-window:not(.is-mobile-viewport) .pms-sidebar:not(.open) {
+    width: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border-right: none !important;
+  }
+}
+
+.pms-sidebar-backdrop {
+  display: none;
 }
 
 .pms-nav-item {
@@ -327,8 +341,8 @@
 
 /* Top Room Dashboard Filter / Status Bar (Frames 0005, 0020) */
 .room-status-bar {
-  background: #e9ecef;
-  padding: 8px 12px;
+  background: #ffffff;
+  padding: 10px 14px;
   border-radius: 4px;
   display: flex;
   align-items: center;
@@ -336,13 +350,21 @@
   flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 12px;
-  border: 1px solid #dee2e6;
+  border: 1px solid #e2e8f0;
 }
 
 .status-pills-group {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.status-pills-group::-webkit-scrollbar {
+  display: none;
 }
 
 .status-btn {
@@ -418,8 +440,10 @@
 /* Room Matrix Grid (Frames 0005, 0020, 0040) */
 .room-matrix-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
   gap: 12px;
+  align-content: start;
+  width: 100%;
   padding-bottom: 20px;
 }
 
@@ -553,32 +577,109 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 14px;
-  max-width: 1050px;
-  margin: 0 auto 30px auto;
+  max-width: 1100px;
+  margin: 0 auto 24px auto;
+  width: 100%;
+}
+
+@media (max-width: 1199px) {
+  .home-tiles-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (max-width: 767px) {
+  .home-tiles-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
+
+.pms-window.is-mobile-viewport .home-tiles-grid {
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 10px !important;
 }
 
 .hub-tile-btn {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-  border-radius: 5px;
-  font-size: 14px;
-  font-weight: 700;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100px;
+  max-height: 125px;
+  padding: 14px;
+  border-radius: 8px;
+  box-sizing: border-box;
   color: #ffffff;
   border: none;
   cursor: pointer;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  text-align: left;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
 }
 
 .hub-tile-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+}
+
+.hub-tile-btn .tile-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
 }
 
 .hub-tile-btn .tile-icon {
-  font-size: 20px;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.hub-tile-btn .tile-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.25);
+  color: #ffffff;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+
+.hub-tile-btn.tile-new-kot .tile-badge,
+.hub-tile-btn.tile-stock-issue .tile-badge {
+  background: rgba(0, 0, 0, 0.15);
+  color: #1a1e22;
+}
+
+.hub-tile-btn .tile-bottom-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.hub-tile-btn .tile-title {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.2px;
+}
+
+.hub-tile-btn .tile-subtitle {
+  font-size: 11px;
+  opacity: 0.88;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
 }
 
 /* Exact Hub Colors from Frame 0100 */
@@ -777,61 +878,6 @@
    Matches RoomG Frames 0138 (1-column stacked mobile tiles) and 0145 (2-column room cards)
    ========================================================================== */
 
-@media (max-width: 900px) {
-  .home-tiles-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-}
-
-@media (max-width: 540px) {
-  .home-tiles-grid {
-    grid-template-columns: 1fr;
-    gap: 8px;
-    padding: 0 4px;
-  }
-  
-  .hub-tile-btn {
-    padding: 12px 14px;
-    font-size: 13px;
-  }
-
-  .pms-header {
-    height: auto;
-    padding: 8px 10px;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .pms-header-left {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .pms-header-search {
-    margin-left: 0;
-    width: 100%;
-  }
-
-  .pms-search-input {
-    width: 100%;
-    flex: 1;
-  }
-
-  .pms-header-right {
-    width: 100%;
-    justify-content: flex-end;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  /* 2-Column Mobile Room Matrix (Frame 0145) */
-  .pms-room-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 8px !important;
-  }
-}
-
 /* Video 21 Quick Action Buttons */
 .tile-users {
   background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
@@ -847,6 +893,228 @@
 
 .tile-mobile-preview {
   background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+}
+
+/* ========================================================================= */
+/* MODULE 7: MOBILE RESPONSIVE DRAWER, COMPACT HEADER & 1-COL FORMS          */
+/* ========================================================================= */
+
+/* Slide-Over Drawer Sidebar on screens < 1024px or .is-mobile-viewport */
+@media (max-width: 1024px) {
+  .pms-sidebar {
+    position: fixed !important;
+    left: -240px !important;
+    top: 56px !important;
+    height: calc(100vh - 56px) !important;
+    width: 240px !important;
+    z-index: 1000 !important;
+    transition: left 0.25s ease !important;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.45) !important;
+  }
+
+  .pms-sidebar.open {
+    left: 0 !important;
+  }
+
+  .pms-sidebar-backdrop {
+    display: none !important;
+  }
+
+  .pms-sidebar-backdrop.open {
+    display: block !important;
+    position: fixed;
+    inset: 56px 0 0 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 999;
+    backdrop-filter: blur(2px);
+    cursor: pointer;
+  }
+}
+
+.pms-window.is-mobile-viewport .pms-sidebar {
+  position: fixed !important;
+  left: -240px !important;
+  top: 52px !important;
+  height: calc(100vh - 52px) !important;
+  width: 240px !important;
+  z-index: 1000 !important;
+  transition: left 0.25s ease !important;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.45) !important;
+}
+
+.pms-window.is-mobile-viewport .pms-sidebar.open {
+  left: 0 !important;
+}
+
+.pms-window.is-mobile-viewport .pms-sidebar-backdrop {
+  display: none !important;
+}
+
+.pms-window.is-mobile-viewport .pms-sidebar-backdrop.open {
+  display: block !important;
+  position: fixed;
+  inset: 52px 0 0 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 999;
+  backdrop-filter: blur(2px);
+  cursor: pointer;
+}
+
+/* Compact Mobile Header (Height 52px, Padding 0 10px, Single-Line Scrollable Right Toolbar) */
+@media (max-width: 768px) {
+  .pms-header {
+    height: 52px !important;
+    padding: 0 10px !important;
+    gap: 8px !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .pms-brand-main {
+    font-size: 13px !important;
+  }
+
+  .pms-brand-sub {
+    font-size: 8px !important;
+  }
+
+  .pms-body {
+    height: calc(100vh - 52px) !important;
+  }
+
+  .pms-header-search {
+    display: none !important;
+  }
+
+  .pms-header-right {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    gap: 6px !important;
+    flex-wrap: nowrap !important;
+  }
+}
+
+.pms-window.is-mobile-viewport .pms-header {
+  height: 52px !important;
+  padding: 0 10px !important;
+  gap: 8px !important;
+  flex-wrap: nowrap !important;
+}
+
+.pms-window.is-mobile-viewport .pms-brand-main {
+  font-size: 13px !important;
+}
+
+.pms-window.is-mobile-viewport .pms-brand-sub {
+  font-size: 8px !important;
+}
+
+.pms-window.is-mobile-viewport .pms-body {
+  height: calc(100vh - 52px) !important;
+}
+
+.pms-window.is-mobile-viewport .pms-header-search {
+  display: none !important;
+}
+
+.pms-window.is-mobile-viewport .pms-header-right {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+  gap: 6px !important;
+  flex-wrap: nowrap !important;
+}
+
+/* Single-Column Stack for Checkout & Billing Form */
+.pms-checkout-kyc-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1.2fr 1.2fr 1.5fr;
+  gap: 8px;
+}
+
+@media (max-width: 1024px) {
+  .pms-checkout-kyc-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .pms-checkout-kyc-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.pms-window.is-mobile-viewport .pms-checkout-kyc-grid {
+  grid-template-columns: 1fr !important;
+}
+
+.pms-checkout-4cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.3fr 1.2fr;
+  gap: 10px;
+  align-items: stretch;
+}
+
+@media (max-width: 1024px) {
+  .pms-checkout-4cards-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .pms-checkout-4cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+}
+
+.pms-window.is-mobile-viewport .pms-checkout-4cards-grid {
+  grid-template-columns: 1fr !important;
+  gap: 12px !important;
+}
+
+.pms-checkout-corporate-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 1024px) {
+  .pms-checkout-corporate-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .pms-checkout-corporate-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.pms-window.is-mobile-viewport .pms-checkout-corporate-grid {
+  grid-template-columns: 1fr !important;
+}
+
+/* Touch-Friendly Controls on Mobile */
+@media (max-width: 768px) {
+  .pms-form-body input,
+  .pms-form-body select,
+  .pms-form-body button,
+  .form-input-pms,
+  .form-select-pms {
+    min-height: 40px !important;
+    font-size: 14px !important;
+  }
+}
+
+.pms-window.is-mobile-viewport .pms-form-body input,
+.pms-window.is-mobile-viewport .pms-form-body select,
+.pms-window.is-mobile-viewport .pms-form-body button,
+.pms-window.is-mobile-viewport .form-input-pms,
+.pms-window.is-mobile-viewport .form-select-pms {
+  min-height: 40px !important;
+  font-size: 14px !important;
 }
 
 /* ========================================================================= */

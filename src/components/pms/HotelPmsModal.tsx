@@ -69,6 +69,7 @@ interface HotelPmsModalProps {
 export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<'matrix' | 'hub'>('matrix');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isMobileMode, setIsMobileMode] = useState(false);
   const [masterMenuOpen, setMasterMenuOpen] = useState(false);
   const [entryMenuOpen, setEntryMenuOpen] = useState(true);
   const [reportMenuOpen, setReportMenuOpen] = useState(false);
@@ -561,7 +562,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   return (
     <>
       <div className="pms-overlay" onClick={onClose}>
-        <div className="pms-window" onClick={e => e.stopPropagation()}>
+        <div className={`pms-window ${isMobileMode ? 'is-mobile-viewport' : ''}`} onClick={e => e.stopPropagation()}>
           {/* Master Header matching Video 01 & 02 */}
           {/* Master Header matching Video 01 & 02 */}
           <header className="pms-header">
@@ -675,16 +676,26 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                 <span>Shirdi (Main)</span>
               </button>
 
-              {/* Video 21: Mobile Responsive View Emulator Toggle */}
+              {/* Video 21: Mobile Responsive View Toggle */}
               <button
                 type="button"
-                onClick={() => setIsDevicePreviewOpen(true)}
-                title="Click to test PMS on mobile / tablet responsive emulator"
+                onClick={() => {
+                  const next = !isMobileMode;
+                  setIsMobileMode(next);
+                  if (next) {
+                    setSidebarOpen(false);
+                  }
+                }}
+                title={isMobileMode ? "Switch back to Desktop View" : "Toggle Mobile Responsive View"}
                 className="pms-header-btn"
-                style={{ background: '#7c3aed', color: '#ffffff' }}
+                style={{
+                  background: isMobileMode ? '#e11d48' : '#7c3aed',
+                  color: '#ffffff',
+                  boxShadow: isMobileMode ? '0 0 10px rgba(225, 29, 72, 0.6)' : undefined
+                }}
               >
                 <span>📱</span>
-                <span>Mobile View</span>
+                <span>{isMobileMode ? 'Exit Mobile' : 'Mobile View'}</span>
               </button>
 
               {/* Video 22: WhatsApp Validity & Gateway Status Badge */}
@@ -1033,9 +1044,14 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
 
           {/* Master PMS Body Layout */}
           <div className="pms-body">
+            {/* Slide-over backdrop overlay for mobile drawer */}
+            <div
+              className={`pms-sidebar-backdrop ${sidebarOpen ? 'open' : ''}`}
+              onClick={() => setSidebarOpen(false)}
+            />
+
             {/* Left Dark Sidebar matching Frames 0005, 0020, 0065, 0090 */}
-            {sidebarOpen && (
-              <aside className="pms-sidebar">
+            <aside className={`pms-sidebar ${sidebarOpen ? 'open' : ''}`}>
                 <div
                   className={`pms-nav-item ${activeTab === 'matrix' ? 'active' : ''}`}
                   onClick={() => checkModuleAccess('Hotel Module', 'Room Dashboard', () => setActiveTab('matrix'))}
@@ -1488,7 +1504,6 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                   </div>
                 </div>
               </aside>
-            )}
 
             {/* Main Dynamic View: Matrix Grid vs Home Hub */}
             {activeTab === 'matrix' ? (
