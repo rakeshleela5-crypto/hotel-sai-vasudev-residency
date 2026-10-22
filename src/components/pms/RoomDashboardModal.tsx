@@ -476,6 +476,27 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
 
           <button
             type="button"
+            onClick={() => setIsDirtyModalOpen(true)}
+            style={{
+              background: '#dc2626',
+              color: '#ffffff',
+              border: 'none',
+              padding: '5px 10px',
+              borderRadius: '5px',
+              fontSize: '11px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+            title="Mark Room Dirty / Clean Status (/markdirty/create)"
+          >
+            🧽 Status Toggle
+          </button>
+
+          <button
+            type="button"
             onClick={() => setIsPettyExpenseOpen(true)}
             style={{
               background: '#1e293b',
@@ -1449,6 +1470,15 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
                   style={{ padding: '10px', background: '#f1f5f9', color: '#334155', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
                 >
                   🛠️ Block for Maintenance (OOO)
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsDirtyModalOpen(true)}
+                  style={{ padding: '10px', background: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
+                  title="Open Mark Dirty / Housekeeping Status Manager"
+                >
+                  🧽 Mark Room Dirty / Change Clean Status
                 </button>
 
                 {isBlockingMaintenance && (

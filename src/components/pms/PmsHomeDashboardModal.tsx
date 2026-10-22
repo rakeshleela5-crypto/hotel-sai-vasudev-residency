@@ -239,6 +239,19 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
       case 'restaurant_table':
         setIsTableDashboardOpen(true);
         break;
+      case 'shift_table':
+      case 'table_shift':
+        setIsShiftTableOpen(true);
+        break;
+      case 'nc_kot_register':
+      case 'nc_kot':
+        setIsNcKotRegisterOpen(true);
+        break;
+      case 'table_master':
+      case 'restaurant_tables':
+      case 'manage_tables':
+        setIsTableMasterOpen(true);
+        break;
       case 'fb_report':
         setGstReportTab('consolidated');
         setIsGstReportsOpen(true);
@@ -384,6 +397,19 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         break;
       case 'restaurant_table':
         setIsTableDashboardOpen(true);
+        break;
+      case 'shift_table':
+      case 'table_shift':
+        setIsShiftTableOpen(true);
+        break;
+      case 'nc_kot_register':
+      case 'nc_kot':
+        setIsNcKotRegisterOpen(true);
+        break;
+      case 'table_master':
+      case 'restaurant_tables':
+      case 'manage_tables':
+        setIsTableMasterOpen(true);
         break;
       case 'purchase_entry':
         setIsPurchaseOpen(true);

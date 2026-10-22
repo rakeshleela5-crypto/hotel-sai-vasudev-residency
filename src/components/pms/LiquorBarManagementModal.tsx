@@ -145,6 +145,158 @@ export const LiquorBarManagementModal: React.FC<LiquorBarManagementModalProps> =
     }
   }, [isOpen]);
 
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  const handleCopyStocks = () => {
+    const filtered = stocks.filter(s => s.brand.toLowerCase().includes(searchQuery.toLowerCase()));
+    const text = filtered
+      .map((s, idx) => `${idx + 1}\t${s.brand}\t${s.bottleMl || 750} ML\t${s.stockInMl} ML\t${s.stockOutMl} ML\t${s.closingMl} ML\t${s.closingBottel} Btls`)
+      .join('\n');
+    navigator.clipboard.writeText(`S.No\tBrand Name\tBottle Size\tStock In ML\tStock Out ML\tClosing ML\tClosing Bottles\n${text}`);
+    alert('Stock ledger copied to clipboard!');
+  };
+
+  const handleExportCsv = () => {
+    const headers = ['S.No', 'Brand Name', 'Bottle Size (ML)', 'Stock In (ML)', 'Stock Out (ML)', 'Closing (ML)', 'Closing (Bottles)'];
+    const filtered = stocks.filter(s => s.brand.toLowerCase().includes(searchQuery.toLowerCase()));
+    const rows = filtered.map((s, idx) => [
+      idx + 1,
+      `"${s.brand}"`,
+      s.bottleMl || 750,
+      s.stockInMl,
+      s.stockOutMl,
+      s.closingMl,
+      s.closingBottel
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e: any[]) => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `Bar_Liquor_Excise_Ledger_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleExportItemRegister = () => {
+    const headers = ['S.No', 'Item Name', 'Brand', 'Barcode', 'Group', 'Rate', 'MRP', 'Purchase Rate', 'Unit', 'Conversion (ML)', 'VAT %', 'Surcharge %'];
+    const rows = items.map(i => [
+      i.sNo,
+      `"${i.name}"`,
+      `"${i.brandName}"`,
+      `"${i.barcodeNo}"`,
+      `"${i.group}"`,
+      i.rate,
+      i.mrp,
+      i.purchaseRate,
+      `"${i.unit}"`,
+      i.conversionMl,
+      i.vatPercentage,
+      i.surchargePercentage
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `Bar_Liquor_Item_Register_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const content = event.target?.result as string;
+        if (file.name.endsWith('.json')) {
+          const parsed = JSON.parse(content);
+          if (Array.isArray(parsed)) {
+            parsed.forEach(p => PmsStore.saveLiquorItem(p));
+            loadData();
+            alert(`Successfully imported ${parsed.length} liquor items!`);
+          }
+        } else {
+          const lines = content.split('\n').filter(l => l.trim().length > 0);
+          let imported = 0;
+          const startIndex = lines[0].toLowerCase().includes('name') ? 1 : 0;
+          for (let i = startIndex; i < lines.length; i++) {
+            const cols = lines[i].split(',').map(c => c.trim().replace(/^["']|["']$/g, ''));
+            if (cols.length >= 2 && (cols[1] || cols[0])) {
+              const newItem: PmsLiquorItem = {
+                id: `lq-imp-${Date.now()}-${i}`,
+                sNo: items.length + imported + 1,
+                name: cols[1] || cols[0],
+                brandName: cols[2] || 'Imported Brand',
+                barcodeNo: cols[3] || String(10080 + imported),
+                group: 'Liquor',
+                headGroup: 'Restaurant_Item',
+                mrp: Number(cols[5]) || 250,
+                rate: Number(cols[5]) || 250,
+                purchaseRate: Number(cols[6]) || 20,
+                unit: cols[7] || '30 ml',
+                conversionMl: Number(cols[8]) || 30,
+                taxType: 'VAT 13%',
+                vatPercentage: 13,
+                surchargePercentage: 10,
+                active: true
+              };
+              PmsStore.saveLiquorItem(newItem);
+              imported++;
+            }
+          }
+          loadData();
+          alert(`Imported ${imported} items successfully from ${file.name}!`);
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to parse import file. Please upload valid CSV or JSON.');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleAddNewUnit = () => {
+    const primaryUnit = window.prompt('Enter Primary Unit Name (e.g. 750 ML Bottle, 375 ML Half, 650 ML Beer):');
+    if (!primaryUnit) return;
+    const conversionStr = window.prompt('Enter ML Conversion factor (e.g. 750, 375, 650):', '750');
+    const conversion = Number(conversionStr) || 750;
+    const altUnit = window.prompt('Enter Alternate Unit Name:', 'ML') || 'ML';
+    
+    PmsStore.saveLiquorUnit({
+      id: `unit-${Date.now()}`,
+      sNo: units.length + 1,
+      primaryUnitName: primaryUnit.trim(),
+      conversion,
+      alternateUnitName: altUnit.trim()
+    });
+    loadData();
+    alert(`Unit "${primaryUnit}" created.`);
+  };
+
+  const handleAddNewCompany = () => {
+    const compName = window.prompt('Enter Liquor Brand / Company Name:');
+    if (!compName) return;
+    const disStr = window.prompt('Enter standard discount % (optional):', '0');
+    const dis = Number(disStr) || 0;
+    
+    PmsStore.saveLiquorBrand({
+      id: `brand-${Date.now()}`,
+      sNo: brands.length + 1,
+      name: compName.trim(),
+      discountPercentage: dis,
+      status: 'ACTIVE'
+    });
+    loadData();
+    alert(`Brand / Company "${compName}" saved.`);
+  };
+
   if (!isOpen) return null;
 
   // POS Calculations matching Frame 0260
@@ -536,16 +688,16 @@ export const LiquorBarManagementModal: React.FC<LiquorBarManagementModalProps> =
               {/* Action Toolbar matching Frame 0300 */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 10 }}>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <button type="button" onClick={() => alert('Copied to clipboard!')} style={{ background: '#334155', color: '#fff', border: '1px solid #475569', padding: '6px 12px', borderRadius: 3, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                  <button type="button" onClick={handleCopyStocks} style={{ background: '#334155', color: '#fff', border: '1px solid #475569', padding: '6px 12px', borderRadius: 3, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                     Copy
                   </button>
-                  <button type="button" onClick={() => alert('CSV Export generated!')} style={{ background: '#334155', color: '#fff', border: '1px solid #475569', padding: '6px 12px', borderRadius: 3, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                  <button type="button" onClick={handleExportCsv} style={{ background: '#334155', color: '#fff', border: '1px solid #475569', padding: '6px 12px', borderRadius: 3, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                     CSV
                   </button>
-                  <button type="button" onClick={() => alert('Excel (.xlsx) Export generated!')} style={{ background: '#334155', color: '#fff', border: '1px solid #475569', padding: '6px 12px', borderRadius: 3, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                  <button type="button" onClick={handleExportCsv} style={{ background: '#334155', color: '#fff', border: '1px solid #475569', padding: '6px 12px', borderRadius: 3, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                     Excel
                   </button>
-                  <button type="button" onClick={() => alert('PDF Report downloaded!')} style={{ background: '#334155', color: '#fff', border: '1px solid #475569', padding: '6px 12px', borderRadius: 3, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                  <button type="button" onClick={() => window.print()} style={{ background: '#334155', color: '#fff', border: '1px solid #475569', padding: '6px 12px', borderRadius: 3, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                     PDF
                   </button>
                   <button type="button" onClick={() => window.print()} style={{ background: '#334155', color: '#fff', border: '1px solid #475569', padding: '6px 12px', borderRadius: 3, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
@@ -906,18 +1058,27 @@ export const LiquorBarManagementModal: React.FC<LiquorBarManagementModalProps> =
                   </button>
                   <button
                     type="button"
-                    onClick={() => alert('Item Register: complete list of all food and beverage products.')}
+                    onClick={handleExportItemRegister}
                     style={{ background: '#1e293b', color: '#fff', border: '1px solid #475569', padding: '6px 14px', borderRadius: 4, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                    title="Export Complete Food & Beverage Item Register to CSV"
                   >
                     Register
                   </button>
                   <button
                     type="button"
-                    onClick={() => alert('Import items from Excel spreadsheet.')}
+                    onClick={handleImportClick}
                     style={{ background: '#f59e0b', color: '#0f172a', border: 'none', padding: '6px 14px', borderRadius: 4, fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
+                    title="Import items from CSV / JSON file"
                   >
                     Import
                   </button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileImport}
+                    accept=".csv,.json"
+                    style={{ display: 'none' }}
+                  />
                 </div>
 
                 <div style={{ fontSize: 12, color: '#94a3b8' }}>
@@ -1098,7 +1259,7 @@ export const LiquorBarManagementModal: React.FC<LiquorBarManagementModalProps> =
                   <h3 style={{ margin: 0, fontSize: 13, fontWeight: 800, color: '#38bdf8' }}>
                     Unit Master &amp; ML Conversion (/units)
                   </h3>
-                  <button type="button" onClick={() => alert('Add New Unit')} style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: 3, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                  <button type="button" onClick={handleAddNewUnit} style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: 3, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                     + Add New Unit
                   </button>
                 </div>
@@ -1130,7 +1291,7 @@ export const LiquorBarManagementModal: React.FC<LiquorBarManagementModalProps> =
                   <h3 style={{ margin: 0, fontSize: 13, fontWeight: 800, color: '#38bdf8' }}>
                     Company / Brand Master (/company)
                   </h3>
-                  <button type="button" onClick={() => alert('Add New Company')} style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: 3, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                  <button type="button" onClick={handleAddNewCompany} style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: 3, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                     + Add New Company
                   </button>
                 </div>
