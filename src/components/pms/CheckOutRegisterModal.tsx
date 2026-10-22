@@ -83,9 +83,8 @@ export const CheckOutRegisterModal: React.FC<CheckOutRegisterModalProps> = ({
         operatorName: currentUser.userName
       });
 
-      const updated = checkouts.filter(c => c.invoiceNo !== invoiceNo);
-      setCheckouts(updated);
-      localStorage.setItem('hotel_pms_checkouts', JSON.stringify(updated));
+      PmsStore.deleteCheckout(invoiceNo);
+      setCheckouts(PmsStore.getCheckouts());
 
       setAntiTheftAlert({
         show: true,

@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Room, BookingResponse, AvailabilityCheckResponse } from '../types';
 import { hotelApi } from '../services/api';
+import { PmsStore } from '../services/pmsStore';
 import { getTodayIST, addDays, calculateNights, validateIndianPhone, validateEmail } from '../utils/validation';
 
 interface BookingModalProps {
@@ -183,6 +184,68 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         payment_method: paymentMethod,
         special_requests: specialRequests
       });
+
+      // Synchronize Public Online Booking directly into Front Desk PMS Engine
+      try {
+        const refNo = response.booking_ref || `WEB-${Date.now().toString().slice(-6)}`;
+        const assignedRoomNo = selectedRoom.name.replace(/\D/g, '') || String(100 + selectedRoom.id);
+        const mappedMode: 'Cash' | 'UPI' | 'Card' | 'Bank Transfer' | 'Online' = 
+          paymentMethod.toLowerCase().includes('cash') ? 'Cash' :
+          paymentMethod.toLowerCase().includes('upi') ? 'UPI' :
+          paymentMethod.toLowerCase().includes('card') ? 'Card' : 'Online';
+
+        const pmsBooking: import('../types/pmsModels').PmsBooking = {
+          bookingNo: refNo,
+          voucherNo: refNo.replace(/\D/g, '').slice(-4) || '101',
+          bookingDate: new Date().toLocaleDateString('en-GB').replace(/\//g, '-'),
+          bookingTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+          numberOfDays: totalNights,
+          numberOfGuests: adults + children,
+          businessSource: 'Online',
+          package: 'ROOM ONLY || 0',
+          checkInDate: checkIn,
+          checkInTime: '11:00 AM',
+          checkOutDate: checkOut,
+          checkOutTime: '10:00 AM',
+          guestName: guestName.trim(),
+          mobile: phoneVal.sanitized,
+          email: guestEmail.trim(),
+          companyName: companyName.trim(),
+          gstNo: gstin.trim(),
+          totalAmount: grandTotal,
+          bookingAmount: advanceDeposit,
+          paymentMode: mappedMode,
+          status: advanceDeposit > 0 ? 'Confirmed' : 'Unconfirmed',
+          rooms: [
+            {
+              roomNo: assignedRoomNo,
+              roomType: selectedRoom.room_type || selectedRoom.name,
+              tariff: selectedRoom.price_per_night
+            }
+          ],
+          specialRequests,
+          createdAt: new Date().toISOString()
+        };
+        PmsStore.saveBooking(pmsBooking);
+
+        if (advanceDeposit > 0) {
+          PmsStore.saveAdvanceReceipt({
+            receiptNo: `AR-WEB-${Date.now().toString().slice(-4)}`,
+            voucherNo: `${Date.now().toString().slice(-4)}`,
+            date: new Date().toLocaleDateString('en-GB').replace(/\//g, '-'),
+            time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+            voucherName: 'Advance_Receipt',
+            roomNo: assignedRoomNo,
+            guestName: guestName.trim(),
+            mobile: phoneVal.sanitized,
+            amount: advanceDeposit,
+            paymentMode: mappedMode,
+            remark: `Online Website Booking Advance Deposit (Ref: ${refNo})`
+          });
+        }
+      } catch (pmsSyncErr) {
+        console.warn('[BookingModal] Note: Local PMS booking queue sync:', pmsSyncErr);
+      }
 
       setBookingResult(response);
     } catch (err: unknown) {

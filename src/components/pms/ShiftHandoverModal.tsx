@@ -65,6 +65,20 @@ export const ShiftHandoverModal: React.FC<ShiftHandoverModalProps> = ({ isOpen, 
               className="px-3 py-1.5 bg-white border border-gray-300 rounded text-xs font-semibold text-gray-800 focus:outline-none focus:border-blue-500 w-32 shadow-2xs"
               placeholder="Shift Date"
             />
+            <button
+              type="button"
+              onClick={() => handleRefresh(shiftType)}
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded shadow-xs cursor-pointer transition-colors"
+            >
+              OK
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShiftDate('19-07-2025'); setHandoverRecord(PmsStore.getShiftHandoverData('19-07-2025', shiftType)); }}
+              className="text-[11px] text-blue-700 underline font-medium cursor-pointer"
+            >
+              Benchmark
+            </button>
             <div className="flex items-center bg-white rounded border border-gray-300 p-0.5 shadow-2xs">
               {(['Morning', 'Evening', 'Night'] as const).map(type => (
                 <button

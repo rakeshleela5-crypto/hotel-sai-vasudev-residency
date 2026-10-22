@@ -8,13 +8,34 @@ interface FbbReportModalProps {
 
 export const FbbReportModal: React.FC<FbbReportModalProps> = ({ isOpen, onClose }) => {
   const foodBills = PmsStore.getFoodBills();
-  const [selectedDate, setSelectedDate] = useState('2025-06-07');
+  const [selectedDate, setSelectedDate] = useState('');
   const [selectedRoom, setSelectedRoom] = useState('all');
+
+  // Extract all distinct room and table numbers across PMS
+  const allRooms = React.useMemo(() => {
+    const set = new Set<string>();
+    PmsStore.getRooms().forEach(r => set.add(r.roomNo));
+    foodBills.forEach(b => {
+      if (b.roomNo) set.add(b.roomNo);
+      if (b.tableNo) set.add(b.tableNo);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  }, [foodBills]);
 
   if (!isOpen) return null;
 
   const filtered = foodBills.filter(b => {
-    if (selectedRoom !== 'all' && b.roomNo !== selectedRoom) return false;
+    if (selectedRoom !== 'all' && b.roomNo !== selectedRoom && b.tableNo !== selectedRoom) return false;
+    if (selectedDate) {
+      const cleanBillDate = (b.date || '').trim().replace(/\//g, '-');
+      const cleanSelDate = selectedDate.trim().replace(/\//g, '-');
+      // Normalize comparison (supports both DD-MM-YYYY and YYYY-MM-DD)
+      const bParts = cleanBillDate.split('-');
+      const sParts = cleanSelDate.split('-');
+      const bNorm = bParts.length === 3 && bParts[0].length === 2 ? `${bParts[2]}-${bParts[1].padStart(2, '0')}-${bParts[0].padStart(2, '0')}` : cleanBillDate;
+      const sNorm = sParts.length === 3 && sParts[0].length === 2 ? `${sParts[2]}-${sParts[1].padStart(2, '0')}-${sParts[0].padStart(2, '0')}` : cleanSelDate;
+      if (bNorm !== sNorm) return false;
+    }
     return true;
   });
 
@@ -40,29 +61,42 @@ export const FbbReportModal: React.FC<FbbReportModalProps> = ({ isOpen, onClose 
             alignItems: 'center',
             marginBottom: 14,
             paddingBottom: 8,
-            borderBottom: '1px solid #cbd5e1'
+            borderBottom: '1px solid #cbd5e1',
+            flexWrap: 'wrap',
+            gap: 10
           }}>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
               <span style={{ fontSize: 13, fontWeight: 700, color: '#0369a1' }}>Date:</span>
               <input
                 type="date"
                 value={selectedDate}
                 onChange={e => setSelectedDate(e.target.value)}
                 className="form-input-pms"
-                style={{ width: 150 }}
+                style={{ width: 140 }}
               />
+              {selectedDate && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedDate('')}
+                  style={{ fontSize: 11, background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 4, padding: '2px 6px', cursor: 'pointer' }}
+                >
+                  Show All Dates
+                </button>
+              )}
 
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#0369a1', marginLeft: 10 }}>Room:</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#0369a1', marginLeft: 6 }}>Room / Table:</span>
               <select
                 value={selectedRoom}
                 onChange={e => setSelectedRoom(e.target.value)}
                 className="form-select-pms"
-                style={{ width: 140 }}
+                style={{ width: 150 }}
               >
-                <option value="all">All Rooms</option>
-                <option value="105">Room 105</option>
-                <option value="103">Room 103</option>
-                <option value="102">Room 102</option>
+                <option value="all">All Rooms &amp; Tables</option>
+                {allRooms.map(rm => (
+                  <option key={rm} value={rm}>
+                    {rm.toLowerCase().includes('table') ? rm : `Room ${rm}`}
+                  </option>
+                ))}
               </select>
             </div>
 

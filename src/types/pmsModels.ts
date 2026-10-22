@@ -957,6 +957,7 @@ export interface PmsDatabaseBackup {
     itemGroups?: any[];
     whatsAppLogs?: any[];
     companyInfo?: any;
+    [key: string]: any;
   };
 }
 
@@ -1088,7 +1089,7 @@ export interface PmsConsolidatedGstItem {
   checkInDate: string;
   invoiceDate: string;
   totalDays: number;
-  type: 'Room Bill' | 'Food Bill';
+  type: 'Room Bill' | 'Food Bill' | 'Banquet Event' | 'Bar & Lounge';
   gstRate: number;
   sgst: number;
   cgst: number;

@@ -28,7 +28,7 @@ app.add_middleware(
     allow_origin_regex=r"^https://hotel-sai-vasudev-residency(-[a-z0-9]+)?\.pages\.dev$",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization", "Accept", "X-Requested-With", "X-API-Key"],
+    allow_headers=["*"],
 )
 
 # Include API Routers

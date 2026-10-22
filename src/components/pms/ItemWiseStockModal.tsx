@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PmsStore } from '../../services/pmsStore';
+import { PmsStore, INITIAL_MENU_ITEMS } from '../../services/pmsStore';
 import type { PmsItemStockReport } from '../../types/pmsModels';
 import './pmsStyles.css';
 
@@ -31,7 +31,7 @@ export const ItemWiseStockModal: React.FC<ItemWiseStockModalProps> = ({
     window.print();
   };
 
-  const availableItems = [
+  const benchmarkItems = [
     'Boondi Raita',
     'PANEER TIKA',
     'TAWA ROTI',
@@ -40,6 +40,29 @@ export const ItemWiseStockModal: React.FC<ItemWiseStockModalProps> = ({
     'MINERAL WATER 1LTR',
     'Cooking Oil 15L'
   ];
+
+  const availableItems = React.useMemo(() => {
+    const set = new Set<string>(benchmarkItems);
+    try {
+      INITIAL_MENU_ITEMS.forEach(m => {
+        if (m.name) set.add(m.name);
+      });
+      const godownMap = PmsStore.getGodownStock();
+      Object.values(godownMap).forEach(rows => {
+        rows.forEach(g => {
+          if (g.itemName) set.add(g.itemName);
+        });
+      });
+      PmsStore.getPurchases().forEach(p => {
+        p.items.forEach(it => {
+          if (it.itemName) set.add(it.itemName);
+        });
+      });
+    } catch {
+      // fallback
+    }
+    return Array.from(set);
+  }, []);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">

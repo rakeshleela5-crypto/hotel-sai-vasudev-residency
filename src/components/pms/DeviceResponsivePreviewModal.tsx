@@ -71,7 +71,51 @@ export const DeviceResponsivePreviewModal: React.FC<DeviceResponsivePreviewModal
 
   const handleSimulateMobileKot = (e: React.FormEvent) => {
     e.preventDefault();
-    setKotStatusMsg(`✓ KOT #${Math.floor(1000 + Math.random() * 9000)} punched for ${kotRoomOrTable} (${kotQty}x ${selectedItem}) by ${currentUser?.userName || 'Staff'}`);
+    const menuItems = PmsStore.getMenuItems();
+    const foundItem = menuItems.find(m => m.name.toLowerCase() === selectedItem.toLowerCase()) || {
+      name: selectedItem,
+      price: 220,
+      code: 'FD-101',
+      category: 'Pure Veg Main Course'
+    };
+    const rate = (foundItem as any).price || (foundItem as any).rate || 220;
+    const amount = rate * kotQty;
+    const kotNum = String(Math.floor(1000 + Math.random() * 9000));
+    const isTable = kotRoomOrTable.toLowerCase().includes('table') || kotRoomOrTable.toLowerCase().startsWith('t-');
+    const targetRoomNo = isTable ? undefined : kotRoomOrTable.replace(/^Room\s+/i, '').trim();
+    const targetTableNo = isTable ? kotRoomOrTable.trim() : undefined;
+
+    const newKot: import('../../types/pmsModels').PmsKotRecord = {
+      kotNo: `KOT-${kotNum}`,
+      date: new Date().toLocaleDateString('en-GB').replace(/\//g, '-'),
+      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+      serviceType: isTable ? 'Restaurant' : 'Room',
+      tableNo: targetTableNo,
+      roomNo: targetRoomNo || '',
+      guestName: isTable ? 'Dine-In Guest' : `Guest (Room ${targetRoomNo || '101'})`,
+      waiterName: currentUser?.userName || 'Captain Ramesh',
+      operatorName: currentUser?.userName || 'Mobile App',
+      items: [
+        {
+          sNo: 1,
+          itemCode: (foundItem as any).code || 'ITEM-01',
+          itemName: foundItem.name,
+          qty: kotQty,
+          rate,
+          amount
+        }
+      ],
+      totalQty: kotQty,
+      totalAmount: amount,
+      status: 'Pending',
+      serveStatus: '0',
+      isPrinted: true,
+      createdAt: new Date().toISOString()
+    };
+
+    PmsStore.saveKot(newKot);
+
+    setKotStatusMsg(`✓ KOT #${kotNum} punched for ${kotRoomOrTable} (${kotQty}x ${selectedItem} - ₹${amount}) by ${currentUser?.userName || 'Staff'}`);
     setTimeout(() => setKotStatusMsg(null), 4000);
   };
 
