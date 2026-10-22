@@ -1686,14 +1686,20 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
         isOpen={isKotOpen}
         onClose={() => setIsKotOpen(false)}
         defaultRoomNo={selectedRoomForKot?.roomNo}
-        onKotSaved={() => {}}
+        onKotSaved={() => {
+          setIsKotOpen(false);
+          setSelectedDrawerRoomNo(null);
+        }}
       />
 
       <FoodBillModal
         isOpen={isFoodBillOpen}
         onClose={() => setIsFoodBillOpen(false)}
         defaultRoomNo={selectedRoomForFoodBill?.roomNo}
-        onBillSaved={() => {}}
+        onBillSaved={() => {
+          setIsFoodBillOpen(false);
+          setSelectedDrawerRoomNo(null);
+        }}
       />
 
       <RoomCheckOutModal
@@ -1701,21 +1707,28 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
         onClose={() => setIsCheckoutOpen(false)}
         targetRoom={selectedRoomForCheckout}
         onCheckoutComplete={() => {
-          alert('Room Checkout completed successfully! Final GST Invoice generated and room marked as Vacant Dirty.');
+          setIsCheckoutOpen(false);
+          setSelectedDrawerRoomNo(null);
         }}
       />
 
       <MarkDirtyModal
         isOpen={isDirtyModalOpen}
         onClose={() => setIsDirtyModalOpen(false)}
-        onStatusUpdated={() => {}}
+        onStatusUpdated={() => {
+          setIsDirtyModalOpen(false);
+          setSelectedDrawerRoomNo(null);
+        }}
       />
 
       <RoomShiftModal
         isOpen={isRoomShiftOpen}
         onClose={() => setIsRoomShiftOpen(false)}
         initialFromRoomNo={selectedRoomForShift}
-        onShiftCompleted={() => {}}
+        onShiftCompleted={() => {
+          setIsRoomShiftOpen(false);
+          setSelectedDrawerRoomNo(null);
+        }}
       />
 
       {/* Housekeeping Modal */}

@@ -1615,7 +1615,10 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         }}
         defaultTableNo={selectedKotTable}
         defaultServiceType={selectedKotTable ? 'Restaurant' : undefined}
-        onKotSaved={() => {}}
+        onKotSaved={() => {
+          setIsKotOpen(false);
+          setSelectedKotTable(undefined);
+        }}
       />
 
       <FoodBillModal
@@ -1625,7 +1628,10 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           setSelectedBillTable(undefined);
         }}
         defaultTableNo={selectedBillTable}
-        onBillSaved={() => {}}
+        onBillSaved={() => {
+          setIsFoodBillOpen(false);
+          setSelectedBillTable(undefined);
+        }}
       />
 
       <RoomCheckOutModal
@@ -1633,7 +1639,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         onClose={() => setIsCheckoutOpen(false)}
         targetRoom={rooms.find(r => r.status === 'occupied') || rooms[0]}
         onCheckoutComplete={() => {
-          alert('Room checkout completed! Room status updated.');
+          setIsCheckoutOpen(false);
         }}
       />
 
