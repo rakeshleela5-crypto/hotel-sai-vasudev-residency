@@ -26,3 +26,15 @@ if (fs.existsSync(indexHtml)) {
     console.warn('[setup-backend] Note: could not copy 200.html:', e.message);
   }
 }
+
+// Ensure dist/_headers exists for Cloudflare Pages security headers
+const publicHeaders = path.join(projectRoot, 'public', '_headers');
+const distHeaders = path.join(distDir, '_headers');
+if (fs.existsSync(publicHeaders) && fs.existsSync(distDir)) {
+  try {
+    fs.copyFileSync(publicHeaders, distHeaders);
+    console.log('[setup-backend] Ensured production security headers copied to dist/_headers');
+  } catch (e) {
+    console.warn('[setup-backend] Note: could not copy _headers:', e.message);
+  }
+}

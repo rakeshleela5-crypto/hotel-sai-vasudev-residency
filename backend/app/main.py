@@ -21,15 +21,14 @@ app = FastAPI(
     docs_url=f"{settings.API_V1_STR}/docs"
 )
 
-# Allow CORS for Cloudflare Pages and local development
-# Cloudflare Pages default domains are *.pages.dev
+# Production CORS configuration: Restricted to official Cloudflare Pages domains & localhost
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Or specify settings.parsed_allowed_origins
-    allow_origin_regex=r"https://.*\.pages\.dev",
+    allow_origins=settings.parsed_allowed_origins,
+    allow_origin_regex=r"^https://hotel-sai-vasudev-residency(-[a-z0-9]+)?\.pages\.dev$",
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "Accept", "X-Requested-With", "X-API-Key"],
 )
 
 # Include API Routers

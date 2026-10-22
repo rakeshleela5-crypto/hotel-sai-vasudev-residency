@@ -19,10 +19,24 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 PORT = 8080
 
 class HardwareBridgeHandler(BaseHTTPRequestHandler):
+    ALLOWED_ORIGINS = {
+        "https://hotel-sai-vasudev-residency.pages.dev",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000"
+    }
+
     def _send_cors_headers(self):
-        self.send_header("Access-Control-Allow-Origin", "*")
+        origin = self.headers.get("Origin", "")
+        # Allow exact match or official preview domains
+        if origin in self.ALLOWED_ORIGINS or (origin.startswith("https://hotel-sai-vasudev-residency") and origin.endswith(".pages.dev")):
+            self.send_header("Access-Control-Allow-Origin", origin)
+            self.send_header("Vary", "Origin")
+        else:
+            self.send_header("Access-Control-Allow-Origin", "https://hotel-sai-vasudev-residency.pages.dev")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
 
     def do_OPTIONS(self):
         self.send_response(200)

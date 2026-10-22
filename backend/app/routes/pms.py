@@ -1,7 +1,8 @@
+import os
 import datetime
 import uuid
 import json
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, Header
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import text, func
@@ -664,9 +665,20 @@ def get_pms_dashboard_sync(db: Session = Depends(get_db)):
     )
 
 # --- 12. Full Database Snapshot Export / Backup ---
+ADMIN_API_KEY = os.getenv("ADMIN_API_KEY", "")
+
 @router.get("/backup/export")
-def export_pms_database_backup(db: Session = Depends(get_db)):
-    """Export complete JSON snapshot of all rooms, bookings, payments, and audits"""
+def export_pms_database_backup(
+    x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
+    db: Session = Depends(get_db)
+):
+    """
+    Export complete JSON snapshot of all rooms, bookings, payments, and audits.
+    Protected by ADMIN_API_KEY when configured to prevent unauthorized data exfiltration.
+    """
+    if ADMIN_API_KEY and x_api_key != ADMIN_API_KEY:
+        raise HTTPException(status_code=403, detail="Unauthorized access to database export backup.")
+
     rooms = db.query(models.Room).all()
     bookings = db.query(models.Booking).all()
     payments = db.query(models.BookingPayment).all()

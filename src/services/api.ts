@@ -522,7 +522,12 @@ export const hotelApi = {
   },
 
   async exportDatabaseBackup() {
-    const res = await fetch(`${API_BASE_URL}/pms/backup/export`);
+    const headers: Record<string, string> = {};
+    if (typeof window !== 'undefined') {
+      const savedKey = localStorage.getItem('svr_admin_api_key');
+      if (savedKey) headers['X-API-Key'] = savedKey;
+    }
+    const res = await fetch(`${API_BASE_URL}/pms/backup/export`, { headers });
     if (!res.ok) throw new Error('Failed to export database backup');
     return await res.json();
   },

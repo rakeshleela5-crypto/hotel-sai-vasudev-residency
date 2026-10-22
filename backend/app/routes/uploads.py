@@ -42,8 +42,24 @@ async def upload_guest_id_document(
 
 @router.get("/files/{folder}/{filename}")
 async def serve_local_file(folder: str, filename: str):
-    """Fallback endpoint to serve uploaded files when local storage is used"""
-    file_path = os.path.join(LOCAL_UPLOAD_DIR, folder, filename)
-    if not os.path.exists(file_path):
+    """Secure fallback endpoint to serve uploaded files with strict path traversal prevention"""
+    safe_folder = os.path.basename(folder)
+    ALLOWED_FOLDERS = {"guest_ids", "documents", "receipts"}
+    if safe_folder not in ALLOWED_FOLDERS:
+        raise HTTPException(status_code=400, detail="Invalid folder specification.")
+
+    safe_filename = os.path.basename(filename)
+    base_dir = os.path.abspath(LOCAL_UPLOAD_DIR)
+    resolved_path = os.path.abspath(os.path.join(base_dir, safe_folder, safe_filename))
+
+    # Strict boundary check ensuring resolved path is directly inside base_dir
+    try:
+        if os.path.commonpath([resolved_path, base_dir]) != base_dir:
+            raise HTTPException(status_code=403, detail="Access denied.")
+    except ValueError:
+        raise HTTPException(status_code=403, detail="Access denied.")
+
+    if not os.path.exists(resolved_path) or not os.path.isfile(resolved_path):
         raise HTTPException(status_code=404, detail="File not found")
-    return FileResponse(file_path)
+
+    return FileResponse(resolved_path)

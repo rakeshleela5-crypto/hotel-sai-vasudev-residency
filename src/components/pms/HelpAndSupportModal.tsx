@@ -218,7 +218,7 @@ export const HelpAndSupportModal: React.FC<HelpAndSupportModalProps> = ({
             <a 
               href="https://wa.me/917999663696?text=Namaste%20Support%2C%20I%20need%20assistance%20with%20Hotel%20Sai%20Vasudev%20Residency." 
               target="_blank" 
-              rel="noreferrer"
+              rel="noopener noreferrer"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -700,7 +700,7 @@ export const HelpAndSupportModal: React.FC<HelpAndSupportModalProps> = ({
                       <a
                         href={selectedVideo.url}
                         target="_blank"
-                        rel="noreferrer"
+                        rel="noopener noreferrer"
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
@@ -1264,7 +1264,7 @@ export const HelpAndSupportModal: React.FC<HelpAndSupportModalProps> = ({
                     <a
                       href="https://ultraviewer.net/en/download.html"
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -1291,7 +1291,7 @@ export const HelpAndSupportModal: React.FC<HelpAndSupportModalProps> = ({
                     <a
                       href="https://anydesk.com/en/downloads"
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       style={{
                         display: 'flex',
                         alignItems: 'center',

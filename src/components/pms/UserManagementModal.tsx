@@ -93,6 +93,14 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
       alert('Please enter Email ID');
       return;
     }
+    if (!editingUser && !formPassword.trim()) {
+      alert('Please enter a secure password for the new staff account (minimum 6 characters).');
+      return;
+    }
+    if (formPassword.trim() && formPassword.trim().length < 6) {
+      alert('Password must be at least 6 characters long.');
+      return;
+    }
 
     const selectedRole = roles.find(r => r.id === Number(formRoleId));
     const roleName = selectedRole ? selectedRole.name : 'staff';
@@ -131,7 +139,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
         regDate: nowStr,
         verifiedDate: formStatus === 'Verified' ? nowStr : undefined,
         mobile: formMobile.trim(),
-        password: formPassword.trim() || 'SaiVasudev@123',
+        password: formPassword.trim(),
         department: formDepartment,
         shift: formShift,
         isOnDuty: formIsOnDuty
