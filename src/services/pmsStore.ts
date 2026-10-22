@@ -4269,6 +4269,38 @@ export class PmsStore {
       localStorage.setItem(STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify(advanceReceipts));
     }
 
+    // Migrate Other Charges (SAC 999799 Add-on services: extra bed, cab, laundry)
+    const rawOtherCharges = localStorage.getItem(STORAGE_KEYS.OTHER_CHARGES);
+    if (rawOtherCharges) {
+      try {
+        const charges = JSON.parse(rawOtherCharges);
+        let chargesMigrated = false;
+        charges.forEach((c: any) => {
+          if (c.roomNo === fromRoomNo) {
+            c.roomNo = toRoomNo;
+            chargesMigrated = true;
+          }
+        });
+        if (chargesMigrated) {
+          localStorage.setItem(STORAGE_KEYS.OTHER_CHARGES, JSON.stringify(charges));
+        }
+      } catch {}
+    }
+
+    // Migrate food bills to destination room so checkout folio has dining history
+    const allFoodBills = this.getFoodBills();
+    let foodBillsMigrated = false;
+    allFoodBills.forEach(fb => {
+      if (fb.roomNo === fromRoomNo) {
+        fb.roomNo = toRoomNo;
+        foodBillsMigrated = true;
+      }
+    });
+    if (foodBillsMigrated) {
+      localStorage.setItem(STORAGE_KEYS.FOOD_BILLS, JSON.stringify(allFoodBills));
+      localStorage.setItem('hotel_pms_foodbills', JSON.stringify(allFoodBills));
+    }
+
     this.saveRooms(rooms);
     this.notify();
 
@@ -5072,6 +5104,53 @@ export class PmsStore {
         });
       });
     }
+
+    // Automatically record advance payment in Advance Receipts and Cashier Collections
+    if (booking.bookingAmount && booking.bookingAmount > 0) {
+      try {
+        const primaryRoomNo = booking.rooms?.[0]?.roomNo || '101';
+        const advances = this.getAdvanceReceipts();
+        const existingAdv = advances.find(a => a.receiptNo === `AR-${booking.bookingNo}` || a.id === `adv-bkg-${booking.bookingNo}`);
+        if (!existingAdv) {
+          const pMode = (booking.paymentMode || 'Cash').toLowerCase();
+          advances.unshift({
+            id: `adv-bkg-${booking.bookingNo}`,
+            sNo: advances.length + 1,
+            voucherName: 'Advance_Receipt',
+            receiptNo: `AR-${booking.bookingNo}`,
+            voucherNo: String(advances.length + 1),
+            date: booking.checkInDate || new Date().toISOString().split('T')[0],
+            time: booking.checkInTime || '11:00 AM',
+            roomNo: primaryRoomNo,
+            guestName: booking.guestName,
+            mobile: booking.mobile,
+            paymentMode: (pMode.includes('online') || pMode.includes('upi') || pMode.includes('card')) ? 'Online' : 'Cash',
+            amount: booking.bookingAmount,
+            remark: `Reservation advance for #${booking.bookingNo} (${booking.rooms.map(r => r.roomNo).join(', ')})`,
+            createdAt: new Date().toISOString()
+          });
+          localStorage.setItem(STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify(advances));
+
+          // Also mirror to Receipts
+          this.saveReceipt({
+            id: `rec-bkg-${booking.bookingNo}`,
+            sNo: this.getReceipts().length + 1,
+            voucherName: 'Advance_Receipt',
+            receiptNo: `AR-${booking.bookingNo}`,
+            voucherNo: parseInt(booking.bookingNo.replace(/\D/g, '').slice(-4) || '1', 10),
+            date: booking.checkInDate || new Date().toISOString().split('T')[0],
+            accountName: booking.guestName,
+            accountMobile: booking.mobile,
+            paymentMode: (pMode.includes('online') || pMode.includes('upi') || pMode.includes('card')) ? 'Online' : 'Cash',
+            amount: booking.bookingAmount,
+            remark: `Booking #${booking.bookingNo} advance deposit (${booking.guestName})`,
+            createdAt: new Date().toISOString()
+          });
+        }
+      } catch (advErr) {
+        console.warn('[PmsStore] Booking advance receipt sync note:', advErr);
+      }
+    }
   }
 
   static confirmBooking(bookingNo: string, advancePaid?: number): { success: boolean; message: string } {
@@ -5387,6 +5466,27 @@ export class PmsStore {
           remark: `Advance collected at check-in for Room ${checkIn.roomNo} (${checkIn.guestName})`,
           createdAt: new Date().toISOString()
         });
+        const advances = this.getAdvanceReceipts();
+        const existingAdv = advances.find(a => a.receiptNo === `AR-${checkIn.checkInNo}` || a.id === `adv-ci-${checkIn.checkInNo}`);
+        if (!existingAdv) {
+          advances.unshift({
+            id: `adv-ci-${checkIn.checkInNo}`,
+            sNo: advances.length + 1,
+            voucherName: 'Advance_Receipt',
+            receiptNo: `AR-${checkIn.checkInNo}`,
+            voucherNo: String(advances.length + 1),
+            date: checkIn.checkInDate || new Date().toISOString().split('T')[0],
+            time: checkIn.checkInTime || '11:00 AM',
+            roomNo: checkIn.roomNo,
+            guestName: checkIn.guestName,
+            mobile: checkIn.mobile,
+            paymentMode: (pMode.includes('online') || pMode.includes('upi') || pMode.includes('card')) ? 'Online' : 'Cash',
+            amount: checkIn.advancePaid,
+            remark: `Check-in advance collected for Room ${checkIn.roomNo} (${checkIn.guestName})`,
+            createdAt: new Date().toISOString()
+          });
+          localStorage.setItem(STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify(advances));
+        }
       } catch (err) {
         console.warn('[PmsStore] Check-in advance cashier sync note:', err);
       }

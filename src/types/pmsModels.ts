@@ -484,6 +484,8 @@ export interface PmsVoucherType {
 }
 
 export interface PmsAdvanceReceipt {
+  id?: string;
+  sNo?: number;
   receiptNo: string;        // e.g. AR12 or AR/101/24-25
   voucherNo?: string;       // e.g. 12
   date: string;             // DD-MM-YYYY

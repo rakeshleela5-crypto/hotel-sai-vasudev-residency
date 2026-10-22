@@ -25,7 +25,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.parsed_allowed_origins,
-    allow_origin_regex=r"^https://hotel-sai-vasudev-residency(-[a-z0-9]+)?\.pages\.dev$",
+    allow_origin_regex=r"^https://([a-zA-Z0-9-]+\.)?hotel-sai-vasudev-residency(-[a-z0-9]+)?\.pages\.dev$",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
