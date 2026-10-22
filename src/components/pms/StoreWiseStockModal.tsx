@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { GodownStockRow, PmsGodown } from '../../types/pmsModels';
-import { PmsStore } from '../../services/pmsStore';
+import { PmsStore, usePmsSync } from '../../services/pmsStore';
 import './pmsStyles.css';
 
 interface StoreWiseStockModalProps {
@@ -16,6 +16,7 @@ export const StoreWiseStockModal: React.FC<StoreWiseStockModalProps> = ({
   onOpenPurchase,
   onOpenTransfer
 }) => {
+  usePmsSync();
   const [godowns, setGodowns] = useState<PmsGodown[]>([]);
   const [stockMap, setStockMap] = useState<Record<string, GodownStockRow[]>>({});
   const [selectedGodownFilter, setSelectedGodownFilter] = useState<string>('ALL');
@@ -35,6 +36,12 @@ export const StoreWiseStockModal: React.FC<StoreWiseStockModalProps> = ({
       setCopiedGodown(null);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    return PmsStore.subscribe(() => {
+      refreshData();
+    });
+  }, []);
 
   if (!isOpen) return null;
 

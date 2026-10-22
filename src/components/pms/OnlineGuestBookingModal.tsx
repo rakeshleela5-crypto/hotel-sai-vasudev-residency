@@ -215,6 +215,22 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
 
     // Save to store
     PmsStore.saveBooking(bookingRecord);
+    if (advanceAmount > 0) {
+      PmsStore.saveAdvanceReceipt({
+        receiptNo: `ADV-${bookingRecord.bookingNo.replace(/\D/g, '').slice(-4) || Date.now().toString().slice(-4)}`,
+        voucherNo: bookingRecord.bookingNo.replace(/\D/g, '').slice(-4) || '101',
+        date: bookingRecord.bookingDate,
+        time: bookingRecord.bookingTime,
+        voucherName: 'Advance_Receipt',
+        guestName: bookingRecord.guestName,
+        mobile: bookingRecord.mobile,
+        roomNo: bookingRecord.rooms[0]?.roomNo || '',
+        amount: advanceAmount,
+        paymentMode: paymentMode,
+        remark: `Online Guest Booking Advance (${packageType})`,
+        createdAt: new Date().toISOString()
+      });
+    }
     setSavedBooking(bookingRecord);
     setViewMode('slip');
   };
@@ -224,10 +240,17 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
   };
 
   const handleShareWhatsApp = (b: PmsBooking) => {
-    const msg = encodeURIComponent(
-      `Namaste ${b.guestName} ji! Greetings from HOTEL SAI VASUDEV RESIDENCY, Shirdi.\n\nYour Online Reservation Slip:\nBooking No: ${b.bookingNo}\nRoom No: ${b.rooms[0]?.roomNo} (${b.rooms[0]?.roomType})\nDates: ${b.checkInDate} to ${b.checkOutDate} (${b.numberOfDays} Nights)\nTariff: Rs. ${b.totalAmount}\nAdvance Received: Rs. ${b.bookingAmount}\n\nOur team will confirm your reservation shortly. Shirdi Temple assistance available. Helpline: +91 9822000000.`
-    );
-    window.open(`https://wa.me/91${b.mobile}?text=${msg}`, '_blank');
+    const msg = `Namaste ${b.guestName} ji! Greetings from HOTEL SAI VASUDEV RESIDENCY, Shirdi.\n\nYour Online Reservation Slip:\nBooking No: ${b.bookingNo}\nRoom No: ${b.rooms[0]?.roomNo} (${b.rooms[0]?.roomType})\nDates: ${b.checkInDate} to ${b.checkOutDate} (${b.numberOfDays} Nights)\nTariff: Rs. ${b.totalAmount}\nAdvance Received: Rs. ${b.bookingAmount}\n\nOur team will confirm your reservation shortly. Shirdi Temple assistance available. Helpline: +91 9822000000.`;
+    PmsStore.sendWhatsAppNotification({
+      voucherType: 'Booking Confirmation',
+      recipientMobile: b.mobile,
+      recipientName: b.guestName,
+      recipientType: 'Guest',
+      voucherNo: b.bookingNo,
+      roomNo: b.rooms[0]?.roomNo,
+      customMessage: msg,
+      openDirectly: true
+    });
   };
 
   return (

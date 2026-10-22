@@ -145,7 +145,6 @@ export const StockReportMasterModal: React.FC<StockReportMasterModalProps> = ({
 
   // Video 34 Live Simulator Actions
   const handleSimStep1Purchase = () => {
-    const purchases = PmsStore.getPurchases();
     const newPur = {
       id: `pur-sim-${Date.now()}`,
       billNo: '4334',
@@ -179,8 +178,7 @@ export const StockReportMasterModal: React.FC<StockReportMasterModalProps> = ({
       totalNetValue: simPurchaseQty * simPurchaseRate,
       createdAt: new Date().toISOString()
     };
-    purchases.unshift(newPur);
-    localStorage.setItem('svr_pms_purchases', JSON.stringify(purchases));
+    PmsStore.savePurchase(newPur);
     loadData();
     setSimStep(2);
     setSimSuccessMsg(`✅ Step 1 Complete: Purchased ${simPurchaseQty} pcs WATER BOTLE into STORE1 (Bill #4334, Vendor: Gupta Jii)`);

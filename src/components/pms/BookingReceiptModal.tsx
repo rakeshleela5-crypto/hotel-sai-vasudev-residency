@@ -15,6 +15,8 @@ export const BookingReceiptModal: React.FC<BookingReceiptModalProps> = ({
 }) => {
   if (!isOpen || !booking) return null;
 
+  const company = PmsStore.getCompanyInfo();
+
   const handlePrint = () => {
     window.print();
   };
@@ -39,7 +41,7 @@ export const BookingReceiptModal: React.FC<BookingReceiptModalProps> = ({
             fontWeight: 800,
             color: '#854d0e'
           }}>
-            <span>GST NO: GSTIN27AABCS1429B1Z2</span>
+            <span>GST NO: {company.gstNo || 'GSTIN27AABCS1429B1Z2'}</span>
             <span style={{ fontSize: 16, textTransform: 'uppercase', letterSpacing: 1 }}>Room Booking Slip</span>
             <span>CIN: U55101MH2024PTC123456</span>
           </div>
@@ -74,13 +76,13 @@ export const BookingReceiptModal: React.FC<BookingReceiptModalProps> = ({
             {/* Hotel Center Title */}
             <div style={{ textAlign: 'center' }}>
               <h2 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#1c1917', letterSpacing: 1 }}>
-                HOTEL SAI VASUDEV RESIDENCY
+                {company.firmName || 'HOTEL SAI VASUDEV RESIDENCY'}
               </h2>
               <div style={{ fontSize: 12, fontWeight: 600, color: '#44403c', marginTop: 3 }}>
-                Opp. Gate No. 2, Pimpalwadi Road, Shirdi, Maharashtra - 423109
+                {[company.address1, company.address2, company.city, company.state, company.pincode].filter(Boolean).join(', ') || 'Opp. Gate No. 2, Pimpalwadi Road, Shirdi, Maharashtra - 423109'}
               </div>
               <div style={{ fontSize: 11, color: '#44403c', marginTop: 2 }}>
-                Email: info@saivasudevresidency.com &bull; Phone: 02423-255555 &bull; Mobile: +91 98765 43210
+                Email: {company.email || 'info@saivasudevresidency.com'} &bull; Phone: {company.phone || '02423-255555'} &bull; Mobile: {company.mobile || company.phone || '+91 98765 43210'}
               </div>
             </div>
 

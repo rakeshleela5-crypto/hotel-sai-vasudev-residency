@@ -7910,6 +7910,7 @@ export class PmsStore {
         console.warn('[PmsStore] Purchase payment recording note:', purErr);
       }
     }
+    this.notify();
   }
 
   static deletePurchase(id: string): void {
@@ -7925,6 +7926,7 @@ export class PmsStore {
         localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(payments));
       } catch {}
     }
+    this.notify();
   }
 
   // 4. Stock Transfers & Issues (Frames 0335, 0370)
@@ -7950,11 +7952,13 @@ export class PmsStore {
       list.unshift(transfer);
     }
     localStorage.setItem(STORAGE_KEYS.STOCK_TRANSFERS, JSON.stringify(list));
+    this.notify();
   }
 
   static deleteStockTransfer(id: string): void {
     const list = this.getStockTransfers().filter(s => s.id !== id && s.entryNo !== id);
     localStorage.setItem(STORAGE_KEYS.STOCK_TRANSFERS, JSON.stringify(list));
+    this.notify();
   }
 
   // 5. Dynamic Store-Wise Stock Calculator (Frames 0260, 0320, 0370)
