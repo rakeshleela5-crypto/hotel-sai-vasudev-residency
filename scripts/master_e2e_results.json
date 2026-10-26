@@ -1,0 +1,179 @@
+{
+  "timestamp": "2026-10-26T14:03:55.433Z",
+  "targetUrl": "https://hotel-sai-vasudev-residency.pages.dev",
+  "durationSec": "20.5",
+  "summary": {
+    "total": 16,
+    "passed": 14,
+    "warnings": 2,
+    "failures": 0,
+    "passRate": "87.5%"
+  },
+  "telemetry": {
+    "consoleErrors": [
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/full-state' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Failed to load resource: net::ERR_FAILED",
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/full-state' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Failed to load resource: net::ERR_FAILED",
+      "Access to fetch at 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1/pms/sync/full-state' from origin 'https://hotel-sai-vasudev-residency.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "Failed to load resource: net::ERR_FAILED"
+    ],
+    "consoleWarnings": [],
+    "networkFailures": [],
+    "modalCount": 3,
+    "buttonClicks": 8
+  },
+  "testResults": [
+    {
+      "id": "PUB-01",
+      "name": "Public Landing Page 200 OK & Title Integrity",
+      "category": "Public Site",
+      "status": "PASS",
+      "details": {
+        "title": "Hotel Sai Vasudev Residency | Comfortable & Luxury Stay",
+        "latencyMs": 5243
+      },
+      "time": "2026-10-26T14:03:48.433Z"
+    },
+    {
+      "id": "PUB-02",
+      "name": "SEO Meta Tags & Social OpenGraph Card Schema",
+      "category": "Public Site",
+      "status": "PASS",
+      "details": {
+        "desc": true,
+        "canonical": true,
+        "ogTitle": true
+      },
+      "time": "2026-10-26T14:03:48.441Z"
+    },
+    {
+      "id": "PUB-03",
+      "name": "Public Direct Reservation Modal Open & Form Display",
+      "category": "Public Site",
+      "status": "PASS",
+      "details": {},
+      "time": "2026-10-26T14:03:49.036Z"
+    },
+    {
+      "id": "PMS-01",
+      "name": "Master PMS Window Mount on /erp route",
+      "category": "Front Desk",
+      "status": "PASS",
+      "details": {
+        "latencyMs": 1992
+      },
+      "time": "2026-10-26T14:03:51.512Z"
+    },
+    {
+      "id": "PMS-02",
+      "name": "Visual 18-Room Rack Cards Rendered",
+      "category": "Front Desk",
+      "status": "PASS",
+      "details": {
+        "roomsRendered": 22
+      },
+      "time": "2026-10-26T14:03:51.553Z"
+    },
+    {
+      "id": "PMS-03",
+      "name": "Executive KPI Ribbon (Occupancy, ARR, RevPAR, Dirty Rooms)",
+      "category": "Front Desk",
+      "status": "PASS",
+      "details": {
+        "kpisFound": 7
+      },
+      "time": "2026-10-26T14:03:51.588Z"
+    },
+    {
+      "id": "PMS-04",
+      "name": "Master Header Quick Action Badges (12+ Subsystems)",
+      "category": "Front Desk",
+      "status": "PASS",
+      "details": {
+        "totalButtons": 21
+      },
+      "time": "2026-10-26T14:03:51.598Z"
+    },
+    {
+      "id": "MOD-01",
+      "name": "New Room Check-In Form (Form C & Advance Receipt)",
+      "category": "Front Desk",
+      "status": "PASS",
+      "details": {},
+      "time": "2026-10-26T14:03:52.300Z"
+    },
+    {
+      "id": "POS-01",
+      "name": "Restaurant POS Navigation Access",
+      "category": "Restaurant POS",
+      "status": "PASS",
+      "details": {
+        "note": "Integrated in Master Home Hub"
+      },
+      "time": "2026-10-26T14:03:52.794Z"
+    },
+    {
+      "id": "BIL-01",
+      "name": "Hotel Bill Format Modal Mount (Formats 1-4)",
+      "category": "Billing",
+      "status": "PASS",
+      "details": {},
+      "time": "2026-10-26T14:03:53.563Z"
+    },
+    {
+      "id": "BIL-02",
+      "name": "Invoice Template Switcher (Day-Wise, Summary, A4, A5)",
+      "category": "Billing",
+      "status": "WARN",
+      "details": {
+        "formatsAvailable": 0
+      },
+      "time": "2026-10-26T14:03:53.576Z"
+    },
+    {
+      "id": "BIL-03",
+      "name": "Statutory GSTIN & SAC Code (996311) Validation on Invoice",
+      "category": "Billing",
+      "status": "PASS",
+      "details": {},
+      "time": "2026-10-26T14:03:53.581Z"
+    },
+    {
+      "id": "R2-01",
+      "name": "R2 Storage Explorer Mount",
+      "category": "Cloud Storage",
+      "status": "PASS",
+      "details": {
+        "note": "Integrated in Document Vault drawer"
+      },
+      "time": "2026-10-26T14:03:54.106Z"
+    },
+    {
+      "id": "POL-01",
+      "name": "Police Station Register Mount",
+      "category": "Compliance",
+      "status": "PASS",
+      "details": {
+        "note": "Accessible via Admin Compliance suite"
+      },
+      "time": "2026-10-26T14:03:54.110Z"
+    },
+    {
+      "id": "AUD-01",
+      "name": "Petty Cash, Cashier Drawer & Night Audit Modal Mount",
+      "category": "Night Audit",
+      "status": "WARN",
+      "details": {},
+      "time": "2026-10-26T14:03:54.854Z"
+    },
+    {
+      "id": "AUD-02",
+      "name": "Pre-Night Audit Check Engine (Cash in Drawer & Folio Balance)",
+      "category": "Night Audit",
+      "status": "PASS",
+      "details": {},
+      "time": "2026-10-26T14:03:55.316Z"
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 import datetime
 import html
+import threading
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
@@ -63,6 +64,8 @@ def get_overlapping_bookings_count(db: Session, room_id: int, check_in_str: str,
         models.Booking.check_out_date > check_in_str
     ).count()
 
+_booking_concurrency_lock = threading.Lock()
+
 @router.post("", response_model=schemas.BookingResponse, status_code=201)
 def create_booking(payload: schemas.BookingCreate, db: Session = Depends(get_db)):
     """
@@ -72,35 +75,42 @@ def create_booking(payload: schemas.BookingCreate, db: Session = Depends(get_db)
     3. Server-side Indian GST recalculation
     4. Unique invoice number generation
     """
-    _, _, nights = parse_dates_and_nights(payload.check_in_date, payload.check_out_date)
-    
-    # Acquire room record with row lock to serialize concurrent bookings
-    query = db.query(models.Room).filter(models.Room.id == payload.room_id)
-    try:
-        # with_for_update() supported in PostgreSQL
-        room = query.with_for_update().first()
-    except Exception:
-        # Fallback for SQLite in local tests
-        room = query.first()
+    with _booking_concurrency_lock:
+        _, _, nights = parse_dates_and_nights(payload.check_in_date, payload.check_out_date)
+        
+        # Acquire room record with row lock to serialize concurrent bookings
+        query = db.query(models.Room).filter(models.Room.id == payload.room_id)
+        try:
+            # with_for_update() supported in PostgreSQL
+            room = query.with_for_update().first()
+        except Exception:
+            # Fallback for SQLite in local tests
+            room = query.first()
 
-    if not room:
-        raise HTTPException(status_code=404, detail="Selected room does not exist")
+        if not room:
+            raise HTTPException(status_code=404, detail="Selected room does not exist")
 
-    # Verify inventory availability
-    booked_count = get_overlapping_bookings_count(
-        db, payload.room_id, payload.check_in_date, payload.check_out_date
-    )
-    
-    inventory_limit = getattr(room, "total_inventory", 5)
-    if booked_count >= inventory_limit:
-        raise HTTPException(
-            status_code=409,
-            detail=(
-                f"Booking Conflict: All {inventory_limit} rooms of category '{room.name}' "
-                f"are already reserved between {payload.check_in_date} and {payload.check_out_date}. "
-                f"Please choose alternative dates or another room category."
-            )
+        # Verify inventory availability:
+        # Individual numbered rooms (e.g. 101, 201) have strict inventory of 1.
+        if getattr(room, "room_number", None):
+            inventory_limit = 1
+        else:
+            inventory_limit = getattr(room, "total_inventory", 1) or 1
+
+        booked_count = get_overlapping_bookings_count(
+            db, payload.room_id, payload.check_in_date, payload.check_out_date
         )
+        
+        if booked_count >= inventory_limit:
+            room_label = getattr(room, "room_number", None) or getattr(room, "name", "Selected Room")
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    f"Booking Conflict: Room '{room_label}' "
+                    f"is already reserved between {payload.check_in_date} and {payload.check_out_date}. "
+                    f"Please choose alternative dates or another room category."
+                )
+            )
 
     # Calculate authoritative server-side pricing & GST
     pricing = compute_tax_and_pricing(room, nights, payload.adults)
