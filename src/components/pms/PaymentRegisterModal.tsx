@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PmsStore } from '../../services/pmsStore';
+import { hotelApi } from '../../services/api';
 import type { PmsPaymentRecord } from '../../types/pmsModels';
 import { AddPaymentModal } from './AddPaymentModal';
 import { PartyLedgerModal } from './PartyLedgerModal';
@@ -26,6 +27,11 @@ export const PaymentRegisterModal: React.FC<PaymentRegisterModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setPayments(PmsStore.getPayments());
+      hotelApi.getGeneralPayments().then(cloudList => {
+        if (cloudList && cloudList.length > 0) {
+          setPayments(cloudList);
+        }
+      }).catch(err => console.warn('[PaymentRegisterModal] Cloud payments fetch note:', err));
     }
   }, [isOpen]);
 

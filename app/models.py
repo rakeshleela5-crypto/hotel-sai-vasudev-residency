@@ -503,5 +503,68 @@ class AdvanceReceipt(Base):
     remark = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
+class JournalEntry(Base):
+    __tablename__ = "journal_entries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    entry_id = Column(String(50), unique=True, index=True, nullable=False) # e.g. JV-2026-0001
+    date = Column(String(50), nullable=False) # YYYY-MM-DD
+    time = Column(String(50), nullable=True) # e.g. 11:00 AM
+    voucher_type = Column(String(50), nullable=False) # Advance, NightAudit, PosBill, RoomPosting, CheckOut, Expense, Manual
+    reference_no = Column(String(100), index=True, nullable=True)
+    narration = Column(Text, nullable=False)
+    debit_account = Column(String(150), nullable=False)
+    credit_account = Column(String(150), nullable=False)
+    amount_paise = Column(Integer, default=0)
+    amount_rupees = Column(Float, default=0.0)
+    posted_by = Column(String(100), default="Front Desk Mgr")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class PartyAccount(Base):
+    __tablename__ = "party_accounts"
+
+    id = Column(String(100), primary_key=True, index=True) # e.g. pa-1
+    name = Column(String(200), unique=True, index=True, nullable=False)
+    mobile = Column(String(50), nullable=True)
+    category = Column(String(50), default="General") # Customer, Corporate, Owner, Bank, General, Vendor
+    balance = Column(Float, default=0.0)
+    balance_type = Column(String(10), default="Dr") # Dr, Cr
+    gstin = Column(String(50), nullable=True)
+    address = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class GeneralReceipt(Base):
+    __tablename__ = "general_receipts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    s_no = Column(Integer, default=1)
+    voucher_name = Column(String(100), default="Receipts")
+    receipt_no = Column(String(100), unique=True, index=True, nullable=False) # e.g. REC/12/24-25
+    voucher_no = Column(Integer, default=1)
+    date = Column(String(50), nullable=False)
+    payment_mode = Column(String(50), default="Cash") # Cash, Online, Card, UPI, Cheque
+    account_name = Column(String(200), index=True, nullable=False)
+    account_mobile = Column(String(50), nullable=True)
+    amount = Column(Float, nullable=False)
+    remark = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class GeneralPayment(Base):
+    __tablename__ = "general_payments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    s_no = Column(Integer, default=1)
+    voucher_name = Column(String(100), default="Payments")
+    payment_no = Column(String(100), unique=True, index=True, nullable=False) # e.g. PAY/5/24-25
+    voucher_no = Column(Integer, default=1)
+    date = Column(String(50), nullable=False)
+    payment_mode = Column(String(50), default="Cash") # Cash, Online, Card, UPI, Cheque
+    account_name = Column(String(200), index=True, nullable=False)
+    account_mobile = Column(String(50), nullable=True)
+    amount = Column(Float, nullable=False)
+    remark = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
 
 

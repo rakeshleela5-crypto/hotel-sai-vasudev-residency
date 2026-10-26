@@ -3168,6 +3168,26 @@ export class PmsStore {
         localStorage.setItem(STORAGE_KEYS.ROOM_SHIFTS, JSON.stringify(state.room_shifts));
       }
 
+      // 13. Hydrate Journal Entries from PostgreSQL
+      if (state.journal_entries && state.journal_entries.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.JOURNAL_ENTRIES, JSON.stringify(state.journal_entries));
+      }
+
+      // 14. Hydrate Party Accounts from PostgreSQL
+      if (state.party_accounts && state.party_accounts.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.PARTY_ACCOUNTS, JSON.stringify(state.party_accounts));
+      }
+
+      // 15. Hydrate General Receipts from PostgreSQL
+      if (state.general_receipts && state.general_receipts.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.RECEIPTS, JSON.stringify(state.general_receipts));
+      }
+
+      // 16. Hydrate General Payments from PostgreSQL
+      if (state.general_payments && state.general_payments.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(state.general_payments));
+      }
+
       this.notify();
       return true;
     } catch (e) {
@@ -3467,6 +3487,7 @@ export class PmsStore {
     };
     list.unshift(fullEntry);
     localStorage.setItem(STORAGE_KEYS.JOURNAL_ENTRIES, JSON.stringify(list));
+    hotelApi.postJournalEntry(fullEntry).catch(e => console.warn('[PmsStore] Journal entry background cloud sync note:', e));
     this.notify();
     return fullEntry;
   }
@@ -9175,6 +9196,7 @@ export class PmsStore {
       item.sNo = index + 1;
     });
     localStorage.setItem(STORAGE_KEYS.RECEIPTS, JSON.stringify(list));
+    hotelApi.saveGeneralReceipt(receipt).catch(e => console.warn('[PmsStore] General receipt cloud sync note:', e));
 
     // Automatically update party account balance if party exists (Video 15 logic)
     this.settlePartyPayment(receipt.accountName, receipt.amount);
@@ -9186,6 +9208,7 @@ export class PmsStore {
       item.sNo = index + 1;
     });
     localStorage.setItem(STORAGE_KEYS.RECEIPTS, JSON.stringify(list));
+    hotelApi.deleteGeneralReceipt(receiptNo).catch(e => console.warn('[PmsStore] General receipt delete sync note:', e));
   }
 
   static getPartyAccounts(): PmsPartyAccount[] {
@@ -9210,6 +9233,7 @@ export class PmsStore {
       list.push(party);
     }
     localStorage.setItem(STORAGE_KEYS.PARTY_ACCOUNTS, JSON.stringify(list));
+    hotelApi.savePartyAccount(party).catch(e => console.warn('[PmsStore] Party account cloud sync note:', e));
   }
 
   static settlePartyPayment(accountName: string, amount: number): void {
@@ -9253,6 +9277,7 @@ export class PmsStore {
       item.sNo = index + 1;
     });
     localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(list));
+    hotelApi.saveGeneralPayment(payment).catch(e => console.warn('[PmsStore] General payment cloud sync note:', e));
 
     // Update party balance if it's an expense / owner / creditor
     const parties = this.getPartyAccounts();
@@ -9270,6 +9295,7 @@ export class PmsStore {
       item.sNo = index + 1;
     });
     localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(list));
+    hotelApi.deleteGeneralPayment(paymentNo).catch(e => console.warn('[PmsStore] General payment delete sync note:', e));
   }
 
   // ==========================================

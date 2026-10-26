@@ -996,6 +996,10 @@ def get_full_cloud_state(db: Session = Depends(get_db)):
     checkouts = db.query(models.CheckoutRecord).order_by(models.CheckoutRecord.id.desc()).limit(150).all()
     advance_receipts = db.query(models.AdvanceReceipt).order_by(models.AdvanceReceipt.id.desc()).limit(150).all()
     room_shifts = db.query(models.RoomShift).order_by(models.RoomShift.id.desc()).limit(100).all()
+    journal_entries = db.query(models.JournalEntry).order_by(models.JournalEntry.created_at.desc()).limit(150).all()
+    party_accounts = db.query(models.PartyAccount).order_by(models.PartyAccount.name.asc()).all()
+    general_receipts = db.query(models.GeneralReceipt).order_by(models.GeneralReceipt.created_at.desc()).limit(150).all()
+    general_payments = db.query(models.GeneralPayment).order_by(models.GeneralPayment.created_at.desc()).limit(150).all()
     masters = db.query(models.MasterItem).all()
 
     masters_by_cat = {}
@@ -1218,6 +1222,58 @@ def get_full_cloud_state(db: Session = Depends(get_db)):
             "shiftedBy": rs.shifted_by,
             "createdAt": rs.created_at.isoformat() if rs.created_at else None
         } for rs in room_shifts],
+        "journal_entries": [{
+            "entryId": j.entry_id,
+            "date": j.date,
+            "time": j.time,
+            "voucherType": j.voucher_type,
+            "referenceNo": j.reference_no,
+            "narration": j.narration,
+            "debitAccount": j.debit_account,
+            "creditAccount": j.credit_account,
+            "amountPaise": j.amount_paise,
+            "amountRupees": j.amount_rupees,
+            "postedBy": j.posted_by,
+            "createdAt": j.created_at.isoformat() if j.created_at else None
+        } for j in journal_entries],
+        "party_accounts": [{
+            "id": p.id,
+            "name": p.name,
+            "mobile": p.mobile,
+            "category": p.category,
+            "balance": p.balance,
+            "balanceType": p.balance_type,
+            "gstin": p.gstin,
+            "address": p.address
+        } for p in party_accounts],
+        "general_receipts": [{
+            "id": f"rec-{r.id}",
+            "sNo": r.s_no,
+            "voucherName": r.voucher_name,
+            "receiptNo": r.receipt_no,
+            "voucherNo": r.voucher_no,
+            "date": r.date,
+            "paymentMode": r.payment_mode,
+            "accountName": r.account_name,
+            "accountMobile": r.account_mobile,
+            "amount": r.amount,
+            "remark": r.remark,
+            "createdAt": r.created_at.isoformat() if r.created_at else None
+        } for r in general_receipts],
+        "general_payments": [{
+            "id": f"pay-{p.id}",
+            "sNo": p.s_no,
+            "voucherName": p.voucher_name,
+            "paymentNo": p.payment_no,
+            "voucherNo": p.voucher_no,
+            "date": p.date,
+            "paymentMode": p.payment_mode,
+            "accountName": p.account_name,
+            "accountMobile": p.account_mobile,
+            "amount": p.amount,
+            "remark": p.remark,
+            "createdAt": p.created_at.isoformat() if p.created_at else None
+        } for p in general_payments],
         "masters": masters_by_cat
     }
 
@@ -2563,3 +2619,312 @@ def delete_advance_receipt(receipt_no: str, db: Session = Depends(get_db)):
     db.delete(rec)
     db.commit()
     return {"success": True, "message": f"Advance receipt {receipt_no} deleted."}
+
+# --- 21. General Ledger & Double-Entry Journal Postings ---
+@router.post("/journal-entries")
+def post_journal_entry(payload: schemas.JournalEntryCreate, db: Session = Depends(get_db)):
+    """Record a double-entry financial journal entry in PostgreSQL."""
+    e_id = payload.entry_id or payload.entryId or f"JV-{datetime.date.today().year}-{int(datetime.datetime.utcnow().timestamp()) % 10000:04d}"
+    dt = payload.date or datetime.date.today().isoformat()
+    tm = payload.time or datetime.datetime.utcnow().strftime("%I:%M %p")
+    v_type = payload.voucher_type or payload.voucherType or "Manual"
+    ref_no = payload.reference_no or payload.referenceNo
+    debit = payload.debit_account or payload.debitAccount or "Cash in Hand (Reception)"
+    credit = payload.credit_account or payload.creditAccount or "Room Accommodation Revenue"
+    amt_rupees = payload.amount_rupees or (payload.amountRupees if payload.amountRupees is not None else 0.0)
+    amt_paise = payload.amount_paise or (payload.amountPaise if payload.amountPaise is not None else int(round(amt_rupees * 100)))
+    if amt_rupees == 0.0 and amt_paise > 0:
+        amt_rupees = round(amt_paise / 100.0, 2)
+    posted_by = payload.posted_by or payload.postedBy or "Front Desk Mgr"
+
+    entry = models.JournalEntry(
+        entry_id=e_id,
+        date=dt,
+        time=tm,
+        voucher_type=v_type,
+        reference_no=ref_no,
+        narration=payload.narration,
+        debit_account=debit,
+        credit_account=credit,
+        amount_paise=amt_paise,
+        amount_rupees=amt_rupees,
+        posted_by=posted_by
+    )
+    db.add(entry)
+    db.commit()
+    db.refresh(entry)
+
+    return {
+        "success": True,
+        "message": f"Journal Entry {entry.entry_id} (₹{entry.amount_rupees}) posted to general ledger.",
+        "entryId": entry.entry_id,
+        "date": entry.date,
+        "time": entry.time,
+        "voucherType": entry.voucher_type,
+        "referenceNo": entry.reference_no,
+        "narration": entry.narration,
+        "debitAccount": entry.debit_account,
+        "creditAccount": entry.credit_account,
+        "amountPaise": entry.amount_paise,
+        "amountRupees": entry.amount_rupees,
+        "postedBy": entry.posted_by
+    }
+
+@router.get("/journal-entries")
+def get_journal_entries(db: Session = Depends(get_db)):
+    """Retrieve all double-entry journal vouchers from PostgreSQL."""
+    entries = db.query(models.JournalEntry).order_by(models.JournalEntry.created_at.desc()).limit(300).all()
+    return [{
+        "entryId": j.entry_id,
+        "date": j.date,
+        "time": j.time,
+        "voucherType": j.voucher_type,
+        "referenceNo": j.reference_no,
+        "narration": j.narration,
+        "debitAccount": j.debit_account,
+        "creditAccount": j.credit_account,
+        "amountPaise": j.amount_paise,
+        "amountRupees": j.amount_rupees,
+        "postedBy": j.posted_by,
+        "createdAt": j.created_at.isoformat() if j.created_at else None
+    } for j in entries]
+
+# --- 22. Party Accounts & Sundry Debtors/Creditors ---
+@router.post("/party-accounts")
+def save_party_account(payload: schemas.PartyAccountCreate, db: Session = Depends(get_db)):
+    """Save or update a party account (Customer, Vendor, Corporate, Bank) in PostgreSQL."""
+    existing = db.query(models.PartyAccount).filter(
+        (models.PartyAccount.name.ilike(payload.name.strip())) |
+        (models.PartyAccount.id == payload.id if payload.id else False)
+    ).first()
+
+    b_type = payload.balance_type or payload.balanceType or "Dr"
+
+    if existing:
+        existing.name = payload.name.strip()
+        if payload.mobile:
+            existing.mobile = payload.mobile
+        if payload.category:
+            existing.category = payload.category
+        if payload.balance is not None:
+            existing.balance = payload.balance
+        existing.balance_type = b_type
+        if payload.gstin:
+            existing.gstin = payload.gstin
+        if payload.address:
+            existing.address = payload.address
+        party = existing
+    else:
+        p_id = payload.id or f"pa-{uuid.uuid4().hex[:6]}"
+        party = models.PartyAccount(
+            id=p_id,
+            name=payload.name.strip(),
+            mobile=payload.mobile,
+            category=payload.category or "General",
+            balance=payload.balance or 0.0,
+            balance_type=b_type,
+            gstin=payload.gstin,
+            address=payload.address
+        )
+        db.add(party)
+
+    db.commit()
+    db.refresh(party)
+    return {
+        "success": True,
+        "id": party.id,
+        "name": party.name,
+        "mobile": party.mobile,
+        "category": party.category,
+        "balance": party.balance,
+        "balanceType": party.balance_type,
+        "gstin": party.gstin,
+        "address": party.address
+    }
+
+@router.get("/party-accounts")
+def get_party_accounts(db: Session = Depends(get_db)):
+    """Retrieve all party accounts from PostgreSQL."""
+    parties = db.query(models.PartyAccount).order_by(models.PartyAccount.name.asc()).all()
+    return [{
+        "id": p.id,
+        "name": p.name,
+        "mobile": p.mobile,
+        "category": p.category,
+        "balance": p.balance,
+        "balanceType": p.balance_type,
+        "gstin": p.gstin,
+        "address": p.address
+    } for p in parties]
+
+@router.delete("/party-accounts/{account_id}")
+def delete_party_account(account_id: str, db: Session = Depends(get_db)):
+    """Delete a party account from PostgreSQL."""
+    p = db.query(models.PartyAccount).filter(
+        (models.PartyAccount.id == account_id) | (models.PartyAccount.name.ilike(account_id))
+    ).first()
+    if not p:
+        raise HTTPException(status_code=404, detail="Party account not found")
+    db.delete(p)
+    db.commit()
+    return {"success": True, "message": f"Party account {account_id} removed."}
+
+# --- 23. General Receipts Register ---
+@router.post("/general-receipts")
+def save_general_receipt(payload: schemas.GeneralReceiptCreate, db: Session = Depends(get_db)):
+    """Save a general receipt voucher in PostgreSQL and update party balance."""
+    r_no = payload.receipt_no or payload.receiptNo or f"REC/{int(datetime.datetime.utcnow().timestamp()) % 100000}/24-25"
+    v_name = payload.voucher_name or payload.voucherName or "Receipts"
+    v_no = payload.voucher_no or payload.voucherNo or 1
+    dt = payload.date or datetime.date.today().isoformat()
+    p_mode = payload.payment_mode or payload.paymentMode or "Cash"
+    acc_name = payload.account_name or payload.accountName or "Cash"
+    acc_mob = payload.account_mobile or payload.accountMobile
+
+    rec = models.GeneralReceipt(
+        s_no=payload.s_no or payload.sNo or 1,
+        voucher_name=v_name,
+        receipt_no=r_no,
+        voucher_no=v_no,
+        date=dt,
+        payment_mode=p_mode,
+        account_name=acc_name,
+        account_mobile=acc_mob,
+        amount=payload.amount,
+        remark=payload.remark
+    )
+    db.add(rec)
+
+    # Settle party balance if matching party account exists
+    party = db.query(models.PartyAccount).filter(models.PartyAccount.name.ilike(acc_name.strip())).first()
+    if party:
+        party.balance = max(0.0, round(party.balance - payload.amount, 2))
+        if party.balance == 0.0:
+            party.balance_type = "Dr"
+
+    db.commit()
+    db.refresh(rec)
+    return {
+        "success": True,
+        "message": f"General Receipt {rec.receipt_no} (₹{rec.amount}) recorded in PostgreSQL.",
+        "id": f"rec-{rec.id}",
+        "sNo": rec.s_no,
+        "voucherName": rec.voucher_name,
+        "receiptNo": rec.receipt_no,
+        "voucherNo": rec.voucher_no,
+        "date": rec.date,
+        "paymentMode": rec.payment_mode,
+        "accountName": rec.account_name,
+        "accountMobile": rec.account_mobile,
+        "amount": rec.amount,
+        "remark": rec.remark
+    }
+
+@router.get("/general-receipts")
+def get_general_receipts(db: Session = Depends(get_db)):
+    """Retrieve all general receipts from PostgreSQL."""
+    receipts = db.query(models.GeneralReceipt).order_by(models.GeneralReceipt.created_at.desc()).limit(300).all()
+    return [{
+        "id": f"rec-{r.id}",
+        "sNo": r.s_no,
+        "voucherName": r.voucher_name,
+        "receiptNo": r.receipt_no,
+        "voucherNo": r.voucher_no,
+        "date": r.date,
+        "paymentMode": r.payment_mode,
+        "accountName": r.account_name,
+        "accountMobile": r.account_mobile,
+        "amount": r.amount,
+        "remark": r.remark,
+        "createdAt": r.created_at.isoformat() if r.created_at else None
+    } for r in receipts]
+
+@router.delete("/general-receipts/{receipt_no}")
+def delete_general_receipt(receipt_no: str, db: Session = Depends(get_db)):
+    """Delete a general receipt voucher from PostgreSQL."""
+    rec = db.query(models.GeneralReceipt).filter(models.GeneralReceipt.receipt_no == receipt_no).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail="Receipt not found")
+    db.delete(rec)
+    db.commit()
+    return {"success": True, "message": f"Receipt {receipt_no} deleted."}
+
+# --- 24. General Payments Register ---
+@router.post("/general-payments")
+def save_general_payment(payload: schemas.GeneralPaymentCreate, db: Session = Depends(get_db)):
+    """Save a general payment voucher in PostgreSQL and update party balance."""
+    p_no = payload.payment_no or payload.paymentNo or f"PAY/{int(datetime.datetime.utcnow().timestamp()) % 100000}/24-25"
+    v_name = payload.voucher_name or payload.voucherName or "Payments"
+    v_no = payload.voucher_no or payload.voucherNo or 1
+    dt = payload.date or datetime.date.today().isoformat()
+    p_mode = payload.payment_mode or payload.paymentMode or "Cash"
+    acc_name = payload.account_name or payload.accountName or "Cash"
+    acc_mob = payload.account_mobile or payload.accountMobile
+
+    pmt = models.GeneralPayment(
+        s_no=payload.s_no or payload.sNo or 1,
+        voucher_name=v_name,
+        payment_no=p_no,
+        voucher_no=v_no,
+        date=dt,
+        payment_mode=p_mode,
+        account_name=acc_name,
+        account_mobile=acc_mob,
+        amount=payload.amount,
+        remark=payload.remark
+    )
+    db.add(pmt)
+
+    # Update party balance if matching party account exists
+    party = db.query(models.PartyAccount).filter(models.PartyAccount.name.ilike(acc_name.strip())).first()
+    if party:
+        party.balance = round(party.balance + payload.amount, 2)
+        party.balance_type = "Dr"
+
+    db.commit()
+    db.refresh(pmt)
+    return {
+        "success": True,
+        "message": f"General Payment {pmt.payment_no} (₹{pmt.amount}) recorded in PostgreSQL.",
+        "id": f"pay-{pmt.id}",
+        "sNo": pmt.s_no,
+        "voucherName": pmt.voucher_name,
+        "paymentNo": pmt.payment_no,
+        "voucherNo": pmt.voucher_no,
+        "date": pmt.date,
+        "paymentMode": pmt.payment_mode,
+        "accountName": pmt.account_name,
+        "accountMobile": pmt.account_mobile,
+        "amount": pmt.amount,
+        "remark": pmt.remark
+    }
+
+@router.get("/general-payments")
+def get_general_payments(db: Session = Depends(get_db)):
+    """Retrieve all general payments from PostgreSQL."""
+    payments = db.query(models.GeneralPayment).order_by(models.GeneralPayment.created_at.desc()).limit(300).all()
+    return [{
+        "id": f"pay-{p.id}",
+        "sNo": p.s_no,
+        "voucherName": p.voucher_name,
+        "paymentNo": p.payment_no,
+        "voucherNo": p.voucher_no,
+        "date": p.date,
+        "paymentMode": p.payment_mode,
+        "accountName": p.account_name,
+        "accountMobile": p.account_mobile,
+        "amount": p.amount,
+        "remark": p.remark,
+        "createdAt": p.created_at.isoformat() if p.created_at else None
+    } for p in payments]
+
+@router.delete("/general-payments/{payment_no}")
+def delete_general_payment(payment_no: str, db: Session = Depends(get_db)):
+    """Delete a general payment voucher from PostgreSQL."""
+    pmt = db.query(models.GeneralPayment).filter(models.GeneralPayment.payment_no == payment_no).first()
+    if not pmt:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    db.delete(pmt)
+    db.commit()
+    return {"success": True, "message": f"Payment {payment_no} deleted."}
+

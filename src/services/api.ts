@@ -903,6 +903,126 @@ export const hotelApi = {
     });
     if (!res.ok) throw new Error('Failed to delete advance receipt from PostgreSQL');
     return await res.json();
+  },
+
+  // Module 21: Double-Entry Financial Journal Ledger
+  async postJournalEntry(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/journal-entries`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to post journal entry to PostgreSQL');
+    }
+    return await res.json();
+  },
+
+  async getJournalEntries(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/journal-entries`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  // Module 22: Party Accounts (Sundry Creditors & Debtors)
+  async savePartyAccount(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/party-accounts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to save party account to PostgreSQL');
+    }
+    return await res.json();
+  },
+
+  async getPartyAccounts(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/party-accounts`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async deletePartyAccount(accountId: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/party-accounts/${encodeURIComponent(accountId)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete party account from PostgreSQL');
+    return await res.json();
+  },
+
+  // Module 23: General Receipts Register
+  async saveGeneralReceipt(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/general-receipts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to persist general receipt to PostgreSQL');
+    }
+    return await res.json();
+  },
+
+  async getGeneralReceipts(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/general-receipts`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async deleteGeneralReceipt(receiptNo: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/general-receipts/${encodeURIComponent(receiptNo)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete general receipt from PostgreSQL');
+    return await res.json();
+  },
+
+  // Module 24: General Payments Register
+  async saveGeneralPayment(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/general-payments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to persist general payment to PostgreSQL');
+    }
+    return await res.json();
+  },
+
+  async getGeneralPayments(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/general-payments`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async deleteGeneralPayment(paymentNo: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/general-payments/${encodeURIComponent(paymentNo)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete general payment from PostgreSQL');
+    return await res.json();
   }
 };
 

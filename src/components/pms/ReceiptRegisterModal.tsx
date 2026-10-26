@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PmsStore } from '../../services/pmsStore';
+import { hotelApi } from '../../services/api';
 import type { PmsReceiptRecord } from '../../types/pmsModels';
 import { AddReceiptModal } from './AddReceiptModal';
 import { OutstandingReceivablesModal } from './OutstandingReceivablesModal';
@@ -27,6 +28,11 @@ export const ReceiptRegisterModal: React.FC<ReceiptRegisterModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setReceipts(PmsStore.getReceipts());
+      hotelApi.getGeneralReceipts().then(cloudList => {
+        if (cloudList && cloudList.length > 0) {
+          setReceipts(cloudList);
+        }
+      }).catch(err => console.warn('[ReceiptRegisterModal] Cloud receipts fetch note:', err));
     }
   }, [isOpen]);
 

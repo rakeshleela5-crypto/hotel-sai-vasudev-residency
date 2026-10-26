@@ -161,6 +161,10 @@ def test_parity_endpoints():
     assert "checkouts" in state
     assert "advance_receipts" in state
     assert "room_shifts" in state
+    assert "journal_entries" in state
+    assert "party_accounts" in state
+    assert "general_receipts" in state
+    assert "general_payments" in state
     assert "masters" in state
     print(f"   [OK] Full Cloud State Hydration: {len(state['rooms'])} rooms, {len(state['food_bills'])} food bills, {len(state['expenses'])} expenses, {len(state['purchases'])} purchases, {len(state['discounts'])} discounts, {len(state['group_bookings'])} group bookings")
 
@@ -258,6 +262,88 @@ def test_parity_endpoints():
     assert r.status_code == 200
     assert len(r.json()) >= 1
     print(f"   [OK] Room Shifts Query: Found {len(r.json())} shift record(s)")
+
+    # 16. Journal Entry Test
+    jv_payload = {
+        "entryId": "JV-2026-TEST",
+        "date": "2026-10-26",
+        "time": "11:30 AM",
+        "voucherType": "CheckOut",
+        "referenceNo": "GSR/TEST/26-27",
+        "narration": "Test Room Checkout Folio settlement posting",
+        "debitAccount": "Cash in Hand (Reception)",
+        "creditAccount": "Room Accommodation Revenue",
+        "amountRupees": 2760.0,
+        "postedBy": "Duty Manager"
+    }
+    r = client.post("/api/v1/pms/journal-entries", json=jv_payload)
+    assert r.status_code == 200, f"Journal entry failed: {r.text}"
+    print(f"   [OK] Journal Entry Posted: {r.json()['entryId']} (Rs.{r.json()['amountRupees']})")
+
+    r = client.get("/api/v1/pms/journal-entries")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Journal Entries Query: Found {len(r.json())} record(s)")
+
+    # 17. Party Account Test
+    party_payload = {
+        "id": "pa-jk-paper",
+        "name": "JK Paper Ltd Corporate",
+        "mobile": "+91 94402 89999",
+        "category": "Corporate",
+        "balance": 25000.0,
+        "balanceType": "Dr",
+        "gstin": "21AAACJ0123M1Z5",
+        "address": "Jaykaypur, Rayagada, Odisha"
+    }
+    r = client.post("/api/v1/pms/party-accounts", json=party_payload)
+    assert r.status_code == 200, f"Party account failed: {r.text}"
+    print(f"   [OK] Party Account Saved: {r.json()['name']} (Bal: Rs.{r.json()['balance']} {r.json()['balanceType']})")
+
+    r = client.get("/api/v1/pms/party-accounts")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Party Accounts Query: Found {len(r.json())} party account(s)")
+
+    # 18. General Receipt Voucher Test
+    rec_payload = {
+        "receiptNo": "REC/2026/TEST",
+        "voucherName": "Receipts",
+        "voucherNo": 101,
+        "date": "2026-10-26",
+        "paymentMode": "Cash",
+        "accountName": "JK Paper Ltd Corporate",
+        "amount": 5000.0,
+        "remark": "Partial settlement of corporate conference folio"
+    }
+    r = client.post("/api/v1/pms/general-receipts", json=rec_payload)
+    assert r.status_code == 200, f"General receipt failed: {r.text}"
+    print(f"   [OK] General Receipt Recorded: {r.json()['receiptNo']} for Rs.{r.json()['amount']}")
+
+    r = client.get("/api/v1/pms/general-receipts")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] General Receipts Query: Found {len(r.json())} receipt voucher(s)")
+
+    # 19. General Payment Voucher Test
+    pmt_payload = {
+        "paymentNo": "PAY/2026/TEST",
+        "voucherName": "Payments",
+        "voucherNo": 501,
+        "date": "2026-10-26",
+        "paymentMode": "Online",
+        "accountName": "Sai Ghee & Dairy Supplier",
+        "amount": 12000.0,
+        "remark": "Kitchen butter & pure ghee weekly payment"
+    }
+    r = client.post("/api/v1/pms/general-payments", json=pmt_payload)
+    assert r.status_code == 200, f"General payment failed: {r.text}"
+    print(f"   [OK] General Payment Recorded: {r.json()['paymentNo']} for Rs.{r.json()['amount']}")
+
+    r = client.get("/api/v1/pms/general-payments")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] General Payments Query: Found {len(r.json())} payment voucher(s)")
 
     print("\n=== ALL PARITY ENDPOINTS TESTED & PASSED 100%! ===")
 

@@ -829,3 +829,76 @@ class AdvanceReceiptCreate(BaseModel):
     paymentMode: Optional[str] = None
     remark: Optional[str] = None
 
+class JournalEntryCreate(BaseModel):
+    entry_id: Optional[str] = None
+    entryId: Optional[str] = None
+    date: Optional[str] = None
+    time: Optional[str] = None
+    voucher_type: Optional[str] = "Manual"
+    voucherType: Optional[str] = None
+    reference_no: Optional[str] = None
+    referenceNo: Optional[str] = None
+    narration: str
+    debit_account: Optional[str] = None
+    debitAccount: Optional[str] = None
+    credit_account: Optional[str] = None
+    creditAccount: Optional[str] = None
+    amount_paise: Optional[int] = 0
+    amountPaise: Optional[int] = None
+    amount_rupees: Optional[float] = 0.0
+    amountRupees: Optional[float] = None
+    posted_by: Optional[str] = "Front Desk Mgr"
+    postedBy: Optional[str] = None
+
+class PartyAccountCreate(BaseModel):
+    id: Optional[str] = None
+    name: str
+    mobile: Optional[str] = None
+    category: Optional[str] = "General"
+    balance: Optional[float] = 0.0
+    balance_type: Optional[str] = "Dr"
+    balanceType: Optional[str] = None
+    gstin: Optional[str] = None
+    address: Optional[str] = None
+
+class GeneralReceiptCreate(BaseModel):
+    id: Optional[str] = None
+    s_no: Optional[int] = 1
+    sNo: Optional[int] = None
+    voucher_name: Optional[str] = "Receipts"
+    voucherName: Optional[str] = None
+    receipt_no: Optional[str] = None
+    receiptNo: Optional[str] = None
+    voucher_no: Optional[int] = 1
+    voucherNo: Optional[int] = None
+    date: Optional[str] = None
+    payment_mode: Optional[str] = "Cash"
+    paymentMode: Optional[str] = None
+    account_name: Optional[str] = None
+    accountName: Optional[str] = None
+    account_mobile: Optional[str] = None
+    accountMobile: Optional[str] = None
+    amount: float
+    remark: Optional[str] = None
+
+class GeneralPaymentCreate(BaseModel):
+    id: Optional[str] = None
+    s_no: Optional[int] = 1
+    sNo: Optional[int] = None
+    voucher_name: Optional[str] = "Payments"
+    voucherName: Optional[str] = None
+    payment_no: Optional[str] = None
+    paymentNo: Optional[str] = None
+    voucher_no: Optional[int] = 1
+    voucherNo: Optional[int] = None
+    date: Optional[str] = None
+    payment_mode: Optional[str] = "Cash"
+    paymentMode: Optional[str] = None
+    account_name: Optional[str] = None
+    accountName: Optional[str] = None
+    account_mobile: Optional[str] = None
+    accountMobile: Optional[str] = None
+    amount: float
+    remark: Optional[str] = None
+
+
