@@ -1500,6 +1500,266 @@ export const hotelApi = {
     });
     if (!res.ok) throw new Error('Failed to delete support ticket from PostgreSQL');
     return await res.json();
+  },
+
+  // Module 38: Hotel Settings & Identity
+  async getHotelSettings(): Promise<any> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/settings`);
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async saveHotelSettings(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/settings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to save hotel settings');
+    return await res.json();
+  },
+
+  // Module 39: Room Types Master
+  async getRoomTypes(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/room-types`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async saveRoomType(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/room-types`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to save room type');
+    return await res.json();
+  },
+
+  async deleteRoomType(typeId: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/room-types/${encodeURIComponent(typeId)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete room type');
+    return await res.json();
+  },
+
+  // Module 40: Restaurant Menu Items
+  async getMenuItems(category?: string): Promise<any[]> {
+    try {
+      const url = category ? `${API_BASE_URL}/pms/menu-items?category=${encodeURIComponent(category)}` : `${API_BASE_URL}/pms/menu-items`;
+      const res = await fetch(url);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async saveMenuItem(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/menu-items`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to save menu item');
+    return await res.json();
+  },
+
+  async saveMenuItemsBulk(items: any[]): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/menu-items/bulk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(items)
+    });
+    if (!res.ok) throw new Error('Failed to save menu items bulk');
+    return await res.json();
+  },
+
+  async deleteMenuItem(itemCode: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/menu-items/${encodeURIComponent(itemCode)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete menu item');
+    return await res.json();
+  },
+
+  // Module 41: Housekeeping Duty Records
+  async getHousekeepingRecords(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/housekeeping`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async saveHousekeepingRecord(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/housekeeping`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to save housekeeping record');
+    return await res.json();
+  },
+
+  // Module 42: Agent Commission Accruals
+  async getAgentCommissions(agentId?: string, status?: string): Promise<any[]> {
+    try {
+      const params = new URLSearchParams();
+      if (agentId) params.append('agent_id', agentId);
+      if (status) params.append('status', status);
+      const url = `${API_BASE_URL}/pms/agent-commissions${params.toString() ? '?' + params.toString() : ''}`;
+      const res = await fetch(url);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async saveAgentCommission(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/agent-commissions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to save agent commission');
+    return await res.json();
+  },
+
+  async updateAgentCommissionStatus(commissionId: string, status: string, payoutVoucherNo?: string, payoutDate?: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/agent-commissions/${encodeURIComponent(commissionId)}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status, payoutVoucherNo, payoutDate })
+    });
+    if (!res.ok) throw new Error('Failed to update agent commission status');
+    return await res.json();
+  },
+
+  // Module 43: WhatsApp & SMS Notification Templates
+  async getWhatsAppTemplates(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/whatsapp-templates`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async saveWhatsAppTemplate(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/whatsapp-templates`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to save whatsapp template');
+    return await res.json();
+  },
+
+  async saveWhatsAppTemplatesBulk(templates: any[]): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/whatsapp-templates/bulk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(templates)
+    });
+    if (!res.ok) throw new Error('Failed to bulk save whatsapp templates');
+    return await res.json();
+  },
+
+  // Module 44: Roles & Permissions Matrix
+  async getRoles(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/roles`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async saveRole(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/roles`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to save role');
+    return await res.json();
+  },
+
+  // Module 45: No-Discount Margin Protection Config
+  async getNoDiscountConfig(): Promise<any> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/no-discount-config`);
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async saveNoDiscountConfig(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/no-discount-config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to save no-discount config');
+    return await res.json();
+  },
+
+  // Module 46: Liquor Brands & Dispensing Units
+  async getLiquorBrands(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/liquor-brands`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async saveLiquorBrand(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/liquor-brands`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to save liquor brand');
+    return await res.json();
+  },
+
+  async getLiquorUnits(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/liquor-units`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async saveLiquorUnit(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/liquor-units`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to save liquor unit');
+    return await res.json();
   }
 };
 

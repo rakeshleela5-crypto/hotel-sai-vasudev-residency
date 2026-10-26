@@ -1310,6 +1310,220 @@ class SupportTicketCreate(BaseModel):
     resolution_notes: Optional[str] = None
     resolutionNotes: Optional[str] = None
 
+class HotelSettingCreate(BaseModel):
+    key: Optional[str] = "default"
+    firm_name: Optional[str] = None
+    firmName: Optional[str] = None
+    legal_name: Optional[str] = None
+    legalName: Optional[str] = None
+    trade_name: Optional[str] = None
+    tradeName: Optional[str] = None
+    address1: Optional[str] = None
+    address2: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    pincode: Optional[str] = None
+    phone: Optional[str] = None
+    mobile: Optional[str] = None
+    email: Optional[str] = None
+    website: Optional[str] = None
+    gst_no: Optional[str] = None
+    gstNo: Optional[str] = None
+    gstin: Optional[str] = None
+    company_gst_code: Optional[str] = None
+    companyGstCode: Optional[str] = None
+    pan_no: Optional[str] = None
+    pencardNo: Optional[str] = None
+    fssai_no: Optional[str] = None
+    bank_name: Optional[str] = None
+    bankName: Optional[str] = None
+    bank_account_no: Optional[str] = None
+    bankAccountNo: Optional[str] = None
+    bank_ifsc: Optional[str] = None
+    bankIfsc: Optional[str] = None
+    bank_branch: Optional[str] = None
+    bankBranch: Optional[str] = None
+    upi_id: Optional[str] = None
+    upiId: Optional[str] = None
+    calculation_type: Optional[str] = None
+    calculationType: Optional[str] = None
+    standard_checkout_time: Optional[str] = None
+    standardCheckoutTime: Optional[str] = None
+    make_all_bill_local_gst: Optional[bool] = None
+    makeAllBillLocalGst: Optional[bool] = None
+    restaurant_food_bill_tax_inclusive: Optional[bool] = None
+    restaurantFoodBillTaxInclusive: Optional[bool] = None
+    terms_and_conditions: Optional[str] = None
+    termsAndConditions: Optional[str] = None
+    logo_url: Optional[str] = None
+    logoUrl: Optional[str] = None
+    seal_url: Optional[str] = None
+    signature_url: Optional[str] = None
+
+class RoomTypeCreate(BaseModel):
+    id: Optional[str] = None
+    type_id: Optional[str] = None
+    room_type_name: Optional[str] = None
+    roomTypeName: Optional[str] = None
+    package: Optional[str] = "EP"
+    gst_tax_string: Optional[str] = None
+    gstTaxString: Optional[str] = None
+    gst_percent: Optional[float] = 12.0
+    gstPercent: Optional[float] = None
+    room_tariff: Optional[float] = 2500.0
+    roomTariff: Optional[float] = None
+    discount_percent: Optional[float] = 0.0
+    discountPercent: Optional[float] = None
+
+class MenuItemCreate(BaseModel):
+    id: Optional[str] = None
+    item_code: Optional[str] = None
+    code: Optional[str] = None
+    name: str
+    category: str
+    rate: Optional[float] = 0.0
+    sale_rate: Optional[float] = None
+    saleRate: Optional[float] = None
+    mrp: Optional[float] = None
+    purchase_rate: Optional[float] = None
+    purchaseRate: Optional[float] = None
+    unit: Optional[str] = "Pcs"
+    gst_percent: Optional[float] = 5.0
+    gstPercent: Optional[float] = None
+    head_group: Optional[str] = None
+    headGroup: Optional[str] = None
+    hsn_code: Optional[str] = None
+    hsnCode: Optional[str] = None
+    sac_code: Optional[str] = None
+    sacCode: Optional[str] = None
+    no_discount: Optional[bool] = None
+    noDiscount: Optional[bool] = None
+
+class HousekeepingRecordCreate(BaseModel):
+    room_no: Optional[str] = None
+    roomNo: Optional[str] = None
+    status: Optional[str] = "Vacant Clean"
+    assigned_staff: Optional[str] = None
+    assignedStaff: Optional[str] = None
+    priority: Optional[str] = "Normal"
+    last_cleaned_time: Optional[str] = None
+    lastCleanedTime: Optional[str] = None
+    cleaning_started_at: Optional[str] = None
+    cleaningStartedAt: Optional[str] = None
+    maintenance_issue: Optional[str] = None
+    maintenanceIssue: Optional[str] = None
+    maintenance_logged_at: Optional[str] = None
+    maintenanceLoggedAt: Optional[str] = None
+    remarks: Optional[str] = None
+
+class AgentCommissionAccrualCreate(BaseModel):
+    id: Optional[str] = None
+    commission_id: Optional[str] = None
+    agent_id: Optional[str] = None
+    agentId: Optional[str] = None
+    agent_name: Optional[str] = None
+    agentName: Optional[str] = None
+    agent_type: Optional[str] = None
+    agentType: Optional[str] = None
+    check_in_no: Optional[str] = None
+    checkInNo: Optional[str] = None
+    booking_ref_no: Optional[str] = None
+    bookingRefNo: Optional[str] = None
+    room_no: Optional[str] = None
+    roomNo: Optional[str] = None
+    guest_name: Optional[str] = None
+    guestName: Optional[str] = None
+    guest_mobile: Optional[str] = None
+    guestMobile: Optional[str] = None
+    check_in_date: Optional[str] = None
+    checkInDate: Optional[str] = None
+    check_out_date: Optional[str] = None
+    checkOutDate: Optional[str] = None
+    number_of_nights: Optional[int] = 1
+    numberOfNights: Optional[int] = None
+    room_tariff: Optional[float] = 0.0
+    roomTariff: Optional[float] = None
+    gross_room_tariff: Optional[float] = 0.0
+    grossRoomTariff: Optional[float] = None
+    commission_type: Optional[str] = "PERCENTAGE"
+    commissionType: Optional[str] = None
+    commission_rate: Optional[float] = 10.0
+    commissionRate: Optional[float] = None
+    gross_commission: Optional[float] = 0.0
+    grossCommission: Optional[float] = None
+    tds_percentage: Optional[float] = 5.0
+    tdsPercentage: Optional[float] = None
+    tds_amount: Optional[float] = 0.0
+    tdsAmount: Optional[float] = None
+    net_payable_commission: Optional[float] = 0.0
+    netPayableCommission: Optional[float] = None
+    status: Optional[str] = "PENDING"
+    payout_voucher_no: Optional[str] = None
+    payoutVoucherNo: Optional[str] = None
+    payout_date: Optional[str] = None
+    payoutDate: Optional[str] = None
+    remarks: Optional[str] = None
+
+class WhatsAppTemplateCreate(BaseModel):
+    id: Optional[Any] = None
+    template_id: Optional[str] = None
+    s_no: Optional[int] = 1
+    sNo: Optional[int] = None
+    type: Optional[str] = "WhatsApp"
+    voucher_type: Optional[str] = None
+    voucherType: Optional[str] = None
+    label: str
+    message: str
+    active: Optional[str] = "On"
+    send_to: Optional[str] = "Guest"
+    sendTo: Optional[str] = None
+
+class RolePermissionCreate(BaseModel):
+    id: Optional[Any] = None
+    role_id: Optional[str] = None
+    name: str
+    description: Optional[str] = None
+    permissions: Optional[List[str]] = None
+    permissions_json: Optional[str] = None
+    is_system: Optional[bool] = False
+    isSystem: Optional[bool] = None
+
+class NoDiscountRuleCreate(BaseModel):
+    config_key: Optional[str] = "default"
+    enabled: Optional[bool] = True
+    protected_groups: Optional[List[str]] = None
+    protectedGroups: Optional[List[str]] = None
+    max_allowed_discount_percent: Optional[float] = 20.0
+    maxAllowedDiscountPercent: Optional[float] = None
+    allow_manual_override: Optional[bool] = True
+    allowManualOverride: Optional[bool] = None
+    override_role_required: Optional[str] = "Admin"
+    overrideRoleRequired: Optional[str] = None
+    reason_required_for_override: Optional[bool] = True
+    reasonRequiredForOverride: Optional[bool] = None
+
+class LiquorBrandCreate(BaseModel):
+    id: Optional[str] = None
+    brand_id: Optional[str] = None
+    s_no: Optional[int] = 1
+    sNo: Optional[int] = None
+    name: str
+    discount_percentage: Optional[float] = 0.0
+    discountPercentage: Optional[float] = None
+    status: Optional[str] = "ACTIVE"
+
+class LiquorUnitCreate(BaseModel):
+    id: Optional[str] = None
+    unit_id: Optional[str] = None
+    s_no: Optional[int] = 1
+    sNo: Optional[int] = None
+    primary_unit_name: Optional[str] = None
+    primaryUnitName: Optional[str] = None
+    conversion: Optional[float] = 1.0
+    alternate_unit_name: Optional[str] = "ML"
+    alternateUnitName: Optional[str] = None
+
+
 
 
 

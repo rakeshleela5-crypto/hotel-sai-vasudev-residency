@@ -1,5 +1,6 @@
 import os
 import datetime
+import time
 import uuid
 import json
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, Header
@@ -1016,6 +1017,19 @@ def get_full_cloud_state(db: Session = Depends(get_db)):
     whatsapp_logs = db.query(models.WhatsAppLog).order_by(models.WhatsAppLog.created_at.desc()).limit(150).all()
     whatsapp_cfg = db.query(models.WhatsAppConfig).filter(models.WhatsAppConfig.config_key == "default").first()
     support_tickets = db.query(models.SupportTicket).order_by(models.SupportTicket.created_at.desc()).limit(150).all()
+    hotel_setting = db.query(models.HotelSetting).filter(models.HotelSetting.key == "default").first()
+    room_types = db.query(models.RoomType).order_by(models.RoomType.id.asc()).all()
+    menu_items = db.query(models.MenuItem).order_by(models.MenuItem.category.asc(), models.MenuItem.name.asc()).all()
+    housekeeping = db.query(models.HousekeepingRecord).all()
+    agent_commissions = db.query(models.AgentCommissionAccrual).order_by(models.AgentCommissionAccrual.created_at.desc()).limit(150).all()
+    whatsapp_templates = db.query(models.WhatsAppTemplate).order_by(models.WhatsAppTemplate.s_no.asc()).all()
+    roles = db.query(models.RolePermission).order_by(models.RolePermission.id.asc()).all()
+    no_discount_rule = db.query(models.NoDiscountRule).filter(models.NoDiscountRule.config_key == "default").first()
+    liquor_brands = db.query(models.LiquorBrand).order_by(models.LiquorBrand.s_no.asc()).all()
+    liquor_units = db.query(models.LiquorUnit).order_by(models.LiquorUnit.s_no.asc()).all()
+    key_cards = db.query(models.KeyCardAccess).order_by(models.KeyCardAccess.created_at.desc()).limit(100).all()
+    kot_voids = db.query(models.KotVoidAuditLog).order_by(models.KotVoidAuditLog.timestamp.desc()).limit(100).all()
+    hk_discrepancies = db.query(models.HousekeepingDiscrepancy).order_by(models.HousekeepingDiscrepancy.id.desc()).limit(100).all()
     masters = db.query(models.MasterItem).all()
 
     masters_by_cat = {}
@@ -1539,6 +1553,163 @@ def get_full_cloud_state(db: Session = Depends(get_db)):
             "assignedEngineer": t.assigned_engineer,
             "resolutionNotes": t.resolution_notes
         } for t in support_tickets],
+        "hotel_settings": {
+            "firmName": hotel_setting.firm_name,
+            "legalName": hotel_setting.legal_name,
+            "tradeName": hotel_setting.trade_name,
+            "address1": hotel_setting.address1,
+            "address2": hotel_setting.address2,
+            "city": hotel_setting.city,
+            "state": hotel_setting.state,
+            "pincode": hotel_setting.pincode,
+            "phone": hotel_setting.phone,
+            "mobile": hotel_setting.mobile,
+            "email": hotel_setting.email,
+            "website": hotel_setting.website,
+            "gstNo": hotel_setting.gst_no,
+            "companyGstCode": hotel_setting.company_gst_code,
+            "panNo": hotel_setting.pan_no,
+            "fssaiNo": hotel_setting.fssai_no,
+            "bankName": hotel_setting.bank_name,
+            "bankAccountNo": hotel_setting.bank_account_no,
+            "bankIfsc": hotel_setting.bank_ifsc,
+            "bankBranch": hotel_setting.bank_branch,
+            "upiId": hotel_setting.upi_id,
+            "calculationType": hotel_setting.calculation_type,
+            "standardCheckoutTime": hotel_setting.standard_checkout_time,
+            "makeAllBillLocalGst": hotel_setting.make_all_bill_local_gst,
+            "restaurantFoodBillTaxInclusive": hotel_setting.restaurant_food_bill_tax_inclusive,
+            "termsAndConditions": hotel_setting.terms_and_conditions,
+            "logoUrl": hotel_setting.logo_url
+        } if hotel_setting else None,
+        "room_types": [{
+            "id": rt.type_id,
+            "roomTypeName": rt.room_type_name,
+            "package": rt.package,
+            "gstTaxString": rt.gst_tax_string,
+            "gstPercent": rt.gst_percent,
+            "roomTariff": rt.room_tariff,
+            "discountPercent": rt.discount_percent
+        } for rt in room_types],
+        "menu_items": [{
+            "id": it.item_code,
+            "code": it.item_code,
+            "name": it.name,
+            "category": it.category,
+            "rate": it.rate,
+            "saleRate": it.sale_rate,
+            "mrp": it.mrp,
+            "purchaseRate": it.purchase_rate,
+            "unit": it.unit,
+            "gstPercent": it.gst_percent,
+            "headGroup": it.head_group,
+            "hsnCode": it.hsn_code,
+            "sacCode": it.sac_code,
+            "noDiscount": it.no_discount
+        } for it in menu_items],
+        "housekeeping": [{
+            "roomNo": r.room_no,
+            "status": r.status,
+            "assignedStaff": r.assigned_staff,
+            "priority": r.priority,
+            "lastCleanedTime": r.last_cleaned_time,
+            "cleaningStartedAt": r.cleaning_started_at,
+            "maintenanceIssue": r.maintenance_issue,
+            "maintenanceLoggedAt": r.maintenance_logged_at,
+            "remarks": r.remarks
+        } for r in housekeeping],
+        "agent_commissions": [{
+            "id": c.commission_id,
+            "agentId": c.agent_id,
+            "agentName": c.agent_name,
+            "agentType": c.agent_type,
+            "checkInNo": c.check_in_no,
+            "bookingRefNo": c.booking_ref_no,
+            "roomNo": c.room_no,
+            "guestName": c.guest_name,
+            "guestMobile": c.guest_mobile,
+            "checkInDate": c.check_in_date,
+            "checkOutDate": c.check_out_date,
+            "numberOfNights": c.number_of_nights,
+            "roomTariff": c.room_tariff,
+            "grossRoomTariff": c.gross_room_tariff,
+            "commissionType": c.commission_type,
+            "commissionRate": c.commission_rate,
+            "grossCommission": c.gross_commission,
+            "tdsPercentage": c.tds_percentage,
+            "tdsAmount": c.tds_amount,
+            "netPayableCommission": c.net_payable_commission,
+            "status": c.status,
+            "payoutVoucherNo": c.payout_voucher_no,
+            "payoutDate": c.payout_date,
+            "remarks": c.remarks,
+            "createdAt": c.created_at.isoformat() if c.created_at else None
+        } for c in agent_commissions],
+        "whatsapp_templates": [{
+            "id": t.id,
+            "templateId": t.template_id,
+            "sNo": t.s_no,
+            "type": t.type,
+            "voucherType": t.voucher_type,
+            "label": t.label,
+            "message": t.message,
+            "active": t.active,
+            "sendTo": t.send_to
+        } for t in whatsapp_templates],
+        "roles": [{
+            "id": r.id,
+            "roleId": r.role_id,
+            "name": r.name,
+            "description": r.description,
+            "permissions": json.loads(r.permissions_json) if r.permissions_json else [],
+            "isSystem": r.is_system
+        } for r in roles],
+        "no_discount_config": {
+            "enabled": no_discount_rule.enabled,
+            "protectedGroups": json.loads(no_discount_rule.protected_groups_json) if no_discount_rule.protected_groups_json else [],
+            "maxAllowedDiscountPercent": no_discount_rule.max_allowed_discount_percent,
+            "allowManualOverride": no_discount_rule.allow_manual_override,
+            "overrideRoleRequired": no_discount_rule.override_role_required,
+            "reasonRequiredForOverride": no_discount_rule.reason_required_for_override
+        } if no_discount_rule else None,
+        "liquor_brands": [{
+            "id": b.brand_id,
+            "sNo": b.s_no,
+            "name": b.name,
+            "discountPercentage": b.discount_percentage,
+            "status": b.status
+        } for b in liquor_brands],
+        "liquor_units": [{
+            "id": u.unit_id,
+            "sNo": u.s_no,
+            "primaryUnitName": u.primary_unit_name,
+            "conversion": u.conversion,
+            "alternateUnitName": u.alternate_unit_name
+        } for u in liquor_units],
+        "key_cards": [{
+            "cardUid": kc.card_uid,
+            "roomNumber": kc.room_no,
+            "guestName": kc.guest_name,
+            "status": kc.status,
+            "validUntil": kc.scheduled_checkout_time.isoformat() if kc.scheduled_checkout_time else None
+        } for kc in key_cards],
+        "kot_void_audit": [{
+            "kotId": kv.kot_no,
+            "itemName": kv.item_name,
+            "quantity": kv.qty_voided,
+            "reason": kv.void_reason,
+            "voidedBy": kv.approving_manager_id,
+            "timestamp": kv.timestamp.isoformat() if kv.timestamp else None
+        } for kv in kot_voids],
+        "housekeeping_discrepancies": [{
+            "id": d.id,
+            "roomNo": d.room_no,
+            "frontDeskStatus": d.front_desk_status,
+            "housekeepingStatus": d.housekeeping_status,
+            "status": "Resolved" if d.resolved else "Pending",
+            "recordedBy": d.reported_by,
+            "resolvedNotes": d.notes
+        } for d in hk_discrepancies],
         "masters": masters_by_cat
     }
 
@@ -4506,4 +4677,539 @@ def delete_support_ticket(ticket_no: str, db: Session = Depends(get_db)):
 
 
 
+
+
+
+# ==========================================
+# Batch 2: Operational Workflows Endpoints
+# ==========================================
+
+# 1. Hotel Settings & Identity
+@router.get("/settings")
+def get_hotel_settings(db: Session = Depends(get_db)):
+    s = db.query(models.HotelSetting).filter(models.HotelSetting.key == "default").first()
+    if not s:
+        s = models.HotelSetting(key="default")
+        db.add(s)
+        db.commit()
+        db.refresh(s)
+    return {
+        "firmName": s.firm_name,
+        "legalName": s.legal_name,
+        "tradeName": s.trade_name,
+        "address1": s.address1,
+        "address2": s.address2,
+        "city": s.city,
+        "state": s.state,
+        "pincode": s.pincode,
+        "phone": s.phone,
+        "mobile": s.mobile,
+        "email": s.email,
+        "website": s.website,
+        "gstNo": s.gst_no,
+        "companyGstCode": s.company_gst_code,
+        "panNo": s.pan_no,
+        "fssaiNo": s.fssai_no,
+        "bankName": s.bank_name,
+        "bankAccountNo": s.bank_account_no,
+        "bankIfsc": s.bank_ifsc,
+        "bankBranch": s.bank_branch,
+        "upiId": s.upi_id,
+        "calculationType": s.calculation_type,
+        "standardCheckoutTime": s.standard_checkout_time,
+        "makeAllBillLocalGst": s.make_all_bill_local_gst,
+        "restaurantFoodBillTaxInclusive": s.restaurant_food_bill_tax_inclusive,
+        "termsAndConditions": s.terms_and_conditions,
+        "logoUrl": s.logo_url,
+        "sealUrl": s.seal_url,
+        "signatureUrl": s.signature_url
+    }
+
+@router.post("/settings")
+def update_hotel_settings(payload: schemas.HotelSettingCreate, db: Session = Depends(get_db)):
+    s = db.query(models.HotelSetting).filter(models.HotelSetting.key == (payload.key or "default")).first()
+    if not s:
+        s = models.HotelSetting(key=payload.key or "default")
+        db.add(s)
+
+    if payload.firm_name or payload.firmName: s.firm_name = payload.firm_name or payload.firmName
+    if payload.legal_name or payload.legalName: s.legal_name = payload.legal_name or payload.legalName
+    if payload.trade_name or payload.tradeName: s.trade_name = payload.trade_name or payload.tradeName
+    if payload.address1: s.address1 = payload.address1
+    if payload.address2 is not None: s.address2 = payload.address2
+    if payload.city: s.city = payload.city
+    if payload.state: s.state = payload.state
+    if payload.pincode: s.pincode = payload.pincode
+    if payload.phone: s.phone = payload.phone
+    if payload.mobile: s.mobile = payload.mobile
+    if payload.email: s.email = payload.email
+    if payload.website: s.website = payload.website
+    if payload.gst_no or payload.gstNo or payload.gstin: s.gst_no = payload.gst_no or payload.gstNo or payload.gstin
+    if payload.company_gst_code or payload.companyGstCode: s.company_gst_code = payload.company_gst_code or payload.companyGstCode
+    if payload.pan_no or payload.pencardNo: s.pan_no = payload.pan_no or payload.pencardNo
+    if payload.fssai_no: s.fssai_no = payload.fssai_no
+    if payload.bank_name or payload.bankName: s.bank_name = payload.bank_name or payload.bankName
+    if payload.bank_account_no or payload.bankAccountNo: s.bank_account_no = payload.bank_account_no or payload.bankAccountNo
+    if payload.bank_ifsc or payload.bankIfsc: s.bank_ifsc = payload.bank_ifsc or payload.bankIfsc
+    if payload.bank_branch or payload.bankBranch: s.bank_branch = payload.bank_branch or payload.bankBranch
+    if payload.upi_id or payload.upiId: s.upi_id = payload.upi_id or payload.upiId
+    if payload.calculation_type or payload.calculationType: s.calculation_type = payload.calculation_type or payload.calculationType
+    if payload.standard_checkout_time or payload.standardCheckoutTime: s.standard_checkout_time = payload.standard_checkout_time or payload.standardCheckoutTime
+    if payload.make_all_bill_local_gst is not None: s.make_all_bill_local_gst = payload.make_all_bill_local_gst
+    elif payload.makeAllBillLocalGst is not None: s.make_all_bill_local_gst = payload.makeAllBillLocalGst
+    if payload.restaurant_food_bill_tax_inclusive is not None: s.restaurant_food_bill_tax_inclusive = payload.restaurant_food_bill_tax_inclusive
+    elif payload.restaurantFoodBillTaxInclusive is not None: s.restaurant_food_bill_tax_inclusive = payload.restaurantFoodBillTaxInclusive
+    if payload.terms_and_conditions or payload.termsAndConditions: s.terms_and_conditions = payload.terms_and_conditions or payload.termsAndConditions
+    if payload.logo_url or payload.logoUrl: s.logo_url = payload.logo_url or payload.logoUrl
+
+    db.commit()
+    db.refresh(s)
+    return {"success": True, "message": "Hotel settings saved to PostgreSQL", "firmName": s.firm_name}
+
+# 2. Room Types Master
+@router.get("/room-types")
+def list_room_types(db: Session = Depends(get_db)):
+    rts = db.query(models.RoomType).order_by(models.RoomType.id.asc()).all()
+    return [{
+        "id": rt.type_id,
+        "roomTypeName": rt.room_type_name,
+        "package": rt.package,
+        "gstTaxString": rt.gst_tax_string,
+        "gstPercent": rt.gst_percent,
+        "roomTariff": rt.room_tariff,
+        "discountPercent": rt.discount_percent
+    } for rt in rts]
+
+@router.post("/room-types")
+def save_room_type(payload: schemas.RoomTypeCreate, db: Session = Depends(get_db)):
+    tid = payload.type_id or payload.id or (payload.room_type_name or payload.roomTypeName or "RT").replace(" ", "_").upper()
+    rt = db.query(models.RoomType).filter(models.RoomType.type_id == tid).first()
+    if not rt:
+        rt = models.RoomType(type_id=tid, room_type_name=payload.room_type_name or payload.roomTypeName or "Standard Room")
+        db.add(rt)
+    
+    rt.room_type_name = payload.room_type_name or payload.roomTypeName or rt.room_type_name
+    rt.package = payload.package or rt.package
+    rt.gst_tax_string = payload.gst_tax_string or payload.gstTaxString or rt.gst_tax_string
+    if payload.gst_percent is not None: rt.gst_percent = payload.gst_percent
+    elif payload.gstPercent is not None: rt.gst_percent = payload.gstPercent
+    if payload.room_tariff is not None: rt.room_tariff = payload.room_tariff
+    elif payload.roomTariff is not None: rt.room_tariff = payload.roomTariff
+    if payload.discount_percent is not None: rt.discount_percent = payload.discount_percent
+    elif payload.discountPercent is not None: rt.discount_percent = payload.discountPercent
+
+    db.commit()
+    db.refresh(rt)
+    return {"success": True, "id": rt.type_id, "roomTypeName": rt.room_type_name, "tariff": rt.room_tariff}
+
+@router.delete("/room-types/{type_id}")
+def delete_room_type(type_id: str, db: Session = Depends(get_db)):
+    rt = db.query(models.RoomType).filter(models.RoomType.type_id == type_id).first()
+    if not rt:
+        raise HTTPException(status_code=404, detail="Room type not found")
+    db.delete(rt)
+    db.commit()
+    return {"success": True, "message": f"Room type {type_id} deleted"}
+
+# 3. Restaurant Menu Items
+@router.get("/menu-items")
+def list_menu_items(category: Optional[str] = None, db: Session = Depends(get_db)):
+    q = db.query(models.MenuItem)
+    if category:
+        q = q.filter(models.MenuItem.category == category)
+    items = q.order_by(models.MenuItem.category.asc(), models.MenuItem.name.asc()).all()
+    return [{
+        "id": it.item_code,
+        "code": it.item_code,
+        "name": it.name,
+        "category": it.category,
+        "rate": it.rate,
+        "saleRate": it.sale_rate,
+        "mrp": it.mrp,
+        "purchaseRate": it.purchase_rate,
+        "unit": it.unit,
+        "gstPercent": it.gst_percent,
+        "headGroup": it.head_group,
+        "hsnCode": it.hsn_code,
+        "sacCode": it.sac_code,
+        "noDiscount": it.no_discount
+    } for it in items]
+
+@router.post("/menu-items")
+def save_menu_item(payload: schemas.MenuItemCreate, db: Session = Depends(get_db)):
+    code = payload.item_code or payload.code or payload.id or payload.name.replace(" ", "_").upper()
+    it = db.query(models.MenuItem).filter(models.MenuItem.item_code == code).first()
+    if not it:
+        it = models.MenuItem(item_code=code, name=payload.name, category=payload.category)
+        db.add(it)
+    
+    it.name = payload.name
+    it.category = payload.category
+    it.rate = float(payload.rate or payload.sale_rate or payload.saleRate or 0.0)
+    it.sale_rate = float(payload.sale_rate or payload.saleRate or it.rate)
+    if payload.mrp is not None: it.mrp = payload.mrp
+    if payload.purchase_rate or payload.purchaseRate: it.purchase_rate = payload.purchase_rate or payload.purchaseRate
+    if payload.unit: it.unit = payload.unit
+    if payload.gst_percent is not None: it.gst_percent = payload.gst_percent
+    elif payload.gstPercent is not None: it.gst_percent = payload.gstPercent
+    if payload.head_group or payload.headGroup: it.head_group = payload.head_group or payload.headGroup
+    if payload.hsn_code or payload.hsnCode: it.hsn_code = payload.hsn_code or payload.hsnCode
+    if payload.sac_code or payload.sacCode: it.sac_code = payload.sac_code or payload.sacCode
+    if payload.no_discount is not None: it.no_discount = payload.no_discount
+    elif payload.noDiscount is not None: it.no_discount = payload.noDiscount
+
+    db.commit()
+    db.refresh(it)
+    return {"success": True, "id": it.item_code, "name": it.name, "rate": it.rate}
+
+@router.post("/menu-items/bulk")
+def save_menu_items_bulk(items: List[schemas.MenuItemCreate], db: Session = Depends(get_db)):
+    saved = 0
+    for payload in items:
+        code = payload.item_code or payload.code or payload.id or payload.name.replace(" ", "_").upper()
+        it = db.query(models.MenuItem).filter(models.MenuItem.item_code == code).first()
+        if not it:
+            it = models.MenuItem(item_code=code, name=payload.name, category=payload.category)
+            db.add(it)
+        it.name = payload.name
+        it.category = payload.category
+        it.rate = float(payload.rate or payload.sale_rate or payload.saleRate or 0.0)
+        it.sale_rate = float(payload.sale_rate or payload.saleRate or it.rate)
+        if payload.unit: it.unit = payload.unit
+        saved += 1
+    db.commit()
+    return {"success": True, "savedCount": saved}
+
+@router.delete("/menu-items/{item_code}")
+def delete_menu_item(item_code: str, db: Session = Depends(get_db)):
+    it = db.query(models.MenuItem).filter(models.MenuItem.item_code == item_code).first()
+    if not it:
+        raise HTTPException(status_code=404, detail="Menu item not found")
+    db.delete(it)
+    db.commit()
+    return {"success": True, "message": f"Menu item {item_code} deleted"}
+
+# 4. Housekeeping Duty Records
+@router.get("/housekeeping")
+def list_housekeeping_records(db: Session = Depends(get_db)):
+    recs = db.query(models.HousekeepingRecord).all()
+    return [{
+        "roomNo": r.room_no,
+        "status": r.status,
+        "assignedStaff": r.assigned_staff,
+        "priority": r.priority,
+        "lastCleanedTime": r.last_cleaned_time,
+        "cleaningStartedAt": r.cleaning_started_at,
+        "maintenanceIssue": r.maintenance_issue,
+        "maintenanceLoggedAt": r.maintenance_logged_at,
+        "remarks": r.remarks
+    } for r in recs]
+
+@router.post("/housekeeping")
+def save_housekeeping_record(payload: schemas.HousekeepingRecordCreate, db: Session = Depends(get_db)):
+    r_no = payload.room_no or payload.roomNo
+    if not r_no:
+        raise HTTPException(status_code=400, detail="room_no is required")
+    hk = db.query(models.HousekeepingRecord).filter(models.HousekeepingRecord.room_no == r_no).first()
+    if not hk:
+        hk = models.HousekeepingRecord(room_no=r_no)
+        db.add(hk)
+    
+    if payload.status: hk.status = payload.status
+    if payload.assigned_staff or payload.assignedStaff: hk.assigned_staff = payload.assigned_staff or payload.assignedStaff
+    if payload.priority: hk.priority = payload.priority
+    if payload.last_cleaned_time or payload.lastCleanedTime: hk.last_cleaned_time = payload.last_cleaned_time or payload.lastCleanedTime
+    if payload.cleaning_started_at or payload.cleaningStartedAt: hk.cleaning_started_at = payload.cleaning_started_at or payload.cleaningStartedAt
+    if payload.maintenance_issue or payload.maintenanceIssue: hk.maintenance_issue = payload.maintenance_issue or payload.maintenanceIssue
+    if payload.maintenance_logged_at or payload.maintenanceLoggedAt: hk.maintenance_logged_at = payload.maintenance_logged_at or payload.maintenanceLoggedAt
+    if payload.remarks: hk.remarks = payload.remarks
+
+    # Also sync room housekeeping status
+    room = db.query(models.Room).filter(models.Room.id == int(r_no) if r_no.isdigit() else False).first()
+    if room:
+        if "Clean" in hk.status:
+            room.housekeeping_status = "Clean"
+        elif "Dirty" in hk.status:
+            room.housekeeping_status = "Dirty"
+        elif "Maintenance" in hk.status:
+            room.housekeeping_status = "Under_Maintenance"
+
+    db.commit()
+    db.refresh(hk)
+    return {"success": True, "roomNo": hk.room_no, "status": hk.status, "assignedStaff": hk.assigned_staff}
+
+# 5. Agent Commission Accruals
+@router.get("/agent-commissions")
+def list_agent_commissions(agent_id: Optional[str] = None, status: Optional[str] = None, db: Session = Depends(get_db)):
+    q = db.query(models.AgentCommissionAccrual)
+    if agent_id:
+        q = q.filter(models.AgentCommissionAccrual.agent_id == agent_id)
+    if status:
+        q = q.filter(models.AgentCommissionAccrual.status == status)
+    accruals = q.order_by(models.AgentCommissionAccrual.created_at.desc()).limit(150).all()
+    return [{
+        "id": c.commission_id,
+        "agentId": c.agent_id,
+        "agentName": c.agent_name,
+        "agentType": c.agent_type,
+        "checkInNo": c.check_in_no,
+        "bookingRefNo": c.booking_ref_no,
+        "roomNo": c.room_no,
+        "guestName": c.guest_name,
+        "guestMobile": c.guest_mobile,
+        "checkInDate": c.check_in_date,
+        "checkOutDate": c.check_out_date,
+        "numberOfNights": c.number_of_nights,
+        "roomTariff": c.room_tariff,
+        "grossRoomTariff": c.gross_room_tariff,
+        "commissionType": c.commission_type,
+        "commissionRate": c.commission_rate,
+        "grossCommission": c.gross_commission,
+        "tdsPercentage": c.tds_percentage,
+        "tdsAmount": c.tds_amount,
+        "netPayableCommission": c.net_payable_commission,
+        "status": c.status,
+        "payoutVoucherNo": c.payout_voucher_no,
+        "payoutDate": c.payout_date,
+        "remarks": c.remarks,
+        "createdAt": c.created_at.isoformat() if c.created_at else None
+    } for c in accruals]
+
+@router.post("/agent-commissions")
+def save_agent_commission(payload: schemas.AgentCommissionAccrualCreate, db: Session = Depends(get_db)):
+    cid = payload.commission_id or payload.id or f"COMM-{int(time.time())}"
+    c = db.query(models.AgentCommissionAccrual).filter(models.AgentCommissionAccrual.commission_id == cid).first()
+    if not c:
+        c = models.AgentCommissionAccrual(
+            commission_id=cid,
+            agent_id=payload.agent_id or payload.agentId or "AGENT-001",
+            agent_name=payload.agent_name or payload.agentName or "Direct Agent",
+            room_no=payload.room_no or payload.roomNo or "101",
+            guest_name=payload.guest_name or payload.guestName or "Guest",
+            check_in_date=payload.check_in_date or payload.checkInDate or "2026-10-26",
+            check_out_date=payload.check_out_date or payload.checkOutDate or "2026-10-27"
+        )
+        db.add(c)
+    
+    if payload.agent_type or payload.agentType: c.agent_type = payload.agent_type or payload.agentType
+    if payload.check_in_no or payload.checkInNo: c.check_in_no = payload.check_in_no or payload.checkInNo
+    if payload.booking_ref_no or payload.bookingRefNo: c.booking_ref_no = payload.booking_ref_no or payload.bookingRefNo
+    if payload.guest_mobile or payload.guestMobile: c.guest_mobile = payload.guest_mobile or payload.guestMobile
+    if payload.number_of_nights or payload.numberOfNights: c.number_of_nights = payload.number_of_nights or payload.numberOfNights
+    if payload.room_tariff or payload.roomTariff: c.room_tariff = payload.room_tariff or payload.roomTariff
+    if payload.gross_room_tariff or payload.grossRoomTariff: c.gross_room_tariff = payload.gross_room_tariff or payload.grossRoomTariff
+    if payload.commission_type or payload.commissionType: c.commission_type = payload.commission_type or payload.commissionType
+    if payload.commission_rate or payload.commissionRate: c.commission_rate = payload.commission_rate or payload.commissionRate
+    if payload.gross_commission or payload.grossCommission: c.gross_commission = payload.gross_commission or payload.grossCommission
+    if payload.tds_percentage or payload.tdsPercentage: c.tds_percentage = payload.tds_percentage or payload.tdsPercentage
+    if payload.tds_amount or payload.tdsAmount: c.tds_amount = payload.tds_amount or payload.tdsAmount
+    if payload.net_payable_commission or payload.netPayableCommission: c.net_payable_commission = payload.net_payable_commission or payload.netPayableCommission
+    if payload.status: c.status = payload.status
+    if payload.payout_voucher_no or payload.payoutVoucherNo: c.payout_voucher_no = payload.payout_voucher_no or payload.payoutVoucherNo
+    if payload.payout_date or payload.payoutDate: c.payout_date = payload.payout_date or payload.payoutDate
+    if payload.remarks: c.remarks = payload.remarks
+
+    # Also update agent balance
+    agent = db.query(models.CommissionAgent).filter(models.CommissionAgent.agent_id == c.agent_id).first()
+    if agent and c.status == "PENDING":
+        agent.total_commission_earned = (agent.total_commission_earned or 0.0) + c.net_payable_commission
+        agent.balance_payable = (agent.balance_payable or 0.0) + c.net_payable_commission
+
+    db.commit()
+    db.refresh(c)
+    return {"success": True, "commissionId": c.commission_id, "amount": c.net_payable_commission, "status": c.status}
+
+@router.put("/agent-commissions/{commission_id}/status")
+def update_agent_commission_status(commission_id: str, payload: Dict[str, Any], db: Session = Depends(get_db)):
+    c = db.query(models.AgentCommissionAccrual).filter(models.AgentCommissionAccrual.commission_id == commission_id).first()
+    if not c:
+        raise HTTPException(status_code=404, detail="Commission accrual record not found")
+    new_status = payload.get("status", c.status)
+    c.status = new_status
+    if payload.get("payoutVoucherNo"): c.payout_voucher_no = payload.get("payoutVoucherNo")
+    if payload.get("payoutDate"): c.payout_date = payload.get("payoutDate")
+    db.commit()
+    return {"success": True, "commissionId": commission_id, "status": c.status}
+
+# 6. WhatsApp & SMS Notification Templates
+@router.get("/whatsapp-templates")
+def list_whatsapp_templates(db: Session = Depends(get_db)):
+    tpls = db.query(models.WhatsAppTemplate).order_by(models.WhatsAppTemplate.s_no.asc()).all()
+    return [{
+        "id": t.id,
+        "templateId": t.template_id,
+        "sNo": t.s_no,
+        "type": t.type,
+        "voucherType": t.voucher_type,
+        "label": t.label,
+        "message": t.message,
+        "active": t.active,
+        "sendTo": t.send_to
+    } for t in tpls]
+
+@router.post("/whatsapp-templates")
+def save_whatsapp_template(payload: schemas.WhatsAppTemplateCreate, db: Session = Depends(get_db)):
+    tid = payload.template_id or str(payload.id) or f"tpl-{payload.voucher_type or payload.voucherType}"
+    t = db.query(models.WhatsAppTemplate).filter(models.WhatsAppTemplate.template_id == tid).first()
+    if not t:
+        t = models.WhatsAppTemplate(template_id=tid, label=payload.label, message=payload.message, voucher_type=payload.voucher_type or payload.voucherType or "General")
+        db.add(t)
+    
+    t.label = payload.label
+    t.message = payload.message
+    if payload.voucher_type or payload.voucherType: t.voucher_type = payload.voucher_type or payload.voucherType
+    if payload.s_no or payload.sNo: t.s_no = payload.s_no or payload.sNo
+    if payload.type: t.type = payload.type
+    if payload.active: t.active = payload.active
+    if payload.send_to or payload.sendTo: t.send_to = payload.send_to or payload.sendTo
+
+    db.commit()
+    db.refresh(t)
+    return {"success": True, "templateId": t.template_id, "label": t.label}
+
+@router.post("/whatsapp-templates/bulk")
+def save_whatsapp_templates_bulk(templates: List[schemas.WhatsAppTemplateCreate], db: Session = Depends(get_db)):
+    saved = 0
+    for payload in templates:
+        tid = payload.template_id or str(payload.id) or f"tpl-{payload.voucher_type or payload.voucherType}"
+        t = db.query(models.WhatsAppTemplate).filter(models.WhatsAppTemplate.template_id == tid).first()
+        if not t:
+            t = models.WhatsAppTemplate(template_id=tid, label=payload.label, message=payload.message, voucher_type=payload.voucher_type or payload.voucherType or "General")
+            db.add(t)
+        t.label = payload.label
+        t.message = payload.message
+        if payload.active: t.active = payload.active
+        saved += 1
+    db.commit()
+    return {"success": True, "savedCount": saved}
+
+# 7. Role Permissions Matrix
+@router.get("/roles")
+def list_role_permissions(db: Session = Depends(get_db)):
+    roles = db.query(models.RolePermission).order_by(models.RolePermission.id.asc()).all()
+    return [{
+        "id": r.id,
+        "roleId": r.role_id,
+        "name": r.name,
+        "description": r.description,
+        "permissions": json.loads(r.permissions_json) if r.permissions_json else [],
+        "isSystem": r.is_system
+    } for r in roles]
+
+@router.post("/roles")
+def save_role_permission(payload: schemas.RolePermissionCreate, db: Session = Depends(get_db)):
+    rid = payload.role_id or str(payload.id) or payload.name.lower().replace(" ", "-")
+    r = db.query(models.RolePermission).filter(models.RolePermission.role_id == rid).first()
+    if not r:
+        r = models.RolePermission(role_id=rid, name=payload.name)
+        db.add(r)
+    
+    r.name = payload.name
+    if payload.description: r.description = payload.description
+    perms = payload.permissions
+    if perms is not None:
+        r.permissions_json = json.dumps(perms)
+    elif payload.permissions_json:
+        r.permissions_json = payload.permissions_json
+    if payload.is_system is not None: r.is_system = payload.is_system
+    elif payload.isSystem is not None: r.is_system = payload.isSystem
+
+    db.commit()
+    db.refresh(r)
+    return {"success": True, "roleId": r.role_id, "name": r.name}
+
+# 8. No-Discount Margin Protection Config
+@router.get("/no-discount-config")
+def get_no_discount_config(db: Session = Depends(get_db)):
+    cfg = db.query(models.NoDiscountRule).filter(models.NoDiscountRule.config_key == "default").first()
+    if not cfg:
+        cfg = models.NoDiscountRule(config_key="default")
+        db.add(cfg)
+        db.commit()
+        db.refresh(cfg)
+    return {
+        "enabled": cfg.enabled,
+        "protectedGroups": json.loads(cfg.protected_groups_json) if cfg.protected_groups_json else [],
+        "maxAllowedDiscountPercent": cfg.max_allowed_discount_percent,
+        "allowManualOverride": cfg.allow_manual_override,
+        "overrideRoleRequired": cfg.override_role_required,
+        "reasonRequiredForOverride": cfg.reason_required_for_override
+    }
+
+@router.post("/no-discount-config")
+def update_no_discount_config(payload: schemas.NoDiscountRuleCreate, db: Session = Depends(get_db)):
+    cfg = db.query(models.NoDiscountRule).filter(models.NoDiscountRule.config_key == (payload.config_key or "default")).first()
+    if not cfg:
+        cfg = models.NoDiscountRule(config_key=payload.config_key or "default")
+        db.add(cfg)
+    
+    if payload.enabled is not None: cfg.enabled = payload.enabled
+    grps = payload.protected_groups or payload.protectedGroups
+    if grps is not None:
+        cfg.protected_groups_json = json.dumps(grps)
+    if payload.max_allowed_discount_percent is not None: cfg.max_allowed_discount_percent = payload.max_allowed_discount_percent
+    elif payload.maxAllowedDiscountPercent is not None: cfg.max_allowed_discount_percent = payload.maxAllowedDiscountPercent
+    if payload.allow_manual_override is not None: cfg.allow_manual_override = payload.allow_manual_override
+    elif payload.allowManualOverride is not None: cfg.allow_manual_override = payload.allowManualOverride
+    if payload.override_role_required or payload.overrideRoleRequired: cfg.override_role_required = payload.override_role_required or payload.overrideRoleRequired
+    if payload.reason_required_for_override is not None: cfg.reason_required_for_override = payload.reason_required_for_override
+    elif payload.reasonRequiredForOverride is not None: cfg.reason_required_for_override = payload.reasonRequiredForOverride
+
+    db.commit()
+    db.refresh(cfg)
+    return {"success": True, "message": "No-discount margin protection config saved", "enabled": cfg.enabled}
+
+# 9. Liquor Brands & Units
+@router.get("/liquor-brands")
+def list_liquor_brands(db: Session = Depends(get_db)):
+    brands = db.query(models.LiquorBrand).order_by(models.LiquorBrand.s_no.asc()).all()
+    return [{
+        "id": b.brand_id,
+        "sNo": b.s_no,
+        "name": b.name,
+        "discountPercentage": b.discount_percentage,
+        "status": b.status
+    } for b in brands]
+
+@router.post("/liquor-brands")
+def save_liquor_brand(payload: schemas.LiquorBrandCreate, db: Session = Depends(get_db)):
+    bid = payload.brand_id or payload.id or payload.name.lower().replace(" ", "_")
+    b = db.query(models.LiquorBrand).filter(models.LiquorBrand.brand_id == bid).first()
+    if not b:
+        b = models.LiquorBrand(brand_id=bid, name=payload.name)
+        db.add(b)
+    b.name = payload.name
+    if payload.s_no or payload.sNo: b.s_no = payload.s_no or payload.sNo
+    if payload.discount_percentage is not None: b.discount_percentage = payload.discount_percentage
+    elif payload.discountPercentage is not None: b.discount_percentage = payload.discountPercentage
+    if payload.status: b.status = payload.status
+    db.commit()
+    db.refresh(b)
+    return {"success": True, "brandId": b.brand_id, "name": b.name}
+
+@router.get("/liquor-units")
+def list_liquor_units(db: Session = Depends(get_db)):
+    units = db.query(models.LiquorUnit).order_by(models.LiquorUnit.s_no.asc()).all()
+    return [{
+        "id": u.unit_id,
+        "sNo": u.s_no,
+        "primaryUnitName": u.primary_unit_name,
+        "conversion": u.conversion,
+        "alternateUnitName": u.alternate_unit_name
+    } for u in units]
+
+@router.post("/liquor-units")
+def save_liquor_unit(payload: schemas.LiquorUnitCreate, db: Session = Depends(get_db)):
+    uid = payload.unit_id or payload.id or (payload.primary_unit_name or payload.primaryUnitName or "Unit").lower().replace(" ", "_")
+    u = db.query(models.LiquorUnit).filter(models.LiquorUnit.unit_id == uid).first()
+    if not u:
+        u = models.LiquorUnit(unit_id=uid, primary_unit_name=payload.primary_unit_name or payload.primaryUnitName or "Peg")
+        db.add(u)
+    if payload.primary_unit_name or payload.primaryUnitName: u.primary_unit_name = payload.primary_unit_name or payload.primaryUnitName
+    if payload.s_no or payload.sNo: u.s_no = payload.s_no or payload.sNo
+    if payload.conversion is not None: u.conversion = payload.conversion
+    if payload.alternate_unit_name or payload.alternateUnitName: u.alternate_unit_name = payload.alternate_unit_name or payload.alternateUnitName
+    db.commit()
+    db.refresh(u)
+    return {"success": True, "unitId": u.unit_id, "primaryUnitName": u.primary_unit_name}
 

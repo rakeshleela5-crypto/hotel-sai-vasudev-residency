@@ -867,6 +867,180 @@ class SupportTicket(Base):
     resolution_notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
+class HotelSetting(Base):
+    __tablename__ = "hotel_settings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    key = Column(String(100), unique=True, index=True, default="default")
+    firm_name = Column(String(200), default="Hotel Sai Vasudev Residency")
+    legal_name = Column(String(200), default="Hotel Sai Vasudev Residency")
+    trade_name = Column(String(200), default="Hotel Sai Vasudev Residency")
+    address1 = Column(Text, default="Pimpalwadi Road, Opposite Sai Baba Temple")
+    address2 = Column(Text, nullable=True)
+    city = Column(String(100), default="Shirdi")
+    state = Column(String(100), default="Maharashtra")
+    pincode = Column(String(20), default="423109")
+    phone = Column(String(50), default="+91 94402 89999")
+    mobile = Column(String(50), default="+91 94402 89999")
+    email = Column(String(150), default="saivasudevresidency@gmail.com")
+    website = Column(String(150), default="https://hotelsai-vasudevresidency.com")
+    gst_no = Column(String(50), default="27AAAAA0000A1Z5")
+    company_gst_code = Column(String(10), default="27")
+    pan_no = Column(String(50), nullable=True)
+    fssai_no = Column(String(50), nullable=True)
+    bank_name = Column(String(100), default="State Bank of India")
+    bank_account_no = Column(String(100), default="39820011928")
+    bank_ifsc = Column(String(50), default="SBIN0001234")
+    bank_branch = Column(String(100), default="Shirdi Main Branch")
+    upi_id = Column(String(100), default="saivasudev@sbi")
+    calculation_type = Column(String(50), default="12hour")
+    standard_checkout_time = Column(String(50), default="11:00 AM")
+    make_all_bill_local_gst = Column(Boolean, default=True)
+    restaurant_food_bill_tax_inclusive = Column(Boolean, default=False)
+    terms_and_conditions = Column(Text, nullable=True)
+    logo_url = Column(Text, nullable=True)
+    seal_url = Column(Text, nullable=True)
+    signature_url = Column(Text, nullable=True)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+class RoomType(Base):
+    __tablename__ = "room_types"
+
+    id = Column(Integer, primary_key=True, index=True)
+    type_id = Column(String(100), unique=True, index=True, nullable=False)
+    room_type_name = Column(String(150), nullable=False)
+    package = Column(String(100), default="EP")
+    gst_tax_string = Column(String(100), default="GST 12%")
+    gst_percent = Column(Float, default=12.0)
+    room_tariff = Column(Float, default=2500.0)
+    discount_percent = Column(Float, default=0.0)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class MenuItem(Base):
+    __tablename__ = "menu_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    item_code = Column(String(100), unique=True, index=True, nullable=False)
+    name = Column(String(200), nullable=False)
+    category = Column(String(100), nullable=False, index=True)
+    rate = Column(Float, default=0.0)
+    sale_rate = Column(Float, default=0.0)
+    mrp = Column(Float, default=0.0)
+    purchase_rate = Column(Float, default=0.0)
+    unit = Column(String(50), default="Pcs")
+    gst_percent = Column(Float, default=5.0)
+    head_group = Column(String(100), default="Restaurant_Item")
+    hsn_code = Column(String(50), nullable=True)
+    sac_code = Column(String(50), default="996331")
+    no_discount = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class HousekeepingRecord(Base):
+    __tablename__ = "housekeeping_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    room_no = Column(String(50), unique=True, index=True, nullable=False)
+    status = Column(String(100), default="Vacant Clean")
+    assigned_staff = Column(String(100), default="Ramesh")
+    priority = Column(String(100), default="Normal")
+    last_cleaned_time = Column(String(100), nullable=True)
+    cleaning_started_at = Column(String(100), nullable=True)
+    maintenance_issue = Column(Text, nullable=True)
+    maintenance_logged_at = Column(String(100), nullable=True)
+    remarks = Column(Text, nullable=True)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+class AgentCommissionAccrual(Base):
+    __tablename__ = "agent_commissions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    commission_id = Column(String(100), unique=True, index=True, nullable=False)
+    agent_id = Column(String(100), index=True, nullable=False)
+    agent_name = Column(String(150), nullable=False)
+    agent_type = Column(String(100), default="Travel Agent")
+    check_in_no = Column(String(100), nullable=True)
+    booking_ref_no = Column(String(100), nullable=True, index=True)
+    room_no = Column(String(50), nullable=False)
+    guest_name = Column(String(150), nullable=False)
+    guest_mobile = Column(String(50), nullable=True)
+    check_in_date = Column(String(50), nullable=False)
+    check_out_date = Column(String(50), nullable=False)
+    number_of_nights = Column(Integer, default=1)
+    room_tariff = Column(Float, default=0.0)
+    gross_room_tariff = Column(Float, default=0.0)
+    commission_type = Column(String(50), default="PERCENTAGE")
+    commission_rate = Column(Float, default=10.0)
+    gross_commission = Column(Float, default=0.0)
+    tds_percentage = Column(Float, default=5.0)
+    tds_amount = Column(Float, default=0.0)
+    net_payable_commission = Column(Float, default=0.0)
+    status = Column(String(50), default="PENDING")
+    payout_voucher_no = Column(String(100), nullable=True)
+    payout_date = Column(String(50), nullable=True)
+    remarks = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class WhatsAppTemplate(Base):
+    __tablename__ = "whatsapp_templates"
+
+    id = Column(Integer, primary_key=True, index=True)
+    template_id = Column(String(100), unique=True, index=True, nullable=False)
+    s_no = Column(Integer, default=1)
+    type = Column(String(50), default="WhatsApp")
+    voucher_type = Column(String(100), nullable=False)
+    label = Column(String(150), nullable=False)
+    message = Column(Text, nullable=False)
+    active = Column(String(20), default="On")
+    send_to = Column(String(50), default="Guest")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class RolePermission(Base):
+    __tablename__ = "roles_permissions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    role_id = Column(String(100), unique=True, index=True, nullable=False)
+    name = Column(String(100), nullable=False)
+    description = Column(Text, nullable=True)
+    permissions_json = Column(Text, default="[]")
+    is_system = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class NoDiscountRule(Base):
+    __tablename__ = "no_discount_configs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    config_key = Column(String(100), unique=True, index=True, default="default")
+    enabled = Column(Boolean, default=True)
+    protected_groups_json = Column(Text, default='["Beverage","Liquor","Beer","Tobacco"]')
+    max_allowed_discount_percent = Column(Float, default=20.0)
+    allow_manual_override = Column(Boolean, default=True)
+    override_role_required = Column(String(100), default="Admin")
+    reason_required_for_override = Column(Boolean, default=True)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+class LiquorBrand(Base):
+    __tablename__ = "liquor_brands"
+
+    id = Column(Integer, primary_key=True, index=True)
+    brand_id = Column(String(100), unique=True, index=True, nullable=False)
+    s_no = Column(Integer, default=1)
+    name = Column(String(150), nullable=False)
+    discount_percentage = Column(Float, default=0.0)
+    status = Column(String(50), default="ACTIVE")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class LiquorUnit(Base):
+    __tablename__ = "liquor_units"
+
+    id = Column(Integer, primary_key=True, index=True)
+    unit_id = Column(String(100), unique=True, index=True, nullable=False)
+    s_no = Column(Integer, default=1)
+    primary_unit_name = Column(String(100), nullable=False)
+    conversion = Column(Float, default=1.0)
+    alternate_unit_name = Column(String(100), default="ML")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
 
 
 

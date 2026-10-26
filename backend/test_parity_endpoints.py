@@ -686,6 +686,176 @@ def test_parity_endpoints():
     assert len(r.json()) >= 1
     print(f"   [OK] Support Tickets Query: Found {len(r.json())} ticket(s)")
 
+    # 32. Test Hotel Settings & Identity
+    settings_payload = {
+        "firmName": "Hotel Sai Vasudev Residency",
+        "legalName": "Hotel Sai Vasudev Residency Pvt Ltd",
+        "gstNo": "27AAAAA0000A1Z5",
+        "city": "Shirdi",
+        "calculationType": "12hour",
+        "standardCheckoutTime": "11:00 AM"
+    }
+    r = client.post("/api/v1/pms/settings", json=settings_payload)
+    assert r.status_code == 200, f"Settings update failed: {r.text}"
+    print(f"   [OK] Hotel Settings Persisted: {r.json()['firmName']}")
+
+    r = client.get("/api/v1/pms/settings")
+    assert r.status_code == 200
+    assert r.json()["gstNo"] == "27AAAAA0000A1Z5"
+    print(f"   [OK] Hotel Settings Query: GSTIN={r.json()['gstNo']}, Policy={r.json()['calculationType']}")
+
+    # 33. Test Room Types Master
+    rt_payload = {
+        "roomTypeName": "Deluxe Executive AC",
+        "package": "EP",
+        "gstTaxString": "GST 12%",
+        "gstPercent": 12.0,
+        "roomTariff": 2800.0,
+        "discountPercent": 0.0
+    }
+    r = client.post("/api/v1/pms/room-types", json=rt_payload)
+    assert r.status_code == 200, f"Room type save failed: {r.text}"
+    print(f"   [OK] Room Type Persisted: {r.json()['roomTypeName']} (Rs.{r.json()['tariff']})")
+
+    r = client.get("/api/v1/pms/room-types")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Room Types Query: Found {len(r.json())} room type(s)")
+
+    # 34. Test Restaurant Menu Items
+    menu_payload = {
+        "code": "MENU-TEST-01",
+        "name": "Shirdi Special Paneer Tikka",
+        "category": "Starter",
+        "rate": 280.0,
+        "unit": "Plate",
+        "gstPercent": 5.0
+    }
+    r = client.post("/api/v1/pms/menu-items", json=menu_payload)
+    assert r.status_code == 200, f"Menu item save failed: {r.text}"
+    print(f"   [OK] Menu Item Persisted: {r.json()['name']} (Rs.{r.json()['rate']})")
+
+    r = client.get("/api/v1/pms/menu-items")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Menu Items Query: Found {len(r.json())} item(s)")
+
+    # 35. Test Housekeeping Duty Records
+    hk_payload = {
+        "roomNo": "101",
+        "status": "Inspected",
+        "assignedStaff": "Sunita",
+        "priority": "VIP Suite",
+        "lastCleanedTime": "2026-10-26 23:45",
+        "remarks": "Deep sanitization complete for VIP arrival"
+    }
+    r = client.post("/api/v1/pms/housekeeping", json=hk_payload)
+    assert r.status_code == 200, f"Housekeeping record save failed: {r.text}"
+    print(f"   [OK] Housekeeping Duty Persisted: Room {r.json()['roomNo']} -> {r.json()['status']} ({r.json()['assignedStaff']})")
+
+    r = client.get("/api/v1/pms/housekeeping")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Housekeeping Query: Found {len(r.json())} duty record(s)")
+
+    # 36. Test Agent Commission Accruals
+    comm_payload = {
+        "commissionId": "COMM-TEST-001",
+        "agentId": "AGT-SHIRDI-01",
+        "agentName": "Sai Pilgrim Tours & Travels",
+        "roomNo": "101",
+        "guestName": "Rajesh Sharma",
+        "checkInDate": "2026-10-26",
+        "checkOutDate": "2026-10-28",
+        "numberOfNights": 2,
+        "roomTariff": 2400.0,
+        "grossRoomTariff": 4800.0,
+        "commissionRate": 10.0,
+        "grossCommission": 480.0,
+        "tdsPercentage": 5.0,
+        "tdsAmount": 24.0,
+        "netPayableCommission": 456.0,
+        "status": "PENDING"
+    }
+    r = client.post("/api/v1/pms/agent-commissions", json=comm_payload)
+    assert r.status_code == 200, f"Commission save failed: {r.text}"
+    print(f"   [OK] Agent Commission Accrual Persisted: {r.json()['commissionId']} (Net: Rs.{r.json()['amount']})")
+
+    r = client.get("/api/v1/pms/agent-commissions")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Agent Commissions Query: Found {len(r.json())} accrual(s)")
+
+    # 37. Test WhatsApp Notification Templates
+    wa_tpl_payload = {
+        "templateId": "tpl-checkout-test",
+        "label": "Checkout Bill & Thanks",
+        "voucherType": "Check_out_store",
+        "message": "Dear {{guest_name}}, thank you for staying at Hotel Sai Vasudev Residency.",
+        "active": "On",
+        "sendTo": "Guest"
+    }
+    r = client.post("/api/v1/pms/whatsapp-templates", json=wa_tpl_payload)
+    assert r.status_code == 200, f"WhatsApp template save failed: {r.text}"
+    print(f"   [OK] WhatsApp Template Persisted: {r.json()['label']}")
+
+    r = client.get("/api/v1/pms/whatsapp-templates")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] WhatsApp Templates Query: Found {len(r.json())} template(s)")
+
+    # 38. Test Role Permissions Matrix
+    role_payload = {
+        "roleId": "front-desk-lead",
+        "name": "Front Desk Lead",
+        "description": "Front office shift supervisor",
+        "permissions": ["roombooking", "checkin", "checkout", "foodbill", "kot"]
+    }
+    r = client.post("/api/v1/pms/roles", json=role_payload)
+    assert r.status_code == 200, f"Role save failed: {r.text}"
+    print(f"   [OK] Role Permission Persisted: {r.json()['name']}")
+
+    r = client.get("/api/v1/pms/roles")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Roles Query: Found {len(r.json())} role(s)")
+
+    # 39. Test No-Discount Margin Protection Config
+    no_disc_payload = {
+        "enabled": True,
+        "protectedGroups": ["Beverage", "Liquor", "Tobacco", "Mineral Water"],
+        "maxAllowedDiscountPercent": 15.0,
+        "allowManualOverride": True,
+        "overrideRoleRequired": "Admin"
+    }
+    r = client.post("/api/v1/pms/no-discount-config", json=no_disc_payload)
+    assert r.status_code == 200, f"No-discount config update failed: {r.text}"
+    print(f"   [OK] No-Discount Margin Protection Persisted: {r.json()['message']}")
+
+    r = client.get("/api/v1/pms/no-discount-config")
+    assert r.status_code == 200
+    assert "Mineral Water" in r.json()["protectedGroups"]
+    print(f"   [OK] No-Discount Config Query: Max {r.json()['maxAllowedDiscountPercent']}%, {len(r.json()['protectedGroups'])} protected group(s)")
+
+    # 40. Test Liquor Brands & Dispensing Units
+    lb_payload = {
+        "name": "Royal Challenge Reserve",
+        "discountPercentage": 0.0,
+        "status": "ACTIVE"
+    }
+    r = client.post("/api/v1/pms/liquor-brands", json=lb_payload)
+    assert r.status_code == 200, f"Liquor brand save failed: {r.text}"
+    print(f"   [OK] Liquor Brand Persisted: {r.json()['name']}")
+
+    lu_payload = {
+        "primaryUnitName": "Large Peg 60ml",
+        "conversion": 60.0,
+        "alternateUnitName": "ML"
+    }
+    r = client.post("/api/v1/pms/liquor-units", json=lu_payload)
+    assert r.status_code == 200, f"Liquor unit save failed: {r.text}"
+    print(f"   [OK] Liquor Dispensing Unit Persisted: {r.json()['primaryUnitName']}")
+
     print("\n=== ALL PARITY ENDPOINTS TESTED & PASSED 100%! ===")
 
 if __name__ == "__main__":

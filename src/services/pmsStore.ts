@@ -3263,6 +3263,75 @@ export class PmsStore {
         localStorage.setItem(STORAGE_KEYS.SUPPORT_TICKETS, JSON.stringify(state.support_tickets));
       }
 
+      // 32. Hydrate Hotel Settings & Identity from PostgreSQL
+      if (state.hotel_settings) {
+        localStorage.setItem(STORAGE_KEYS.COMPANY_INFO, JSON.stringify(state.hotel_settings));
+        if (state.hotel_settings.calculationType || state.hotel_settings.standardCheckoutTime) {
+          const bSettings = {
+            calculationType: state.hotel_settings.calculationType || '12hour',
+            standardCheckoutTime: state.hotel_settings.standardCheckoutTime || '11:00 AM'
+          };
+          localStorage.setItem(STORAGE_KEYS.BUSINESS_SETTINGS, JSON.stringify(bSettings));
+        }
+      }
+
+      // 33. Hydrate Room Types Master from PostgreSQL
+      if (state.room_types && state.room_types.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.ROOM_TYPES, JSON.stringify(state.room_types));
+      }
+
+      // 34. Hydrate Restaurant Menu Items from PostgreSQL
+      if (state.menu_items && state.menu_items.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.MENU_ITEMS, JSON.stringify(state.menu_items));
+      }
+
+      // 35. Hydrate Housekeeping Duty Records from PostgreSQL
+      if (state.housekeeping && state.housekeeping.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.HOUSEKEEPING, JSON.stringify(state.housekeeping));
+      }
+
+      // 36. Hydrate Agent Commission Accruals from PostgreSQL
+      if (state.agent_commissions && state.agent_commissions.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.AGENT_COMMISSIONS, JSON.stringify(state.agent_commissions));
+      }
+
+      // 37. Hydrate WhatsApp Notification Templates from PostgreSQL
+      if (state.whatsapp_templates && state.whatsapp_templates.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.WHATSAPP_TEMPLATES, JSON.stringify(state.whatsapp_templates));
+      }
+
+      // 38. Hydrate Role Permissions Matrix from PostgreSQL
+      if (state.roles && state.roles.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.ROLES, JSON.stringify(state.roles));
+      }
+
+      // 39. Hydrate No-Discount Margin Protection Config from PostgreSQL
+      if (state.no_discount_config) {
+        localStorage.setItem(STORAGE_KEYS.NO_DISCOUNT_CONFIG, JSON.stringify(state.no_discount_config));
+      }
+
+      // 40. Hydrate Liquor Brands & Units from PostgreSQL
+      if (state.liquor_brands && state.liquor_brands.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.LIQUOR_BRANDS, JSON.stringify(state.liquor_brands));
+      }
+      if (state.liquor_units && state.liquor_units.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.LIQUOR_UNITS, JSON.stringify(state.liquor_units));
+      }
+
+      // 41. Hydrate Key Cards, KOT Voids & Discrepancies from PostgreSQL
+      if (state.key_cards && state.key_cards.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.KEY_CARDS, JSON.stringify(state.key_cards));
+      }
+      if (state.kot_void_audit && state.kot_void_audit.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.KOT_VOID_AUDIT, JSON.stringify(state.kot_void_audit));
+      }
+      if (state.housekeeping_discrepancies && state.housekeeping_discrepancies.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.HOUSEKEEPING_DISCREPANCIES, JSON.stringify(state.housekeeping_discrepancies));
+      }
+      if (state.night_audits && state.night_audits.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.NIGHT_AUDITS, JSON.stringify(state.night_audits));
+      }
+
       this.notify();
       return true;
     } catch (e) {
@@ -3875,6 +3944,16 @@ export class PmsStore {
       }
       this.saveRooms(rooms);
     }
+
+    hotelApi.saveHousekeepingRecord({
+      roomNo,
+      status,
+      assignedStaff,
+      priority,
+      maintenanceIssue: issue,
+      lastCleanedTime: updatedRec.lastCleanedTime,
+      cleaningStartedAt: updatedRec.cleaningStartedAt
+    }).catch(e => console.warn('[PmsStore] Housekeeping cloud sync note:', e));
 
     this.notify();
   }
@@ -4916,11 +4995,13 @@ export class PmsStore {
       list.push(roomType);
     }
     localStorage.setItem(STORAGE_KEYS.ROOM_TYPES, JSON.stringify(list));
+    hotelApi.saveRoomType(roomType).catch(e => console.warn('[PmsStore] Room type cloud sync note:', e));
   }
 
   static deleteRoomType(id: string): void {
     const list = this.getRoomTypes().filter(r => r.id !== id && r.roomTypeName !== id);
     localStorage.setItem(STORAGE_KEYS.ROOM_TYPES, JSON.stringify(list));
+    hotelApi.deleteRoomType(id).catch(e => console.warn('[PmsStore] Room type delete note:', e));
   }
 
   // Dining Tables
@@ -5159,15 +5240,18 @@ export class PmsStore {
       list.push(item);
     }
     localStorage.setItem(STORAGE_KEYS.MENU_ITEMS, JSON.stringify(list));
+    hotelApi.saveMenuItem(item).catch(e => console.warn('[PmsStore] Menu item cloud sync note:', e));
   }
 
   static saveMenuItems(items: MenuItem[]): void {
     localStorage.setItem(STORAGE_KEYS.MENU_ITEMS, JSON.stringify(items));
+    hotelApi.saveMenuItemsBulk(items).catch(e => console.warn('[PmsStore] Menu items bulk sync note:', e));
   }
 
   static deleteMenuItem(id: string): void {
     const list = this.getMenuItems().filter(m => m.id !== id && m.code !== id);
     localStorage.setItem(STORAGE_KEYS.MENU_ITEMS, JSON.stringify(list));
+    hotelApi.deleteMenuItem(id).catch(e => console.warn('[PmsStore] Menu item delete note:', e));
   }
 
   // Business Settings (Video 09 - 12 Hour vs 24 Hour Policy)
@@ -5186,6 +5270,10 @@ export class PmsStore {
 
   static saveBusinessSettings(settings: PmsBusinessSetting): void {
     localStorage.setItem(STORAGE_KEYS.BUSINESS_SETTINGS, JSON.stringify(settings));
+    hotelApi.saveHotelSettings({
+      calculationType: settings.calculationType,
+      standardCheckoutTime: settings.standardCheckoutTime
+    }).catch(e => console.warn('[PmsStore] Business settings cloud sync note:', e));
   }
 
   /**
@@ -9737,6 +9825,7 @@ export class PmsStore {
 
   static saveRoles(roles: PmsRole[]): void {
     localStorage.setItem(STORAGE_KEYS.ROLES, JSON.stringify(roles));
+    roles.forEach(r => hotelApi.saveRole(r).catch(() => {}));
   }
 
   static getRoleById(id: number): PmsRole | undefined {
@@ -9752,6 +9841,7 @@ export class PmsStore {
       roles.push(role);
     }
     this.saveRoles(roles);
+    hotelApi.saveRole(role).catch(e => console.warn('[PmsStore] Role cloud sync note:', e));
   }
 
   static updateRolePermissions(roleId: number, permissions: string[]): void {
@@ -9956,6 +10046,7 @@ export class PmsStore {
 
   static saveWhatsAppTemplates(templates: PmsWhatsAppTemplate[]): void {
     localStorage.setItem(STORAGE_KEYS.WHATSAPP_TEMPLATES, JSON.stringify(templates));
+    hotelApi.saveWhatsAppTemplatesBulk(templates).catch(e => console.warn('[PmsStore] WhatsApp templates bulk sync note:', e));
   }
 
   static getWhatsAppTemplate(voucherType: string): PmsWhatsAppTemplate | undefined {
@@ -9971,6 +10062,7 @@ export class PmsStore {
       list.push(tmpl);
     }
     this.saveWhatsAppTemplates(list);
+    hotelApi.saveWhatsAppTemplate(tmpl).catch(e => console.warn('[PmsStore] WhatsApp template sync note:', e));
   }
 
   static deleteWhatsAppTemplate(id: number): void {
@@ -12138,6 +12230,7 @@ export class PmsStore {
       this.saveCommissionAgent(agent);
     }
 
+    hotelApi.saveAgentCommission(newRecord).catch(e => console.warn('[PmsStore] Agent commission cloud sync note:', e));
     return newRecord;
   }
 
@@ -12147,6 +12240,7 @@ export class PmsStore {
     if (item) {
       item.status = status;
       localStorage.setItem(STORAGE_KEYS.AGENT_COMMISSIONS, JSON.stringify(list));
+      hotelApi.updateAgentCommissionStatus(id, status).catch(e => console.warn('[PmsStore] Agent commission status sync note:', e));
     }
   }
 
@@ -12283,6 +12377,7 @@ export class PmsStore {
     }
     list.forEach((item, index) => { item.sNo = index + 1; });
     localStorage.setItem(STORAGE_KEYS.LIQUOR_UNITS, JSON.stringify(list));
+    hotelApi.saveLiquorUnit(unit).catch(e => console.warn('[PmsStore] Liquor unit cloud sync note:', e));
   }
 
   static getLiquorBrands(): PmsLiquorBrand[] {
@@ -12308,6 +12403,7 @@ export class PmsStore {
     }
     list.forEach((item, index) => { item.sNo = index + 1; });
     localStorage.setItem(STORAGE_KEYS.LIQUOR_BRANDS, JSON.stringify(list));
+    hotelApi.saveLiquorBrand(brand).catch(e => console.warn('[PmsStore] Liquor brand cloud sync note:', e));
   }
 
   static getLiquorItems(): PmsLiquorItem[] {
@@ -12494,6 +12590,7 @@ export class PmsStore {
 
   static saveNoDiscountConfig(cfg: PmsNoDiscountConfig): void {
     localStorage.setItem(STORAGE_KEYS.NO_DISCOUNT_CONFIG, JSON.stringify(cfg));
+    hotelApi.saveNoDiscountConfig(cfg).catch(e => console.warn('[PmsStore] No-discount config cloud sync note:', e));
   }
 
   static isItemDiscountExempt(itemName: string, category?: string, group?: string, itemNoDiscount?: boolean): boolean {
