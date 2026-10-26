@@ -3,6 +3,8 @@ import type { PmsCheckIn, PmsRoom, PaymentSplit } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import { hotelApi } from '../../services/api';
 import { CheckInSlipModal } from './CheckInSlipModal';
+import { decentroApi } from '../../services/decentroApi';
+import { DecentroUpiQrModal } from './DecentroUpiQrModal';
 
 interface NewRoomCheckInModalProps {
   isOpen: boolean;
@@ -268,6 +270,37 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
   const [companyName, setCompanyName] = useState('');
   const [companyAddress, setCompanyAddress] = useState('');
   const [gstNo, setGstNo] = useState('');
+
+  // Decentro Banking & KYC State
+  const [showDecentroAdvanceQr, setShowDecentroAdvanceQr] = useState<boolean>(false);
+  const [isVerifyingGstin, setIsVerifyingGstin] = useState<boolean>(false);
+  const [gstinVerifiedBadge, setGstinVerifiedBadge] = useState<string | null>(null);
+
+  const handleVerifyGstin = async () => {
+    if (!gstNo || gstNo.trim().length !== 15) {
+      alert('Please enter a 15-character GSTIN (e.g. 21AEKPP8689J1ZS or 21AAACJ...)');
+      return;
+    }
+    setIsVerifyingGstin(true);
+    try {
+      const res = await decentroApi.verifyGstin(gstNo);
+      if (res.success) {
+        if (res.trade_name || res.legal_name) {
+          setCompanyName(res.trade_name || res.legal_name);
+        }
+        if (res.address) {
+          setCompanyAddress(res.address);
+        }
+        setGstinVerifiedBadge(`✓ ${res.legal_name} (${res.state || 'Verified'})`);
+      } else {
+        alert(res.message || 'GSTIN verification failed');
+      }
+    } catch (err: any) {
+      alert(err.message || 'Error verifying GSTIN via Decentro KYC');
+    } finally {
+      setIsVerifyingGstin(false);
+    }
+  };
 
   // Photos
   const [guestPhoto, setGuestPhoto] = useState<string | null>(null);
@@ -1231,16 +1264,44 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                     <input type="text" placeholder="Registered office address" value={companyAddress} onChange={e => setCompanyAddress(e.target.value)} className="form-input-pms" />
                   </div>
                   <div className="form-group-pms">
-                    <label className="form-label-pms">15-Digit GSTIN (B2B Tax Invoice)</label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
+                      <label className="form-label-pms" style={{ margin: 0 }}>15-Digit GSTIN (B2B)</label>
+                      <button
+                        type="button"
+                        onClick={handleVerifyGstin}
+                        disabled={isVerifyingGstin}
+                        style={{
+                          background: '#0284c7',
+                          color: '#fff',
+                          border: 'none',
+                          padding: '1px 6px',
+                          borderRadius: 2,
+                          fontSize: 9,
+                          fontWeight: 800,
+                          cursor: 'pointer'
+                        }}
+                        title="Verify GSTIN with Decentro Public Registry & auto-fill corporate name/address"
+                      >
+                        {isVerifyingGstin ? 'Verifying...' : '🔍 Verify (Decentro)'}
+                      </button>
+                    </div>
                     <input 
                       type="text" 
                       maxLength={15}
-                      placeholder="27ABCDE1234F1Z5" 
+                      placeholder="21AEKPP8689J1ZS" 
                       value={gstNo} 
-                      onChange={e => setGstNo(e.target.value.toUpperCase())} 
+                      onChange={e => {
+                        setGstNo(e.target.value.toUpperCase());
+                        setGstinVerifiedBadge(null);
+                      }} 
                       className="form-input-pms" 
                       style={{ fontWeight: 700, textTransform: 'uppercase' }}
                     />
+                    {gstinVerifiedBadge && (
+                      <div style={{ fontSize: 9, color: '#15803d', fontWeight: 800, marginTop: 2 }}>
+                        {gstinVerifiedBadge}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -1469,22 +1530,41 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                     ))}
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
-                      <button
-                        type="button"
-                        onClick={handleAddPaymentMode}
-                        style={{
-                          background: '#2563eb',
-                          color: '#ffffff',
-                          border: 'none',
-                          padding: '4px 10px',
-                          borderRadius: 3,
-                          fontSize: 11,
-                          fontWeight: 700,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        + Payment Mode
-                      </button>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button
+                          type="button"
+                          onClick={handleAddPaymentMode}
+                          style={{
+                            background: '#2563eb',
+                            color: '#ffffff',
+                            border: 'none',
+                            padding: '4px 10px',
+                            borderRadius: 3,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          + Payment Mode
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowDecentroAdvanceQr(true)}
+                          style={{
+                            background: '#0284c7',
+                            color: '#ffffff',
+                            border: 'none',
+                            padding: '4px 10px',
+                            borderRadius: 3,
+                            fontSize: 11,
+                            fontWeight: 800,
+                            cursor: 'pointer'
+                          }}
+                          title="Generate Decentro Dynamic UPI QR for advance deposit"
+                        >
+                          ⚡ Decentro UPI QR
+                        </button>
+                      </div>
                       <span style={{ fontSize: 12, fontWeight: 800, color: '#15803d' }}>
                         Advance Paid: ₹{totalAdvancePaid.toFixed(2)}
                       </span>
@@ -1571,6 +1651,27 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
           onClose();
         }}
         checkIn={completedCheckIn}
+      />
+
+      {/* Decentro Dynamic UPI QR Modal for Advance Collection */}
+      <DecentroUpiQrModal
+        isOpen={showDecentroAdvanceQr}
+        onClose={() => setShowDecentroAdvanceQr(false)}
+        amount={totalAdvancePaid > 0 ? totalAdvancePaid : 1000}
+        purpose={`Advance Deposit for Room ${selectedRoomNo || 'Check-In'}`}
+        roomNo={selectedRoomNo}
+        onPaymentSuccess={txn => {
+          setPaymentSplits([
+            {
+              mode: 'UPI',
+              amount: txn.amount,
+              referenceNo: txn.bank_reference_number || txn.reference_id,
+              remark: `Decentro Advance UPI Reconciled (${txn.payer_vpa || 'App'})`
+            }
+          ]);
+          setPaymentReference(txn.bank_reference_number || txn.reference_id);
+          setShowDecentroAdvanceQr(false);
+        }}
       />
     </>
   );

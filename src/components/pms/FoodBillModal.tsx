@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PmsStore } from '../../services/pmsStore';
 import type { FoodBillItem, PmsFoodBill, PmsKotRecord, TableSession } from '../../types/pmsModels';
 import { ManagerPinModal } from './ManagerPinModal';
+import { DecentroUpiQrModal } from './DecentroUpiQrModal';
 
 interface FoodBillModalProps {
   isOpen: boolean;
@@ -67,6 +68,7 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
   const [billItems, setBillItems] = useState<FoodBillItem[]>([]);
   const [showPrintSlip, setShowPrintSlip] = useState<boolean>(false);
   const [savedBill, setSavedBill] = useState<PmsFoodBill | null>(null);
+  const [showDecentroQrModal, setShowDecentroQrModal] = useState<boolean>(false);
 
   // Load KOTs & Active Table Session
   useEffect(() => {
@@ -828,8 +830,27 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                   </button>
                   <button
                     type="button"
+                    onClick={() => setShowDecentroQrModal(true)}
+                    style={{
+                      background: '#0284c7',
+                      color: '#fff',
+                      border: 'none',
+                      padding: '7px 16px',
+                      borderRadius: 4,
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4
+                    }}
+                    title="Generate Dynamic Decentro UPI QR for guest to scan and settle food bill instantly"
+                  >
+                    <span>⚡</span> Decentro UPI QR
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => handleSaveBill(true)}
-                    style={{ background: '#0284c7', color: '#fff', border: 'none', padding: '7px 22px', borderRadius: 4, fontWeight: 800, cursor: 'pointer' }}
+                    style={{ background: '#15803d', color: '#fff', border: 'none', padding: '7px 22px', borderRadius: 4, fontWeight: 800, cursor: 'pointer' }}
                   >
                     Save &amp; Settle Bill
                   </button>
@@ -1012,6 +1033,22 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
             setApprovedDiscountReason(reason);
             applyDiscount(pendingDiscountPct);
             setShowManagerPinModal(false);
+          }}
+        />
+
+        {/* Decentro Dynamic UPI QR Modal with Real-time Settlement for KOT Bills */}
+        <DecentroUpiQrModal
+          isOpen={showDecentroQrModal}
+          onClose={() => setShowDecentroQrModal(false)}
+          amount={netBillAmount}
+          purpose={`KOT Bill ${billNo} - ${serviceType === 'Room Service' ? `Room ${selectedRoomNo}` : selectedTable}`}
+          roomNo={serviceType === 'Room Service' ? selectedRoomNo : undefined}
+          kotId={billNo}
+          onPaymentSuccess={txn => {
+            setSettlementType('Settle To Online');
+            setPaymentRemark(`Decentro UPI Reconciled (UTR: ${txn.bank_reference_number})`);
+            setShowDecentroQrModal(false);
+            handleSaveBill(true);
           }}
         />
       </div>

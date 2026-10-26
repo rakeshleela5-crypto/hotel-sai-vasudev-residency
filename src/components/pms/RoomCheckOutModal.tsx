@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import type { PmsRoom, PmsCheckOutDetail, PaymentSplit, PmsFoodBill, DayWiseRentItem, BillFormatType } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import { HotelBillFormatModal } from './HotelBillFormatModal';
+import { DecentroUpiQrModal } from './DecentroUpiQrModal';
+import { DecentroVirtualAccountModal } from './DecentroVirtualAccountModal';
+import { decentroApi } from '../../services/decentroApi';
 
 interface RoomCheckOutModalProps {
   isOpen: boolean;
@@ -82,6 +85,38 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
   const [companyAddress, setCompanyAddress] = useState('Main Road, Shirdi');
   const [gstNumber, setGstNumber] = useState((guest as any)?.gstNumber || (guest as any)?.gstin || '');
   const [checkoutRemark, setCheckoutRemark] = useState('Checked out peacefully. Key returned.');
+  
+  // Decentro Banking & KYC State
+  const [showDecentroQrModal, setShowDecentroQrModal] = useState<boolean>(false);
+  const [showDecentroVaModal, setShowDecentroVaModal] = useState<boolean>(false);
+  const [isVerifyingGstin, setIsVerifyingGstin] = useState<boolean>(false);
+  const [gstinVerifiedBadge, setGstinVerifiedBadge] = useState<string | null>(null);
+
+  const handleVerifyGstin = async () => {
+    if (!gstNumber || gstNumber.trim().length !== 15) {
+      alert('Please enter a valid 15-character GSTIN (e.g. 21AEKPP8689J1ZS or 21AAACJ...)');
+      return;
+    }
+    setIsVerifyingGstin(true);
+    try {
+      const res = await decentroApi.verifyGstin(gstNumber);
+      if (res.success) {
+        if (res.trade_name || res.legal_name) {
+          setCompanyName(res.trade_name || res.legal_name);
+        }
+        if (res.address) {
+          setCompanyAddress(res.address);
+        }
+        setGstinVerifiedBadge(`✓ ${res.legal_name} (${res.state || 'Verified'})`);
+      } else {
+        alert(res.message || 'GSTIN verification failed');
+      }
+    } catch (err: any) {
+      alert(err.message || 'Error verifying GSTIN via Decentro Public Registry');
+    } finally {
+      setIsVerifyingGstin(false);
+    }
+  };
 
   // Recalculate day-wise rent
   useEffect(() => {
@@ -1045,23 +1080,42 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                       alignItems: 'center'
                     }}>
                       <span>Bill Summary &amp; Payment Allocation</span>
-                      <button
-                        type="button"
-                        onClick={handleAutoSettle}
-                        style={{
-                          background: '#15803d',
-                          color: '#fff',
-                          border: 'none',
-                          padding: '1px 5px',
-                          borderRadius: 2,
-                          fontSize: 9,
-                          fontWeight: 700,
-                          cursor: 'pointer'
-                        }}
-                        title="Auto-fill balance into payment split"
-                      >
-                        ⚡ Settle Full
-                      </button>
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <button
+                          type="button"
+                          onClick={() => setShowDecentroQrModal(true)}
+                          style={{
+                            background: '#0284c7',
+                            color: '#fff',
+                            border: 'none',
+                            padding: '1px 6px',
+                            borderRadius: 2,
+                            fontSize: 9,
+                            fontWeight: 800,
+                            cursor: 'pointer'
+                          }}
+                          title="Generate dynamic UPI QR via Decentro Banking for instant room settlement"
+                        >
+                          ⚡ Decentro UPI QR
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleAutoSettle}
+                          style={{
+                            background: '#15803d',
+                            color: '#fff',
+                            border: 'none',
+                            padding: '1px 5px',
+                            borderRadius: 2,
+                            fontSize: 9,
+                            fontWeight: 700,
+                            cursor: 'pointer'
+                          }}
+                          title="Auto-fill balance into payment split"
+                        >
+                          ⚡ Settle Full
+                        </button>
+                      </div>
                     </div>
 
                     <div style={{ padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -1224,9 +1278,43 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                   <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="e.g. Tata Motors Ltd" className="form-input-pms" />
                 </div>
                 <div className="form-group-pms" style={{ margin: 0 }}>
-                  <label className="form-label-pms">Party GSTIN (15 Chars)</label>
-                  <input type="text" value={gstNumber} onChange={e => setGstNumber(e.target.value.toUpperCase())} placeholder="e.g. 27AABCT3518Q1ZP" className="form-input-pms" />
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 3 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
+                    <label className="form-label-pms" style={{ margin: 0 }}>Party GSTIN (15 Chars)</label>
+                    <button
+                      type="button"
+                      onClick={handleVerifyGstin}
+                      disabled={isVerifyingGstin}
+                      style={{
+                        background: '#0284c7',
+                        color: '#fff',
+                        border: 'none',
+                        padding: '1px 6px',
+                        borderRadius: 2,
+                        fontSize: 9,
+                        fontWeight: 800,
+                        cursor: 'pointer'
+                      }}
+                      title="Verify GSTIN with Decentro Public Registry & auto-fill corporate details"
+                    >
+                      {isVerifyingGstin ? 'Verifying...' : '🔍 Verify (Decentro)'}
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    value={gstNumber}
+                    onChange={e => {
+                      setGstNumber(e.target.value.toUpperCase());
+                      setGstinVerifiedBadge(null);
+                    }}
+                    placeholder="e.g. 21AEKPP8689J1ZS"
+                    className="form-input-pms"
+                  />
+                  {gstinVerifiedBadge && (
+                    <div style={{ fontSize: 9, color: '#15803d', fontWeight: 800, marginTop: 2 }}>
+                      {gstinVerifiedBadge}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 3 }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 9, fontWeight: 700, color: '#4338ca', cursor: 'pointer' }}>
                       <input
                         type="checkbox"
@@ -1243,6 +1331,23 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                       />
                       <span>⚡ Split B2B Folio</span>
                     </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowDecentroVaModal(true)}
+                      style={{
+                        background: '#312e81',
+                        color: '#fff',
+                        border: 'none',
+                        padding: '1px 6px',
+                        borderRadius: 2,
+                        fontSize: 9,
+                        fontWeight: 800,
+                        cursor: 'pointer'
+                      }}
+                      title="Create or view Decentro Dedicated Virtual Account for NEFT/RTGS/IMPS wire transfers"
+                    >
+                      🏢 Virtual Account
+                    </button>
                   </div>
                 </div>
                 <div className="form-group-pms" style={{ margin: 0 }}>
@@ -1835,6 +1940,40 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
           pinCode: '423109',
           sacCode: '996311',
           invoiceFormat: 'A4_Standard'
+        }}
+      />
+
+      {/* Decentro Dynamic UPI QR Modal with Real-Time Webhook Auto-Reconciliation */}
+      <DecentroUpiQrModal
+        isOpen={showDecentroQrModal}
+        onClose={() => setShowDecentroQrModal(false)}
+        amount={remainingToSettle > 0 ? remainingToSettle : netPayable}
+        purpose={`Room ${targetRoom.roomNo} Settlement (${activeInvoiceNo})`}
+        roomNo={targetRoom.roomNo}
+        bookingId={guest ? (guest as any).bookingId : undefined}
+        onPaymentSuccess={txn => {
+          const nonUpiSplits = paymentSplits.filter(p => p.mode !== 'UPI');
+          setPaymentSplits([
+            ...nonUpiSplits,
+            {
+              mode: 'UPI',
+              amount: txn.amount,
+              referenceNo: txn.bank_reference_number || txn.reference_id,
+              remark: `Decentro UPI Reconciled (${txn.payer_vpa || 'App'})`
+            }
+          ]);
+          setShowDecentroQrModal(false);
+        }}
+      />
+
+      {/* Decentro Dedicated Corporate Virtual Account Modal */}
+      <DecentroVirtualAccountModal
+        isOpen={showDecentroVaModal}
+        onClose={() => setShowDecentroVaModal(false)}
+        bookingId={guest ? (guest as any).bookingId : undefined}
+        defaultCorporateName={companyName || 'Corporate Client'}
+        onAccountCreated={va => {
+          alert(`Dedicated Virtual Account ${va.account_number} (IFSC: ${va.ifsc_code}, ${va.bank_name}) generated successfully! Direct NEFT/RTGS/IMPS deposits will auto-credit this room.`);
         }}
       />
     </div>

@@ -32,6 +32,15 @@ class Settings(BaseSettings):
         "https://hotel-sai-vasudev-residency.pages.dev,http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"
     )
 
+    # Decentro Banking & KYC API Credentials
+    DECENTRO_BASE_URL: str = os.getenv("DECENTRO_BASE_URL", "https://in.staging.decentro.tech")
+    DECENTRO_CLIENT_ID: str = os.getenv("DECENTRO_CLIENT_ID", "")
+    DECENTRO_CLIENT_SECRET: str = os.getenv("DECENTRO_CLIENT_SECRET", "")
+    DECENTRO_PAYMENT_SECRET: str = os.getenv("DECENTRO_PAYMENT_SECRET", "")
+    DECENTRO_KYC_SECRET: str = os.getenv("DECENTRO_KYC_SECRET", "")
+    DECENTRO_WEBHOOK_SECRET: str = os.getenv("DECENTRO_WEBHOOK_SECRET", "")
+    DECENTRO_PAYEE_ACCOUNT: str = os.getenv("DECENTRO_PAYEE_ACCOUNT", "SAIVASUDEV@icici")
+
     @property
     def get_database_url(self) -> str:
         # Railway sometimes provides postgres:// which SQLAlchemy 1.4+ requires postgresql://

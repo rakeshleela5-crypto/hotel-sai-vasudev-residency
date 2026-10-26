@@ -333,3 +333,49 @@ class InventoryPurchase(Base):
     terms = Column(String(50), default="Credit")
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
+class PaymentTransaction(Base):
+    __tablename__ = "payment_transactions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    reference_id = Column(String(100), unique=True, index=True, nullable=False) # Decentro reference_id UUID
+    booking_id = Column(Integer, ForeignKey("bookings.id", ondelete="SET NULL"), nullable=True, index=True)
+    kot_id = Column(String(100), nullable=True, index=True)
+    room_no = Column(String(50), nullable=True)
+    amount = Column(Float, nullable=False)
+    currency = Column(String(10), default="INR")
+    purpose_message = Column(String(255), nullable=True)
+    payment_method = Column(String(50), default="UPI_QR") # UPI_QR, VIRTUAL_ACCOUNT, CARD, NETBANKING
+    status = Column(String(50), default="PENDING", index=True) # PENDING, SUCCESS, FAILURE, EXPIRED, CANCELLED
+    decentro_txn_id = Column(String(150), nullable=True, index=True)
+    bank_reference_number = Column(String(100), nullable=True, index=True) # UTR
+    payer_vpa = Column(String(100), nullable=True)
+    qr_code_base64 = Column(Text, nullable=True)
+    upi_intent_link = Column(Text, nullable=True)
+    expiry_time = Column(DateTime, nullable=True)
+    metadata_json = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    booking = relationship("Booking", backref="payment_transactions")
+
+class VirtualAccount(Base):
+    __tablename__ = "virtual_accounts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    reference_id = Column(String(100), unique=True, index=True, nullable=False)
+    corporate_client_id = Column(String(100), nullable=True, index=True)
+    booking_id = Column(Integer, ForeignKey("bookings.id", ondelete="SET NULL"), nullable=True, index=True)
+    group_id = Column(String(100), nullable=True, index=True)
+    account_number = Column(String(100), unique=True, index=True, nullable=False)
+    ifsc_code = Column(String(50), nullable=False)
+    bank_name = Column(String(100), default="YES BANK")
+    account_name = Column(String(200), nullable=False)
+    upi_id = Column(String(150), nullable=True)
+    decentro_urn = Column(String(150), nullable=True, index=True)
+    status = Column(String(50), default="ACTIVE") # ACTIVE, DEACTIVATED, CLOSED
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    booking = relationship("Booking", backref="virtual_accounts")
+
+

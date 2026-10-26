@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.config import settings
 from app.database import engine, Base, get_db
-from app.routes import rooms, bookings, inquiries, pms, uploads
+from app.routes import rooms, bookings, inquiries, pms, uploads, payments, kyc
 
 # Initialize DB tables safely
 try:
@@ -31,12 +31,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include API Routers
+# Include API Routers (mounted under /api/v1 as well as direct /api for Decentro webhooks)
 app.include_router(rooms.router, prefix=settings.API_V1_STR)
 app.include_router(bookings.router, prefix=settings.API_V1_STR)
 app.include_router(inquiries.router, prefix=settings.API_V1_STR)
 app.include_router(pms.router, prefix=settings.API_V1_STR)
 app.include_router(uploads.router, prefix=settings.API_V1_STR)
+app.include_router(payments.router, prefix=settings.API_V1_STR)
+app.include_router(kyc.router, prefix=settings.API_V1_STR)
+app.include_router(payments.router, prefix="/api")
+app.include_router(kyc.router, prefix="/api")
 
 @app.get("/", tags=["Root"])
 def root():
