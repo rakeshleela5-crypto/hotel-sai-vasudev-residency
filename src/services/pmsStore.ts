@@ -5328,6 +5328,32 @@ export class PmsStore {
         console.warn('[PmsStore] Booking advance receipt sync note:', advErr);
       }
     }
+
+    // Cloud sync: mirror Reservation to Railway PostgreSQL
+    try {
+      const primaryRoom = booking.rooms?.[0];
+      const checkInISO = booking.checkInDate?.includes('T') ? booking.checkInDate.split('T')[0] : booking.checkInDate;
+      const checkOutISO = booking.checkOutDate?.includes('T') ? booking.checkOutDate.split('T')[0] : booking.checkOutDate;
+      hotelApi.createBooking({
+        room_id: parseInt(primaryRoom?.roomNo?.replace(/\D/g, '') || '101', 10),
+        guest_name: booking.guestName,
+        guest_email: booking.email || `${booking.mobile || 'guest'}@sai-vasudev.com`,
+        guest_phone: booking.mobile || '9999999999',
+        id_proof_type: booking.documentName || 'Aadhaar Card',
+        check_in_date: checkInISO || new Date().toISOString().split('T')[0],
+        check_out_date: checkOutISO || new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        adults: booking.numberOfGuests || 2,
+        children: 0,
+        payment_method: (booking.paymentMode || 'Cash').toLowerCase().includes('online') ? 'Online' : 'Cash',
+        special_requests: booking.bookingRemark || `PMS Booking #${booking.bookingNo}`
+      }).catch(bkgErr => {
+        console.warn('[PmsStore] Cloud reservation sync notice:', bkgErr);
+      });
+    } catch (syncErr) {
+      console.warn('[PmsStore] Booking cloud sync dispatch notice:', syncErr);
+    }
+
+    this.notify();
   }
 
   static confirmBooking(bookingNo: string, advancePaid?: number): { success: boolean; message: string } {
@@ -5347,6 +5373,12 @@ export class PmsStore {
   static deleteBooking(bookingNo: string): void {
     const list = this.getBookings().filter(b => b.bookingNo !== bookingNo);
     localStorage.setItem(STORAGE_KEYS.BOOKINGS, JSON.stringify(list));
+    
+    // Cloud sync: cancel booking on Railway PostgreSQL
+    hotelApi.updateBookingStatus(bookingNo, 'Cancelled', undefined, 'Deleted from PMS reservation calendar')
+      .catch(e => console.warn('[PmsStore] Background booking cancellation cloud sync note:', e));
+
+    this.notify();
   }
 
   /**
