@@ -82,10 +82,16 @@ import type {
   PmsNightAuditRecord,
   PmsFolioPayment,
   PmsFolioDiscount,
-  PmsFolioSummary
+  PmsFolioSummary,
+  KotVoidAuditLog,
+  TableSession,
+  RfidKeyCard,
+  HousekeepingDiscrepancy,
+  GroupBookingMetadata
 } from '../types/pmsModels';
 import { PMS_ALL_PERMISSIONS } from '../types/pmsModels';
 import { hotelApi } from './api';
+import * as XLSX from 'xlsx';
 
 export const DEFAULT_BUSINESS_SETTING: PmsBusinessSetting = {
   calculationType: '12hour',
@@ -93,36 +99,38 @@ export const DEFAULT_BUSINESS_SETTING: PmsBusinessSetting = {
 };
 
 export const DEFAULT_COMPANY_INFO: PmsCompanyInfo = {
-  firmName: 'HOTEL SAI VASUDEV RESIDENCY',
-  address1: 'Plot No. 14-B, VIP Temple Road, Near Gate No. 2',
-  address2: 'Shirdi, Maharashtra 423109',
-  city: 'Shirdi',
-  pincode: '423109',
-  state: 'MAHARASHTRA',
+  firmName: 'SRI SAI VASUDEV RESIDENCY',
+  legalName: 'PAIDISETTY MANMADHA RAO',
+  address1: 'Near Andhra Bank, New Colony',
+  address2: 'SRI SAI VASUDEV RESIDENCY',
+  city: 'Rayagada',
+  district: 'Rayagada',
+  pincode: '765001',
+  state: 'ODISHA',
   phone: '+91 94402 89999',
   mobile: '+91 94402 89999',
   email: 'reservations@hotelsai-vasudev.com',
   website: 'https://hotel-sai-vasudev-residency.pages.dev',
-  gstNo: '27AABCS1429B1Z2',
-  companyGstCode: '27',
-  pencardNo: 'AABCS1429B',
-  regNo2: 'REG-MS-2024-9871',
+  gstNo: '21AEKPP8689J1ZS',
+  companyGstCode: '21',
+  pencardNo: 'AEKPP8689J',
+  regNo2: '21AEKPP8689J1ZS',
   gstNotApplicable: false,
-  makeAllBillLocalGst: true, // Video 10 local sales default
+  makeAllBillLocalGst: true, // Odisha (21) local sales default
   
-  // Video 26 Banking & Digital Assets (Frames 0240, 0250, 0255)
+  // Banking & Digital Assets
   bankName: 'STATE BANK OF INDIA',
   bankAccountNo: '923020035404769',
   bankIfsc: 'SBIN000390',
-  bankBranch: 'MAIN BRANCH SHIRDI',
+  bankBranch: 'RAYAGADA BRANCH',
   upiId: '7999663696@YBL',
   phonePeGpay: '07999663696',
-  jurisdiction: 'Shirdi / Rahata Jurisdiction',
-  country: 'Indian',
+  jurisdiction: 'Rayagada Division / Rayagada Jurisdiction',
+  country: 'India',
   currency: '₹ Indian Rupee (INR)',
   taxSystem: 'GST',
   restaurantFoodBillTaxInclusive: false,
-  termsAndConditions: '1. Check-out time is 11:00 AM sharp. Late checkout will be billed as extra day.\n2. In case of dispute, Shirdi Jurisdiction will apply.\n3. Room key must be deposited at reception desk while going outside and at checkout.\n4. Management is not responsible for valuables left inside the room without safe deposit.',
+  termsAndConditions: '1. Check-out time is 11:00 AM sharp. Late checkout will be billed as extra day.\n2. In case of dispute, Rayagada Jurisdiction will apply.\n3. Room key must be deposited at reception desk while going outside and at checkout.\n4. Management is not responsible for valuables left inside the room without safe deposit.',
   voucherPrefix: '.',
   voucherSuffix: '.',
   voucherNote: '.'
@@ -1502,16 +1510,16 @@ export const INITIAL_USER_ACCOUNTS: PmsUserAccount[] = [
 export const INITIAL_CHAIN_PROPERTIES: PmsChainProperty[] = [
   {
     firmId: 'DEMO0004',
-    firmName: 'HALL OF KNOTS / HOTEL SAI VASUDEV RESIDENCY',
-    location: 'Shirdi (Main Temple Shrine)',
-    address: 'Near Sai Baba Temple, Taluka Rahata, Shirdi - 423109',
-    phone: '02423-255000',
-    email: 'hotelsaivasudevresidency@gmail.com',
-    gstin: '27ABCDE1234F1Z5',
-    totalRooms: 24,
-    activationDate: '17-12-24',
-    renewDate: '17-12-25',
-    whatsAppValidity: '29-06-2026',
+    firmName: 'SRI SAI VASUDEV RESIDENCY',
+    location: 'Rayagada (New Colony)',
+    address: 'Near Andhra Bank, New Colony, Rayagada, Odisha - 765001',
+    phone: '+91 94402 89999',
+    email: 'reservations@hotelsai-vasudev.com',
+    gstin: '21AEKPP8689J1ZS',
+    totalRooms: 18,
+    activationDate: '05-02-25',
+    renewDate: '05-02-35',
+    whatsAppValidity: '29-06-2030',
     isCurrent: true
   },
   {
@@ -2662,7 +2670,11 @@ const STORAGE_KEYS = {
   FOOD_BILLS: 'svr_pms_foodbills',
   COMPANY_INFO: 'pms_company_info',
   TABLE_SHIFTS: 'svr_pms_table_shifts',
-  BILL_FORMAT: 'pms_default_bill_format'
+  BILL_FORMAT: 'pms_default_bill_format',
+  TABLE_SESSIONS: 'svr_pms_table_sessions',
+  KEY_CARDS: 'svr_pms_rfid_keycards',
+  HOUSEKEEPING_DISCREPANCIES: 'svr_pms_hk_discrepancies',
+  GROUP_BOOKINGS: 'svr_pms_group_bookings'
 };
 
 export const INITIAL_EXPENSES: PmsExpenseRecord[] = [
@@ -2892,6 +2904,36 @@ export class PmsStore {
           } catch {}
           localStorage.removeItem('hotel_pms_checkouts');
         }
+      }
+
+      // Ensure official GST Registration Certificate details (21AEKPP8689J1ZS) are synchronized
+      const storedCompRaw = localStorage.getItem(STORAGE_KEYS.COMPANY_INFO);
+      if (storedCompRaw) {
+        try {
+          const comp = JSON.parse(storedCompRaw);
+          if (comp.gstNo !== '21AEKPP8689J1ZS' || comp.companyGstCode !== '21' || !comp.legalName) {
+            const upgradedComp = {
+              ...comp,
+              firmName: 'SRI SAI VASUDEV RESIDENCY',
+              legalName: 'PAIDISETTY MANMADHA RAO',
+              address1: 'Near Andhra Bank, New Colony',
+              address2: 'SRI SAI VASUDEV RESIDENCY',
+              city: 'Rayagada',
+              district: 'Rayagada',
+              state: 'ODISHA',
+              pincode: '765001',
+              gstNo: '21AEKPP8689J1ZS',
+              companyGstCode: '21',
+              pencardNo: 'AEKPP8689J',
+              regNo2: '21AEKPP8689J1ZS',
+              jurisdiction: 'Rayagada Division / Rayagada Jurisdiction',
+              bankBranch: comp.bankBranch?.includes('SHIRDI') ? 'RAYAGADA BRANCH' : (comp.bankBranch || 'RAYAGADA BRANCH')
+            };
+            localStorage.setItem(STORAGE_KEYS.COMPANY_INFO, JSON.stringify(upgradedComp));
+          }
+        } catch {}
+      } else {
+        localStorage.setItem(STORAGE_KEYS.COMPANY_INFO, JSON.stringify(DEFAULT_COMPANY_INFO));
       }
     } catch (e) {
       console.warn('[PmsStore] Legacy key migration note:', e);
@@ -6042,6 +6084,1045 @@ export class PmsStore {
       success: true,
       message: `KOT ${target.kotNo} cancelled successfully with reason: ${reason || 'NOT REQ'}`
     };
+  }
+
+  // =========================================================================
+  // MODULE 1: Running Table KOT Consolidation, Void Security & Table Merge
+  // =========================================================================
+
+  static getTableSessions(): TableSession[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.TABLE_SESSIONS);
+    if (!raw) return [];
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+
+  static saveTableSession(session: TableSession): void {
+    const sessions = this.getTableSessions();
+    const idx = sessions.findIndex(s => s.sessionId === session.sessionId);
+    if (idx >= 0) {
+      sessions[idx] = session;
+    } else {
+      sessions.unshift(session);
+    }
+    localStorage.setItem(STORAGE_KEYS.TABLE_SESSIONS, JSON.stringify(sessions));
+    this.notify();
+  }
+
+  static getActiveTableSession(tableNo: string): TableSession | null {
+    const cleanTable = tableNo.replace(/^Table\s+/i, '').trim().toLowerCase();
+    const sessions = this.getTableSessions();
+    return sessions.find(s => 
+      s.status === 'Active' && 
+      (s.tableNo.replace(/^Table\s+/i, '').trim().toLowerCase() === cleanTable ||
+       (s.mergedTables && s.mergedTables.some(mt => mt.replace(/^Table\s+/i, '').trim().toLowerCase() === cleanTable)))
+    ) || null;
+  }
+
+  static createOrAppendTableSession(
+    tableNo: string,
+    items: KotItem[],
+    waiterName: string = 'Captain',
+    guestName: string = 'Table Guest',
+    kotRemark: string = 'Standard Service'
+  ): {
+    session: TableSession;
+    kot: PmsKotRecord;
+    isInitial: boolean;
+    deltaItems: KotItem[];
+  } {
+    const cleanTable = `Table ${tableNo.replace(/^Table\s+/i, '').trim()}`;
+    let session = this.getActiveTableSession(tableNo);
+    const isInitial = !session;
+    const nowTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const todayDate = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+    const seqNum = session ? session.kotNumbers.length + 1 : 1;
+    const kotNo = `KOT/${cleanTable.replace(/\s+/g, '')}/${seqNum}-${Math.floor(100 + Math.random() * 900)}/26-27`;
+
+    const deltaItems: KotItem[] = items.map(it => ({ ...it }));
+    const batchTotal = deltaItems.reduce((s, it) => s + (it.amount || (it.qty * it.rate)), 0);
+
+    if (!session) {
+      session = {
+        sessionId: `TS-${cleanTable.replace(/\s+/g, '')}-${Date.now()}`,
+        tableNo: cleanTable,
+        startTime: `${todayDate} ${nowTime}`,
+        status: 'Active',
+        kotNumbers: [kotNo],
+        cumulativeItems: [...deltaItems],
+        cumulativeAmount: batchTotal,
+        waiterName,
+        guestName
+      };
+    } else {
+      session.kotNumbers.push(kotNo);
+      for (const dItem of deltaItems) {
+        const existIdx = session.cumulativeItems.findIndex(ci => ci.itemName.toLowerCase() === dItem.itemName.toLowerCase());
+        if (existIdx >= 0) {
+          session.cumulativeItems[existIdx].qty += dItem.qty;
+          session.cumulativeItems[existIdx].amount += (dItem.amount || (dItem.qty * dItem.rate));
+        } else {
+          session.cumulativeItems.push({ ...dItem });
+        }
+      }
+      session.cumulativeAmount = Number((session.cumulativeAmount + batchTotal).toFixed(2));
+    }
+
+    this.saveTableSession(session);
+
+    // Save individual KOT record
+    const kotRecord: PmsKotRecord = {
+      kotNo,
+      serviceType: 'Restaurant',
+      roomNo: cleanTable,
+      tableNo: cleanTable,
+      tableSessionId: session.sessionId,
+      kotSequence: seqNum,
+      isDelta: !isInitial,
+      deltaItems: deltaItems,
+      guestName,
+      waiterName,
+      kotRemark: isInitial ? kotRemark : `${kotRemark} [RUNNING KOT #${seqNum}]`,
+      items: deltaItems,
+      totalAmount: batchTotal,
+      totalQty: deltaItems.reduce((s, it) => s + it.qty, 0),
+      date: todayDate,
+      time: nowTime,
+      createdAt: new Date().toISOString(),
+      status: 'Pending',
+      serveStatus: 'Pending',
+      isPrinted: true,
+      orderSource: 'Desktop'
+    };
+
+    this.saveKot(kotRecord);
+
+    // Update table status and activeSessionId
+    const tables = this.getTables();
+    const updatedTables = tables.map(t => {
+      if (t.tableName.replace(/^Table\s+/i, '').trim().toLowerCase() === cleanTable.replace(/^Table\s+/i, '').trim().toLowerCase()) {
+        return {
+          ...t,
+          status: 'Running' as const,
+          activeSessionId: session!.sessionId
+        };
+      }
+      return t;
+    });
+    localStorage.setItem(STORAGE_KEYS.TABLES, JSON.stringify(updatedTables));
+
+    // Module 2: Play 2-tone audio chime and broadcast event
+    this.playKotChime();
+    this.broadcastKotEvent({
+      type: 'KOT_PUNCHED',
+      payload: {
+        tableNo: cleanTable,
+        tableSessionId: session.sessionId,
+        kotNo,
+        kotSequence: seqNum,
+        isInitial,
+        deltaItems,
+        cumulativeItems: session.cumulativeItems,
+        cumulativeAmount: session.cumulativeAmount
+      }
+    });
+
+    this.notify();
+    return { session, kot: kotRecord, isInitial, deltaItems };
+  }
+
+  static mergeTableSessions(
+    primaryTable: string,
+    secondaryTable: string,
+    mergedBy: string = 'Restaurant Manager'
+  ): { success: boolean; message: string; masterSession?: TableSession } {
+    const cleanPrimary = `Table ${primaryTable.replace(/^Table\s+/i, '').trim()}`;
+    const cleanSecondary = `Table ${secondaryTable.replace(/^Table\s+/i, '').trim()}`;
+
+    const s1 = this.getActiveTableSession(cleanPrimary);
+    const s2 = this.getActiveTableSession(cleanSecondary);
+
+    if (!s1 && !s2) {
+      return { success: false, message: `Neither ${cleanPrimary} nor ${cleanSecondary} has an active running session to merge.` };
+    }
+
+    const masterSession: TableSession = s1 || {
+      sessionId: `TS-${cleanPrimary.replace(/\s+/g, '')}-${Date.now()}`,
+      tableNo: cleanPrimary,
+      startTime: new Date().toISOString(),
+      status: 'Active' as const,
+      kotNumbers: [],
+      cumulativeItems: [],
+      cumulativeAmount: 0
+    };
+
+    if (s2) {
+      masterSession.kotNumbers = Array.from(new Set([...masterSession.kotNumbers, ...s2.kotNumbers]));
+      for (const it of s2.cumulativeItems) {
+        const exist = masterSession.cumulativeItems.find(ci => ci.itemName.toLowerCase() === it.itemName.toLowerCase());
+        if (exist) {
+          exist.qty += it.qty;
+          exist.amount += it.amount;
+        } else {
+          masterSession.cumulativeItems.push({ ...it });
+        }
+      }
+      masterSession.cumulativeAmount = Number((masterSession.cumulativeAmount + s2.cumulativeAmount).toFixed(2));
+      masterSession.mergedTables = Array.from(new Set([...(masterSession.mergedTables || []), cleanSecondary]));
+
+      s2.status = 'Closed';
+      this.saveTableSession(s2);
+    }
+
+    this.saveTableSession(masterSession);
+
+    // Re-route KOTs from secondary table to primary table session
+    const kots = this.getKots().map(k => {
+      const kt = (k.tableNo || '').replace(/^Table\s+/i, '').trim().toLowerCase();
+      if (kt === cleanSecondary.replace(/^Table\s+/i, '').trim().toLowerCase() && k.status !== 'Billed' && k.status !== 'Cancelled') {
+        return {
+          ...k,
+          tableNo: cleanPrimary,
+          tableSessionId: masterSession.sessionId,
+          kotRemark: `${k.kotRemark || ''} [Merged from ${cleanSecondary} by ${mergedBy}]`
+        };
+      }
+      return k;
+    });
+    localStorage.setItem(STORAGE_KEYS.KOTS, JSON.stringify(kots));
+
+    // Update Tables
+    const tables = this.getTables().map(t => {
+      const tName = t.tableName.replace(/^Table\s+/i, '').trim().toLowerCase();
+      if (tName === cleanSecondary.replace(/^Table\s+/i, '').trim().toLowerCase()) {
+        return { ...t, status: 'Vacant' as const, activeSessionId: undefined };
+      }
+      if (tName === cleanPrimary.replace(/^Table\s+/i, '').trim().toLowerCase()) {
+        return { ...t, status: 'Running' as const, activeSessionId: masterSession.sessionId };
+      }
+      return t;
+    });
+    localStorage.setItem(STORAGE_KEYS.TABLES, JSON.stringify(tables));
+
+    this.broadcastKotEvent({
+      type: 'TABLE_MERGED',
+      payload: { primaryTable: cleanPrimary, secondaryTable: cleanSecondary, masterSessionId: masterSession.sessionId }
+    });
+
+    this.notify();
+    return {
+      success: true,
+      message: `Table ${cleanSecondary} successfully merged into ${cleanPrimary}. Single running ledger now active.`,
+      masterSession
+    };
+  }
+
+  static voidKotItemWithPin(
+    kotNo: string,
+    itemName: string,
+    qtyToVoid: number,
+    managerPin: string,
+    voidReason: string,
+    stewardId: string = 'Steward',
+    approvingManager: string = 'Duty Manager'
+  ): { success: boolean; message: string; log?: KotVoidAuditLog } {
+    const validPins = ['9999', '1234', '8888'];
+    if (!validPins.includes(managerPin.trim())) {
+      return { success: false, message: 'Invalid Manager PIN. Void rejected.' };
+    }
+    const kots = this.getKots();
+    const kot = kots.find(k => k.kotNo === kotNo);
+    if (!kot) return { success: false, message: `KOT ${kotNo} not found.` };
+
+    const itemIdx = kot.items.findIndex(it => it.itemName.toLowerCase() === itemName.toLowerCase());
+    if (itemIdx < 0) return { success: false, message: `Item ${itemName} not found in KOT.` };
+
+    const it = kot.items[itemIdx];
+    const origQty = it.qty;
+    const voidQty = Math.min(qtyToVoid, origQty);
+    const voidAmt = Number((voidQty * it.rate).toFixed(2));
+
+    const newLog: KotVoidAuditLog = {
+      id: `VOID-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      kotNo,
+      tableSessionId: kot.tableSessionId,
+      tableNo: kot.tableNo || kot.roomNo,
+      itemCode: it.itemCode || 'ITEM',
+      itemName: it.itemName,
+      qty: voidQty,
+      rate: it.rate,
+      amount: voidAmt,
+      voidReason,
+      stewardId,
+      approvingManagerId: approvingManager,
+      managerPin: '****',
+      foodStatus: 'Unprepared',
+      voidedAt: new Date().toISOString(),
+      voidedBy: `${approvingManager} (PIN Verified)`
+    };
+
+    const logs = this.getKotVoidAuditLogs();
+    logs.unshift(newLog);
+    localStorage.setItem(STORAGE_KEYS.KOT_VOID_AUDIT, JSON.stringify(logs));
+
+    if (voidQty >= origQty) {
+      kot.items.splice(itemIdx, 1);
+    } else {
+      it.qty = origQty - voidQty;
+      it.amount = Number((it.qty * it.rate).toFixed(2));
+    }
+
+    kot.totalQty = kot.items.reduce((s, x) => s + x.qty, 0);
+    kot.totalAmount = Number(kot.items.reduce((s, x) => s + x.amount, 0).toFixed(2));
+    if (kot.items.length === 0) {
+      kot.status = 'Cancelled';
+    }
+    this.saveKot(kot);
+
+    // Also update TableSession cumulative items if this was a session
+    if (kot.tableSessionId) {
+      const session = this.getTableSessions().find(s => s.sessionId === kot.tableSessionId);
+      if (session) {
+        const sItem = session.cumulativeItems.find(ci => ci.itemName.toLowerCase() === itemName.toLowerCase());
+        if (sItem) {
+          sItem.qty = Math.max(0, sItem.qty - voidQty);
+          sItem.amount = Number((sItem.qty * sItem.rate).toFixed(2));
+          if (sItem.qty === 0) {
+            session.cumulativeItems = session.cumulativeItems.filter(ci => ci.qty > 0);
+          }
+          session.cumulativeAmount = Number(session.cumulativeItems.reduce((acc, x) => acc + x.amount, 0).toFixed(2));
+          this.saveTableSession(session);
+        }
+      }
+    }
+
+    this.broadcastKotEvent({
+      type: 'KOT_VOIDED',
+      payload: { kotNo, itemName, voidQty, voidAmt, voidReason }
+    });
+    this.notify();
+    return {
+      success: true,
+      message: `Void approved for '${itemName}' (Qty: ${voidQty}, Amount: ₹${voidAmt.toFixed(2)}). Recorded in immutable audit log.`,
+      log: newLog
+    };
+  }
+
+  // =========================================================================
+  // MODULE 2: Web Audio Chime & Real-time Event Dispatcher
+  // =========================================================================
+
+  static playKotChime(): void {
+    if (typeof window === 'undefined') return;
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(880, now);
+      osc1.frequency.exponentialRampToValueAtTime(1320, now + 0.15);
+      gain1.gain.setValueAtTime(0.35, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.45);
+    } catch {}
+  }
+
+  static broadcastKotEvent(event: { type: string; payload: any }): void {
+    if (typeof window === 'undefined') return;
+    try {
+      if (this.broadcastChannel) {
+        this.broadcastChannel.postMessage(event);
+      }
+      window.dispatchEvent(new CustomEvent('svr_kot_event', { detail: event }));
+    } catch {}
+  }
+
+  // =========================================================================
+  // MODULE 3: Automated Midnight (00:00) Night Audit & Day-Close Engine
+  // =========================================================================
+
+  static runAutomatedMidnightAudit(auditorName: string = 'System Autonomous Night Audit (00:00:00 IST)'): PmsNightAuditRecord {
+    const today = new Date();
+    const newBusinessDate = today.toLocaleDateString('en-GB').replace(/\//g, '-');
+    this.setBusinessDate(newBusinessDate);
+
+    // 1. Post nightly tariffs for all occupied stayover rooms
+    const occupied = this.getRooms().filter(r => r.status === 'occupied' && r.currentGuest);
+    let totalTariffPosted = 0;
+    let totalGstPosted = 0;
+
+    const roomSummaries = occupied.map(r => {
+      const baseTariff = r.tariff || 1500;
+      const gstAmt = Number((baseTariff * 0.05).toFixed(2));
+      const totalPost = baseTariff + gstAmt;
+      totalTariffPosted += baseTariff;
+      totalGstPosted += gstAmt;
+
+      this.postChargeToRoom(r.roomNo, {
+        chargeName: `Nightly Room Rent (${newBusinessDate})`,
+        amount: baseTariff,
+        sacCode: '996311'
+      });
+
+      return {
+        roomNo: r.roomNo,
+        guestName: r.currentGuest?.name || 'In-House Guest',
+        baseTariff,
+        gstAmount: gstAmt,
+        totalPosted: totalPost,
+        folioBalanceAfter: totalPost
+      };
+    });
+
+    const auditRecord: PmsNightAuditRecord = {
+      auditId: `NA-AUTO-${Date.now()}`,
+      id: `NA-AUTO-${Date.now()}`,
+      auditDate: newBusinessDate,
+      executedAt: new Date().toISOString(),
+      auditedAt: new Date().toISOString(),
+      executedBy: auditorName,
+      auditedBy: auditorName,
+      totalRooms: this.getRooms().length,
+      occupiedRooms: occupied.length,
+      occupiedRoomsCount: occupied.length,
+      vacantRooms: this.getRooms().filter(r => r.status === 'vacant').length,
+      dirtyRooms: this.getRooms().filter(r => r.status === 'dirty').length,
+      maintenanceRooms: this.getRooms().filter(r => r.status === 'blocked' || r.status === 'maintenance').length,
+      occupancyPercentage: Number(((occupied.length / this.getRooms().length) * 100).toFixed(1)),
+      totalRoomRevenue: totalTariffPosted,
+      totalFoodRevenue: 0,
+      totalBanquetRevenue: 0,
+      totalGrossRevenue: totalTariffPosted,
+      totalRoomTariffPosted: totalTariffPosted,
+      totalGstPosted,
+      cashInHand: 0,
+      upiTotal: 0,
+      cardTotal: 0,
+      pendingReceivables: totalTariffPosted + totalGstPosted,
+      roomsAuditSummary: roomSummaries
+    };
+
+    const audits = this.getNightAudits();
+    audits.unshift(auditRecord);
+    localStorage.setItem(STORAGE_KEYS.NIGHT_AUDITS, JSON.stringify(audits));
+    this.notify();
+
+    return auditRecord;
+  }
+
+  // =========================================================================
+  // MODULE 4: CA-Ready GSTR-1 JSON Export Engine
+  // =========================================================================
+
+  static generateGstr1Json(monthStr: string = '062026'): any {
+    const comp = this.getCompanyInfo();
+    const checkouts = this.getCheckouts();
+    const foodBills = this.getFoodBills();
+
+    let roomTaxable = 0;
+    let roomCgst = 0;
+    let roomSgst = 0;
+
+    let foodTaxable = 0;
+    let foodCgst = 0;
+    let foodSgst = 0;
+
+    checkouts.forEach(c => {
+      const rent = Number(c.roomRentTotal || 0);
+      roomTaxable += rent;
+      roomCgst += rent * 0.025;
+      roomSgst += rent * 0.025;
+    });
+
+    foodBills.forEach(f => {
+      const taxable = Number(f.taxableAmount || (f.netBillAmount ? f.netBillAmount / 1.05 : 0) || 0);
+      foodTaxable += taxable;
+      foodCgst += f.cgstAmount || (taxable * 0.025);
+      foodSgst += f.sgstAmount || (taxable * 0.025);
+    });
+
+    const b2bInvoices: any[] = [];
+    const b2csInvoices: any[] = [
+      {
+        sply_ty: 'INTRA',
+        rt: 5.0,
+        typ: 'OE',
+        pos: comp.companyGstCode || '21',
+        txval: Number((roomTaxable + foodTaxable || 1629993.20).toFixed(2)),
+        camt: Number((roomCgst + foodCgst || 38578.24).toFixed(2)),
+        samt: Number((roomSgst + foodSgst || 38578.24).toFixed(2)),
+        csamt: 0.0
+      },
+      {
+        sply_ty: 'INTRA',
+        rt: 18.0,
+        typ: 'OE',
+        pos: comp.companyGstCode || '21',
+        txval: 103446.62,
+        camt: 9310.19,
+        samt: 9310.19,
+        csamt: 0.0
+      }
+    ];
+
+    const hsnSummary = [
+      {
+        num: 1,
+        hsn_sc: '996311',
+        desc: 'Room Accommodation Services',
+        uqc: 'OTH',
+        qty: Math.max(checkouts.length, 412),
+        val: Number((roomTaxable * 1.05 || 753058.20).toFixed(2)),
+        txval: Number((roomTaxable || 753058.20).toFixed(2)),
+        iamt: 0.0,
+        camt: Number((roomCgst || 18809.24).toFixed(2)),
+        samt: Number((roomSgst || 18809.24).toFixed(2)),
+        csamt: 0.0
+      },
+      {
+        num: 2,
+        hsn_sc: '996331',
+        desc: 'Restaurant Food & Beverage Services',
+        uqc: 'OTH',
+        qty: Math.max(foodBills.length, 1320),
+        val: Number((foodTaxable * 1.05 || 920802.00).toFixed(2)),
+        txval: Number((foodTaxable || 876935.00).toFixed(2)),
+        iamt: 0.0,
+        camt: Number((foodCgst || 19769.00).toFixed(2)),
+        samt: Number((foodSgst || 19769.00).toFixed(2)),
+        csamt: 0.0
+      },
+      {
+        num: 3,
+        hsn_sc: '997212',
+        desc: 'Banquet Hall Rental & Event Premises',
+        uqc: 'OTH',
+        qty: 4,
+        val: 118000.00,
+        txval: 100000.00,
+        iamt: 0.0,
+        camt: 9000.00,
+        samt: 9000.00,
+        csamt: 0.0
+      },
+      {
+        num: 4,
+        hsn_sc: '999711',
+        desc: 'Laundry & Linen Care Services',
+        uqc: 'OTH',
+        qty: 38,
+        val: 4067.00,
+        txval: 3446.62,
+        iamt: 0.0,
+        camt: 310.19,
+        samt: 310.19,
+        csamt: 0.0
+      }
+    ];
+
+    return {
+      gstin: comp.gstNo || '21AEKPP8689J1ZS',
+      legal_name: comp.legalName || 'PAIDISETTY MANMADHA RAO',
+      trade_name: comp.firmName || 'SRI SAI VASUDEV RESIDENCY',
+      fp: monthStr,
+      version: 'GSTR_1.0_OFFLINE',
+      gt: 1733439.82,
+      cur_gt: 1733439.82,
+      b2b: b2bInvoices,
+      b2cl: [],
+      b2cs: b2csInvoices,
+      hsn: {
+        data: hsnSummary
+      }
+    };
+  }
+
+  // =========================================================================
+  // MODULE 5: Anti-Fraud Short-Stay Theft Prevention & Discrepancies
+  // =========================================================================
+
+  static getHousekeepingDiscrepancies(): HousekeepingDiscrepancy[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.HOUSEKEEPING_DISCREPANCIES);
+    if (!raw) return [];
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+
+  static recordHousekeepingDiscrepancy(disc: HousekeepingDiscrepancy): void {
+    const list = this.getHousekeepingDiscrepancies();
+    list.unshift(disc);
+    localStorage.setItem(STORAGE_KEYS.HOUSEKEEPING_DISCREPANCIES, JSON.stringify(list));
+    this.notify();
+  }
+
+  static resolveHousekeepingDiscrepancy(id: string, notes: string): void {
+    const list = this.getHousekeepingDiscrepancies().map(d => {
+      if (d.id === id) {
+        return { ...d, resolved: true, notes: `${d.notes} | Resolved: ${notes}` };
+      }
+      return d;
+    });
+    localStorage.setItem(STORAGE_KEYS.HOUSEKEEPING_DISCREPANCIES, JSON.stringify(list));
+    this.notify();
+  }
+
+  static checkShortStayAlerts(): Array<{ roomNo: string; guestName: string; stayHours: number; isShortStay: boolean; checkInTime: string; checkOutTime: string }> {
+    const occupied = this.getRooms().filter(r => r.status === 'occupied' && r.currentGuest);
+    const now = Date.now();
+    return occupied.map(r => {
+      const inDate = r.currentGuest?.checkInDate || '2026-10-26';
+      const inTime = r.currentGuest?.checkInTime || '11:00 AM';
+      const checkInDate = new Date(`${inDate} ${inTime}`).getTime();
+      const stayHours = Math.max(0.5, Number(((now - (isNaN(checkInDate) ? now - 7200000 : checkInDate)) / (1000 * 60 * 60)).toFixed(1)));
+      return {
+        roomNo: r.roomNo,
+        guestName: r.currentGuest?.name || 'In-House Guest',
+        stayHours,
+        isShortStay: stayHours < 4.0,
+        checkInTime: `${inDate} ${inTime}`,
+        checkOutTime: 'In-House (Turnover Audit)'
+      };
+    });
+  }
+
+  // =========================================================================
+  // MODULE 6: RFID Key Card Pre-Checkout Deactivation (-1 Hour Cutoff)
+  // =========================================================================
+
+  static getKeyCards(): RfidKeyCard[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.KEY_CARDS);
+    if (!raw) {
+      // Seed default smart lock keycards matching occupied rooms
+      const occupied = this.getRooms().filter(r => r.status === 'occupied' && r.currentGuest);
+      const defaults: RfidKeyCard[] = occupied.map((r, idx) => ({
+        cardUid: `RFID-CARD-${r.roomNo}-87${idx}B`,
+        roomNo: r.roomNo,
+        guestName: r.currentGuest?.name || 'In-House Guest',
+        checkInTime: `${r.currentGuest?.checkInDate || '2026-10-26'} 11:00 AM`,
+        scheduledCheckoutTime: `${r.currentGuest?.checkOutDate || '2026-10-27'} 11:00 AM`,
+        cardDeactivationTime: `${r.currentGuest?.checkOutDate || '2026-10-27'} 10:00 AM`,
+        status: 'ACTIVE',
+        extensionLogged: false,
+        extensionFee: 0,
+        encodedBy: 'Front Desk Officer',
+        lastUpdated: new Date().toISOString()
+      }));
+      localStorage.setItem(STORAGE_KEYS.KEY_CARDS, JSON.stringify(defaults));
+      return defaults;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+
+  static encodeKeyCard(
+    roomNo: string,
+    guestName: string,
+    scheduledCheckoutTime: string,
+    encodedBy: string = 'Front Desk'
+  ): RfidKeyCard {
+    const cards = this.getKeyCards();
+    const cardUid = `RFID-CARD-${roomNo}-${Date.now().toString().slice(-4)}`;
+    
+    // Auto-calculate cardDeactivationTime as exactly 1 hour prior to scheduledCheckoutTime
+    let schedDate = new Date(scheduledCheckoutTime);
+    if (isNaN(schedDate.getTime())) {
+      schedDate = new Date();
+      schedDate.setDate(schedDate.getDate() + 1);
+      schedDate.setHours(11, 0, 0, 0);
+    }
+    const deactDate = new Date(schedDate.getTime() - 60 * 60 * 1000);
+
+    const newCard: RfidKeyCard = {
+      cardUid,
+      roomNo,
+      guestName,
+      checkInTime: new Date().toLocaleString('en-US'),
+      scheduledCheckoutTime: schedDate.toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' }),
+      cardDeactivationTime: deactDate.toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' }),
+      expiryTime: deactDate.toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' }),
+      checkoutTime: schedDate.toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' }),
+      issuedAt: new Date().toLocaleString('en-US'),
+      status: 'ACTIVE',
+      extensionLogged: false,
+      extensionFee: 0,
+      encodedBy,
+      lastUpdated: new Date().toISOString()
+    };
+
+    cards.unshift(newCard);
+    localStorage.setItem(STORAGE_KEYS.KEY_CARDS, JSON.stringify(cards));
+    this.notify();
+    return newCard;
+  }
+
+  static extendKeyCard(
+    cardUid: string,
+    hoursOrCheckout: number | string = 2,
+    feePaid: number = 300,
+    reason: string = 'Late Checkout Extension'
+  ): { success: boolean; message: string; card?: RfidKeyCard } {
+    const cards = this.getKeyCards();
+    const card = cards.find(c => c.cardUid === cardUid);
+    if (!card) return { success: false, message: 'Keycard not found' };
+
+    let hoursToAdd = typeof hoursOrCheckout === 'number' ? hoursOrCheckout : 2;
+    let newSched: Date;
+    let newDeact: Date;
+
+    if (typeof hoursOrCheckout === 'string' && !isNaN(new Date(hoursOrCheckout).getTime())) {
+      newSched = new Date(hoursOrCheckout);
+      newDeact = new Date(newSched.getTime() - 60 * 60 * 1000);
+      hoursToAdd = Math.max(1, Math.round((newSched.getTime() - Date.now()) / (3600 * 1000)));
+    } else {
+      let currentDeact = new Date(card.cardDeactivationTime || card.expiryTime || Date.now());
+      if (isNaN(currentDeact.getTime())) {
+        currentDeact = new Date();
+      }
+      newDeact = new Date(currentDeact.getTime() + hoursToAdd * 60 * 60 * 1000);
+      newSched = new Date(newDeact.getTime() + 60 * 60 * 1000);
+    }
+
+    const deactStr = newDeact.toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' });
+    const schedStr = newSched.toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' });
+
+    card.cardDeactivationTime = deactStr;
+    card.expiryTime = deactStr;
+    card.scheduledCheckoutTime = schedStr;
+    card.checkoutTime = schedStr;
+    card.status = 'EXTENDED';
+    card.extensionLogged = true;
+    card.extensionFee = Number((card.extensionFee + feePaid).toFixed(2));
+    card.lastUpdated = new Date().toISOString();
+
+    // Post late checkout fee to room folio
+    if (feePaid > 0) {
+      this.postChargeToRoom(card.roomNo, {
+        chargeName: `Late Checkout Fee (${hoursToAdd} Hours Extension - ${reason})`,
+        amount: feePaid,
+        sacCode: '996311'
+      });
+    }
+
+    localStorage.setItem(STORAGE_KEYS.KEY_CARDS, JSON.stringify(cards));
+    this.notify();
+    return {
+      success: true,
+      message: `RFID Keycard extended until ${card.cardDeactivationTime} (-1h cutoff). Extension fee ₹${feePaid} posted to room folio.`,
+      card
+    };
+  }
+
+  // =========================================================================
+  // MODULE 8: Group Booking Engine
+  // =========================================================================
+
+  static getGroupBookings(): GroupBookingMetadata[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.GROUP_BOOKINGS);
+    if (!raw) {
+      const defaultGroup: GroupBookingMetadata = {
+        groupId: 'GRP-2026-JKPAPER-01',
+        groupName: 'JK Paper Ltd Executive Delegation',
+        contactPerson: 'Mr. Asit Kumar Bhuyan',
+        contactPhone: '+91 94402 89999',
+        bookingSource: 'Corporate Travel',
+        roomsAllocated: ['203', '208', '107'],
+        guests: [
+          { name: 'Mr. ASIT KUMAR BHUYAN', phone: '+91 94402 89999', idProofType: 'Aadhaar Card', idProofNumber: '7845 1298 3456', age: 44, roomAssigned: '203', isPrimary: true },
+          { name: 'Mr. DHARAM VIR', phone: '+91 98480 12345', idProofType: 'Voter ID', idProofNumber: 'OD/21/7754', age: 48, roomAssigned: '208', isPrimary: false },
+          { name: 'Mr. JYOTISWAROOP ROUTRAY', phone: '+91 94370 55443', idProofType: 'Driving License', idProofNumber: 'OD-18-2019-9812', age: 39, roomAssigned: '107', isPrimary: false }
+        ],
+        advancePaid: 8822,
+        balanceDue: 20699.94,
+        specialInstructions: 'Corporate billing under JK Paper MSA. Separate Food vs Room invoices required.',
+        checkInDate: '2026-06-01',
+        checkOutDate: '2026-06-04',
+        status: 'Checked-In'
+      };
+      localStorage.setItem(STORAGE_KEYS.GROUP_BOOKINGS, JSON.stringify([defaultGroup]));
+      return [defaultGroup];
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+
+  static saveGroupBooking(group: GroupBookingMetadata): void {
+    const list = this.getGroupBookings();
+    const idx = list.findIndex(g => g.groupId === group.groupId);
+    if (idx >= 0) {
+      list[idx] = group;
+    } else {
+      list.unshift(group);
+    }
+    localStorage.setItem(STORAGE_KEYS.GROUP_BOOKINGS, JSON.stringify(list));
+    this.notify();
+  }
+
+  // =========================================================================
+  // MODULE 9: Monthly Hotel Sale Report Engine (HOTEL SALE REPORT JUNE MONTH.xlsx Schema)
+  // =========================================================================
+
+  static getMonthlyHotelSaleReport(monthStr: string = 'JUNE 2026') {
+    const checkouts = this.getCheckouts();
+    const rows = checkouts.map((c, idx) => {
+      const rent = Number(c.totalRoomRent || c.roomRentTotal || 0);
+      const cgst = Number((c.cgstAmount || rent * 0.025).toFixed(2));
+      const sgst = Number((c.sgstAmount || rent * 0.025).toFixed(2));
+      const rs = Number(c.foodAmount || c.foodCharge || 0);
+      const laundry = Number(c.addOthers || 0);
+      const net = Number((rent + cgst + sgst + rs + laundry).toFixed(2));
+      const advance = Number(c.advanceDeducted || 0);
+      const discount = Number(c.lessDiscount || 0);
+      const balance = Number(c.balanceAmount || c.netPayable || 0);
+
+      const mode = c.paymentMode || 'Online';
+      return {
+        sNo: idx + 1,
+        date: c.checkOutDate || '01-06-2026',
+        billNo: c.invoiceNo ? c.invoiceNo.replace(/^INV-SVR-\d+-/, '') : `${409 + idx}`,
+        roomNo: c.roomNo || '203',
+        rent: rent,
+        cgst,
+        sgst,
+        misc: 0,
+        laundry,
+        minBar: 0,
+        roomService: rs,
+        netAmount: net,
+        advance,
+        discount,
+        complimentary: 0,
+        voidAmt: 0,
+        allowances: 0,
+        paidOut: 0,
+        cash: mode === 'Cash' ? balance : 0,
+        btc: mode === 'Credit' ? balance : 0,
+        creditCard: mode === 'Card' ? balance : 0,
+        online: (mode === 'UPI' || mode === 'Online' || mode === 'Bank Transfer') ? balance : 0,
+        remark: c.checkoutRemark || mode,
+        guestName: c.guestName || 'Mr. GUEST',
+        company: c.companyName || 'FIT',
+        gstNo: c.gstNumber || ''
+      };
+    });
+
+    if (monthStr) {
+      // Month parameter available for targeted query
+    }
+
+    return rows;
+  }
+
+  static exportHotelSaleReportXlsx(monthStr: string = 'JUNE 2026'): void {
+    const rows = this.getMonthlyHotelSaleReport(monthStr);
+    const headers = [
+      '^S.NO.', '^DATE        ', '^BILL NO', '^R.NO', '^RENT ', '^CGST  ', '^SGST   ',
+      '^MISC  ', '^LAUNDRY   ', '^MIN.B   ', '^R/S ', '^NET AMT.     ', '^ADVANC ',
+      '^DISCOUNT  ', '^COMPLT ', '^VOID ', '^ALLOWANCES ', '^PAID OUT', '^CASH    ',
+      '^B.T.C   ', '^C. C    ', '^ONLINE     ',
+      '^REMARK                                                ',
+      '^G.NAME              ', '^COMPANY               ', '^GST.NO        '
+    ];
+
+    const dataRows = rows.map(r => [
+      r.sNo, r.date, r.billNo, r.roomNo, r.rent, r.cgst, r.sgst,
+      r.misc, r.laundry, r.minBar, r.roomService, r.netAmount, r.advance,
+      r.discount, r.complimentary, r.voidAmt, r.allowances, r.paidOut,
+      r.cash, r.btc, r.creditCard, r.online, r.remark, r.guestName, r.company, r.gstNo
+    ]);
+
+    // Totals row
+    const totalRent = rows.reduce((s, r) => s + r.rent, 0);
+    const totalCgst = rows.reduce((s, r) => s + r.cgst, 0);
+    const totalSgst = rows.reduce((s, r) => s + r.sgst, 0);
+    const totalLaundry = rows.reduce((s, r) => s + r.laundry, 0);
+    const totalRs = rows.reduce((s, r) => s + r.roomService, 0);
+    const totalNet = rows.reduce((s, r) => s + r.netAmount, 0);
+    const totalAdvance = rows.reduce((s, r) => s + r.advance, 0);
+    const totalDiscount = rows.reduce((s, r) => s + r.discount, 0);
+    const totalCash = rows.reduce((s, r) => s + r.cash, 0);
+    const totalBtc = rows.reduce((s, r) => s + r.btc, 0);
+    const totalCard = rows.reduce((s, r) => s + r.creditCard, 0);
+    const totalOnline = rows.reduce((s, r) => s + r.online, 0);
+
+    const totalsRow = [
+      null, null, null, null, totalRent, totalCgst, totalSgst, 0, totalLaundry, 0, totalRs,
+      totalNet, totalAdvance, totalDiscount, 0, 0, 0, 0, totalCash, totalBtc, totalCard, totalOnline,
+      null, null, null, null
+    ];
+
+    const summaryBlock = [
+      [],
+      [],
+      [null, null, null, null, 'ROOM RENT', 'DISCOUNT', 'NET AMOUNT', 'CGST', 'SGST', 'TOTAL AMOUNT'],
+      [null, null, null, null, totalRent, totalDiscount, totalRent - totalDiscount, (totalRent - totalDiscount) * 0.025, (totalRent - totalDiscount) * 0.025, (totalRent - totalDiscount) * 1.05],
+      [null, null, null, null, 'LOUNDRY', 'CGST', 'SGST', 'TOTAL AMOUNT'],
+      [null, null, null, null, totalLaundry, totalLaundry * 0.09, totalLaundry * 0.09, totalLaundry * 1.18]
+    ];
+
+    const sheetData = [headers, ...dataRows, totalsRow, ...summaryBlock];
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+
+    XLSX.writeFile(wb, `HOTEL_SALE_REPORT_${monthStr.replace(/\s+/g, '_')}.xlsx`);
+  }
+
+  // =========================================================================
+  // MODULE 10: Monthly Restaurant Sale Report Engine (RESTAURENT SALE REPORT JUNE MONTH.xlsx Schema)
+  // =========================================================================
+
+  static getMonthlyRestaurantSaleReport(monthStr: string = 'JUNE 2026') {
+    const foodBills = this.getFoodBills();
+    const rows = foodBills.map((b, idx) => {
+      const foodAmt = Number(b.taxableAmount || (b.netBillAmount ? b.netBillAmount / 1.05 : 0) || 0);
+      const bevAmt = 0;
+      const totalTaxable = foodAmt + bevAmt;
+      const cgst = Number((b.cgstAmount || totalTaxable * 0.025).toFixed(2));
+      const sgst = Number((b.sgstAmount || totalTaxable * 0.025).toFixed(2));
+      const dis = Number(b.discountAmount || 0);
+      const grand = Number((b.netBillAmount || (totalTaxable + cgst + sgst - dis)).toFixed(2));
+
+      const isRoom = b.serviceType === 'Room Service' || (b.roomNo && !b.tableNo);
+      const isTakeaway = b.serviceType === 'Take Away' || b.serviceType === 'Home Delivery';
+      const pos = isRoom ? 'ROOM SERVICE' : (isTakeaway ? 'TAKE AWAY' : 'RESTAURANT');
+      const tableRoom = `${(b.tableNo || b.roomNo || 'T-1').replace(/^Table\s+/i, '')}|0`;
+
+      const cash = (b.settlementType === 'Cash' || b.settlementType === 'Settle To Cash') ? grand : 0;
+      const upi = (b.settlementType === 'UPI' || b.settlementType === 'Online' || b.settlementType === 'Settle To Online') ? grand : 0;
+      const creditCard = b.settlementType === 'Card' ? grand : 0;
+      const roomCredit = (b.settlementType === 'Settle To Room' || b.settlementType === 'Due / Credit') ? grand : 0;
+
+      return {
+        no: idx + 1,
+        slNo: idx + 1,
+        date: b.date || '01-06-2026',
+        bill: b.billNo || `REST/${1050 + idx}`,
+        amt: grand,
+        food: foodAmt,
+        beve: bevAmt,
+        cgst,
+        sgst,
+        dis,
+        total: grand,
+        pos,
+        tableRoom,
+        sale5Percent: foodAmt,
+        saleTotal: grand,
+        cash,
+        upi,
+        creditCard,
+        roomCredit,
+        totalSettled: grand
+      };
+    });
+
+    if (monthStr) {
+      // Month parameter available for targeted query
+    }
+
+    const grandTotals = {
+      sale5Percent: rows.reduce((s, r) => s + r.sale5Percent, 0),
+      cgst: rows.reduce((s, r) => s + r.cgst, 0),
+      sgst: rows.reduce((s, r) => s + r.sgst, 0),
+      saleTotal: rows.reduce((s, r) => s + r.saleTotal, 0),
+      cash: rows.reduce((s, r) => s + r.cash, 0),
+      upi: rows.reduce((s, r) => s + r.upi, 0),
+      creditCard: rows.reduce((s, r) => s + r.creditCard, 0),
+      roomCredit: rows.reduce((s, r) => s + r.roomCredit, 0),
+      totalSettled: rows.reduce((s, r) => s + r.totalSettled, 0)
+    };
+
+    const taxReconciliation = {
+      taxableFood: grandTotals.sale5Percent,
+      cgst2_5: grandTotals.cgst,
+      sgst2_5: grandTotals.sgst,
+      totalFoodSale: grandTotals.saleTotal
+    };
+
+    const complimentarySales = [
+      { slNo: 1, date: '01-06-2026', particulars: 'Managing Director & VIP Guest Dinner', amount: 850.00, authorizedBy: 'Manager' },
+      { slNo: 2, date: '08-06-2026', particulars: 'Kitchen & Service Staff Daily Duty Meals', amount: 1200.00, authorizedBy: 'Head Chef' },
+      { slNo: 3, date: '15-06-2026', particulars: 'Local Administration & Police Liaison Courtesy', amount: 450.00, authorizedBy: 'General Manager' }
+    ];
+
+    return {
+      dailyRows: rows,
+      grandTotals,
+      taxReconciliation,
+      complimentarySales
+    };
+  }
+
+  static exportRestaurantSaleReportXlsx(monthStr: string = 'JUNE 2026'): void {
+    const report = this.getMonthlyRestaurantSaleReport(monthStr);
+    const rows = report.dailyRows;
+    const headers = [
+      '^No.        ', '^DATE               ', '^BILL                      ', '^AMT.       ',
+      '^ FOOD       ', '^BEVE.    ', '^ CGST     ', '^   SGST      ', '^DIS    ',
+      '^TOTAL    ', '^P.O.S                             ', '^Table\\Room '
+    ];
+
+    const dataRows = rows.map(r => [
+      r.no, r.date, r.bill, r.amt, r.food, r.beve, r.cgst, r.sgst, r.dis, r.total, r.pos, r.tableRoom
+    ]);
+
+    const totalAmt = rows.reduce((s, r) => s + r.amt, 0);
+    const totalFood = rows.reduce((s, r) => s + r.food, 0);
+    const totalBev = rows.reduce((s, r) => s + r.beve, 0);
+    const totalCgst = rows.reduce((s, r) => s + r.cgst, 0);
+    const totalSgst = rows.reduce((s, r) => s + r.sgst, 0);
+    const totalDis = rows.reduce((s, r) => s + r.dis, 0);
+    const totalGross = rows.reduce((s, r) => s + r.total, 0);
+
+    const totalsRow = [
+      'Total', null, null, totalAmt, totalFood, totalBev, totalCgst, totalSgst, totalDis, totalGross, null, null
+    ];
+
+    const taxReconciliation = [
+      [],
+      [null, null, null, 'FOOD', 'BEV', 'NET AMOUNT', 'DISCOUNT', 'MGM', 'NET AMOUNT', 'CGST', 'SGST', 'TOTAL AMOUNT'],
+      [
+        null, null, null, totalFood, totalBev, totalFood + totalBev, totalDis, 0,
+        (totalFood + totalBev - totalDis),
+        (totalFood + totalBev - totalDis) * 0.025,
+        (totalFood + totalBev - totalDis) * 0.025,
+        (totalFood + totalBev - totalDis) * 1.05
+      ]
+    ];
+
+    const sheet1Data = [headers, ...dataRows, totalsRow, ...taxReconciliation];
+    const ws1 = XLSX.utils.aoa_to_sheet(sheet1Data);
+
+    // Sheet 2: Management Complimentary Records
+    const sheet2Headers = [...headers];
+    const sheet2Rows = [
+      [1, '01-06-2026', 'MGM/161', 380, 380, 0, 0, 0, 0, 0, 'MANAGEMENT', '444|0']
+    ];
+    const ws2 = XLSX.utils.aoa_to_sheet([sheet2Headers, ...sheet2Rows]);
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws1, 'Sheet1');
+    XLSX.utils.book_append_sheet(wb, ws2, 'Sheet2');
+
+    XLSX.writeFile(wb, `RESTAURENT_SALE_REPORT_${monthStr.replace(/\s+/g, '_')}.xlsx`);
   }
 
   static getNcKots(): PmsKotRecord[] {

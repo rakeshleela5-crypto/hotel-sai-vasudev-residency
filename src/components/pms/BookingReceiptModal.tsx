@@ -41,7 +41,7 @@ export const BookingReceiptModal: React.FC<BookingReceiptModalProps> = ({
             fontWeight: 800,
             color: '#854d0e'
           }}>
-            <span>GST NO: {company.gstNo || 'GSTIN27AABCS1429B1Z2'}</span>
+            <span>GST NO: {company.gstNo || '21AEKPP8689J1ZS'}</span>
             <span style={{ fontSize: 16, textTransform: 'uppercase', letterSpacing: 1 }}>Room Booking Slip</span>
             <span>CIN: U55101MH2024PTC123456</span>
           </div>

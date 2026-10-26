@@ -130,7 +130,7 @@ export const ContactSection: React.FC = () => {
                 <span className="channel-icon" aria-hidden="true">📍</span>
                 <div>
                   <strong>Hotel Address</strong>
-                  <p>Plot No. 14-B, VIP Temple Road, Near Gate No. 2, Shirdi, Maharashtra 423109</p>
+                  <p>Near Andhra Bank, New Colony, Rayagada, Odisha 765001</p>
                 </div>
               </div>
             </div>

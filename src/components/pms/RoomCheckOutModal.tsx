@@ -1504,19 +1504,19 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
               <div style={{ textAlign: 'center', borderBottom: '2px solid #0f172a', paddingBottom: 10, marginBottom: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
                   <div style={{ textAlign: 'left', fontSize: 11, color: '#475569' }}>
-                    <div><strong>GSTIN:</strong> 27AABCS1429B1Z2</div>
-                    <div><strong>PAN:</strong> AABCS1429B</div>
-                    <div><strong>State:</strong> Maharashtra (27)</div>
+                    <div><strong>GSTIN:</strong> 21AEKPP8689J1ZS</div>
+                    <div><strong>PAN:</strong> AEKPP8689J</div>
+                    <div><strong>State:</strong> Odisha (21)</div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <h1 style={{ margin: 0, fontSize: 22, fontWeight: 900, letterSpacing: 1.5, color: '#0f172a' }}>
-                      HOTEL SAI VASUDEV RESIDENCY
+                      SRI SAI VASUDEV RESIDENCY
                     </h1>
                     <div style={{ fontSize: 11, fontWeight: 700, color: '#b45309' }}>
-                      Pure Veg Sanctum &amp; Luxury Suites &bull; Near Sai Baba Samadhi Temple Shrine
+                      Proprietorship: PAIDISETTY MANMADHA RAO
                     </div>
                     <div style={{ fontSize: 11, color: '#334155' }}>
-                      Plot No. 14-B, VIP Temple Road, Near Gate No. 2, Shirdi, Maharashtra 423109
+                      Near Andhra Bank, New Colony, Rayagada, Odisha 765001
                     </div>
                     <div style={{ fontSize: 11, color: '#334155' }}>
                       Phone: <strong>+91 94402 89999</strong> &bull; Email: reservations@hotelsai-vasudev.com

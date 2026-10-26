@@ -126,13 +126,25 @@ export const CompanyInfoModal: React.FC<CompanyInfoModalProps> = ({
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             {/* Firm Name */}
             <div className="form-group-pms" style={{ margin: 0 }}>
-              <label className="form-label-pms">Firm Name</label>
+              <label className="form-label-pms">Trade / Firm Name</label>
               <input
                 type="text"
                 value={formData.firmName}
                 onChange={e => handleChange('firmName', e.target.value)}
                 className="form-input-pms"
                 required
+              />
+            </div>
+
+            {/* Legal / Proprietor Name */}
+            <div className="form-group-pms" style={{ margin: 0 }}>
+              <label className="form-label-pms">Legal / Proprietor Name (As per GST Certificate)</label>
+              <input
+                type="text"
+                value={formData.legalName || ''}
+                onChange={e => handleChange('legalName', e.target.value)}
+                className="form-input-pms"
+                placeholder="e.g. PAIDISETTY MANMADHA RAO"
               />
             </div>
 

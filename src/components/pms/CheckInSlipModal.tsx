@@ -41,9 +41,9 @@ export const CheckInSlipModal: React.FC<CheckInSlipModalProps> = ({
             fontWeight: 800,
             color: '#854d0e'
           }}>
-            <span>GST NO: {company.gstNo || '27AABCS1429B1Z2'}</span>
+            <span>GST NO: {company.gstNo || '21AEKPP8689J1ZS'}</span>
             <span style={{ fontSize: 16, textTransform: 'uppercase', letterSpacing: 1 }}>Room Check Inn Slip</span>
-            <span>SHIRDI POLICE VERIFIED</span>
+            <span>POLICE VERIFIED &bull; RAYAGADA</span>
           </div>
 
           {/* Hotel Header with Single QR Code matching Frame 0340 */}

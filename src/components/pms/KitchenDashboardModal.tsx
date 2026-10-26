@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { PmsKotRecord } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
+import { ManagerPinModal } from './ManagerPinModal';
 
 interface KitchenDashboardModalProps {
   isOpen: boolean;
@@ -20,6 +21,14 @@ export const KitchenDashboardModal: React.FC<KitchenDashboardModalProps> = ({
   const [nowTime, setNowTime] = useState(Date.now());
   const [selectedKotForPrint, setSelectedKotForPrint] = useState<PmsKotRecord | null>(null);
 
+  // Module 1 & 2: Manager Override Strict Void Lock
+  const [showManagerPinModal, setShowManagerPinModal] = useState<boolean>(false);
+  const [pendingVoidItem, setPendingVoidItem] = useState<{
+    kotNo: string;
+    itemName: string;
+    qty: number;
+  } | null>(null);
+
   // KOT Anti-Pilferage & Void Modal State
   const [voidTargetKot, setVoidTargetKot] = useState<PmsKotRecord | null>(null);
   const [selectedItemIndex, setSelectedItemIndex] = useState<number>(0);
@@ -33,6 +42,25 @@ export const KitchenDashboardModal: React.FC<KitchenDashboardModalProps> = ({
     setNowTime(Date.now());
     setCountdown(30);
   };
+
+  // Module 2: Zero-refresh WebSocket / Event Listener with Web Audio Chime
+  useEffect(() => {
+    if (!isOpen) return;
+    const unsub = PmsStore.subscribe(() => {
+      refreshKots();
+    });
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'svr_kot_event') {
+        PmsStore.playKotChime();
+        refreshKots();
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      unsub();
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, [isOpen]);
 
   const handleConfirmVoid = () => {
     if (!voidTargetKot) return;
@@ -527,6 +555,24 @@ export const KitchenDashboardModal: React.FC<KitchenDashboardModalProps> = ({
                       </div>
                     )}
 
+                    {/* Module 2: Delta Ticket Badge for Kitchen Chef */}
+                    {(kot.isDelta || (kot.kotSequence && kot.kotSequence > 1)) && (
+                      <div
+                        style={{
+                          background: '#fff7ed',
+                          borderLeft: '4px solid #f97316',
+                          padding: '5px 8px',
+                          margin: '4px 8px 0',
+                          borderRadius: 3,
+                          fontSize: 10,
+                          fontWeight: 900,
+                          color: '#c2410c'
+                        }}
+                      >
+                        ⚡ DELTA TICKET (RUNNING KOT #{kot.kotSequence}) &mdash; COOK ONLY NEW ITEMS BELOW
+                      </div>
+                    )}
+
                     {/* Room/Table Metadata line matching Frame 0225:
                         Room No:203|| Total Qty:2.00|| Remark: || Waiter: DEMO0004||Total Qty:2.00 */}
                     <div
@@ -542,7 +588,7 @@ export const KitchenDashboardModal: React.FC<KitchenDashboardModalProps> = ({
                       <div>
                         <strong>{kot.tableNo ? `Table: ${kot.tableNo}` : `Room No: ${kot.roomNo}`}</strong>
                         {' || '}
-                        Total Qty: {kot.totalQty || kot.items.reduce((a, b) => a + b.qty, 0)}.00
+                        Total Qty: {kot.totalQty || (kot.deltaItems || kot.items).reduce((a, b) => a + b.qty, 0)}.00
                       </div>
                       <div>
                         {kot.kotRemark ? `Remark: ${kot.kotRemark} || ` : ''}
@@ -550,23 +596,48 @@ export const KitchenDashboardModal: React.FC<KitchenDashboardModalProps> = ({
                       </div>
                     </div>
 
-                    {/* Items Table matching Frame 0225 */}
+                    {/* Items Table matching Frame 0225 (Displays newly added delta items for chef) */}
                     <div style={{ flex: 1, padding: '4px 10px', minHeight: 90 }}>
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
                         <thead>
                           <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#64748b' }}>
                             <th style={{ textAlign: 'left', padding: '4px 0', fontWeight: 800 }}>Item Name</th>
                             <th style={{ textAlign: 'right', padding: '4px 0', fontWeight: 800, width: 45 }}>QTY</th>
+                            <th style={{ textAlign: 'center', padding: '4px 0', fontWeight: 800, width: 28 }}></th>
                           </tr>
                         </thead>
                         <tbody>
-                          {kot.items.map((item, idx) => (
+                          {(kot.deltaItems && kot.deltaItems.length > 0 ? kot.deltaItems : kot.items).map((item, idx) => (
                             <tr key={idx} style={{ borderBottom: '1px dashed #f1f5f9' }}>
                               <td style={{ padding: '4px 0', fontWeight: 700, color: '#0f172a' }}>
                                 {item.itemName}
                               </td>
                               <td style={{ textAlign: 'right', padding: '4px 0', fontWeight: 800, color: '#0284c7' }}>
                                 {item.qty}.00
+                              </td>
+                              <td style={{ textAlign: 'center', padding: '4px 0' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setPendingVoidItem({
+                                      kotNo: kot.kotNo,
+                                      itemName: item.itemName,
+                                      qty: item.qty
+                                    });
+                                    setShowManagerPinModal(true);
+                                  }}
+                                  title="Strict Post-Punch Void (Manager PIN Required)"
+                                  style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: '#ef4444',
+                                    cursor: 'pointer',
+                                    fontSize: 12,
+                                    padding: 0
+                                  }}
+                                >
+                                  🗑️
+                                </button>
                               </td>
                             </tr>
                           ))}
@@ -1040,6 +1111,37 @@ export const KitchenDashboardModal: React.FC<KitchenDashboardModalProps> = ({
             </div>
           </div>
         )}
+
+        {/* Module 1: Strict Post-Punch Manager Override Modal */}
+        <ManagerPinModal
+          isOpen={showManagerPinModal}
+          onClose={() => {
+            setShowManagerPinModal(false);
+            setPendingVoidItem(null);
+          }}
+          title="Strict Post-Punch Void & Deletion Lock"
+          actionDescription={`You are attempting to void "${pendingVoidItem?.itemName}" (Qty: ${pendingVoidItem?.qty}) from punched KOT ${pendingVoidItem?.kotNo}. This action requires Manager Authorization and an immutable audit log entry.`}
+          onAuthorized={(pin, reason) => {
+            if (!pendingVoidItem) return;
+            const res = PmsStore.voidKotItemWithPin(
+              pendingVoidItem.kotNo,
+              pendingVoidItem.itemName,
+              pendingVoidItem.qty,
+              pin,
+              reason,
+              'Steward DEMO0004',
+              'Duty Manager'
+            );
+            setShowManagerPinModal(false);
+            setPendingVoidItem(null);
+            if (res.success) {
+              alert(`✅ Void Approved & Logged!\n\n${res.message}\nItem: ${res.log?.itemName} (Qty: ${res.log?.qty})\nReason: ${res.log?.voidReason}\nApproved by: ${res.log?.voidedBy}`);
+              refreshKots();
+            } else {
+              alert(`❌ Void Rejected: ${res.message}`);
+            }
+          }}
+        />
       </div>
     </div>
   );

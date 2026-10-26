@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PmsStore } from '../../services/pmsStore';
-import type { FoodBillItem, PmsFoodBill, PmsKotRecord } from '../../types/pmsModels';
+import type { FoodBillItem, PmsFoodBill, PmsKotRecord, TableSession } from '../../types/pmsModels';
+import { ManagerPinModal } from './ManagerPinModal';
 
 interface FoodBillModalProps {
   isOpen: boolean;
@@ -53,15 +54,25 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
     isTableMode ? 'Settle To Cash' : 'Settle To Room'
   );
 
+  // Module 1: Single Active Table Session
+  const [currentSession, setCurrentSession] = useState<TableSession | null>(null);
+
+  // Module 7: Role-Based Discount Cap (5% Threshold)
+  const [showManagerPinModal, setShowManagerPinModal] = useState<boolean>(false);
+  const [pendingDiscountPct, setPendingDiscountPct] = useState<number>(0);
+  const [isManagerDiscountApproved, setIsManagerDiscountApproved] = useState<boolean>(false);
+  const [approvedDiscountReason, setApprovedDiscountReason] = useState<string>('');
+
   const [pendingKots, setPendingKots] = useState<PmsKotRecord[]>([]);
   const [billItems, setBillItems] = useState<FoodBillItem[]>([]);
   const [showPrintSlip, setShowPrintSlip] = useState<boolean>(false);
   const [savedBill, setSavedBill] = useState<PmsFoodBill | null>(null);
 
-  // Load KOTs
+  // Load KOTs & Active Table Session
   useEffect(() => {
     let kots: PmsKotRecord[] = [];
     if (serviceType === 'Room Service') {
+      setCurrentSession(null);
       kots = PmsStore.getKots().filter(
         k => k.roomNo === selectedRoomNo && k.status !== 'Billed' && k.status !== 'Cancelled'
       );
@@ -71,12 +82,17 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
         setCustomerMobile(room.currentGuest.phone || '');
       }
     } else {
+      const activeSession = PmsStore.getActiveTableSession(selectedTable);
+      setCurrentSession(activeSession);
       const cleanTable = selectedTable.toLowerCase().replace(/^table\s+/i, '').trim();
       kots = PmsStore.getKots().filter(k => {
         const kTable = (k.tableNo || '').toLowerCase().replace(/^table\s+/i, '').trim();
-        return kTable === cleanTable && k.status !== 'Billed' && k.status !== 'Cancelled';
+        const matchSession = activeSession ? (k.tableSessionId === activeSession.sessionId || activeSession.kotNumbers.includes(k.kotNo)) : false;
+        return (kTable === cleanTable || matchSession) && k.status !== 'Billed' && k.status !== 'Cancelled';
       });
-      if (kots.length > 0 && kots[0].guestName && kots[0].guestName !== 'Walk-In Guest') {
+      if (activeSession && activeSession.guestName) {
+        setCustomerName(activeSession.guestName);
+      } else if (kots.length > 0 && kots[0].guestName && kots[0].guestName !== 'Walk-In Guest') {
         setCustomerName(kots[0].guestName);
       } else {
         setCustomerName('vinod sharma');
@@ -213,6 +229,16 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
     setDiscountAmount(Number(totDisAmt.toFixed(2)));
   };
 
+  // Module 7: Role-Based Discount Cap (5% Threshold for Receptionist/Cashier)
+  const handleDiscountInputChange = (val: number) => {
+    if (val > 5 && !isManagerDiscountApproved) {
+      setPendingDiscountPct(val);
+      setShowManagerPinModal(true);
+      return;
+    }
+    applyDiscount(val);
+  };
+
   const kotNoDisplay = pendingKots.length > 0
     ? pendingKots.map(k => k.kotNo.replace(/\D/g, '').slice(-3) || k.kotNo).join(',')
     : '372,374';
@@ -254,7 +280,7 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
       guestName: customerName,
       mobile: customerMobile,
       address: customerAddress,
-      remark: customerRemark,
+      remark: customerRemark + (isManagerDiscountApproved ? ` [Mgr Disc Override: ${approvedDiscountReason}]` : ''),
       paymentRemark,
       kotNumbers: kotNums,
       items: billItems,
@@ -274,6 +300,24 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
 
     PmsStore.saveFoodBill(billRecord);
     setSavedBill(billRecord);
+
+    // Module 1: Close active table session and release table back to Vacant
+    if (serviceType !== 'Room Service') {
+      const activeSession = PmsStore.getActiveTableSession(selectedTable);
+      if (activeSession) {
+        activeSession.status = 'Settled';
+        PmsStore.saveTableSession(activeSession);
+      }
+      const allTables = PmsStore.getTables();
+      const cleanT = selectedTable.replace(/^table\s+/i, '').trim().toLowerCase();
+      const updatedTables = allTables.map(t => {
+        if (t.tableName.replace(/^table\s+/i, '').trim().toLowerCase() === cleanT) {
+          return { ...t, status: 'Vacant' as const, activeSessionId: undefined };
+        }
+        return t;
+      });
+      localStorage.setItem('svr_tables', JSON.stringify(updatedTables));
+    }
 
     if (onBillSaved) {
       onBillSaved(billRecord);
@@ -347,6 +391,30 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                   </button>
                 </div>
               </div>
+
+              {/* Module 1: Single Active Table Session Indicator */}
+              {currentSession && (
+                <div style={{
+                  background: '#eff6ff',
+                  border: '1px solid #93c5fd',
+                  padding: '8px 14px',
+                  borderRadius: 4,
+                  marginBottom: 10,
+                  fontSize: 12,
+                  color: '#1e40af',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <div>
+                    <span style={{ fontWeight: 800 }}>🔗 Active Table Session:</span>{' '}
+                    <code>{currentSession.sessionId}</code> &bull; Consolidated KOTs: {currentSession.kotNumbers.join(', ')} ({currentSession.kotNumbers.length} Punched Batches)
+                  </div>
+                  <span style={{ background: '#2563eb', color: '#fff', padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 800 }}>
+                    Cumulative Items: {currentSession.cumulativeItems.reduce((s, it) => s + it.qty, 0)}
+                  </span>
+                </div>
+              )}
 
               {/* Row 1 Controls matching Frame 0330 */}
               <div
@@ -446,10 +514,15 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                     max="100"
                     step="1"
                     value={discountPercent}
-                    onChange={e => applyDiscount(Number(e.target.value))}
+                    onChange={e => handleDiscountInputChange(Number(e.target.value))}
                     className="form-input-pms"
                     style={{ textAlign: 'right', fontWeight: 700 }}
                   />
+                  {isManagerDiscountApproved && (
+                    <div style={{ fontSize: 9, color: '#16a34a', fontWeight: 800, marginTop: 2 }}>
+                      🔓 Overridden: {approvedDiscountReason}
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-group-pms" style={{ margin: 0 }}>
@@ -924,6 +997,23 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
             </div>
           </div>
         )}
+
+        {/* Module 7: Role-Based Discount Cap Manager Authorization Modal */}
+        <ManagerPinModal
+          isOpen={showManagerPinModal}
+          onClose={() => {
+            setShowManagerPinModal(false);
+            setPendingDiscountPct(0);
+          }}
+          title="Manager PIN Authorization: Discount Cap Exceeded"
+          actionDescription={`Cashier/Reception discount threshold is capped at 5%. You are attempting to grant a ${pendingDiscountPct}% discount (₹${((totalAmount * pendingDiscountPct) / 100).toFixed(2)}) on Table/Room ${serviceType === 'Room Service' ? selectedRoomNo : selectedTable}. Manager PIN and mandatory reason are required.`}
+          onAuthorized={(_pin, reason) => {
+            setIsManagerDiscountApproved(true);
+            setApprovedDiscountReason(reason);
+            applyDiscount(pendingDiscountPct);
+            setShowManagerPinModal(false);
+          }}
+        />
       </div>
     </div>
   );

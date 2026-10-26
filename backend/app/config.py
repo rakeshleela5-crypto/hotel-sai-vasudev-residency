@@ -8,6 +8,17 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Hotel Sai Vasudev Residency API"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
+
+    # Official Government of India Form GST REG-06 Registration Details
+    HOTEL_TRADE_NAME: str = "SRI SAI VASUDEV RESIDENCY"
+    HOTEL_LEGAL_NAME: str = "PAIDISETTY MANMADHA RAO"
+    HOTEL_GSTIN: str = "21AEKPP8689J1ZS"
+    HOTEL_STATE_CODE: str = "21"
+    HOTEL_PAN: str = "AEKPP8689J"
+    HOTEL_ADDRESS: str = "Near Andhra Bank, New Colony, Rayagada, Odisha - 765001"
+    HOTEL_STATE: str = "Odisha"
+    HOTEL_PINCODE: str = "765001"
+    HOTEL_JURISDICTION: str = "RAYAGADA DIVISION"
     
     # Railway passes DATABASE_URL when PostgreSQL is attached
     DATABASE_URL: str = os.getenv(

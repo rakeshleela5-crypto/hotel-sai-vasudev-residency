@@ -496,9 +496,16 @@ export const AdvanceReceiptModal: React.FC<AdvanceReceiptModalProps> = ({
             {/* Printable Voucher Slip */}
             <div style={{ border: '2px solid #000', padding: 16 }}>
               <div style={{ textAlign: 'center', borderBottom: '1px solid #000', paddingBottom: 8, marginBottom: 10 }}>
-                <h2 style={{ margin: 0, fontSize: 18, textTransform: 'uppercase' }}>HOTEL SAI VASUDEV RESIDENCY</h2>
-                <div style={{ fontSize: 11 }}>Pimpalwadi Road, Shirdi - 423109 (Maharashtra)</div>
-                <div style={{ fontSize: 11 }}>Tel: +91 999663696 / +91 9822000000 | GSTIN: 27AABCS1234F1Z1</div>
+                {(() => {
+                  const comp = PmsStore.getCompanyInfo();
+                  return (
+                    <>
+                      <h2 style={{ margin: 0, fontSize: 18, textTransform: 'uppercase' }}>{comp.firmName}</h2>
+                      <div style={{ fontSize: 11 }}>{comp.address1}, {comp.city} - {comp.pincode} ({comp.state})</div>
+                      <div style={{ fontSize: 11 }}>Tel: {comp.mobile} | GSTIN: {comp.gstNo}</div>
+                    </>
+                  );
+                })()}
                 <div style={{ display: 'inline-block', background: '#000', color: '#fff', padding: '2px 10px', fontSize: 12, fontWeight: 700, marginTop: 6, borderRadius: 2 }}>
                   ROOM ADVANCE RECEIPT
                 </div>

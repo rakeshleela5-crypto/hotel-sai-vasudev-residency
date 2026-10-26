@@ -42,8 +42,8 @@ export const LocationSection: React.FC = () => {
               <div className="map-header">
                 <div className="map-marker-pin">📍</div>
                 <div>
-                  <h3>Hotel Sai Vasudev Residency</h3>
-                  <p>Plot No. 14-B, VIP Temple Road, Beside Sacred Gate No. 2</p>
+                  <h3>Sri Sai Vasudev Residency</h3>
+                  <p>Near Andhra Bank, New Colony, Rayagada, Odisha - 765001</p>
                 </div>
               </div>
 

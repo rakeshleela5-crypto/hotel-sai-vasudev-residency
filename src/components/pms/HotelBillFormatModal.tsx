@@ -420,15 +420,15 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
                         color: '#000'
                       }}
                     >
-                      {companyInfo.firmName || 'HALL OF KNOTS'}
+                      {companyInfo.firmName || 'SRI SAI VASUDEV RESIDENCY'}
                     </h1>
                     <div style={{ fontSize: 11, marginTop: 4, lineHeight: 1.3 }}>
-                      {companyInfo.address1 || 'Mall Godown Rd, near Choudhary petrol pump'},{' '}
-                      {companyInfo.address2 || 'Ashok Nagar, Chogurjee Nagar'}, {companyInfo.city || 'Etawah'},{' '}
-                      {companyInfo.state || 'UTTAR PRADESH'} {companyInfo.pincode || '206001'}
+                      {companyInfo.address1 || 'Near Andhra Bank, New Colony'},{' '}
+                      {companyInfo.address2 || 'SRI SAI VASUDEV RESIDENCY'}, {companyInfo.city || 'Rayagada'},{' '}
+                      {companyInfo.state || 'ODISHA'} {companyInfo.pincode || '765001'}
                     </div>
                     <div style={{ fontSize: 11, marginTop: 2 }}>
-                      India Email: {companyInfo.email || '-'} Phone Mobile {companyInfo.mobile || '9466219194'}
+                      India Email: {companyInfo.email || 'reservations@hotelsai-vasudev.com'} Phone Mobile {companyInfo.mobile || '+91 94402 89999'}
                     </div>
                   </div>
                 </div>
@@ -642,7 +642,7 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
                       <div><strong>Bank Name:</strong> {companyInfo.bankName || 'STATE BANK OF INDIA'}</div>
                       <div><strong>Bank A/C No:</strong> {companyInfo.bankAccountNo || '923020035404769'}</div>
                       <div><strong>Bank IFSC:</strong> {companyInfo.bankIfsc || 'SBIN000390'}</div>
-                      <div><strong>Bank Branch:</strong> {companyInfo.bankBranch || 'MAIN BRANCH SHIRDI'}</div>
+                      <div><strong>Bank Branch:</strong> {companyInfo.bankBranch || 'RAYAGADA BRANCH'}</div>
                       <div style={{ marginTop: 4, color: '#475569', fontSize: 9 }}>
                         {companyInfo.termsAndConditions?.split('\n')[0] || 'Check-out time is 11:00 AM sharp.'}
                       </div>
@@ -684,7 +684,7 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
                       }}
                     >
                       <div style={{ fontSize: 10, fontWeight: 800 }}>
-                        For {companyInfo.firmName || 'HALL OF KNOTS'}
+                        For {companyInfo.firmName || 'SRI SAI VASUDEV RESIDENCY'}
                       </div>
 
                       {/* Payment Completed Seal Stamp matching Frame 0125 & 0240 */}
@@ -732,7 +732,7 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
                     INVOICE
                   </div>
                   <h2 style={{ margin: '2px 0', fontSize: 18, fontWeight: 900 }}>
-                    {companyInfo.firmName || 'HALL OF KNOTS'}
+                    {companyInfo.firmName || 'SRI SAI VASUDEV RESIDENCY'}
                   </h2>
                   <div style={{ fontSize: 10 }}>
                     {companyInfo.address1}, {companyInfo.city} - {companyInfo.pincode} ({companyInfo.state})

@@ -9,6 +9,7 @@ export type RoomStatus =
   | 'occupied'
   | 'dirty'
   | 'blocked'
+  | 'maintenance'
   | 'VACANT_CLEAN'
   | 'VACANT_DIRTY'
   | 'OCCUPIED_CLEAN'
@@ -32,16 +33,94 @@ export interface PmsJournalEntry {
 
 export interface KotVoidAuditLog {
   id: string;
+  tableSessionId?: string;
+  tableNo?: string;
   kotNo: string;
   itemCode: string;
   itemName: string;
   qty: number;
   rate: number;
   amount: number;
-  voidReason: 'Guest Changed Mind' | 'Kitchen Out of Stock' | 'Wrong Entry' | string;
+  voidReason: string;
+  stewardId?: string;
+  approvingManagerId?: string;
+  managerPin?: string;
   foodStatus: 'Prepared/Wasted' | 'Unprepared';
   voidedAt: string;
   voidedBy: string;
+}
+
+export interface TableSession {
+  sessionId: string;
+  tableNo: string;
+  startTime: string;
+  status: 'Active' | 'Billed' | 'Closed' | 'Settled';
+  kotNumbers: string[];
+  cumulativeItems: KotItem[];
+  cumulativeAmount: number;
+  mergedTables?: string[];
+  waiterName?: string;
+  guestName?: string;
+}
+
+export interface RfidKeyCard {
+  cardUid: string;
+  roomNo: string;
+  guestName: string;
+  checkInTime: string;
+  scheduledCheckoutTime: string;
+  cardDeactivationTime: string; // T-minus 1 hour cutoff
+  status: 'ACTIVE' | 'WARNING_T_MINUS_1H' | 'DEACTIVATED' | 'EXTENDED' | 'Deactivated';
+  extensionLogged: boolean;
+  extensionFee: number;
+  encodedBy: string;
+  lastUpdated: string;
+  expiryTime?: string;
+  checkoutTime?: string;
+  issuedAt?: string;
+}
+
+export interface HousekeepingDiscrepancy {
+  id: string;
+  roomNo: string;
+  frontDeskStatus?: string;       // e.g. "Occupied"
+  housekeepingStatus: string;     // e.g. "Vacant Dirty"
+  reportedAt: string;
+  reportedBy: string;
+  resolved?: boolean;
+  notes: string;
+  isShortStaySuspect?: boolean;
+  pmsStatus?: string;
+  status?: string;
+  severity?: string;
+  guestName?: string;
+  discrepancyType?: string;
+}
+
+export interface GroupBookingGuest {
+  name: string;
+  phone?: string;
+  idProofType?: string;
+  idProofNumber?: string;
+  age?: number;
+  roomAssigned: string;
+  isPrimary: boolean;
+}
+
+export interface GroupBookingMetadata {
+  groupId: string;
+  groupName: string;
+  contactPerson: string;
+  contactPhone: string;
+  bookingSource: 'Direct Phone Reservation' | 'Online Booking Engine' | 'Corporate Travel';
+  roomsAllocated: string[];
+  guests: GroupBookingGuest[];
+  advancePaid: number;
+  balanceDue: number;
+  specialInstructions: string;
+  checkInDate: string;
+  checkOutDate: string;
+  status: 'Confirmed' | 'Checked-In' | 'Completed' | 'Cancelled';
 }
 
 export interface PmsRoom {
@@ -209,6 +288,10 @@ export interface PmsKotRecord {
   printedAt?: string;
   printedBy?: string;
   orderSource?: 'Mobile' | 'Desktop';
+  tableSessionId?: string;    // Module 1: Single active table session ID
+  kotSequence?: number;       // Sequential KOT #1, #2, #3 for the session
+  isDelta?: boolean;          // Module 2: True if running KOT contains delta newly added items
+  deltaItems?: KotItem[];     // Newly added items for chef KDS display
 }
 export interface PmsCheckIn {
   checkInNo: string;          // e.g. SR/188/24-25
@@ -440,6 +523,9 @@ export interface PmsDiningTable {
   capacity?: number;
   status?: 'Vacant' | 'Running' | 'Billed' | 'Occupied';
   activeKotNos?: string[];
+  activeSessionId?: string; // Module 1: Single active session ID
+  sessionStartTime?: string;
+  mergedWithTables?: string[]; // Module 1: Merged tables list
 }
 
 export interface PmsTableShiftRecord {
@@ -514,9 +600,11 @@ export interface LedgerEntry {
 
 export interface PmsCompanyInfo {
   firmName: string;
+  legalName?: string;
   address1: string;
   address2?: string;
   city: string;
+  district?: string;
   pincode: string;
   state: string;
   phone?: string;
@@ -529,6 +617,11 @@ export interface PmsCompanyInfo {
   regNo2?: string;
   gstNotApplicable: boolean;
   makeAllBillLocalGst: boolean;
+  tradeName?: string;
+  hotelName?: string;
+  gstin?: string;
+  pan?: string;
+  panNo?: string;
   
   // Video 26 Banking, UPI & Branding Details (Frames 0240, 0250, 0255)
   bankName?: string;
@@ -1780,6 +1873,19 @@ export interface PmsNightAuditRecord {
     totalPosted: number;
     folioBalanceAfter: number;
   }>;
+  id?: string;
+  totalRooms?: number;
+  occupiedRooms?: number;
+  vacantRooms?: number;
+  dirtyRooms?: number;
+  maintenanceRooms?: number;
+  occupancyPercentage?: number;
+  totalRoomRevenue?: number;
+  totalFoodRevenue?: number;
+  totalBanquetRevenue?: number;
+  totalGrossRevenue?: number;
+  auditedAt?: string;
+  auditedBy?: string;
 }
 
 // ==========================================

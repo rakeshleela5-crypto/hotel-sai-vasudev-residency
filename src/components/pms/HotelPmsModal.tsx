@@ -57,6 +57,11 @@ import { NewRoomBookingModal } from './NewRoomBookingModal';
 import { RoomCheckOutModal } from './RoomCheckOutModal';
 import { HousekeepingTrackerModal } from './HousekeepingTrackerModal';
 import { PettyExpenseModal } from './PettyExpenseModal';
+import { Gstr1ExportModal } from './Gstr1ExportModal';
+import { HousekeepingDiscrepancyModal } from './HousekeepingDiscrepancyModal';
+import { RfidKeyCardModal } from './RfidKeyCardModal';
+import { MonthlyHotelSaleReportModal } from './MonthlyHotelSaleReportModal';
+import { MonthlyRestaurantSaleReportModal } from './MonthlyRestaurantSaleReportModal';
 import type { PmsUserAccount, PmsChainProperty, BillFormatType, PmsCheckOutDetail, PmsGstReportTab, PmsRoom } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import './pmsStyles.css';
@@ -179,6 +184,13 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
 
   // Video 27: Top 20 Features of RoomG PMS Master Navigator (Frames 0005-0815)
   const [isTop20FeaturesOpen, setIsTop20FeaturesOpen] = useState(false);
+
+  // 10 Core Upgrade Modules Suite State
+  const [isGstr1ExportOpen, setIsGstr1ExportOpen] = useState(false);
+  const [isHousekeepingDiscrepancyOpen, setIsHousekeepingDiscrepancyOpen] = useState(false);
+  const [isRfidKeyCardOpen, setIsRfidKeyCardOpen] = useState(false);
+  const [isMonthlyHotelSaleOpen, setIsMonthlyHotelSaleOpen] = useState(false);
+  const [isMonthlyRestaurantSaleOpen, setIsMonthlyRestaurantSaleOpen] = useState(false);
 
   // Video 28: GST Tax Reports & Master Report Dashboard (Frames 0080-0330)
   const [isGstReportsOpen, setIsGstReportsOpen] = useState(false);
@@ -1306,6 +1318,21 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     <div className="pms-nav-item" onClick={() => setIsStoreWiseStockOpen(true)}>
                       <span style={{ color: '#38bdf8', fontWeight: 800 }}>🏬 Store-Wise Stock &amp; Inventory Suite</span>
                     </div>
+
+                    {/* Module 4: CA-Ready GSTR-1 JSON Export Engine */}
+                    <div className="pms-nav-item" onClick={() => setIsGstr1ExportOpen(true)}>
+                      <span style={{ color: '#4ade80', fontWeight: 900 }}>⚖️ CA-Ready GSTR-1 JSON Export (HSN/SAC)</span>
+                    </div>
+
+                    {/* Module 9: Monthly Hotel Sale Report */}
+                    <div className="pms-nav-item" onClick={() => setIsMonthlyHotelSaleOpen(true)}>
+                      <span style={{ color: '#38bdf8', fontWeight: 900 }}>📊 Monthly Hotel Sale Report (XLSX Schema)</span>
+                    </div>
+
+                    {/* Module 10: Monthly Restaurant Sale Report */}
+                    <div className="pms-nav-item" onClick={() => setIsMonthlyRestaurantSaleOpen(true)}>
+                      <span style={{ color: '#fb923c', fontWeight: 900 }}>🍽️ Monthly Restaurant POS Sale (5% GST)</span>
+                    </div>
                   </div>
                 )}
 
@@ -1347,6 +1374,21 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsHousekeepingOpen(true)}>
                       <span style={{ color: '#c084fc', fontWeight: 800 }}>🧹 Housekeeping Kanban (16 Rooms)</span>
+                    </div>
+                    {/* Module 5: Anti-Fraud Short-Stay Theft Prevention */}
+                    <div className="pms-nav-item" onClick={() => setIsHousekeepingDiscrepancyOpen(true)}>
+                      <span style={{ color: '#ef4444', fontWeight: 900 }}>🚨 Anti-Fraud Short-Stay Turnover Portal</span>
+                    </div>
+                    {/* Module 6: RFID Key Card Pre-Checkout Deactivation (-1h Cutoff) */}
+                    <div className="pms-nav-item" onClick={() => setIsRfidKeyCardOpen(true)}>
+                      <span style={{ color: '#38bdf8', fontWeight: 900 }}>🔑 Smart RFID Keycards (-1h Expiry)</span>
+                    </div>
+                    {/* Module 3: Automated Midnight (00:00) Night Audit Rollover */}
+                    <div className="pms-nav-item" onClick={() => {
+                      const res = PmsStore.runAutomatedMidnightAudit('Manual Trigger (Manager)');
+                      alert(`🌙 Automated Midnight Night Audit Executed!\n\nBusiness Date: ${res.auditDate}\nNightly Room Tariffs Posted: ₹${res.totalRoomTariffPosted.toFixed(2)}\nOccupied Rooms Audited: ${res.occupiedRoomsCount}\nDate rolled forward cleanly for 24/7/365 operations.`);
+                    }}>
+                      <span style={{ color: '#a855f7', fontWeight: 900 }}>🌙 Run Midnight Night Audit Rollover</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => setIsPettyExpenseOpen(true)}>
                       <span style={{ color: '#fbbf24', fontWeight: 800 }}>💰 Petty Cash &amp; Daily Night Audit</span>
@@ -2027,6 +2069,36 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
           setIsPettyExpenseOpen(false);
           setRoomRefreshTrigger(prev => prev + 1);
         }}
+      />
+
+      {/* Module 4: CA-Ready GSTR-1 JSON Export Engine */}
+      <Gstr1ExportModal
+        isOpen={isGstr1ExportOpen}
+        onClose={() => setIsGstr1ExportOpen(false)}
+      />
+
+      {/* Module 5: Anti-Fraud Housekeeping & Short Stay Discrepancy Portal */}
+      <HousekeepingDiscrepancyModal
+        isOpen={isHousekeepingDiscrepancyOpen}
+        onClose={() => setIsHousekeepingDiscrepancyOpen(false)}
+      />
+
+      {/* Module 6: Smart RFID Key Card Encoding & -1 Hour Cutoff Lock System */}
+      <RfidKeyCardModal
+        isOpen={isRfidKeyCardOpen}
+        onClose={() => setIsRfidKeyCardOpen(false)}
+      />
+
+      {/* Module 9: Monthly Hotel Sale Report Engine (HOTEL SALE REPORT JUNE MONTH.xlsx Schema) */}
+      <MonthlyHotelSaleReportModal
+        isOpen={isMonthlyHotelSaleOpen}
+        onClose={() => setIsMonthlyHotelSaleOpen(false)}
+      />
+
+      {/* Module 10: Monthly Restaurant Sale Report Engine (RESTAURENT SALE REPORT JUNE MONTH.xlsx Schema) */}
+      <MonthlyRestaurantSaleReportModal
+        isOpen={isMonthlyRestaurantSaleOpen}
+        onClose={() => setIsMonthlyRestaurantSaleOpen(false)}
       />
     </>
   );

@@ -396,3 +396,46 @@ class PmsDashboardSyncResponse(BaseModel):
     rooms: List[RoomResponse]
     active_bookings: List[BookingResponse]
 
+# --- Module 1 & 2 Schemas ---
+class KotVoidRequest(BaseModel):
+    kot_no: str
+    item_name: str
+    qty_voided: int = 1
+    manager_pin: str
+    void_reason: str
+    steward_id: Optional[str] = "Steward"
+    approving_manager_id: Optional[str] = "Duty Manager"
+
+class TableShiftRequest(BaseModel):
+    source_table: str
+    target_table: str
+    shifted_by: Optional[str] = "Steward / Cashier"
+
+class TableMergeRequest(BaseModel):
+    primary_table: str
+    secondary_table: str
+    merged_by: Optional[str] = "Restaurant Manager"
+
+# --- Module 5 Schemas: Anti-Fraud & Housekeeping Discrepancy ---
+class HousekeepingDiscrepancyCreate(BaseModel):
+    room_no: str
+    housekeeping_status: str # Vacant Dirty, Occupied
+    reported_by: Optional[str] = "Housekeeping Staff"
+    notes: Optional[str] = None
+
+# --- Module 6 Schemas: RFID Key Card Access ---
+class KeyCardEncodeRequest(BaseModel):
+    card_uid: str
+    room_no: str
+    guest_name: str
+    scheduled_checkout_time: str # ISO or YYYY-MM-DD HH:MM
+    encoded_by: Optional[str] = "Front Desk"
+
+class KeyCardExtendRequest(BaseModel):
+    card_uid: str
+    extended_checkout_time: str
+    extension_fee_paid: float = 0.0
+    payment_mode: str = "Cash"
+    extended_by: Optional[str] = "Front Desk Officer"
+
+

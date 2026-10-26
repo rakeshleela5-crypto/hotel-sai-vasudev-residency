@@ -236,35 +236,66 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
 
     setIsProcessing(true);
     try {
-      const targetRoomOrTable = serviceType === 'Restaurant' ? selectedTableNo : selectedRoomNo;
       const nowTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      const fullRemark = kotRemark + (isJain ? ' (Jain Prep)' : '') + (isSattvic ? ' (Sattvic Prep)' : '') + (isLessSpicy ? ' (Less Spicy)' : '');
 
-      const kotRecord: PmsKotRecord = {
-        kotNo,
-        serviceType,
-        roomNo: targetRoomOrTable,
-        tableNo: serviceType === 'Restaurant' ? selectedTableNo : undefined,
-        guestName: currentGuestName,
-        kotRemark: kotRemark + (isJain ? ' (Jain Prep)' : '') + (isSattvic ? ' (Sattvic Prep)' : '') + (isLessSpicy ? ' (Less Spicy)' : ''),
-        operatorName: 'DEMO0004',
-        items: cartItems,
-        totalAmount: taxableAmount,
-        totalQty,
-        date: new Date().toLocaleDateString('en-GB').replace(/\//g, '-'),
-        time: nowTime,
-        createdAt: new Date().toISOString(),
-        status: 'Pending',
-        serveStatus: 'Pending',
-        isPrinted: true,
-        orderSource: 'Desktop'
-      };
+      if (serviceType === 'Restaurant') {
+        // Module 1 & 2: Single Active Table Session & Real-Time WebSocket Delta Dispatch
+        const result = PmsStore.createOrAppendTableSession(
+          selectedTableNo,
+          cartItems,
+          'DEMO0004',
+          currentGuestName,
+          fullRemark
+        );
+        setSavedKotRecord(result.kot);
+        if (onKotSaved) onKotSaved(result.kot);
 
-      PmsStore.saveKot(kotRecord);
-      setSavedKotRecord(kotRecord);
-      if (onKotSaved) onKotSaved(kotRecord);
+        showToast(result.isInitial
+          ? `🔥 KOT ${result.kot.kotNo} (Table Session Initialized) dispatched to Kitchen & Cashier!`
+          : `🔥 RUNNING KOT #${result.kot.kotSequence} (${result.kot.kotNo}) DELTA ticket dispatched to Kitchen! Cumulative bill updated at Cashier.`
+        );
+        setShowSlipPreview(true);
+      } else {
+        const targetRoomOrTable = selectedRoomNo;
+        const kotRecord: PmsKotRecord = {
+          kotNo,
+          serviceType,
+          roomNo: targetRoomOrTable,
+          tableNo: undefined,
+          guestName: currentGuestName,
+          kotRemark: fullRemark,
+          operatorName: 'DEMO0004',
+          items: cartItems,
+          totalAmount: taxableAmount,
+          totalQty,
+          date: new Date().toLocaleDateString('en-GB').replace(/\//g, '-'),
+          time: nowTime,
+          createdAt: new Date().toISOString(),
+          status: 'Pending',
+          serveStatus: 'Pending',
+          isPrinted: true,
+          orderSource: 'Desktop'
+        };
 
-      showToast(`🔥 KOT ${kotNo} punched to live Kitchen Display System (KDS)!`);
-      setShowSlipPreview(true);
+        PmsStore.saveKot(kotRecord);
+        PmsStore.playKotChime();
+        PmsStore.broadcastKotEvent({
+          type: 'KOT_PUNCHED',
+          payload: {
+            roomNo: targetRoomOrTable,
+            kotNo,
+            items: cartItems,
+            totalAmount: taxableAmount
+          }
+        });
+
+        setSavedKotRecord(kotRecord);
+        if (onKotSaved) onKotSaved(kotRecord);
+
+        showToast(`🔥 KOT ${kotNo} punched to live Kitchen Display System (KDS)!`);
+        setShowSlipPreview(true);
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -412,8 +443,8 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
             >
               <div style={{ textAlign: 'center', borderBottom: '1px dashed #000', paddingBottom: 8, marginBottom: 8 }}>
                 <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900 }}>VASUDEV RASOI</h3>
-                <p style={{ margin: '2px 0', fontSize: 11, fontWeight: 700 }}>HOTEL SAI VASUDEV RESIDENCY</p>
-                <p style={{ margin: 0, fontSize: 10 }}>Plot No. 14-B, VIP Temple Road, Shirdi - 423109</p>
+                <p style={{ margin: '2px 0', fontSize: 11, fontWeight: 700 }}>SRI SAI VASUDEV RESIDENCY</p>
+                <p style={{ margin: 0, fontSize: 10 }}>Near Andhra Bank, New Colony, Rayagada - 765001</p>
                 <div style={{ display: 'inline-block', border: '1px solid #000', padding: '2px 8px', fontWeight: 900, fontSize: 12, marginTop: 4 }}>
                   KITCHEN ORDER TICKET (KOT)
                 </div>
@@ -495,9 +526,9 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
             >
               <div style={{ textAlign: 'center', borderBottom: '1px dashed #000', paddingBottom: 8, marginBottom: 8 }}>
                 <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900 }}>VASUDEV RASOI</h3>
-                <p style={{ margin: '2px 0', fontSize: 11, fontWeight: 700 }}>HOTEL SAI VASUDEV RESIDENCY</p>
-                <p style={{ margin: 0, fontSize: 10 }}>Plot No. 14-B, VIP Temple Road, Near Gate No. 2, Shirdi 423109</p>
-                <p style={{ margin: '2px 0', fontSize: 10 }}>GSTIN: 27AABCS1429B1Z2 &bull; Ph: +91 94402 89999</p>
+                <p style={{ margin: '2px 0', fontSize: 11, fontWeight: 700 }}>SRI SAI VASUDEV RESIDENCY</p>
+                <p style={{ margin: 0, fontSize: 10 }}>Near Andhra Bank, New Colony, Rayagada 765001</p>
+                <p style={{ margin: '2px 0', fontSize: 10 }}>GSTIN: 21AEKPP8689J1ZS &bull; Ph: +91 94402 89999</p>
                 <div style={{ display: 'inline-block', border: '1px solid #000', padding: '2px 8px', fontWeight: 900, fontSize: 12, marginTop: 4 }}>
                   RESTAURANT TAX INVOICE (SAC 996331)
                 </div>

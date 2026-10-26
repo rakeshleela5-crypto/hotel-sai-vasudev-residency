@@ -20,6 +20,8 @@ export const ShiftTableModal: React.FC<ShiftTableModalProps> = ({
   const [toTable, setToTable] = useState<string>('');
   const [shiftRecords, setShiftRecords] = useState<PmsTableShiftRecord[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState<'shift' | 'merge'>('shift');
+  const [secondaryMergeTable, setSecondaryMergeTable] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
@@ -27,15 +29,13 @@ export const ShiftTableModal: React.FC<ShiftTableModalProps> = ({
       setTables(allTables);
       setShiftRecords(PmsStore.getTableShifts());
 
+      const runningTables = allTables.filter(t => t.status === 'Running' || t.status === 'Occupied');
       if (initialFromTable) {
         setFromTable(initialFromTable);
-      } else {
-        const firstOccupied = allTables.find(t => t.status === 'Running' || t.status === 'Occupied');
-        if (firstOccupied) {
-          setFromTable(firstOccupied.tableName);
-        } else if (allTables.length > 0) {
-          setFromTable(allTables[0].tableName);
-        }
+      } else if (runningTables.length > 0) {
+        setFromTable(runningTables[0].tableName);
+      } else if (allTables.length > 0) {
+        setFromTable(allTables[0].tableName);
       }
 
       // Default destination
@@ -44,6 +44,10 @@ export const ShiftTableModal: React.FC<ShiftTableModalProps> = ({
         setToTable(firstVacant.tableName);
       } else if (allTables.length > 1) {
         setToTable(allTables[1].tableName);
+      }
+
+      if (runningTables.length > 1) {
+        setSecondaryMergeTable(runningTables[1].tableName);
       }
     }
   }, [isOpen, initialFromTable]);
@@ -75,6 +79,32 @@ export const ShiftTableModal: React.FC<ShiftTableModalProps> = ({
       if (onShiftCompleted) {
         onShiftCompleted();
       }
+      onClose();
+    }
+  };
+
+  const handleMergeNow = () => {
+    if (!fromTable) {
+      alert('Please select the Primary Master Table.');
+      return;
+    }
+    if (!secondaryMergeTable) {
+      alert('Please select the Secondary Table to merge.');
+      return;
+    }
+    if (fromTable.toLowerCase() === secondaryMergeTable.toLowerCase()) {
+      alert('Primary and Secondary merge tables cannot be the same!');
+      return;
+    }
+
+    setIsSubmitting(true);
+    const result = PmsStore.mergeTableSessions(fromTable, secondaryMergeTable, 'Restaurant Manager');
+    setIsSubmitting(false);
+
+    alert(result.message);
+    if (result.success) {
+      setTables(PmsStore.getTables());
+      if (onShiftCompleted) onShiftCompleted();
       onClose();
     }
   };
@@ -145,20 +175,143 @@ export const ShiftTableModal: React.FC<ShiftTableModalProps> = ({
           </button>
         </div>
 
-        {/* Inner Content - Exact Frame 130 and Frame 155 layout */}
-        <div style={{ padding: '30px 24px' }}>
-          <h2
+        {/* Tab Controls for Shift vs Merge */}
+        <div style={{ display: 'flex', borderBottom: '2px solid #e2e8f0', background: '#f8fafc', padding: '0 20px' }}>
+          <button
+            type="button"
+            onClick={() => setActiveTab('shift')}
             style={{
-              textAlign: 'center',
-              color: '#1d4ed8',
-              fontSize: 20,
-              fontWeight: 700,
-              margin: '0 0 28px 0',
-              fontFamily: 'inherit'
+              background: 'transparent',
+              border: 'none',
+              borderBottom: activeTab === 'shift' ? '3px solid #0284c7' : '3px solid transparent',
+              color: activeTab === 'shift' ? '#0284c7' : '#64748b',
+              fontWeight: activeTab === 'shift' ? 800 : 600,
+              fontSize: 13,
+              padding: '12px 18px',
+              cursor: 'pointer',
+              marginBottom: -2
             }}
           >
-            Shift KOTs from One Table to Another
-          </h2>
+            🔄 Table Shift (Move Active Session to Vacant Table)
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('merge')}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              borderBottom: activeTab === 'merge' ? '3px solid #7c3aed' : '3px solid transparent',
+              color: activeTab === 'merge' ? '#7c3aed' : '#64748b',
+              fontWeight: activeTab === 'merge' ? 800 : 600,
+              fontSize: 13,
+              padding: '12px 18px',
+              cursor: 'pointer',
+              marginBottom: -2
+            }}
+          >
+            🔗 Table Merge (Combine Running Bills into Master Session)
+          </button>
+        </div>
+
+        {/* Inner Content */}
+        <div style={{ padding: '24px' }}>
+          {activeTab === 'merge' ? (
+            <div>
+              <h2
+                style={{
+                  textAlign: 'center',
+                  color: '#7c3aed',
+                  fontSize: 18,
+                  fontWeight: 800,
+                  margin: '0 0 10px 0'
+                }}
+              >
+                Merge Multiple Active Dining Sessions
+              </h2>
+              <p style={{ textAlign: 'center', fontSize: 12, color: '#64748b', margin: '0 0 20px 0' }}>
+                Combines all punched KOTs from both tables into a single consolidated master running bill while preserving full ticket history.
+              </p>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr auto',
+                  gap: 16,
+                  alignItems: 'flex-end',
+                  background: '#f8fafc',
+                  padding: '20px',
+                  borderRadius: 8,
+                  border: '1px solid #e2e8f0'
+                }}
+              >
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 6 }}>
+                    Primary Master Table (Holds Final Bill)
+                  </label>
+                  <select
+                    value={fromTable}
+                    onChange={(e) => setFromTable(e.target.value)}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: 6, border: '1.5px solid #7c3aed', fontWeight: 700 }}
+                  >
+                    {tables.map(t => (
+                      <option key={t.id} value={t.tableName}>
+                        {t.tableName} {t.status === 'Running' || t.status === 'Occupied' ? '🟢 (Active)' : '⚪ (Vacant)'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 6 }}>
+                    Secondary Table to Merge In
+                  </label>
+                  <select
+                    value={secondaryMergeTable}
+                    onChange={(e) => setSecondaryMergeTable(e.target.value)}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: 6, border: '1.5px solid #7c3aed', fontWeight: 700 }}
+                  >
+                    <option value="">-- Select Secondary Table --</option>
+                    {tables.filter(t => t.tableName !== fromTable).map(t => (
+                      <option key={t.id} value={t.tableName}>
+                        {t.tableName} {t.status === 'Running' || t.status === 'Occupied' ? '🟢 (Active)' : '⚪ (Vacant)'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleMergeNow}
+                  disabled={isSubmitting}
+                  style={{
+                    background: '#7c3aed',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '10px 20px',
+                    borderRadius: 6,
+                    fontWeight: 800,
+                    fontSize: 13,
+                    cursor: 'pointer'
+                  }}
+                >
+                  🔗 Merge Sessions
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <h2
+                style={{
+                  textAlign: 'center',
+                  color: '#1d4ed8',
+                  fontSize: 18,
+                  fontWeight: 700,
+                  margin: '0 0 20px 0',
+                  fontFamily: 'inherit'
+                }}
+              >
+                Shift KOTs &amp; Active Session to Vacant Table
+              </h2>
 
           <div
             style={{
@@ -328,6 +481,8 @@ export const ShiftTableModal: React.FC<ShiftTableModalProps> = ({
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
             </div>
           )}
         </div>
