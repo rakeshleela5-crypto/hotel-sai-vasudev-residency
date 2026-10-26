@@ -2,13 +2,13 @@
 providers = ["python"]
 
 [phases.setup]
-nixPkgs = ["python311", "gcc", "libpqxx"]
+nixPkgs = ["python311", "gcc", "postgresql"]
 
 [phases.install]
 cmds = [
   "python3 -m pip install --upgrade pip",
-  "test -f requirements.txt && pip install -r requirements.txt || pip install -r backend/requirements.txt"
+  "pip install -r requirements.txt"
 ]
 
 [start]
-cmd = "test -d app && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} || (cd backend && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000})"
+cmd = "sh -c \"uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}\""
