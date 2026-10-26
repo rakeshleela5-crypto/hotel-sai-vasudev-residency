@@ -89,7 +89,7 @@ def execute_room_shift(payload: schemas.RoomShiftCreate, db: Session = Depends(g
             if not booking:
                 # Create active in-house booking record on the fly
                 booking = models.Booking(
-                    booking_ref=f"SVR-SHIFT-{clean_ref}",
+                    booking_ref=f"SVR-SHIFT-{clean_ref}-{uuid.uuid4().hex[:4].upper()}",
                     room_id=room_candidate.id,
                     guest_name="In-House Guest",
                     guest_email=f"guest{clean_ref}@sai-vasudev.com",
@@ -1000,6 +1000,9 @@ def get_full_cloud_state(db: Session = Depends(get_db)):
     party_accounts = db.query(models.PartyAccount).order_by(models.PartyAccount.name.asc()).all()
     general_receipts = db.query(models.GeneralReceipt).order_by(models.GeneralReceipt.created_at.desc()).limit(150).all()
     general_payments = db.query(models.GeneralPayment).order_by(models.GeneralPayment.created_at.desc()).limit(150).all()
+    godowns = db.query(models.Godown).order_by(models.Godown.s_no.asc()).all()
+    item_groups = db.query(models.ItemGroup).order_by(models.ItemGroup.s_no.asc()).all()
+    stock_transfers = db.query(models.StockTransfer).order_by(models.StockTransfer.created_at.desc()).limit(150).all()
     masters = db.query(models.MasterItem).all()
 
     masters_by_cat = {}
@@ -1274,6 +1277,39 @@ def get_full_cloud_state(db: Session = Depends(get_db)):
             "remark": p.remark,
             "createdAt": p.created_at.isoformat() if p.created_at else None
         } for p in general_payments],
+        "godowns": [{
+            "id": g.godown_id,
+            "sNo": g.s_no,
+            "name": g.name,
+            "address": g.address,
+            "createdAt": g.created_at.isoformat() if g.created_at else None
+        } for g in godowns],
+        "item_groups": [{
+            "id": ig.group_id,
+            "sNo": ig.s_no,
+            "name": ig.name,
+            "headGroup": ig.head_group,
+            "noDiscount": ig.no_discount,
+            "createdAt": ig.created_at.isoformat() if ig.created_at else None
+        } for ig in item_groups],
+        "stock_transfers": [{
+            "id": f"st-{st.id}",
+            "entryNo": st.entry_no,
+            "date": st.date,
+            "fromGodown": st.from_godown,
+            "toGodown": st.to_godown,
+            "billDate": st.bill_date,
+            "billNo": st.bill_no,
+            "items": json.loads(st.items_json) if st.items_json else [],
+            "totalQty": st.total_qty,
+            "totalAmount": st.total_amount,
+            "totalDiscount": st.total_discount,
+            "totalTaxable": st.total_taxable,
+            "totalGstAmt": st.total_gst_amt,
+            "totalNetValue": st.total_net_value,
+            "remark": st.remark,
+            "createdAt": st.created_at.isoformat() if st.created_at else None
+        } for st in stock_transfers],
         "masters": masters_by_cat
     }
 
@@ -2637,20 +2673,34 @@ def post_journal_entry(payload: schemas.JournalEntryCreate, db: Session = Depend
         amt_rupees = round(amt_paise / 100.0, 2)
     posted_by = payload.posted_by or payload.postedBy or "Front Desk Mgr"
 
-    entry = models.JournalEntry(
-        entry_id=e_id,
-        date=dt,
-        time=tm,
-        voucher_type=v_type,
-        reference_no=ref_no,
-        narration=payload.narration,
-        debit_account=debit,
-        credit_account=credit,
-        amount_paise=amt_paise,
-        amount_rupees=amt_rupees,
-        posted_by=posted_by
-    )
-    db.add(entry)
+    existing = db.query(models.JournalEntry).filter(models.JournalEntry.entry_id == e_id).first()
+    if existing:
+        existing.date = dt
+        existing.time = tm
+        existing.voucher_type = v_type
+        existing.reference_no = ref_no
+        existing.narration = payload.narration
+        existing.debit_account = debit
+        existing.credit_account = credit
+        existing.amount_paise = amt_paise
+        existing.amount_rupees = amt_rupees
+        existing.posted_by = posted_by
+        entry = existing
+    else:
+        entry = models.JournalEntry(
+            entry_id=e_id,
+            date=dt,
+            time=tm,
+            voucher_type=v_type,
+            reference_no=ref_no,
+            narration=payload.narration,
+            debit_account=debit,
+            credit_account=credit,
+            amount_paise=amt_paise,
+            amount_rupees=amt_rupees,
+            posted_by=posted_by
+        )
+        db.add(entry)
     db.commit()
     db.refresh(entry)
 
@@ -2781,19 +2831,32 @@ def save_general_receipt(payload: schemas.GeneralReceiptCreate, db: Session = De
     acc_name = payload.account_name or payload.accountName or "Cash"
     acc_mob = payload.account_mobile or payload.accountMobile
 
-    rec = models.GeneralReceipt(
-        s_no=payload.s_no or payload.sNo or 1,
-        voucher_name=v_name,
-        receipt_no=r_no,
-        voucher_no=v_no,
-        date=dt,
-        payment_mode=p_mode,
-        account_name=acc_name,
-        account_mobile=acc_mob,
-        amount=payload.amount,
-        remark=payload.remark
-    )
-    db.add(rec)
+    existing = db.query(models.GeneralReceipt).filter(models.GeneralReceipt.receipt_no == r_no).first()
+    if existing:
+        existing.s_no = payload.s_no or payload.sNo or existing.s_no
+        existing.voucher_name = v_name
+        existing.voucher_no = v_no
+        existing.date = dt
+        existing.payment_mode = p_mode
+        existing.account_name = acc_name
+        existing.account_mobile = acc_mob
+        existing.amount = payload.amount
+        existing.remark = payload.remark
+        rec = existing
+    else:
+        rec = models.GeneralReceipt(
+            s_no=payload.s_no or payload.sNo or 1,
+            voucher_name=v_name,
+            receipt_no=r_no,
+            voucher_no=v_no,
+            date=dt,
+            payment_mode=p_mode,
+            account_name=acc_name,
+            account_mobile=acc_mob,
+            amount=payload.amount,
+            remark=payload.remark
+        )
+        db.add(rec)
 
     # Settle party balance if matching party account exists
     party = db.query(models.PartyAccount).filter(models.PartyAccount.name.ilike(acc_name.strip())).first()
@@ -2861,19 +2924,32 @@ def save_general_payment(payload: schemas.GeneralPaymentCreate, db: Session = De
     acc_name = payload.account_name or payload.accountName or "Cash"
     acc_mob = payload.account_mobile or payload.accountMobile
 
-    pmt = models.GeneralPayment(
-        s_no=payload.s_no or payload.sNo or 1,
-        voucher_name=v_name,
-        payment_no=p_no,
-        voucher_no=v_no,
-        date=dt,
-        payment_mode=p_mode,
-        account_name=acc_name,
-        account_mobile=acc_mob,
-        amount=payload.amount,
-        remark=payload.remark
-    )
-    db.add(pmt)
+    existing = db.query(models.GeneralPayment).filter(models.GeneralPayment.payment_no == p_no).first()
+    if existing:
+        existing.s_no = payload.s_no or payload.sNo or existing.s_no
+        existing.voucher_name = v_name
+        existing.voucher_no = v_no
+        existing.date = dt
+        existing.payment_mode = p_mode
+        existing.account_name = acc_name
+        existing.account_mobile = acc_mob
+        existing.amount = payload.amount
+        existing.remark = payload.remark
+        pmt = existing
+    else:
+        pmt = models.GeneralPayment(
+            s_no=payload.s_no or payload.sNo or 1,
+            voucher_name=v_name,
+            payment_no=p_no,
+            voucher_no=v_no,
+            date=dt,
+            payment_mode=p_mode,
+            account_name=acc_name,
+            account_mobile=acc_mob,
+            amount=payload.amount,
+            remark=payload.remark
+        )
+        db.add(pmt)
 
     # Update party balance if matching party account exists
     party = db.query(models.PartyAccount).filter(models.PartyAccount.name.ilike(acc_name.strip())).first()
@@ -2927,4 +3003,233 @@ def delete_general_payment(payment_no: str, db: Session = Depends(get_db)):
     db.delete(pmt)
     db.commit()
     return {"success": True, "message": f"Payment {payment_no} deleted."}
+
+# --- 25. Godowns Master ---
+@router.post("/godowns")
+def save_godown(payload: schemas.GodownCreate, db: Session = Depends(get_db)):
+    """Save or update a godown/store location in PostgreSQL."""
+    existing = db.query(models.Godown).filter(
+        (models.Godown.name.ilike(payload.name.strip())) |
+        (models.Godown.godown_id == payload.id if payload.id else False)
+    ).first()
+
+    if existing:
+        existing.name = payload.name.strip()
+        if payload.address:
+            existing.address = payload.address
+        if payload.s_no or payload.sNo:
+            existing.s_no = payload.s_no or payload.sNo
+        gd = existing
+    else:
+        g_id = payload.id or payload.godown_id or payload.godownId or f"gd-{uuid.uuid4().hex[:6]}"
+        gd = models.Godown(
+            godown_id=g_id,
+            s_no=payload.s_no or payload.sNo or 1,
+            name=payload.name.strip(),
+            address=payload.address or payload.name.strip()
+        )
+        db.add(gd)
+
+    db.commit()
+    db.refresh(gd)
+    return {
+        "success": True,
+        "id": gd.godown_id,
+        "sNo": gd.s_no,
+        "name": gd.name,
+        "address": gd.address
+    }
+
+@router.get("/godowns")
+def get_godowns(db: Session = Depends(get_db)):
+    """Retrieve all godowns from PostgreSQL."""
+    godowns = db.query(models.Godown).order_by(models.Godown.s_no.asc()).all()
+    return [{
+        "id": g.godown_id,
+        "sNo": g.s_no,
+        "name": g.name,
+        "address": g.address,
+        "createdAt": g.created_at.isoformat() if g.created_at else None
+    } for g in godowns]
+
+@router.delete("/godowns/{godown_id}")
+def delete_godown(godown_id: str, db: Session = Depends(get_db)):
+    """Delete a godown from PostgreSQL."""
+    gd = db.query(models.Godown).filter(
+        (models.Godown.godown_id == godown_id) | (models.Godown.name.ilike(godown_id))
+    ).first()
+    if not gd:
+        raise HTTPException(status_code=404, detail="Godown not found")
+    db.delete(gd)
+    db.commit()
+    return {"success": True, "message": f"Godown {godown_id} deleted."}
+
+# --- 26. Item Groups Master ---
+@router.post("/item-groups")
+def save_item_group(payload: schemas.ItemGroupCreate, db: Session = Depends(get_db)):
+    """Save or update an inventory item group in PostgreSQL."""
+    existing = db.query(models.ItemGroup).filter(
+        (models.ItemGroup.name.ilike(payload.name.strip())) |
+        (models.ItemGroup.group_id == payload.id if payload.id else False)
+    ).first()
+
+    h_group = payload.head_group or payload.headGroup or "Raw_Material"
+    no_disc = payload.no_discount if payload.no_discount is not None else (payload.noDiscount if payload.noDiscount is not None else False)
+
+    if existing:
+        existing.name = payload.name.strip()
+        existing.head_group = h_group
+        existing.no_discount = no_disc
+        if payload.s_no or payload.sNo:
+            existing.s_no = payload.s_no or payload.sNo
+        ig = existing
+    else:
+        ig_id = payload.id or payload.group_id or payload.groupId or f"ig-{uuid.uuid4().hex[:6]}"
+        ig = models.ItemGroup(
+            group_id=ig_id,
+            s_no=payload.s_no or payload.sNo or 1,
+            name=payload.name.strip(),
+            head_group=h_group,
+            no_discount=no_disc
+        )
+        db.add(ig)
+
+    db.commit()
+    db.refresh(ig)
+    return {
+        "success": True,
+        "id": ig.group_id,
+        "sNo": ig.s_no,
+        "name": ig.name,
+        "headGroup": ig.head_group,
+        "noDiscount": ig.no_discount
+    }
+
+@router.get("/item-groups")
+def get_item_groups(db: Session = Depends(get_db)):
+    """Retrieve all item groups from PostgreSQL."""
+    groups = db.query(models.ItemGroup).order_by(models.ItemGroup.s_no.asc()).all()
+    return [{
+        "id": ig.group_id,
+        "sNo": ig.s_no,
+        "name": ig.name,
+        "headGroup": ig.head_group,
+        "noDiscount": ig.no_discount,
+        "createdAt": ig.created_at.isoformat() if ig.created_at else None
+    } for ig in groups]
+
+@router.delete("/item-groups/{group_id}")
+def delete_item_group(group_id: str, db: Session = Depends(get_db)):
+    """Delete an item group from PostgreSQL."""
+    ig = db.query(models.ItemGroup).filter(
+        (models.ItemGroup.group_id == group_id) | (models.ItemGroup.name.ilike(group_id))
+    ).first()
+    if not ig:
+        raise HTTPException(status_code=404, detail="Item group not found")
+    db.delete(ig)
+    db.commit()
+    return {"success": True, "message": f"Item group {group_id} deleted."}
+
+# --- 27. Stock Transfers & Godown Movements ---
+@router.post("/stock-transfers")
+def save_stock_transfer(payload: schemas.StockTransferCreate, db: Session = Depends(get_db)):
+    """Record a stock transfer between godowns in PostgreSQL."""
+    e_no = payload.entry_no or payload.entryNo or f"ST/{int(datetime.datetime.utcnow().timestamp()) % 100000}/24-25"
+    dt = payload.date or datetime.date.today().isoformat()
+    f_gd = payload.from_godown or payload.fromGodown or "Main Store"
+    t_gd = payload.to_godown or payload.toGodown or "Kitchen"
+    b_dt = payload.bill_date or payload.billDate or dt
+    b_no = payload.bill_no or payload.billNo or "1"
+    
+    items_str = payload.items_json
+    if not items_str and payload.items is not None:
+        items_str = json.dumps(payload.items)
+    if not items_str:
+        items_str = "[]"
+
+    existing = db.query(models.StockTransfer).filter(models.StockTransfer.entry_no == e_no).first()
+    if existing:
+        existing.date = dt
+        existing.from_godown = f_gd
+        existing.to_godown = t_gd
+        existing.bill_date = b_dt
+        existing.bill_no = b_no
+        existing.items_json = items_str
+        existing.total_qty = payload.total_qty or payload.totalQty or 0.0
+        existing.total_amount = payload.total_amount or payload.totalAmount or 0.0
+        existing.total_discount = payload.total_discount or payload.totalDiscount or 0.0
+        existing.total_taxable = payload.total_taxable or payload.totalTaxable or 0.0
+        existing.total_gst_amt = payload.total_gst_amt or payload.totalGstAmt or 0.0
+        existing.total_net_value = payload.total_net_value or payload.totalNetValue or 0.0
+        existing.remark = payload.remark
+        st = existing
+    else:
+        st = models.StockTransfer(
+            entry_no=e_no,
+            date=dt,
+            from_godown=f_gd,
+            to_godown=t_gd,
+            bill_date=b_dt,
+            bill_no=b_no,
+            items_json=items_str,
+            total_qty=payload.total_qty or payload.totalQty or 0.0,
+            total_amount=payload.total_amount or payload.totalAmount or 0.0,
+            total_discount=payload.total_discount or payload.totalDiscount or 0.0,
+            total_taxable=payload.total_taxable or payload.totalTaxable or 0.0,
+            total_gst_amt=payload.total_gst_amt or payload.totalGstAmt or 0.0,
+            total_net_value=payload.total_net_value or payload.totalNetValue or 0.0,
+            remark=payload.remark
+        )
+        db.add(st)
+
+    db.commit()
+    db.refresh(st)
+
+    return {
+        "success": True,
+        "message": f"Stock transfer {st.entry_no} ({st.from_godown} -> {st.to_godown}) recorded in PostgreSQL.",
+        "id": f"st-{st.id}",
+        "entryNo": st.entry_no,
+        "date": st.date,
+        "fromGodown": st.from_godown,
+        "toGodown": st.to_godown,
+        "totalQty": st.total_qty,
+        "totalAmount": st.total_amount,
+        "totalNetValue": st.total_net_value,
+        "remark": st.remark
+    }
+
+@router.get("/stock-transfers")
+def get_stock_transfers(db: Session = Depends(get_db)):
+    """Retrieve all stock transfers from PostgreSQL."""
+    transfers = db.query(models.StockTransfer).order_by(models.StockTransfer.created_at.desc()).limit(300).all()
+    return [{
+        "id": f"st-{t.id}",
+        "entryNo": t.entry_no,
+        "date": t.date,
+        "fromGodown": t.from_godown,
+        "toGodown": t.to_godown,
+        "billDate": t.bill_date,
+        "billNo": t.bill_no,
+        "items": json.loads(t.items_json) if t.items_json else [],
+        "totalQty": t.total_qty,
+        "totalAmount": t.total_amount,
+        "totalDiscount": t.total_discount,
+        "totalTaxable": t.total_taxable,
+        "totalGstAmt": t.total_gst_amt,
+        "totalNetValue": t.total_net_value,
+        "remark": t.remark,
+        "createdAt": t.created_at.isoformat() if t.created_at else None
+    } for t in transfers]
+
+@router.delete("/stock-transfers/{entry_no}")
+def delete_stock_transfer(entry_no: str, db: Session = Depends(get_db)):
+    """Delete a stock transfer voucher from PostgreSQL."""
+    st = db.query(models.StockTransfer).filter(models.StockTransfer.entry_no == entry_no).first()
+    if not st:
+        raise HTTPException(status_code=404, detail="Stock transfer not found")
+    db.delete(st)
+    db.commit()
+    return {"success": True, "message": f"Stock transfer {entry_no} deleted."}
+
 

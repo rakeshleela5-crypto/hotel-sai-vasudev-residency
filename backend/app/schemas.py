@@ -901,4 +901,55 @@ class GeneralPaymentCreate(BaseModel):
     amount: float
     remark: Optional[str] = None
 
+class GodownCreate(BaseModel):
+    id: Optional[str] = None
+    godown_id: Optional[str] = None
+    godownId: Optional[str] = None
+    s_no: Optional[int] = 1
+    sNo: Optional[int] = None
+    name: str
+    address: Optional[str] = None
+
+class ItemGroupCreate(BaseModel):
+    id: Optional[str] = None
+    group_id: Optional[str] = None
+    groupId: Optional[str] = None
+    s_no: Optional[int] = 1
+    sNo: Optional[int] = None
+    name: str
+    head_group: Optional[str] = "Raw_Material"
+    headGroup: Optional[str] = None
+    no_discount: Optional[bool] = False
+    noDiscount: Optional[bool] = None
+
+class StockTransferCreate(BaseModel):
+    id: Optional[str] = None
+    entry_no: Optional[str] = None
+    entryNo: Optional[str] = None
+    date: Optional[str] = None
+    from_godown: Optional[str] = None
+    fromGodown: Optional[str] = None
+    to_godown: Optional[str] = None
+    toGodown: Optional[str] = None
+    bill_date: Optional[str] = None
+    billDate: Optional[str] = None
+    bill_no: Optional[str] = None
+    billNo: Optional[str] = None
+    items: Optional[List[Dict[str, Any]]] = None
+    items_json: Optional[str] = None
+    total_qty: Optional[float] = 0.0
+    totalQty: Optional[float] = None
+    total_amount: Optional[float] = 0.0
+    totalAmount: Optional[float] = None
+    total_discount: Optional[float] = 0.0
+    totalDiscount: Optional[float] = None
+    total_taxable: Optional[float] = 0.0
+    totalTaxable: Optional[float] = None
+    total_gst_amt: Optional[float] = 0.0
+    totalGstAmt: Optional[float] = None
+    total_net_value: Optional[float] = 0.0
+    totalNetValue: Optional[float] = None
+    remark: Optional[str] = None
+
+
 

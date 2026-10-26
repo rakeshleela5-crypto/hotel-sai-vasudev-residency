@@ -165,6 +165,9 @@ def test_parity_endpoints():
     assert "party_accounts" in state
     assert "general_receipts" in state
     assert "general_payments" in state
+    assert "godowns" in state
+    assert "item_groups" in state
+    assert "stock_transfers" in state
     assert "masters" in state
     print(f"   [OK] Full Cloud State Hydration: {len(state['rooms'])} rooms, {len(state['food_bills'])} food bills, {len(state['expenses'])} expenses, {len(state['purchases'])} purchases, {len(state['discounts'])} discounts, {len(state['group_bookings'])} group bookings")
 
@@ -344,6 +347,65 @@ def test_parity_endpoints():
     assert r.status_code == 200
     assert len(r.json()) >= 1
     print(f"   [OK] General Payments Query: Found {len(r.json())} payment voucher(s)")
+
+    # 20. Godowns Master Test
+    gd_payload = {
+        "id": "gd-main-store",
+        "sNo": 1,
+        "name": "Main Central Store",
+        "address": "Basement Storage Room 01"
+    }
+    r = client.post("/api/v1/pms/godowns", json=gd_payload)
+    assert r.status_code == 200, f"Godown save failed: {r.text}"
+    print(f"   [OK] Godown Saved: {r.json()['name']} ({r.json()['id']})")
+
+    r = client.get("/api/v1/pms/godowns")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Godowns Query: Found {len(r.json())} godown(s)")
+
+    # 21. Item Groups Master Test
+    ig_payload = {
+        "id": "ig-raw-material",
+        "sNo": 1,
+        "name": "Raw Cooking Material",
+        "headGroup": "Raw_Material",
+        "noDiscount": True
+    }
+    r = client.post("/api/v1/pms/item-groups", json=ig_payload)
+    assert r.status_code == 200, f"Item group save failed: {r.text}"
+    print(f"   [OK] Item Group Saved: {r.json()['name']} (Head: {r.json()['headGroup']})")
+
+    r = client.get("/api/v1/pms/item-groups")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Item Groups Query: Found {len(r.json())} item group(s)")
+
+    # 22. Stock Transfers Test
+    st_payload = {
+        "entryNo": "ST/2026/TEST",
+        "date": "2026-10-26",
+        "fromGodown": "Main Central Store",
+        "toGodown": "Kitchen",
+        "billDate": "2026-10-26",
+        "billNo": "TX-01",
+        "items": [
+            {"sNo": 1, "itemId": "item-101", "itemName": "Basmati Rice 25kg Bag", "qty": 4, "rate": 1850.0, "amount": 7400.0, "netValue": 7400.0},
+            {"sNo": 2, "itemId": "item-102", "itemName": "Amul Pure Butter 500g", "qty": 20, "rate": 275.0, "amount": 5500.0, "netValue": 5500.0}
+        ],
+        "totalQty": 24,
+        "totalAmount": 12900.0,
+        "totalNetValue": 12900.0,
+        "remark": "Morning kitchen bulk issue from central store"
+    }
+    r = client.post("/api/v1/pms/stock-transfers", json=st_payload)
+    assert r.status_code == 200, f"Stock transfer failed: {r.text}"
+    print(f"   [OK] Stock Transfer Recorded: {r.json()['entryNo']} ({r.json()['fromGodown']} -> {r.json()['toGodown']}, Net: Rs.{r.json()['totalNetValue']})")
+
+    r = client.get("/api/v1/pms/stock-transfers")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Stock Transfers Query: Found {len(r.json())} transfer voucher(s)")
 
     print("\n=== ALL PARITY ENDPOINTS TESTED & PASSED 100%! ===")
 

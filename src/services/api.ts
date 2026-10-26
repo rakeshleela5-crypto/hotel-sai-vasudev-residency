@@ -1023,6 +1023,102 @@ export const hotelApi = {
     });
     if (!res.ok) throw new Error('Failed to delete general payment from PostgreSQL');
     return await res.json();
+  },
+
+  // Module 25: Multi-Godown Warehouse Masters
+  async saveGodown(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/godowns`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to save godown to PostgreSQL');
+    }
+    return await res.json();
+  },
+
+  async getGodowns(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/godowns`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async deleteGodown(godownId: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/godowns/${encodeURIComponent(godownId)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete godown from PostgreSQL');
+    return await res.json();
+  },
+
+  // Module 26: Inventory Item Groups Master
+  async saveItemGroup(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/item-groups`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to save item group to PostgreSQL');
+    }
+    return await res.json();
+  },
+
+  async getItemGroups(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/item-groups`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async deleteItemGroup(groupId: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/item-groups/${encodeURIComponent(groupId)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete item group from PostgreSQL');
+    return await res.json();
+  },
+
+  // Module 27: Stock Transfers & Issues
+  async saveStockTransfer(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/stock-transfers`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to persist stock transfer to PostgreSQL');
+    }
+    return await res.json();
+  },
+
+  async getStockTransfers(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/stock-transfers`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async deleteStockTransfer(entryNo: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/stock-transfers/${encodeURIComponent(entryNo)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete stock transfer from PostgreSQL');
+    return await res.json();
   }
 };
 

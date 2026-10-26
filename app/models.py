@@ -565,6 +565,48 @@ class GeneralPayment(Base):
     remark = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
+class Godown(Base):
+    __tablename__ = "godowns"
+
+    id = Column(Integer, primary_key=True, index=True)
+    godown_id = Column(String(100), unique=True, index=True, nullable=False) # e.g. godown-1
+    s_no = Column(Integer, default=1)
+    name = Column(String(150), unique=True, index=True, nullable=False) # e.g. Main Store, Kitchen
+    address = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class ItemGroup(Base):
+    __tablename__ = "item_groups"
+
+    id = Column(Integer, primary_key=True, index=True)
+    group_id = Column(String(100), unique=True, index=True, nullable=False) # e.g. ig-1
+    s_no = Column(Integer, default=1)
+    name = Column(String(150), unique=True, index=True, nullable=False) # e.g. Raw Material, Spices
+    head_group = Column(String(100), default="Raw_Material") # Restaurant_Item vs Raw_Material
+    no_discount = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class StockTransfer(Base):
+    __tablename__ = "stock_transfers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    entry_no = Column(String(100), unique=True, index=True, nullable=False) # e.g. ST/1/24-25
+    date = Column(String(50), nullable=False)
+    from_godown = Column(String(150), nullable=False)
+    to_godown = Column(String(150), nullable=False)
+    bill_date = Column(String(50), nullable=True)
+    bill_no = Column(String(100), nullable=True)
+    items_json = Column(Text, default="[]")
+    total_qty = Column(Float, default=0.0)
+    total_amount = Column(Float, default=0.0)
+    total_discount = Column(Float, default=0.0)
+    total_taxable = Column(Float, default=0.0)
+    total_gst_amt = Column(Float, default=0.0)
+    total_net_value = Column(Float, default=0.0)
+    remark = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
 
 
 

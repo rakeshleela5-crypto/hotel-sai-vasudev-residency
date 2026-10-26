@@ -3188,6 +3188,21 @@ export class PmsStore {
         localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(state.general_payments));
       }
 
+      // 17. Hydrate Godowns from PostgreSQL
+      if (state.godowns && state.godowns.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.GODOWNS, JSON.stringify(state.godowns));
+      }
+
+      // 18. Hydrate Item Groups from PostgreSQL
+      if (state.item_groups && state.item_groups.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.ITEM_GROUPS, JSON.stringify(state.item_groups));
+      }
+
+      // 19. Hydrate Stock Transfers from PostgreSQL
+      if (state.stock_transfers && state.stock_transfers.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.STOCK_TRANSFERS, JSON.stringify(state.stock_transfers));
+      }
+
       this.notify();
       return true;
     } catch (e) {
@@ -9328,6 +9343,7 @@ export class PmsStore {
       item.sNo = index + 1;
     });
     localStorage.setItem(STORAGE_KEYS.ITEM_GROUPS, JSON.stringify(list));
+    hotelApi.saveItemGroup(group).catch(e => console.warn('[PmsStore] Item group cloud sync note:', e));
   }
 
   static deleteItemGroup(id: string): void {
@@ -9336,6 +9352,7 @@ export class PmsStore {
       item.sNo = index + 1;
     });
     localStorage.setItem(STORAGE_KEYS.ITEM_GROUPS, JSON.stringify(list));
+    hotelApi.deleteItemGroup(id).catch(e => console.warn('[PmsStore] Item group delete sync note:', e));
   }
 
   // 2. Godowns Master (Frame 0230)
@@ -9364,6 +9381,7 @@ export class PmsStore {
       item.sNo = index + 1;
     });
     localStorage.setItem(STORAGE_KEYS.GODOWNS, JSON.stringify(list));
+    hotelApi.saveGodown(godown).catch(e => console.warn('[PmsStore] Godown cloud sync note:', e));
   }
 
   static deleteGodown(id: string): void {
@@ -9372,6 +9390,7 @@ export class PmsStore {
       item.sNo = index + 1;
     });
     localStorage.setItem(STORAGE_KEYS.GODOWNS, JSON.stringify(list));
+    hotelApi.deleteGodown(id).catch(e => console.warn('[PmsStore] Godown delete sync note:', e));
   }
 
   // 3. Purchase Bills (Frames 0280, 0300)
@@ -9506,12 +9525,14 @@ export class PmsStore {
       list.unshift(transfer);
     }
     localStorage.setItem(STORAGE_KEYS.STOCK_TRANSFERS, JSON.stringify(list));
+    hotelApi.saveStockTransfer(transfer).catch(e => console.warn('[PmsStore] Stock transfer cloud sync note:', e));
     this.notify();
   }
 
   static deleteStockTransfer(id: string): void {
     const list = this.getStockTransfers().filter(s => s.id !== id && s.entryNo !== id);
     localStorage.setItem(STORAGE_KEYS.STOCK_TRANSFERS, JSON.stringify(list));
+    hotelApi.deleteStockTransfer(id).catch(e => console.warn('[PmsStore] Stock transfer delete sync note:', e));
     this.notify();
   }
 
