@@ -19,12 +19,10 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
   targetRoom,
   onCheckoutComplete
 }) => {
-  if (!isOpen || !targetRoom) return null;
-
   const existingCheckouts = PmsStore.getCheckouts();
   const nextSeq = String(1040 + existingCheckouts.length + 1).padStart(4, '0');
   const defaultInvoiceNo = `SVR/2026-27/INV-${nextSeq}`;
-  const guest = targetRoom.currentGuest;
+  const guest = targetRoom?.currentGuest;
   const businessSettings = PmsStore.getBusinessSettings();
   const companyInfo = PmsStore.getCompanyInfo();
 
@@ -66,7 +64,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
     guest?.calculationType || businessSettings.calculationType || '12hour'
   );
   const [noOfDays, setNoOfDays] = useState(1);
-  const [perDayTariff, setPerDayTariff] = useState(targetRoom.tariff || 1800);
+  const [perDayTariff, setPerDayTariff] = useState(targetRoom?.tariff || 1800);
   const [dayWiseRent, setDayWiseRent] = useState<DayWiseRentItem[]>([]);
   const [invoiceFormat, setInvoiceFormat] = useState<'A4_Standard' | 'A5_HalfPage' | 'Detailed'>('A4_Standard');
   const [showInvoicePreview, setShowInvoicePreview] = useState(false);
@@ -134,13 +132,13 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
   }, [checkInDate, checkInTime, checkOutDate, checkOutTime, perDayTariff, calculationType, businessSettings.standardCheckoutTime]);
 
   // Food Bill automatically pulled from room account (Vasudev Rasoi POS)
-  const foodBills = PmsStore.getFoodBills().filter(f => f.roomNo === targetRoom.roomNo);
+  const foodBills = targetRoom ? PmsStore.getFoodBills().filter(f => f.roomNo === targetRoom.roomNo) : [];
   const foodBillNo = foodBills[0]?.billNo || 'VR/KOT-ROOM-FOLIO';
-  const foodAmount = foodBills.reduce((s, f) => s + f.netBillAmount, 0) || targetRoom.foodAmount || 0;
+  const foodAmount = foodBills.reduce((s, f) => s + f.netBillAmount, 0) || targetRoom?.foodAmount || 0;
 
   // Tax and Special Toggles
   const [isMyCheckout, setIsMyCheckout] = useState(false);
-  const activeInvoiceNo = isMyCheckout ? `SVR/2026-27/PERS-${targetRoom.roomNo}` : defaultInvoiceNo;
+  const activeInvoiceNo = isMyCheckout ? `SVR/2026-27/PERS-${targetRoom?.roomNo || ''}` : defaultInvoiceNo;
   const [isTaxInclusive, setIsTaxInclusive] = useState(true); // Default True: Published tariffs are strictly GST-inclusive
   const [splitFolioMode, setSplitFolioMode] = useState<'single' | 'split'>('single');
   const [isComplimentary, setIsComplimentary] = useState(false);
@@ -154,18 +152,18 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
   const canChangeDateTime = PmsStore.hasPermission('Change_Date&Time');
   
   // Dynamic Advance Calculation
-  const roomAdvanceReceipts = PmsStore.getAdvanceReceiptsByRoom(targetRoom.roomNo);
+  const roomAdvanceReceipts = targetRoom ? PmsStore.getAdvanceReceiptsByRoom(targetRoom.roomNo) : [];
   const totalAdvanceFromReceipts = roomAdvanceReceipts.reduce((sum, r) => sum + Number(r.amount), 0);
   const [advanceDeducted, setAdvanceDeducted] = useState<number>(
     totalAdvanceFromReceipts > 0 ? totalAdvanceFromReceipts : (guest?.advancePaid || 0)
   );
 
   // Pending KOTs enforcement
-  const [pendingKots, setPendingKots] = useState(PmsStore.getPendingKotsByRoom(targetRoom.roomNo));
+  const [pendingKots, setPendingKots] = useState(() => targetRoom ? PmsStore.getPendingKotsByRoom(targetRoom.roomNo) : []);
   const pendingKotAmount = pendingKots.reduce((sum, k) => sum + k.totalAmount, 0);
 
   const handleClearKotsToFoodBill = () => {
-    if (pendingKots.length === 0) return;
+    if (!targetRoom || pendingKots.length === 0) return;
     const billRecord: PmsFoodBill = {
       billNo: `VR/FB-${Math.floor(250 + Math.random() * 50)}/26-27`,
       date: checkOutDate,
@@ -325,6 +323,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
 
   const handleCheckoutSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!targetRoom) return;
 
     if (pendingKots.length > 0) {
       alert("Hard Interlock 1: Pending Kitchen Orders Block:\n\nCannot submit checkout because KOT amount is greater than ₹0! Please convert all pending KOTs to Food Bill before checkout (Click '⚡ Clear to Food Bill').");
@@ -498,6 +497,8 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
     onCheckoutComplete(checkoutData);
     setShowInvoicePreview(true);
   };
+
+  if (!isOpen || !targetRoom) return null;
 
   return (
     <div className="pms-submodal-overlay" onClick={onClose}>

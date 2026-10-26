@@ -45,8 +45,6 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
   defaultServiceType,
   onKotSaved
 }) => {
-  if (!isOpen) return null;
-
   const occupiedRooms = PmsStore.getRooms().filter(r => r.status === 'occupied');
   const allMenuItems = PmsStore.getMenuItems().length > 0 ? PmsStore.getMenuItems() : INITIAL_MENU_ITEMS;
 
@@ -391,6 +389,8 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
       setIsProcessing(false);
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="pms-submodal-overlay" onClick={onClose}>

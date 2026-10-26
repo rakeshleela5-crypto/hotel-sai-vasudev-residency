@@ -19,8 +19,6 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
   defaultTableNo,
   onBillSaved
 }) => {
-  if (!isOpen) return null;
-
   const tables = PmsStore.getTables();
   const occupiedRooms = PmsStore.getRooms().filter(r => r.status === 'occupied');
   const companyInfo = PmsStore.getCompanyInfo();
@@ -310,15 +308,7 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
         activeSession.status = 'Settled';
         PmsStore.saveTableSession(activeSession);
       }
-      const allTables = PmsStore.getTables();
-      const cleanT = selectedTable.replace(/^table\s+/i, '').trim().toLowerCase();
-      const updatedTables = allTables.map(t => {
-        if (t.tableName.replace(/^table\s+/i, '').trim().toLowerCase() === cleanT) {
-          return { ...t, status: 'Vacant' as const, activeSessionId: undefined };
-        }
-        return t;
-      });
-      localStorage.setItem('svr_tables', JSON.stringify(updatedTables));
+      PmsStore.vacateTable(selectedTable);
     }
 
     if (onBillSaved) {
@@ -332,6 +322,8 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
       onClose();
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="pms-submodal-overlay" onClick={onClose}>

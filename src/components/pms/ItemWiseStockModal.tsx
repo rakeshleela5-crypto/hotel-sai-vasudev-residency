@@ -21,8 +21,6 @@ export const ItemWiseStockModal: React.FC<ItemWiseStockModalProps> = ({
     PmsStore.getItemWiseStock('Boondi Raita', '01-07-2025', '19-07-2025')
   );
 
-  if (!isOpen) return null;
-
   const handleFetchStock = () => {
     setStockReport(PmsStore.getItemWiseStock(selectedItem, fromDate, toDate));
   };
@@ -63,6 +61,8 @@ export const ItemWiseStockModal: React.FC<ItemWiseStockModalProps> = ({
     }
     return Array.from(set);
   }, []);
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">

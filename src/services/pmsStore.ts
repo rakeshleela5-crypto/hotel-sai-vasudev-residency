@@ -4718,6 +4718,7 @@ export class PmsStore {
     if (table) {
       table.status = 'Vacant';
       table.activeKotNos = [];
+      table.activeSessionId = undefined;
       this.saveTable(table);
     }
   }

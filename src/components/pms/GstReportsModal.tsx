@@ -34,8 +34,6 @@ export const GstReportsModal: React.FC<GstReportsModalProps> = ({
     }
   }, [initialTab]);
 
-  if (!isOpen) return null;
-
   const b2bData: PmsB2BInvoiceRecord[] = PmsStore.getB2BReport(fromDate, toDate);
   const b2cData: PmsB2CInvoiceRecord[] = PmsStore.getB2CReport(fromDate, toDate);
   const consolidatedData: PmsConsolidatedGstItem[] = PmsStore.getConsolidatedGstReport(fromDate, toDate);
@@ -185,6 +183,8 @@ export const GstReportsModal: React.FC<GstReportsModalProps> = ({
     const url = `https://api.whatsapp.com/send?phone=${mobileWithCode}&text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="pms-modal-backdrop" style={{ zIndex: 1200 }}>
