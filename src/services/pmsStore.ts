@@ -3153,6 +3153,21 @@ export class PmsStore {
         localStorage.setItem(STORAGE_KEYS.GROUP_BOOKINGS, JSON.stringify(state.group_bookings));
       }
 
+      // 10. Hydrate Completed Checkouts from PostgreSQL
+      if (state.checkouts && state.checkouts.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.CHECKOUTS, JSON.stringify(state.checkouts));
+      }
+
+      // 11. Hydrate Advance Receipts from PostgreSQL
+      if (state.advance_receipts && state.advance_receipts.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify(state.advance_receipts));
+      }
+
+      // 12. Hydrate Room Shifts from PostgreSQL
+      if (state.room_shifts && state.room_shifts.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.ROOM_SHIFTS, JSON.stringify(state.room_shifts));
+      }
+
       this.notify();
       return true;
     } catch (e) {
@@ -7893,13 +7908,17 @@ export class PmsStore {
       console.warn('[PmsStore] Checkout cashier settlement note:', finErr);
     }
 
-    // Cloud sync: mirror check-out to Railway PostgreSQL
+    // Cloud sync: mirror full check-out to Railway PostgreSQL
+    hotelApi.saveCheckout(checkout).then(res => {
+      console.log('[PmsStore] Checkout bill persisted to PostgreSQL:', res);
+    }).catch(e => console.warn('[PmsStore] Background checkout cloud sync note:', e));
+
     hotelApi.checkOutBooking({
       booking_ref: checkout.invoiceNo || `SVR-ROOM-${checkout.roomNo}`,
       settlement_payment_mode: checkout.paymentMode || 'Cash',
       settlement_amount_paid: checkout.netPayable || 0,
       processed_by: 'Reception Desk'
-    }).catch(e => console.warn('[PmsStore] Background checkout cloud sync note:', e));
+    }).catch(e => console.warn('[PmsStore] Background checkout booking status note:', e));
 
     this.notify();
   }
@@ -7911,6 +7930,11 @@ export class PmsStore {
     const remaining = list.filter(c => c.invoiceNo !== invoiceNo);
     localStorage.setItem(STORAGE_KEYS.CHECKOUTS, JSON.stringify(remaining));
     localStorage.removeItem('hotel_pms_checkouts');
+
+    // Remove from PostgreSQL
+    hotelApi.deleteCheckout(invoiceNo).catch(e => {
+      console.warn('[PmsStore] Background delete checkout deferred:', e);
+    });
 
     // Also remove mirrored cashier receipts
     try {
@@ -8024,7 +8048,23 @@ export class PmsStore {
       console.warn('[PmsStore] Advance cashier receipt recording note:', finErr);
     }
 
-    // Cloud sync: mirror Advance Receipt to Railway PostgreSQL
+    // Cloud sync: Persist Advance Receipt to Railway PostgreSQL
+    hotelApi.saveAdvanceReceipt({
+      receiptNo: receipt.receiptNo,
+      voucherNo: receipt.voucherNo,
+      date: receipt.date,
+      time: receipt.time,
+      voucherName: receipt.voucherName,
+      roomNo: receipt.roomNo,
+      guestName: receipt.guestName,
+      mobile: receipt.mobile,
+      amount: receipt.amount,
+      paymentMode: receipt.paymentMode,
+      remark: receipt.remark
+    }).then(res => {
+      console.log('[PmsStore] Advance receipt persisted to PostgreSQL:', res);
+    }).catch(e => console.warn('[PmsStore] Background advance receipt cloud sync note:', e));
+
     const advMode = (receipt.paymentMode || 'Cash').toString().toLowerCase();
     const resolvedAdvMode = advMode.includes('online') || advMode.includes('upi') ? 'UPI' : (advMode.includes('card') ? 'Card' : 'Cash');
     hotelApi.recordPayment({
@@ -8044,6 +8084,11 @@ export class PmsStore {
     const target = list.find(r => r.receiptNo === receiptNo);
     const remaining = list.filter(r => r.receiptNo !== receiptNo);
     localStorage.setItem(STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify(remaining));
+
+    // Remove from PostgreSQL
+    hotelApi.deleteAdvanceReceipt(receiptNo).catch(e => {
+      console.warn('[PmsStore] Background delete advance receipt deferred:', e);
+    });
 
     if (target) {
       // Decrement advance from active room guest

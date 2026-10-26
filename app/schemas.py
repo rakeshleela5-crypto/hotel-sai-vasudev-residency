@@ -747,7 +747,85 @@ class GroupBookingResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class CheckoutRecordCreate(BaseModel):
+    invoice_no: Optional[str] = None
+    invoiceNo: Optional[str] = None
+    room_no: Optional[str] = None
+    roomNo: Optional[str] = None
+    room_type: Optional[str] = "DELUXE"
+    roomType: Optional[str] = None
+    guest_name: Optional[str] = None
+    guestName: Optional[str] = None
+    guest_phone: Optional[str] = None
+    guestPhone: Optional[str] = None
+    check_in_date: Optional[str] = None
+    checkInDate: Optional[str] = None
+    check_in_time: Optional[str] = None
+    checkInTime: Optional[str] = None
+    check_out_date: Optional[str] = None
+    checkOutDate: Optional[str] = None
+    check_out_time: Optional[str] = None
+    checkOutTime: Optional[str] = None
+    calculation_type: Optional[str] = "12hour"
+    calculationType: Optional[str] = None
+    number_of_days: Optional[int] = 1
+    numberOfDays: Optional[int] = None
+    per_day_tariff: Optional[float] = 0.0
+    perDayTariff: Optional[float] = None
+    total_room_rent: Optional[float] = 0.0
+    totalRoomRent: Optional[float] = None
+    food_amount: Optional[float] = 0.0
+    foodAmount: Optional[float] = None
+    gst_percent: Optional[float] = 12.0
+    gstPercent: Optional[float] = None
+    gst_amount: Optional[float] = 0.0
+    gstAmount: Optional[float] = None
+    cgst_amount: Optional[float] = 0.0
+    cgstAmount: Optional[float] = None
+    sgst_amount: Optional[float] = 0.0
+    sgstAmount: Optional[float] = None
+    add_others: Optional[float] = 0.0
+    addOthers: Optional[float] = None
+    less_discount: Optional[float] = 0.0
+    lessDiscount: Optional[float] = None
+    advance_deducted: Optional[float] = 0.0
+    advanceDeducted: Optional[float] = None
+    bill_amount: Optional[float] = 0.0
+    billAmount: Optional[float] = None
+    net_payable: Optional[float] = 0.0
+    netPayable: Optional[float] = None
+    payment_mode: Optional[str] = "Cash"
+    paymentMode: Optional[str] = None
+    payments: Optional[List[Dict[str, Any]]] = None
+    payments_json: Optional[str] = None
+    checkout_remark: Optional[str] = None
+    checkoutRemark: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    country: Optional[str] = "India"
+    pin_code: Optional[str] = None
+    pinCode: Optional[str] = None
+    sac_code: Optional[str] = "996311"
+    sacCode: Optional[str] = None
+    invoice_format: Optional[str] = "A4_Standard"
+    invoiceFormat: Optional[str] = None
 
-
-
+class AdvanceReceiptCreate(BaseModel):
+    receipt_no: Optional[str] = None
+    receiptNo: Optional[str] = None
+    voucher_no: Optional[str] = None
+    voucherNo: Optional[str] = None
+    date: Optional[str] = None
+    time: Optional[str] = None
+    voucher_name: Optional[str] = "Advance_Receipt"
+    voucherName: Optional[str] = None
+    room_no: Optional[str] = None
+    roomNo: Optional[str] = None
+    guest_name: Optional[str] = None
+    guestName: Optional[str] = None
+    mobile: Optional[str] = None
+    amount: Optional[float] = 0.0
+    payment_mode: Optional[str] = "Cash"
+    paymentMode: Optional[str] = None
+    remark: Optional[str] = None
 

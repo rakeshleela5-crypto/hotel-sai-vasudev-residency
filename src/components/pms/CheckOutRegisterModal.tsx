@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { PmsCheckOutDetail, BillFormatType } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
+import { hotelApi } from '../../services/api';
 import './pmsStyles.css';
 
 interface CheckOutRegisterModalProps {
@@ -31,6 +32,26 @@ export const CheckOutRegisterModal: React.FC<CheckOutRegisterModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setCheckouts(PmsStore.getCheckouts());
+      const unsub = PmsStore.subscribe(() => {
+        setCheckouts(PmsStore.getCheckouts());
+      });
+
+      hotelApi.getCheckouts()
+        .then(pgCheckouts => {
+          if (Array.isArray(pgCheckouts) && pgCheckouts.length > 0) {
+            const current = PmsStore.getCheckouts();
+            const map = new Map(current.map(c => [c.invoiceNo, c]));
+            pgCheckouts.forEach(c => map.set(c.invoiceNo, c));
+            const merged = Array.from(map.values());
+            localStorage.setItem('svr_pms_checkouts', JSON.stringify(merged));
+            setCheckouts(merged);
+          }
+        })
+        .catch(err => {
+          console.warn('[CheckOutRegisterModal] PostgreSQL sync fallback to cache:', err);
+        });
+
+      return () => unsub();
     }
   }, [isOpen]);
 

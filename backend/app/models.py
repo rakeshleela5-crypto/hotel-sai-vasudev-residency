@@ -448,5 +448,60 @@ class GroupBooking(Base):
     status = Column(String(50), default="Confirmed")
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
+class CheckoutRecord(Base):
+    __tablename__ = "checkout_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    invoice_no = Column(String(100), unique=True, index=True, nullable=False)
+    room_no = Column(String(50), index=True, nullable=False)
+    room_type = Column(String(100), default="DELUXE")
+    guest_name = Column(String(150), nullable=False)
+    guest_phone = Column(String(50), nullable=True)
+    check_in_date = Column(String(50), nullable=False)
+    check_in_time = Column(String(50), nullable=True)
+    check_out_date = Column(String(50), nullable=False)
+    check_out_time = Column(String(50), nullable=True)
+    calculation_type = Column(String(50), default="12hour")
+    number_of_days = Column(Integer, default=1)
+    per_day_tariff = Column(Float, default=0.0)
+    total_room_rent = Column(Float, default=0.0)
+    food_amount = Column(Float, default=0.0)
+    gst_percent = Column(Float, default=12.0)
+    gst_amount = Column(Float, default=0.0)
+    cgst_amount = Column(Float, default=0.0)
+    sgst_amount = Column(Float, default=0.0)
+    add_others = Column(Float, default=0.0)
+    less_discount = Column(Float, default=0.0)
+    advance_deducted = Column(Float, default=0.0)
+    bill_amount = Column(Float, default=0.0)
+    net_payable = Column(Float, default=0.0)
+    payment_mode = Column(String(50), default="Cash")
+    payments_json = Column(Text, default="[]")
+    checkout_remark = Column(Text, nullable=True)
+    city = Column(String(100), nullable=True)
+    state = Column(String(100), nullable=True)
+    country = Column(String(100), default="India")
+    pin_code = Column(String(20), nullable=True)
+    sac_code = Column(String(20), default="996311")
+    invoice_format = Column(String(50), default="A4_Standard")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class AdvanceReceipt(Base):
+    __tablename__ = "advance_receipts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    receipt_no = Column(String(100), unique=True, index=True, nullable=False)
+    voucher_no = Column(String(50), nullable=True)
+    date = Column(String(50), nullable=False)
+    time = Column(String(50), nullable=True)
+    voucher_name = Column(String(100), default="Advance_Receipt")
+    room_no = Column(String(50), index=True, nullable=False)
+    guest_name = Column(String(150), nullable=False)
+    mobile = Column(String(50), nullable=True)
+    amount = Column(Float, nullable=False)
+    payment_mode = Column(String(50), default="Cash")
+    remark = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
 
 

@@ -350,6 +350,16 @@ export const hotelApi = {
     return await res.json();
   },
 
+  async getRoomShifts(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/room-shifts`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
   async recordPayment(data: { booking_ref: string; payment_type: string; payment_mode: string; amount: number; transaction_ref?: string; notes?: string; collected_by?: string }) {
     const res = await fetch(`${API_BASE_URL}/pms/payments`, {
       method: 'POST',
@@ -836,6 +846,62 @@ export const hotelApi = {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.detail || 'Failed to cancel group booking');
     }
+    return await res.json();
+  },
+
+  // Module 19: Full Checkout & Folio Settlement Persistence
+  async saveCheckout(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/checkouts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to persist checkout to PostgreSQL');
+    }
+    return await res.json();
+  },
+
+  async getCheckouts(): Promise<any[]> {
+    const res = await fetch(`${API_BASE_URL}/pms/checkouts`);
+    if (!res.ok) throw new Error('Failed to fetch checkouts from PostgreSQL');
+    return await res.json();
+  },
+
+  async deleteCheckout(invoiceNo: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/checkouts/${encodeURIComponent(invoiceNo)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete checkout from PostgreSQL');
+    return await res.json();
+  },
+
+  // Module 20: Advance Receipts & Guest Deposits
+  async saveAdvanceReceipt(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/advance-receipts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to persist advance receipt to PostgreSQL');
+    }
+    return await res.json();
+  },
+
+  async getAdvanceReceipts(): Promise<any[]> {
+    const res = await fetch(`${API_BASE_URL}/pms/advance-receipts`);
+    if (!res.ok) throw new Error('Failed to fetch advance receipts from PostgreSQL');
+    return await res.json();
+  },
+
+  async deleteAdvanceReceipt(receiptNo: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/advance-receipts/${encodeURIComponent(receiptNo)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete advance receipt from PostgreSQL');
     return await res.json();
   }
 };

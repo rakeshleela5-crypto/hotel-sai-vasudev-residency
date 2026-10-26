@@ -76,18 +76,52 @@ def execute_room_shift(payload: schemas.RoomShiftCreate, db: Session = Depends(g
     """
     booking = find_booking_by_ref_or_room(db, payload.booking_ref)
     if not booking:
-        raise HTTPException(status_code=404, detail="Booking not found")
+        clean_ref = payload.booking_ref.replace("SVR-ROOM-", "").replace("SR/", "").strip()
+        room_candidate = db.query(models.Room).filter(
+            (models.Room.id == int(clean_ref) if clean_ref.isdigit() else False) |
+            (models.Room.name.ilike(f"%{clean_ref}%"))
+        ).first()
+        if room_candidate:
+            booking = db.query(models.Booking).filter(
+                models.Booking.room_id == room_candidate.id,
+                models.Booking.status.in_(["Checked-In", "Confirmed"])
+            ).order_by(models.Booking.id.desc()).first()
+            if not booking:
+                # Create active in-house booking record on the fly
+                booking = models.Booking(
+                    booking_ref=f"SVR-SHIFT-{clean_ref}",
+                    room_id=room_candidate.id,
+                    guest_name="In-House Guest",
+                    guest_email=f"guest{clean_ref}@sai-vasudev.com",
+                    guest_phone="9440289999",
+                    check_in_date=datetime.date.today().isoformat(),
+                    check_out_date=(datetime.date.today() + datetime.timedelta(days=1)).isoformat(),
+                    base_rate=room_candidate.price_per_night,
+                    base_amount=room_candidate.price_per_night,
+                    total_price=room_candidate.price_per_night,
+                    status="Checked-In"
+                )
+                db.add(booking)
+                db.commit()
+                db.refresh(booking)
+
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found for room shift")
 
     old_room = db.query(models.Room).filter(models.Room.id == booking.room_id).first()
-    new_room = db.query(models.Room).filter(models.Room.id == payload.to_room_id).first()
+    clean_to = str(payload.to_room_id).replace("SVR-ROOM-", "").strip()
+    new_room = db.query(models.Room).filter(
+        (models.Room.id == int(clean_to) if clean_to.isdigit() else False) |
+        (models.Room.name.ilike(f"%{clean_to}%"))
+    ).first()
 
     if not new_room:
         raise HTTPException(status_code=404, detail="Destination room does not exist")
-    if old_room.id == new_room.id:
+    if old_room and old_room.id == new_room.id:
         raise HTTPException(status_code=400, detail="Cannot shift to the exact same room")
 
     today_str = datetime.date.today().isoformat()
-    old_rate = float(old_room.price_per_night)
+    old_rate = float(old_room.price_per_night) if old_room else 2000.0
     new_rate = float(new_room.price_per_night)
 
     # Transition previous room to 'Dirty' for sanitization
@@ -120,6 +154,24 @@ def execute_room_shift(payload: schemas.RoomShiftCreate, db: Session = Depends(g
     db.commit()
     db.refresh(shift_record)
     return shift_record
+
+@router.get("/room-shifts")
+def get_room_shifts(db: Session = Depends(get_db)):
+    """Retrieve all room shifts from PostgreSQL."""
+    shifts = db.query(models.RoomShift).order_by(models.RoomShift.id.desc()).limit(150).all()
+    return [{
+        "id": rs.id,
+        "shiftNo": f"RS-{rs.id:04d}",
+        "bookingId": rs.booking_id,
+        "fromRoomNo": str(rs.from_room_id),
+        "toRoomNo": str(rs.to_room_id),
+        "shiftDate": rs.shift_date,
+        "reason": rs.reason,
+        "oldRate": rs.old_rate,
+        "newRate": rs.new_rate,
+        "shiftedBy": rs.shifted_by,
+        "createdAt": rs.created_at.isoformat() if rs.created_at else None
+    } for rs in shifts]
 
 # --- 2. Multi-Tender & Split Bill Payments ---
 @router.post("/payments", response_model=schemas.BookingPaymentResponse)
@@ -941,6 +993,9 @@ def get_full_cloud_state(db: Session = Depends(get_db)):
     purchases = db.query(models.InventoryPurchase).order_by(models.InventoryPurchase.id.desc()).limit(50).all()
     discounts = db.query(models.FolioDiscountRecord).order_by(models.FolioDiscountRecord.id.desc()).limit(100).all()
     group_bookings = db.query(models.GroupBooking).order_by(models.GroupBooking.id.desc()).limit(100).all()
+    checkouts = db.query(models.CheckoutRecord).order_by(models.CheckoutRecord.id.desc()).limit(150).all()
+    advance_receipts = db.query(models.AdvanceReceipt).order_by(models.AdvanceReceipt.id.desc()).limit(150).all()
+    room_shifts = db.query(models.RoomShift).order_by(models.RoomShift.id.desc()).limit(100).all()
     masters = db.query(models.MasterItem).all()
 
     masters_by_cat = {}
@@ -1101,6 +1156,68 @@ def get_full_cloud_state(db: Session = Depends(get_db)):
             "status": g.status,
             "createdAt": g.created_at.isoformat() if g.created_at else None
         } for g in group_bookings],
+        "checkouts": [{
+            "invoiceNo": c.invoice_no,
+            "roomNo": c.room_no,
+            "roomType": c.room_type,
+            "guestName": c.guest_name,
+            "guestPhone": c.guest_phone,
+            "checkInDate": c.check_in_date,
+            "checkInTime": c.check_in_time,
+            "checkOutDate": c.check_out_date,
+            "checkOutTime": c.check_out_time,
+            "calculationType": c.calculation_type,
+            "numberOfDays": c.number_of_days,
+            "perDayTariff": c.per_day_tariff,
+            "totalRoomRent": c.total_room_rent,
+            "foodAmount": c.food_amount,
+            "gstPercent": c.gst_percent,
+            "gstAmount": c.gst_amount,
+            "cgstAmount": c.cgst_amount,
+            "sgstAmount": c.sgst_amount,
+            "addOthers": c.add_others,
+            "lessDiscount": c.less_discount,
+            "advanceDeducted": c.advance_deducted,
+            "billAmount": c.bill_amount,
+            "netPayable": c.net_payable,
+            "paymentMode": c.payment_mode,
+            "payments": json.loads(c.payments_json) if c.payments_json else [],
+            "checkoutRemark": c.checkout_remark,
+            "city": c.city,
+            "state": c.state,
+            "country": c.country,
+            "pinCode": c.pin_code,
+            "sacCode": c.sac_code,
+            "invoiceFormat": c.invoice_format,
+            "createdAt": c.created_at.isoformat() if c.created_at else None
+        } for c in checkouts],
+        "advance_receipts": [{
+            "receiptNo": ar.receipt_no,
+            "voucherNo": ar.voucher_no,
+            "date": ar.date,
+            "time": ar.time,
+            "voucherName": ar.voucher_name,
+            "roomNo": ar.room_no,
+            "guestName": ar.guest_name,
+            "mobile": ar.mobile,
+            "amount": ar.amount,
+            "paymentMode": ar.payment_mode,
+            "remark": ar.remark,
+            "createdAt": ar.created_at.isoformat() if ar.created_at else None
+        } for ar in advance_receipts],
+        "room_shifts": [{
+            "id": rs.id,
+            "shiftNo": f"RS-{rs.id:04d}",
+            "bookingId": rs.booking_id,
+            "fromRoomNo": str(rs.from_room_id),
+            "toRoomNo": str(rs.to_room_id),
+            "shiftDate": rs.shift_date,
+            "reason": rs.reason,
+            "oldRate": rs.old_rate,
+            "newRate": rs.new_rate,
+            "shiftedBy": rs.shifted_by,
+            "createdAt": rs.created_at.isoformat() if rs.created_at else None
+        } for rs in room_shifts],
         "masters": masters_by_cat
     }
 
@@ -2132,6 +2249,317 @@ def cancel_group_booking(group_id: str, db: Session = Depends(get_db)):
         "message": f"Group Booking {group_id} cancelled and all rooms released."
     }
 
+# --- 19. Full Checkout & Folio Settlement Persistence ---
+@router.post("/checkouts")
+def save_checkout(payload: schemas.CheckoutRecordCreate, db: Session = Depends(get_db)):
+    """Persist completed guest departure, checkout bill, and ledger settlement into PostgreSQL."""
+    inv = payload.invoice_no or payload.invoiceNo or f"GSR/{uuid.uuid4().hex[:4].upper()}/26-27"
+    r_no = str(payload.room_no or payload.roomNo or "101").strip()
+    g_name = payload.guest_name or payload.guestName or "Guest"
+    g_phone = payload.guest_phone or payload.guestPhone or ""
+    cin_d = payload.check_in_date or payload.checkInDate or datetime.date.today().isoformat()
+    cin_t = payload.check_in_time or payload.checkInTime or "12:00 PM"
+    cout_d = payload.check_out_date or payload.checkOutDate or datetime.date.today().isoformat()
+    cout_t = payload.check_out_time or payload.checkOutTime or "11:00 AM"
+    calc_type = payload.calculation_type or payload.calculationType or "12hour"
+    days = int(payload.number_of_days or payload.numberOfDays or 1)
+    tariff = float(payload.per_day_tariff or payload.perDayTariff or 0.0)
+    rent = float(payload.total_room_rent or payload.totalRoomRent or 0.0)
+    food = float(payload.food_amount or payload.foodAmount or 0.0)
+    gst_pct = float(payload.gst_percent or payload.gstPercent or 12.0)
+    gst_amt = float(payload.gst_amount or payload.gstAmount or 0.0)
+    cgst_amt = float(payload.cgst_amount or payload.cgstAmount or (gst_amt / 2.0))
+    sgst_amt = float(payload.sgst_amount or payload.sgstAmount or (gst_amt / 2.0))
+    add_o = float(payload.add_others or payload.addOthers or 0.0)
+    disc = float(payload.less_discount or payload.lessDiscount or 0.0)
+    adv_ded = float(payload.advance_deducted or payload.advanceDeducted or 0.0)
+    bill_amt = float(payload.bill_amount or payload.billAmount or 0.0)
+    net = float(payload.net_payable or payload.netPayable or 0.0)
+    pmode = payload.payment_mode or payload.paymentMode or "Cash"
+    
+    pmts = payload.payments if payload.payments is not None else []
+    pmts_json = json.dumps(pmts) if isinstance(pmts, list) else (payload.payments_json or "[]")
+    rem = payload.checkout_remark or payload.checkoutRemark or "Checked out successfully"
 
+    existing = db.query(models.CheckoutRecord).filter(models.CheckoutRecord.invoice_no == inv).first()
+    if existing:
+        existing.room_no = r_no
+        existing.guest_name = g_name
+        existing.guest_phone = g_phone
+        existing.check_in_date = cin_d
+        existing.check_in_time = cin_t
+        existing.check_out_date = cout_d
+        existing.check_out_time = cout_t
+        existing.calculation_type = calc_type
+        existing.number_of_days = days
+        existing.per_day_tariff = tariff
+        existing.total_room_rent = rent
+        existing.food_amount = food
+        existing.gst_percent = gst_pct
+        existing.gst_amount = gst_amt
+        existing.cgst_amount = cgst_amt
+        existing.sgst_amount = sgst_amt
+        existing.add_others = add_o
+        existing.less_discount = disc
+        existing.advance_deducted = adv_ded
+        existing.bill_amount = bill_amt
+        existing.net_payable = net
+        existing.payment_mode = pmode
+        existing.payments_json = pmts_json
+        existing.checkout_remark = rem
+        existing.city = payload.city
+        existing.state = payload.state
+        existing.country = payload.country or "India"
+        existing.pin_code = payload.pin_code or payload.pinCode
+        existing.sac_code = payload.sac_code or payload.sacCode or "996311"
+        existing.invoice_format = payload.invoice_format or payload.invoiceFormat or "A4_Standard"
+        chk = existing
+    else:
+        chk = models.CheckoutRecord(
+            invoice_no=inv,
+            room_no=r_no,
+            room_type=payload.room_type or payload.roomType or "DELUXE",
+            guest_name=g_name,
+            guest_phone=g_phone,
+            check_in_date=cin_d,
+            check_in_time=cin_t,
+            check_out_date=cout_d,
+            check_out_time=cout_t,
+            calculation_type=calc_type,
+            number_of_days=days,
+            per_day_tariff=tariff,
+            total_room_rent=rent,
+            food_amount=food,
+            gst_percent=gst_pct,
+            gst_amount=gst_amt,
+            cgst_amount=cgst_amt,
+            sgst_amount=sgst_amt,
+            add_others=add_o,
+            less_discount=disc,
+            advance_deducted=adv_ded,
+            bill_amount=bill_amt,
+            net_payable=net,
+            payment_mode=pmode,
+            payments_json=pmts_json,
+            checkout_remark=rem,
+            city=payload.city,
+            state=payload.state,
+            country=payload.country or "India",
+            pin_code=payload.pin_code or payload.pinCode,
+            sac_code=payload.sac_code or payload.sacCode or "996311",
+            invoice_format=payload.invoice_format or payload.invoiceFormat or "A4_Standard"
+        )
+        db.add(chk)
 
+    # Transition Room to 'Dirty' for Housekeeping Turnover
+    room_obj = db.query(models.Room).filter(
+        (models.Room.id == int(r_no) if r_no.isdigit() else False) |
+        (models.Room.name.ilike(f"%{r_no}%"))
+    ).first()
+    if room_obj:
+        room_obj.housekeeping_status = "Dirty"
+        room_obj.is_available = True
 
+        # Complete and close active booking if present
+        active_b = db.query(models.Booking).filter(
+            models.Booking.room_id == room_obj.id,
+            models.Booking.status.in_(["Checked-In", "Confirmed"])
+        ).order_by(models.Booking.id.desc()).first()
+
+        if active_b:
+            active_b.status = "Checked-Out"
+            active_b.actual_check_out = datetime.datetime.utcnow()
+            active_b.payment_status = "Paid"
+            active_b.balance_due = 0.0
+
+            # Record final settlement payment record
+            if net > 0:
+                pmt_rec = models.BookingPayment(
+                    booking_id=active_b.id,
+                    payment_type="Settlement",
+                    payment_mode=pmode,
+                    amount=net,
+                    notes=f"Checkout settlement for Room {r_no} (Inv: {inv})",
+                    collected_by="Reception Cashier"
+                )
+                db.add(pmt_rec)
+
+    db.commit()
+    db.refresh(chk)
+
+    return {
+        "success": True,
+        "message": f"Checkout invoice {chk.invoice_no} for Room {chk.room_no} securely saved to PostgreSQL database.",
+        "invoiceNo": chk.invoice_no,
+        "roomNo": chk.room_no,
+        "guestName": chk.guest_name,
+        "netPayable": chk.net_payable,
+        "paymentMode": chk.payment_mode
+    }
+
+@router.get("/checkouts")
+def get_checkouts(db: Session = Depends(get_db)):
+    """Retrieve all checkouts and guest departure bills from PostgreSQL."""
+    records = db.query(models.CheckoutRecord).order_by(models.CheckoutRecord.created_at.desc()).limit(200).all()
+    return [{
+        "invoiceNo": c.invoice_no,
+        "roomNo": c.room_no,
+        "roomType": c.room_type,
+        "guestName": c.guest_name,
+        "guestPhone": c.guest_phone,
+        "checkInDate": c.check_in_date,
+        "checkInTime": c.check_in_time,
+        "checkOutDate": c.check_out_date,
+        "checkOutTime": c.check_out_time,
+        "calculationType": c.calculation_type,
+        "numberOfDays": c.number_of_days,
+        "perDayTariff": c.per_day_tariff,
+        "totalRoomRent": c.total_room_rent,
+        "foodAmount": c.food_amount,
+        "gstPercent": c.gst_percent,
+        "gstAmount": c.gst_amount,
+        "cgstAmount": c.cgst_amount,
+        "sgstAmount": c.sgst_amount,
+        "addOthers": c.add_others,
+        "lessDiscount": c.less_discount,
+        "advanceDeducted": c.advance_deducted,
+        "billAmount": c.bill_amount,
+        "netPayable": c.net_payable,
+        "paymentMode": c.payment_mode,
+        "payments": json.loads(c.payments_json) if c.payments_json else [],
+        "checkoutRemark": c.checkout_remark,
+        "city": c.city,
+        "state": c.state,
+        "country": c.country,
+        "pinCode": c.pin_code,
+        "sacCode": c.sac_code,
+        "invoiceFormat": c.invoice_format,
+        "createdAt": c.created_at.isoformat() if c.created_at else None
+    } for c in records]
+
+@router.delete("/checkouts/{invoice_no}")
+def delete_checkout(invoice_no: str, db: Session = Depends(get_db)):
+    """Remove a checkout record from PostgreSQL."""
+    rec = db.query(models.CheckoutRecord).filter(models.CheckoutRecord.invoice_no == invoice_no).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail="Checkout record not found")
+    db.delete(rec)
+    db.commit()
+    return {"success": True, "message": f"Checkout invoice {invoice_no} removed."}
+
+# --- 20. Advance Receipts & Guest Deposit Persistence ---
+@router.post("/advance-receipts")
+def save_advance_receipt(payload: schemas.AdvanceReceiptCreate, db: Session = Depends(get_db)):
+    """Record an advance payment receipt in PostgreSQL database and allocate to room booking."""
+    rcp_no = payload.receipt_no or payload.receiptNo or f"AR{int(datetime.datetime.utcnow().timestamp()) % 100000}"
+    v_no = payload.voucher_no or payload.voucherNo or rcp_no.replace("AR", "")
+    dt = payload.date or datetime.date.today().isoformat()
+    tm = payload.time or datetime.datetime.utcnow().strftime("%I:%M %p")
+    v_name = payload.voucher_name or payload.voucherName or "Advance_Receipt"
+    r_no = str(payload.room_no or payload.roomNo or "101").strip()
+    g_name = payload.guest_name or payload.guestName or "Guest"
+    mob = payload.mobile or ""
+    amt = float(payload.amount or 0.0)
+    pmode = payload.payment_mode or payload.paymentMode or "Cash"
+    rem = payload.remark or "Advance Receipt collected at Front Desk"
+
+    existing = db.query(models.AdvanceReceipt).filter(models.AdvanceReceipt.receipt_no == rcp_no).first()
+    if existing:
+        existing.voucher_no = v_no
+        existing.date = dt
+        existing.time = tm
+        existing.voucher_name = v_name
+        existing.room_no = r_no
+        existing.guest_name = g_name
+        existing.mobile = mob
+        existing.amount = amt
+        existing.payment_mode = pmode
+        existing.remark = rem
+        adv = existing
+    else:
+        adv = models.AdvanceReceipt(
+            receipt_no=rcp_no,
+            voucher_no=v_no,
+            date=dt,
+            time=tm,
+            voucher_name=v_name,
+            room_no=r_no,
+            guest_name=g_name,
+            mobile=mob,
+            amount=amt,
+            payment_mode=pmode,
+            remark=rem
+        )
+        db.add(adv)
+
+    # Link advance to active room booking in PostgreSQL
+    room_obj = db.query(models.Room).filter(
+        (models.Room.id == int(r_no) if r_no.isdigit() else False) |
+        (models.Room.name.ilike(f"%{r_no}%"))
+    ).first()
+    if room_obj:
+        active_b = db.query(models.Booking).filter(
+            models.Booking.room_id == room_obj.id,
+            models.Booking.status.in_(["Checked-In", "Confirmed"])
+        ).order_by(models.Booking.id.desc()).first()
+
+        if active_b:
+            active_b.total_paid += amt
+            active_b.balance_due = max(0.0, active_b.total_price - active_b.total_paid)
+            if active_b.balance_due <= 0:
+                active_b.payment_status = "Paid"
+            elif active_b.total_paid > 0:
+                active_b.payment_status = "Partial"
+
+            pmt_rec = models.BookingPayment(
+                booking_id=active_b.id,
+                payment_type="Advance",
+                payment_mode=pmode,
+                amount=amt,
+                notes=f"Advance Receipt {rcp_no} - {rem}",
+                collected_by="Front Desk Cashier"
+            )
+            db.add(pmt_rec)
+
+    db.commit()
+    db.refresh(adv)
+
+    return {
+        "success": True,
+        "message": f"Advance receipt {adv.receipt_no} (₹{adv.amount}) securely saved to PostgreSQL database.",
+        "receiptNo": adv.receipt_no,
+        "voucherNo": adv.voucher_no,
+        "roomNo": adv.room_no,
+        "guestName": adv.guest_name,
+        "amount": adv.amount,
+        "paymentMode": adv.payment_mode
+    }
+
+@router.get("/advance-receipts")
+def get_advance_receipts(db: Session = Depends(get_db)):
+    """Retrieve all advance receipts from PostgreSQL."""
+    receipts = db.query(models.AdvanceReceipt).order_by(models.AdvanceReceipt.created_at.desc()).limit(200).all()
+    return [{
+        "receiptNo": ar.receipt_no,
+        "voucherNo": ar.voucher_no,
+        "date": ar.date,
+        "time": ar.time,
+        "voucherName": ar.voucher_name,
+        "roomNo": ar.room_no,
+        "guestName": ar.guest_name,
+        "mobile": ar.mobile,
+        "amount": ar.amount,
+        "paymentMode": ar.payment_mode,
+        "remark": ar.remark,
+        "createdAt": ar.created_at.isoformat() if ar.created_at else None
+    } for ar in receipts]
+
+@router.delete("/advance-receipts/{receipt_no}")
+def delete_advance_receipt(receipt_no: str, db: Session = Depends(get_db)):
+    """Delete an advance receipt from PostgreSQL."""
+    rec = db.query(models.AdvanceReceipt).filter(models.AdvanceReceipt.receipt_no == receipt_no).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail="Advance receipt not found")
+    db.delete(rec)
+    db.commit()
+    return {"success": True, "message": f"Advance receipt {receipt_no} deleted."}

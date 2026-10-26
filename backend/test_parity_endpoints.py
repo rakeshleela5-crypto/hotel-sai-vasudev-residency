@@ -158,6 +158,9 @@ def test_parity_endpoints():
     assert "purchases" in state
     assert "discounts" in state
     assert "group_bookings" in state
+    assert "checkouts" in state
+    assert "advance_receipts" in state
+    assert "room_shifts" in state
     assert "masters" in state
     print(f"   [OK] Full Cloud State Hydration: {len(state['rooms'])} rooms, {len(state['food_bills'])} food bills, {len(state['expenses'])} expenses, {len(state['purchases'])} purchases, {len(state['discounts'])} discounts, {len(state['group_bookings'])} group bookings")
 
@@ -191,6 +194,70 @@ def test_parity_endpoints():
     assert r.status_code == 200
     assert len(r.json()) >= 1
     print(f"   [OK] Group Bookings Query: Found {len(r.json())} group(s)")
+
+    # 13. Checkout Persistence Test
+    chk_payload = {
+        "invoiceNo": "GSR/TEST/26-27",
+        "roomNo": "101",
+        "roomType": "DELUXE",
+        "guestName": "Test Guest Checkout",
+        "guestPhone": "9440289999",
+        "checkInDate": "2026-10-25",
+        "checkInTime": "12:00 PM",
+        "checkOutDate": "2026-10-27",
+        "checkOutTime": "11:00 AM",
+        "totalRoomRent": 3000.0,
+        "foodAmount": 400.0,
+        "gstPercent": 12.0,
+        "gstAmount": 360.0,
+        "advanceDeducted": 1000.0,
+        "netPayable": 2760.0,
+        "paymentMode": "Online",
+        "payments": [{"mode": "Online", "amount": 2760.0, "remark": "UPI Settlement"}]
+    }
+    r = client.post("/api/v1/pms/checkouts", json=chk_payload)
+    assert r.status_code == 200
+    print(f"   [OK] Checkout Persisted: {r.json()['invoiceNo']} (Net: Rs.{r.json()['netPayable']})")
+
+    r = client.get("/api/v1/pms/checkouts")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Checkouts Query: Found {len(r.json())} checkout(s)")
+
+    # 14. Advance Receipt Test
+    adv_payload = {
+        "receiptNo": "AR-TEST-001",
+        "roomNo": "101",
+        "guestName": "Test Guest Advance",
+        "mobile": "9440289999",
+        "amount": 1500.0,
+        "paymentMode": "Cash",
+        "remark": "Pilgrim group darshan advance deposit"
+    }
+    r = client.post("/api/v1/pms/advance-receipts", json=adv_payload)
+    assert r.status_code == 200
+    print(f"   [OK] Advance Receipt Persisted: {r.json()['receiptNo']} (Rs.{r.json()['amount']})")
+
+    r = client.get("/api/v1/pms/advance-receipts")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Advance Receipts Query: Found {len(r.json())} receipt(s)")
+
+    # 15. Room Shift Test
+    shift_payload = {
+        "booking_ref": "SVR-ROOM-101",
+        "to_room_id": 2,
+        "reason": "AC Cooling Issue / Upgrade",
+        "shifted_by": "Duty Manager"
+    }
+    r = client.post("/api/v1/pms/room-shift", json=shift_payload)
+    assert r.status_code == 200, f"Room shift failed: {r.text}"
+    print(f"   [OK] Room Shift Executed: From Room {r.json()['from_room_id']} to Room {r.json()['to_room_id']}")
+
+    r = client.get("/api/v1/pms/room-shifts")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Room Shifts Query: Found {len(r.json())} shift record(s)")
 
     print("\n=== ALL PARITY ENDPOINTS TESTED & PASSED 100%! ===")
 

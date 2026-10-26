@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PmsStore } from '../../services/pmsStore';
+import { hotelApi } from '../../services/api';
 import type { PmsAdvanceReceipt } from '../../types/pmsModels';
 
 interface AdvanceReceiptModalProps {
@@ -16,7 +17,34 @@ export const AdvanceReceiptModal: React.FC<AdvanceReceiptModalProps> = ({
   const [receipts, setReceipts] = useState<PmsAdvanceReceipt[]>(PmsStore.getAdvanceReceipts());
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [printingReceipt, setPrintingReceipt] = useState<PmsAdvanceReceipt | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setReceipts(PmsStore.getAdvanceReceipts());
+    const unsub = PmsStore.subscribe(() => {
+      setReceipts(PmsStore.getAdvanceReceipts());
+    });
+
+    // Sync from PostgreSQL
+    hotelApi.getAdvanceReceipts()
+      .then(pgReceipts => {
+        if (Array.isArray(pgReceipts) && pgReceipts.length > 0) {
+          const current = PmsStore.getAdvanceReceipts();
+          const map = new Map(current.map(r => [r.receiptNo, r]));
+          pgReceipts.forEach(r => map.set(r.receiptNo, r));
+          const merged = Array.from(map.values());
+          localStorage.setItem('svr_pms_advance_receipts', JSON.stringify(merged));
+          setReceipts(merged);
+        }
+      })
+      .catch(err => {
+        console.warn('[AdvanceReceiptModal] PostgreSQL sync note:', err);
+      });
+
+    return () => unsub();
+  }, [isOpen]);
 
   // Form state for "Add Reciept" modal (matching Video 06 Frame 0148 & 0154)
   const rooms = PmsStore.getRooms();
@@ -68,7 +96,7 @@ export const AdvanceReceiptModal: React.FC<AdvanceReceiptModalProps> = ({
     setIsAddModalOpen(true);
   };
 
-  const handleSaveReceipt = (e: React.FormEvent) => {
+  const handleSaveReceipt = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || Number(amount) <= 0) {
       alert('Please enter a valid advance amount.');
@@ -96,10 +124,30 @@ export const AdvanceReceiptModal: React.FC<AdvanceReceiptModalProps> = ({
       createdAt: new Date().toISOString()
     };
 
-    PmsStore.saveAdvanceReceipt(newReceipt);
-    setReceipts(PmsStore.getAdvanceReceipts());
-    setIsAddModalOpen(false);
-    setPrintingReceipt(newReceipt);
+    setIsSaving(true);
+    try {
+      await hotelApi.saveAdvanceReceipt({
+        receiptNo: newReceipt.receiptNo,
+        voucherNo: newReceipt.voucherNo,
+        date: newReceipt.date,
+        time: newReceipt.time,
+        voucherName: newReceipt.voucherName,
+        roomNo: newReceipt.roomNo,
+        guestName: newReceipt.guestName,
+        mobile: newReceipt.mobile,
+        amount: newReceipt.amount,
+        paymentMode: newReceipt.paymentMode,
+        remark: newReceipt.remark
+      });
+    } catch (err) {
+      console.warn('[AdvanceReceiptModal] PostgreSQL sync deferred to background:', err);
+    } finally {
+      PmsStore.saveAdvanceReceipt(newReceipt);
+      setReceipts(PmsStore.getAdvanceReceipts());
+      setIsSaving(false);
+      setIsAddModalOpen(false);
+      setPrintingReceipt(newReceipt);
+    }
   };
 
   const handleDeleteReceipt = (receiptNoToDelete: string) => {
@@ -455,18 +503,22 @@ export const AdvanceReceiptModal: React.FC<AdvanceReceiptModalProps> = ({
                 </button>
                 <button
                   type="submit"
+                  disabled={isSaving}
                   style={{
-                    background: '#0284c7',
+                    background: isSaving ? '#64748b' : '#0284c7',
                     color: '#ffffff',
                     border: 'none',
                     borderRadius: 4,
                     padding: '6px 16px',
                     fontSize: 12,
                     fontWeight: 700,
-                    cursor: 'pointer'
+                    cursor: isSaving ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6
                   }}
                 >
-                  Save Receipt
+                  {isSaving ? '⏳ Saving to PostgreSQL...' : '✓ Save Receipt & Sync DB'}
                 </button>
               </div>
             </form>

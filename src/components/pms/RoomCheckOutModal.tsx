@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { PmsRoom, PmsCheckOutDetail, PaymentSplit, PmsFoodBill, DayWiseRentItem, BillFormatType } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
+import { hotelApi } from '../../services/api';
 import { HotelBillFormatModal } from './HotelBillFormatModal';
 import { DecentroUpiQrModal } from './DecentroUpiQrModal';
 import { DecentroVirtualAccountModal } from './DecentroVirtualAccountModal';
@@ -321,7 +322,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
     setPaymentSplits(paymentSplits.filter((_, i) => i !== idx));
   };
 
-  const handleCheckoutSubmit = (e: React.FormEvent) => {
+  const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!targetRoom) return;
 
@@ -401,6 +402,12 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
     };
 
     // Save checkout & automatically mark room as Dirty (VACANT_DIRTY) and enqueue high-priority housekeeping
+    try {
+      await hotelApi.saveCheckout(checkoutData);
+      console.log('✅ Checkout invoice persisted directly to PostgreSQL');
+    } catch (apiErr) {
+      console.warn('⚠️ Direct PostgreSQL checkout save note:', apiErr);
+    }
     PmsStore.saveCheckout(checkoutData);
 
     // Double-Entry Journal Vouchers upon Final Checkout Settlement
@@ -1500,7 +1507,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                     cursor: isProcessing || (!isCityLedgerApproved && remainingToSettle > 0.01) ? 'not-allowed' : 'pointer'
                   }}
                 >
-                  {isProcessing ? 'Processing Settlement...' : '✓ Complete Checkout & Generate Final Tax Invoice'}
+                  {isProcessing ? '⏳ Finalizing Checkout & Syncing PostgreSQL...' : '✓ Complete Checkout & Generate Final Tax Invoice'}
                 </button>
               </div>
             </form>
