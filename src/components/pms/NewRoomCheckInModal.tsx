@@ -530,6 +530,25 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
     // Save to PmsStore & update room status to occupied
     PmsStore.saveCheckIn(checkInRecord);
 
+    // Submit official Police Station / Form C Registration Log to Railway PostgreSQL
+    hotelApi.submitPoliceStationLog({
+      booking_ref: selectedBookingRef || `SVR-ROOM-${selectedRoomNo}`,
+      guest_name: cleanName,
+      age: 35,
+      gender: 'Male',
+      nationality: nationality || 'Indian',
+      id_proof_type: documentName || 'Aadhaar Card',
+      id_proof_number: documentNo.trim() || 'VERIFIED_AT_DESK',
+      permanent_address: `${addressLine1} ${city} ${state} ${pinCode}`.trim() || 'Not Provided',
+      origin_city: comingFrom.trim() || 'Shirdi',
+      next_destination: goingTo.trim() || 'Home',
+      purpose_of_visit: purposeOfVisit || 'Temple Darshan',
+      vehicle_number: undefined,
+      is_foreign_national: nationality?.toLowerCase() !== 'india' && nationality?.toLowerCase() !== 'indian'
+    }).catch(err => {
+      console.warn('[NewRoomCheckInModal] Police registration log note:', err);
+    });
+
     // Post Early Check-In Charge to Room Account if applicable
     if (earlyCheckInCharge > 0) {
       PmsStore.postChargeToRoom(selectedRoomNo, {

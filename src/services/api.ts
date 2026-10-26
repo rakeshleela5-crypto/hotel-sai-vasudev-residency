@@ -287,7 +287,7 @@ export const hotelApi = {
     paymentStatus?: string,
     cancellationReason?: string
   ): Promise<BookingResponse> {
-    const res = await fetch(`${API_BASE_URL}/bookings/${bookingRef.trim().toUpperCase()}/status`, {
+    const res = await fetch(`${API_BASE_URL}/bookings/${encodeURIComponent(bookingRef.trim().toUpperCase())}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -296,7 +296,10 @@ export const hotelApi = {
         cancellation_reason: cancellationReason
       })
     });
-    if (!res.ok) throw new Error(`Failed to update booking status: HTTP ${res.status}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `Failed to update booking status: HTTP ${res.status}`);
+    }
     return await res.json();
   },
 
@@ -608,10 +611,192 @@ export const hotelApi = {
     return await res.json();
   },
 
+  async applyFolioDiscount(payload: { booking_ref: string; discount_amount: number; discount_percentage?: number; discount_reason: string; approved_by?: string }) {
+    const res = await fetch(`${API_BASE_URL}/pms/folio/discount`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to apply folio discount');
+    }
+    return await res.json();
+  },
+
+  async getFolioDiscounts(roomOrRef?: string) {
+    const target = roomOrRef ? encodeURIComponent(roomOrRef.trim().toUpperCase()) : 'ALL';
+    const res = await fetch(`${API_BASE_URL}/pms/folio/discounts/${target}`);
+    if (!res.ok) throw new Error('Failed to fetch folio discounts');
+    return await res.json();
+  },
+
+  async saveFoodBill(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/food-bills`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to persist food bill');
+    }
+    return await res.json();
+  },
+
+  async getFoodBills(startDate?: string, endDate?: string): Promise<any[]> {
+    const params = new URLSearchParams();
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    const res = await fetch(`${API_BASE_URL}/pms/food-bills${qs}`);
+    if (!res.ok) throw new Error('Failed to fetch food bills');
+    return await res.json();
+  },
+
+  async savePettyExpense(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/expenses`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to persist expense record');
+    }
+    return await res.json();
+  },
+
+  async getPettyExpenses(startDate?: string, endDate?: string, category?: string): Promise<any[]> {
+    const params = new URLSearchParams();
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    if (category) params.append('category', category);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    const res = await fetch(`${API_BASE_URL}/pms/expenses${qs}`);
+    if (!res.ok) throw new Error('Failed to fetch petty expenses');
+    return await res.json();
+  },
+
+  async getNightAudits(): Promise<any[]> {
+    const res = await fetch(`${API_BASE_URL}/pms/night-audits`);
+    if (!res.ok) throw new Error('Failed to fetch night audit records');
+    return await res.json();
+  },
+
+  async saveInventoryPurchase(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/inventory/purchases`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to persist purchase entry');
+    }
+    return await res.json();
+  },
+
+  async getInventoryPurchases(): Promise<any[]> {
+    const res = await fetch(`${API_BASE_URL}/pms/inventory/purchases`);
+    if (!res.ok) throw new Error('Failed to fetch inventory purchases');
+    return await res.json();
+  },
+
+  async voidKotItem(payload: { kot_id?: number; kot_number?: string; item_name: string; quantity: number; void_reason: string; voided_by?: string; table_number?: string; room_number?: string }): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/kot/void`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to void KOT item');
+    }
+    return await res.json();
+  },
+
+  async getKotVoidLogs(): Promise<any[]> {
+    const res = await fetch(`${API_BASE_URL}/pms/kot/void-logs`);
+    if (!res.ok) throw new Error('Failed to fetch KOT void logs');
+    return await res.json();
+  },
+
+  async shiftDiningTableSession(payload: { from_table: string; to_table: string; shifted_by?: string }): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/tables/shift-session`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to shift dining table');
+    }
+    return await res.json();
+  },
+
+  async mergeDiningTableSessions(payload: { source_table: string; target_table: string; merged_by?: string }): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/tables/merge-sessions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to merge dining tables');
+    }
+    return await res.json();
+  },
+
+  async encodeKeycardAccess(payload: { room_number: string; guest_name: string; check_out_time: string; card_number?: string; operator_name?: string }): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/keycards/encode`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to encode keycard');
+    }
+    return await res.json();
+  },
+
+  async extendKeycardAccess(payload: { room_number: string; new_check_out_time: string; operator_name?: string }): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/keycards/extend`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to extend keycard');
+    }
+    return await res.json();
+  },
+
+  async reportHousekeepingDiscrepancy(payload: { room_id: number; room_number: string; pms_status: string; physical_status: string; discrepancy_type: string; reported_by?: string; notes?: string }): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/housekeeping/audit-discrepancy`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to report discrepancy');
+    }
+    return await res.json();
+  },
+
+  async getHousekeepingDiscrepancies(): Promise<any[]> {
+    const res = await fetch(`${API_BASE_URL}/pms/housekeeping/discrepancies`);
+    if (!res.ok) throw new Error('Failed to fetch housekeeping discrepancies');
+    return await res.json();
+  },
+
   async getFullCloudState(): Promise<any> {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
       const res = await fetch(`${API_BASE_URL}/pms/sync/full-state`, { signal: controller.signal });
       clearTimeout(timeoutId);
       const contentType = res.headers.get('content-type') || '';

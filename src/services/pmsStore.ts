@@ -3059,19 +3059,40 @@ export class PmsStore {
       const state = await hotelApi.getFullCloudState();
       if (!state) return false;
 
-      // 1. Hydrate Rooms from PostgreSQL
+      // 1. Hydrate Rooms & Active In-House Guest Occupancy from PostgreSQL
       if (state.rooms && state.rooms.length > 0) {
         const localRooms = this.getRooms();
+        const activeBookings = state.active_bookings || [];
         const updated = state.rooms.map((r: any) => {
           const match = localRooms.find(lr => lr.roomNo === r.roomNo || lr.id === r.id);
+          const activeBooking = activeBookings.find((b: any) => 
+            (String(b.room_id) === String(r.id) || b.room_id === r.roomNo) &&
+            (b.status === 'Checked-In' || b.status === 'Confirmed')
+          );
+          
+          let currentGuest = match?.currentGuest;
+          if (activeBooking) {
+            currentGuest = {
+              bookingNo: activeBooking.booking_ref,
+              name: activeBooking.guest_name || 'In-House Guest',
+              phone: activeBooking.guest_phone || '',
+              checkInDate: activeBooking.check_in_date,
+              checkInTime: '11:00 AM',
+              checkOutDate: activeBooking.check_out_date,
+              checkOutTime: '11:00 AM',
+              advancePaid: activeBooking.total_paid || 0,
+              idProofType: activeBooking.id_proof_type || 'Aadhaar Card'
+            };
+          }
+
           return {
             id: r.id,
             roomNo: r.roomNo,
             roomType: r.roomType,
             tariff: r.tariff,
             capacity: r.capacity || 2,
-            status: r.status,
-            currentGuest: match?.currentGuest,
+            status: activeBooking ? 'occupied' : (r.status || 'vacant'),
+            currentGuest: activeBooking ? currentGuest : match?.currentGuest,
             foodAmount: match?.foodAmount || 0
           };
         });
@@ -3091,6 +3112,43 @@ export class PmsStore {
         if (state.masters.other_charge) localStorage.setItem(STORAGE_KEYS.OTHER_CHARGES, JSON.stringify(state.masters.other_charge));
       }
 
+      // 4. Hydrate KOT Tickets from PostgreSQL
+      if (state.kots && state.kots.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.KOTS, JSON.stringify(state.kots));
+      }
+
+      // 5. Hydrate Food Bills from PostgreSQL
+      if (state.food_bills && state.food_bills.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.FOOD_BILLS, JSON.stringify(state.food_bills));
+        localStorage.setItem('hotel_pms_foodbills', JSON.stringify(state.food_bills));
+      }
+
+      // 6. Hydrate Petty Cash Expenses from PostgreSQL
+      if (state.expenses && state.expenses.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(state.expenses));
+      }
+
+      // 7. Hydrate Inventory Purchases from PostgreSQL
+      if (state.purchases && state.purchases.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.PURCHASES, JSON.stringify(state.purchases));
+      }
+
+      // 8. Hydrate Folio Discounts from PostgreSQL
+      if (state.discounts && state.discounts.length > 0) {
+        const discountMap: Record<string, any> = {};
+        state.discounts.forEach((d: any) => {
+          if (d.roomNo) {
+            discountMap[d.roomNo] = {
+              type: d.discountType === 'percent' ? 'percent' : 'flat',
+              value: d.discountValue || d.discountAmount || 0,
+              reason: d.discountReason || 'Manager Approval'
+            };
+          }
+        });
+        localStorage.setItem(STORAGE_KEYS.FOLIO_DISCOUNTS, JSON.stringify(discountMap));
+      }
+
+      this.notify();
       return true;
     } catch (e) {
       console.warn('[PmsStore] Cloud hydration running in offline fallback mode:', e);
@@ -3759,6 +3817,22 @@ export class PmsStore {
       console.warn('[PmsStore] Expense payment register recording note:', err);
     }
 
+    // Cloud sync: mirror petty expense to Railway PostgreSQL
+    hotelApi.savePettyExpense({
+      expense_no: newRecord.expenseNo,
+      date: newRecord.date,
+      time: newRecord.time,
+      category: newRecord.category,
+      amount: newRecord.amount,
+      payment_mode: newRecord.paymentMode,
+      paid_to: newRecord.paidTo,
+      description: newRecord.description,
+      bill_number: newRecord.billNumber,
+      approved_by: newRecord.approvedBy
+    }).catch(err => {
+      console.warn('[PmsStore] Background expense cloud sync note:', err);
+    });
+
     this.notify();
     return newRecord;
   }
@@ -3993,6 +4067,11 @@ export class PmsStore {
     audits.unshift(newAuditRecord);
     localStorage.setItem(STORAGE_KEYS.NIGHT_AUDITS, JSON.stringify(audits));
 
+    // Cloud sync: trigger Night Audit on Railway PostgreSQL
+    hotelApi.runNightAudit(bDate, auditorName).catch(e => {
+      console.warn('[PmsStore] Background night audit cloud sync note:', e);
+    });
+
     // Step 4: Advance Business Date forward by +1 day
     this.advanceBusinessDate();
 
@@ -4045,6 +4124,20 @@ export class PmsStore {
 
     all.unshift(newPayment);
     localStorage.setItem(STORAGE_KEYS.FOLIO_PAYMENTS, JSON.stringify(all));
+
+    // Cloud sync: mirror folio payment to Railway PostgreSQL
+    hotelApi.recordPayment({
+      booking_ref: r?.currentGuest?.bookingNo || `SVR-ROOM-${roomNo}`,
+      payment_type: 'Folio Payment',
+      payment_mode: payment.paymentMode || 'UPI',
+      amount: payment.amount,
+      transaction_ref: newPayment.referenceNo,
+      notes: payment.notes || 'Folio Settlement Payment',
+      collected_by: this.getCurrentUser()?.userName || 'Front Desk Officer'
+    }).catch(err => {
+      console.warn('[PmsStore] Background folio payment cloud sync note:', err);
+    });
+
     this.notify();
     return newPayment;
   }
@@ -4062,6 +4155,28 @@ export class PmsStore {
     }
     allDiscounts[roomNo] = discount;
     localStorage.setItem(STORAGE_KEYS.FOLIO_DISCOUNTS, JSON.stringify(allDiscounts));
+
+    // Cloud sync: mirror folio discount to Railway PostgreSQL
+    try {
+      const room = this.getRooms().find(r => r.roomNo === roomNo);
+      const summary = this.getFolioSummary(roomNo);
+      const calculatedDiscount = discount.type === 'percent'
+        ? Math.round(summary.baseRoomRent * (discount.value / 100))
+        : discount.value;
+
+      hotelApi.applyFolioDiscount({
+        booking_ref: room?.currentGuest?.bookingNo || `SVR-ROOM-${roomNo}`,
+        discount_amount: calculatedDiscount,
+        discount_percentage: discount.type === 'percent' ? discount.value : undefined,
+        discount_reason: discount.reason || 'Manager Approval',
+        approved_by: this.getCurrentUser()?.userName || 'Duty Manager'
+      }).catch(err => {
+        console.warn('[PmsStore] Background folio discount cloud sync note:', err);
+      });
+    } catch (e) {
+      console.warn('[PmsStore] Folio discount calculation sync note:', e);
+    }
+
     this.notify();
   }
 
@@ -5609,6 +5724,14 @@ export class PmsStore {
       // ignore
     }
 
+    // Cloud sync: cancel booking in Railway PostgreSQL
+    hotelApi.updateBookingStatus(
+      checkInNo || `SVR-ROOM-${target.roomNo}`,
+      'Cancelled',
+      `Check-in deleted at front desk by ${this.getCurrentUser()?.userName || 'Operator'}`
+    ).catch(e => console.warn('[PmsStore] Background check-in cancellation cloud sync note:', e));
+
+    this.notify();
     return true;
   }
 
@@ -6056,6 +6179,13 @@ export class PmsStore {
     localStorage.setItem(STORAGE_KEYS.TABLE_SHIFTS, JSON.stringify(shifts));
     localStorage.setItem('hotel_pms_table_shifts', JSON.stringify(shifts));
 
+    // Cloud sync: mirror table shift to Railway PostgreSQL
+    hotelApi.shiftDiningTableSession({
+      from_table: fromTable,
+      to_table: toTable,
+      shifted_by: shiftedBy
+    }).catch(e => console.warn('[PmsStore] Background table shift cloud sync note:', e));
+
     return {
       success: true,
       transferredCount,
@@ -6340,6 +6470,13 @@ export class PmsStore {
       payload: { primaryTable: cleanPrimary, secondaryTable: cleanSecondary, masterSessionId: masterSession.sessionId }
     });
 
+    // Cloud sync: mirror table session merge to Railway PostgreSQL
+    hotelApi.mergeDiningTableSessions({
+      source_table: cleanSecondary,
+      target_table: cleanPrimary,
+      merged_by: mergedBy
+    }).catch(e => console.warn('[PmsStore] Background table merge cloud sync note:', e));
+
     this.notify();
     return {
       success: true,
@@ -6431,6 +6568,18 @@ export class PmsStore {
       type: 'KOT_VOIDED',
       payload: { kotNo, itemName, voidQty, voidAmt, voidReason }
     });
+
+    // Cloud sync: mirror voided item to Railway PostgreSQL
+    hotelApi.voidKotItem({
+      kot_number: kotNo,
+      item_name: itemName,
+      quantity: voidQty,
+      void_reason: voidReason,
+      voided_by: `${approvingManager} (PIN Verified)`,
+      table_number: kot.tableNo,
+      room_number: kot.roomNo
+    }).catch(e => console.warn('[PmsStore] Background KOT void cloud sync note:', e));
+
     this.notify();
     return {
       success: true,
@@ -7294,6 +7443,28 @@ export class PmsStore {
         });
       }
     }
+
+    // Cloud sync: mirror food bill to Railway PostgreSQL
+    hotelApi.saveFoodBill({
+      bill_no: bill.billNo,
+      date: bill.date,
+      time: bill.time,
+      room_no: bill.roomNo,
+      table_no: bill.tableNo,
+      guest_name: bill.guestName,
+      kot_numbers_json: JSON.stringify(bill.kotNumbers || []),
+      items_json: JSON.stringify(bill.items || []),
+      taxable_amount: bill.taxableAmount,
+      gst_percent: bill.gstPercent,
+      cgst_amount: bill.cgstAmount,
+      sgst_amount: bill.sgstAmount,
+      discount_amount: bill.discountAmount,
+      net_bill_amount: bill.netBillAmount,
+      settlement_type: bill.settlementType,
+      status: bill.status || 'Settled'
+    }).catch(e => console.warn('[PmsStore] Background food bill cloud sync note:', e));
+
+    this.notify();
   }
 
   static getCheckouts(): PmsCheckOutDetail[] {
@@ -7786,10 +7957,12 @@ export class PmsStore {
     }
 
     // Cloud sync: mirror Advance Receipt to Railway PostgreSQL
+    const advMode = (receipt.paymentMode || 'Cash').toString().toLowerCase();
+    const resolvedAdvMode = advMode.includes('online') || advMode.includes('upi') ? 'UPI' : (advMode.includes('card') ? 'Card' : 'Cash');
     hotelApi.recordPayment({
       booking_ref: `SVR-ROOM-${receipt.roomNo}`,
       payment_type: 'Advance',
-      payment_mode: 'Cash',
+      payment_mode: resolvedAdvMode,
       amount: receipt.amount,
       notes: receipt.remark || 'Advance Receipt collected at Front Desk',
       collected_by: 'Front Desk Officer'
@@ -9134,6 +9307,24 @@ export class PmsStore {
         console.warn('[PmsStore] Purchase payment recording note:', purErr);
       }
     }
+
+    // Cloud sync: mirror inventory purchase to Railway PostgreSQL
+    hotelApi.saveInventoryPurchase({
+      bill_no: bill.billNo,
+      bill_date: bill.billDate,
+      account_name: bill.accountName,
+      godown: bill.godown,
+      terms: bill.terms,
+      items_json: JSON.stringify(bill.items || []),
+      total_gross_amount: bill.totalAmount,
+      total_discount: bill.totalDiscount || 0,
+      total_tax: bill.totalGstAmt || 0,
+      total_net_value: bill.totalNetValue || bill.totalAmount,
+      remarks: 'Recorded from Purchase Register'
+    }).catch(purErr => {
+      console.warn('[PmsStore] Inventory purchase cloud sync note:', purErr);
+    });
+
     this.notify();
   }
 

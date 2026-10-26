@@ -378,4 +378,54 @@ class VirtualAccount(Base):
 
     booking = relationship("Booking", backref="virtual_accounts")
 
+class FoodBill(Base):
+    __tablename__ = "food_bills"
+
+    id = Column(Integer, primary_key=True, index=True)
+    bill_no = Column(String(100), unique=True, index=True, nullable=False)
+    date = Column(String(50), nullable=False)
+    time = Column(String(50), nullable=False)
+    room_no = Column(String(50), nullable=True, index=True)
+    table_no = Column(String(50), nullable=True, index=True)
+    guest_name = Column(String(150), nullable=True)
+    kot_numbers_json = Column(Text, default="[]")
+    items_json = Column(Text, default="[]")
+    food_gross_amount = Column(Float, default=0.0)
+    discount_percent = Column(Float, default=0.0)
+    discount_amount = Column(Float, default=0.0)
+    taxable_amount = Column(Float, default=0.0)
+    gst_amount = Column(Float, default=0.0)
+    net_bill_amount = Column(Float, default=0.0)
+    settlement_type = Column(String(50), default="Cash") # Settle To Room, Cash, Online, Card, Credit
+    status = Column(String(50), default="Settled")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class PettyExpense(Base):
+    __tablename__ = "petty_expenses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    expense_no = Column(String(100), unique=True, index=True, nullable=False)
+    date = Column(String(50), nullable=False)
+    category = Column(String(100), nullable=False)
+    amount = Column(Float, nullable=False)
+    payment_mode = Column(String(50), default="Cash") # Cash, Online
+    paid_to = Column(String(150), nullable=False)
+    description = Column(Text, nullable=True)
+    bill_number = Column(String(100), nullable=True)
+    approved_by = Column(String(100), default="General Manager")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class FolioDiscountRecord(Base):
+    __tablename__ = "folio_discount_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    booking_ref = Column(String(100), index=True, nullable=False)
+    room_no = Column(String(50), index=True, nullable=False)
+    discount_type = Column(String(50), default="flat") # flat, percent
+    discount_value = Column(Float, default=0.0)
+    discount_amount = Column(Float, default=0.0)
+    reason = Column(String(255), nullable=True)
+    approved_by = Column(String(100), default="General Manager")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
 

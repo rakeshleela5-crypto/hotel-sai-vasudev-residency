@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { PmsCheckIn } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
+import { hotelApi } from '../../services/api';
 
 interface PoliceStationReportModalProps {
   isOpen: boolean;
@@ -32,18 +33,61 @@ export const PoliceStationReportModal: React.FC<PoliceStationReportModalProps> =
   const currentProperty = PmsStore.getCurrentProperty();
   const currentUser = PmsStore.getCurrentUser();
 
+  const loadReportData = async (fDate: string, tDate: string) => {
+    const localList = PmsStore.getPoliceStationReport(fDate, tDate);
+    setReportList(localList);
+
+    try {
+      const cloudLogs = await hotelApi.getPoliceStationLogs();
+      if (Array.isArray(cloudLogs) && cloudLogs.length > 0) {
+        const existingNos = new Set(localList.map(l => l.checkInNo.toLowerCase()));
+        const extra: PmsCheckIn[] = [];
+        for (const log of cloudLogs) {
+          const ref = log.booking_ref || `POL-${log.id}`;
+          if (!existingNos.has(ref.toLowerCase())) {
+            extra.push({
+              checkInNo: ref,
+              roomNo: log.room_number || '101',
+              guestName: log.guest_name,
+              mobile: log.phone || '',
+              checkInDate: log.created_at ? log.created_at.slice(0, 10) : fDate,
+              checkInTime: '11:00 AM',
+              checkOutDate: tDate,
+              checkOutTime: '11:00 AM',
+              numberOfGuests: log.total_pax || 1,
+              documentName: log.id_proof_type || 'Aadhaar Card',
+              documentNo: log.id_proof_number || '',
+              addressLine1: log.permanent_address || '',
+              city: log.city || log.origin_city || '',
+              state: log.state || '',
+              pinCode: log.pincode || '',
+              comingFrom: log.origin_city || '',
+              goingTo: log.next_destination || '',
+              purposeOfVisit: log.purpose_of_visit || 'Temple Darshan',
+              status: 'CheckedIn'
+            } as PmsCheckIn);
+          }
+        }
+        if (extra.length > 0) {
+          setReportList([...localList, ...extra]);
+        }
+      }
+    } catch (err) {
+      console.warn('[PoliceStationReportModal] Cloud police log fetch note:', err);
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       setViewMode('filter');
-      setReportList(PmsStore.getPoliceStationReport(fromDate, toDate));
+      loadReportData(fromDate, toDate);
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
   const handleApplyFilter = () => {
-    const list = PmsStore.getPoliceStationReport(fromDate, toDate);
-    setReportList(list);
+    loadReportData(fromDate, toDate);
     if (selectedFormat === 'format1') {
       setViewMode('format1');
     } else {

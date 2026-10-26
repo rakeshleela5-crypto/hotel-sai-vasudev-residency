@@ -153,9 +153,8 @@ def update_booking_status(
     db: Session = Depends(get_db)
 ):
     """Update booking lifecycle (Confirmed, Checked-In, Checked-Out, Cancelled)"""
-    booking = db.query(models.Booking).filter(
-        models.Booking.booking_ref == booking_ref.upper().strip()
-    ).first()
+    from app.routes.pms import find_booking_by_ref_or_room
+    booking = find_booking_by_ref_or_room(db, booking_ref)
     if not booking:
         raise HTTPException(status_code=404, detail="Booking reservation not found")
 
@@ -172,9 +171,8 @@ def update_booking_status(
 @router.get("/{booking_ref}/invoice", response_model=schemas.TaxInvoiceVoucher)
 def get_booking_tax_invoice(booking_ref: str, db: Session = Depends(get_db)):
     """Generate official Indian GST Tax Invoice & Voucher details"""
-    booking = db.query(models.Booking).filter(
-        models.Booking.booking_ref == booking_ref.upper().strip()
-    ).first()
+    from app.routes.pms import find_booking_by_ref_or_room
+    booking = find_booking_by_ref_or_room(db, booking_ref)
     if not booking:
         raise HTTPException(status_code=404, detail="Booking reservation not found")
 
