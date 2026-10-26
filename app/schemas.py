@@ -1070,6 +1070,247 @@ class ShiftHandoverCreate(BaseModel):
     handoverNotes: Optional[str] = None
     status: Optional[str] = "Verified & Closed"
 
+class BanquetVenueCreate(BaseModel):
+    id: Optional[str] = None
+    venue_id: Optional[str] = None
+    venueId: Optional[str] = None
+    name: str
+    type: Optional[str] = "Banquet Hall"
+    base_tariff: Optional[float] = 50000.0
+    baseTariff: Optional[float] = None
+    gst_percent: Optional[float] = 18.0
+    gstPercent: Optional[float] = None
+    capacity_pax_min: Optional[int] = 50
+    capacityPaxMin: Optional[int] = None
+    capacity_pax_max: Optional[int] = 500
+    capacityPaxMax: Optional[int] = None
+    sq_ft_area: Optional[float] = 5000.0
+    sqFtArea: Optional[float] = None
+    floor: Optional[str] = "Ground Floor"
+    amenities: Optional[List[str]] = None
+    amenities_json: Optional[str] = None
+    status: Optional[str] = "vacant"
+    cleaning_status: Optional[str] = "Ready"
+    cleaningStatus: Optional[str] = None
+    sac_code: Optional[str] = "996311"
+    sacCode: Optional[str] = None
+
+class BanquetBookingCreate(BaseModel):
+    id: Optional[str] = None
+    booking_no: Optional[str] = None
+    bookingNo: Optional[str] = None
+    event_name: Optional[str] = None
+    eventName: Optional[str] = None
+    event_type: Optional[str] = "Wedding / Reception"
+    eventType: Optional[str] = None
+    host_name: Optional[str] = None
+    hostName: Optional[str] = None
+    contact_person: Optional[str] = None
+    contactPerson: Optional[str] = None
+    contact_mobile: Optional[str] = None
+    contactMobile: Optional[str] = None
+    contact_email: Optional[str] = None
+    contactEmail: Optional[str] = None
+    venue_id: Optional[str] = None
+    venueId: Optional[str] = None
+    venue_name: Optional[str] = None
+    venueName: Optional[str] = None
+    venue_tariff: Optional[float] = 0.0
+    venueTariff: Optional[float] = None
+    booking_date: Optional[str] = None
+    bookingDate: Optional[str] = None
+    event_date: Optional[str] = None
+    eventDate: Optional[str] = None
+    check_in_date: Optional[str] = None
+    checkInDate: Optional[str] = None
+    check_out_date: Optional[str] = None
+    checkOutDate: Optional[str] = None
+    guaranteed_pax: Optional[int] = 100
+    guaranteedPax: Optional[int] = None
+    actual_pax_served: Optional[int] = 100
+    actualPaxServed: Optional[int] = None
+    per_plate_rate: Optional[float] = 0.0
+    perPlateRate: Optional[float] = None
+    total_food_amount: Optional[float] = 0.0
+    totalFoodAmount: Optional[float] = None
+    grand_total: Optional[float] = 0.0
+    grandTotal: Optional[float] = None
+    advance_paid: Optional[float] = 0.0
+    advancePaid: Optional[float] = None
+    balance_due: Optional[float] = 0.0
+    balanceDue: Optional[float] = None
+    status: Optional[str] = "Confirmed"
+    financial_summary: Optional[Dict[str, Any]] = None
+    financial_summary_json: Optional[str] = None
+
+class LiquorItemCreate(BaseModel):
+    id: Optional[str] = None
+    item_code: Optional[str] = None
+    itemCode: Optional[str] = None
+    s_no: Optional[int] = 1
+    sNo: Optional[int] = None
+    name: str
+    brand_name: Optional[str] = None
+    brandName: Optional[str] = None
+    barcode_no: Optional[str] = None
+    barcodeNo: Optional[str] = None
+    group: Optional[str] = "Liquor"
+    mrp: Optional[float] = 0.0
+    rate: Optional[float] = 0.0
+    purchase_rate: Optional[float] = 0.0
+    purchaseRate: Optional[float] = None
+    unit: Optional[str] = "30 ml"
+    conversion_ml: Optional[float] = 30.0
+    conversionMl: Optional[float] = None
+    tax_type: Optional[str] = "VAT 13%"
+    taxType: Optional[str] = None
+    vat_percentage: Optional[float] = 13.0
+    vatPercentage: Optional[float] = None
+    surcharge_percentage: Optional[float] = 10.0
+    surchargePercentage: Optional[float] = None
+    active: Optional[bool] = True
+
+class BarInvoiceCreate(BaseModel):
+    id: Optional[str] = None
+    bill_no: Optional[str] = None
+    billNo: Optional[str] = None
+    date: Optional[str] = None
+    time: Optional[str] = None
+    table_no: Optional[str] = "Bar Counter"
+    tableNo: Optional[str] = None
+    kot_no: Optional[str] = None
+    kotNo: Optional[str] = None
+    service_type: Optional[str] = "Bar Counter"
+    serviceType: Optional[str] = None
+    guest_name: Optional[str] = None
+    guestName: Optional[str] = None
+    guest_mobile: Optional[str] = None
+    guestMobile: Optional[str] = None
+    items: Optional[List[Dict[str, Any]]] = None
+    items_json: Optional[str] = None
+    total_items: Optional[int] = 1
+    totalItems: Optional[int] = None
+    total_quantity: Optional[float] = 1.0
+    totalQuantity: Optional[float] = None
+    basic_amount: Optional[float] = 0.0
+    basicAmount: Optional[float] = None
+    vat_amount: Optional[float] = 0.0
+    vatAmount: Optional[float] = None
+    surcharge_amount: Optional[float] = 0.0
+    surchargeAmount: Optional[float] = None
+    grand_total: Optional[float] = 0.0
+    grandTotal: Optional[float] = None
+    settled: Optional[bool] = True
+    payment_mode: Optional[str] = "CASH"
+    paymentMode: Optional[str] = None
+    room_no: Optional[str] = None
+    roomNo: Optional[str] = None
+
+class HotelAssetCreate(BaseModel):
+    id: Optional[str] = None
+    asset_id: Optional[str] = None
+    assetId: Optional[str] = None
+    asset_name: Optional[str] = None
+    assetName: Optional[str] = None
+    category: Optional[str] = "Linen"
+    unit: Optional[str] = "Pcs"
+    total_purchased: Optional[float] = 0.0
+    totalPurchased: Optional[float] = None
+    in_rooms: Optional[float] = 0.0
+    inRooms: Optional[float] = None
+    in_linen_store: Optional[float] = 0.0
+    inLinenStore: Optional[float] = None
+    in_laundry: Optional[float] = 0.0
+    inLaundry: Optional[float] = None
+    in_damaged_repair: Optional[float] = 0.0
+    inDamagedRepair: Optional[float] = None
+    missing_discrepancy: Optional[float] = 0.0
+    missingDiscrepancy: Optional[float] = None
+    unit_cost: Optional[float] = 0.0
+    unitCost: Optional[float] = None
+    last_audit_date: Optional[str] = None
+    lastAuditDate: Optional[str] = None
+
+class LockerCreate(BaseModel):
+    id: Optional[str] = None
+    locker_no: Optional[str] = None
+    lockerNo: Optional[str] = None
+    locker_size: Optional[str] = "Medium"
+    lockerSize: Optional[str] = None
+    daily_rate: Optional[float] = 100.0
+    dailyRate: Optional[float] = None
+    status: Optional[str] = "Vacant"
+    assigned_guest_name: Optional[str] = None
+    assignedGuestName: Optional[str] = None
+    assigned_room_no: Optional[str] = None
+    assignedRoomNo: Optional[str] = None
+    key_number: Optional[str] = "K-101"
+    keyNumber: Optional[str] = None
+    security_deposit: Optional[float] = 500.0
+    securityDeposit: Optional[float] = None
+
+class WhatsAppLogCreate(BaseModel):
+    id: Optional[str] = None
+    log_id: Optional[str] = None
+    timestamp_str: Optional[str] = None
+    timestamp: Optional[str] = None
+    recipient_mobile: Optional[str] = None
+    recipientMobile: Optional[str] = None
+    recipient_name: Optional[str] = None
+    recipientName: Optional[str] = None
+    recipient_type: Optional[str] = "Guest"
+    recipientType: Optional[str] = None
+    voucher_type: Optional[str] = "Check-In"
+    voucherType: Optional[str] = None
+    voucher_no: Optional[str] = None
+    voucherNo: Optional[str] = None
+    room_no: Optional[str] = None
+    roomNo: Optional[str] = None
+    message: str
+    status: Optional[str] = "Sent"
+    firm_id: Optional[str] = "SVR0001"
+    firmId: Optional[str] = None
+
+class WhatsAppConfigCreate(BaseModel):
+    api_url: Optional[str] = "https://api.whatsapp-gateway.com/v1"
+    apiUrl: Optional[str] = None
+    instance_id: Optional[str] = "SVR_WHATSAPP_INST_01"
+    instanceId: Optional[str] = None
+    token: Optional[str] = "waba_token_svr_live_2026"
+    owner_mobile: Optional[str] = "9440289999"
+    ownerMobile: Optional[str] = None
+    validity_date: Optional[str] = "2026-12-31"
+    validityDate: Optional[str] = None
+    auto_send_on_checkin: Optional[bool] = True
+    autoSendOnCheckIn: Optional[bool] = None
+    auto_send_on_checkout: Optional[bool] = True
+    autoSendOnCheckOut: Optional[bool] = None
+    auto_send_on_booking: Optional[bool] = True
+    autoSendOnBooking: Optional[bool] = None
+    auto_send_on_food_bill: Optional[bool] = True
+    autoSendOnFoodBill: Optional[bool] = None
+
+class SupportTicketCreate(BaseModel):
+    id: Optional[str] = None
+    ticket_no: Optional[str] = None
+    ticketNo: Optional[str] = None
+    date: Optional[str] = None
+    time: Optional[str] = None
+    staff_name: Optional[str] = None
+    staffName: Optional[str] = None
+    department: Optional[str] = "Front Office"
+    phone: Optional[str] = "9440289999"
+    category: Optional[str] = "Billing & Checkout"
+    priority: Optional[str] = "Medium"
+    subject: str
+    description: str
+    status: Optional[str] = "Open"
+    assigned_engineer: Optional[str] = None
+    assignedEngineer: Optional[str] = None
+    resolution_notes: Optional[str] = None
+    resolutionNotes: Optional[str] = None
+
+
 
 
 

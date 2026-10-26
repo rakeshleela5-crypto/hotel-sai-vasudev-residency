@@ -172,6 +172,14 @@ def test_parity_endpoints():
     assert "commission_agents" in state
     assert "agent_payout_vouchers" in state
     assert "shift_handovers" in state
+    assert "banquet_venues" in state
+    assert "banquet_bookings" in state
+    assert "liquor_items" in state
+    assert "bar_invoices" in state
+    assert "hotel_assets" in state
+    assert "lockers" in state
+    assert "whatsapp_logs" in state
+    assert "support_tickets" in state
     assert "masters" in state
     print(f"   [OK] Full Cloud State Hydration: {len(state['rooms'])} rooms, {len(state['food_bills'])} food bills, {len(state['expenses'])} expenses, {len(state['purchases'])} purchases, {len(state['discounts'])} discounts, {len(state['group_bookings'])} group bookings")
 
@@ -505,6 +513,178 @@ def test_parity_endpoints():
     assert r.status_code == 200
     assert len(r.json()) >= 1
     print(f"   [OK] Shift Handovers Query: Found {len(r.json())} shift record(s)")
+
+    # 26. Test Banquet Venues & Bookings
+    venue_payload = {
+        "venueId": "BV-TEST-01",
+        "name": "Sai Mandapam Marriage Lawn",
+        "type": "Marriage Garden",
+        "baseTariff": 75000.0,
+        "gstPercent": 18.0,
+        "capacityPaxMin": 100,
+        "capacityPaxMax": 1000,
+        "sqFtArea": 12000.0,
+        "floor": "Ground Lawn",
+        "status": "vacant",
+        "cleaningStatus": "Ready",
+        "sacCode": "996311"
+    }
+    r = client.post("/api/v1/pms/banquet-venues", json=venue_payload)
+    assert r.status_code == 200, f"Banquet venue save failed: {r.text}"
+    print(f"   [OK] Banquet Venue Persisted: {r.json()['name']} (Tariff: Rs.{r.json()['tariff']})")
+
+    r = client.get("/api/v1/pms/banquet-venues")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Banquet Venues Query: Found {len(r.json())} venue(s)")
+
+    b_booking_payload = {
+        "bookingNo": "BQ/TEST/26-27",
+        "eventName": "Sharma Family Silver Jubilee",
+        "eventType": "Anniversary",
+        "hostName": "Sharma Family",
+        "contactPerson": "Ramesh Sharma",
+        "contactMobile": "9822001122",
+        "venueId": "BV-TEST-01",
+        "venueName": "Sai Mandapam Marriage Lawn",
+        "venueTariff": 75000.0,
+        "bookingDate": "2026-10-26",
+        "eventDate": "2026-11-15",
+        "guaranteedPax": 250,
+        "grandTotal": 145000.0,
+        "advancePaid": 50000.0,
+        "balanceDue": 95000.0,
+        "status": "Confirmed"
+    }
+    r = client.post("/api/v1/pms/banquet-bookings", json=b_booking_payload)
+    assert r.status_code == 200, f"Banquet booking save failed: {r.text}"
+    print(f"   [OK] Banquet Booking Persisted: {r.json()['bookingNo']} (Net: Rs.{r.json()['grandTotal']}, Due: Rs.{r.json()['balanceDue']})")
+
+    # 27. Test Restro-Bar & Liquor Excise
+    liq_item_payload = {
+        "itemCode": "LIQ-TEST-1001",
+        "sNo": 1,
+        "name": "Signature Premium Grain Whisky (60 ML)",
+        "brandName": "Signature",
+        "group": "Whisky",
+        "mrp": 350.0,
+        "rate": 350.0,
+        "purchaseRate": 120.0,
+        "unit": "60 Ml",
+        "conversionMl": 60.0,
+        "taxType": "VAT 13%",
+        "vatPercentage": 13.0,
+        "active": True
+    }
+    r = client.post("/api/v1/pms/liquor-items", json=liq_item_payload)
+    assert r.status_code == 200, f"Liquor item save failed: {r.text}"
+    print(f"   [OK] Liquor Item Persisted: {r.json()['name']} (Rate: Rs.{r.json()['rate']})")
+
+    bar_inv_payload = {
+        "billNo": "BAR/TEST/099",
+        "date": "2026-10-26",
+        "time": "21:30",
+        "tableNo": "Bar Table 4",
+        "serviceType": "Table Service",
+        "guestName": "Executive Guest",
+        "guestMobile": "9823000001",
+        "totalItems": 2,
+        "totalQuantity": 2.0,
+        "basicAmount": 700.0,
+        "vatAmount": 91.0,
+        "grandTotal": 791.0,
+        "settled": True,
+        "paymentMode": "UPI"
+    }
+    r = client.post("/api/v1/pms/bar-invoices", json=bar_inv_payload)
+    assert r.status_code == 200, f"Bar invoice save failed: {r.text}"
+    print(f"   [OK] Bar Invoice Persisted: {r.json()['billNo']} (Total: Rs.{r.json()['grandTotal']})")
+
+    # 28. Test Hotel Asset & Linen Master
+    asset_payload = {
+        "assetId": "AST-TEST-01",
+        "assetName": "Premium King Bed Cotton Sheet (300 TC)",
+        "category": "Linen",
+        "unit": "Pcs",
+        "totalPurchased": 150.0,
+        "inRooms": 60.0,
+        "inLinenStore": 70.0,
+        "inLaundry": 18.0,
+        "inDamagedRepair": 2.0,
+        "unitCost": 850.0
+    }
+    r = client.post("/api/v1/pms/hotel-assets", json=asset_payload)
+    assert r.status_code == 200, f"Hotel asset save failed: {r.text}"
+    print(f"   [OK] Hotel Asset Persisted: {r.json()['name']} ({r.json()['category']})")
+
+    r = client.get("/api/v1/pms/hotel-assets")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Hotel Assets Query: Found {len(r.json())} asset(s)")
+
+    # 29. Test Pilgrim Safe Lockers
+    locker_payload = {
+        "lockerNo": "LCK-TEST-12",
+        "lockerSize": "Large",
+        "dailyRate": 150.0,
+        "status": "Occupied",
+        "assignedGuestName": "Shirdi Pilgrim Devotee",
+        "assignedRoomNo": "205",
+        "keyNumber": "K-TEST-12",
+        "securityDeposit": 500.0
+    }
+    r = client.post("/api/v1/pms/lockers", json=locker_payload)
+    assert r.status_code == 200, f"Locker save failed: {r.text}"
+    print(f"   [OK] Pilgrim Locker Persisted: Locker #{r.json()['lockerNo']} ({r.json()['status']})")
+
+    # 30. Test WhatsApp CRM & Config
+    wa_cfg_payload = {
+        "apiUrl": "https://api.whatsapp-gateway.com/v1",
+        "instanceId": "SVR_PROD_INSTANCE",
+        "token": "waba_live_token_verified",
+        "ownerMobile": "9440289999",
+        "validityDate": "2027-12-31",
+        "autoSendOnCheckIn": True,
+        "autoSendOnCheckOut": True
+    }
+    r = client.post("/api/v1/pms/whatsapp-config", json=wa_cfg_payload)
+    assert r.status_code == 200, f"WhatsApp config save failed: {r.text}"
+    print(f"   [OK] WhatsApp Gateway Config Persisted in PostgreSQL")
+
+    wa_log_payload = {
+        "recipientMobile": "9822114455",
+        "recipientName": "Anand Kulkarni",
+        "recipientType": "Guest",
+        "voucherType": "Check-In",
+        "roomNo": "101",
+        "message": "Welcome to Hotel Sai Vasudev Residency Shirdi. Your Room 101 key is active.",
+        "status": "Sent"
+    }
+    r = client.post("/api/v1/pms/whatsapp-logs", json=wa_log_payload)
+    assert r.status_code == 200, f"WhatsApp log save failed: {r.text}"
+    print(f"   [OK] WhatsApp Log Persisted: To {r.json()['recipient']} (Status: {r.json()['status']})")
+
+    # 31. Test Staff Support Tickets
+    ticket_payload = {
+        "ticketNo": "TKT-TEST-999",
+        "date": "2026-10-26",
+        "time": "22:15",
+        "staffName": "Sunil (Night Auditor)",
+        "department": "Front Office",
+        "category": "Billing & Checkout",
+        "priority": "High",
+        "subject": "Printer Paper Roll Jam at Terminal 2",
+        "description": "Thermal receipt printer roller requires cleaning after heavy checkout rush",
+        "status": "Open"
+    }
+    r = client.post("/api/v1/pms/support-tickets", json=ticket_payload)
+    assert r.status_code == 200, f"Support ticket save failed: {r.text}"
+    print(f"   [OK] Support Ticket Persisted: {r.json()['ticketNo']} - {r.json()['subject']}")
+
+    r = client.get("/api/v1/pms/support-tickets")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Support Tickets Query: Found {len(r.json())} ticket(s)")
 
     print("\n=== ALL PARITY ENDPOINTS TESTED & PASSED 100%! ===")
 

@@ -3218,6 +3218,51 @@ export class PmsStore {
         localStorage.setItem(STORAGE_KEYS.AGENT_PAYOUT_VOUCHERS, JSON.stringify(state.agent_payout_vouchers));
       }
 
+      // 23. Hydrate Banquet Venues from PostgreSQL
+      if (state.banquet_venues && state.banquet_venues.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.BANQUET_VENUES, JSON.stringify(state.banquet_venues));
+      }
+
+      // 24. Hydrate Banquet Bookings from PostgreSQL
+      if (state.banquet_bookings && state.banquet_bookings.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.BANQUET_BOOKINGS, JSON.stringify(state.banquet_bookings));
+      }
+
+      // 25. Hydrate Liquor Items from PostgreSQL
+      if (state.liquor_items && state.liquor_items.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.LIQUOR_ITEMS, JSON.stringify(state.liquor_items));
+      }
+
+      // 26. Hydrate Bar Invoices from PostgreSQL
+      if (state.bar_invoices && state.bar_invoices.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.BAR_INVOICES, JSON.stringify(state.bar_invoices));
+      }
+
+      // 27. Hydrate Hotel Assets & Linen from PostgreSQL
+      if (state.hotel_assets && state.hotel_assets.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.HOTEL_ASSETS, JSON.stringify(state.hotel_assets));
+      }
+
+      // 28. Hydrate Pilgrim Lockers from PostgreSQL
+      if (state.lockers && state.lockers.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.LOCKERS, JSON.stringify(state.lockers));
+      }
+
+      // 29. Hydrate WhatsApp Logs from PostgreSQL
+      if (state.whatsapp_logs && state.whatsapp_logs.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.WHATSAPP_LOGS, JSON.stringify(state.whatsapp_logs));
+      }
+
+      // 30. Hydrate WhatsApp Config from PostgreSQL
+      if (state.whatsapp_config) {
+        localStorage.setItem(STORAGE_KEYS.WHATSAPP_CONFIG, JSON.stringify(state.whatsapp_config));
+      }
+
+      // 31. Hydrate Support Tickets from PostgreSQL
+      if (state.support_tickets && state.support_tickets.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.SUPPORT_TICKETS, JSON.stringify(state.support_tickets));
+      }
+
       this.notify();
       return true;
     } catch (e) {
@@ -5051,11 +5096,13 @@ export class PmsStore {
       list.push(locker);
     }
     localStorage.setItem(STORAGE_KEYS.LOCKERS, JSON.stringify(list));
+    hotelApi.saveLocker(locker).catch(e => console.warn('[PmsStore] Locker cloud sync note:', e));
   }
 
   static deleteLocker(id: string): void {
     const list = this.getLockers().filter(l => l.id !== id && l.lockerNo !== id);
     localStorage.setItem(STORAGE_KEYS.LOCKERS, JSON.stringify(list));
+    hotelApi.deleteLocker(id).catch(e => console.warn('[PmsStore] Locker delete note:', e));
   }
 
   // Other Charges Master
@@ -9946,6 +9993,7 @@ export class PmsStore {
 
   static saveWhatsAppConfig(config: PmsWhatsAppConfig): void {
     localStorage.setItem(STORAGE_KEYS.WHATSAPP_CONFIG, JSON.stringify(config));
+    hotelApi.saveWhatsAppConfig(config).catch(e => console.warn('[PmsStore] WhatsApp config cloud sync note:', e));
   }
 
   static getWhatsAppLogs(): PmsWhatsAppLog[] {
@@ -9979,6 +10027,7 @@ export class PmsStore {
     list.unshift(newLog);
     const trimmed = list.slice(0, 150);
     localStorage.setItem(STORAGE_KEYS.WHATSAPP_LOGS, JSON.stringify(trimmed));
+    hotelApi.saveWhatsAppLog(newLog).catch(e => console.warn('[PmsStore] WhatsApp log cloud sync note:', e));
     return newLog;
   }
 
@@ -11924,12 +11973,13 @@ export class PmsStore {
     };
     tickets.unshift(newTicket);
     localStorage.setItem(STORAGE_KEYS.SUPPORT_TICKETS, JSON.stringify(tickets));
+    hotelApi.saveSupportTicket(newTicket).catch(e => console.warn('[PmsStore] Support ticket cloud sync note:', e));
     return newTicket;
   }
 
   static updateSupportTicketStatus(id: string, status: PmsSupportTicket['status'], resolutionNotes?: string): void {
     const tickets = this.getSupportTickets();
-    const idx = tickets.findIndex(t => t.id === id);
+    const idx = tickets.findIndex(t => t.id === id || t.ticketNo === id);
     if (idx >= 0) {
       tickets[idx].status = status;
       if (resolutionNotes) {
@@ -11937,7 +11987,14 @@ export class PmsStore {
       }
       tickets[idx].updatedAt = new Date().toISOString().replace('T', ' ').substring(0, 19);
       localStorage.setItem(STORAGE_KEYS.SUPPORT_TICKETS, JSON.stringify(tickets));
+      hotelApi.saveSupportTicket(tickets[idx]).catch(e => console.warn('[PmsStore] Support ticket status update note:', e));
     }
+  }
+
+  static deleteSupportTicket(ticketNo: string): void {
+    const list = this.getSupportTickets().filter(t => t.id !== ticketNo && t.ticketNo !== ticketNo);
+    localStorage.setItem(STORAGE_KEYS.SUPPORT_TICKETS, JSON.stringify(list));
+    hotelApi.deleteSupportTicket(ticketNo).catch(e => console.warn('[PmsStore] Support ticket delete note:', e));
   }
 
   /**
@@ -12276,6 +12333,14 @@ export class PmsStore {
     }
     list.forEach((itm, index) => { itm.sNo = index + 1; });
     localStorage.setItem(STORAGE_KEYS.LIQUOR_ITEMS, JSON.stringify(list));
+    hotelApi.saveLiquorItem(item).catch(e => console.warn('[PmsStore] Liquor item cloud sync note:', e));
+  }
+
+  static deleteLiquorItem(itemCode: string): void {
+    const list = this.getLiquorItems().filter(i => i.id !== itemCode && i.barcodeNo !== itemCode);
+    list.forEach((itm, index) => { itm.sNo = index + 1; });
+    localStorage.setItem(STORAGE_KEYS.LIQUOR_ITEMS, JSON.stringify(list));
+    hotelApi.deleteLiquorItem(itemCode).catch(e => console.warn('[PmsStore] Liquor item delete note:', e));
   }
 
   static getBrandWiseLiquorStocks(): PmsBrandWiseLiquorStock[] {
@@ -12401,7 +12466,14 @@ export class PmsStore {
       // Bar receipt sync fallback
     }
 
+    hotelApi.saveBarInvoice(invoice).catch(e => console.warn('[PmsStore] Bar invoice cloud sync note:', e));
     return invoice;
+  }
+
+  static deleteBarInvoice(billNo: string): void {
+    const list = this.getBarInvoices().filter(i => i.billNo !== billNo);
+    localStorage.setItem(STORAGE_KEYS.BAR_INVOICES, JSON.stringify(list));
+    hotelApi.deleteBarInvoice(billNo).catch(e => console.warn('[PmsStore] Bar invoice delete note:', e));
   }
 
   // ==========================================
@@ -12823,6 +12895,13 @@ export class PmsStore {
       list.push(record);
     }
     localStorage.setItem(STORAGE_KEYS.HOTEL_ASSETS, JSON.stringify(list));
+    hotelApi.saveHotelAsset(record).catch(e => console.warn('[PmsStore] Hotel asset cloud sync note:', e));
+  }
+
+  static deleteHotelAssetLinenRecord(id: string): void {
+    const list = this.getHotelAssetLinenRecords().filter(a => a.id !== id);
+    localStorage.setItem(STORAGE_KEYS.HOTEL_ASSETS, JSON.stringify(list));
+    hotelApi.deleteHotelAsset(id).catch(e => console.warn('[PmsStore] Hotel asset delete note:', e));
   }
 
   static recordStockTransferDirect(fromGodown: string, toGodown: string, itemName: string, qty: number, billNo = '1'): void {
@@ -12902,6 +12981,13 @@ export class PmsStore {
       rooms[roomIdx].tariff = venue.baseTariff;
       localStorage.setItem(STORAGE_KEYS.ROOMS, JSON.stringify(rooms));
     }
+    hotelApi.saveBanquetVenue(venue).catch(e => console.warn('[PmsStore] Banquet venue cloud sync note:', e));
+  }
+
+  static deleteBanquetVenue(venueId: string): void {
+    const list = this.getBanquetVenues().filter(v => v.id !== venueId && v.name !== venueId);
+    localStorage.setItem(STORAGE_KEYS.BANQUET_VENUES, JSON.stringify(list));
+    hotelApi.deleteBanquetVenue(venueId).catch(e => console.warn('[PmsStore] Banquet venue delete note:', e));
   }
 
   static getBanquetBookings(): PmsBanquetBooking[] {
@@ -12941,6 +13027,13 @@ export class PmsStore {
       }
       localStorage.setItem(STORAGE_KEYS.BANQUET_VENUES, JSON.stringify(venues));
     }
+    hotelApi.saveBanquetBooking(booking).catch(e => console.warn('[PmsStore] Banquet booking cloud sync note:', e));
+  }
+
+  static deleteBanquetBooking(bookingNo: string): void {
+    const list = this.getBanquetBookings().filter(b => b.id !== bookingNo && b.bookingNo !== bookingNo);
+    localStorage.setItem(STORAGE_KEYS.BANQUET_BOOKINGS, JSON.stringify(list));
+    hotelApi.deleteBanquetBooking(bookingNo).catch(e => console.warn('[PmsStore] Banquet booking delete note:', e));
   }
 
   static addBanquetKot(bookingId: string, kot: PmsBanquetKot): void {

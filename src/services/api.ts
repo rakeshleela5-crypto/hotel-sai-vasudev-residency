@@ -1231,6 +1231,275 @@ export const hotelApi = {
     } catch {
       return [];
     }
+  },
+
+  // Module 32: Banquet Venues & Event Bookings
+  async saveBanquetVenue(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/banquet-venues`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to save banquet venue to PostgreSQL');
+    }
+    return await res.json();
+  },
+
+  async getBanquetVenues(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/banquet-venues`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async deleteBanquetVenue(venueId: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/banquet-venues/${encodeURIComponent(venueId)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete banquet venue from PostgreSQL');
+    return await res.json();
+  },
+
+  async saveBanquetBooking(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/banquet-bookings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to save banquet booking to PostgreSQL');
+    }
+    return await res.json();
+  },
+
+  async getBanquetBookings(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/banquet-bookings`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async deleteBanquetBooking(bookingNo: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/banquet-bookings/${encodeURIComponent(bookingNo)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete banquet booking from PostgreSQL');
+    return await res.json();
+  },
+
+  // Module 33: Restro-Bar & Liquor Excise
+  async saveLiquorItem(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/liquor-items`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to save liquor item to PostgreSQL');
+    }
+    return await res.json();
+  },
+
+  async getLiquorItems(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/liquor-items`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async deleteLiquorItem(itemCode: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/liquor-items/${encodeURIComponent(itemCode)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete liquor item from PostgreSQL');
+    return await res.json();
+  },
+
+  async saveBarInvoice(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/bar-invoices`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to save bar invoice to PostgreSQL');
+    }
+    return await res.json();
+  },
+
+  async getBarInvoices(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/bar-invoices`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async deleteBarInvoice(billNo: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/bar-invoices/${encodeURIComponent(billNo)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete bar invoice from PostgreSQL');
+    return await res.json();
+  },
+
+  // Module 34: Hotel Assets & Linen Master
+  async saveHotelAsset(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/hotel-assets`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to save hotel asset to PostgreSQL');
+    }
+    return await res.json();
+  },
+
+  async getHotelAssets(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/hotel-assets`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async deleteHotelAsset(assetId: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/hotel-assets/${encodeURIComponent(assetId)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete hotel asset from PostgreSQL');
+    return await res.json();
+  },
+
+  // Module 35: Pilgrim Valuables & Lockers
+  async saveLocker(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/lockers`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to save locker to PostgreSQL');
+    }
+    return await res.json();
+  },
+
+  async getLockers(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/lockers`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async deleteLocker(lockerNo: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/lockers/${encodeURIComponent(lockerNo)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete locker from PostgreSQL');
+    return await res.json();
+  },
+
+  // Module 36: WhatsApp CRM & Guest Communication
+  async saveWhatsAppLog(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/whatsapp-logs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to save WhatsApp log to PostgreSQL');
+    }
+    return await res.json();
+  },
+
+  async getWhatsAppLogs(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/whatsapp-logs`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async saveWhatsAppConfig(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/whatsapp-config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to save WhatsApp configuration to PostgreSQL');
+    }
+    return await res.json();
+  },
+
+  async getWhatsAppConfig(): Promise<any> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/whatsapp-config`);
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  // Module 37: Support & Service Tickets
+  async saveSupportTicket(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/support-tickets`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to save support ticket to PostgreSQL');
+    }
+    return await res.json();
+  },
+
+  async getSupportTickets(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/support-tickets`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async deleteSupportTicket(ticketNo: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/support-tickets/${encodeURIComponent(ticketNo)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete support ticket from PostgreSQL');
+    return await res.json();
   }
 };
 

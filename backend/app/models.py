@@ -690,6 +690,184 @@ class ShiftHandover(Base):
     status = Column(String(50), default="Verified & Closed")
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
+class BanquetVenue(Base):
+    __tablename__ = "banquet_venues"
+
+    id = Column(Integer, primary_key=True, index=True)
+    venue_id = Column(String(100), unique=True, index=True, nullable=False) # e.g. BV-01
+    name = Column(String(150), nullable=False) # e.g. MARRIAGE GARDEN1
+    type = Column(String(100), default="Banquet Hall")
+    base_tariff = Column(Float, default=50000.0)
+    gst_percent = Column(Float, default=18.0)
+    capacity_pax_min = Column(Integer, default=50)
+    capacity_pax_max = Column(Integer, default=500)
+    sq_ft_area = Column(Float, default=5000.0)
+    floor = Column(String(50), default="Ground Floor")
+    amenities_json = Column(Text, default="[]")
+    status = Column(String(50), default="vacant")
+    cleaning_status = Column(String(100), default="Ready")
+    sac_code = Column(String(50), default="996311")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class BanquetBooking(Base):
+    __tablename__ = "banquet_bookings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    booking_no = Column(String(100), unique=True, index=True, nullable=False) # e.g. BQ/89/24-25
+    event_name = Column(String(150), nullable=False)
+    event_type = Column(String(100), default="Wedding / Reception")
+    host_name = Column(String(150), nullable=False)
+    contact_person = Column(String(150), nullable=False)
+    contact_mobile = Column(String(50), nullable=False)
+    contact_email = Column(String(150), nullable=True)
+    venue_id = Column(String(100), index=True, nullable=False)
+    venue_name = Column(String(150), nullable=False)
+    venue_tariff = Column(Float, default=0.0)
+    booking_date = Column(String(50), nullable=False)
+    event_date = Column(String(50), nullable=False)
+    check_in_date = Column(String(50), nullable=True)
+    check_out_date = Column(String(50), nullable=True)
+    guaranteed_pax = Column(Integer, default=100)
+    actual_pax_served = Column(Integer, default=100)
+    per_plate_rate = Column(Float, default=0.0)
+    total_food_amount = Column(Float, default=0.0)
+    grand_total = Column(Float, default=0.0)
+    advance_paid = Column(Float, default=0.0)
+    balance_due = Column(Float, default=0.0)
+    status = Column(String(50), default="Confirmed")
+    financial_summary_json = Column(Text, default="{}")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class LiquorItem(Base):
+    __tablename__ = "liquor_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    item_code = Column(String(100), unique=True, index=True, nullable=False) # e.g. LIQ-10070
+    s_no = Column(Integer, default=1)
+    name = Column(String(150), nullable=False)
+    brand_name = Column(String(150), nullable=False)
+    barcode_no = Column(String(100), nullable=True)
+    group = Column(String(50), default="Liquor")
+    mrp = Column(Float, default=0.0)
+    rate = Column(Float, default=0.0)
+    purchase_rate = Column(Float, default=0.0)
+    unit = Column(String(50), default="30 ml")
+    conversion_ml = Column(Float, default=30.0)
+    tax_type = Column(String(50), default="VAT 13%")
+    vat_percentage = Column(Float, default=13.0)
+    surcharge_percentage = Column(Float, default=10.0)
+    active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class BarInvoice(Base):
+    __tablename__ = "bar_invoices"
+
+    id = Column(Integer, primary_key=True, index=True)
+    bill_no = Column(String(100), unique=True, index=True, nullable=False) # e.g. Res/289/24-25
+    date = Column(String(50), nullable=False)
+    time = Column(String(50), nullable=True)
+    table_no = Column(String(50), default="Bar Counter")
+    kot_no = Column(String(50), nullable=True)
+    service_type = Column(String(50), default="Bar Counter")
+    guest_name = Column(String(150), nullable=True)
+    guest_mobile = Column(String(50), nullable=True)
+    items_json = Column(Text, default="[]")
+    total_items = Column(Integer, default=1)
+    total_quantity = Column(Float, default=1.0)
+    basic_amount = Column(Float, default=0.0)
+    vat_amount = Column(Float, default=0.0)
+    surcharge_amount = Column(Float, default=0.0)
+    grand_total = Column(Float, default=0.0)
+    settled = Column(Boolean, default=True)
+    payment_mode = Column(String(50), default="CASH")
+    room_no = Column(String(50), nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class HotelAsset(Base):
+    __tablename__ = "hotel_assets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    asset_id = Column(String(100), unique=True, index=True, nullable=False) # e.g. AST-001
+    asset_name = Column(String(150), nullable=False)
+    category = Column(String(100), default="Linen")
+    unit = Column(String(50), default="Pcs")
+    total_purchased = Column(Float, default=0.0)
+    in_rooms = Column(Float, default=0.0)
+    in_linen_store = Column(Float, default=0.0)
+    in_laundry = Column(Float, default=0.0)
+    in_damaged_repair = Column(Float, default=0.0)
+    missing_discrepancy = Column(Float, default=0.0)
+    unit_cost = Column(Float, default=0.0)
+    last_audit_date = Column(String(50), nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class Locker(Base):
+    __tablename__ = "lockers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    locker_no = Column(String(50), unique=True, index=True, nullable=False) # e.g. LCK-101
+    locker_size = Column(String(50), default="Medium")
+    daily_rate = Column(Float, default=100.0)
+    status = Column(String(50), default="Vacant")
+    assigned_guest_name = Column(String(150), nullable=True)
+    assigned_room_no = Column(String(50), nullable=True)
+    key_number = Column(String(50), default="K-101")
+    security_deposit = Column(Float, default=500.0)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class WhatsAppLog(Base):
+    __tablename__ = "whatsapp_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    log_id = Column(String(100), unique=True, index=True, nullable=False)
+    timestamp_str = Column(String(50), nullable=False)
+    recipient_mobile = Column(String(50), nullable=False)
+    recipient_name = Column(String(150), nullable=False)
+    recipient_type = Column(String(50), default="Guest")
+    voucher_type = Column(String(50), default="Check-In")
+    voucher_no = Column(String(100), nullable=True)
+    room_no = Column(String(50), nullable=True)
+    message = Column(Text, nullable=False)
+    status = Column(String(50), default="Sent")
+    firm_id = Column(String(50), default="SVR0001")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class WhatsAppConfig(Base):
+    __tablename__ = "whatsapp_configs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    config_key = Column(String(50), unique=True, default="default")
+    api_url = Column(String(255), default="https://api.whatsapp-gateway.com/v1")
+    instance_id = Column(String(100), default="SVR_WHATSAPP_INST_01")
+    token = Column(String(255), default="waba_token_svr_live_2026")
+    owner_mobile = Column(String(50), default="9440289999")
+    validity_date = Column(String(50), default="2026-12-31")
+    auto_send_on_checkin = Column(Boolean, default=True)
+    auto_send_on_checkout = Column(Boolean, default=True)
+    auto_send_on_booking = Column(Boolean, default=True)
+    auto_send_on_food_bill = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class SupportTicket(Base):
+    __tablename__ = "support_tickets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    ticket_no = Column(String(100), unique=True, index=True, nullable=False) # e.g. TKT-2026-001
+    date = Column(String(50), nullable=False)
+    time = Column(String(50), nullable=True)
+    staff_name = Column(String(150), nullable=False)
+    department = Column(String(100), default="Front Office")
+    phone = Column(String(50), default="9440289999")
+    category = Column(String(100), default="Billing & Checkout")
+    priority = Column(String(50), default="Medium")
+    subject = Column(String(255), nullable=False)
+    description = Column(Text, nullable=False)
+    status = Column(String(50), default="Open")
+    assigned_engineer = Column(String(150), nullable=True)
+    resolution_notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
 
 
 

@@ -1007,6 +1007,15 @@ def get_full_cloud_state(db: Session = Depends(get_db)):
     commission_agents = db.query(models.CommissionAgent).order_by(models.CommissionAgent.id.asc()).all()
     agent_payouts = db.query(models.AgentPayoutVoucher).order_by(models.AgentPayoutVoucher.created_at.desc()).limit(150).all()
     shift_handovers = db.query(models.ShiftHandover).order_by(models.ShiftHandover.created_at.desc()).limit(150).all()
+    banquet_venues = db.query(models.BanquetVenue).order_by(models.BanquetVenue.id.asc()).all()
+    banquet_bookings = db.query(models.BanquetBooking).order_by(models.BanquetBooking.created_at.desc()).limit(150).all()
+    liquor_items = db.query(models.LiquorItem).order_by(models.LiquorItem.s_no.asc()).all()
+    bar_invoices = db.query(models.BarInvoice).order_by(models.BarInvoice.created_at.desc()).limit(150).all()
+    hotel_assets = db.query(models.HotelAsset).order_by(models.HotelAsset.id.asc()).all()
+    lockers = db.query(models.Locker).order_by(models.Locker.locker_no.asc()).all()
+    whatsapp_logs = db.query(models.WhatsAppLog).order_by(models.WhatsAppLog.created_at.desc()).limit(150).all()
+    whatsapp_cfg = db.query(models.WhatsAppConfig).filter(models.WhatsAppConfig.config_key == "default").first()
+    support_tickets = db.query(models.SupportTicket).order_by(models.SupportTicket.created_at.desc()).limit(150).all()
     masters = db.query(models.MasterItem).all()
 
     masters_by_cat = {}
@@ -1386,6 +1395,150 @@ def get_full_cloud_state(db: Session = Depends(get_db)):
             "handoverNotes": sh.handover_notes,
             "status": sh.status
         } for sh in shift_handovers],
+        "banquet_venues": [{
+            "id": v.venue_id,
+            "name": v.name,
+            "type": v.type,
+            "baseTariff": v.base_tariff,
+            "gstPercent": v.gst_percent,
+            "capacityPaxMin": v.capacity_pax_min,
+            "capacityPaxMax": v.capacity_pax_max,
+            "sqFtArea": v.sq_ft_area,
+            "floor": v.floor,
+            "amenities": json.loads(v.amenities_json) if v.amenities_json else [],
+            "status": v.status,
+            "cleaningStatus": v.cleaning_status,
+            "sacCode": v.sac_code
+        } for v in banquet_venues],
+        "banquet_bookings": [{
+            "id": b.booking_no,
+            "bookingNo": b.booking_no,
+            "eventName": b.event_name,
+            "eventType": b.event_type,
+            "hostName": b.host_name,
+            "contactPerson": b.contact_person,
+            "contactMobile": b.contact_mobile,
+            "contactEmail": b.contact_email,
+            "venueId": b.venue_id,
+            "venueName": b.venue_name,
+            "venueTariff": b.venue_tariff,
+            "bookingDate": b.booking_date,
+            "eventDate": b.event_date,
+            "checkInDate": b.check_in_date,
+            "checkOutDate": b.check_out_date,
+            "guaranteedPax": b.guaranteed_pax,
+            "actualPaxServed": b.actual_pax_served,
+            "perPlateRate": b.per_plate_rate,
+            "totalFoodAmount": b.total_food_amount,
+            "grandTotal": b.grand_total,
+            "advancePaid": b.advance_paid,
+            "balanceDue": b.balance_due,
+            "status": b.status,
+            "financialSummary": json.loads(b.financial_summary_json) if b.financial_summary_json else {}
+        } for b in banquet_bookings],
+        "liquor_items": [{
+            "id": it.item_code,
+            "sNo": it.s_no,
+            "name": it.name,
+            "brandName": it.brand_name,
+            "barcodeNo": it.barcode_no,
+            "group": it.group,
+            "mrp": it.mrp,
+            "rate": it.rate,
+            "purchaseRate": it.purchase_rate,
+            "unit": it.unit,
+            "conversionMl": it.conversion_ml,
+            "taxType": it.tax_type,
+            "vatPercentage": it.vat_percentage,
+            "surchargePercentage": it.surcharge_percentage,
+            "active": it.active
+        } for it in liquor_items],
+        "bar_invoices": [{
+            "id": inv.bill_no,
+            "billNo": inv.bill_no,
+            "date": inv.date,
+            "time": inv.time,
+            "tableNo": inv.table_no,
+            "kotNo": inv.kot_no,
+            "serviceType": inv.service_type,
+            "guestName": inv.guest_name,
+            "guestMobile": inv.guest_mobile,
+            "items": json.loads(inv.items_json) if inv.items_json else [],
+            "totalItems": inv.total_items,
+            "totalQuantity": inv.total_quantity,
+            "basicAmount": inv.basic_amount,
+            "vatAmount": inv.vat_amount,
+            "surchargeAmount": inv.surcharge_amount,
+            "grandTotal": inv.grand_total,
+            "settled": inv.settled,
+            "paymentMode": inv.payment_mode,
+            "roomNo": inv.room_no
+        } for inv in bar_invoices],
+        "hotel_assets": [{
+            "id": a.asset_id,
+            "assetName": a.asset_name,
+            "category": a.category,
+            "unit": a.unit,
+            "totalPurchased": a.total_purchased,
+            "inRooms": a.in_rooms,
+            "inLinenStore": a.in_linen_store,
+            "inLaundry": a.in_laundry,
+            "inDamagedRepair": a.in_damaged_repair,
+            "missingDiscrepancy": a.missing_discrepancy,
+            "unitCost": a.unit_cost,
+            "lastAuditDate": a.last_audit_date
+        } for a in hotel_assets],
+        "lockers": [{
+            "id": l.locker_no,
+            "lockerNo": l.locker_no,
+            "lockerSize": l.locker_size,
+            "dailyRate": l.daily_rate,
+            "status": l.status,
+            "assignedGuestName": l.assigned_guest_name,
+            "assignedRoomNo": l.assigned_room_no,
+            "keyNumber": l.key_number,
+            "securityDeposit": l.security_deposit
+        } for l in lockers],
+        "whatsapp_logs": [{
+            "id": wl.log_id,
+            "timestamp": wl.timestamp_str,
+            "recipientMobile": wl.recipient_mobile,
+            "recipientName": wl.recipient_name,
+            "recipientType": wl.recipient_type,
+            "voucherType": wl.voucher_type,
+            "voucherNo": wl.voucher_no,
+            "roomNo": wl.room_no,
+            "message": wl.message,
+            "status": wl.status,
+            "firmId": wl.firm_id
+        } for wl in whatsapp_logs],
+        "whatsapp_config": {
+            "apiUrl": whatsapp_cfg.api_url,
+            "instanceId": whatsapp_cfg.instance_id,
+            "token": whatsapp_cfg.token,
+            "ownerMobile": whatsapp_cfg.owner_mobile,
+            "validityDate": whatsapp_cfg.validity_date,
+            "autoSendOnCheckIn": whatsapp_cfg.auto_send_on_checkin,
+            "autoSendOnCheckOut": whatsapp_cfg.auto_send_on_checkout,
+            "autoSendOnBooking": whatsapp_cfg.auto_send_on_booking,
+            "autoSendOnFoodBill": whatsapp_cfg.auto_send_on_food_bill
+        } if whatsapp_cfg else None,
+        "support_tickets": [{
+            "id": t.ticket_no,
+            "ticketNo": t.ticket_no,
+            "date": t.date,
+            "time": t.time,
+            "staffName": t.staff_name,
+            "department": t.department,
+            "phone": t.phone,
+            "category": t.category,
+            "priority": t.priority,
+            "subject": t.subject,
+            "description": t.description,
+            "status": t.status,
+            "assignedEngineer": t.assigned_engineer,
+            "resolutionNotes": t.resolution_notes
+        } for t in support_tickets],
         "masters": masters_by_cat
     }
 
@@ -3681,6 +3834,676 @@ def get_shift_handovers(db: Session = Depends(get_db)):
         "handoverNotes": sh.handover_notes,
         "status": sh.status
     } for sh in handovers]
+
+# --- 32. Banquet Venues & Event Bookings ---
+@router.post("/banquet-venues")
+def save_banquet_venue(payload: schemas.BanquetVenueCreate, db: Session = Depends(get_db)):
+    """Save or update banquet venue in PostgreSQL."""
+    v_id = payload.id or payload.venue_id or payload.venueId or f"BV-{uuid.uuid4().hex[:4].upper()}"
+    existing = db.query(models.BanquetVenue).filter(
+        (models.BanquetVenue.venue_id == v_id) | (models.BanquetVenue.name.ilike(payload.name.strip()))
+    ).first()
+
+    amenities_json = payload.amenities_json or json.dumps(payload.amenities or [])
+
+    if existing:
+        existing.name = payload.name.strip()
+        existing.type = payload.type or "Banquet Hall"
+        existing.base_tariff = payload.base_tariff or payload.baseTariff or 50000.0
+        existing.gst_percent = payload.gst_percent or payload.gstPercent or 18.0
+        existing.capacity_pax_min = payload.capacity_pax_min or payload.capacityPaxMin or 50
+        existing.capacity_pax_max = payload.capacity_pax_max or payload.capacityPaxMax or 500
+        existing.sq_ft_area = payload.sq_ft_area or payload.sqFtArea or 5000.0
+        existing.floor = payload.floor or "Ground Floor"
+        existing.amenities_json = amenities_json
+        existing.status = payload.status or "vacant"
+        existing.cleaning_status = payload.cleaning_status or payload.cleaningStatus or "Ready"
+        existing.sac_code = payload.sac_code or payload.sacCode or "996311"
+        v = existing
+    else:
+        v = models.BanquetVenue(
+            venue_id=v_id,
+            name=payload.name.strip(),
+            type=payload.type or "Banquet Hall",
+            base_tariff=payload.base_tariff or payload.baseTariff or 50000.0,
+            gst_percent=payload.gst_percent or payload.gstPercent or 18.0,
+            capacity_pax_min=payload.capacity_pax_min or payload.capacityPaxMin or 50,
+            capacity_pax_max=payload.capacity_pax_max or payload.capacityPaxMax or 500,
+            sq_ft_area=payload.sq_ft_area or payload.sqFtArea or 5000.0,
+            floor=payload.floor or "Ground Floor",
+            amenities_json=amenities_json,
+            status=payload.status or "vacant",
+            cleaning_status=payload.cleaning_status or payload.cleaningStatus or "Ready",
+            sac_code=payload.sac_code or payload.sacCode or "996311"
+        )
+        db.add(v)
+
+    db.commit()
+    db.refresh(v)
+    return {"success": True, "id": v.venue_id, "name": v.name, "tariff": v.base_tariff}
+
+@router.get("/banquet-venues")
+def get_banquet_venues(db: Session = Depends(get_db)):
+    """Retrieve all banquet venues from PostgreSQL."""
+    venues = db.query(models.BanquetVenue).order_by(models.BanquetVenue.id.asc()).all()
+    return [{
+        "id": v.venue_id,
+        "name": v.name,
+        "type": v.type,
+        "baseTariff": v.base_tariff,
+        "gstPercent": v.gst_percent,
+        "capacityPaxMin": v.capacity_pax_min,
+        "capacityPaxMax": v.capacity_pax_max,
+        "sqFtArea": v.sq_ft_area,
+        "floor": v.floor,
+        "amenities": json.loads(v.amenities_json) if v.amenities_json else [],
+        "status": v.status,
+        "cleaningStatus": v.cleaning_status,
+        "sacCode": v.sac_code
+    } for v in venues]
+
+@router.delete("/banquet-venues/{venue_id}")
+def delete_banquet_venue(venue_id: str, db: Session = Depends(get_db)):
+    """Delete a banquet venue from PostgreSQL."""
+    v = db.query(models.BanquetVenue).filter(
+        (models.BanquetVenue.venue_id == venue_id) | (models.BanquetVenue.name.ilike(venue_id))
+    ).first()
+    if not v:
+        raise HTTPException(status_code=404, detail="Banquet venue not found")
+    db.delete(v)
+    db.commit()
+    return {"success": True, "message": f"Venue {venue_id} removed."}
+
+@router.post("/banquet-bookings")
+def save_banquet_booking(payload: schemas.BanquetBookingCreate, db: Session = Depends(get_db)):
+    """Save or update banquet event booking in PostgreSQL."""
+    b_no = payload.id or payload.booking_no or payload.bookingNo or f"BQ/{int(datetime.datetime.utcnow().timestamp()) % 100000}/26-27"
+    existing = db.query(models.BanquetBooking).filter(models.BanquetBooking.booking_no == b_no).first()
+
+    fin_json = payload.financial_summary_json or json.dumps(payload.financial_summary or {})
+
+    if existing:
+        existing.event_name = payload.event_name or payload.eventName or existing.event_name
+        existing.event_type = payload.event_type or payload.eventType or existing.event_type
+        existing.host_name = payload.host_name or payload.hostName or existing.host_name
+        existing.contact_person = payload.contact_person or payload.contactPerson or existing.contact_person
+        existing.contact_mobile = payload.contact_mobile or payload.contactMobile or existing.contact_mobile
+        existing.contact_email = payload.contact_email or payload.contactEmail
+        existing.venue_id = payload.venue_id or payload.venueId or existing.venue_id
+        existing.venue_name = payload.venue_name or payload.venueName or existing.venue_name
+        existing.venue_tariff = payload.venue_tariff or payload.venueTariff or 0.0
+        existing.booking_date = payload.booking_date or payload.bookingDate or existing.booking_date
+        existing.event_date = payload.event_date or payload.eventDate or existing.event_date
+        existing.check_in_date = payload.check_in_date or payload.checkInDate
+        existing.check_out_date = payload.check_out_date or payload.checkOutDate
+        existing.guaranteed_pax = payload.guaranteed_pax or payload.guaranteedPax or 100
+        existing.actual_pax_served = payload.actual_pax_served or payload.actualPaxServed or 100
+        existing.per_plate_rate = payload.per_plate_rate or payload.perPlateRate or 0.0
+        existing.total_food_amount = payload.total_food_amount or payload.totalFoodAmount or 0.0
+        existing.grand_total = payload.grand_total or payload.grandTotal or 0.0
+        existing.advance_paid = payload.advance_paid or payload.advancePaid or 0.0
+        existing.balance_due = payload.balance_due or payload.balanceDue or 0.0
+        existing.status = payload.status or "Confirmed"
+        existing.financial_summary_json = fin_json
+        b = existing
+    else:
+        b = models.BanquetBooking(
+            booking_no=b_no,
+            event_name=payload.event_name or payload.eventName or "Wedding Reception",
+            event_type=payload.event_type or payload.eventType or "Wedding / Reception",
+            host_name=payload.host_name or payload.hostName or "Host Family",
+            contact_person=payload.contact_person or payload.contactPerson or "Event Organizer",
+            contact_mobile=payload.contact_mobile or payload.contactMobile or "9440289999",
+            contact_email=payload.contact_email or payload.contactEmail,
+            venue_id=payload.venue_id or payload.venueId or "BV-01",
+            venue_name=payload.venue_name or payload.venueName or "Banquet Hall",
+            venue_tariff=payload.venue_tariff or payload.venueTariff or 0.0,
+            booking_date=payload.booking_date or payload.bookingDate or datetime.date.today().isoformat(),
+            event_date=payload.event_date or payload.eventDate or datetime.date.today().isoformat(),
+            check_in_date=payload.check_in_date or payload.checkInDate,
+            check_out_date=payload.check_out_date or payload.checkOutDate,
+            guaranteed_pax=payload.guaranteed_pax or payload.guaranteedPax or 100,
+            actual_pax_served=payload.actual_pax_served or payload.actualPaxServed or 100,
+            per_plate_rate=payload.per_plate_rate or payload.perPlateRate or 0.0,
+            total_food_amount=payload.total_food_amount or payload.totalFoodAmount or 0.0,
+            grand_total=payload.grand_total or payload.grandTotal or 0.0,
+            advance_paid=payload.advance_paid or payload.advancePaid or 0.0,
+            balance_due=payload.balance_due or payload.balanceDue or 0.0,
+            status=payload.status or "Confirmed",
+            financial_summary_json=fin_json
+        )
+        db.add(b)
+
+    db.commit()
+    db.refresh(b)
+    return {
+        "success": True,
+        "bookingNo": b.booking_no,
+        "eventName": b.event_name,
+        "grandTotal": b.grand_total,
+        "balanceDue": b.balance_due
+    }
+
+@router.get("/banquet-bookings")
+def get_banquet_bookings(db: Session = Depends(get_db)):
+    """Retrieve all banquet bookings from PostgreSQL."""
+    bookings = db.query(models.BanquetBooking).order_by(models.BanquetBooking.created_at.desc()).limit(150).all()
+    return [{
+        "id": b.booking_no,
+        "bookingNo": b.booking_no,
+        "eventName": b.event_name,
+        "eventType": b.event_type,
+        "hostName": b.host_name,
+        "contactPerson": b.contact_person,
+        "contactMobile": b.contact_mobile,
+        "contactEmail": b.contact_email,
+        "venueId": b.venue_id,
+        "venueName": b.venue_name,
+        "venueTariff": b.venue_tariff,
+        "bookingDate": b.booking_date,
+        "eventDate": b.event_date,
+        "checkInDate": b.check_in_date,
+        "checkOutDate": b.check_out_date,
+        "guaranteedPax": b.guaranteed_pax,
+        "actualPaxServed": b.actual_pax_served,
+        "perPlateRate": b.per_plate_rate,
+        "totalFoodAmount": b.total_food_amount,
+        "grandTotal": b.grand_total,
+        "advancePaid": b.advance_paid,
+        "balanceDue": b.balance_due,
+        "status": b.status,
+        "financialSummary": json.loads(b.financial_summary_json) if b.financial_summary_json else {}
+    } for b in bookings]
+
+@router.delete("/banquet-bookings/{booking_no}")
+def delete_banquet_booking(booking_no: str, db: Session = Depends(get_db)):
+    """Delete a banquet booking from PostgreSQL."""
+    b = db.query(models.BanquetBooking).filter(models.BanquetBooking.booking_no == booking_no).first()
+    if not b:
+        raise HTTPException(status_code=404, detail="Banquet booking not found")
+    db.delete(b)
+    db.commit()
+    return {"success": True, "message": f"Banquet booking {booking_no} deleted."}
+
+# --- 33. Restro-Bar & Liquor Excise ---
+@router.post("/liquor-items")
+def save_liquor_item(payload: schemas.LiquorItemCreate, db: Session = Depends(get_db)):
+    """Save or update liquor item in PostgreSQL."""
+    code = payload.id or payload.item_code or payload.itemCode or f"LIQ-{uuid.uuid4().hex[:4].upper()}"
+    existing = db.query(models.LiquorItem).filter(
+        (models.LiquorItem.item_code == code) | (models.LiquorItem.name.ilike(payload.name.strip()))
+    ).first()
+
+    if existing:
+        existing.s_no = payload.s_no or payload.sNo or existing.s_no
+        existing.name = payload.name.strip()
+        existing.brand_name = payload.brand_name or payload.brandName or existing.brand_name
+        existing.barcode_no = payload.barcode_no or payload.barcodeNo
+        existing.group = payload.group or "Liquor"
+        existing.mrp = payload.mrp or 0.0
+        existing.rate = payload.rate or 0.0
+        existing.purchase_rate = payload.purchase_rate or payload.purchaseRate or 0.0
+        existing.unit = payload.unit or "30 ml"
+        existing.conversion_ml = payload.conversion_ml or payload.conversionMl or 30.0
+        existing.tax_type = payload.tax_type or payload.taxType or "VAT 13%"
+        existing.vat_percentage = payload.vat_percentage or payload.vatPercentage or 13.0
+        existing.surcharge_percentage = payload.surcharge_percentage or payload.surchargePercentage or 10.0
+        existing.active = payload.active if payload.active is not None else True
+        it = existing
+    else:
+        it = models.LiquorItem(
+            item_code=code,
+            s_no=payload.s_no or payload.sNo or 1,
+            name=payload.name.strip(),
+            brand_name=payload.brand_name or payload.brandName or payload.name.strip(),
+            barcode_no=payload.barcode_no or payload.barcodeNo,
+            group=payload.group or "Liquor",
+            mrp=payload.mrp or 0.0,
+            rate=payload.rate or 0.0,
+            purchase_rate=payload.purchase_rate or payload.purchaseRate or 0.0,
+            unit=payload.unit or "30 ml",
+            conversion_ml=payload.conversion_ml or payload.conversionMl or 30.0,
+            tax_type=payload.tax_type or payload.taxType or "VAT 13%",
+            vat_percentage=payload.vat_percentage or payload.vatPercentage or 13.0,
+            surcharge_percentage=payload.surcharge_percentage or payload.surchargePercentage or 10.0,
+            active=payload.active if payload.active is not None else True
+        )
+        db.add(it)
+
+    db.commit()
+    db.refresh(it)
+    return {"success": True, "id": it.item_code, "name": it.name, "rate": it.rate}
+
+@router.get("/liquor-items")
+def get_liquor_items(db: Session = Depends(get_db)):
+    """Retrieve all liquor items from PostgreSQL."""
+    items = db.query(models.LiquorItem).order_by(models.LiquorItem.s_no.asc()).all()
+    return [{
+        "id": it.item_code,
+        "sNo": it.s_no,
+        "name": it.name,
+        "brandName": it.brand_name,
+        "barcodeNo": it.barcode_no,
+        "group": it.group,
+        "mrp": it.mrp,
+        "rate": it.rate,
+        "purchaseRate": it.purchase_rate,
+        "unit": it.unit,
+        "conversionMl": it.conversion_ml,
+        "taxType": it.tax_type,
+        "vatPercentage": it.vat_percentage,
+        "surchargePercentage": it.surcharge_percentage,
+        "active": it.active
+    } for it in items]
+
+@router.delete("/liquor-items/{item_code}")
+def delete_liquor_item(item_code: str, db: Session = Depends(get_db)):
+    """Delete a liquor item from PostgreSQL."""
+    it = db.query(models.LiquorItem).filter(
+        (models.LiquorItem.item_code == item_code) | (models.LiquorItem.name.ilike(item_code))
+    ).first()
+    if not it:
+        raise HTTPException(status_code=404, detail="Liquor item not found")
+    db.delete(it)
+    db.commit()
+    return {"success": True, "message": f"Liquor item {item_code} deleted."}
+
+@router.post("/bar-invoices")
+def save_bar_invoice(payload: schemas.BarInvoiceCreate, db: Session = Depends(get_db)):
+    """Save or update bar invoice in PostgreSQL."""
+    b_no = payload.id or payload.bill_no or payload.billNo or f"Res/{int(datetime.datetime.utcnow().timestamp()) % 100000}/24-25"
+    existing = db.query(models.BarInvoice).filter(models.BarInvoice.bill_no == b_no).first()
+
+    items_json = payload.items_json or json.dumps(payload.items or [])
+
+    if existing:
+        existing.date = payload.date or existing.date
+        existing.time = payload.time or existing.time
+        existing.table_no = payload.table_no or payload.tableNo or existing.table_no
+        existing.kot_no = payload.kot_no or payload.kotNo
+        existing.service_type = payload.service_type or payload.serviceType or existing.service_type
+        existing.guest_name = payload.guest_name or payload.guestName
+        existing.guest_mobile = payload.guest_mobile or payload.guestMobile
+        existing.items_json = items_json
+        existing.total_items = payload.total_items or payload.totalItems or 1
+        existing.total_quantity = payload.total_quantity or payload.totalQuantity or 1.0
+        existing.basic_amount = payload.basic_amount or payload.basicAmount or 0.0
+        existing.vat_amount = payload.vat_amount or payload.vatAmount or 0.0
+        existing.surcharge_amount = payload.surcharge_amount or payload.surchargeAmount or 0.0
+        existing.grand_total = payload.grand_total or payload.grandTotal or 0.0
+        existing.settled = payload.settled if payload.settled is not None else True
+        existing.payment_mode = payload.payment_mode or payload.paymentMode or "CASH"
+        existing.room_no = payload.room_no or payload.roomNo
+        inv = existing
+    else:
+        inv = models.BarInvoice(
+            bill_no=b_no,
+            date=payload.date or datetime.date.today().isoformat(),
+            time=payload.time or datetime.datetime.now().strftime("%H:%M"),
+            table_no=payload.table_no or payload.tableNo or "Bar Counter",
+            kot_no=payload.kot_no or payload.kotNo,
+            service_type=payload.service_type or payload.serviceType or "Bar Counter",
+            guest_name=payload.guest_name or payload.guestName,
+            guest_mobile=payload.guest_mobile or payload.guestMobile,
+            items_json=items_json,
+            total_items=payload.total_items or payload.totalItems or 1,
+            total_quantity=payload.total_quantity or payload.totalQuantity or 1.0,
+            basic_amount=payload.basic_amount or payload.basicAmount or 0.0,
+            vat_amount=payload.vat_amount or payload.vatAmount or 0.0,
+            surcharge_amount=payload.surcharge_amount or payload.surchargeAmount or 0.0,
+            grand_total=payload.grand_total or payload.grandTotal or 0.0,
+            settled=payload.settled if payload.settled is not None else True,
+            payment_mode=payload.payment_mode or payload.paymentMode or "CASH",
+            room_no=payload.room_no or payload.roomNo
+        )
+        db.add(inv)
+
+    db.commit()
+    db.refresh(inv)
+    return {"success": True, "billNo": inv.bill_no, "grandTotal": inv.grand_total}
+
+@router.get("/bar-invoices")
+def get_bar_invoices(db: Session = Depends(get_db)):
+    """Retrieve all bar invoices from PostgreSQL."""
+    invoices = db.query(models.BarInvoice).order_by(models.BarInvoice.created_at.desc()).limit(150).all()
+    return [{
+        "id": inv.bill_no,
+        "billNo": inv.bill_no,
+        "date": inv.date,
+        "time": inv.time,
+        "tableNo": inv.table_no,
+        "kotNo": inv.kot_no,
+        "serviceType": inv.service_type,
+        "guestName": inv.guest_name,
+        "guestMobile": inv.guest_mobile,
+        "items": json.loads(inv.items_json) if inv.items_json else [],
+        "totalItems": inv.total_items,
+        "totalQuantity": inv.total_quantity,
+        "basicAmount": inv.basic_amount,
+        "vatAmount": inv.vat_amount,
+        "surchargeAmount": inv.surcharge_amount,
+        "grandTotal": inv.grand_total,
+        "settled": inv.settled,
+        "paymentMode": inv.payment_mode,
+        "roomNo": inv.room_no
+    } for inv in invoices]
+
+@router.delete("/bar-invoices/{bill_no}")
+def delete_bar_invoice(bill_no: str, db: Session = Depends(get_db)):
+    """Delete a bar invoice from PostgreSQL."""
+    inv = db.query(models.BarInvoice).filter(models.BarInvoice.bill_no == bill_no).first()
+    if not inv:
+        raise HTTPException(status_code=404, detail="Bar invoice not found")
+    db.delete(inv)
+    db.commit()
+    return {"success": True, "message": f"Bar invoice {bill_no} deleted."}
+
+# --- 34. Hotel Assets & Linen Master ---
+@router.post("/hotel-assets")
+def save_hotel_asset(payload: schemas.HotelAssetCreate, db: Session = Depends(get_db)):
+    """Save or update hotel asset in PostgreSQL."""
+    a_id = payload.id or payload.asset_id or payload.assetId or f"AST-{uuid.uuid4().hex[:4].upper()}"
+    existing = db.query(models.HotelAsset).filter(
+        (models.HotelAsset.asset_id == a_id) | (models.HotelAsset.asset_name.ilike((payload.asset_name or payload.assetName or '').strip()))
+    ).first()
+
+    name = payload.asset_name or payload.assetName or "Hotel Equipment"
+
+    if existing:
+        existing.asset_name = name.strip()
+        existing.category = payload.category or "Linen"
+        existing.unit = payload.unit or "Pcs"
+        existing.total_purchased = payload.total_purchased or payload.totalPurchased or 0.0
+        existing.in_rooms = payload.in_rooms or payload.inRooms or 0.0
+        existing.in_linen_store = payload.in_linen_store or payload.inLinenStore or 0.0
+        existing.in_laundry = payload.in_laundry or payload.inLaundry or 0.0
+        existing.in_damaged_repair = payload.in_damaged_repair or payload.inDamagedRepair or 0.0
+        existing.missing_discrepancy = payload.missing_discrepancy or payload.missingDiscrepancy or 0.0
+        existing.unit_cost = payload.unit_cost or payload.unitCost or 0.0
+        existing.last_audit_date = payload.last_audit_date or payload.lastAuditDate
+        ast = existing
+    else:
+        ast = models.HotelAsset(
+            asset_id=a_id,
+            asset_name=name.strip(),
+            category=payload.category or "Linen",
+            unit=payload.unit or "Pcs",
+            total_purchased=payload.total_purchased or payload.totalPurchased or 0.0,
+            in_rooms=payload.in_rooms or payload.inRooms or 0.0,
+            in_linen_store=payload.in_linen_store or payload.inLinenStore or 0.0,
+            in_laundry=payload.in_laundry or payload.inLaundry or 0.0,
+            in_damaged_repair=payload.in_damaged_repair or payload.inDamagedRepair or 0.0,
+            missing_discrepancy=payload.missing_discrepancy or payload.missingDiscrepancy or 0.0,
+            unit_cost=payload.unit_cost or payload.unitCost or 0.0,
+            last_audit_date=payload.last_audit_date or payload.lastAuditDate or datetime.date.today().isoformat()
+        )
+        db.add(ast)
+
+    db.commit()
+    db.refresh(ast)
+    return {"success": True, "id": ast.asset_id, "name": ast.asset_name, "category": ast.category}
+
+@router.get("/hotel-assets")
+def get_hotel_assets(db: Session = Depends(get_db)):
+    """Retrieve all hotel assets from PostgreSQL."""
+    assets = db.query(models.HotelAsset).order_by(models.HotelAsset.id.asc()).all()
+    return [{
+        "id": a.asset_id,
+        "assetName": a.asset_name,
+        "category": a.category,
+        "unit": a.unit,
+        "totalPurchased": a.total_purchased,
+        "inRooms": a.in_rooms,
+        "inLinenStore": a.in_linen_store,
+        "inLaundry": a.in_laundry,
+        "inDamagedRepair": a.in_damaged_repair,
+        "missingDiscrepancy": a.missing_discrepancy,
+        "unitCost": a.unit_cost,
+        "lastAuditDate": a.last_audit_date
+    } for a in assets]
+
+@router.delete("/hotel-assets/{asset_id}")
+def delete_hotel_asset(asset_id: str, db: Session = Depends(get_db)):
+    """Delete a hotel asset from PostgreSQL."""
+    ast = db.query(models.HotelAsset).filter(
+        (models.HotelAsset.asset_id == asset_id) | (models.HotelAsset.asset_name.ilike(asset_id))
+    ).first()
+    if not ast:
+        raise HTTPException(status_code=404, detail="Hotel asset not found")
+    db.delete(ast)
+    db.commit()
+    return {"success": True, "message": f"Hotel asset {asset_id} deleted."}
+
+# --- 35. Pilgrim Valuables & Lockers ---
+@router.post("/lockers")
+def save_locker(payload: schemas.LockerCreate, db: Session = Depends(get_db)):
+    """Save or update locker in PostgreSQL."""
+    l_no = payload.id or payload.locker_no or payload.lockerNo or f"LCK-{uuid.uuid4().hex[:3].upper()}"
+    existing = db.query(models.Locker).filter(models.Locker.locker_no == l_no).first()
+
+    if existing:
+        existing.locker_size = payload.locker_size or payload.lockerSize or "Medium"
+        existing.daily_rate = payload.daily_rate or payload.dailyRate or 100.0
+        existing.status = payload.status or "Vacant"
+        existing.assigned_guest_name = payload.assigned_guest_name or payload.assignedGuestName
+        existing.assigned_room_no = payload.assigned_room_no or payload.assignedRoomNo
+        existing.key_number = payload.key_number or payload.keyNumber or existing.key_number
+        existing.security_deposit = payload.security_deposit or payload.securityDeposit or 500.0
+        lck = existing
+    else:
+        lck = models.Locker(
+            locker_no=l_no,
+            locker_size=payload.locker_size or payload.lockerSize or "Medium",
+            daily_rate=payload.daily_rate or payload.dailyRate or 100.0,
+            status=payload.status or "Vacant",
+            assigned_guest_name=payload.assigned_guest_name or payload.assignedGuestName,
+            assigned_room_no=payload.assigned_room_no or payload.assignedRoomNo,
+            key_number=payload.key_number or payload.keyNumber or f"K-{l_no}",
+            security_deposit=payload.security_deposit or payload.securityDeposit or 500.0
+        )
+        db.add(lck)
+
+    db.commit()
+    db.refresh(lck)
+    return {"success": True, "lockerNo": lck.locker_no, "status": lck.status}
+
+@router.get("/lockers")
+def get_lockers(db: Session = Depends(get_db)):
+    """Retrieve all lockers from PostgreSQL."""
+    lockers = db.query(models.Locker).order_by(models.Locker.locker_no.asc()).all()
+    return [{
+        "id": l.locker_no,
+        "lockerNo": l.locker_no,
+        "lockerSize": l.locker_size,
+        "dailyRate": l.daily_rate,
+        "status": l.status,
+        "assignedGuestName": l.assigned_guest_name,
+        "assignedRoomNo": l.assigned_room_no,
+        "keyNumber": l.key_number,
+        "securityDeposit": l.security_deposit
+    } for l in lockers]
+
+@router.delete("/lockers/{locker_no}")
+def delete_locker(locker_no: str, db: Session = Depends(get_db)):
+    """Delete a locker from PostgreSQL."""
+    l = db.query(models.Locker).filter(models.Locker.locker_no == locker_no).first()
+    if not l:
+        raise HTTPException(status_code=404, detail="Locker not found")
+    db.delete(l)
+    db.commit()
+    return {"success": True, "message": f"Locker {locker_no} deleted."}
+
+# --- 36. WhatsApp CRM & Guest Communication ---
+@router.post("/whatsapp-logs")
+def save_whatsapp_log(payload: schemas.WhatsAppLogCreate, db: Session = Depends(get_db)):
+    """Record an outbound WhatsApp notification log in PostgreSQL."""
+    log_id = payload.id or payload.log_id or f"WALOG-{int(datetime.datetime.utcnow().timestamp()) % 1000000}"
+    timestamp = payload.timestamp_str or payload.timestamp or datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+
+    log = models.WhatsAppLog(
+        log_id=log_id,
+        timestamp_str=timestamp,
+        recipient_mobile=payload.recipient_mobile or payload.recipientMobile or "9440289999",
+        recipient_name=payload.recipient_name or payload.recipientName or "Valued Guest",
+        recipient_type=payload.recipient_type or payload.recipientType or "Guest",
+        voucher_type=payload.voucher_type or payload.voucherType or "Check-In",
+        voucher_no=payload.voucher_no or payload.voucherNo,
+        room_no=payload.room_no or payload.roomNo,
+        message=payload.message,
+        status=payload.status or "Sent",
+        firm_id=payload.firm_id or payload.firmId or "SVR0001"
+    )
+    db.add(log)
+    db.commit()
+    db.refresh(log)
+    return {"success": True, "logId": log.log_id, "recipient": log.recipient_name, "status": log.status}
+
+@router.get("/whatsapp-logs")
+def get_whatsapp_logs(db: Session = Depends(get_db)):
+    """Retrieve recent WhatsApp logs from PostgreSQL."""
+    logs = db.query(models.WhatsAppLog).order_by(models.WhatsAppLog.created_at.desc()).limit(150).all()
+    return [{
+        "id": wl.log_id,
+        "timestamp": wl.timestamp_str,
+        "recipientMobile": wl.recipient_mobile,
+        "recipientName": wl.recipient_name,
+        "recipientType": wl.recipient_type,
+        "voucherType": wl.voucher_type,
+        "voucherNo": wl.voucher_no,
+        "roomNo": wl.room_no,
+        "message": wl.message,
+        "status": wl.status,
+        "firmId": wl.firm_id
+    } for wl in logs]
+
+@router.post("/whatsapp-config")
+def save_whatsapp_config(payload: schemas.WhatsAppConfigCreate, db: Session = Depends(get_db)):
+    """Save or update WhatsApp gateway configuration in PostgreSQL."""
+    cfg = db.query(models.WhatsAppConfig).filter(models.WhatsAppConfig.config_key == "default").first()
+    if not cfg:
+        cfg = models.WhatsAppConfig(config_key="default")
+        db.add(cfg)
+
+    cfg.api_url = payload.api_url or payload.apiUrl or cfg.api_url
+    cfg.instance_id = payload.instance_id or payload.instanceId or cfg.instance_id
+    cfg.token = payload.token or cfg.token
+    cfg.owner_mobile = payload.owner_mobile or payload.ownerMobile or cfg.owner_mobile
+    cfg.validity_date = payload.validity_date or payload.validityDate or cfg.validity_date
+    if payload.auto_send_on_checkin is not None or payload.autoSendOnCheckIn is not None:
+        cfg.auto_send_on_checkin = payload.auto_send_on_checkin if payload.auto_send_on_checkin is not None else payload.autoSendOnCheckIn
+    if payload.auto_send_on_checkout is not None or payload.autoSendOnCheckOut is not None:
+        cfg.auto_send_on_checkout = payload.auto_send_on_checkout if payload.auto_send_on_checkout is not None else payload.autoSendOnCheckOut
+    if payload.auto_send_on_booking is not None or payload.autoSendOnBooking is not None:
+        cfg.auto_send_on_booking = payload.auto_send_on_booking if payload.auto_send_on_booking is not None else payload.autoSendOnBooking
+    if payload.auto_send_on_food_bill is not None or payload.autoSendOnFoodBill is not None:
+        cfg.auto_send_on_food_bill = payload.auto_send_on_food_bill if payload.auto_send_on_food_bill is not None else payload.autoSendOnFoodBill
+
+    db.commit()
+    db.refresh(cfg)
+    return {"success": True, "message": "WhatsApp gateway configuration updated in PostgreSQL."}
+
+@router.get("/whatsapp-config")
+def get_whatsapp_config(db: Session = Depends(get_db)):
+    """Retrieve WhatsApp configuration from PostgreSQL."""
+    cfg = db.query(models.WhatsAppConfig).filter(models.WhatsAppConfig.config_key == "default").first()
+    if not cfg:
+        return {
+            "apiUrl": "https://api.whatsapp-gateway.com/v1",
+            "instanceId": "SVR_WHATSAPP_INST_01",
+            "token": "waba_token_svr_live_2026",
+            "ownerMobile": "9440289999",
+            "validityDate": "2026-12-31",
+            "autoSendOnCheckIn": True,
+            "autoSendOnCheckOut": True,
+            "autoSendOnBooking": True,
+            "autoSendOnFoodBill": True
+        }
+    return {
+        "apiUrl": cfg.api_url,
+        "instanceId": cfg.instance_id,
+        "token": cfg.token,
+        "ownerMobile": cfg.owner_mobile,
+        "validityDate": cfg.validity_date,
+        "autoSendOnCheckIn": cfg.auto_send_on_checkin,
+        "autoSendOnCheckOut": cfg.auto_send_on_checkout,
+        "autoSendOnBooking": cfg.auto_send_on_booking,
+        "autoSendOnFoodBill": cfg.auto_send_on_food_bill
+    }
+
+# --- 37. Support & Service Tickets ---
+@router.post("/support-tickets")
+def save_support_ticket(payload: schemas.SupportTicketCreate, db: Session = Depends(get_db)):
+    """Save or update staff support ticket in PostgreSQL."""
+    t_no = payload.id or payload.ticket_no or payload.ticketNo or f"TKT-{int(datetime.datetime.utcnow().timestamp()) % 100000}"
+    existing = db.query(models.SupportTicket).filter(models.SupportTicket.ticket_no == t_no).first()
+
+    if existing:
+        existing.date = payload.date or existing.date
+        existing.time = payload.time or existing.time
+        existing.staff_name = payload.staff_name or payload.staffName or existing.staff_name
+        existing.department = payload.department or existing.department
+        existing.phone = payload.phone or existing.phone
+        existing.category = payload.category or existing.category
+        existing.priority = payload.priority or existing.priority
+        existing.subject = payload.subject or existing.subject
+        existing.description = payload.description or existing.description
+        existing.status = payload.status or existing.status
+        existing.assigned_engineer = payload.assigned_engineer or payload.assignedEngineer
+        existing.resolution_notes = payload.resolution_notes or payload.resolutionNotes
+        t = existing
+    else:
+        t = models.SupportTicket(
+            ticket_no=t_no,
+            date=payload.date or datetime.date.today().isoformat(),
+            time=payload.time or datetime.datetime.now().strftime("%H:%M"),
+            staff_name=payload.staff_name or payload.staffName or "Staff",
+            department=payload.department or "Front Office",
+            phone=payload.phone or "9440289999",
+            category=payload.category or "Billing & Checkout",
+            priority=payload.priority or "Medium",
+            subject=payload.subject,
+            description=payload.description,
+            status=payload.status or "Open",
+            assigned_engineer=payload.assigned_engineer or payload.assignedEngineer,
+            resolution_notes=payload.resolution_notes or payload.resolutionNotes
+        )
+        db.add(t)
+
+    db.commit()
+    db.refresh(t)
+    return {"success": True, "ticketNo": t.ticket_no, "subject": t.subject, "status": t.status}
+
+@router.get("/support-tickets")
+def get_support_tickets(db: Session = Depends(get_db)):
+    """Retrieve all support tickets from PostgreSQL."""
+    tickets = db.query(models.SupportTicket).order_by(models.SupportTicket.created_at.desc()).limit(150).all()
+    return [{
+        "id": t.ticket_no,
+        "ticketNo": t.ticket_no,
+        "date": t.date,
+        "time": t.time,
+        "staffName": t.staff_name,
+        "department": t.department,
+        "phone": t.phone,
+        "category": t.category,
+        "priority": t.priority,
+        "subject": t.subject,
+        "description": t.description,
+        "status": t.status,
+        "assignedEngineer": t.assigned_engineer,
+        "resolutionNotes": t.resolution_notes
+    } for t in tickets]
+
+@router.delete("/support-tickets/{ticket_no}")
+def delete_support_ticket(ticket_no: str, db: Session = Depends(get_db)):
+    """Delete a support ticket from PostgreSQL."""
+    t = db.query(models.SupportTicket).filter(models.SupportTicket.ticket_no == ticket_no).first()
+    if not t:
+        raise HTTPException(status_code=404, detail="Support ticket not found")
+    db.delete(t)
+    db.commit()
+    return {"success": True, "message": f"Support ticket {ticket_no} deleted."}
+
 
 
 
