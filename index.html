@@ -230,6 +230,43 @@
       </div>
     </noscript>
 
+    <!-- Fail-safe global crash catcher and auto-recovery guard -->
+    <script>
+      (function() {
+        function showRecovery(msg) {
+          var root = document.getElementById('root');
+          if (!root) return;
+          root.innerHTML = '<div style="min-height:100vh;background:#0a111e;color:#fff;display:flex;align-items:center;justify-content:center;padding:20px;font-family:system-ui,-apple-system,sans-serif;">' +
+            '<div style="max-width:540px;width:100%;background:#0f172a;border:1px solid rgba(212,175,55,0.4);border-radius:14px;padding:32px;text-align:center;box-shadow:0 15px 40px rgba(0,0,0,0.6);">' +
+            '<div style="width:50px;height:50px;margin:0 auto 16px;background:linear-gradient(135deg,#f2d77a,#d4af37);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#0a111e;font-weight:800;font-size:22px;font-family:serif;">SV</div>' +
+            '<h2 style="color:#fae084;margin:0 0 8px 0;font-size:20px;">Hotel Sai Vasudev Residency</h2>' +
+            '<p style="color:#94a3b8;font-size:13px;margin:0 0 20px 0;">' + (msg || 'Local browser session refresh required.') + '</p>' +
+            '<button onclick="try{localStorage.clear();sessionStorage.clear();}catch(e){}location.href=\'/\';" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#0f172a;border:none;padding:12px 20px;border-radius:6px;font-weight:800;cursor:pointer;font-size:13px;width:100%;margin-bottom:10px;box-shadow:0 4px 12px rgba(245,158,11,0.3);">🧹 Reset Corrupted Local Cache &amp; Reload (Fixes White Screen)</button>' +
+            '<div style="display:flex;gap:10px;"><button onclick="location.reload();" style="flex:1;background:#1e293b;color:#f8fafc;border:1px solid #475569;padding:10px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;">🔄 Reload Page</button><button onclick="location.href=\'/erp\';" style="flex:1;background:#0284c7;color:#fff;border:none;padding:10px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;">🛎️ Open Staff ERP</button></div>' +
+            '<p style="color:#64748b;font-size:11px;margin:18px 0 0 0;">Front Desk: +91 94402 89999 &bull; Shirdi VIP Road</p>' +
+            '</div></div>';
+        }
+
+        window.addEventListener('error', function(e) {
+          console.error('[Global FailSafe]', e);
+          var root = document.getElementById('root');
+          if (root && (!root.innerText || root.innerText.trim() === '')) {
+            showRecovery('Browser initialization notice: ' + (e.message || 'Script error'));
+          }
+        });
+
+        window.addEventListener('DOMContentLoaded', function() {
+          setTimeout(function() {
+            var root = document.getElementById('root');
+            var hasApp = document.querySelector('.hotel-app');
+            if (root && !hasApp && (!root.innerText || root.innerText.trim() === '')) {
+              showRecovery('Application rendering timeout. Click below to clear cache.');
+            }
+          }, 4000);
+        });
+      })();
+    </script>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -208,48 +208,62 @@ export function App() {
       <Footer />
 
       {/* Guest Public Reservation Modal (Direct Live Room Booking Modal with Strict KYC & Tariff) */}
-      <BookingModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        selectedRoom={selectedRoom}
-        initialDates={searchDates}
-      />
+      {isModalOpen && (
+        <BookingModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          selectedRoom={selectedRoom}
+          initialDates={searchDates}
+        />
+      )}
 
       {/* Video 20 Public Guest Web Booking Engine Portal (/hotel_room/DEMO0004) */}
-      <OnlineGuestBookingModal
-        isOpen={isGuestEngineOpen}
-        onClose={() => setIsGuestEngineOpen(false)}
-      />
+      {isGuestEngineOpen && (
+        <OnlineGuestBookingModal
+          isOpen={isGuestEngineOpen}
+          onClose={() => setIsGuestEngineOpen(false)}
+        />
+      )}
 
       {/* Receptionist Enterprise PMS Portal (Video 01-20 Cloned) */}
-      <HotelPmsModal
-        isOpen={isPmsOpen}
-        onClose={() => setIsPmsOpen(false)}
-      />
+      {isPmsOpen && (
+        <HotelPmsModal
+          isOpen={isPmsOpen}
+          onClose={() => setIsPmsOpen(false)}
+        />
+      )}
 
       {/* Housekeeping 16-Room Cleanliness & Maintenance Kanban Board */}
-      <HousekeepingTrackerModal
-        isOpen={isHousekeepingOpen}
-        onClose={() => setIsHousekeepingOpen(false)}
-      />
+      {isHousekeepingOpen && (
+        <HousekeepingTrackerModal
+          isOpen={isHousekeepingOpen}
+          onClose={() => setIsHousekeepingOpen(false)}
+        />
+      )}
 
       {/* Petty Cash & 1-Click Night Audit Ledger */}
-      <PettyExpenseModal
-        isOpen={isPettyCashOpen}
-        onClose={() => setIsPettyCashOpen(false)}
-      />
+      {isPettyCashOpen && (
+        <PettyExpenseModal
+          isOpen={isPettyCashOpen}
+          onClose={() => setIsPettyCashOpen(false)}
+        />
+      )}
 
       {/* Vasudev Rasoi KOT Entry Modal */}
-      <KotEntryModal
-        isOpen={isKotOpen}
-        onClose={() => setIsKotOpen(false)}
-      />
+      {isKotOpen && (
+        <KotEntryModal
+          isOpen={isKotOpen}
+          onClose={() => setIsKotOpen(false)}
+        />
+      )}
 
       {/* Vasudev Rasoi Food Bill & POS Modal */}
-      <FoodBillModal
-        isOpen={isFoodBillOpen}
-        onClose={() => setIsFoodBillOpen(false)}
-      />
+      {isFoodBillOpen && (
+        <FoodBillModal
+          isOpen={isFoodBillOpen}
+          onClose={() => setIsFoodBillOpen(false)}
+        />
+      )}
     </div>
   );
 }

@@ -3719,7 +3719,8 @@ export class PmsStore {
       return INITIAL_EXPENSES;
     }
     try {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : INITIAL_EXPENSES;
     } catch {
       return INITIAL_EXPENSES;
     }
@@ -3791,7 +3792,8 @@ export class PmsStore {
       return INITIAL_NIGHT_AUDITS;
     }
     try {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : INITIAL_NIGHT_AUDITS;
     } catch {
       return INITIAL_NIGHT_AUDITS;
     }
@@ -3858,7 +3860,12 @@ export class PmsStore {
   static runNightAudit(auditorName: string = 'General Manager / Lead Auditor'): PmsNightAuditRecord {
     const bDate = this.getBusinessDate();
     const rawAccruals = localStorage.getItem(STORAGE_KEYS.NIGHT_AUDIT_ACCRUALS);
-    const accrualMap: Record<string, boolean> = rawAccruals ? JSON.parse(rawAccruals) : {};
+    let accrualMap: Record<string, boolean> = {};
+    try {
+      if (rawAccruals) accrualMap = JSON.parse(rawAccruals) || {};
+    } catch {
+      accrualMap = {};
+    }
 
     const rooms = this.getRooms();
     const occupiedRooms = rooms.filter(r => this.isRoomOccupied(r));
@@ -4047,7 +4054,12 @@ export class PmsStore {
     discount: { type: 'flat' | 'percent'; value: number; reason: string }
   ): void {
     const raw = localStorage.getItem(STORAGE_KEYS.FOLIO_DISCOUNTS);
-    const allDiscounts = raw ? JSON.parse(raw) : {};
+    let allDiscounts: Record<string, any> = {};
+    try {
+      if (raw) allDiscounts = JSON.parse(raw) || {};
+    } catch {
+      allDiscounts = {};
+    }
     allDiscounts[roomNo] = discount;
     localStorage.setItem(STORAGE_KEYS.FOLIO_DISCOUNTS, JSON.stringify(allDiscounts));
     this.notify();
@@ -4150,7 +4162,12 @@ export class PmsStore {
 
     // Discount Engine
     const discountsRaw = localStorage.getItem(STORAGE_KEYS.FOLIO_DISCOUNTS);
-    const allDiscounts = discountsRaw ? JSON.parse(discountsRaw) : {};
+    let allDiscounts: Record<string, any> = {};
+    try {
+      if (discountsRaw) allDiscounts = JSON.parse(discountsRaw) || {};
+    } catch {
+      allDiscounts = {};
+    }
     const roomDiscount: PmsFolioDiscount | undefined = allDiscounts[roomNo];
 
     let discountAmount = 0;
@@ -4683,7 +4700,8 @@ export class PmsStore {
       return INITIAL_TABLES;
     }
     try {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : INITIAL_TABLES;
     } catch {
       return INITIAL_TABLES;
     }
@@ -4892,7 +4910,8 @@ export class PmsStore {
       return INITIAL_MENU_ITEMS;
     }
     try {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : INITIAL_MENU_ITEMS;
     } catch {
       return INITIAL_MENU_ITEMS;
     }
@@ -6017,7 +6036,15 @@ export class PmsStore {
 
     // Save Table Shift Record
     const rawShifts = localStorage.getItem('hotel_pms_table_shifts');
-    const shifts: PmsTableShiftRecord[] = rawShifts ? JSON.parse(rawShifts) : [];
+    let shifts: PmsTableShiftRecord[] = [];
+    try {
+      if (rawShifts) {
+        const parsed = JSON.parse(rawShifts);
+        if (Array.isArray(parsed)) shifts = parsed;
+      }
+    } catch {
+      shifts = [];
+    }
     shifts.unshift({
       id: `ts-${Date.now()}`,
       fromTable,
@@ -7132,12 +7159,22 @@ export class PmsStore {
 
   static getTableShifts(): PmsTableShiftRecord[] {
     const raw = localStorage.getItem(STORAGE_KEYS.TABLE_SHIFTS) || localStorage.getItem('hotel_pms_table_shifts');
-    return raw ? JSON.parse(raw) : [];
+    try {
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
   }
 
   static getFoodBills(): import('../types/pmsModels').PmsFoodBill[] {
     const raw = localStorage.getItem(STORAGE_KEYS.FOOD_BILLS) || localStorage.getItem('hotel_pms_foodbills') || localStorage.getItem('hotel_pms_food_bills');
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      } catch {}
+    }
 
     // Initial default demo food bill from Video 04 (Frame 0230)
     const initialBills: import('../types/pmsModels').PmsFoodBill[] = [
@@ -8577,7 +8614,12 @@ export class PmsStore {
   // --- Video 11: Room Shifting (Change Guest Room Easily) ---
   static getRoomShifts(): PmsRoomShiftRecord[] {
     const raw = localStorage.getItem(STORAGE_KEYS.ROOM_SHIFTS);
-    return raw ? JSON.parse(raw) : [];
+    try {
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
   }
 
   static shiftRoom(params: {
