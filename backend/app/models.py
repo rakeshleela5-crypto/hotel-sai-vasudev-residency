@@ -428,4 +428,25 @@ class FolioDiscountRecord(Base):
     approved_by = Column(String(100), default="General Manager")
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
+class GroupBooking(Base):
+    __tablename__ = "group_bookings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    group_id = Column(String(100), unique=True, index=True, nullable=False)
+    group_name = Column(String(200), nullable=False)
+    contact_person = Column(String(150), nullable=False)
+    contact_phone = Column(String(50), nullable=False)
+    booking_source = Column(String(100), default="Direct Phone Reservation")
+    check_in_date = Column(String(50), nullable=False)
+    check_out_date = Column(String(50), nullable=False)
+    advance_paid = Column(Float, default=0.0)
+    balance_due = Column(Float, default=0.0)
+    total_amount = Column(Float, default=0.0)
+    rooms_allocated_json = Column(Text, default="[]")
+    guests_json = Column(Text, default="[]")
+    special_instructions = Column(Text, nullable=True)
+    status = Column(String(50), default="Confirmed")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
 

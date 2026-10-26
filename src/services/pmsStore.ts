@@ -3148,6 +3148,11 @@ export class PmsStore {
         localStorage.setItem(STORAGE_KEYS.FOLIO_DISCOUNTS, JSON.stringify(discountMap));
       }
 
+      // 9. Hydrate Group Bookings from PostgreSQL
+      if (state.group_bookings && state.group_bookings.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.GROUP_BOOKINGS, JSON.stringify(state.group_bookings));
+      }
+
       this.notify();
       return true;
     } catch (e) {
@@ -7082,6 +7087,37 @@ export class PmsStore {
     }
     localStorage.setItem(STORAGE_KEYS.GROUP_BOOKINGS, JSON.stringify(list));
     this.notify();
+
+    // Persist to Railway PostgreSQL Database via FastAPI
+    hotelApi.saveGroupBooking({
+      groupId: group.groupId,
+      groupName: group.groupName,
+      contactPerson: group.contactPerson,
+      contactPhone: group.contactPhone,
+      bookingSource: group.bookingSource,
+      roomsAllocated: group.roomsAllocated,
+      checkInDate: group.checkInDate,
+      checkOutDate: group.checkOutDate,
+      advancePaid: group.advancePaid,
+      balanceDue: group.balanceDue,
+      specialInstructions: group.specialInstructions,
+      guests: group.guests,
+      status: group.status || 'Confirmed'
+    }).then(res => {
+      console.log('[PmsStore] Group Booking persisted to PostgreSQL:', res);
+    }).catch(err => {
+      console.warn('[PmsStore] Background cloud sync for group booking deferred:', err);
+    });
+  }
+
+  static cancelGroupBooking(groupId: string): void {
+    const list = this.getGroupBookings().map(g => g.groupId === groupId ? { ...g, status: 'Cancelled' as const } : g);
+    localStorage.setItem(STORAGE_KEYS.GROUP_BOOKINGS, JSON.stringify(list));
+    this.notify();
+
+    hotelApi.cancelGroupBooking(groupId).catch(err => {
+      console.warn('[PmsStore] Background cloud cancel for group booking deferred:', err);
+    });
   }
 
   // =========================================================================

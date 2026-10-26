@@ -807,5 +807,36 @@ export const hotelApi = {
     } catch {
       return null;
     }
+  },
+
+  async saveGroupBooking(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/group-bookings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to save group booking to cloud database');
+    }
+    return await res.json();
+  },
+
+  async getGroupBookings(): Promise<any[]> {
+    const res = await fetch(`${API_BASE_URL}/pms/group-bookings`);
+    if (!res.ok) throw new Error('Failed to fetch group bookings from cloud database');
+    return await res.json();
+  },
+
+  async cancelGroupBooking(groupId: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/group-bookings/${groupId}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to cancel group booking');
+    }
+    return await res.json();
   }
 };
+

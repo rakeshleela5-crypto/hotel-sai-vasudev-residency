@@ -697,6 +697,57 @@ class TableMergeRequest(BaseModel):
     primary_session_id: Optional[str] = None
     merged_by: Optional[str] = "Captain"
 
+class GroupBookingCreate(BaseModel):
+    group_id: Optional[str] = None
+    groupId: Optional[str] = None
+    group_name: Optional[str] = None
+    groupName: Optional[str] = None
+    contact_person: Optional[str] = None
+    contactPerson: Optional[str] = None
+    contact_phone: Optional[str] = None
+    contactPhone: Optional[str] = None
+    booking_source: Optional[str] = "Direct Phone Reservation"
+    bookingSource: Optional[str] = None
+    check_in_date: Optional[str] = None
+    checkInDate: Optional[str] = None
+    check_out_date: Optional[str] = None
+    checkOutDate: Optional[str] = None
+    advance_paid: Optional[float] = 0.0
+    advancePaid: Optional[float] = 0.0
+    balance_due: Optional[float] = 0.0
+    balanceDue: Optional[float] = 0.0
+    total_amount: Optional[float] = 0.0
+    rooms_allocated: Optional[List[str]] = None
+    roomsAllocated: Optional[List[str]] = None
+    rooms_allocated_json: Optional[str] = None
+    guests: Optional[List[Dict[str, Any]]] = None
+    guests_json: Optional[str] = None
+    special_instructions: Optional[str] = None
+    specialInstructions: Optional[str] = None
+    status: Optional[str] = "Confirmed"
+
+class GroupBookingResponse(BaseModel):
+    id: int
+    group_id: str
+    group_name: str
+    contact_person: str
+    contact_phone: str
+    booking_source: str
+    check_in_date: str
+    check_out_date: str
+    advance_paid: float
+    balance_due: float
+    total_amount: float
+    rooms_allocated: List[str]
+    guests: List[Dict[str, Any]]
+    special_instructions: Optional[str]
+    status: str
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+
 
 
 

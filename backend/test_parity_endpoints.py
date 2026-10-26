@@ -21,8 +21,8 @@ def test_parity_endpoints():
     # 1. Test Folio Discount
     disc_payload = {
         "booking_ref": "SVR-ROOM-101",
+        "discount_type": "flat",
         "discount_amount": 250.0,
-        "discount_percentage": 10.0,
         "discount_reason": "Pilgrim Group Courteous Discount",
         "approved_by": "Duty Manager"
     }
@@ -157,8 +157,40 @@ def test_parity_endpoints():
     assert "expenses" in state
     assert "purchases" in state
     assert "discounts" in state
+    assert "group_bookings" in state
     assert "masters" in state
-    print(f"   [OK] Full Cloud State Hydration: {len(state['rooms'])} rooms, {len(state['food_bills'])} food bills, {len(state['expenses'])} expenses, {len(state['purchases'])} purchases, {len(state['discounts'])} discounts")
+    print(f"   [OK] Full Cloud State Hydration: {len(state['rooms'])} rooms, {len(state['food_bills'])} food bills, {len(state['expenses'])} expenses, {len(state['purchases'])} purchases, {len(state['discounts'])} discounts, {len(state['group_bookings'])} group bookings")
+
+    # 9. Test Group Booking (Multi-Room Tape Chart Sync)
+    grp_payload = {
+        "groupId": "GRP-021892",
+        "groupName": "JK Paper Ltd Delegation",
+        "contactPerson": "Mr. Asit Kumar Bhuyan",
+        "contactPhone": "+91 94402 8999",
+        "bookingSource": "Direct Phone Reservation",
+        "roomsAllocated": ["107", "203", "205", "208"],
+        "checkInDate": "2026-10-27",
+        "checkOutDate": "2026-10-30",
+        "advancePaid": 8822.0,
+        "balanceDue": 20700.0,
+        "totalAmount": 29522.0,
+        "specialInstructions": "Corporate Billing under JK Paper MSA. Separate Food vs Room invoices required.",
+        "guests": [
+            {"name": "Mr. Asit Kumar Bhuyan", "phone": "+91 94402 8999", "roomAssigned": "203", "age": 44},
+            {"name": "Mr. Chandan Giri", "phone": "+91 98480 1234", "roomAssigned": "208", "age": 48},
+            {"name": "Mr. Jyotiswaroop Routray", "phone": "+91 94370 5044", "roomAssigned": "107", "age": 39},
+            {"name": "Mr. S. K. Patra", "phone": "+91 94371 2233", "roomAssigned": "205", "age": 41}
+        ]
+    }
+    r = client.post("/api/v1/pms/group-bookings", json=grp_payload)
+    assert r.status_code == 200, f"Group booking creation failed: {r.text}"
+    print(f"   [OK] Group Booking Persisted: {r.json()['message']}")
+
+    # Get Group Bookings
+    r = client.get("/api/v1/pms/group-bookings")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Group Bookings Query: Found {len(r.json())} group(s)")
 
     print("\n=== ALL PARITY ENDPOINTS TESTED & PASSED 100%! ===")
 
