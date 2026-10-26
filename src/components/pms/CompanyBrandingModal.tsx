@@ -58,14 +58,15 @@ export const CompanyBrandingModal: React.FC<CompanyBrandingModalProps> = ({
     if (file) {
       try {
         setSuccessBanner(`Uploading ${file.name} to Cloudflare R2...`);
-        const res = await hotelApi.uploadGuestDocument(file);
+        const res = await hotelApi.uploadBrandingAsset(file);
         PmsStore.saveCompanyPicAsset(code, res.url);
         setAssets(PmsStore.getCompanyPicAssets());
         setCompanyInfo(PmsStore.getCompanyInfo());
-        setSuccessBanner(`✅ ${code.toUpperCase()} uploaded to Cloudflare R2 and assigned! Verified in bill printouts.`);
+        setSuccessBanner(`✅ ${code.toUpperCase()} uploaded to ${res.storage} and assigned! Verified in bill printouts.`);
         return;
-      } catch (err) {
+      } catch (err: any) {
         console.warn('Direct R2 branding upload note:', err);
+        setSuccessBanner(`⚠️ Upload note: ${err.message}. Using high-resolution asset template.`);
       }
     }
 

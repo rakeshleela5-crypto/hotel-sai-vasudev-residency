@@ -58,6 +58,7 @@ import { RoomCheckOutModal } from './RoomCheckOutModal';
 import { HousekeepingTrackerModal } from './HousekeepingTrackerModal';
 import { PettyExpenseModal } from './PettyExpenseModal';
 import { Gstr1ExportModal } from './Gstr1ExportModal';
+import { CloudflareR2StorageModal } from './CloudflareR2StorageModal';
 import { HousekeepingDiscrepancyModal } from './HousekeepingDiscrepancyModal';
 import { RfidKeyCardModal } from './RfidKeyCardModal';
 import { MonthlyHotelSaleReportModal } from './MonthlyHotelSaleReportModal';
@@ -220,6 +221,9 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
 
   // Video 35: Banquet Hall Billing & Event/Party Hall Invoice Demo
   const [isBanquetOpen, setIsBanquetOpen] = useState(false);
+
+  // Cloudflare R2 Object Storage Explorer & Asset Manager
+  const [isR2StorageOpen, setIsR2StorageOpen] = useState(false);
 
   const handleLaunchReportAction = (actionKey: string) => {
     switch (actionKey) {
@@ -564,6 +568,8 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       setIsPettyExpenseOpen(true);
     } else if (query.includes('calendar')) {
       setIsCalendarOpen(true);
+    } else if (query.includes('r2') || query.includes('storage') || query.includes('cloud') || query.includes('bucket') || query.includes('media')) {
+      setIsR2StorageOpen(true);
     } else {
       setActiveTab('matrix');
     }
@@ -674,6 +680,18 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               >
                 <span>💰</span>
                 <span>Cash &amp; Night Audit</span>
+              </button>
+
+              {/* Cloudflare R2 Object Storage Explorer & Asset Manager */}
+              <button
+                type="button"
+                onClick={() => setIsR2StorageOpen(true)}
+                title="Cloudflare R2 Object Storage — Manage property images, KYC documents, backups"
+                className="pms-header-btn"
+                style={{ background: 'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)', color: '#ffffff' }}
+              >
+                <span>☁️</span>
+                <span>Cloudflare R2</span>
               </button>
 
               {/* Video 21: Active Chain Property Selector */}
@@ -2099,6 +2117,12 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       <MonthlyRestaurantSaleReportModal
         isOpen={isMonthlyRestaurantSaleOpen}
         onClose={() => setIsMonthlyRestaurantSaleOpen(false)}
+      />
+
+      {/* Cloudflare R2 Object Storage Explorer & Asset Manager */}
+      <CloudflareR2StorageModal
+        isOpen={isR2StorageOpen}
+        onClose={() => setIsR2StorageOpen(false)}
       />
     </>
   );

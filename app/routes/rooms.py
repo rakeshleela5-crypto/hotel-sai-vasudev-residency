@@ -161,6 +161,9 @@ def get_room(room_id: int, db: Session = Depends(get_db)):
 
 @router.post("/seed", response_model=dict)
 def trigger_seed(db: Session = Depends(get_db)):
-    """Seed or reset rooms catalog"""
-    seed_rooms_if_empty(db)
-    return {"message": "Rooms catalog seeded successfully", "count": db.query(models.Room).count()}
+    """Seed rooms catalog idempotently if empty; prevents unauthorized catalog manipulation"""
+    count = db.query(models.Room).count()
+    if count == 0:
+        seed_rooms_if_empty(db)
+        return {"message": "Rooms catalog seeded successfully", "count": db.query(models.Room).count()}
+    return {"message": "Rooms catalog is already initialized", "count": count}

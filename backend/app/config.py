@@ -41,6 +41,13 @@ class Settings(BaseSettings):
     DECENTRO_WEBHOOK_SECRET: str = os.getenv("DECENTRO_WEBHOOK_SECRET", "")
     DECENTRO_PAYEE_ACCOUNT: str = os.getenv("DECENTRO_PAYEE_ACCOUNT", "SAIVASUDEV@icici")
 
+    # Cloudflare R2 Object Storage (S3-Compatible)
+    R2_ACCOUNT_ID: str = os.getenv("R2_ACCOUNT_ID", "")
+    R2_ACCESS_KEY_ID: str = os.getenv("R2_ACCESS_KEY_ID", "")
+    R2_SECRET_ACCESS_KEY: str = os.getenv("R2_SECRET_ACCESS_KEY", "")
+    R2_BUCKET_NAME: str = os.getenv("R2_BUCKET_NAME", "hotel-sai-vasudev-documents")
+    R2_PUBLIC_DOMAIN: str = os.getenv("R2_PUBLIC_DOMAIN", "")
+
     @property
     def get_database_url(self) -> str:
         # Railway sometimes provides postgres:// which SQLAlchemy 1.4+ requires postgresql://

@@ -1,5 +1,5 @@
-from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, List
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from typing import Optional, List, Dict, Any
 import datetime
 
 # --- Room Schemas ---
@@ -395,4 +395,135 @@ class PmsDashboardSyncResponse(BaseModel):
     unconfirmed_web_bookings_count: int
     rooms: List[RoomResponse]
     active_bookings: List[BookingResponse]
+
+# --- Module 1 & 2 Schemas ---
+class KotVoidRequest(BaseModel):
+    kot_no: str
+    item_name: str
+    qty_voided: int = 1
+    manager_pin: str
+    void_reason: str
+    steward_id: Optional[str] = "Steward"
+    approving_manager_id: Optional[str] = "Duty Manager"
+
+class TableShiftRequest(BaseModel):
+    source_table: str
+    target_table: str
+    shifted_by: Optional[str] = "Steward / Cashier"
+
+class TableMergeRequest(BaseModel):
+    primary_table: str
+    secondary_table: str
+    merged_by: Optional[str] = "Restaurant Manager"
+
+# --- Module 5 Schemas: Anti-Fraud & Housekeeping Discrepancy ---
+class HousekeepingDiscrepancyCreate(BaseModel):
+    room_no: str
+    housekeeping_status: str # Vacant Dirty, Occupied
+    reported_by: Optional[str] = "Housekeeping Staff"
+    notes: Optional[str] = None
+
+# --- Module 6 Schemas: RFID Key Card Access ---
+class KeyCardEncodeRequest(BaseModel):
+    card_uid: str
+    room_no: str
+    guest_name: str
+    scheduled_checkout_time: str # ISO or YYYY-MM-DD HH:MM
+    encoded_by: Optional[str] = "Front Desk"
+
+class KeyCardExtendRequest(BaseModel):
+    card_uid: str
+    extended_checkout_time: str
+    extension_fee_paid: float = 0.0
+    payment_mode: str = "Cash"
+    extended_by: Optional[str] = "Front Desk Officer"
+
+# =========================================================================
+# Decentro Banking & KYC Integration Schemas
+# =========================================================================
+
+class DecentroUpiQrRequest(BaseModel):
+    amount: float = Field(..., gt=0, description="Payment amount in INR")
+    booking_id: Optional[int] = None
+    kot_id: Optional[str] = None
+    room_no: Optional[str] = None
+    purpose_message: Optional[str] = "Hotel Sai Vasudev Residency Settlement"
+    expiry_minutes: Optional[int] = 30
+
+class DecentroUpiQrResponse(BaseModel):
+    reference_id: str
+    decentro_txn_id: Optional[str] = None
+    amount: float
+    qr_code_base64: str
+    upi_intent_link: str
+    status: str = "PENDING"
+    expiry_time: Optional[str] = None
+    message: str = "Dynamic UPI QR generated successfully"
+
+class DecentroVirtualAccountRequest(BaseModel):
+    corporate_name: str = Field(..., min_length=2, description="Corporate entity or guest name")
+    corporate_client_id: Optional[str] = None
+    booking_id: Optional[int] = None
+    group_id: Optional[str] = None
+    contact_email: Optional[EmailStr] = None
+    contact_phone: Optional[str] = None
+    address: Optional[str] = None
+
+class DecentroVirtualAccountResponse(BaseModel):
+    reference_id: str
+    account_number: str
+    ifsc_code: str
+    bank_name: str = "YES BANK"
+    account_name: str
+    upi_id: Optional[str] = None
+    decentro_urn: Optional[str] = None
+    status: str = "ACTIVE"
+    message: str = "Dedicated Virtual Account created successfully"
+
+class DecentroWebhookPayload(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    decentro_txn_id: Optional[str] = None
+    reference_id: Optional[str] = None
+    transaction_status: str # SUCCESS, FAILURE, PENDING
+    amount: Optional[float] = None
+    bank_reference_number: Optional[str] = None # Bank UTR
+    payer_vpa: Optional[str] = None
+    timestamp: Optional[str] = None
+    original_callback_data: Optional[Dict[str, Any]] = None
+
+class DecentroGstinVerifyRequest(BaseModel):
+    gstin: str = Field(..., min_length=15, max_length=15, description="15-digit Indian GST Identification Number")
+
+class DecentroGstinVerifyResponse(BaseModel):
+    success: bool
+    gstin: str
+    legal_name: str
+    trade_name: str
+    status: str
+    state: Optional[str] = None
+    address: Optional[str] = None
+    pincode: Optional[str] = None
+    message: Optional[str] = None
+
+class PaymentTransactionResponse(BaseModel):
+    id: int
+    reference_id: str
+    booking_id: Optional[int]
+    kot_id: Optional[str]
+    room_no: Optional[str]
+    amount: float
+    currency: str
+    purpose_message: Optional[str]
+    payment_method: str
+    status: str
+    bank_reference_number: Optional[str]
+    payer_vpa: Optional[str]
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+
 

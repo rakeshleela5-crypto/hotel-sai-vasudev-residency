@@ -219,6 +219,8 @@ class DiningTable(Base):
     table_group = Column(String(50), default="General") # General, TakeAway, Nc, SelfService
     capacity = Column(Integer, default=4)
     status = Column(String(50), default="Vacant") # Vacant, Running, Billed
+    active_session_id = Column(String(100), nullable=True, index=True) # Module 1: Single table session ID
+    merged_with_tables = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 class KotTicket(Base):
@@ -226,6 +228,8 @@ class KotTicket(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     kot_no = Column(String(100), unique=True, index=True, nullable=False)
+    table_session_id = Column(String(100), index=True, nullable=True) # Module 1: Single table session ID
+    kot_sequence = Column(Integer, default=1) # KOT #1, KOT #2...
     date = Column(String(50), nullable=False)
     time = Column(String(50), nullable=False)
     table_no = Column(String(50), nullable=True, index=True)
@@ -234,10 +238,60 @@ class KotTicket(Base):
     guest_name = Column(String(150), nullable=True)
     pax = Column(Integer, default=2)
     items_json = Column(Text, nullable=False) # JSON array of {itemName, qty, rate, amount}
+    delta_items_json = Column(Text, nullable=True) # Newly added items in this running KOT
     total_amount = Column(Float, default=0.0)
     status = Column(String(50), default="Running") # Running, Billed, Cancelled
     is_printed = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class KotVoidAuditLog(Base):
+    __tablename__ = "kot_void_audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    table_session_id = Column(String(100), index=True, nullable=True)
+    kot_no = Column(String(100), index=True, nullable=False)
+    table_no = Column(String(50), nullable=True)
+    item_name = Column(String(150), nullable=False)
+    qty_voided = Column(Integer, nullable=False)
+    rate = Column(Float, nullable=False)
+    amount = Column(Float, nullable=False)
+    steward_id = Column(String(100), default="Steward")
+    approving_manager_id = Column(String(100), default="Duty Manager")
+    manager_pin_verified = Column(Boolean, default=True)
+    void_reason = Column(String(255), nullable=False)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+
+class KeyCardAccess(Base):
+    __tablename__ = "key_card_access"
+
+    id = Column(Integer, primary_key=True, index=True)
+    card_uid = Column(String(100), unique=True, index=True, nullable=False)
+    room_no = Column(String(50), nullable=False, index=True)
+    guest_name = Column(String(150), nullable=False)
+    check_in_time = Column(DateTime, default=datetime.datetime.utcnow)
+    scheduled_checkout_time = Column(DateTime, nullable=False)
+    card_deactivation_time = Column(DateTime, nullable=False) # T-1h cutoff
+    status = Column(String(50), default="ACTIVE") # ACTIVE, WARNING_T_MINUS_1H, DEACTIVATED, EXTENDED
+    extension_logged = Column(Boolean, default=False)
+    extension_fee = Column(Float, default=0.0)
+    encoded_by = Column(String(100), default="Front Desk")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+class HousekeepingDiscrepancy(Base):
+    __tablename__ = "housekeeping_discrepancies"
+
+    id = Column(Integer, primary_key=True, index=True)
+    room_no = Column(String(50), nullable=False, index=True)
+    front_desk_status = Column(String(50), nullable=False)
+    housekeeping_status = Column(String(50), nullable=False)
+    reported_by = Column(String(100), default="Housekeeping Attendant")
+    reported_at = Column(DateTime, default=datetime.datetime.utcnow)
+    resolved = Column(Boolean, default=False)
+    resolved_by = Column(String(100), nullable=True)
+    resolved_at = Column(DateTime, nullable=True)
+    notes = Column(Text, nullable=True)
+    is_short_stay_suspect = Column(Boolean, default=False)
 
 class MasterItem(Base):
     __tablename__ = "master_items"
@@ -278,4 +332,50 @@ class InventoryPurchase(Base):
     net_amount = Column(Float, default=0.0)
     terms = Column(String(50), default="Credit")
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class PaymentTransaction(Base):
+    __tablename__ = "payment_transactions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    reference_id = Column(String(100), unique=True, index=True, nullable=False) # Decentro reference_id UUID
+    booking_id = Column(Integer, ForeignKey("bookings.id", ondelete="SET NULL"), nullable=True, index=True)
+    kot_id = Column(String(100), nullable=True, index=True)
+    room_no = Column(String(50), nullable=True)
+    amount = Column(Float, nullable=False)
+    currency = Column(String(10), default="INR")
+    purpose_message = Column(String(255), nullable=True)
+    payment_method = Column(String(50), default="UPI_QR") # UPI_QR, VIRTUAL_ACCOUNT, CARD, NETBANKING
+    status = Column(String(50), default="PENDING", index=True) # PENDING, SUCCESS, FAILURE, EXPIRED, CANCELLED
+    decentro_txn_id = Column(String(150), nullable=True, index=True)
+    bank_reference_number = Column(String(100), nullable=True, index=True) # UTR
+    payer_vpa = Column(String(100), nullable=True)
+    qr_code_base64 = Column(Text, nullable=True)
+    upi_intent_link = Column(Text, nullable=True)
+    expiry_time = Column(DateTime, nullable=True)
+    metadata_json = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    booking = relationship("Booking", backref="payment_transactions")
+
+class VirtualAccount(Base):
+    __tablename__ = "virtual_accounts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    reference_id = Column(String(100), unique=True, index=True, nullable=False)
+    corporate_client_id = Column(String(100), nullable=True, index=True)
+    booking_id = Column(Integer, ForeignKey("bookings.id", ondelete="SET NULL"), nullable=True, index=True)
+    group_id = Column(String(100), nullable=True, index=True)
+    account_number = Column(String(100), unique=True, index=True, nullable=False)
+    ifsc_code = Column(String(50), nullable=False)
+    bank_name = Column(String(100), default="YES BANK")
+    account_name = Column(String(200), nullable=False)
+    upi_id = Column(String(150), nullable=True)
+    decentro_urn = Column(String(150), nullable=True, index=True)
+    status = Column(String(50), default="ACTIVE") # ACTIVE, DEACTIVATED, CLOSED
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    booking = relationship("Booking", backref="virtual_accounts")
+
 

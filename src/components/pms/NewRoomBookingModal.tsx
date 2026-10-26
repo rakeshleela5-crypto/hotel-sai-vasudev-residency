@@ -122,6 +122,9 @@ export const NewRoomBookingModal: React.FC<NewRoomBookingModalProps> = ({
   // Photos
   const [guestPhoto, setGuestPhoto] = useState<string | null>(null);
   const [idPhoto, setIdPhoto] = useState<string | null>(null);
+  const [isUploadingBookingId, setIsUploadingBookingId] = useState(false);
+  const [isUploadingGuestPic, setIsUploadingGuestPic] = useState(false);
+  const [bookingUploadError, setBookingUploadError] = useState<string | null>(null);
 
   // Selected Rooms
   const [selectedRoomNos, setSelectedRoomNos] = useState<string[]>(
@@ -540,10 +543,20 @@ export const NewRoomBookingModal: React.FC<NewRoomBookingModalProps> = ({
                 </div>
               </div>
 
-              {/* Document Image & Guest Image upload clickables (Frame 0080) */}
+              {/* Document Image & Guest Image upload clickables (Cloudflare R2 Encrypted) */}
+              {bookingUploadError && (
+                <div style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', padding: '6px 10px', borderRadius: 4, fontSize: 11, marginTop: 4, display: 'flex', justifyContent: 'space-between' }}>
+                  <span>⚠️ {bookingUploadError}</span>
+                  <button type="button" onClick={() => setBookingUploadError(null)} style={{ background: 'none', border: 'none', color: '#b91c1c', cursor: 'pointer', fontWeight: 'bold' }}>✕</button>
+                </div>
+              )}
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 4 }}>
                 <div>
-                  <label className="form-label-pms">Document Image</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <label className="form-label-pms">Document Image</label>
+                    <span style={{ fontSize: 9, color: '#0284c7' }}>☁️ R2</span>
+                  </div>
                   <label style={{
                     display: 'block',
                     border: '2px dashed #93c5fd',
@@ -551,23 +564,28 @@ export const NewRoomBookingModal: React.FC<NewRoomBookingModalProps> = ({
                     textAlign: 'center',
                     borderRadius: 4,
                     fontSize: 12,
-                    color: '#2563eb',
-                    cursor: 'pointer',
+                    color: isUploadingBookingId ? '#0369a1' : '#2563eb',
+                    cursor: isUploadingBookingId ? 'not-allowed' : 'pointer',
                     background: '#eff6ff'
                   }}>
-                    📎 Click to upload or choose file
+                    {isUploadingBookingId ? '⏳ Uploading to Cloudflare R2...' : '📎 Click to upload to R2'}
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/*,application/pdf"
+                      disabled={isUploadingBookingId}
                       style={{ display: 'none' }}
                       onChange={async e => {
                         const file = e.target.files?.[0];
                         if (file) {
+                          setBookingUploadError(null);
+                          setIsUploadingBookingId(true);
                           try {
                             const res = await hotelApi.uploadGuestDocument(file);
                             setIdPhoto(res.url);
-                          } catch (err) {
-                            console.warn('Booking ID upload note:', err);
+                          } catch (err: any) {
+                            setBookingUploadError(`Document upload failed: ${err.message}`);
+                          } finally {
+                            setIsUploadingBookingId(false);
                           }
                         }
                       }}
@@ -576,7 +594,10 @@ export const NewRoomBookingModal: React.FC<NewRoomBookingModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="form-label-pms">Guest Image</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <label className="form-label-pms">Guest Image</label>
+                    <span style={{ fontSize: 9, color: '#0284c7' }}>☁️ R2</span>
+                  </div>
                   <label style={{
                     display: 'block',
                     border: '2px dashed #93c5fd',
@@ -584,23 +605,28 @@ export const NewRoomBookingModal: React.FC<NewRoomBookingModalProps> = ({
                     textAlign: 'center',
                     borderRadius: 4,
                     fontSize: 12,
-                    color: '#2563eb',
-                    cursor: 'pointer',
+                    color: isUploadingGuestPic ? '#0369a1' : '#2563eb',
+                    cursor: isUploadingGuestPic ? 'not-allowed' : 'pointer',
                     background: '#eff6ff'
                   }}>
-                    📷 Click to upload or webcam capture
+                    {isUploadingGuestPic ? '⏳ Uploading to Cloudflare R2...' : '📷 Click to upload to R2'}
                     <input
                       type="file"
                       accept="image/*"
+                      disabled={isUploadingGuestPic}
                       style={{ display: 'none' }}
                       onChange={async e => {
                         const file = e.target.files?.[0];
                         if (file) {
+                          setBookingUploadError(null);
+                          setIsUploadingGuestPic(true);
                           try {
                             const res = await hotelApi.uploadGuestDocument(file);
                             setGuestPhoto(res.url);
-                          } catch (err) {
-                            console.warn('Guest photo upload note:', err);
+                          } catch (err: any) {
+                            setBookingUploadError(`Guest photo upload failed: ${err.message}`);
+                          } finally {
+                            setIsUploadingGuestPic(false);
                           }
                         }
                       }}

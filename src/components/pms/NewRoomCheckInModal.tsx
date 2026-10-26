@@ -302,10 +302,12 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
     }
   };
 
-  // Photos
+  // Photos (Cloudflare R2 Encrypted)
   const [guestPhoto, setGuestPhoto] = useState<string | null>(null);
   const [idPhotoFront, setIdPhotoFront] = useState<string | null>(null);
   const [idPhotoBack, setIdPhotoBack] = useState<string | null>(null);
+  const [uploadingDocSlot, setUploadingDocSlot] = useState<string | null>(null);
+  const [docUploadError, setDocUploadError] = useState<string | null>(null);
 
   // Co-Travelers KYC
   const [secondGuestName, setSecondGuestName] = useState('');
@@ -755,14 +757,54 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                 </select>
               </div>
 
-              {/* Guest Live Image Box */}
-              <div className="pms-photo-box" style={{ overflow: 'hidden' }}>
-                {guestPhoto ? (
-                  <img src={guestPhoto} alt="Guest" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              {/* Guest Live Image Box (Cloudflare R2 Direct Upload) */}
+              <label 
+                className="pms-photo-box" 
+                style={{ 
+                  overflow: 'hidden', 
+                  cursor: uploadingDocSlot === 'guest' ? 'not-allowed' : 'pointer',
+                  position: 'relative',
+                  border: guestPhoto ? '2px solid #22c55e' : '1px dashed #3b82f6',
+                  background: guestPhoto ? '#000' : '#f0f9ff'
+                }}
+                title="Click to upload guest face photo or webcam capture to Cloudflare R2"
+              >
+                {uploadingDocSlot === 'guest' ? (
+                  <span style={{ fontSize: 10, color: '#0369a1', fontWeight: 700 }}>⏳ Uploading to R2...</span>
+                ) : guestPhoto ? (
+                  <>
+                    <img src={guestPhoto} alt="Guest" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <span style={{ position: 'absolute', bottom: 2, right: 2, background: 'rgba(15, 23, 42, 0.8)', color: '#38bdf8', fontSize: 8, padding: '1px 4px', borderRadius: 2 }}>
+                      ☁️ R2
+                    </span>
+                  </>
                 ) : (
-                  <span>Your Image<br />Will Show Here</span>
+                  <span style={{ fontSize: 10, color: '#1d4ed8' }}>
+                    📷 Click to Upload<br /><b>Guest Photo</b>
+                  </span>
                 )}
-              </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={uploadingDocSlot === 'guest'}
+                  style={{ display: 'none' }}
+                  onChange={async e => {
+                    const f = e.target.files?.[0];
+                    if (f) {
+                      setDocUploadError(null);
+                      setUploadingDocSlot('guest');
+                      try {
+                        const res = await hotelApi.uploadGuestDocument(f);
+                        setGuestPhoto(res.url);
+                      } catch (err: any) {
+                        setDocUploadError(`Guest photo upload error: ${err.message}`);
+                      } finally {
+                        setUploadingDocSlot(null);
+                      }
+                    }
+                  }}
+                />
+              </label>
 
               {/* Select Guest Searchable Dropdown */}
               <div>
@@ -782,49 +824,97 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                 </select>
               </div>
 
-              {/* Stacked ID Proof Front & Back Photos (Frame 0070) */}
+              {/* Stacked ID Proof Front & Back Photos (Cloudflare R2 Direct Upload) */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <label className="pms-photo-box" style={{ width: 90, height: 42, overflow: 'hidden', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {idPhotoFront ? (
-                    <img src={idPhotoFront} alt="ID Front" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <label 
+                  className="pms-photo-box" 
+                  style={{ 
+                    width: 96, 
+                    height: 42, 
+                    overflow: 'hidden', 
+                    cursor: uploadingDocSlot === 'idFront' ? 'not-allowed' : 'pointer', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    border: idPhotoFront ? '1.5px solid #22c55e' : '1px dashed #94a3b8',
+                    position: 'relative'
+                  }}
+                  title="Upload ID Proof Front to Cloudflare R2"
+                >
+                  {uploadingDocSlot === 'idFront' ? (
+                    <span style={{ fontSize: 9, color: '#0369a1' }}>⏳ R2...</span>
+                  ) : idPhotoFront ? (
+                    <>
+                      <img src={idPhotoFront} alt="ID Front" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <span style={{ position: 'absolute', bottom: 1, right: 2, background: 'rgba(0,0,0,0.7)', color: '#38bdf8', fontSize: 7, padding: '0 2px' }}>R2</span>
+                    </>
                   ) : (
-                    <span style={{ fontSize: 9 }}>ID Front</span>
+                    <span style={{ fontSize: 9, color: '#475569' }}>📎 ID Front (R2)</span>
                   )}
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/*,application/pdf"
+                    disabled={uploadingDocSlot === 'idFront'}
                     style={{ display: 'none' }}
                     onChange={async e => {
                       const f = e.target.files?.[0];
                       if (f) {
+                        setDocUploadError(null);
+                        setUploadingDocSlot('idFront');
                         try {
                           const res = await hotelApi.uploadGuestDocument(f);
                           setIdPhotoFront(res.url);
-                        } catch (err) {
-                          console.warn('ID Front upload note:', err);
+                        } catch (err: any) {
+                          setDocUploadError(`ID Front upload failed: ${err.message}`);
+                        } finally {
+                          setUploadingDocSlot(null);
                         }
                       }
                     }}
                   />
                 </label>
-                <label className="pms-photo-box" style={{ width: 90, height: 42, overflow: 'hidden', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {idPhotoBack ? (
-                    <img src={idPhotoBack} alt="ID Back" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <label 
+                  className="pms-photo-box" 
+                  style={{ 
+                    width: 96, 
+                    height: 42, 
+                    overflow: 'hidden', 
+                    cursor: uploadingDocSlot === 'idBack' ? 'not-allowed' : 'pointer', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    border: idPhotoBack ? '1.5px solid #22c55e' : '1px dashed #94a3b8',
+                    position: 'relative'
+                  }}
+                  title="Upload ID Proof Back to Cloudflare R2"
+                >
+                  {uploadingDocSlot === 'idBack' ? (
+                    <span style={{ fontSize: 9, color: '#0369a1' }}>⏳ R2...</span>
+                  ) : idPhotoBack ? (
+                    <>
+                      <img src={idPhotoBack} alt="ID Back" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <span style={{ position: 'absolute', bottom: 1, right: 2, background: 'rgba(0,0,0,0.7)', color: '#38bdf8', fontSize: 7, padding: '0 2px' }}>R2</span>
+                    </>
                   ) : (
-                    <span style={{ fontSize: 9 }}>ID Back</span>
+                    <span style={{ fontSize: 9, color: '#475569' }}>📎 ID Back (R2)</span>
                   )}
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/*,application/pdf"
+                    disabled={uploadingDocSlot === 'idBack'}
                     style={{ display: 'none' }}
                     onChange={async e => {
                       const f = e.target.files?.[0];
                       if (f) {
+                        setDocUploadError(null);
+                        setUploadingDocSlot('idBack');
                         try {
                           const res = await hotelApi.uploadGuestDocument(f);
                           setIdPhotoBack(res.url);
-                        } catch (err) {
-                          console.warn('ID Back upload note:', err);
+                        } catch (err: any) {
+                          setDocUploadError(`ID Back upload failed: ${err.message}`);
+                        } finally {
+                          setUploadingDocSlot(null);
                         }
                       }
                     }}
@@ -832,6 +922,13 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                 </label>
               </div>
             </div>
+
+            {docUploadError && (
+              <div style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', padding: '6px 12px', borderRadius: 4, fontSize: 11, marginBottom: 8, display: 'flex', justifyContent: 'space-between' }}>
+                <span>⚠️ {docUploadError}</span>
+                <button type="button" onClick={() => setDocUploadError(null)} style={{ background: 'none', border: 'none', color: '#b91c1c', cursor: 'pointer', fontWeight: 'bold' }}>✕</button>
+              </div>
+            )}
 
             <div className="pms-grid-2col">
               {/* Left Column: Stay and Guest Details */}

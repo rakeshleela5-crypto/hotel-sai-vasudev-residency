@@ -1,4 +1,5 @@
 import datetime
+import html
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
@@ -222,11 +223,25 @@ def get_printable_slip(booking_ref: str, db: Session = Depends(get_db)):
     room = booking.room or db.query(models.Room).filter(models.Room.id == booking.room_id).first()
     room_name = room.name if room else "Deluxe Room"
 
+    # Strictly sanitize all guest and room inputs against Stored XSS / HTML Injection
+    safe_booking_ref = html.escape(str(booking.booking_ref or ""))
+    safe_invoice_number = html.escape(str(booking.invoice_number or f"INV-{booking.booking_ref}"))
+    safe_created_date = html.escape(booking.created_at.strftime('%d-%b-%Y %I:%M %p') if booking.created_at else "")
+    safe_guest_name = html.escape(str(booking.guest_name or ""))
+    safe_guest_phone = html.escape(str(booking.guest_phone or ""))
+    safe_id_proof = html.escape(str(booking.id_proof_type or "Aadhaar"))
+    safe_room_name = html.escape(str(room_name or ""))
+    safe_check_in = html.escape(str(booking.check_in_date or ""))
+    safe_check_out = html.escape(str(booking.check_out_date or ""))
+    safe_status = html.escape(str(booking.status or "CONFIRMED").upper())
+    safe_payment_method = html.escape(str(booking.payment_method or "Pay at Hotel"))
+    safe_payment_status = html.escape(str(booking.payment_status or "Pending"))
+
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Receipt - {booking.booking_ref}</title>
+<title>Receipt - {safe_booking_ref}</title>
 <style>
   @media print {{
     body {{ margin: 0; padding: 0; background: #fff; }}
@@ -332,50 +347,50 @@ def get_printable_slip(booking_ref: str, db: Session = Depends(get_db)):
     <p class="hotel-sub">Near Temple Main Road, Holy Town</p>
     <p class="hotel-sub">Tel: +91 94402 89999 / +91 98480 12345</p>
     <div class="gstin">GSTIN: 37AAACH7409R1ZZ | SAC: 996311 (Accommodation)</div>
-    <div class="badge">{booking.status.upper()} RESERVATION &bull; INCLUSIVE OF GST (12%)</div>
+    <div class="badge">{safe_status} RESERVATION &bull; INCLUSIVE OF GST (12%)</div>
   </div>
 
   <div class="row">
     <span class="row-label">Booking Ref:</span>
-    <span class="row-val">{booking.booking_ref}</span>
+    <span class="row-val">{safe_booking_ref}</span>
   </div>
   <div class="row">
     <span class="row-label">Tax Invoice #:</span>
-    <span class="row-val">{booking.invoice_number}</span>
+    <span class="row-val">{safe_invoice_number}</span>
   </div>
   <div class="row">
     <span class="row-label">Booked Date:</span>
-    <span class="row-val">{booking.created_at.strftime('%d-%b-%Y %I:%M %p')}</span>
+    <span class="row-val">{safe_created_date}</span>
   </div>
 
   <div class="divider"></div>
 
   <div class="row">
     <span class="row-label">Guest Name:</span>
-    <span class="row-val">{booking.guest_name}</span>
+    <span class="row-val">{safe_guest_name}</span>
   </div>
   <div class="row">
     <span class="row-label">Contact:</span>
-    <span class="row-val">{booking.guest_phone}</span>
+    <span class="row-val">{safe_guest_phone}</span>
   </div>
   <div class="row">
     <span class="row-label">ID Proof:</span>
-    <span class="row-val">{booking.id_proof_type or 'Aadhaar'}</span>
+    <span class="row-val">{safe_id_proof}</span>
   </div>
 
   <div class="divider"></div>
 
   <div class="row">
     <span class="row-label">Room Reserved:</span>
-    <span class="row-val">{room_name}</span>
+    <span class="row-val">{safe_room_name}</span>
   </div>
   <div class="row">
     <span class="row-label">Check-In:</span>
-    <span class="row-val">{booking.check_in_date} (12:00 PM)</span>
+    <span class="row-val">{safe_check_in} (12:00 PM)</span>
   </div>
   <div class="row">
     <span class="row-label">Check-Out:</span>
-    <span class="row-val">{booking.check_out_date} (11:00 AM)</span>
+    <span class="row-val">{safe_check_out} (11:00 AM)</span>
   </div>
   <div class="row">
     <span class="row-label">Duration:</span>
@@ -408,7 +423,7 @@ def get_printable_slip(booking_ref: str, db: Session = Depends(get_db)):
 
   <div class="row" style="margin-top: 8px;">
     <span class="row-label">Payment Mode:</span>
-    <span class="row-val">{booking.payment_method} ({booking.payment_status})</span>
+    <span class="row-val">{safe_payment_method} ({safe_payment_status})</span>
   </div>
 
   <div class="footer">

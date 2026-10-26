@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.config import settings
 from app.database import engine, Base, get_db
-from app.routes import rooms, bookings, inquiries, pms, uploads
+from app.routes import rooms, bookings, inquiries, pms, uploads, payments, kyc
 
 # Initialize DB tables safely
 try:
@@ -21,23 +21,26 @@ app = FastAPI(
     docs_url=f"{settings.API_V1_STR}/docs"
 )
 
-# Allow CORS for Cloudflare Pages and local development
-# Cloudflare Pages default domains are *.pages.dev
+# Production CORS configuration: Restricted to official Cloudflare Pages domains & localhost
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Or specify settings.parsed_allowed_origins
-    allow_origin_regex=r"https://.*\.pages\.dev",
+    allow_origins=settings.parsed_allowed_origins,
+    allow_origin_regex=r"^https://([a-zA-Z0-9-]+\.)?hotel-sai-vasudev-residency(-[a-z0-9]+)?\.pages\.dev$",
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
-# Include API Routers
+# Include API Routers (mounted under /api/v1 as well as direct /api for Decentro webhooks)
 app.include_router(rooms.router, prefix=settings.API_V1_STR)
 app.include_router(bookings.router, prefix=settings.API_V1_STR)
 app.include_router(inquiries.router, prefix=settings.API_V1_STR)
 app.include_router(pms.router, prefix=settings.API_V1_STR)
 app.include_router(uploads.router, prefix=settings.API_V1_STR)
+app.include_router(payments.router, prefix=settings.API_V1_STR)
+app.include_router(kyc.router, prefix=settings.API_V1_STR)
+app.include_router(payments.router, prefix="/api")
+app.include_router(kyc.router, prefix="/api")
 
 @app.get("/", tags=["Root"])
 def root():

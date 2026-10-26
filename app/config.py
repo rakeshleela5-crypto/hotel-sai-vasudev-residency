@@ -8,6 +8,17 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Hotel Sai Vasudev Residency API"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
+
+    # Official Government of India Form GST REG-06 Registration Details
+    HOTEL_TRADE_NAME: str = "SRI SAI VASUDEV RESIDENCY"
+    HOTEL_LEGAL_NAME: str = "PAIDISETTY MANMADHA RAO"
+    HOTEL_GSTIN: str = "21AEKPP8689J1ZS"
+    HOTEL_STATE_CODE: str = "21"
+    HOTEL_PAN: str = "AEKPP8689J"
+    HOTEL_ADDRESS: str = "Near Andhra Bank, New Colony, Rayagada, Odisha - 765001"
+    HOTEL_STATE: str = "Odisha"
+    HOTEL_PINCODE: str = "765001"
+    HOTEL_JURISDICTION: str = "RAYAGADA DIVISION"
     
     # Railway passes DATABASE_URL when PostgreSQL is attached
     DATABASE_URL: str = os.getenv(
@@ -20,6 +31,22 @@ class Settings(BaseSettings):
         "ALLOWED_ORIGINS",
         "https://hotel-sai-vasudev-residency.pages.dev,http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"
     )
+
+    # Decentro Banking & KYC API Credentials
+    DECENTRO_BASE_URL: str = os.getenv("DECENTRO_BASE_URL", "https://in.staging.decentro.tech")
+    DECENTRO_CLIENT_ID: str = os.getenv("DECENTRO_CLIENT_ID", "")
+    DECENTRO_CLIENT_SECRET: str = os.getenv("DECENTRO_CLIENT_SECRET", "")
+    DECENTRO_PAYMENT_SECRET: str = os.getenv("DECENTRO_PAYMENT_SECRET", "")
+    DECENTRO_KYC_SECRET: str = os.getenv("DECENTRO_KYC_SECRET", "")
+    DECENTRO_WEBHOOK_SECRET: str = os.getenv("DECENTRO_WEBHOOK_SECRET", "")
+    DECENTRO_PAYEE_ACCOUNT: str = os.getenv("DECENTRO_PAYEE_ACCOUNT", "SAIVASUDEV@icici")
+
+    # Cloudflare R2 Object Storage (S3-Compatible)
+    R2_ACCOUNT_ID: str = os.getenv("R2_ACCOUNT_ID", "")
+    R2_ACCESS_KEY_ID: str = os.getenv("R2_ACCESS_KEY_ID", "")
+    R2_SECRET_ACCESS_KEY: str = os.getenv("R2_SECRET_ACCESS_KEY", "")
+    R2_BUCKET_NAME: str = os.getenv("R2_BUCKET_NAME", "hotel-sai-vasudev-documents")
+    R2_PUBLIC_DOMAIN: str = os.getenv("R2_PUBLIC_DOMAIN", "")
 
     @property
     def get_database_url(self) -> str:

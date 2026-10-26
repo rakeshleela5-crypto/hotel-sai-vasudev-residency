@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { PmsRoom, PmsRoomType } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
+import { R2StorageClient } from '../../services/r2Storage';
 import './pmsStyles.css';
 
 interface RoomMasterModalProps {
@@ -34,6 +35,8 @@ export const RoomMasterModal: React.FC<RoomMasterModalProps> = ({
   const [roomImage1, setRoomImage1] = useState<string>('');
   const [roomImage2, setRoomImage2] = useState<string>('');
   const [roomImage3, setRoomImage3] = useState<string>('');
+  const [uploadingImageSlot, setUploadingImageSlot] = useState<number | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Add / Edit Room Type Modal State
   const [isAddRoomTypeOpen, setIsAddRoomTypeOpen] = useState(false);
@@ -675,50 +678,82 @@ export const RoomMasterModal: React.FC<RoomMasterModalProps> = ({
                 )}
               </div>
 
-              {/* Room Images matching Frame 0660 */}
-              <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#495057', marginBottom: 4 }}>
-                  Room Image 1
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={e => {
-                    const file = e.target.files?.[0];
-                    if (file) setRoomImage1(file.name);
-                  }}
-                  style={{ fontSize: 12 }}
-                />
-              </div>
+              {/* Cloudflare R2 Room Image Uploads */}
+              <div style={{ background: '#f8fafc', padding: '12px', borderRadius: 6, border: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: '#1e293b', margin: 0 }}>
+                    📸 Room Gallery Images (Cloudflare R2)
+                  </label>
+                  <span style={{ fontSize: 11, background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '1px 6px', borderRadius: 4, fontWeight: 600 }}>
+                    ☁️ S3 Compatible Storage
+                  </span>
+                </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#495057', marginBottom: 4 }}>
-                  Room Image 2
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={e => {
-                    const file = e.target.files?.[0];
-                    if (file) setRoomImage2(file.name);
-                  }}
-                  style={{ fontSize: 12 }}
-                />
-              </div>
+                {uploadError && (
+                  <div style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', padding: '6px 10px', borderRadius: 4, fontSize: 11, marginBottom: 8 }}>
+                    ⚠️ {uploadError}
+                  </div>
+                )}
 
-              <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#495057', marginBottom: 4 }}>
-                  Room Image 3
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={e => {
-                    const file = e.target.files?.[0];
-                    if (file) setRoomImage3(file.name);
-                  }}
-                  style={{ fontSize: 12 }}
-                />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                  {[1, 2, 3].map((slot) => {
+                    const currentImg = slot === 1 ? roomImage1 : slot === 2 ? roomImage2 : roomImage3;
+                    const setImg = slot === 1 ? setRoomImage1 : slot === 2 ? setRoomImage2 : setRoomImage3;
+                    const isUploading = uploadingImageSlot === slot;
+
+                    return (
+                      <div key={slot} style={{ border: '1px dashed #cbd5e1', borderRadius: 6, padding: 6, textAlign: 'center', background: '#fff' }}>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', marginBottom: 4 }}>
+                          Image {slot}
+                        </div>
+                        {currentImg ? (
+                          <div style={{ position: 'relative', width: '100%', height: 64, borderRadius: 4, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                            <img src={currentImg} alt={`Room ${slot}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <button
+                              type="button"
+                              onClick={() => setImg('')}
+                              title="Remove image"
+                              style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', width: 18, height: 18, fontSize: 10, cursor: 'pointer', lineHeight: '18px', padding: 0 }}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ) : (
+                          <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 64, cursor: isUploading ? 'not-allowed' : 'pointer', background: '#f1f5f9', borderRadius: 4, fontSize: 11, color: '#0284c7' }}>
+                            {isUploading ? (
+                              <span style={{ fontSize: 10 }}>⏳ Uploading...</span>
+                            ) : (
+                              <>
+                                <span style={{ fontSize: 16 }}>📷</span>
+                                <span style={{ fontSize: 10, fontWeight: 600 }}>Upload to R2</span>
+                              </>
+                            )}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              disabled={isUploading}
+                              style={{ display: 'none' }}
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                setUploadError(null);
+                                setUploadingImageSlot(slot);
+                                try {
+                                  const res = await R2StorageClient.uploadPropertyImage(file);
+                                  setImg(res.url);
+                                } catch (err: any) {
+                                  setUploadError(err.message || 'Image upload failed');
+                                } finally {
+                                  setUploadingImageSlot(null);
+                                }
+                              }}
+                            />
+                          </label>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Modal Buttons */}

@@ -8,6 +8,7 @@ import type {
   TaxInvoice 
 } from '../types';
 import { PmsStore } from './pmsStore';
+import { R2StorageClient, type R2UploadResult, type R2FileItem, type R2StatusResponse, type R2TestConnectionResponse } from './r2Storage';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
 
@@ -507,18 +508,36 @@ export const hotelApi = {
     }
   },
 
-  async uploadGuestDocument(file: File): Promise<{ status: string; storage: string; url: string; filename: string }> {
-    const formData = new FormData();
-    formData.append('file', file);
-    const res = await fetch(`${API_BASE_URL}/uploads/guest-document`, {
-      method: 'POST',
-      body: formData
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || 'Document upload to Cloudflare R2 failed');
-    }
-    return await res.json();
+  async uploadGuestDocument(file: File, onProgress?: (pct: number) => void): Promise<R2UploadResult> {
+    return await R2StorageClient.uploadGuestKycDocument(file, onProgress);
+  },
+
+  async uploadPropertyImage(file: File, onProgress?: (pct: number) => void): Promise<R2UploadResult> {
+    return await R2StorageClient.uploadPropertyImage(file, onProgress);
+  },
+
+  async uploadBrandingAsset(file: File, onProgress?: (pct: number) => void): Promise<R2UploadResult> {
+    return await R2StorageClient.uploadBrandingGraphic(file, onProgress);
+  },
+
+  async getR2Status(): Promise<R2StatusResponse> {
+    return await R2StorageClient.getStatus();
+  },
+
+  async testR2Connection(): Promise<R2TestConnectionResponse> {
+    return await R2StorageClient.testConnection();
+  },
+
+  async listR2Files(folder?: string, limit: number = 100): Promise<R2FileItem[]> {
+    return await R2StorageClient.listFiles(folder, limit);
+  },
+
+  async deleteR2File(objectKey: string): Promise<boolean> {
+    return await R2StorageClient.deleteFile(objectKey);
+  },
+
+  async getR2PresignedDownloadUrl(objectKey: string, expiresIn: number = 3600): Promise<string> {
+    return await R2StorageClient.getPresignedDownloadUrl(objectKey, expiresIn);
   },
 
   async exportDatabaseBackup() {
