@@ -10,6 +10,58 @@ from app.routes import rooms, bookings, inquiries, pms, uploads, payments, kyc
 # Initialize DB tables safely
 try:
     Base.metadata.create_all(bind=engine)
+    
+    # Auto-migrate schema: ensure columns added in newer versions exist
+    with engine.connect() as conn:
+        is_sqlite = "sqlite" in str(engine.url)
+        
+        # 1. dining_tables
+        try:
+            res = conn.execute(text("PRAGMA table_info(dining_tables)" if is_sqlite else "SELECT column_name FROM information_schema.columns WHERE table_name='dining_tables'"))
+            existing_cols = [row[1] if is_sqlite else row[0] for row in res.fetchall()]
+            if "active_session_id" not in existing_cols:
+                conn.execute(text("ALTER TABLE dining_tables ADD COLUMN active_session_id VARCHAR(100)"))
+            if "merged_with_tables" not in existing_cols:
+                conn.execute(text("ALTER TABLE dining_tables ADD COLUMN merged_with_tables VARCHAR(255)"))
+            conn.commit()
+        except Exception as e:
+            print(f"Notice: dining_tables migration: {e}")
+
+        # 2. kot_tickets
+        try:
+            res = conn.execute(text("PRAGMA table_info(kot_tickets)" if is_sqlite else "SELECT column_name FROM information_schema.columns WHERE table_name='kot_tickets'"))
+            existing_cols = [row[1] if is_sqlite else row[0] for row in res.fetchall()]
+            if "table_session_id" not in existing_cols:
+                conn.execute(text("ALTER TABLE kot_tickets ADD COLUMN table_session_id VARCHAR(100)"))
+            if "kot_sequence" not in existing_cols:
+                conn.execute(text("ALTER TABLE kot_tickets ADD COLUMN kot_sequence INTEGER DEFAULT 1"))
+            if "is_delta" not in existing_cols:
+                conn.execute(text("ALTER TABLE kot_tickets ADD COLUMN is_delta BOOLEAN DEFAULT 0"))
+            if "delta_items_json" not in existing_cols:
+                conn.execute(text("ALTER TABLE kot_tickets ADD COLUMN delta_items_json TEXT"))
+            if "waiter_name" not in existing_cols:
+                conn.execute(text("ALTER TABLE kot_tickets ADD COLUMN waiter_name VARCHAR(100)"))
+            if "order_source" not in existing_cols:
+                conn.execute(text("ALTER TABLE kot_tickets ADD COLUMN order_source VARCHAR(50) DEFAULT 'Desktop'"))
+            conn.commit()
+        except Exception as e:
+            print(f"Notice: kot_tickets migration: {e}")
+
+        # 3. bookings
+        try:
+            res = conn.execute(text("PRAGMA table_info(bookings)" if is_sqlite else "SELECT column_name FROM information_schema.columns WHERE table_name='bookings'"))
+            existing_cols = [row[1] if is_sqlite else row[0] for row in res.fetchall()]
+            if "cancellation_reason" not in existing_cols:
+                conn.execute(text("ALTER TABLE bookings ADD COLUMN cancellation_reason VARCHAR(255)"))
+            if "discount_amount" not in existing_cols:
+                conn.execute(text("ALTER TABLE bookings ADD COLUMN discount_amount FLOAT DEFAULT 0.0"))
+            if "actual_check_in" not in existing_cols:
+                conn.execute(text("ALTER TABLE bookings ADD COLUMN actual_check_in TIMESTAMP"))
+            if "actual_check_out" not in existing_cols:
+                conn.execute(text("ALTER TABLE bookings ADD COLUMN actual_check_out TIMESTAMP"))
+            conn.commit()
+        except Exception as e:
+            print(f"Notice: bookings migration: {e}")
 except Exception as exc:
     print(f"Notice: Initial DB schema sync deferred: {exc}")
 

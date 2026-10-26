@@ -425,18 +425,25 @@ class HousekeepingDiscrepancyCreate(BaseModel):
 
 # --- Module 6 Schemas: RFID Key Card Access ---
 class KeyCardEncodeRequest(BaseModel):
-    card_uid: str
-    room_no: str
-    guest_name: str
-    scheduled_checkout_time: str # ISO or YYYY-MM-DD HH:MM
+    card_uid: Optional[str] = None
+    card_number: Optional[str] = None
+    room_no: Optional[str] = None
+    room_number: Optional[str] = None
+    guest_name: Optional[str] = "Valued Guest"
+    scheduled_checkout_time: Optional[str] = None
+    check_out_time: Optional[str] = None
     encoded_by: Optional[str] = "Front Desk"
+    operator_name: Optional[str] = None
 
 class KeyCardExtendRequest(BaseModel):
-    card_uid: str
-    extended_checkout_time: str
+    card_uid: Optional[str] = None
+    card_number: Optional[str] = None
+    extended_checkout_time: Optional[str] = None
+    check_out_time: Optional[str] = None
     extension_fee_paid: float = 0.0
     payment_mode: str = "Cash"
     extended_by: Optional[str] = "Front Desk Officer"
+    operator_name: Optional[str] = None
 
 # =========================================================================
 # Decentro Banking & KYC Integration Schemas
@@ -524,6 +531,172 @@ class PaymentTransactionResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+# --- New Enterprise Operations Schemas ---
+
+class FoodBillCreate(BaseModel):
+    bill_no: str
+    date: str
+    time: str
+    room_no: Optional[str] = None
+    table_no: Optional[str] = None
+    guest_name: Optional[str] = None
+    kot_numbers: Optional[List[str]] = []
+    items: Optional[List[Dict[str, Any]]] = []
+    food_gross_amount: float = 0.0
+    discount_percent: float = 0.0
+    discount_amount: float = 0.0
+    taxable_amount: float = 0.0
+    gst_amount: float = 0.0
+    net_bill_amount: float = 0.0
+    settlement_type: str = "Cash"
+    status: str = "Settled"
+
+class FoodBillResponse(BaseModel):
+    id: int
+    bill_no: str
+    date: str
+    time: str
+    room_no: Optional[str]
+    table_no: Optional[str]
+    guest_name: Optional[str]
+    food_gross_amount: float
+    discount_amount: float
+    taxable_amount: float
+    gst_amount: float
+    net_bill_amount: float
+    settlement_type: str
+    status: str
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+class PettyExpenseCreate(BaseModel):
+    expense_no: Optional[str] = None
+    date: str
+    category: str
+    amount: float
+    payment_mode: str = "Cash"
+    paid_to: str
+    description: Optional[str] = None
+    bill_number: Optional[str] = None
+    approved_by: Optional[str] = "General Manager"
+
+class PettyExpenseResponse(BaseModel):
+    id: int
+    expense_no: str
+    date: str
+    category: str
+    amount: float
+    payment_mode: str
+    paid_to: str
+    description: Optional[str]
+    bill_number: Optional[str]
+    approved_by: str
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+class FolioDiscountCreate(BaseModel):
+    booking_ref: str
+    room_no: Optional[str] = None
+    discount_type: Optional[str] = "flat" # flat, percent
+    discount_value: Optional[float] = 0.0
+    discount_amount: Optional[float] = 0.0
+    discount_percentage: Optional[float] = None
+    discount_reason: Optional[str] = None
+    reason: Optional[str] = None
+    approved_by: Optional[str] = "General Manager"
+
+class FolioDiscountResponse(BaseModel):
+    id: int
+    booking_ref: str
+    room_no: str
+    discount_type: str
+    discount_value: float
+    discount_amount: float
+    reason: Optional[str]
+    approved_by: str
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+class InventoryPurchaseCreate(BaseModel):
+    bill_no: str
+    bill_date: str
+    godown: Optional[str] = "Main Kitchen Store"
+    supplier_name: Optional[str] = None
+    account_name: Optional[str] = None
+    items: Optional[List[Dict[str, Any]]] = None
+    items_json: Optional[str] = None
+    total_amount: Optional[float] = 0.0
+    total_gross_amount: Optional[float] = 0.0
+    tax_amount: Optional[float] = 0.0
+    total_tax: Optional[float] = 0.0
+    net_amount: Optional[float] = 0.0
+    total_net_value: Optional[float] = 0.0
+    total_discount: Optional[float] = 0.0
+    remarks: Optional[str] = None
+    terms: Optional[str] = "Credit"
+
+class InventoryPurchaseResponse(BaseModel):
+    id: int
+    bill_no: str
+    bill_date: str
+    godown: str
+    supplier_name: str
+    total_amount: float
+    tax_amount: float
+    net_amount: float
+    terms: str
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+class KotVoidRequest(BaseModel):
+    table_session_id: Optional[str] = None
+    kot_no: Optional[str] = None
+    kot_number: Optional[str] = None
+    table_no: Optional[str] = None
+    table_number: Optional[str] = None
+    room_number: Optional[str] = None
+    item_name: str
+    qty_voided: Optional[int] = 1
+    quantity: Optional[int] = None
+    rate: Optional[float] = 0.0
+    amount: Optional[float] = 0.0
+    steward_id: Optional[str] = "Steward"
+    approving_manager_id: Optional[str] = "Duty Manager"
+    voided_by: Optional[str] = None
+    manager_pin: Optional[str] = "9999"
+    void_reason: str
+
+class TableShiftRequest(BaseModel):
+    from_table_code: Optional[str] = None
+    to_table_code: Optional[str] = None
+    from_table: Optional[str] = None
+    to_table: Optional[str] = None
+    source_table: Optional[str] = None
+    target_table: Optional[str] = None
+    table_session_id: Optional[str] = None
+    steward_id: Optional[str] = "Captain"
+    shifted_by: Optional[str] = None
+    notes: Optional[str] = None
+
+class TableMergeRequest(BaseModel):
+    primary_table_code: Optional[str] = None
+    secondary_table_codes: Optional[List[str]] = None
+    primary_table: Optional[str] = None
+    secondary_table: Optional[str] = None
+    source_table: Optional[str] = None
+    target_table: Optional[str] = None
+    primary_session_id: Optional[str] = None
+    merged_by: Optional[str] = "Captain"
+
 
 
 
