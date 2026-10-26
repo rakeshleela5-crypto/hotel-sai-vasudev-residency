@@ -3203,6 +3203,21 @@ export class PmsStore {
         localStorage.setItem(STORAGE_KEYS.STOCK_TRANSFERS, JSON.stringify(state.stock_transfers));
       }
 
+      // 20. Hydrate Staff User Accounts from PostgreSQL
+      if (state.users && state.users.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(state.users));
+      }
+
+      // 21. Hydrate Commission Agents from PostgreSQL
+      if (state.commission_agents && state.commission_agents.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.COMMISSION_AGENTS, JSON.stringify(state.commission_agents));
+      }
+
+      // 22. Hydrate Agent Commission Payout Vouchers from PostgreSQL
+      if (state.agent_payout_vouchers && state.agent_payout_vouchers.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.AGENT_PAYOUT_VOUCHERS, JSON.stringify(state.agent_payout_vouchers));
+      }
+
       this.notify();
       return true;
     } catch (e) {
@@ -9756,6 +9771,7 @@ export class PmsStore {
       users.push(user);
     }
     this.saveUsers(users);
+    hotelApi.saveUserAccount(user).catch(e => console.warn('[PmsStore] User account cloud sync note:', e));
   }
 
   static toggleUserStatus(id: number): void {
@@ -9765,12 +9781,14 @@ export class PmsStore {
       users[idx].status = users[idx].status === 'Verified' ? 'Pending' : 'Verified';
       users[idx].verifiedDate = users[idx].status === 'Verified' ? new Date().toISOString().replace('T', ' ').slice(0, 19) : undefined;
       this.saveUsers(users);
+      hotelApi.saveUserAccount(users[idx]).catch(e => console.warn('[PmsStore] User status cloud sync note:', e));
     }
   }
 
   static deleteUser(id: number): void {
     const users = this.getUsers().filter(u => u.id !== id);
     this.saveUsers(users);
+    hotelApi.deleteUserAccount(id).catch(e => console.warn('[PmsStore] User delete cloud sync note:', e));
   }
 
   static getCurrentUser(): PmsUserAccount {
@@ -11833,6 +11851,11 @@ export class PmsStore {
     };
   }
 
+  static saveShiftHandoverRecord(record: PmsShiftHandoverRecord): void {
+    hotelApi.saveShiftHandover(record).catch(e => console.warn('[PmsStore] Shift handover cloud sync note:', e));
+    this.notify();
+  }
+
   // ==========================================
   // Video 30: Training & Support Suite Methods (Frames 0060-0230)
   // ==========================================
@@ -12012,6 +12035,7 @@ export class PmsStore {
       agents.unshift(agent);
     }
     localStorage.setItem(STORAGE_KEYS.COMMISSION_AGENTS, JSON.stringify(agents));
+    hotelApi.saveCommissionAgent(agent).catch(e => console.warn('[PmsStore] Commission agent cloud sync note:', e));
   }
 
   static getAgentCommissionBookings(agentId?: string, status?: string): PmsAgentCommissionBooking[] {
@@ -12123,6 +12147,7 @@ export class PmsStore {
 
     vouchers.unshift(newVoucher);
     localStorage.setItem(STORAGE_KEYS.AGENT_PAYOUT_VOUCHERS, JSON.stringify(vouchers));
+    hotelApi.saveAgentPayoutVoucher(newVoucher).catch(e => console.warn('[PmsStore] Agent payout voucher cloud sync note:', e));
 
     // Mark commission bookings as PAID
     const comms = this.getAgentCommissionBookings();

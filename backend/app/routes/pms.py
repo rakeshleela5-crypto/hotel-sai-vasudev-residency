@@ -1003,6 +1003,10 @@ def get_full_cloud_state(db: Session = Depends(get_db)):
     godowns = db.query(models.Godown).order_by(models.Godown.s_no.asc()).all()
     item_groups = db.query(models.ItemGroup).order_by(models.ItemGroup.s_no.asc()).all()
     stock_transfers = db.query(models.StockTransfer).order_by(models.StockTransfer.created_at.desc()).limit(150).all()
+    user_accounts = db.query(models.UserAccount).order_by(models.UserAccount.user_id.asc()).all()
+    commission_agents = db.query(models.CommissionAgent).order_by(models.CommissionAgent.id.asc()).all()
+    agent_payouts = db.query(models.AgentPayoutVoucher).order_by(models.AgentPayoutVoucher.created_at.desc()).limit(150).all()
+    shift_handovers = db.query(models.ShiftHandover).order_by(models.ShiftHandover.created_at.desc()).limit(150).all()
     masters = db.query(models.MasterItem).all()
 
     masters_by_cat = {}
@@ -1310,6 +1314,78 @@ def get_full_cloud_state(db: Session = Depends(get_db)):
             "remark": st.remark,
             "createdAt": st.created_at.isoformat() if st.created_at else None
         } for st in stock_transfers],
+        "users": [{
+            "id": u.user_id,
+            "sNo": u.s_no,
+            "firmId": u.firm_id,
+            "userName": u.user_name,
+            "emailId": u.email_id,
+            "roleId": u.role_id,
+            "roleName": u.role_name,
+            "status": u.status,
+            "department": u.department,
+            "shift": u.shift,
+            "mobile": u.mobile,
+            "isOnDuty": u.is_on_duty,
+            "regDate": u.created_at.strftime("%Y-%m-%d %H:%M:%S") if u.created_at else None
+        } for u in user_accounts],
+        "commission_agents": [{
+            "id": a.agent_id,
+            "name": a.name,
+            "phone": a.phone,
+            "alternatePhone": a.alternate_phone,
+            "email": a.email,
+            "city": a.city,
+            "address": a.address,
+            "agentType": a.agent_type,
+            "commissionType": a.commission_type,
+            "defaultRate": a.default_rate,
+            "panNumber": a.pan_number,
+            "gstNumber": a.gst_number,
+            "totalBookings": a.total_bookings,
+            "totalRevenueGenerated": a.total_revenue_generated,
+            "totalCommissionEarned": a.total_commission_earned,
+            "totalCommissionPaid": a.total_commission_paid,
+            "balancePayable": a.balance_payable
+        } for a in commission_agents],
+        "agent_payout_vouchers": [{
+            "id": f"agp-{v.id}",
+            "voucherNo": v.voucher_no,
+            "voucherDate": v.voucher_date,
+            "agentId": v.agent_id,
+            "agentName": v.agent_name,
+            "amount": v.amount,
+            "paymentMode": v.payment_mode,
+            "referenceNo": v.reference_no,
+            "settledCommissionIds": json.loads(v.settled_commission_ids_json) if v.settled_commission_ids_json else [],
+            "tdsDeducted": v.tds_deducted,
+            "grossAmount": v.gross_amount,
+            "notes": v.notes,
+            "createdBy": v.created_by,
+            "printTimestamp": v.created_at.strftime("%Y-%m-%d %H:%M:%S") if v.created_at else None
+        } for v in agent_payouts],
+        "shift_handovers": [{
+            "id": f"sh-{sh.id}",
+            "shiftId": sh.shift_id,
+            "shiftDate": sh.shift_date,
+            "shiftTime": sh.shift_time,
+            "userEmail": sh.user_email,
+            "userName": sh.user_name,
+            "shiftType": sh.shift_type,
+            "openingDrawerCash": sh.opening_drawer_cash,
+            "roomCashCollected": sh.room_cash_collected,
+            "foodCashCollected": sh.food_cash_collected,
+            "advanceCashCollected": sh.advance_cash_collected,
+            "expensesPaidFromDrawer": sh.expenses_paid_from_drawer,
+            "netPhysicalCashInDrawer": sh.net_physical_cash_in_drawer,
+            "onlineUpiVerified": sh.online_upi_verified,
+            "cardSwipeVerified": sh.card_swipe_verified,
+            "creditAccountsAdded": sh.credit_accounts_added,
+            "totalTransactionsHandled": sh.total_transactions_handled,
+            "handoverToUser": sh.handover_to_user,
+            "handoverNotes": sh.handover_notes,
+            "status": sh.status
+        } for sh in shift_handovers],
         "masters": masters_by_cat
     }
 
@@ -3231,5 +3307,380 @@ def delete_stock_transfer(entry_no: str, db: Session = Depends(get_db)):
     db.delete(st)
     db.commit()
     return {"success": True, "message": f"Stock transfer {entry_no} deleted."}
+
+# --- 28. User Accounts & Staff Permissions ---
+@router.post("/users")
+def save_user_account(payload: schemas.UserAccountCreate, db: Session = Depends(get_db)):
+    """Save or update user staff credentials and roles in PostgreSQL."""
+    u_id = payload.id or payload.userId or 1
+    u_email = payload.email_id or payload.emailId or f"user{u_id}@sai-vasudev.com"
+    u_name = payload.user_name or payload.userName or f"Staff Member {u_id}"
+
+    existing = db.query(models.UserAccount).filter(
+        (models.UserAccount.user_id == u_id) | (models.UserAccount.email_id.ilike(u_email.strip()))
+    ).first()
+
+    if existing:
+        existing.user_name = u_name
+        existing.email_id = u_email.strip()
+        if payload.role_id or payload.roleId:
+            existing.role_id = payload.role_id or payload.roleId
+        if payload.role_name or payload.roleName:
+            existing.role_name = payload.role_name or payload.roleName
+        if payload.status:
+            existing.status = payload.status
+        if payload.department:
+            existing.department = payload.department
+        if payload.shift:
+            existing.shift = payload.shift
+        if payload.mobile:
+            existing.mobile = payload.mobile
+        if payload.is_on_duty is not None or payload.isOnDuty is not None:
+            existing.is_on_duty = payload.is_on_duty if payload.is_on_duty is not None else payload.isOnDuty
+        u = existing
+    else:
+        u = models.UserAccount(
+            user_id=u_id,
+            s_no=payload.s_no or payload.sNo or 1,
+            firm_id=payload.firm_id or payload.firmId or "SVR0001",
+            user_name=u_name,
+            email_id=u_email.strip(),
+            role_id=payload.role_id or payload.roleId or 2,
+            role_name=payload.role_name or payload.roleName or "Front Office",
+            status=payload.status or "Active",
+            department=payload.department,
+            shift=payload.shift,
+            mobile=payload.mobile,
+            is_on_duty=payload.is_on_duty if payload.is_on_duty is not None else (payload.isOnDuty if payload.isOnDuty is not None else True)
+        )
+        db.add(u)
+
+    db.commit()
+    db.refresh(u)
+    return {
+        "success": True,
+        "id": u.user_id,
+        "userName": u.user_name,
+        "emailId": u.email_id,
+        "roleName": u.role_name,
+        "status": u.status
+    }
+
+@router.get("/users")
+def get_user_accounts(db: Session = Depends(get_db)):
+    """Retrieve all staff user accounts from PostgreSQL."""
+    users = db.query(models.UserAccount).order_by(models.UserAccount.user_id.asc()).all()
+    return [{
+        "id": u.user_id,
+        "sNo": u.s_no,
+        "firmId": u.firm_id,
+        "userName": u.user_name,
+        "emailId": u.email_id,
+        "roleId": u.role_id,
+        "roleName": u.role_name,
+        "status": u.status,
+        "department": u.department,
+        "shift": u.shift,
+        "mobile": u.mobile,
+        "isOnDuty": u.is_on_duty,
+        "regDate": u.created_at.strftime("%Y-%m-%d %H:%M:%S") if u.created_at else None
+    } for u in users]
+
+@router.delete("/users/{user_id}")
+def delete_user_account(user_id: int, db: Session = Depends(get_db)):
+    """Delete a staff user account from PostgreSQL."""
+    u = db.query(models.UserAccount).filter(models.UserAccount.user_id == user_id).first()
+    if not u:
+        raise HTTPException(status_code=404, detail="User account not found")
+    db.delete(u)
+    db.commit()
+    return {"success": True, "message": f"User account {user_id} removed."}
+
+# --- 29. Commission Agents ---
+@router.post("/commission-agents")
+def save_commission_agent(payload: schemas.CommissionAgentCreate, db: Session = Depends(get_db)):
+    """Save or update a commission agent in PostgreSQL."""
+    agt_id = payload.id or payload.agent_id or payload.agentId or f"AGT-{uuid.uuid4().hex[:4].upper()}"
+
+    existing = db.query(models.CommissionAgent).filter(
+        (models.CommissionAgent.agent_id == agt_id) | (models.CommissionAgent.name.ilike(payload.name.strip()))
+    ).first()
+
+    if existing:
+        existing.name = payload.name.strip()
+        existing.phone = payload.phone
+        if payload.alternate_phone or payload.alternatePhone:
+            existing.alternate_phone = payload.alternate_phone or payload.alternatePhone
+        if payload.email:
+            existing.email = payload.email
+        if payload.city:
+            existing.city = payload.city
+        if payload.address:
+            existing.address = payload.address
+        if payload.agent_type or payload.agentType:
+            existing.agent_type = payload.agent_type or payload.agentType
+        if payload.commission_type or payload.commissionType:
+            existing.commission_type = payload.commission_type or payload.commissionType
+        if payload.default_rate or payload.defaultRate:
+            existing.default_rate = payload.default_rate or payload.defaultRate
+        if payload.pan_number or payload.panNumber:
+            existing.pan_number = payload.pan_number or payload.panNumber
+        if payload.gst_number or payload.gstNumber:
+            existing.gst_number = payload.gst_number or payload.gstNumber
+        if payload.total_bookings or payload.totalBookings:
+            existing.total_bookings = payload.total_bookings or payload.totalBookings
+        if payload.total_revenue_generated or payload.totalRevenueGenerated:
+            existing.total_revenue_generated = payload.total_revenue_generated or payload.totalRevenueGenerated
+        if payload.total_commission_earned or payload.totalCommissionEarned:
+            existing.total_commission_earned = payload.total_commission_earned or payload.totalCommissionEarned
+        if payload.total_commission_paid or payload.totalCommissionPaid:
+            existing.total_commission_paid = payload.total_commission_paid or payload.totalCommissionPaid
+        if payload.balance_payable or payload.balancePayable:
+            existing.balance_payable = payload.balance_payable or payload.balancePayable
+        agt = existing
+    else:
+        agt = models.CommissionAgent(
+            agent_id=agt_id,
+            name=payload.name.strip(),
+            phone=payload.phone,
+            alternate_phone=payload.alternate_phone or payload.alternatePhone,
+            email=payload.email,
+            city=payload.city or "Rayagada",
+            address=payload.address,
+            agent_type=payload.agent_type or payload.agentType or "Travel Agent",
+            commission_type=payload.commission_type or payload.commissionType or "PERCENTAGE_ROOM_ONLY",
+            default_rate=payload.default_rate or payload.defaultRate or 10.0,
+            pan_number=payload.pan_number or payload.panNumber,
+            gst_number=payload.gst_number or payload.gstNumber,
+            total_bookings=payload.total_bookings or payload.totalBookings or 0,
+            total_revenue_generated=payload.total_revenue_generated or payload.totalRevenueGenerated or 0.0,
+            total_commission_earned=payload.total_commission_earned or payload.totalCommissionEarned or 0.0,
+            total_commission_paid=payload.total_commission_paid or payload.totalCommissionPaid or 0.0,
+            balance_payable=payload.balance_payable or payload.balancePayable or 0.0
+        )
+        db.add(agt)
+
+    db.commit()
+    db.refresh(agt)
+    return {
+        "success": True,
+        "id": agt.agent_id,
+        "name": agt.name,
+        "phone": agt.phone,
+        "balancePayable": agt.balance_payable
+    }
+
+@router.get("/commission-agents")
+def get_commission_agents(db: Session = Depends(get_db)):
+    """Retrieve all commission agents from PostgreSQL."""
+    agents = db.query(models.CommissionAgent).order_by(models.CommissionAgent.id.asc()).all()
+    return [{
+        "id": a.agent_id,
+        "name": a.name,
+        "phone": a.phone,
+        "alternatePhone": a.alternate_phone,
+        "email": a.email,
+        "city": a.city,
+        "address": a.address,
+        "agentType": a.agent_type,
+        "commissionType": a.commission_type,
+        "defaultRate": a.default_rate,
+        "panNumber": a.pan_number,
+        "gstNumber": a.gst_number,
+        "totalBookings": a.total_bookings,
+        "totalRevenueGenerated": a.total_revenue_generated,
+        "totalCommissionEarned": a.total_commission_earned,
+        "totalCommissionPaid": a.total_commission_paid,
+        "balancePayable": a.balance_payable
+    } for a in agents]
+
+@router.delete("/commission-agents/{agent_id}")
+def delete_commission_agent(agent_id: str, db: Session = Depends(get_db)):
+    """Delete a commission agent from PostgreSQL."""
+    agt = db.query(models.CommissionAgent).filter(
+        (models.CommissionAgent.agent_id == agent_id) | (models.CommissionAgent.name.ilike(agent_id))
+    ).first()
+    if not agt:
+        raise HTTPException(status_code=404, detail="Commission agent not found")
+    db.delete(agt)
+    db.commit()
+    return {"success": True, "message": f"Agent {agent_id} removed."}
+
+# --- 30. Agent Commission Payout Vouchers ---
+@router.post("/agent-payout-vouchers")
+def record_agent_payout_voucher(payload: schemas.AgentPayoutVoucherCreate, db: Session = Depends(get_db)):
+    """Record an agent commission payout voucher in PostgreSQL."""
+    v_no = payload.voucher_no or payload.voucherNo or f"AGTPAY-{int(datetime.datetime.utcnow().timestamp()) % 100000}"
+    v_date = payload.voucher_date or payload.voucherDate or datetime.date.today().isoformat()
+    agt_id = payload.agent_id or payload.agentId or "AGT-101"
+    agt_name = payload.agent_name or payload.agentName or "Commission Agent"
+    
+    comm_ids = payload.commission_ids or payload.commissionIds or []
+    comm_json = payload.settled_commission_ids_json or json.dumps(comm_ids)
+
+    existing = db.query(models.AgentPayoutVoucher).filter(models.AgentPayoutVoucher.voucher_no == v_no).first()
+    if existing:
+        existing.voucher_date = v_date
+        existing.agent_id = agt_id
+        existing.agent_name = agt_name
+        existing.amount = payload.amount
+        existing.payment_mode = payload.payment_mode or payload.paymentMode or "CASH"
+        existing.reference_no = payload.reference_no or payload.referenceNo
+        existing.settled_commission_ids_json = comm_json
+        existing.tds_deducted = payload.tds_deducted or payload.tdsDeducted or 0.0
+        existing.gross_amount = payload.gross_amount or payload.grossAmount or payload.amount
+        existing.notes = payload.notes
+        existing.created_by = payload.created_by or payload.createdBy or "Accounts"
+        voucher = existing
+    else:
+        voucher = models.AgentPayoutVoucher(
+            voucher_no=v_no,
+            voucher_date=v_date,
+            agent_id=agt_id,
+            agent_name=agt_name,
+            amount=payload.amount,
+            payment_mode=payload.payment_mode or payload.paymentMode or "CASH",
+            reference_no=payload.reference_no or payload.referenceNo or "NA",
+            settled_commission_ids_json=comm_json,
+            tds_deducted=payload.tds_deducted or payload.tdsDeducted or 0.0,
+            gross_amount=payload.gross_amount or payload.grossAmount or payload.amount,
+            notes=payload.notes,
+            created_by=payload.created_by or payload.createdBy or "Accounts"
+        )
+        db.add(voucher)
+
+    # Deduct balance payable from agent
+    agent = db.query(models.CommissionAgent).filter(
+        (models.CommissionAgent.agent_id == agt_id) | (models.CommissionAgent.name.ilike(agt_name.strip()))
+    ).first()
+    if agent:
+        agent.total_commission_paid = round(agent.total_commission_paid + payload.amount, 2)
+        agent.balance_payable = max(0.0, round(agent.balance_payable - payload.amount, 2))
+
+    db.commit()
+    db.refresh(voucher)
+    return {
+        "success": True,
+        "message": f"Agent Payout Voucher {voucher.voucher_no} (₹{voucher.amount}) recorded in PostgreSQL.",
+        "voucherNo": voucher.voucher_no,
+        "agentName": voucher.agent_name,
+        "amount": voucher.amount,
+        "paymentMode": voucher.payment_mode
+    }
+
+@router.get("/agent-payout-vouchers")
+def get_agent_payout_vouchers(db: Session = Depends(get_db)):
+    """Retrieve all agent payout vouchers from PostgreSQL."""
+    vouchers = db.query(models.AgentPayoutVoucher).order_by(models.AgentPayoutVoucher.created_at.desc()).limit(150).all()
+    return [{
+        "id": f"agp-{v.id}",
+        "voucherNo": v.voucher_no,
+        "voucherDate": v.voucher_date,
+        "agentId": v.agent_id,
+        "agentName": v.agent_name,
+        "amount": v.amount,
+        "paymentMode": v.payment_mode,
+        "referenceNo": v.reference_no,
+        "settledCommissionIds": json.loads(v.settled_commission_ids_json) if v.settled_commission_ids_json else [],
+        "tdsDeducted": v.tds_deducted,
+        "grossAmount": v.gross_amount,
+        "notes": v.notes,
+        "createdBy": v.created_by,
+        "printTimestamp": v.created_at.strftime("%Y-%m-%d %H:%M:%S") if v.created_at else None
+    } for v in vouchers]
+
+# --- 31. Shift Handovers & Cash Reconciliation ---
+@router.post("/shift-handovers")
+def save_shift_handover(payload: schemas.ShiftHandoverCreate, db: Session = Depends(get_db)):
+    """Save or update a shift handover cash reconciliation record in PostgreSQL."""
+    s_id = payload.shift_id or payload.shiftId or f"SHIFT/{datetime.date.today().strftime('%Y%m%d')}/01"
+    s_date = payload.shift_date or payload.shiftDate or datetime.date.today().isoformat()
+    s_time = payload.shift_time or payload.shiftTime or "07:00 AM - 03:00 PM"
+    u_email = payload.user_email or payload.userEmail or "reception@sai-vasudev.com"
+    u_name = payload.user_name or payload.userName or "Front Desk Duty Manager"
+
+    existing = db.query(models.ShiftHandover).filter(models.ShiftHandover.shift_id == s_id).first()
+    if existing:
+        existing.shift_date = s_date
+        existing.shift_time = s_time
+        existing.user_email = u_email
+        existing.user_name = u_name
+        existing.shift_type = payload.shift_type or payload.shiftType or "Morning"
+        existing.opening_drawer_cash = payload.opening_drawer_cash or payload.openingDrawerCash or 5000.0
+        existing.room_cash_collected = payload.room_cash_collected or payload.roomCashCollected or 0.0
+        existing.food_cash_collected = payload.food_cash_collected or payload.foodCashCollected or 0.0
+        existing.advance_cash_collected = payload.advance_cash_collected or payload.advanceCashCollected or 0.0
+        existing.expenses_paid_from_drawer = payload.expenses_paid_from_drawer or payload.expensesPaidFromDrawer or 0.0
+        existing.net_physical_cash_in_drawer = payload.net_physical_cash_in_drawer or payload.netPhysicalCashInDrawer or 5000.0
+        existing.online_upi_verified = payload.online_upi_verified or payload.onlineUpiVerified or 0.0
+        existing.card_swipe_verified = payload.card_swipe_verified or payload.cardSwipeVerified or 0.0
+        existing.credit_accounts_added = payload.credit_accounts_added or payload.creditAccountsAdded or 0.0
+        existing.total_transactions_handled = payload.total_transactions_handled or payload.totalTransactionsHandled or 0
+        existing.handover_to_user = payload.handover_to_user or payload.handoverToUser
+        existing.handover_notes = payload.handover_notes or payload.handoverNotes
+        existing.status = payload.status or "Verified & Closed"
+        handover = existing
+    else:
+        handover = models.ShiftHandover(
+            shift_id=s_id,
+            shift_date=s_date,
+            shift_time=s_time,
+            user_email=u_email,
+            user_name=u_name,
+            shift_type=payload.shift_type or payload.shiftType or "Morning",
+            opening_drawer_cash=payload.opening_drawer_cash or payload.openingDrawerCash or 5000.0,
+            room_cash_collected=payload.room_cash_collected or payload.roomCashCollected or 0.0,
+            food_cash_collected=payload.food_cash_collected or payload.foodCashCollected or 0.0,
+            advance_cash_collected=payload.advance_cash_collected or payload.advanceCashCollected or 0.0,
+            expenses_paid_from_drawer=payload.expenses_paid_from_drawer or payload.expensesPaidFromDrawer or 0.0,
+            net_physical_cash_in_drawer=payload.net_physical_cash_in_drawer or payload.netPhysicalCashInDrawer or 5000.0,
+            online_upi_verified=payload.online_upi_verified or payload.onlineUpiVerified or 0.0,
+            card_swipe_verified=payload.card_swipe_verified or payload.cardSwipeVerified or 0.0,
+            credit_accounts_added=payload.credit_accounts_added or payload.creditAccountsAdded or 0.0,
+            total_transactions_handled=payload.total_transactions_handled or payload.totalTransactionsHandled or 0,
+            handover_to_user=payload.handover_to_user or payload.handoverToUser,
+            handover_notes=payload.handover_notes or payload.handoverNotes,
+            status=payload.status or "Verified & Closed"
+        )
+        db.add(handover)
+
+    db.commit()
+    db.refresh(handover)
+    return {
+        "success": True,
+        "message": f"Shift Handover {handover.shift_id} recorded in PostgreSQL.",
+        "shiftId": handover.shift_id,
+        "shiftDate": handover.shift_date,
+        "netPhysicalCashInDrawer": handover.net_physical_cash_in_drawer,
+        "status": handover.status
+    }
+
+@router.get("/shift-handovers")
+def get_shift_handovers(db: Session = Depends(get_db)):
+    """Retrieve all shift handovers from PostgreSQL."""
+    handovers = db.query(models.ShiftHandover).order_by(models.ShiftHandover.created_at.desc()).limit(150).all()
+    return [{
+        "id": f"sh-{sh.id}",
+        "shiftId": sh.shift_id,
+        "shiftDate": sh.shift_date,
+        "shiftTime": sh.shift_time,
+        "userEmail": sh.user_email,
+        "userName": sh.user_name,
+        "shiftType": sh.shift_type,
+        "openingDrawerCash": sh.opening_drawer_cash,
+        "roomCashCollected": sh.room_cash_collected,
+        "foodCashCollected": sh.food_cash_collected,
+        "advanceCashCollected": sh.advance_cash_collected,
+        "expensesPaidFromDrawer": sh.expenses_paid_from_drawer,
+        "netPhysicalCashInDrawer": sh.net_physical_cash_in_drawer,
+        "onlineUpiVerified": sh.online_upi_verified,
+        "cardSwipeVerified": sh.card_swipe_verified,
+        "creditAccountsAdded": sh.credit_accounts_added,
+        "totalTransactionsHandled": sh.total_transactions_handled,
+        "handoverToUser": sh.handover_to_user,
+        "handoverNotes": sh.handover_notes,
+        "status": sh.status
+    } for sh in handovers]
+
 
 

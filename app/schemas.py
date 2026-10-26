@@ -951,5 +951,125 @@ class StockTransferCreate(BaseModel):
     totalNetValue: Optional[float] = None
     remark: Optional[str] = None
 
+class UserAccountCreate(BaseModel):
+    id: Optional[int] = None
+    userId: Optional[int] = None
+    s_no: Optional[int] = 1
+    sNo: Optional[int] = None
+    firm_id: Optional[str] = "SVR0001"
+    firmId: Optional[str] = None
+    user_name: Optional[str] = None
+    userName: Optional[str] = None
+    email_id: Optional[str] = None
+    emailId: Optional[str] = None
+    role_id: Optional[int] = 2
+    roleId: Optional[int] = None
+    role_name: Optional[str] = "Front Office"
+    roleName: Optional[str] = None
+    status: Optional[str] = "Active"
+    department: Optional[str] = None
+    shift: Optional[str] = None
+    mobile: Optional[str] = None
+    is_on_duty: Optional[bool] = True
+    isOnDuty: Optional[bool] = None
+
+class CommissionAgentCreate(BaseModel):
+    id: Optional[str] = None
+    agent_id: Optional[str] = None
+    agentId: Optional[str] = None
+    name: str
+    phone: str
+    alternate_phone: Optional[str] = None
+    alternatePhone: Optional[str] = None
+    email: Optional[str] = None
+    city: Optional[str] = "Rayagada"
+    address: Optional[str] = None
+    agent_type: Optional[str] = "Travel Agent"
+    agentType: Optional[str] = None
+    commission_type: Optional[str] = "PERCENTAGE_ROOM_ONLY"
+    commissionType: Optional[str] = None
+    default_rate: Optional[float] = 10.0
+    defaultRate: Optional[float] = None
+    pan_number: Optional[str] = None
+    panNumber: Optional[str] = None
+    gst_number: Optional[str] = None
+    gstNumber: Optional[str] = None
+    total_bookings: Optional[int] = 0
+    totalBookings: Optional[int] = None
+    total_revenue_generated: Optional[float] = 0.0
+    totalRevenueGenerated: Optional[float] = None
+    total_commission_earned: Optional[float] = 0.0
+    totalCommissionEarned: Optional[float] = None
+    total_commission_paid: Optional[float] = 0.0
+    totalCommissionPaid: Optional[float] = None
+    balance_payable: Optional[float] = 0.0
+    balancePayable: Optional[float] = None
+
+class AgentPayoutVoucherCreate(BaseModel):
+    id: Optional[str] = None
+    voucher_no: Optional[str] = None
+    voucherNo: Optional[str] = None
+    voucher_date: Optional[str] = None
+    voucherDate: Optional[str] = None
+    agent_id: Optional[str] = None
+    agentId: Optional[str] = None
+    agent_name: Optional[str] = None
+    agentName: Optional[str] = None
+    amount: float
+    payment_mode: Optional[str] = "CASH"
+    paymentMode: Optional[str] = None
+    reference_no: Optional[str] = None
+    referenceNo: Optional[str] = None
+    commission_ids: Optional[List[str]] = None
+    commissionIds: Optional[List[str]] = None
+    settled_commission_ids_json: Optional[str] = None
+    tds_deducted: Optional[float] = 0.0
+    tdsDeducted: Optional[float] = None
+    gross_amount: Optional[float] = None
+    grossAmount: Optional[float] = None
+    notes: Optional[str] = None
+    created_by: Optional[str] = "Accounts"
+    createdBy: Optional[str] = None
+
+class ShiftHandoverCreate(BaseModel):
+    shift_id: Optional[str] = None
+    shiftId: Optional[str] = None
+    shift_date: Optional[str] = None
+    shiftDate: Optional[str] = None
+    shift_time: Optional[str] = None
+    shiftTime: Optional[str] = None
+    user_email: Optional[str] = None
+    userEmail: Optional[str] = None
+    user_name: Optional[str] = None
+    userName: Optional[str] = None
+    shift_type: Optional[str] = "Morning"
+    shiftType: Optional[str] = None
+    opening_drawer_cash: Optional[float] = 5000.0
+    openingDrawerCash: Optional[float] = None
+    room_cash_collected: Optional[float] = 0.0
+    roomCashCollected: Optional[float] = None
+    food_cash_collected: Optional[float] = 0.0
+    foodCashCollected: Optional[float] = None
+    advance_cash_collected: Optional[float] = 0.0
+    advanceCashCollected: Optional[float] = None
+    expenses_paid_from_drawer: Optional[float] = 0.0
+    expensesPaidFromDrawer: Optional[float] = None
+    net_physical_cash_in_drawer: Optional[float] = 5000.0
+    netPhysicalCashInDrawer: Optional[float] = None
+    online_upi_verified: Optional[float] = 0.0
+    onlineUpiVerified: Optional[float] = None
+    card_swipe_verified: Optional[float] = 0.0
+    cardSwipeVerified: Optional[float] = None
+    credit_accounts_added: Optional[float] = 0.0
+    creditAccountsAdded: Optional[float] = None
+    total_transactions_handled: Optional[int] = 0
+    totalTransactionsHandled: Optional[int] = None
+    handover_to_user: Optional[str] = None
+    handoverToUser: Optional[str] = None
+    handover_notes: Optional[str] = None
+    handoverNotes: Optional[str] = None
+    status: Optional[str] = "Verified & Closed"
+
+
 
 

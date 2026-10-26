@@ -606,6 +606,91 @@ class StockTransfer(Base):
     remark = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
+class UserAccount(Base):
+    __tablename__ = "user_accounts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, unique=True, index=True, nullable=False)
+    s_no = Column(Integer, default=1)
+    firm_id = Column(String(50), default="SVR0001")
+    user_name = Column(String(150), nullable=False)
+    email_id = Column(String(150), unique=True, index=True, nullable=False)
+    role_id = Column(Integer, default=2)
+    role_name = Column(String(100), default="Front Office")
+    status = Column(String(50), default="Active")
+    department = Column(String(100), nullable=True)
+    shift = Column(String(100), nullable=True)
+    mobile = Column(String(50), nullable=True)
+    is_on_duty = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class CommissionAgent(Base):
+    __tablename__ = "commission_agents"
+
+    id = Column(Integer, primary_key=True, index=True)
+    agent_id = Column(String(100), unique=True, index=True, nullable=False) # e.g. AGT-101
+    name = Column(String(150), nullable=False)
+    phone = Column(String(50), nullable=False)
+    alternate_phone = Column(String(50), nullable=True)
+    email = Column(String(150), nullable=True)
+    city = Column(String(100), default="Rayagada")
+    address = Column(Text, nullable=True)
+    agent_type = Column(String(100), default="Travel Agent")
+    commission_type = Column(String(100), default="PERCENTAGE_ROOM_ONLY")
+    default_rate = Column(Float, default=10.0)
+    pan_number = Column(String(50), nullable=True)
+    gst_number = Column(String(50), nullable=True)
+    total_bookings = Column(Integer, default=0)
+    total_revenue_generated = Column(Float, default=0.0)
+    total_commission_earned = Column(Float, default=0.0)
+    total_commission_paid = Column(Float, default=0.0)
+    balance_payable = Column(Float, default=0.0)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class AgentPayoutVoucher(Base):
+    __tablename__ = "agent_payout_vouchers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    voucher_no = Column(String(100), unique=True, index=True, nullable=False) # e.g. AGTPAY-1001
+    voucher_date = Column(String(50), nullable=False)
+    agent_id = Column(String(100), index=True, nullable=False)
+    agent_name = Column(String(150), nullable=False)
+    amount = Column(Float, nullable=False)
+    payment_mode = Column(String(50), default="CASH")
+    reference_no = Column(String(100), nullable=True)
+    settled_commission_ids_json = Column(Text, default="[]")
+    tds_deducted = Column(Float, default=0.0)
+    gross_amount = Column(Float, default=0.0)
+    notes = Column(Text, nullable=True)
+    created_by = Column(String(100), default="Accounts")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class ShiftHandover(Base):
+    __tablename__ = "shift_handovers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    shift_id = Column(String(100), unique=True, index=True, nullable=False) # e.g. SHIFT/20261026/01
+    shift_date = Column(String(50), nullable=False)
+    shift_time = Column(String(100), nullable=False)
+    user_email = Column(String(150), nullable=False)
+    user_name = Column(String(150), nullable=False)
+    shift_type = Column(String(50), default="Morning")
+    opening_drawer_cash = Column(Float, default=5000.0)
+    room_cash_collected = Column(Float, default=0.0)
+    food_cash_collected = Column(Float, default=0.0)
+    advance_cash_collected = Column(Float, default=0.0)
+    expenses_paid_from_drawer = Column(Float, default=0.0)
+    net_physical_cash_in_drawer = Column(Float, default=5000.0)
+    online_upi_verified = Column(Float, default=0.0)
+    card_swipe_verified = Column(Float, default=0.0)
+    credit_accounts_added = Column(Float, default=0.0)
+    total_transactions_handled = Column(Integer, default=0)
+    handover_to_user = Column(String(150), nullable=True)
+    handover_notes = Column(Text, nullable=True)
+    status = Column(String(50), default="Verified & Closed")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
 
 
 

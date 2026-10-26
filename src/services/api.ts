@@ -1119,6 +1119,118 @@ export const hotelApi = {
     });
     if (!res.ok) throw new Error('Failed to delete stock transfer from PostgreSQL');
     return await res.json();
+  },
+
+  // Module 28: User Staff Accounts & Roles
+  async saveUserAccount(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to save user account to PostgreSQL');
+    }
+    return await res.json();
+  },
+
+  async getUserAccounts(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/users`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async deleteUserAccount(userId: number | string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/users/${encodeURIComponent(String(userId))}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete user account from PostgreSQL');
+    return await res.json();
+  },
+
+  // Module 29: Commission Agents
+  async saveCommissionAgent(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/commission-agents`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to save commission agent to PostgreSQL');
+    }
+    return await res.json();
+  },
+
+  async getCommissionAgents(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/commission-agents`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async deleteCommissionAgent(agentId: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/commission-agents/${encodeURIComponent(agentId)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete commission agent from PostgreSQL');
+    return await res.json();
+  },
+
+  // Module 30: Agent Commission Payout Vouchers
+  async saveAgentPayoutVoucher(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/agent-payout-vouchers`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to save agent payout voucher to PostgreSQL');
+    }
+    return await res.json();
+  },
+
+  async getAgentPayoutVouchers(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/agent-payout-vouchers`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  // Module 31: Shift Handovers & Cash Reconciliation
+  async saveShiftHandover(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/shift-handovers`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to save shift handover to PostgreSQL');
+    }
+    return await res.json();
+  },
+
+  async getShiftHandovers(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/shift-handovers`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
   }
 };
 

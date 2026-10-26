@@ -168,6 +168,10 @@ def test_parity_endpoints():
     assert "godowns" in state
     assert "item_groups" in state
     assert "stock_transfers" in state
+    assert "users" in state
+    assert "commission_agents" in state
+    assert "agent_payout_vouchers" in state
+    assert "shift_handovers" in state
     assert "masters" in state
     print(f"   [OK] Full Cloud State Hydration: {len(state['rooms'])} rooms, {len(state['food_bills'])} food bills, {len(state['expenses'])} expenses, {len(state['purchases'])} purchases, {len(state['discounts'])} discounts, {len(state['group_bookings'])} group bookings")
 
@@ -406,6 +410,101 @@ def test_parity_endpoints():
     assert r.status_code == 200
     assert len(r.json()) >= 1
     print(f"   [OK] Stock Transfers Query: Found {len(r.json())} transfer voucher(s)")
+
+    # 23. User Accounts Test
+    user_payload = {
+        "id": 101,
+        "userName": "Rakesh Nandyala",
+        "emailId": "rakesh@sai-vasudev.com",
+        "roleId": 1,
+        "roleName": "General Manager & Admin",
+        "department": "General Management",
+        "status": "Active",
+        "mobile": "9440289999",
+        "isOnDuty": True
+    }
+    r = client.post("/api/v1/pms/users", json=user_payload)
+    assert r.status_code == 200, f"User account save failed: {r.text}"
+    print(f"   [OK] User Account Saved: {r.json()['userName']} ({r.json()['roleName']})")
+
+    r = client.get("/api/v1/pms/users")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Users Query: Found {len(r.json())} user account(s)")
+
+    # 24. Commission Agents Test
+    agent_payload = {
+        "id": "AGT-TEST-01",
+        "name": "Rayagada Pilgrim Travels Agency",
+        "phone": "9861054321",
+        "city": "Rayagada",
+        "agentType": "Travel Agent",
+        "commissionType": "PERCENTAGE_ROOM_ONLY",
+        "defaultRate": 12.0,
+        "totalBookings": 5,
+        "totalRevenueGenerated": 15000.0,
+        "totalCommissionEarned": 1800.0,
+        "balancePayable": 1800.0
+    }
+    r = client.post("/api/v1/pms/commission-agents", json=agent_payload)
+    assert r.status_code == 200, f"Commission agent save failed: {r.text}"
+    print(f"   [OK] Commission Agent Saved: {r.json()['name']} (Bal: Rs.{r.json()['balancePayable']})")
+
+    r = client.get("/api/v1/pms/commission-agents")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Commission Agents Query: Found {len(r.json())} agent(s)")
+
+    # 25. Agent Payout Voucher Test
+    payout_payload = {
+        "voucherNo": "AGTPAY-TEST-01",
+        "voucherDate": "2026-10-26",
+        "agentId": "AGT-TEST-01",
+        "agentName": "Rayagada Pilgrim Travels Agency",
+        "amount": 1000.0,
+        "paymentMode": "UPI",
+        "referenceNo": "UPI/2026/89472910",
+        "commissionIds": ["COMM-TEST-001"],
+        "notes": "Weekly travel desk payout settlement"
+    }
+    r = client.post("/api/v1/pms/agent-payout-vouchers", json=payout_payload)
+    assert r.status_code == 200, f"Agent payout failed: {r.text}"
+    print(f"   [OK] Agent Payout Voucher Recorded: {r.json()['voucherNo']} for Rs.{r.json()['amount']}")
+
+    r = client.get("/api/v1/pms/agent-payout-vouchers")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Agent Payout Vouchers Query: Found {len(r.json())} voucher(s)")
+
+    # 26. Shift Handover & Cash Reconciliation Test
+    handover_payload = {
+        "shiftId": "SHIFT/TEST/20261026",
+        "shiftDate": "2026-10-26",
+        "shiftTime": "07:00 AM - 03:00 PM",
+        "userEmail": "rakesh@sai-vasudev.com",
+        "userName": "Rakesh Nandyala",
+        "shiftType": "Morning",
+        "openingDrawerCash": 5000.0,
+        "roomCashCollected": 12500.0,
+        "foodCashCollected": 3200.0,
+        "advanceCashCollected": 4000.0,
+        "expensesPaidFromDrawer": 1200.0,
+        "netPhysicalCashInDrawer": 23500.0,
+        "onlineUpiVerified": 15000.0,
+        "cardSwipeVerified": 5000.0,
+        "totalTransactionsHandled": 12,
+        "handoverToUser": "Evening Incharge",
+        "handoverNotes": "Morning shift balance reconciled with 100% currency match",
+        "status": "Verified & Closed"
+    }
+    r = client.post("/api/v1/pms/shift-handovers", json=handover_payload)
+    assert r.status_code == 200, f"Shift handover failed: {r.text}"
+    print(f"   [OK] Shift Handover Recorded: {r.json()['shiftId']} (Net Drawer Cash: Rs.{r.json()['netPhysicalCashInDrawer']})")
+
+    r = client.get("/api/v1/pms/shift-handovers")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Shift Handovers Query: Found {len(r.json())} shift record(s)")
 
     print("\n=== ALL PARITY ENDPOINTS TESTED & PASSED 100%! ===")
 
