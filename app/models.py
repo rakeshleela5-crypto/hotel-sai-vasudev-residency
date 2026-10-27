@@ -8,9 +8,9 @@ def generate_booking_ref():
     return f"SVR-{uuid.uuid4().hex[:6].upper()}"
 
 def generate_invoice_num():
-    year = datetime.datetime.utcnow().year
-    rand_seq = uuid.uuid4().hex[:4].upper()
-    return f"INV-SVR-{year}-{rand_seq}"
+    now_ts = int(datetime.datetime.utcnow().timestamp() * 1000)
+    rand_seq = uuid.uuid4().hex[:6].upper()
+    return f"INV-SVR-{now_ts}-{rand_seq}"
 
 class Room(Base):
     __tablename__ = "rooms"
@@ -286,6 +286,7 @@ class HousekeepingDiscrepancy(Base):
     __tablename__ = "housekeeping_discrepancies"
 
     id = Column(Integer, primary_key=True, index=True)
+    discrepancy_id = Column(String(50), nullable=True, index=True)
     room_no = Column(String(50), nullable=False, index=True)
     front_desk_status = Column(String(50), nullable=False)
     housekeeping_status = Column(String(50), nullable=False)
@@ -1080,6 +1081,77 @@ class HotelProperty(Base):
     is_current = Column(Boolean, default=False)
     total_rooms = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class TableShift(Base):
+    __tablename__ = "table_shifts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    shift_id = Column(String(50), unique=True, index=True, nullable=False)
+    from_table = Column(String(50), nullable=False)
+    to_table = Column(String(50), nullable=False)
+    transferred_count = Column(Integer, default=0)
+    reason = Column(String(255), nullable=True)
+    shifted_by = Column(String(100), default="Cashier")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class TableSessionRecord(Base):
+    __tablename__ = "table_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String(50), unique=True, index=True, nullable=False)
+    table_no = Column(String(50), nullable=False, index=True)
+    start_time = Column(String(50), nullable=False)
+    status = Column(String(50), default="Active")
+    kot_numbers_json = Column(Text, default="[]")
+    cumulative_items_json = Column(Text, default="[]")
+    cumulative_amount = Column(Float, default=0.0)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class RfidKeyCard(Base):
+    __tablename__ = "rfid_keycards"
+
+    id = Column(Integer, primary_key=True, index=True)
+    card_number = Column(String(100), unique=True, index=True, nullable=False)
+    card_uuid = Column(String(100), nullable=True)
+    room_no = Column(String(50), nullable=False, index=True)
+    guest_name = Column(String(150), nullable=False)
+    check_in_time = Column(String(50), nullable=False)
+    valid_until = Column(String(50), nullable=False)
+    status = Column(String(50), default="Active")
+    issued_by = Column(String(100), default="Front Desk")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class HotelCompanyInfo(Base):
+    __tablename__ = "hotel_company_info"
+
+    id = Column(Integer, primary_key=True, index=True)
+    property_name = Column(String(200), default="Hotel Sai Vasudev Residency")
+    address = Column(Text, nullable=True)
+    city = Column(String(100), nullable=True)
+    state = Column(String(100), nullable=True)
+    pincode = Column(String(20), nullable=True)
+    phone = Column(String(50), nullable=True)
+    email = Column(String(100), nullable=True)
+    gstin = Column(String(50), nullable=True)
+    logo_url = Column(String(500), nullable=True)
+    seal_url = Column(String(500), nullable=True)
+    default_bill_format = Column(String(50), default="standard")
+    terms_and_conditions = Column(Text, nullable=True)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class LiquorStockAdjustment(Base):
+    __tablename__ = "liquor_stock_adjustments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    brand = Column(String(150), nullable=False, index=True)
+    item_id = Column(String(50), nullable=True)
+    bottle_size_ml = Column(Integer, default=750)
+    transaction_type = Column(String(50), nullable=False)
+    qty_pegs = Column(Float, nullable=False)
+    pegs_per_bottle = Column(Integer, default=25)
+    reference_no = Column(String(100), nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
 
 
 

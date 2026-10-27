@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { hotelApi } from '../../services/api';
 import './pmsStyles.css';
 
 interface ManagerPinModalProps {
@@ -45,30 +46,44 @@ export const ManagerPinModal: React.FC<ManagerPinModalProps> = ({
   );
   const [customNotes, setCustomNotes] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const displayDesc = actionDescription || itemDescription;
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
     const trimmedPin = pin.trim();
-    // Valid manager pins: 9999 (default master PIN), 1234, 8888
-    if (!trimmedPin || (trimmedPin !== '9999' && trimmedPin !== '1234' && trimmedPin !== '8888')) {
-      setErrorMessage('❌ Invalid Manager PIN! Authorization rejected. (Default Master PIN: 9999)');
+    if (!trimmedPin) {
+      setErrorMessage('❌ Please enter your Manager PIN.');
       return;
     }
 
-    const fullReason = customNotes.trim()
-      ? `${selectedReason} - ${customNotes.trim()}`
-      : selectedReason;
+    setIsVerifying(true);
+    try {
+      const isValid = await hotelApi.verifyManagerPin(trimmedPin);
+      if (!isValid) {
+        setErrorMessage('❌ Invalid Manager PIN! Authorization rejected by database policy.');
+        setIsVerifying(false);
+        return;
+      }
 
-    onAuthorized(trimmedPin, fullReason);
-    setPin('');
-    setCustomNotes('');
-    onClose();
+      const fullReason = customNotes.trim()
+        ? `${selectedReason} - ${customNotes.trim()}`
+        : selectedReason;
+
+      onAuthorized(trimmedPin, fullReason);
+      setPin('');
+      setCustomNotes('');
+      onClose();
+    } catch {
+      setErrorMessage('❌ Backend verification error. Please try again.');
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   const isVoid = actionType === 'void_kot';
@@ -277,21 +292,22 @@ export const ManagerPinModal: React.FC<ManagerPinModalProps> = ({
             </button>
             <button
               type="submit"
+              disabled={isVerifying}
               style={{
                 padding: '8px 20px',
                 borderRadius: 6,
                 border: 'none',
-                background: '#b91c1c',
+                background: isVerifying ? '#94a3b8' : '#b91c1c',
                 color: '#ffffff',
                 fontSize: 12.5,
                 fontWeight: 700,
-                cursor: 'pointer',
+                cursor: isVerifying ? 'wait' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6
               }}
             >
-              <span>🔓 Authorize &amp; Log</span>
+              <span>{isVerifying ? '⏳ Verifying Database...' : '🔓 Authorize & Log'}</span>
             </button>
           </div>
         </form>

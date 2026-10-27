@@ -78,6 +78,16 @@ try:
             conn.commit()
         except Exception as e:
             print(f"Notice: police_station_logs migration: {e}")
+
+        # 5. housekeeping_discrepancies
+        try:
+            res = conn.execute(text("PRAGMA table_info(housekeeping_discrepancies)" if is_sqlite else "SELECT column_name FROM information_schema.columns WHERE table_name='housekeeping_discrepancies'"))
+            existing_cols = [row[1] if is_sqlite else row[0] for row in res.fetchall()]
+            if "discrepancy_id" not in existing_cols:
+                conn.execute(text("ALTER TABLE housekeeping_discrepancies ADD COLUMN discrepancy_id VARCHAR(50)"))
+            conn.commit()
+        except Exception as e:
+            print(f"Notice: housekeeping_discrepancies migration: {e}")
 except Exception as exc:
     print(f"Notice: Initial DB schema sync deferred: {exc}")
 

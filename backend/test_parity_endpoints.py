@@ -1,6 +1,8 @@
 import os
 import sys
 import datetime
+import time
+import uuid
 
 # Ensure backend root is on path
 backend_dir = os.path.dirname(os.path.abspath(__file__))
@@ -17,6 +19,7 @@ client = TestClient(app)
 def test_parity_endpoints():
     print("Testing Full-Stack Parity Endpoints...")
     Base.metadata.create_all(bind=engine)
+    db = next(get_db())
 
     # 1. Test Folio Discount
     disc_payload = {
@@ -953,6 +956,156 @@ def test_parity_endpoints():
     r = client.delete("/api/v1/pms/master-items/gst/GST%2018%25%20Special%20Luxury")
     assert r.status_code == 200
     print(f"   [OK] Master Item Deleted: {r.json()['message']}")
+
+    # 48. Test Restaurant Table Shifts
+    shift_payload = {
+        "from_table": "Table 1",
+        "to_table": "Table 4",
+        "transferred_count": 2,
+        "reason": "Guest moved to AC corner",
+        "shifted_by": "Senior Steward"
+    }
+    r = client.post("/api/v1/pms/restaurant/table-shifts", json=shift_payload)
+    assert r.status_code == 200, f"Table shift failed: {r.text}"
+    print(f"   [OK] Table Shift Persisted: {r.json()['shift_id']}")
+
+    r = client.get("/api/v1/pms/restaurant/table-shifts")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Table Shifts Query: Found {len(r.json())} shift record(s)")
+
+    # 49. Test Dining Table Sessions
+    session_payload = {
+        "session_id": f"TSESS-{int(time.time())}",
+        "table_no": "Table 4",
+        "start_time": "12:30 PM",
+        "status": "Active",
+        "kot_numbers_json": '["KOT-101", "KOT-102"]',
+        "cumulative_items_json": '[{"name": "Paneer Butter Masala", "qty": 1, "rate": 260}]',
+        "cumulative_amount": 260.0
+    }
+    r = client.post("/api/v1/pms/restaurant/table-sessions", json=session_payload)
+    assert r.status_code == 200, f"Table session save failed: {r.text}"
+    print(f"   [OK] Table Session Persisted: {r.json()['sessionId']}")
+
+    r = client.get("/api/v1/pms/restaurant/table-sessions")
+    assert r.status_code == 200
+    print(f"   [OK] Table Sessions Query: Found {len(r.json())} active session(s)")
+
+    # 50. Test Housekeeping Discrepancy Recording
+    hk_disc_payload = {
+        "room_no": "205",
+        "front_desk_status": "Vacant",
+        "housekeeping_status": "Occupied",
+        "reported_by": "Duty Housekeeper Sunita",
+        "remarks": "Baggage detected in room marked vacant"
+    }
+    r = client.post("/api/v1/pms/housekeeping-discrepancies", json=hk_disc_payload)
+    assert r.status_code == 200, f"HK discrepancy save failed: {r.text}"
+    print(f"   [OK] Housekeeping Discrepancy Created: {r.json()['discrepancyId']}")
+
+    r = client.get("/api/v1/pms/housekeeping-discrepancies")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Housekeeping Discrepancies Query: Found {len(r.json())} discrepancy(ies)")
+
+    # 51. Test RFID Key Cards
+    card_number = f"CARD-{int(time.time())}"
+    keycard_payload = {
+        "card_number": card_number,
+        "room_no": "101",
+        "guest_name": "Rakesh Nandyala",
+        "check_in_time": "2026-10-27 10:00 AM",
+        "valid_until": "2026-10-28 11:00 AM",
+        "status": "Active",
+        "issued_by": "Front Desk Receptionist"
+    }
+    r = client.post("/api/v1/pms/key-cards", json=keycard_payload)
+    assert r.status_code == 200, f"Key card issuance failed: {r.text}"
+    print(f"   [OK] RFID Key Card Issued: {r.json()['cardNumber']}")
+
+    r = client.put(f"/api/v1/pms/key-cards/{card_number}/extend", json={"valid_until": "2026-10-28 02:00 PM"})
+    assert r.status_code == 200
+    print(f"   [OK] RFID Key Card Extended: {r.json()['cardNumber']} until {r.json()['validUntil']}")
+
+    r = client.get("/api/v1/pms/key-cards")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] RFID Key Cards Query: Found {len(r.json())} card(s)")
+
+    # 52. Test Hotel Company Info
+    company_payload = {
+        "property_name": "Hotel Sai Vasudev Residency",
+        "address": "Main Road, Near Temple, Shirdi",
+        "city": "Shirdi",
+        "state": "Maharashtra",
+        "pincode": "423109",
+        "phone": "+91 94402 89999",
+        "email": "info@saivasudevresidency.com",
+        "gstin": "27AABCS1234F1Z5",
+        "default_bill_format": "standard"
+    }
+    r = client.post("/api/v1/pms/company-info", json=company_payload)
+    assert r.status_code == 200, f"Company info save failed: {r.text}"
+    print(f"   [OK] Hotel Company Info Persisted: {r.json()['propertyName']}")
+
+    r = client.get("/api/v1/pms/company-info")
+    assert r.status_code == 200
+    assert r.json()['propertyName'] == "Hotel Sai Vasudev Residency"
+    print(f"   [OK] Hotel Company Info Query: {r.json()['propertyName']} ({r.json()['city']})")
+
+    # 53. Test Virtual Accounts
+    va_acc = f"VA9999{int(time.time())}"
+    va_payload = {
+        "account_number": va_acc,
+        "ifsc": "YESB0CMSNOC",
+        "upi_id": f"{va_acc}@yesbank",
+        "guest_name": "JK Paper Ltd Corporate",
+        "status": "Active"
+    }
+    r = client.post("/api/v1/pms/virtual-accounts", json=va_payload)
+    assert r.status_code == 200, f"Virtual account create failed: {r.text}"
+    print(f"   [OK] Virtual Account Persisted: {r.json()['accountNumber']} ({r.json()['upiId']})")
+
+    r = client.get("/api/v1/pms/virtual-accounts")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Virtual Accounts Query: Found {len(r.json())} account(s)")
+
+    # 54. Test Manager PIN Verification
+    r = client.post("/api/v1/pms/auth/verify-manager-pin", json={"pin": "9999"})
+    assert r.status_code == 200
+    assert r.json()["verified"] is True
+    print(f"   [OK] Manager PIN Verified in Database: {r.json()['manager']}")
+
+    r = client.post("/api/v1/pms/auth/verify-manager-pin", json={"pin": "0000"})
+    assert r.status_code == 401
+    print("   [OK] Manager PIN Invalid Rejection Verified")
+
+    # 55. Test Booking Confirmation Transition
+    # Create a stub booking to confirm
+    b_test = models.Booking(
+        booking_ref=f"SVR-CONFIRM-{int(time.time())}",
+        invoice_number=f"INV-SVR-{int(time.time()*1000)}-{uuid.uuid4().hex[:4].upper()}",
+        room_id=1,
+        guest_name="Confirm Test Guest",
+        guest_email="confirm@sai-vasudev.com",
+        guest_phone="9440289999",
+        check_in_date="2026-10-27",
+        check_out_date="2026-10-28",
+        base_rate=2000.0,
+        base_amount=2000.0,
+        total_price=2000.0,
+        status="Pending"
+    )
+    db.add(b_test)
+    db.commit()
+    db.refresh(b_test)
+
+    r = client.put(f"/api/v1/pms/bookings/{b_test.id}/confirm")
+    assert r.status_code == 200
+    assert r.json()["status"] == "Confirmed"
+    print(f"   [OK] Booking Confirmation Transition Persisted: Booking {b_test.id} -> Confirmed")
 
     print("\n=== ALL PARITY ENDPOINTS TESTED & PASSED 100%! ===")
 

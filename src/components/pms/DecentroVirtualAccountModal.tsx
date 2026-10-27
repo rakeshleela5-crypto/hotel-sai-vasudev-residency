@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { decentroApi, type DecentroVirtualAccountResponse } from '../../services/decentroApi';
+import { hotelApi } from '../../services/api';
 
 interface DecentroVirtualAccountModalProps {
   isOpen: boolean;
@@ -51,6 +52,17 @@ export const DecentroVirtualAccountModal: React.FC<DecentroVirtualAccountModalPr
         address
       });
       setCreatedVa(res);
+
+      // Persist virtual account to PostgreSQL backend
+      await hotelApi.createVirtualAccount({
+        account_number: res.account_number,
+        ifsc: res.ifsc_code,
+        upi_id: res.upi_id || `${res.account_number}@yesbank`,
+        booking_id: bookingId,
+        guest_name: corporateName,
+        status: 'Active'
+      }).catch(console.warn);
+
       if (onAccountCreated) {
         onAccountCreated(res);
       }

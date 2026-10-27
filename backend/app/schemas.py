@@ -1654,6 +1654,81 @@ class RoomPhotoUploadResponse(BaseModel):
     storage: str = "Cloudflare R2"
     message: str = "Room photo successfully uploaded to Cloudflare R2 and published to room profile"
 
+# --- Phase 2 Forensic Schemas ---
+class TableShiftCreate(BaseModel):
+    shift_id: Optional[str] = None
+    from_table: str
+    to_table: str
+    transferred_count: Optional[int] = 0
+    reason: Optional[str] = None
+    shifted_by: Optional[str] = "Cashier"
+
+class TableSessionCreate(BaseModel):
+    session_id: str
+    table_no: str
+    start_time: str
+    status: Optional[str] = "Active"
+    kot_numbers_json: Optional[str] = "[]"
+    cumulative_items_json: Optional[str] = "[]"
+    cumulative_amount: Optional[float] = 0.0
+
+class HousekeepingDiscrepancyCreate(BaseModel):
+    discrepancy_id: Optional[str] = None
+    room_no: str
+    front_desk_status: str
+    housekeeping_status: str
+    reported_by: Optional[str] = "System"
+    remarks: Optional[str] = None
+
+class RfidKeyCardCreate(BaseModel):
+    card_number: str
+    card_uuid: Optional[str] = None
+    room_no: str
+    guest_name: str
+    check_in_time: str
+    valid_until: str
+    status: Optional[str] = "Active"
+    issued_by: Optional[str] = "Front Desk"
+
+class RfidKeyCardExtend(BaseModel):
+    valid_until: str
+    extended_by: Optional[str] = "Front Desk"
+
+class HotelCompanyInfoCreate(BaseModel):
+    property_name: Optional[str] = "Hotel Sai Vasudev Residency"
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    pincode: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    gstin: Optional[str] = None
+    logo_url: Optional[str] = None
+    seal_url: Optional[str] = None
+    default_bill_format: Optional[str] = "standard"
+    terms_and_conditions: Optional[str] = None
+
+class VirtualAccountCreate(BaseModel):
+    account_number: str
+    ifsc: str
+    upi_id: Optional[str] = None
+    booking_id: Optional[int] = None
+    guest_name: str
+    status: Optional[str] = "Active"
+
+class LiquorStockAdjustmentCreate(BaseModel):
+    brand: str
+    item_id: Optional[str] = None
+    bottle_size_ml: Optional[int] = 750
+    transaction_type: str
+    qty_pegs: float
+    pegs_per_bottle: Optional[int] = 25
+    reference_no: Optional[str] = None
+
+class ManagerPinVerifyRequest(BaseModel):
+    pin: str
+
+
 
 
 

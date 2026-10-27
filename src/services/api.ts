@@ -815,9 +815,13 @@ export const hotelApi = {
   },
 
   async getHousekeepingDiscrepancies(): Promise<any[]> {
-    const res = await fetch(`${API_BASE_URL}/pms/housekeeping/discrepancies`);
-    if (!res.ok) throw new Error('Failed to fetch housekeeping discrepancies');
-    return await res.json();
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/housekeeping-discrepancies`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
   },
 
   async getFullCloudState(): Promise<any> {
@@ -1891,6 +1895,273 @@ export const hotelApi = {
     });
     if (!res.ok) throw new Error('Failed to submit demo request');
     return await res.json();
+  },
+
+  // Module 53: Table Shifts
+  async recordTableShift(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/restaurant/table-shifts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to record table shift');
+    return await res.json();
+  },
+
+  async getTableShifts(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/restaurant/table-shifts`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  // Module 54: Table Sessions
+  async saveTableSession(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/restaurant/table-sessions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to save table session');
+    return await res.json();
+  },
+
+  async getTableSessions(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/restaurant/table-sessions`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  // Module 55: Housekeeping Discrepancies
+  async createHousekeepingDiscrepancy(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/housekeeping-discrepancies`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to create housekeeping discrepancy');
+    return await res.json();
+  },
+
+
+  // Module 56: RFID Key Cards
+  async issueKeyCard(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/key-cards`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to issue key card');
+    return await res.json();
+  },
+
+  async extendKeyCard(cardNumber: string, validUntil: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/key-cards/${encodeURIComponent(cardNumber)}/extend`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ valid_until: validUntil })
+    });
+    if (!res.ok) throw new Error('Failed to extend key card');
+    return await res.json();
+  },
+
+  async getKeyCards(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/key-cards`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  // Module 57: Company Info
+  async saveCompanyInfo(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/company-info`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to save company branding');
+    return await res.json();
+  },
+
+  async getCompanyInfo(): Promise<any> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/company-info`);
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  // Module 58: Virtual Accounts
+  async createVirtualAccount(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/virtual-accounts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to record virtual account');
+    return await res.json();
+  },
+
+  async getVirtualAccounts(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/virtual-accounts`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  // Module 59: Liquor Stock Adjustments
+  async recordLiquorAdjustment(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/liquor/stock-adjustments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to record liquor adjustment');
+    return await res.json();
+  },
+
+  // Module 60: Manager PIN Verification
+  async verifyManagerPin(pin: string): Promise<boolean> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/auth/verify-manager-pin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin })
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  },
+
+  // Module 61: Confirm Booking
+  async confirmBooking(bookingId: string | number): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/bookings/${encodeURIComponent(String(bookingId))}/confirm`, {
+      method: 'PUT'
+    });
+    if (!res.ok) throw new Error('Failed to confirm booking');
+    return await res.json();
+  },
+
+  // Module 62: Deletions
+  async deleteExpense(expenseId: string | number): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/expenses/${encodeURIComponent(String(expenseId))}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete expense');
+    return await res.json();
+  },
+
+  async deletePurchase(purchaseId: string | number): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/purchases/${encodeURIComponent(String(purchaseId))}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete purchase');
+    return await res.json();
+  },
+
+  async deleteRole(roleId: string | number): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/roles/${encodeURIComponent(String(roleId))}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete role');
+    return await res.json();
+  },
+
+  async deleteUser(userId: string | number): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/users/${encodeURIComponent(String(userId))}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete user');
+    return await res.json();
+  },
+
+  async deleteWhatsAppTemplate(templateId: string | number): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/whatsapp/templates/${encodeURIComponent(String(templateId))}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete WhatsApp template');
+    return await res.json();
+  },
+
+  async clearWhatsAppLogs(): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/whatsapp/logs`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to clear WhatsApp logs');
+    return await res.json();
+  },
+
+  async settlePartyAccount(accountName: string, amount: number): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/party-accounts/settle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accountName, amount })
+    });
+    if (!res.ok) throw new Error('Failed to settle party account');
+    return await res.json();
+  },
+
+  async createRoom(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/rooms`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to create room in database');
+    return await res.json();
+  },
+
+  async updateRoom(roomId: string | number, payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/rooms/${roomId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to update room in database');
+    return await res.json();
+  },
+
+  async deleteRoom(roomId: string | number): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/rooms/${roomId}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete room in database');
+    return await res.json();
+  },
+
+  async saveTable(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/tables`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to save table in database');
+    return await res.json();
+  },
+
+  async deleteTable(tableId: string | number): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/tables/${tableId}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete table in database');
+    return await res.json();
   }
 };
+
 
