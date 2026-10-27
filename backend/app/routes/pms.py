@@ -977,6 +977,32 @@ def delete_master_item(category: str, code: str, db: Session = Depends(get_db)):
     db.commit()
     return {"status": "deleted", "code": code}
 
+# Helper for resilient cloud queries with auto-recovery
+def _safe_pms_query(db: Session, model_cls, order_by=None, limit=None):
+    try:
+        q = db.query(model_cls)
+        if order_by is not None:
+            q = q.order_by(order_by)
+        if limit is not None:
+            q = q.limit(limit)
+        return q.all()
+    except Exception:
+        db.rollback()
+        # Self-heal missing column on housekeeping_discrepancies if encountered
+        if model_cls == models.HousekeepingDiscrepancy:
+            try:
+                db.execute(text("ALTER TABLE housekeeping_discrepancies ADD COLUMN IF NOT EXISTS discrepancy_id VARCHAR(50)"))
+                db.commit()
+                q = db.query(model_cls)
+                if order_by is not None:
+                    q = q.order_by(order_by)
+                if limit is not None:
+                    q = q.limit(limit)
+                return q.all()
+            except Exception:
+                db.rollback()
+        return []
+
 # --- 16. Full Cloud Hydration API ---
 @router.get("/sync/full-state")
 def get_full_cloud_state(db: Session = Depends(get_db)):
@@ -984,54 +1010,54 @@ def get_full_cloud_state(db: Session = Depends(get_db)):
     Returns entire relational ERP state for instant hydration:
     Rooms, Active Bookings, Payments, KOTs, Food Bills, Expenses, Night Audits, Purchases, Dining Tables, and Masters.
     """
-    rooms = db.query(models.Room).order_by(models.Room.id.asc()).all()
-    bookings = db.query(models.Booking).order_by(models.Booking.created_at.desc()).limit(150).all()
-    payments = db.query(models.BookingPayment).order_by(models.BookingPayment.created_at.desc()).limit(150).all()
-    tables = db.query(models.DiningTable).all()
-    kots = db.query(models.KotTicket).order_by(models.KotTicket.created_at.desc()).limit(100).all()
-    food_bills = db.query(models.FoodBill).order_by(models.FoodBill.id.desc()).limit(100).all()
-    expenses = db.query(models.PettyExpense).order_by(models.PettyExpense.id.desc()).limit(150).all()
-    night_audits = db.query(models.DailyNightAudit).order_by(models.DailyNightAudit.audit_date.desc()).limit(30).all()
-    purchases = db.query(models.InventoryPurchase).order_by(models.InventoryPurchase.id.desc()).limit(50).all()
-    discounts = db.query(models.FolioDiscountRecord).order_by(models.FolioDiscountRecord.id.desc()).limit(100).all()
-    group_bookings = db.query(models.GroupBooking).order_by(models.GroupBooking.id.desc()).limit(100).all()
-    checkouts = db.query(models.CheckoutRecord).order_by(models.CheckoutRecord.id.desc()).limit(150).all()
-    advance_receipts = db.query(models.AdvanceReceipt).order_by(models.AdvanceReceipt.id.desc()).limit(150).all()
-    room_shifts = db.query(models.RoomShift).order_by(models.RoomShift.id.desc()).limit(100).all()
-    journal_entries = db.query(models.JournalEntry).order_by(models.JournalEntry.created_at.desc()).limit(150).all()
-    party_accounts = db.query(models.PartyAccount).order_by(models.PartyAccount.name.asc()).all()
-    general_receipts = db.query(models.GeneralReceipt).order_by(models.GeneralReceipt.created_at.desc()).limit(150).all()
-    general_payments = db.query(models.GeneralPayment).order_by(models.GeneralPayment.created_at.desc()).limit(150).all()
-    godowns = db.query(models.Godown).order_by(models.Godown.s_no.asc()).all()
-    item_groups = db.query(models.ItemGroup).order_by(models.ItemGroup.s_no.asc()).all()
-    stock_transfers = db.query(models.StockTransfer).order_by(models.StockTransfer.created_at.desc()).limit(150).all()
-    user_accounts = db.query(models.UserAccount).order_by(models.UserAccount.user_id.asc()).all()
-    commission_agents = db.query(models.CommissionAgent).order_by(models.CommissionAgent.id.asc()).all()
-    agent_payouts = db.query(models.AgentPayoutVoucher).order_by(models.AgentPayoutVoucher.created_at.desc()).limit(150).all()
-    shift_handovers = db.query(models.ShiftHandover).order_by(models.ShiftHandover.created_at.desc()).limit(150).all()
-    banquet_venues = db.query(models.BanquetVenue).order_by(models.BanquetVenue.id.asc()).all()
-    banquet_bookings = db.query(models.BanquetBooking).order_by(models.BanquetBooking.created_at.desc()).limit(150).all()
-    liquor_items = db.query(models.LiquorItem).order_by(models.LiquorItem.s_no.asc()).all()
-    bar_invoices = db.query(models.BarInvoice).order_by(models.BarInvoice.created_at.desc()).limit(150).all()
-    hotel_assets = db.query(models.HotelAsset).order_by(models.HotelAsset.id.asc()).all()
-    lockers = db.query(models.Locker).order_by(models.Locker.locker_no.asc()).all()
-    whatsapp_logs = db.query(models.WhatsAppLog).order_by(models.WhatsAppLog.created_at.desc()).limit(150).all()
-    whatsapp_cfg = db.query(models.WhatsAppConfig).filter(models.WhatsAppConfig.config_key == "default").first()
-    support_tickets = db.query(models.SupportTicket).order_by(models.SupportTicket.created_at.desc()).limit(150).all()
-    hotel_setting = db.query(models.HotelSetting).filter(models.HotelSetting.key == "default").first()
-    room_types = db.query(models.RoomType).order_by(models.RoomType.id.asc()).all()
-    menu_items = db.query(models.MenuItem).order_by(models.MenuItem.category.asc(), models.MenuItem.name.asc()).all()
-    housekeeping = db.query(models.HousekeepingRecord).all()
-    agent_commissions = db.query(models.AgentCommissionAccrual).order_by(models.AgentCommissionAccrual.created_at.desc()).limit(150).all()
-    whatsapp_templates = db.query(models.WhatsAppTemplate).order_by(models.WhatsAppTemplate.s_no.asc()).all()
-    roles = db.query(models.RolePermission).order_by(models.RolePermission.id.asc()).all()
-    no_discount_rule = db.query(models.NoDiscountRule).filter(models.NoDiscountRule.config_key == "default").first()
-    liquor_brands = db.query(models.LiquorBrand).order_by(models.LiquorBrand.s_no.asc()).all()
-    liquor_units = db.query(models.LiquorUnit).order_by(models.LiquorUnit.s_no.asc()).all()
-    key_cards = db.query(models.KeyCardAccess).order_by(models.KeyCardAccess.created_at.desc()).limit(100).all()
-    kot_voids = db.query(models.KotVoidAuditLog).order_by(models.KotVoidAuditLog.timestamp.desc()).limit(100).all()
-    hk_discrepancies = db.query(models.HousekeepingDiscrepancy).order_by(models.HousekeepingDiscrepancy.id.desc()).limit(100).all()
-    masters = db.query(models.MasterItem).all()
+    rooms = _safe_pms_query(db, models.Room, models.Room.id.asc())
+    bookings = _safe_pms_query(db, models.Booking, models.Booking.created_at.desc(), 150)
+    payments = _safe_pms_query(db, models.BookingPayment, models.BookingPayment.created_at.desc(), 150)
+    tables = _safe_pms_query(db, models.DiningTable)
+    kots = _safe_pms_query(db, models.KotTicket, models.KotTicket.created_at.desc(), 100)
+    food_bills = _safe_pms_query(db, models.FoodBill, models.FoodBill.id.desc(), 100)
+    expenses = _safe_pms_query(db, models.PettyExpense, models.PettyExpense.id.desc(), 150)
+    night_audits = _safe_pms_query(db, models.DailyNightAudit, models.DailyNightAudit.audit_date.desc(), 30)
+    purchases = _safe_pms_query(db, models.InventoryPurchase, models.InventoryPurchase.id.desc(), 50)
+    discounts = _safe_pms_query(db, models.FolioDiscountRecord, models.FolioDiscountRecord.id.desc(), 100)
+    group_bookings = _safe_pms_query(db, models.GroupBooking, models.GroupBooking.id.desc(), 100)
+    checkouts = _safe_pms_query(db, models.CheckoutRecord, models.CheckoutRecord.id.desc(), 150)
+    advance_receipts = _safe_pms_query(db, models.AdvanceReceipt, models.AdvanceReceipt.id.desc(), 150)
+    room_shifts = _safe_pms_query(db, models.RoomShift, models.RoomShift.id.desc(), 100)
+    journal_entries = _safe_pms_query(db, models.JournalEntry, models.JournalEntry.created_at.desc(), 150)
+    party_accounts = _safe_pms_query(db, models.PartyAccount, models.PartyAccount.name.asc())
+    general_receipts = _safe_pms_query(db, models.GeneralReceipt, models.GeneralReceipt.created_at.desc(), 150)
+    general_payments = _safe_pms_query(db, models.GeneralPayment, models.GeneralPayment.created_at.desc(), 150)
+    godowns = _safe_pms_query(db, models.Godown, models.Godown.s_no.asc())
+    item_groups = _safe_pms_query(db, models.ItemGroup, models.ItemGroup.s_no.asc())
+    stock_transfers = _safe_pms_query(db, models.StockTransfer, models.StockTransfer.created_at.desc(), 150)
+    user_accounts = _safe_pms_query(db, models.UserAccount, models.UserAccount.user_id.asc())
+    commission_agents = _safe_pms_query(db, models.CommissionAgent, models.CommissionAgent.id.asc())
+    agent_payouts = _safe_pms_query(db, models.AgentPayoutVoucher, models.AgentPayoutVoucher.created_at.desc(), 150)
+    shift_handovers = _safe_pms_query(db, models.ShiftHandover, models.ShiftHandover.created_at.desc(), 150)
+    banquet_venues = _safe_pms_query(db, models.BanquetVenue, models.BanquetVenue.id.asc())
+    banquet_bookings = _safe_pms_query(db, models.BanquetBooking, models.BanquetBooking.created_at.desc(), 150)
+    liquor_items = _safe_pms_query(db, models.LiquorItem, models.LiquorItem.s_no.asc())
+    bar_invoices = _safe_pms_query(db, models.BarInvoice, models.BarInvoice.created_at.desc(), 150)
+    hotel_assets = _safe_pms_query(db, models.HotelAsset, models.HotelAsset.id.asc())
+    lockers = _safe_pms_query(db, models.Locker, models.Locker.locker_no.asc())
+    whatsapp_logs = _safe_pms_query(db, models.WhatsAppLog, models.WhatsAppLog.created_at.desc(), 150)
+    whatsapp_cfg = db.query(models.WhatsAppConfig).filter(models.WhatsAppConfig.config_key == "default").first() if _safe_pms_query(db, models.WhatsAppConfig) else None
+    support_tickets = _safe_pms_query(db, models.SupportTicket, models.SupportTicket.created_at.desc(), 150)
+    hotel_setting = db.query(models.HotelSetting).filter(models.HotelSetting.key == "default").first() if _safe_pms_query(db, models.HotelSetting) else None
+    room_types = _safe_pms_query(db, models.RoomType, models.RoomType.id.asc())
+    menu_items = _safe_pms_query(db, models.MenuItem, models.MenuItem.category.asc())
+    housekeeping = _safe_pms_query(db, models.HousekeepingRecord)
+    agent_commissions = _safe_pms_query(db, models.AgentCommissionAccrual, models.AgentCommissionAccrual.created_at.desc(), 150)
+    whatsapp_templates = _safe_pms_query(db, models.WhatsAppTemplate, models.WhatsAppTemplate.s_no.asc())
+    roles = _safe_pms_query(db, models.RolePermission, models.RolePermission.id.asc())
+    no_discount_rule = db.query(models.NoDiscountRule).filter(models.NoDiscountRule.config_key == "default").first() if _safe_pms_query(db, models.NoDiscountRule) else None
+    liquor_brands = _safe_pms_query(db, models.LiquorBrand, models.LiquorBrand.s_no.asc())
+    liquor_units = _safe_pms_query(db, models.LiquorUnit, models.LiquorUnit.s_no.asc())
+    key_cards = _safe_pms_query(db, models.KeyCardAccess, models.KeyCardAccess.created_at.desc(), 100)
+    kot_voids = _safe_pms_query(db, models.KotVoidAuditLog, models.KotVoidAuditLog.timestamp.desc(), 100)
+    hk_discrepancies = _safe_pms_query(db, models.HousekeepingDiscrepancy, models.HousekeepingDiscrepancy.id.desc(), 100)
+    masters = _safe_pms_query(db, models.MasterItem)
 
     masters_by_cat = {}
     for m in masters:
@@ -5657,24 +5683,56 @@ def get_table_sessions(db: Session = Depends(get_db)):
 @router.post("/housekeeping-discrepancies")
 def create_housekeeping_discrepancy(payload: schemas.HousekeepingDiscrepancyCreate, db: Session = Depends(get_db)):
     disc_id = payload.discrepancy_id or f"DISC-{int(time.time())}-{uuid.uuid4().hex[:4].upper()}"
-    disc = models.HousekeepingDiscrepancy(
-        discrepancy_id=disc_id,
-        room_no=payload.room_no,
-        front_desk_status=payload.front_desk_status,
-        housekeeping_status=payload.housekeeping_status,
-        reported_by=payload.reported_by or "System",
-        notes=payload.remarks or ""
-    )
-    db.add(disc)
-    db.commit()
-    db.refresh(disc)
-    return {"success": True, "discrepancyId": disc.discrepancy_id}
+    try:
+        disc = models.HousekeepingDiscrepancy(
+            discrepancy_id=disc_id,
+            room_no=payload.room_no,
+            front_desk_status=payload.front_desk_status,
+            housekeeping_status=payload.housekeeping_status,
+            reported_by=payload.reported_by or "System",
+            notes=payload.remarks or ""
+        )
+        db.add(disc)
+        db.commit()
+        db.refresh(disc)
+        return {"success": True, "discrepancyId": disc.discrepancy_id}
+    except Exception:
+        db.rollback()
+        try:
+            db.execute(text("ALTER TABLE housekeeping_discrepancies ADD COLUMN IF NOT EXISTS discrepancy_id VARCHAR(50)"))
+            db.commit()
+            disc = models.HousekeepingDiscrepancy(
+                discrepancy_id=disc_id,
+                room_no=payload.room_no,
+                front_desk_status=payload.front_desk_status,
+                housekeeping_status=payload.housekeeping_status,
+                reported_by=payload.reported_by or "System",
+                notes=payload.remarks or ""
+            )
+            db.add(disc)
+            db.commit()
+            db.refresh(disc)
+            return {"success": True, "discrepancyId": disc.discrepancy_id}
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=f"Failed to record housekeeping discrepancy: {str(e)}")
 
 @router.get("/housekeeping-discrepancies")
 def get_housekeeping_discrepancies(db: Session = Depends(get_db)):
-    discs = db.query(models.HousekeepingDiscrepancy).order_by(models.HousekeepingDiscrepancy.id.desc()).all()
+    try:
+        discs = db.query(models.HousekeepingDiscrepancy).order_by(models.HousekeepingDiscrepancy.id.desc()).all()
+    except Exception:
+        db.rollback()
+        try:
+            db.execute(text("ALTER TABLE housekeeping_discrepancies ADD COLUMN IF NOT EXISTS discrepancy_id VARCHAR(50)"))
+            db.commit()
+            discs = db.query(models.HousekeepingDiscrepancy).order_by(models.HousekeepingDiscrepancy.id.desc()).all()
+        except Exception:
+            db.rollback()
+            discs = []
+
     return [{
-        "discrepancyId": getattr(d, 'discrepancy_id', f"DISC-{d.id}"),
+        "discrepancyId": getattr(d, 'discrepancy_id', f"DISC-{d.id}") or f"DISC-{d.id}",
         "roomNo": d.room_no,
         "frontDeskStatus": d.front_desk_status,
         "housekeepingStatus": d.housekeeping_status,
