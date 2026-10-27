@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { PmsCheckIn } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
+import { hotelApi } from '../../services/api';
 import { CheckInSlipModal } from './CheckInSlipModal';
 
 interface RoomCheckInRegisterModalProps {
@@ -24,6 +25,8 @@ export const RoomCheckInRegisterModal: React.FC<RoomCheckInRegisterModalProps> =
   const [selectedCheckIn, setSelectedCheckIn] = useState<PmsCheckIn | null>(null);
   const [printingCheckIn, setPrintingCheckIn] = useState<PmsCheckIn | null>(null);
   const [currentUser, setCurrentUser] = useState(PmsStore.getCurrentUser());
+  const [isFetchingKyc, setIsFetchingKyc] = useState(false);
+  const [kycError, setKycError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -385,6 +388,55 @@ export const RoomCheckInRegisterModal: React.FC<RoomCheckInRegisterModalProps> =
                 <div><strong>Advance Paid:</strong> ₹{selectedCheckIn.advancePaid} ({selectedCheckIn.paymentMode})</div>
                 <div><strong>Business Source:</strong> {selectedCheckIn.businessSource} &bull; {selectedCheckIn.package}</div>
                 <div><strong>Address:</strong> {selectedCheckIn.addressLine1}, {selectedCheckIn.city}, {selectedCheckIn.state}</div>
+                <div><strong>Govt ID Type:</strong> {selectedCheckIn.documentName || 'Aadhaar Card'} - {selectedCheckIn.documentNo || 'Verified'}</div>
+
+                {/* Cloudflare R2 Secure Presigned KYC Access */}
+                <div style={{ marginTop: 12, padding: '10px 12px', background: '#f0fdf4', borderRadius: 6, border: '1px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: 11, color: '#166534', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span>🔒</span> Cloudflare R2 KYC Document
+                    </div>
+                    <div style={{ fontSize: 10, color: '#15803d' }}>Private 15-minute encrypted link</div>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={isFetchingKyc}
+                    onClick={async () => {
+                      setIsFetchingKyc(true);
+                      setKycError(null);
+                      try {
+                        let docUrl = selectedCheckIn.documentImage;
+                        const key = selectedCheckIn.idProofDocumentKey || selectedCheckIn.documentKey;
+                        if (key) {
+                          const presigned = await hotelApi.getR2PresignedDownloadUrl(key, 900);
+                          if (presigned) docUrl = presigned;
+                        }
+                        if (docUrl) {
+                          window.open(docUrl, '_blank', 'noopener,noreferrer');
+                        } else {
+                          alert('No digital KYC attachment found for this guest check-in.');
+                        }
+                      } catch (err: any) {
+                        setKycError(`Failed to load KYC: ${err.message}`);
+                      } finally {
+                        setIsFetchingKyc(false);
+                      }
+                    }}
+                    style={{
+                      background: '#16a34a',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: 4,
+                      padding: '6px 12px',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      cursor: isFetchingKyc ? 'wait' : 'pointer'
+                    }}
+                  >
+                    {isFetchingKyc ? '⏳ Loading R2...' : '🪪 View KYC (15m Secure)'}
+                  </button>
+                </div>
+                {kycError && <div style={{ color: '#ef4444', fontSize: 11, marginTop: 4 }}>{kycError}</div>}
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>
                 <button

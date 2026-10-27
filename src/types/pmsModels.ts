@@ -331,8 +331,12 @@ export interface PmsCheckIn {
   documentName?: string;
   documentNo?: string;
   documentImage?: string;
+  documentKey?: string;
+  idProofDocumentKey?: string;
   guestImage?: string;
+  guestPhotoUrl?: string;
   idProofBackImage?: string;
+  invoicePdfKey?: string;
   // Co-travelers KYC (Video 03 Frame 0260)
   secondGuestName?: string;
   secondGuestIdName?: string;
