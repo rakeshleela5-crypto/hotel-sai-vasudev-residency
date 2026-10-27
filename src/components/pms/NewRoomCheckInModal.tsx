@@ -306,6 +306,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
   const [guestPhoto, setGuestPhoto] = useState<string | null>(null);
   const [idPhotoFront, setIdPhotoFront] = useState<string | null>(null);
   const [idPhotoBack, setIdPhotoBack] = useState<string | null>(null);
+  const [idProofKey, setIdProofKey] = useState<string | null>(null);
   const [uploadingDocSlot, setUploadingDocSlot] = useState<string | null>(null);
   const [docUploadError, setDocUploadError] = useState<string | null>(null);
 
@@ -544,7 +545,8 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
       next_destination: goingTo.trim() || 'Home',
       purpose_of_visit: purposeOfVisit || 'Temple Darshan',
       vehicle_number: undefined,
-      is_foreign_national: nationality?.toLowerCase() !== 'india' && nationality?.toLowerCase() !== 'indian'
+      is_foreign_national: nationality?.toLowerCase() !== 'india' && nationality?.toLowerCase() !== 'indian',
+      id_document_key: idProofKey || undefined
     }).catch(err => {
       console.warn('[NewRoomCheckInModal] Police registration log note:', err);
     });
@@ -883,6 +885,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                         try {
                           const res = await hotelApi.uploadGuestDocument(f);
                           setIdPhotoFront(res.url);
+                          if (res.object_key) setIdProofKey(res.object_key);
                         } catch (err: any) {
                           setDocUploadError(`ID Front upload failed: ${err.message}`);
                         } finally {

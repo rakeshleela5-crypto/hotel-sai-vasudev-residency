@@ -150,6 +150,7 @@ class PoliceStationLogCreate(BaseModel):
     visa_validity: Optional[str] = None
     port_of_arrival: Optional[str] = None
     date_of_entry_india: Optional[str] = None
+    id_document_key: Optional[str] = None
 
 class PoliceStationLogResponse(BaseModel):
     id: int
@@ -168,6 +169,7 @@ class PoliceStationLogResponse(BaseModel):
     is_foreign_national: bool
     passport_number: Optional[str]
     visa_number: Optional[str]
+    id_document_key: Optional[str] = None
     created_at: datetime.datetime
 
     class Config:
@@ -181,6 +183,9 @@ class BookingCreate(BaseModel):
     guest_phone: str = Field(..., min_length=7)
     id_proof_type: Optional[str] = "Aadhaar Card"
     id_proof_number: Optional[str] = None
+    id_proof_document_key: Optional[str] = None
+    guest_photo_url: Optional[str] = None
+    invoice_pdf_key: Optional[str] = None
     check_in_date: str # YYYY-MM-DD
     check_out_date: str # YYYY-MM-DD
     adults: int = Field(default=2, ge=1)
@@ -204,6 +209,9 @@ class BookingResponse(BaseModel):
     guest_phone: str
     id_proof_type: Optional[str] = "Aadhaar Card"
     id_proof_number: Optional[str] = None
+    id_proof_document_key: Optional[str] = None
+    guest_photo_url: Optional[str] = None
+    invoice_pdf_key: Optional[str] = None
     check_in_date: str
     check_out_date: str
     adults: int
@@ -1618,6 +1626,34 @@ class MasterItemCreate(BaseModel):
     itemData: Optional[Dict[str, Any]] = None
     is_active: Optional[bool] = True
     isActive: Optional[bool] = None
+
+# --- Cloudflare R2 Upload & KYC Document Schemas ---
+class BookingKycUploadResponse(BaseModel):
+    status: str = "success"
+    booking_id: int
+    object_key: str
+    storage: str = "Cloudflare R2"
+    filename: Optional[str] = None
+    content_type: Optional[str] = None
+    size_bytes: Optional[int] = 0
+    message: str = "Guest KYC document successfully uploaded to Cloudflare R2 and linked to reservation in PostgreSQL"
+
+class BookingKycPresignedResponse(BaseModel):
+    status: str = "success"
+    booking_id: int
+    object_key: str
+    download_url: str
+    expires_in: int = 900
+    storage: str = "Cloudflare R2"
+
+class RoomPhotoUploadResponse(BaseModel):
+    status: str = "success"
+    room_id: int
+    object_key: str
+    image_url: str
+    storage: str = "Cloudflare R2"
+    message: str = "Room photo successfully uploaded to Cloudflare R2 and published to room profile"
+
 
 
 

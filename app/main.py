@@ -59,9 +59,25 @@ try:
                 conn.execute(text("ALTER TABLE bookings ADD COLUMN actual_check_in TIMESTAMP"))
             if "actual_check_out" not in existing_cols:
                 conn.execute(text("ALTER TABLE bookings ADD COLUMN actual_check_out TIMESTAMP"))
+            if "id_proof_document_key" not in existing_cols:
+                conn.execute(text("ALTER TABLE bookings ADD COLUMN id_proof_document_key VARCHAR(255)"))
+            if "guest_photo_url" not in existing_cols:
+                conn.execute(text("ALTER TABLE bookings ADD COLUMN guest_photo_url VARCHAR(255)"))
+            if "invoice_pdf_key" not in existing_cols:
+                conn.execute(text("ALTER TABLE bookings ADD COLUMN invoice_pdf_key VARCHAR(255)"))
             conn.commit()
         except Exception as e:
             print(f"Notice: bookings migration: {e}")
+
+        # 4. police_station_logs
+        try:
+            res = conn.execute(text("PRAGMA table_info(police_station_logs)" if is_sqlite else "SELECT column_name FROM information_schema.columns WHERE table_name='police_station_logs'"))
+            existing_cols = [row[1] if is_sqlite else row[0] for row in res.fetchall()]
+            if "id_document_key" not in existing_cols:
+                conn.execute(text("ALTER TABLE police_station_logs ADD COLUMN id_document_key VARCHAR(255)"))
+            conn.commit()
+        except Exception as e:
+            print(f"Notice: police_station_logs migration: {e}")
 except Exception as exc:
     print(f"Notice: Initial DB schema sync deferred: {exc}")
 

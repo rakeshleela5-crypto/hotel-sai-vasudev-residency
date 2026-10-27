@@ -3,6 +3,7 @@ import re
 import uuid
 import time
 import datetime
+import mimetypes
 from typing import Optional, Tuple, List, Dict, Any
 from app.config import settings
 
@@ -10,7 +11,7 @@ from app.config import settings
 LOCAL_UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "uploads")
 os.makedirs(LOCAL_UPLOAD_DIR, exist_ok=True)
 
-ALLOWED_FOLDERS = {"guest_ids", "rooms", "branding", "documents", "receipts", "backups"}
+ALLOWED_FOLDERS = {"guest_ids", "rooms", "branding", "documents", "receipts", "backups", "kyc", "invoices"}
 
 def sanitize_filename(filename: str) -> str:
     """Sanitize filename to prevent directory traversal and remove unsafe characters"""
@@ -30,7 +31,7 @@ class R2StorageService:
         self.access_key = os.getenv("R2_ACCESS_KEY_ID") or getattr(settings, "R2_ACCESS_KEY_ID", "")
         self.secret_key = os.getenv("R2_SECRET_ACCESS_KEY") or getattr(settings, "R2_SECRET_ACCESS_KEY", "")
         self.bucket_name = os.getenv("R2_BUCKET_NAME") or getattr(settings, "R2_BUCKET_NAME", "hotel-sai-vasudev-documents")
-        self.public_domain = os.getenv("R2_PUBLIC_DOMAIN") or getattr(settings, "R2_PUBLIC_DOMAIN", "")
+        self.public_domain = os.getenv("R2_PUBLIC_DOMAIN") or os.getenv("R2_PUBLIC_URL") or os.getenv("VITE_R2_PUBLIC_URL") or getattr(settings, "R2_PUBLIC_DOMAIN", "") or getattr(settings, "R2_PUBLIC_URL", "")
 
         self.s3_client = None
         if self.account_id and self.access_key and self.secret_key:
@@ -237,6 +238,66 @@ class R2StorageService:
         local_path = os.path.join(LOCAL_UPLOAD_DIR, object_key)
         with open(local_path, "wb") as f:
             f.write(file_bytes)
+
+        local_url = f"/api/v1/uploads/files/{object_key}"
+        return object_key, local_url
+
+    def upload_fileobj(
+        self,
+        file_obj,
+        original_filename: str,
+        folder: str = "documents",
+        content_type: Optional[str] = None
+    ) -> Tuple[str, str]:
+        """
+        Directly uploads a file stream/object to Cloudflare R2 bucket with automated Content-Type detection
+        and local filesystem fallback.
+        Returns (object_key, file_url).
+        """
+        if not content_type or content_type == "application/octet-stream":
+            guessed_type, _ = mimetypes.guess_type(original_filename)
+            content_type = guessed_type or "application/octet-stream"
+
+        object_key = self.generate_object_key(original_filename, folder)
+
+        if self.s3_client:
+            try:
+                if hasattr(file_obj, "seek"):
+                    try:
+                        file_obj.seek(0)
+                    except Exception:
+                        pass
+                self.s3_client.upload_fileobj(
+                    Fileobj=file_obj,
+                    Bucket=self.bucket_name,
+                    Key=object_key,
+                    ExtraArgs={"ContentType": content_type}
+                )
+                if self.public_domain:
+                    url = f"{self.public_domain.rstrip('/')}/{object_key}"
+                else:
+                    url = f"https://{self.bucket_name}.r2.cloudflarestorage.com/{object_key}"
+                return object_key, url
+            except Exception as err:
+                print(f"[Cloudflare R2] upload_fileobj to bucket '{self.bucket_name}' failed ({err}). Falling back to disk.")
+
+        # Local filesystem fallback
+        dest_folder = os.path.join(LOCAL_UPLOAD_DIR, os.path.dirname(object_key))
+        os.makedirs(dest_folder, exist_ok=True)
+        local_path = os.path.join(LOCAL_UPLOAD_DIR, object_key)
+        if hasattr(file_obj, "seek"):
+            try:
+                file_obj.seek(0)
+            except Exception:
+                pass
+        with open(local_path, "wb") as f:
+            if hasattr(file_obj, "read"):
+                chunk = file_obj.read(65536)
+                while chunk:
+                    f.write(chunk)
+                    chunk = file_obj.read(65536)
+            else:
+                f.write(file_obj)
 
         local_url = f"/api/v1/uploads/files/{object_key}"
         return object_key, local_url

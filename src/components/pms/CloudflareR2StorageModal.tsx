@@ -180,9 +180,11 @@ export const CloudflareR2StorageModal: React.FC<CloudflareR2StorageModalProps> =
   const FOLDER_TABS: { key: R2Folder | 'all'; label: string; icon: string }[] = [
     { key: 'all', label: 'All Files', icon: '📁' },
     { key: 'rooms', label: 'Property & Rooms', icon: '🛏️' },
-    { key: 'guest_ids', label: 'Guest KYC & IDs', icon: '🪪' },
+    { key: 'kyc', label: 'Guest KYC & Aadhaar', icon: '🪪' },
+    { key: 'invoices', label: 'GST Tax Invoices', icon: '🧾' },
+    { key: 'guest_ids', label: 'Legacy Guest IDs', icon: '📎' },
     { key: 'branding', label: 'Company Branding', icon: '🎨' },
-    { key: 'documents', label: 'Documents & Invoices', icon: '📄' },
+    { key: 'documents', label: 'Documents & Folios', icon: '📄' },
     { key: 'backups', label: 'Database Backups', icon: '💾' }
   ];
 
@@ -328,8 +330,10 @@ export const CloudflareR2StorageModal: React.FC<CloudflareR2StorageModalProps> =
                 className="form-select-pms"
                 style={{ width: '100%', fontWeight: 700, background: '#fff' }}
               >
-                <option value="rooms">🛏️ rooms (Property & Room Photos)</option>
-                <option value="guest_ids">🪪 guest_ids (KYC & ID Documents)</option>
+                <option value="rooms">🛏️ rooms (Property & Room Photos - Public)</option>
+                <option value="kyc">🪪 kyc (Guest Aadhaar / KYC Documents - Private)</option>
+                <option value="invoices">🧾 invoices (GST Tax Invoices - Private)</option>
+                <option value="guest_ids">📎 guest_ids (Legacy ID Proofs)</option>
                 <option value="branding">🎨 branding (Logo, Seals, Signatures)</option>
                 <option value="documents">📄 documents (Folios & Bills)</option>
                 <option value="backups">💾 backups (Database Exports)</option>

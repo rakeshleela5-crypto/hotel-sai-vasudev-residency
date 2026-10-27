@@ -4,7 +4,7 @@
  * upload progress tracking, file validations, and resilient fallback handling.
  */
 
-export type R2Folder = 'guest_ids' | 'rooms' | 'branding' | 'documents' | 'receipts' | 'backups';
+export type R2Folder = 'guest_ids' | 'rooms' | 'branding' | 'documents' | 'receipts' | 'backups' | 'kyc' | 'invoices';
 
 export interface R2UploadOptions {
   folder?: R2Folder | string;
@@ -397,5 +397,76 @@ export class R2StorageClient {
     }
 
     return `${API_BASE_URL}/uploads/files/${objectKey}`;
+  }
+
+  /**
+   * Upload guest KYC document directly and bind object key to PostgreSQL booking
+   */
+  static async uploadBookingKyc(bookingId: number, file: File): Promise<{
+    status: string;
+    booking_id: number;
+    object_key: string;
+    storage: string;
+    message: string;
+  }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch(`${API_BASE_URL}/uploads/booking-kyc/${bookingId}`, {
+      method: 'POST',
+      body: formData
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `KYC upload failed with status ${res.status}`);
+    }
+    return await res.json();
+  }
+
+  /**
+   * Generate 15-minute temporary presigned GET URL for guest KYC document
+   */
+  static async getBookingKycPresignedUrl(bookingId: number, expiresIn: number = 900): Promise<{
+    download_url: string;
+    expires_in: number;
+    object_key: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/uploads/booking-kyc/${bookingId}/presigned-url?expires_in=${expiresIn}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `Failed to fetch presigned KYC URL: ${res.status}`);
+    }
+    return await res.json();
+  }
+
+  /**
+   * Delete KYC document from Cloudflare R2 and clear from PostgreSQL booking record
+   */
+  static async deleteBookingKyc(bookingId: number): Promise<boolean> {
+    const res = await fetch(`${API_BASE_URL}/uploads/booking-kyc/${bookingId}`, {
+      method: 'DELETE'
+    });
+    return res.ok;
+  }
+
+  /**
+   * Upload room photo to Cloudflare R2 and update room.image_url in PostgreSQL
+   */
+  static async uploadRoomPhoto(roomId: number, file: File): Promise<{
+    room_id: number;
+    image_url: string;
+    object_key: string;
+    message: string;
+  }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch(`${API_BASE_URL}/uploads/room-photo/${roomId}`, {
+      method: 'POST',
+      body: formData
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `Room photo upload failed: ${res.status}`);
+    }
+    return await res.json();
   }
 }

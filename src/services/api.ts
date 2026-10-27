@@ -553,6 +553,22 @@ export const hotelApi = {
     return await R2StorageClient.getPresignedDownloadUrl(objectKey, expiresIn);
   },
 
+  async uploadBookingKyc(bookingId: number, file: File) {
+    return await R2StorageClient.uploadBookingKyc(bookingId, file);
+  },
+
+  async getBookingKycPresignedUrl(bookingId: number, expiresIn: number = 900) {
+    return await R2StorageClient.getBookingKycPresignedUrl(bookingId, expiresIn);
+  },
+
+  async deleteBookingKyc(bookingId: number) {
+    return await R2StorageClient.deleteBookingKyc(bookingId);
+  },
+
+  async uploadRoomPhoto(roomId: number, file: File) {
+    return await R2StorageClient.uploadRoomPhoto(roomId, file);
+  },
+
   async exportDatabaseBackup() {
     const headers: Record<string, string> = {};
     if (typeof window !== 'undefined') {

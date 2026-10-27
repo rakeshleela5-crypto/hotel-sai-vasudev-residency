@@ -46,7 +46,8 @@ class Settings(BaseSettings):
     R2_ACCESS_KEY_ID: str = os.getenv("R2_ACCESS_KEY_ID", "")
     R2_SECRET_ACCESS_KEY: str = os.getenv("R2_SECRET_ACCESS_KEY", "")
     R2_BUCKET_NAME: str = os.getenv("R2_BUCKET_NAME", "hotel-sai-vasudev-documents")
-    R2_PUBLIC_DOMAIN: str = os.getenv("R2_PUBLIC_DOMAIN", "")
+    R2_PUBLIC_DOMAIN: str = os.getenv("R2_PUBLIC_DOMAIN") or os.getenv("R2_PUBLIC_URL") or os.getenv("VITE_R2_PUBLIC_URL") or ""
+    R2_PUBLIC_URL: str = os.getenv("R2_PUBLIC_URL") or os.getenv("R2_PUBLIC_DOMAIN") or os.getenv("VITE_R2_PUBLIC_URL") or ""
 
     @property
     def get_database_url(self) -> str:

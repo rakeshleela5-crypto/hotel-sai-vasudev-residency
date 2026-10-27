@@ -48,5 +48,7 @@ ENV/
 training_videos/
 extracted_frames/
 transcripts/temp_chunks/
+uploads/
+**/uploads/
 *.wav
 *.mp3

@@ -48,6 +48,9 @@ class Booking(Base):
     guest_phone = Column(String(50), nullable=False)
     id_proof_type = Column(String(50), default="Aadhaar Card")
     id_proof_number = Column(String(50), nullable=True)
+    id_proof_document_key = Column(String(255), nullable=True) # Cloudflare R2 object key (e.g. kyc/2026/10/guest_442.pdf)
+    guest_photo_url = Column(String(255), nullable=True) # Public guest photo URL
+    invoice_pdf_key = Column(String(255), nullable=True) # Cloudflare R2 object key (e.g. invoices/2026/10/inv_101.pdf)
 
     # Reservation Dates
     check_in_date = Column(String(50), nullable=False, index=True) # YYYY-MM-DD
@@ -166,6 +169,7 @@ class PoliceStationLog(Base):
     visa_validity = Column(String(50), nullable=True)
     port_of_arrival = Column(String(100), nullable=True)
     date_of_entry_india = Column(String(50), nullable=True)
+    id_document_key = Column(String(255), nullable=True) # Cloudflare R2 object key for scanned ID/Passport/Visa
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     booking = relationship("Booking", back_populates="police_log")
