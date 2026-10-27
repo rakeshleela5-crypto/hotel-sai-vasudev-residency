@@ -604,7 +604,8 @@ export const hotelApi = {
   },
 
   async saveMasterItem(payload: any): Promise<any> {
-    const res = await fetch(`${API_BASE_URL}/pms/masters`, {
+    const endpoint = (payload.itemData || payload.itemName) ? `${API_BASE_URL}/pms/master-items` : `${API_BASE_URL}/pms/masters`;
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -613,8 +614,8 @@ export const hotelApi = {
     return await res.json();
   },
 
-  async deleteMasterItem(category: string, code: string): Promise<any> {
-    const res = await fetch(`${API_BASE_URL}/pms/masters/${category}/${code}`, {
+  async deleteMasterItem(category: string, codeOrName: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/master-items/${encodeURIComponent(category)}/${encodeURIComponent(codeOrName)}`, {
       method: 'DELETE'
     });
     if (!res.ok) throw new Error('Failed to delete master item');
@@ -1759,6 +1760,120 @@ export const hotelApi = {
       body: JSON.stringify(payload)
     });
     if (!res.ok) throw new Error('Failed to save liquor unit');
+    return await res.json();
+  },
+
+  // Module 46: User Shift Handovers & Cash Drawer Reconciliation
+  async recordShiftHandover(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/shift-handovers`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to save shift handover');
+    return await res.json();
+  },
+
+  // Module 47: Anti-Theft Discount Audit Logs
+  async recordDiscountAudit(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/discount-audit-logs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to save discount audit log');
+    return await res.json();
+  },
+
+  async getDiscountAuditLogs(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/discount-audit-logs`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  // Module 48: Multi-Branch Hotel Properties Master
+  async saveProperty(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/properties`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to save property');
+    return await res.json();
+  },
+
+  async saveProperties(props: any[]): Promise<any> {
+    const results = await Promise.all(
+      props.map(p => this.saveProperty(p).catch(() => null))
+    );
+    return results;
+  },
+
+  async getProperties(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/properties`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  // Module 49: Extend Stay on Booking
+  async extendStay(roomNo: string, newCheckOutDate: string, extendedBy: string = 'Duty Manager'): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/bookings/extend-stay`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ roomNo, newCheckOutDate, extendedBy })
+    });
+    if (!res.ok) throw new Error('Failed to extend stay');
+    return await res.json();
+  },
+
+  // Module 50: Room Folio Incidental Charges
+  async postRoomFolioItem(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/room-folio-items`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to post room folio charge');
+    return await res.json();
+  },
+
+  async getRoomFolioItems(roomNo: string): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/room-folio-items/${encodeURIComponent(roomNo)}`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  // Module 51: Housekeeping Discrepancy Resolution
+  async resolveHousekeepingDiscrepancy(discrepancyId: string | number, notes?: string, resolvedBy: string = 'Duty Manager'): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/housekeeping-discrepancies/${encodeURIComponent(String(discrepancyId))}/resolve`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notes, resolvedBy })
+    });
+    if (!res.ok) throw new Error('Failed to resolve housekeeping discrepancy');
+    return await res.json();
+  },
+
+  // Module 52: Demo Requests / Enterprise Leads
+  async submitDemoRequest(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/demo-requests`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to submit demo request');
     return await res.json();
   }
 };

@@ -1523,6 +1523,103 @@ class LiquorUnitCreate(BaseModel):
     alternate_unit_name: Optional[str] = "ML"
     alternateUnitName: Optional[str] = None
 
+class DiscountAuditLogCreate(BaseModel):
+    id: Optional[str] = None
+    audit_id: Optional[str] = None
+    auditId: Optional[str] = None
+    bill_no: Optional[str] = None
+    billNo: Optional[str] = None
+    room_no: Optional[str] = None
+    roomNo: Optional[str] = None
+    table_no: Optional[str] = None
+    tableNo: Optional[str] = None
+    customer_name: Optional[str] = None
+    customerName: Optional[str] = None
+    gross_amount: Optional[float] = 0.0
+    grossAmount: Optional[float] = None
+    discount_percent: Optional[float] = 0.0
+    discountPercent: Optional[float] = None
+    discount_amount: Optional[float] = 0.0
+    discountAmount: Optional[float] = None
+    reason: Optional[str] = None
+    manager_name: Optional[str] = "Admin"
+    managerName: Optional[str] = None
+    manager_pin_verified: Optional[bool] = True
+    managerPinVerified: Optional[bool] = None
+    margin_saved: Optional[float] = 0.0
+    marginSaved: Optional[float] = None
+    protected_items_prevented: Optional[int] = 0
+    protectedItemsPrevented: Optional[int] = None
+
+class HotelPropertyCreate(BaseModel):
+    id: Optional[Any] = None
+    firm_id: Optional[str] = None
+    firmId: Optional[str] = None
+    name: str
+    code: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = "Shirdi"
+    state: Optional[str] = "Maharashtra"
+    pincode: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    gst_no: Optional[str] = None
+    gstNo: Optional[str] = None
+    is_current: Optional[bool] = False
+    isCurrent: Optional[bool] = None
+    total_rooms: Optional[int] = 0
+    totalRooms: Optional[int] = None
+
+class ExtendStayRequest(BaseModel):
+    room_no: Optional[str] = None
+    roomNo: Optional[str] = None
+    new_checkout_date: Optional[str] = None
+    newCheckOutDate: Optional[str] = None
+    extended_by: Optional[str] = "Duty Manager"
+    extendedBy: Optional[str] = None
+
+class RoomFolioItemCreate(BaseModel):
+    room_no: Optional[str] = None
+    roomNo: Optional[str] = None
+    charge_name: Optional[str] = None
+    chargeName: Optional[str] = None
+    amount: float
+    sac_code: Optional[str] = "996311"
+    sacCode: Optional[str] = None
+    gst_percent: Optional[float] = 12.0
+    gstPercent: Optional[float] = None
+    posted_by: Optional[str] = "Front Desk"
+    postedBy: Optional[str] = None
+
+class ResolveDiscrepancyRequest(BaseModel):
+    notes: Optional[str] = "Inspection confirmed resolved by Duty Manager"
+    resolved_by: Optional[str] = "Duty Manager"
+    resolvedBy: Optional[str] = None
+
+class DemoRequestCreate(BaseModel):
+    name: str
+    hotel_name: Optional[str] = None
+    hotelName: Optional[str] = None
+    phone: str
+    email: Optional[str] = None
+    city: Optional[str] = None
+    room_count: Optional[int] = 20
+    roomCount: Optional[int] = None
+    message: Optional[str] = None
+
+class MasterItemCreate(BaseModel):
+    category: str
+    item_name: Optional[str] = None
+    itemName: Optional[str] = None
+    name: Optional[str] = None
+    item_value: Optional[str] = None
+    itemValue: Optional[str] = None
+    item_data: Optional[Dict[str, Any]] = None
+    itemData: Optional[Dict[str, Any]] = None
+    is_active: Optional[bool] = True
+    isActive: Optional[bool] = None
+
+
 
 
 

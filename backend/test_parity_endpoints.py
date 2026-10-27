@@ -856,7 +856,106 @@ def test_parity_endpoints():
     assert r.status_code == 200, f"Liquor unit save failed: {r.text}"
     print(f"   [OK] Liquor Dispensing Unit Persisted: {r.json()['primaryUnitName']}")
 
+    # 41. Test Discount Audit Logs (Anti-Theft Manager PIN Overrides)
+    dal_payload = {
+        "billNo": "BILL-TEST-8899",
+        "roomNo": "101",
+        "customerName": "Test VIP Guest",
+        "grossAmount": 3000.0,
+        "discountPercent": 10.0,
+        "discountAmount": 300.0,
+        "reason": "General Manager Courteous Approval",
+        "managerName": "Duty GM",
+        "marginSaved": 150.0,
+        "protectedItemsPrevented": 1
+    }
+    r = client.post("/api/v1/pms/discount-audit-logs", json=dal_payload)
+    assert r.status_code == 200, f"Discount audit log save failed: {r.text}"
+    print(f"   [OK] Discount Audit Log Persisted: {r.json()['auditId']} (Bill: {r.json()['billNo']})")
+
+    r = client.get("/api/v1/pms/discount-audit-logs")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Discount Audit Logs Query: Found {len(r.json())} audit log(s)")
+
+    # 42. Test Multi-Branch Hotel Properties Master
+    prop_payload = {
+        "firmId": "branch-02",
+        "name": "HOTEL SAI VASUDEV RESIDENCY (EXECUTIVE ANNEX)",
+        "code": "SVR-ANNEX",
+        "city": "Shirdi",
+        "totalRooms": 24
+    }
+    r = client.post("/api/v1/pms/properties", json=prop_payload)
+    assert r.status_code == 200, f"Property save failed: {r.text}"
+    print(f"   [OK] Hotel Property Persisted: {r.json()['name']} ({r.json()['firmId']})")
+
+    r = client.get("/api/v1/pms/properties")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Hotel Properties Query: Found {len(r.json())} property(ies)")
+
+    # 43. Test Extend Stay on Active Booking
+    extend_payload = {
+        "roomNo": "101",
+        "newCheckOutDate": "2026-10-30",
+        "extendedBy": "Front Desk Manager"
+    }
+    r = client.put("/api/v1/pms/bookings/extend-stay", json=extend_payload)
+    assert r.status_code == 200, f"Extend stay failed: {r.text}"
+    print(f"   [OK] Extend Stay Persisted: Room {r.json()['roomNo']} to {r.json()['newCheckOutDate']}")
+
+    # 44. Test Room Folio Incidental Charges
+    charge_payload = {
+        "roomNo": "101",
+        "chargeName": "Extra Bed Rollaway Service",
+        "amount": 500.0,
+        "sacCode": "996311",
+        "gstPercent": 12.0
+    }
+    r = client.post("/api/v1/pms/room-folio-items", json=charge_payload)
+    assert r.status_code == 200, f"Room folio charge failed: {r.text}"
+    print(f"   [OK] Room Folio Charge Persisted: {r.json()['chargeName']} (Rs.{r.json()['totalAmount']})")
+
+    r = client.get("/api/v1/pms/room-folio-items/101")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+    print(f"   [OK] Room Folio Items Query: Found {len(r.json())} charge(s)")
+
+    # 45. Test Housekeeping Discrepancy Resolution
+    r = client.put("/api/v1/pms/housekeeping-discrepancies/1/resolve", json={"notes": "Physical key card audit verified room vacant"})
+    assert r.status_code == 200
+    print(f"   [OK] Housekeeping Discrepancy Resolve Endpoint Tested: {r.json()['message']}")
+
+    # 46. Test Demo Requests / Enterprise Leads
+    demo_payload = {
+        "name": "Prasad Rao",
+        "hotelName": "Hotel Sai Grand Residency",
+        "phone": "9822334455",
+        "city": "Shirdi",
+        "roomCount": 35,
+        "message": "Interested in cloud PMS deployment with GST invoicing"
+    }
+    r = client.post("/api/v1/pms/demo-requests", json=demo_payload)
+    assert r.status_code == 200, f"Demo request failed: {r.text}"
+    print(f"   [OK] Demo Request Persisted in PostgreSQL: {r.json()['leadId']} ({r.json()['name']})")
+
+    # 47. Test Generic Master Items (GST, Business Source, Other Charges)
+    master_payload = {
+        "category": "gst",
+        "name": "GST 18% Special Luxury",
+        "itemData": {"cgst": 9.0, "sgst": 9.0, "total": 18.0}
+    }
+    r = client.post("/api/v1/pms/master-items", json=master_payload)
+    assert r.status_code == 200, f"Master item save failed: {r.text}"
+    print(f"   [OK] Master Item Persisted: {r.json()['category']} -> {r.json()['itemName']}")
+
+    r = client.delete("/api/v1/pms/master-items/gst/GST%2018%25%20Special%20Luxury")
+    assert r.status_code == 200
+    print(f"   [OK] Master Item Deleted: {r.json()['message']}")
+
     print("\n=== ALL PARITY ENDPOINTS TESTED & PASSED 100%! ===")
 
 if __name__ == "__main__":
     test_parity_endpoints()
+

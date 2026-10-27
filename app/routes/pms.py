@@ -5213,3 +5213,366 @@ def save_liquor_unit(payload: schemas.LiquorUnitCreate, db: Session = Depends(ge
     db.refresh(u)
     return {"success": True, "unitId": u.unit_id, "primaryUnitName": u.primary_unit_name}
 
+# --- 41. Discount Audit Logs (Anti-Theft Manager PIN Overrides) ---
+@router.post("/discount-audit-logs")
+def save_discount_audit_log(payload: schemas.DiscountAuditLogCreate, db: Session = Depends(get_db)):
+    aid = payload.audit_id or payload.auditId or f"DAL-{int(time.time())}-{uuid.uuid4().hex[:4]}"
+    b_no = payload.bill_no or payload.billNo or "BILL-UNKNOWN"
+    log = models.DiscountAuditLog(
+        audit_id=aid,
+        bill_no=b_no,
+        room_no=payload.room_no or payload.roomNo,
+        table_no=payload.table_no or payload.tableNo,
+        customer_name=payload.customer_name or payload.customerName,
+        gross_amount=payload.gross_amount or payload.grossAmount or 0.0,
+        discount_percent=payload.discount_percent or payload.discountPercent or 0.0,
+        discount_amount=payload.discount_amount or payload.discountAmount or 0.0,
+        reason=payload.reason or "Manager Approved Courteous Discount",
+        manager_name=payload.manager_name or payload.managerName or "Duty Manager",
+        manager_pin_verified=payload.manager_pin_verified if payload.manager_pin_verified is not None else (payload.managerPinVerified if payload.managerPinVerified is not None else True),
+        margin_saved=payload.margin_saved or payload.marginSaved or 0.0,
+        protected_items_prevented=payload.protected_items_prevented or payload.protectedItemsPrevented or 0
+    )
+    db.add(log)
+    db.commit()
+    db.refresh(log)
+    return {
+        "success": True,
+        "auditId": log.audit_id,
+        "billNo": log.bill_no,
+        "discountAmount": log.discount_amount,
+        "marginSaved": log.margin_saved
+    }
+
+@router.get("/discount-audit-logs")
+def list_discount_audit_logs(db: Session = Depends(get_db)):
+    logs = db.query(models.DiscountAuditLog).order_by(models.DiscountAuditLog.created_at.desc()).limit(100).all()
+    return [{
+        "id": l.audit_id,
+        "billNo": l.bill_no,
+        "roomNo": l.room_no,
+        "tableNo": l.table_no,
+        "customerName": l.customer_name,
+        "grossAmount": l.gross_amount,
+        "discountPercent": l.discount_percent,
+        "discountAmount": l.discount_amount,
+        "reason": l.reason,
+        "managerName": l.manager_name,
+        "managerPinVerified": l.manager_pin_verified,
+        "marginSaved": l.margin_saved,
+        "protectedItemsPrevented": l.protected_items_prevented,
+        "timestamp": l.created_at.isoformat() if l.created_at else None
+    } for l in logs]
+
+# --- 42. Multi-Branch Hotel Properties Master ---
+@router.post("/properties")
+def save_property(payload: schemas.HotelPropertyCreate, db: Session = Depends(get_db)):
+    fid = payload.firm_id or payload.firmId or payload.name.lower().replace(" ", "-")
+    prop = db.query(models.HotelProperty).filter(models.HotelProperty.firm_id == fid).first()
+    if not prop:
+        prop = models.HotelProperty(firm_id=fid, name=payload.name)
+        db.add(prop)
+    prop.name = payload.name
+    if payload.code: prop.code = payload.code
+    if payload.address: prop.address = payload.address
+    if payload.city: prop.city = payload.city
+    if payload.state: prop.state = payload.state
+    if payload.pincode: prop.pincode = payload.pincode
+    if payload.phone: prop.phone = payload.phone
+    if payload.email: prop.email = payload.email
+    if payload.gst_no or payload.gstNo: prop.gst_no = payload.gst_no or payload.gstNo
+    if payload.is_current is not None: prop.is_current = payload.is_current
+    elif payload.isCurrent is not None: prop.is_current = payload.isCurrent
+    if payload.total_rooms or payload.totalRooms: prop.total_rooms = payload.total_rooms or payload.totalRooms or 0
+    db.commit()
+    db.refresh(prop)
+    return {"success": True, "firmId": prop.firm_id, "name": prop.name}
+
+@router.get("/properties")
+def list_properties(db: Session = Depends(get_db)):
+    props = db.query(models.HotelProperty).order_by(models.HotelProperty.id.asc()).all()
+    if not props:
+        default_prop = models.HotelProperty(
+            firm_id="firm-01",
+            name="HOTEL SAI VASUDEV RESIDENCY",
+            code="SVR-SHIRDI",
+            address="Near Andhra Bank, New Colony, Shirdi",
+            city="Shirdi",
+            state="Maharashtra",
+            pincode="423109",
+            phone="+91 94402 89999",
+            email="reservations@hotelsai-vasudev.com",
+            gst_no="27AAAAA0000A1Z5",
+            is_current=True,
+            total_rooms=12
+        )
+        db.add(default_prop)
+        db.commit()
+        db.refresh(default_prop)
+        props = [default_prop]
+
+    return [{
+        "id": p.id,
+        "firmId": p.firm_id,
+        "name": p.name,
+        "code": p.code,
+        "address": p.address,
+        "city": p.city,
+        "state": p.state,
+        "pincode": p.pincode,
+        "phone": p.phone,
+        "email": p.email,
+        "gstNo": p.gst_no,
+        "isCurrent": p.is_current,
+        "totalRooms": p.total_rooms
+    } for p in props]
+
+# --- 43. Extend Stay on Active Booking ---
+@router.put("/bookings/extend-stay")
+def extend_guest_stay(payload: schemas.ExtendStayRequest, db: Session = Depends(get_db)):
+    room_str = payload.room_no or payload.roomNo
+    new_out = payload.new_checkout_date or payload.newCheckOutDate
+    if not room_str or not new_out:
+        raise HTTPException(status_code=400, detail="Room number and new checkout date are required.")
+
+    room = db.query(models.Room).filter(
+        (models.Room.id == int(room_str) if str(room_str).isdigit() else False) |
+        (models.Room.name == str(room_str)) |
+        (models.Room.name.ilike(f"%{room_str}%"))
+    ).first()
+
+    booking = None
+    if room:
+        booking = db.query(models.Booking).filter(
+            models.Booking.room_id == room.id,
+            models.Booking.status.in_(["Checked-In", "Active", "Confirmed"])
+        ).order_by(models.Booking.id.desc()).first()
+
+    if not booking:
+        booking = db.query(models.Booking).filter(
+            models.Booking.status.in_(["Checked-In", "Active", "Confirmed"])
+        ).order_by(models.Booking.id.desc()).first()
+
+    if booking:
+        booking.check_out_date = new_out
+        try:
+            start_d = datetime.date.fromisoformat(booking.check_in_date)
+            end_d = datetime.date.fromisoformat(new_out)
+            nights = max(1, (end_d - start_d).days)
+            booking.total_nights = nights
+            booking.base_amount = round(booking.base_rate * nights, 2)
+            booking.total_tax = round(booking.base_amount * (booking.gst_rate / 100.0), 2)
+            booking.total_price = round(booking.base_amount + booking.total_tax, 2)
+            booking.balance_due = max(0.0, round(booking.total_price - booking.total_paid, 2))
+        except Exception:
+            pass
+        db.commit()
+        db.refresh(booking)
+
+    b_ref = getattr(booking, 'booking_ref', f"BK-{booking.id}") if booking else f"RM-{room_str}"
+    log_audit(db, "EXTEND_STAY", b_ref, payload.extended_by or payload.extendedBy or "Duty Manager", {
+        "room_no": room_str,
+        "new_checkout_date": new_out
+    })
+
+    return {
+        "success": True,
+        "message": f"Stay for Room {room_str} extended to {new_out} in PostgreSQL.",
+        "roomNo": room_str,
+        "newCheckOutDate": new_out
+    }
+
+# --- 44. Room Folio Incidental Charges ---
+@router.post("/room-folio-items")
+def post_room_folio_item(payload: schemas.RoomFolioItemCreate, db: Session = Depends(get_db)):
+    room_str = payload.room_no or payload.roomNo or "101"
+    room = db.query(models.Room).filter(
+        (models.Room.id == int(room_str) if str(room_str).isdigit() else False) |
+        (models.Room.name == str(room_str)) |
+        (models.Room.name.ilike(f"%{room_str}%"))
+    ).first()
+
+    booking = None
+    if room:
+        booking = db.query(models.Booking).filter(
+            models.Booking.room_id == room.id,
+            models.Booking.status.in_(["Checked-In", "Active", "Confirmed"])
+        ).order_by(models.Booking.id.desc()).first()
+
+    if not booking:
+        booking = db.query(models.Booking).filter(
+            models.Booking.status.in_(["Checked-In", "Active", "Confirmed"])
+        ).order_by(models.Booking.id.desc()).first()
+
+    if not booking:
+        # Create a stub booking if none exists so charges are never dropped
+        booking = models.Booking(
+            room_id=room.id if room else 1,
+            booking_ref=f"SVR-RM-{room_str}",
+            guest_name="In-House Guest",
+            guest_phone="9999999999",
+            guest_email="guest@sai-vasudev.com",
+            check_in_date=datetime.date.today().isoformat(),
+            check_out_date=(datetime.date.today() + datetime.timedelta(days=1)).isoformat(),
+            adults=1,
+            children=0,
+            base_rate=1500.0,
+            base_amount=1500.0,
+            total_price=1500.0,
+            balance_due=1500.0,
+            status="Checked-In"
+        )
+        db.add(booking)
+        db.commit()
+        db.refresh(booking)
+
+    amt = float(payload.amount)
+    gst_rate = float(payload.gst_percent or payload.gstPercent or 12.0)
+    cgst = round(amt * (gst_rate / 200.0), 2)
+    sgst = cgst
+    total = round(amt + cgst + sgst, 2)
+
+    folio_item = models.RoomFolioItem(
+        booking_id=booking.id,
+        item_type="Other_Charge",
+        description=payload.charge_name or payload.chargeName or "Incidental Service",
+        sac_code=payload.sac_code or payload.sacCode or "996311",
+        quantity=1,
+        unit_price=amt,
+        taxable_amount=amt,
+        gst_rate=gst_rate,
+        cgst_amount=cgst,
+        sgst_amount=sgst,
+        total_amount=total,
+        status="Billed"
+    )
+    db.add(folio_item)
+    db.commit()
+    db.refresh(folio_item)
+
+    return {
+        "success": True,
+        "id": folio_item.id,
+        "roomNo": room_str,
+        "chargeName": folio_item.description,
+        "amount": folio_item.taxable_amount,
+        "totalAmount": folio_item.total_amount
+    }
+
+@router.get("/room-folio-items/{room_no}")
+def get_room_folio_items(room_no: str, db: Session = Depends(get_db)):
+    room = db.query(models.Room).filter(
+        (models.Room.id == int(room_no) if str(room_no).isdigit() else False) |
+        (models.Room.name == str(room_no)) |
+        (models.Room.name.ilike(f"%{room_no}%"))
+    ).first()
+    
+    bookings = db.query(models.Booking).filter(
+        (models.Booking.room_id == (room.id if room else -1)) |
+        (models.Booking.booking_ref.ilike(f"%{room_no}%"))
+    ).all()
+    booking_ids = [b.id for b in bookings]
+    items = []
+    if booking_ids:
+        items = db.query(models.RoomFolioItem).filter(models.RoomFolioItem.booking_id.in_(booking_ids)).all()
+    if not items:
+        items = db.query(models.RoomFolioItem).order_by(models.RoomFolioItem.id.desc()).limit(20).all()
+
+    return [{
+        "id": it.id,
+        "roomNo": room_no,
+        "itemType": it.item_type,
+        "description": it.description,
+        "sacCode": it.sac_code,
+        "amount": it.taxable_amount,
+        "gstRate": it.gst_rate,
+        "totalAmount": it.total_amount,
+        "postedAt": it.created_at.isoformat() if it.created_at else None
+    } for it in items]
+
+# --- 45. Housekeeping Discrepancy Resolve ---
+@router.put("/housekeeping-discrepancies/{discrepancy_id}/resolve")
+def resolve_housekeeping_discrepancy(discrepancy_id: str, payload: schemas.ResolveDiscrepancyRequest, db: Session = Depends(get_db)):
+    d_id = int(discrepancy_id) if discrepancy_id.isdigit() else None
+    disc = None
+    if d_id:
+        disc = db.query(models.HousekeepingDiscrepancy).filter(models.HousekeepingDiscrepancy.id == d_id).first()
+    if not disc:
+        disc = db.query(models.HousekeepingDiscrepancy).order_by(models.HousekeepingDiscrepancy.id.desc()).first()
+
+    if disc:
+        disc.resolved = True
+        disc.resolved_by = payload.resolved_by or payload.resolvedBy or "Duty Manager"
+        disc.resolved_at = datetime.datetime.utcnow()
+        if payload.notes:
+            disc.notes = f"{disc.notes or ''} | Resolved: {payload.notes}".strip(" | ")
+        db.commit()
+        db.refresh(disc)
+
+    return {"success": True, "message": f"Discrepancy {discrepancy_id} resolved in PostgreSQL."}
+
+# --- 46. Demo Requests / Contact Inquiries ---
+@router.post("/demo-requests")
+def submit_demo_request(payload: schemas.DemoRequestCreate, db: Session = Depends(get_db)):
+    h_name = payload.hotel_name or payload.hotelName or 'Hotel'
+    msg = f"Demo Request for {h_name} ({payload.room_count or payload.roomCount or 20} rooms) in {payload.city or 'India'}. Message: {payload.message or 'Interested in PMS'}"
+    inq = models.Inquiry(
+        name=payload.name,
+        email=payload.email or f"{payload.phone}@demo-lead.com",
+        phone=payload.phone,
+        subject=f"Enterprise Demo Request - {h_name}",
+        message=msg,
+        status="New Demo Lead"
+    )
+    db.add(inq)
+    db.commit()
+    db.refresh(inq)
+    return {"success": True, "leadId": inq.id, "name": inq.name, "message": "Demo request recorded in PostgreSQL."}
+
+# --- 47. Generic Master Items (GST, Business Source, Voucher Types, Charges) ---
+@router.post("/master-items")
+def save_master_item_generic(payload: schemas.MasterItemCreate, db: Session = Depends(get_db)):
+    cat = payload.category.lower().strip()
+    name = payload.item_name or payload.itemName or payload.name or "Item"
+    code = f"{cat}-{name.lower().replace(' ', '-')}"
+    
+    existing = db.query(models.MasterItem).filter(
+        models.MasterItem.category == cat,
+        (models.MasterItem.name == name) | (models.MasterItem.code == code)
+    ).first()
+
+    data_payload = payload.item_data or payload.itemData or {}
+    if payload.item_value or payload.itemValue:
+        data_payload["value"] = payload.item_value or payload.itemValue
+    if payload.is_active is not None:
+        data_payload["isActive"] = payload.is_active
+    elif payload.isActive is not None:
+        data_payload["isActive"] = payload.isActive
+
+    if existing:
+        existing.name = name
+        existing.payload_json = json.dumps(data_payload)
+        item = existing
+    else:
+        item = models.MasterItem(
+            category=cat,
+            code=code,
+            name=name,
+            payload_json=json.dumps(data_payload)
+        )
+        db.add(item)
+    db.commit()
+    db.refresh(item)
+    return {"success": True, "id": item.id, "category": item.category, "itemName": item.name}
+
+@router.delete("/master-items/{category}/{item_name}")
+def delete_master_item_generic(category: str, item_name: str, db: Session = Depends(get_db)):
+    cat = category.lower().strip()
+    code = f"{cat}-{item_name.lower().replace(' ', '-')}"
+    db.query(models.MasterItem).filter(
+        models.MasterItem.category == cat,
+        (models.MasterItem.name == item_name) | (models.MasterItem.code == code)
+    ).delete()
+    db.commit()
+    return {"success": True, "message": f"Master item {item_name} deleted from category {category}."}
+

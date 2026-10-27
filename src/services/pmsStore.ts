@@ -3332,6 +3332,16 @@ export class PmsStore {
         localStorage.setItem(STORAGE_KEYS.NIGHT_AUDITS, JSON.stringify(state.night_audits));
       }
 
+      // 42. Hydrate Anti-Theft Discount Audit Logs from PostgreSQL
+      if (state.discount_audit_logs && state.discount_audit_logs.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.DISCOUNT_AUDIT_LOGS, JSON.stringify(state.discount_audit_logs));
+      }
+
+      // 43. Hydrate Multi-Branch Hotel Properties from PostgreSQL
+      if (state.hotel_properties && state.hotel_properties.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(state.hotel_properties));
+      }
+
       this.notify();
       return true;
     } catch (e) {
@@ -4565,6 +4575,7 @@ export class PmsStore {
     room.currentGuest.checkOutDate = newCheckOutDate;
     this.saveRooms(rooms);
     this.notify();
+    hotelApi.extendStay(roomNo, newCheckOutDate).catch(e => console.warn('[PmsStore] Extend stay cloud sync note:', e));
     return {
       success: true,
       message: `Stay for Room ${roomNo} successfully extended to ${newCheckOutDate}.`
@@ -5092,11 +5103,13 @@ export class PmsStore {
       list.push(gst);
     }
     localStorage.setItem(STORAGE_KEYS.GST_MASTERS, JSON.stringify(list));
+    hotelApi.saveMasterItem({ category: 'gst', name: gst.name, itemData: gst }).catch(e => console.warn('[PmsStore] GST master cloud sync note:', e));
   }
 
   static deleteGstMaster(id: string): void {
     const list = this.getGstMasters().filter(g => g.id !== id && g.name !== id);
     localStorage.setItem(STORAGE_KEYS.GST_MASTERS, JSON.stringify(list));
+    hotelApi.deleteMasterItem('gst', id).catch(e => console.warn('[PmsStore] GST master delete note:', e));
   }
 
   // Business Sources
@@ -5122,11 +5135,13 @@ export class PmsStore {
       list.push(source);
     }
     localStorage.setItem(STORAGE_KEYS.BUSINESS_SOURCES, JSON.stringify(list));
+    hotelApi.saveMasterItem({ category: 'business_source', name: source.name, itemData: source }).catch(e => console.warn('[PmsStore] Business source cloud sync note:', e));
   }
 
   static deleteBusinessSource(id: string): void {
     const list = this.getBusinessSources().filter(s => s.id !== id && s.name !== id);
     localStorage.setItem(STORAGE_KEYS.BUSINESS_SOURCES, JSON.stringify(list));
+    hotelApi.deleteMasterItem('business_source', id).catch(e => console.warn('[PmsStore] Business source delete note:', e));
   }
 
   // Voucher Types
@@ -5152,6 +5167,7 @@ export class PmsStore {
       list.push(voucher);
     }
     localStorage.setItem(STORAGE_KEYS.VOUCHER_TYPES, JSON.stringify(list));
+    hotelApi.saveMasterItem({ category: 'voucher_type', name: voucher.voucherTypeName, itemData: voucher }).catch(e => console.warn('[PmsStore] Voucher type cloud sync note:', e));
   }
 
   // Lockers Master
@@ -5209,11 +5225,13 @@ export class PmsStore {
       list.push(charge);
     }
     localStorage.setItem(STORAGE_KEYS.OTHER_CHARGES, JSON.stringify(list));
+    hotelApi.saveMasterItem({ category: 'other_charge', name: charge.chargeName, itemData: charge }).catch(e => console.warn('[PmsStore] Other charge cloud sync note:', e));
   }
 
   static deleteOtherCharge(id: string): void {
     const list = this.getOtherCharges().filter(c => c.id !== id && c.chargeName !== id);
     localStorage.setItem(STORAGE_KEYS.OTHER_CHARGES, JSON.stringify(list));
+    hotelApi.deleteMasterItem('other_charge', id).catch(e => console.warn('[PmsStore] Other charge delete note:', e));
   }
 
   // Menu Items
@@ -7091,6 +7109,7 @@ export class PmsStore {
     });
     localStorage.setItem(STORAGE_KEYS.HOUSEKEEPING_DISCREPANCIES, JSON.stringify(list));
     this.notify();
+    hotelApi.resolveHousekeepingDiscrepancy(id, notes).catch(e => console.warn('[PmsStore] Resolve discrepancy cloud sync note:', e));
   }
 
   static checkShortStayAlerts(): Array<{ roomNo: string; guestName: string; stayHours: number; isShortStay: boolean; checkInTime: string; checkOutTime: string }> {
@@ -9329,6 +9348,13 @@ export class PmsStore {
       (room.currentGuest as any).addOthers = ((room.currentGuest as any).addOthers || 0) + charge.amount;
       this.saveRooms(rooms);
       this.notify();
+      hotelApi.postRoomFolioItem({
+        roomNo,
+        chargeName: charge.chargeName,
+        amount: charge.amount,
+        sacCode: charge.sacCode || '996311',
+        gstPercent: charge.gstPercent || 12.0
+      }).catch(e => console.warn('[PmsStore] Post charge cloud sync note:', e));
     }
   }
 
@@ -10000,6 +10026,7 @@ export class PmsStore {
 
   static saveProperties(props: PmsChainProperty[]): void {
     localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(props));
+    hotelApi.saveProperties(props).catch(e => console.warn('[PmsStore] Properties cloud sync note:', e));
   }
 
   static getCurrentProperty(): PmsChainProperty {
@@ -12129,6 +12156,7 @@ export class PmsStore {
     };
     requests.unshift(newReq);
     localStorage.setItem(STORAGE_KEYS.DEMO_REQUESTS, JSON.stringify(requests));
+    hotelApi.submitDemoRequest(data).catch(e => console.warn('[PmsStore] Demo request cloud sync note:', e));
     return newReq;
   }
 
@@ -12679,6 +12707,7 @@ export class PmsStore {
     logs.unshift(record);
     if (logs.length > 50) logs.pop();
     localStorage.setItem(STORAGE_KEYS.DISCOUNT_AUDIT_LOGS, JSON.stringify(logs));
+    hotelApi.recordDiscountAudit(record).catch(e => console.warn('[PmsStore] Discount audit cloud sync note:', e));
   }
 
   // ==========================================

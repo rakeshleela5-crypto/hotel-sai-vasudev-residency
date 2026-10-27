@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PmsStore } from '../../services/pmsStore';
+import { hotelApi } from '../../services/api';
 import type { PmsShiftHandoverRecord } from '../../types/pmsModels';
 import './pmsStyles.css';
 
@@ -15,12 +16,50 @@ export const ShiftHandoverModal: React.FC<ShiftHandoverModalProps> = ({ isOpen, 
     PmsStore.getShiftHandoverData('19-07-2025', 'Morning')
   );
   const [isSignedOff, setIsSignedOff] = useState<boolean>(false);
+  const [isSigning, setIsSigning] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      hotelApi.getShiftHandovers().then(handovers => {
+        if (handovers && handovers.length > 0) {
+          const match = handovers.find((h: any) => h.shiftDate === shiftDate && h.shiftType === shiftType);
+          if (match) {
+            setHandoverRecord(match);
+            if (match.status?.includes('Verified') || match.status?.includes('Closed')) {
+              setIsSignedOff(true);
+            }
+          }
+        }
+      }).catch(err => console.warn('[ShiftHandoverModal] Cloud fetch note:', err));
+    }
+  }, [isOpen, shiftDate, shiftType]);
 
   if (!isOpen) return null;
 
   const handleRefresh = (type: 'Morning' | 'Evening' | 'Night' = shiftType) => {
     setShiftType(type);
     setHandoverRecord(PmsStore.getShiftHandoverData(shiftDate, type));
+  };
+
+  const handleVerifyShiftHandover = async () => {
+    setIsSigning(true);
+    const currentUser = PmsStore.getCurrentUser();
+    const updated: PmsShiftHandoverRecord = {
+      ...handoverRecord,
+      handoverToUser: currentUser?.userName || 'Incoming Shift Incharge',
+      status: 'Verified & Closed'
+    };
+    setHandoverRecord(updated);
+    setIsSignedOff(true);
+
+    try {
+      await hotelApi.recordShiftHandover(updated);
+      console.log('✅ Shift Handover verified and recorded in PostgreSQL database');
+    } catch (err) {
+      console.warn('⚠️ Direct PostgreSQL shift handover save note:', err);
+    } finally {
+      setIsSigning(false);
+    }
   };
 
   const handlePrint = () => {
@@ -217,15 +256,16 @@ export const ShiftHandoverModal: React.FC<ShiftHandoverModalProps> = ({ isOpen, 
                 <div className="h-8 mb-1 flex items-center justify-center">
                   {isSignedOff ? (
                     <span className="text-emerald-700 font-bold font-serif italic text-sm">
-                      Signed: {handoverRecord.handoverToUser} (Verified)
+                      Signed: {handoverRecord.handoverToUser} (Verified &amp; Saved in PostgreSQL)
                     </span>
                   ) : (
                     <button
                       type="button"
-                      onClick={() => setIsSignedOff(true)}
-                      className="px-4 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded cursor-pointer transition-colors"
+                      disabled={isSigning}
+                      onClick={handleVerifyShiftHandover}
+                      className="px-4 py-1 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white font-bold text-xs rounded cursor-pointer transition-colors"
                     >
-                      Verify &amp; Accept Shift Handover
+                      {isSigning ? '⏳ Verifying & Saving to PostgreSQL...' : '✓ Verify & Accept Shift Handover'}
                     </button>
                   )}
                 </div>

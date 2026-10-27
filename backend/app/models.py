@@ -1040,6 +1040,44 @@ class LiquorUnit(Base):
     alternate_unit_name = Column(String(100), default="ML")
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
+class DiscountAuditLog(Base):
+    __tablename__ = "discount_audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    audit_id = Column(String(100), unique=True, index=True, nullable=True)
+    bill_no = Column(String(100), index=True, nullable=False)
+    room_no = Column(String(50), nullable=True)
+    table_no = Column(String(50), nullable=True)
+    customer_name = Column(String(150), nullable=True)
+    gross_amount = Column(Float, default=0.0)
+    discount_percent = Column(Float, default=0.0)
+    discount_amount = Column(Float, default=0.0)
+    reason = Column(String(255), nullable=True)
+    manager_name = Column(String(100), default="Admin")
+    manager_pin_verified = Column(Boolean, default=True)
+    margin_saved = Column(Float, default=0.0)
+    protected_items_prevented = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class HotelProperty(Base):
+    __tablename__ = "hotel_properties"
+
+    id = Column(Integer, primary_key=True, index=True)
+    firm_id = Column(String(100), unique=True, index=True, nullable=False)
+    name = Column(String(200), nullable=False)
+    code = Column(String(50), nullable=True)
+    address = Column(String(255), nullable=True)
+    city = Column(String(100), default="Shirdi")
+    state = Column(String(100), default="Maharashtra")
+    pincode = Column(String(20), nullable=True)
+    phone = Column(String(50), nullable=True)
+    email = Column(String(100), nullable=True)
+    gst_no = Column(String(50), nullable=True)
+    is_current = Column(Boolean, default=False)
+    total_rooms = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
 
 
 
