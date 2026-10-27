@@ -4,6 +4,7 @@ import { hotelApi } from '../../services/api';
 import type { PmsReceiptRecord } from '../../types/pmsModels';
 import { AddReceiptModal } from './AddReceiptModal';
 import { OutstandingReceivablesModal } from './OutstandingReceivablesModal';
+import './registers.css';
 
 interface ReceiptRegisterModalProps {
   isOpen: boolean;
@@ -90,199 +91,193 @@ export const ReceiptRegisterModal: React.FC<ReceiptRegisterModalProps> = ({
   return (
     <>
       <div 
-        className="pms-modal-backdrop" 
-        style={{ zIndex: 12500 }}
+        className="pms-reg-modal-backdrop" 
         onClick={onClose}
       >
         <div 
-          className="pms-modal-container w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden text-gray-800 animate-in fade-in zoom-in-95 duration-150"
+          className="pms-reg-modal-window"
           onClick={e => e.stopPropagation()}
         >
           {/* Header Bar */}
-          <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 bg-gray-50">
-            <div className="flex items-center gap-3">
-              <span className="text-xl">📄</span>
+          <div className="pms-reg-header">
+            <div className="pms-reg-header-left">
+              <span className="pms-reg-header-icon">📄</span>
               <div>
-                <h2 className="text-base font-bold text-gray-900 tracking-tight">
-                  ADD Reciept
+                <h2 className="pms-reg-header-title">
+                  ADD RECEIPT &amp; COLLECTIONS
                 </h2>
-                <div className="text-[11px] text-gray-500">
-                  pms.hotelsai-vasudev.com/reciepts &bull; General Payment Receipts &amp; Collections
+                <div className="pms-reg-header-sub">
+                  pms.hotelsai-vasudev.com/reciepts &bull; <span className="gold">HOTEL SAI VASUDEV RESIDENCY</span> &bull; General Payment Receipts &amp; Ledger
                 </div>
               </div>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-700 text-lg leading-none p-1 rounded transition-colors"
+              className="pms-reg-close-btn"
+              title="Close Modal"
             >
               ✕
             </button>
           </div>
 
-          {/* Action Top Bar matching Frame 0090 & 0250 */}
-          <div className="px-6 pt-4 pb-2 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
+          {/* Action Top Bar */}
+          <div className="pms-reg-toolbar">
+            <div className="pms-reg-toolbar-actions">
               <button
                 type="button"
                 onClick={() => handleOpenAdd()}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded shadow-xs transition-colors flex items-center gap-1.5"
+                className="pms-reg-btn-primary"
               >
-                <span>Add New Reciept</span>
+                <span>➕</span>
+                <span>Add New Receipt</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setIsOutstandingOpen(true)}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs rounded shadow-xs transition-colors flex items-center gap-1.5"
+                className="pms-reg-btn-dark"
               >
                 <span>💰</span>
                 <span>Outstanding Receivables</span>
               </button>
             </div>
 
-            <div className="text-xs text-gray-500">
-              Total Receipts Recorded: <span className="font-bold text-gray-800">{receipts.length}</span>
+            <div className="pms-reg-badge-counter">
+              Total Receipts Recorded: <strong>{receipts.length}</strong>
             </div>
           </div>
 
-          {/* Success Banner matching Frame 0250 (exact RoomG banner text) */}
+          {/* Success Banner */}
           {successBanner && (
-            <div className="mx-6 mt-2 mb-1 px-4 py-2.5 bg-sky-100 border border-sky-300 rounded text-sky-800 text-xs font-medium flex items-center justify-between animate-in fade-in duration-200">
+            <div className="pms-reg-banner">
               <span>{successBanner}</span>
               <button
                 type="button"
                 onClick={() => setSuccessBanner(null)}
-                className="text-sky-600 hover:text-sky-900 font-bold ml-4"
+                className="pms-reg-banner-close"
               >
                 ✕
               </button>
             </div>
           )}
 
-          {/* Table Controls (10 entries per page & Search) - Frame 0090 */}
-          <div className="px-6 py-3 flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2">
+          {/* Table Controls (Entries per page & Search) */}
+          <div className="pms-reg-controls">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <select
                 value={entriesPerPage}
                 onChange={e => {
                   setEntriesPerPage(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                className="border border-gray-300 rounded px-2 py-1 text-xs bg-white text-gray-700"
+                className="pms-reg-entries-select"
               >
                 <option value={10}>10</option>
                 <option value={25}>25</option>
                 <option value={50}>50</option>
                 <option value={100}>100</option>
               </select>
-              <span className="text-gray-600">entries per page</span>
+              <span style={{ color: '#64748b', fontSize: '12px' }}>entries per page</span>
             </div>
 
-            <div className="flex items-center gap-2">
-              <label className="text-gray-600 font-medium">Search:</label>
+            <div className="pms-reg-search-box">
+              <label style={{ color: '#475569', fontWeight: 600, fontSize: '12px' }}>Search:</label>
               <input
                 type="text"
+                placeholder="Search receipts, account, mobile..."
                 value={searchQuery}
                 onChange={e => {
                   setSearchQuery(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="border border-gray-300 rounded px-3 py-1 text-xs bg-white text-gray-800 focus:ring-1 focus:ring-blue-500 w-48"
+                className="pms-reg-search-input"
               />
             </div>
           </div>
 
-          {/* Table matching Frame 0090 and 0250 */}
-          <div className="flex-1 overflow-auto px-6 pb-2">
-            <table className="w-full border-collapse border border-gray-300 text-xs">
+          {/* Table */}
+          <div className="pms-reg-table-wrapper">
+            <table className="pms-reg-table">
               <thead>
-                <tr className="bg-gray-100 text-gray-800 font-semibold text-center border-b border-gray-300">
-                  <th className="border border-gray-300 px-3 py-2 w-14">S.No▲</th>
-                  <th className="border border-gray-300 px-3 py-2 w-28">Date</th>
-                  <th className="border border-gray-300 px-3 py-2 w-32">Reciept No</th>
-                  <th className="border border-gray-300 px-3 py-2 w-28">Payment Mode</th>
-                  <th className="border border-gray-300 px-4 py-2 text-left">Account Name</th>
-                  <th className="border border-gray-300 px-3 py-2 text-right w-24">Amount</th>
-                  <th className="border border-gray-300 px-4 py-2 text-left">Remark</th>
-                  <th className="border border-gray-300 px-3 py-2 w-28 text-center">Actions</th>
+                <tr>
+                  <th className="pms-reg-td-center" style={{ width: '60px' }}>S.No</th>
+                  <th className="pms-reg-td-center" style={{ width: '110px' }}>Date</th>
+                  <th className="pms-reg-td-center" style={{ width: '130px' }}>Receipt No</th>
+                  <th className="pms-reg-td-center" style={{ width: '120px' }}>Payment Mode</th>
+                  <th>Account / Guest Name</th>
+                  <th className="pms-reg-td-right" style={{ width: '120px' }}>Amount (₹)</th>
+                  <th>Remark</th>
+                  <th className="pms-reg-td-center" style={{ width: '110px' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedReceipts.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="text-center py-8 text-gray-500 italic border border-gray-200">
-                      No receipt records found.
+                    <td colSpan={8} className="pms-reg-td-center" style={{ padding: '36px', color: '#94a3b8', fontStyle: 'italic' }}>
+                      No receipt records found matching your search.
                     </td>
                   </tr>
                 ) : (
                   paginatedReceipts.map((r, idx) => (
-                    <tr 
-                      key={r.id}
-                      className={`hover:bg-blue-50/50 transition-colors ${idx % 2 === 1 ? 'bg-gray-50/70' : 'bg-white'}`}
-                    >
-                      <td className="border border-gray-300 px-3 py-1.5 text-center font-medium text-gray-700">
+                    <tr key={r.id}>
+                      <td className="pms-reg-td-center" style={{ color: '#64748b', fontWeight: 600 }}>
                         {r.sNo || (currentPage - 1) * entriesPerPage + idx + 1}
                       </td>
-                      <td className="border border-gray-300 px-3 py-1.5 text-center font-mono text-gray-600">
+                      <td className="pms-reg-td-center pms-reg-td-mono" style={{ color: '#475569' }}>
                         {r.date}
                       </td>
-                      <td className="border border-gray-300 px-3 py-1.5 text-center font-mono font-semibold text-blue-700">
+                      <td className="pms-reg-td-center pms-reg-td-mono" style={{ color: '#2563eb', fontWeight: 700 }}>
                         {r.receiptNo}
                       </td>
-                      <td className="border border-gray-300 px-3 py-1.5 text-center">
-                        <span className={`inline-block px-2 py-0.5 rounded text-[11px] font-semibold ${
+                      <td className="pms-reg-td-center">
+                        <span className={`pms-reg-badge-mode ${
                           r.paymentMode === 'Cash' 
-                            ? 'bg-emerald-100 text-emerald-800' 
+                            ? 'pms-reg-badge-cash' 
                             : r.paymentMode === 'Online' || r.paymentMode === 'UPI' 
-                              ? 'bg-sky-100 text-sky-800' 
-                              : 'bg-purple-100 text-purple-800'
+                              ? 'pms-reg-badge-online' 
+                              : 'pms-reg-badge-cheque'
                         }`}>
                           {r.paymentMode}
                         </span>
                       </td>
-                      <td className="border border-gray-300 px-4 py-1.5 font-medium text-gray-900">
-                        {r.accountName}
+                      <td>
+                        <div style={{ fontWeight: 700, color: '#0f172a' }}>{r.accountName}</div>
                         {r.accountMobile && (
-                          <span className="text-[10px] text-gray-400 block font-normal">
+                          <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
                             📱 {r.accountMobile}
-                          </span>
+                          </div>
                         )}
                       </td>
-                      <td className="border border-gray-300 px-3 py-1.5 text-right font-mono font-bold text-gray-900">
-                        {r.amount.toLocaleString()}
+                      <td className="pms-reg-td-right pms-reg-td-mono" style={{ fontWeight: 800, color: '#0f172a', fontSize: '13px' }}>
+                        ₹{r.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </td>
-                      <td className="border border-gray-300 px-4 py-1.5 text-gray-600">
+                      <td style={{ color: '#64748b' }}>
                         {r.remark || '—'}
                       </td>
-                      <td className="border border-gray-300 px-3 py-1.5 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          {/* Print Icon Button */}
+                      <td className="pms-reg-td-center">
+                        <div className="pms-reg-action-group">
                           <button
                             type="button"
                             title="Print Receipt Slip"
                             onClick={() => setPrintingReceipt(r)}
-                            className="w-7 h-7 inline-flex items-center justify-center bg-gray-50 hover:bg-gray-200 border border-gray-300 rounded text-gray-700 transition-colors"
+                            className="pms-reg-action-icon print"
                           >
                             🖨️
                           </button>
-
-                          {/* Edit Icon Button (blue pen in box) - Frame 0090 */}
                           <button
                             type="button"
                             title="Edit Receipt"
                             onClick={() => handleEdit(r)}
-                            className="w-7 h-7 inline-flex items-center justify-center bg-blue-50 hover:bg-blue-600 border border-blue-300 hover:border-blue-600 rounded text-blue-700 hover:text-white transition-colors"
+                            className="pms-reg-action-icon edit"
                           >
                             ✏️
                           </button>
-
-                          {/* Delete Icon Button (red trash bin in box) - Frame 0090 */}
                           <button
                             type="button"
                             title="Delete Receipt"
                             onClick={() => handleDelete(r)}
-                            className="w-7 h-7 inline-flex items-center justify-center bg-red-50 hover:bg-red-600 border border-red-300 hover:border-red-600 rounded text-red-600 hover:text-white transition-colors"
+                            className="pms-reg-action-icon delete"
                           >
                             🗑️
                           </button>
@@ -295,32 +290,29 @@ export const ReceiptRegisterModal: React.FC<ReceiptRegisterModalProps> = ({
             </table>
           </div>
 
-          {/* Pagination Footer - Frame 0090 */}
-          <div className="px-6 py-3 border-t border-gray-200 bg-gray-50 flex flex-wrap items-center justify-between gap-3 text-xs text-gray-600">
+          {/* Pagination Footer */}
+          <div className="pms-reg-footer">
             <div>
-              Showing {filteredReceipts.length === 0 ? 0 : (currentPage - 1) * entriesPerPage + 1} to{' '}
-              {Math.min(currentPage * entriesPerPage, filteredReceipts.length)} of {filteredReceipts.length} entries
+              Showing <strong>{filteredReceipts.length === 0 ? 0 : (currentPage - 1) * entriesPerPage + 1}</strong> to{' '}
+              <strong>{Math.min(currentPage * entriesPerPage, filteredReceipts.length)}</strong> of{' '}
+              <strong>{filteredReceipts.length}</strong> entries
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="pms-reg-pagination-btns">
               <button
                 type="button"
                 disabled={currentPage <= 1}
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                className="px-2.5 py-1 border border-gray-300 rounded bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed text-xs"
+                className="pms-reg-page-btn"
               >
-                &laquo;
+                &laquo; Prev
               </button>
               {Array.from({ length: totalPages }).map((_, i) => (
                 <button
                   key={i + 1}
                   type="button"
                   onClick={() => setCurrentPage(i + 1)}
-                  className={`px-3 py-1 border rounded text-xs ${
-                    currentPage === i + 1 
-                      ? 'border-blue-600 bg-blue-600 text-white font-bold' 
-                      : 'border-gray-300 bg-white hover:bg-gray-100 text-gray-700'
-                  }`}
+                  className={`pms-reg-page-btn ${currentPage === i + 1 ? 'active' : ''}`}
                 >
                   {i + 1}
                 </button>
@@ -329,9 +321,9 @@ export const ReceiptRegisterModal: React.FC<ReceiptRegisterModalProps> = ({
                 type="button"
                 disabled={currentPage >= totalPages}
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                className="px-2.5 py-1 border border-gray-300 rounded bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed text-xs"
+                className="pms-reg-page-btn"
               >
-                &raquo;
+                Next &raquo;
               </button>
             </div>
           </div>
@@ -382,12 +374,13 @@ const ReceiptPrintSlipModal: React.FC<ReceiptPrintSlipModalProps> = ({ receipt, 
 
   return (
     <div 
-      className="pms-modal-backdrop" 
+      className="pms-reg-modal-backdrop" 
       style={{ zIndex: 13500 }}
       onClick={onClose}
     >
       <div 
-        className="pms-modal-container w-full max-w-lg p-6 text-gray-900 animate-in fade-in zoom-in-95"
+        className="pms-reg-modal-window"
+        style={{ maxWidth: '560px', padding: '20px' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Actions Top */}

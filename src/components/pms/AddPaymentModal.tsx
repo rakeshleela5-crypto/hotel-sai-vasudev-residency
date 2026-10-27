@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PmsStore } from '../../services/pmsStore';
 import type { PmsPaymentRecord, PmsPartyAccount } from '../../types/pmsModels';
+import './registers.css';
 
 interface AddPaymentModalProps {
   isOpen: boolean;
@@ -152,23 +153,33 @@ export const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
 
   return (
     <div 
-      className="pms-modal-backdrop" 
+      className="pms-reg-modal-backdrop" 
       style={{ zIndex: 13000 }}
       onClick={onClose}
     >
       <div 
-        className="pms-modal-container w-full max-w-md overflow-hidden text-gray-800 animate-in fade-in zoom-in-95 duration-150"
+        className="pms-reg-modal-window"
+        style={{ maxWidth: '480px' }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Header - Video 16 Frame 0200 */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200 bg-gray-50">
-          <h3 className="text-base font-semibold text-gray-800">
-            {editingPayment ? 'Edit Payment' : 'Add Payment'}
-          </h3>
+        {/* Header */}
+        <div className="pms-reg-header">
+          <div className="pms-reg-header-left">
+            <span className="pms-reg-header-icon">💳</span>
+            <div>
+              <h2 className="pms-reg-header-title">
+                {editingPayment ? 'Edit Payment' : 'Add New Payment'}
+              </h2>
+              <div className="pms-reg-header-sub">
+                Official Cash/Bank Outflow Voucher Entry
+              </div>
+            </div>
+          </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-lg leading-none p-1 rounded transition-colors"
+            className="pms-reg-close-btn"
+            title="Close"
           >
             ✕
           </button>

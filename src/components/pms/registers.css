@@ -1,0 +1,629 @@
+/* Hotel SAI VASUDEV RESIDENCY - Enterprise Register & Ledger Modals Stylesheet
+   Designed to match the flagship PMS design language:
+   Deep navy / slate header (#0f172a to #1e293b), gold/amber highlights, 
+   crisp typography, vibrant action buttons, and professional data tables.
+*/
+
+/* ============================================================
+   1. MASTER MODAL CONTAINER & BACKDROP
+   ============================================================ */
+.pms-reg-modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(15, 23, 42, 0.75) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 12500 !important;
+  padding: 16px !important;
+  box-sizing: border-box !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+}
+
+.pms-reg-modal-window {
+  position: relative !important;
+  background: #ffffff !important;
+  border-radius: 10px !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid #cbd5e1 !important;
+  width: 100% !important;
+  max-width: 1080px !important;
+  max-height: 92vh !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-sizing: border-box !important;
+  color: #1e293b !important;
+  animation: pmsRegFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+@keyframes pmsRegFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ============================================================
+   2. LUXURY ERP HEADER
+   ============================================================ */
+.pms-reg-header {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+  color: #ffffff !important;
+  padding: 14px 22px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  border-bottom: 2px solid #3b82f6 !important;
+  flex-shrink: 0 !important;
+}
+
+.pms-reg-header-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.pms-reg-header-icon {
+  font-size: 24px !important;
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 40px !important;
+  height: 40px !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.pms-reg-header-title {
+  margin: 0 !important;
+  font-size: 17px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.3px !important;
+  color: #ffffff !important;
+  text-transform: uppercase !important;
+}
+
+.pms-reg-header-sub {
+  margin: 3px 0 0 0 !important;
+  font-size: 11px !important;
+  color: #94a3b8 !important;
+  letter-spacing: 0.2px !important;
+}
+
+.pms-reg-header-sub span.gold {
+  color: #fbbf24 !important;
+  font-weight: 600 !important;
+}
+
+.pms-reg-close-btn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #e2e8f0 !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 16px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.pms-reg-close-btn:hover {
+  background: #ef4444 !important;
+  border-color: #ef4444 !important;
+  color: #ffffff !important;
+  transform: scale(1.05) !important;
+}
+
+/* ============================================================
+   3. ACTION TOOLBAR & BUTTONS
+   ============================================================ */
+.pms-reg-toolbar {
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding: 12px 22px !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  flex-shrink: 0 !important;
+}
+
+.pms-reg-toolbar-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.pms-reg-btn-primary {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid #1d4ed8 !important;
+  padding: 8px 16px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25) !important;
+  transition: all 0.15s ease !important;
+}
+
+.pms-reg-btn-primary:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.35) !important;
+  transform: translateY(-1px) !important;
+}
+
+.pms-reg-btn-dark {
+  background: linear-gradient(135deg, #334155 0%, #1e293b 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid #1e293b !important;
+  padding: 8px 16px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.2) !important;
+  transition: all 0.15s ease !important;
+}
+
+.pms-reg-btn-dark:hover {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+  box-shadow: 0 4px 8px rgba(15, 23, 42, 0.3) !important;
+  transform: translateY(-1px) !important;
+}
+
+.pms-reg-btn-emerald {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid #047857 !important;
+  padding: 8px 16px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.25) !important;
+  transition: all 0.15s ease !important;
+}
+
+.pms-reg-btn-emerald:hover {
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%) !important;
+  box-shadow: 0 4px 8px rgba(5, 150, 105, 0.35) !important;
+  transform: translateY(-1px) !important;
+}
+
+.pms-reg-badge-counter {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  padding: 6px 14px !important;
+  border-radius: 20px !important;
+  font-size: 12px !important;
+  color: #475569 !important;
+  font-weight: 500 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+.pms-reg-badge-counter strong {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+}
+
+/* ============================================================
+   4. SUCCESS NOTIFICATION BANNER
+   ============================================================ */
+.pms-reg-banner {
+  margin: 12px 22px 0 22px !important;
+  padding: 10px 16px !important;
+  background: #eff6ff !important;
+  border: 1px solid #bfdbfe !important;
+  border-radius: 6px !important;
+  color: #1e40af !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  animation: pmsRegFadeIn 0.2s ease !important;
+}
+
+.pms-reg-banner-close {
+  background: none !important;
+  border: none !important;
+  color: #3b82f6 !important;
+  font-weight: bold !important;
+  font-size: 14px !important;
+  cursor: pointer !important;
+  padding: 0 4px !important;
+}
+
+/* ============================================================
+   5. CONTROLS (SEARCH & ENTRIES)
+   ============================================================ */
+.pms-reg-controls {
+  padding: 12px 22px !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  font-size: 12px !important;
+}
+
+.pms-reg-entries-select {
+  border: 1px solid #cbd5e1 !important;
+  background: #ffffff !important;
+  border-radius: 6px !important;
+  padding: 6px 10px !important;
+  font-size: 12px !important;
+  color: #334155 !important;
+  font-weight: 600 !important;
+  outline: none !important;
+  transition: border-color 0.15s ease !important;
+}
+
+.pms-reg-entries-select:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
+}
+
+.pms-reg-search-box {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.pms-reg-search-input {
+  border: 1px solid #cbd5e1 !important;
+  background: #ffffff !important;
+  border-radius: 6px !important;
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+  color: #0f172a !important;
+  width: 220px !important;
+  outline: none !important;
+  transition: all 0.15s ease !important;
+}
+
+.pms-reg-search-input:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+  width: 260px !important;
+}
+
+/* ============================================================
+   6. PREMIUM ENTERPRISE DATA TABLE
+   ============================================================ */
+.pms-reg-table-wrapper {
+  flex: 1 1 auto !important;
+  overflow: auto !important;
+  padding: 0 22px 12px 22px !important;
+}
+
+.pms-reg-table {
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
+  font-size: 12px !important;
+}
+
+.pms-reg-table thead tr {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  font-weight: 700 !important;
+  text-align: left !important;
+}
+
+.pms-reg-table th {
+  padding: 10px 12px !important;
+  border-bottom: 2px solid #cbd5e1 !important;
+  border-right: 1px solid #e2e8f0 !important;
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.4px !important;
+  white-space: nowrap !important;
+  user-select: none !important;
+}
+
+.pms-reg-table th:last-child {
+  border-right: none !important;
+}
+
+.pms-reg-table tbody tr {
+  background: #ffffff !important;
+  transition: background-color 0.1s ease !important;
+}
+
+.pms-reg-table tbody tr:nth-child(even) {
+  background: #f8fafc !important;
+}
+
+.pms-reg-table tbody tr:hover {
+  background: #eff6ff !important;
+}
+
+.pms-reg-table td {
+  padding: 9px 12px !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  border-right: 1px solid #e2e8f0 !important;
+  color: #334155 !important;
+  vertical-align: middle !important;
+}
+
+.pms-reg-table td:last-child {
+  border-right: none !important;
+}
+
+.pms-reg-table tbody tr:last-child td {
+  border-bottom: none !important;
+}
+
+/* Specific Cell Alignments & Badges */
+.pms-reg-td-center {
+  text-align: center !important;
+}
+
+.pms-reg-td-right {
+  text-align: right !important;
+}
+
+.pms-reg-td-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: 11px !important;
+}
+
+.pms-reg-badge-mode {
+  display: inline-block !important;
+  padding: 3px 8px !important;
+  border-radius: 12px !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.3px !important;
+  border: 1px solid transparent !important;
+}
+
+.pms-reg-badge-cash {
+  background: #ecfdf5 !important;
+  color: #047857 !important;
+  border-color: #a7f3d0 !important;
+}
+
+.pms-reg-badge-online {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border-color: #bfdbfe !important;
+}
+
+.pms-reg-badge-cheque {
+  background: #fef3c7 !important;
+  color: #b45309 !important;
+  border-color: #fde68a !important;
+}
+
+/* Action Icon Buttons */
+.pms-reg-action-group {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+}
+
+.pms-reg-action-icon {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 5px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1px solid #cbd5e1 !important;
+  background: #ffffff !important;
+  color: #475569 !important;
+  font-size: 12px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.pms-reg-action-icon:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.pms-reg-action-icon.print:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #94a3b8 !important;
+}
+
+.pms-reg-action-icon.edit:hover {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #1d4ed8 !important;
+}
+
+.pms-reg-action-icon.delete:hover {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+  border-color: #dc2626 !important;
+}
+
+/* ============================================================
+   7. PAGINATION FOOTER
+   ============================================================ */
+.pms-reg-footer {
+  background: #f8fafc !important;
+  border-top: 1px solid #e2e8f0 !important;
+  padding: 12px 22px !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  font-size: 12px !important;
+  color: #64748b !important;
+  flex-shrink: 0 !important;
+}
+
+.pms-reg-pagination-btns {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.pms-reg-page-btn {
+  padding: 4px 10px !important;
+  border: 1px solid #cbd5e1 !important;
+  background: #ffffff !important;
+  color: #334155 !important;
+  border-radius: 4px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.pms-reg-page-btn:hover:not(:disabled) {
+  background: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+}
+
+.pms-reg-page-btn.active {
+  background: #2563eb !important;
+  border-color: #1d4ed8 !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3) !important;
+}
+
+.pms-reg-page-btn:disabled {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+}
+
+/* ============================================================
+   8. UNIVERSAL FALLBACK UTILITIES (HEALS ALL UNSTYLED TAILWIND CALLS)
+   ============================================================ */
+.w-full { width: 100% !important; }
+.max-w-5xl { max-width: 1080px !important; }
+.max-w-4xl { max-width: 896px !important; }
+.max-w-md { max-width: 448px !important; }
+.max-w-lg { max-width: 512px !important; }
+.max-h-\[92vh\] { max-height: 92vh !important; }
+.max-h-\[90vh\] { max-height: 90vh !important; }
+
+.flex { display: flex !important; }
+.flex-col { flex-direction: column !important; }
+.flex-wrap { flex-wrap: wrap !important; }
+.items-center { align-items: center !important; }
+.justify-between { justify-content: space-between !important; }
+.justify-center { justify-content: center !important; }
+.shrink-0 { flex-shrink: 0 !important; }
+.flex-1 { flex: 1 1 0% !important; }
+
+.gap-1 { gap: 4px !important; }
+.gap-1\.5 { gap: 6px !important; }
+.gap-2 { gap: 8px !important; }
+.gap-3 { gap: 12px !important; }
+.gap-4 { gap: 16px !important; }
+
+.px-2 { padding-left: 8px !important; padding-right: 8px !important; }
+.px-2\.5 { padding-left: 10px !important; padding-right: 10px !important; }
+.px-3 { padding-left: 12px !important; padding-right: 12px !important; }
+.px-4 { padding-left: 16px !important; padding-right: 16px !important; }
+.px-5 { padding-left: 20px !important; padding-right: 20px !important; }
+.px-6 { padding-left: 24px !important; padding-right: 24px !important; }
+.py-1 { padding-top: 4px !important; padding-bottom: 4px !important; }
+.py-1\.5 { padding-top: 6px !important; padding-bottom: 6px !important; }
+.py-2 { padding-top: 8px !important; padding-bottom: 8px !important; }
+.py-2\.5 { padding-top: 10px !important; padding-bottom: 10px !important; }
+.py-3 { padding-top: 12px !important; padding-bottom: 12px !important; }
+.py-3\.5 { padding-top: 14px !important; padding-bottom: 14px !important; }
+.py-4 { padding-top: 16px !important; padding-bottom: 16px !important; }
+.pt-4 { padding-top: 16px !important; }
+.pb-2 { padding-bottom: 8px !important; }
+.p-4 { padding: 16px !important; }
+.p-5 { padding: 20px !important; }
+.p-6 { padding: 24px !important; }
+
+.border { border: 1px solid #e2e8f0 !important; }
+.border-b { border-bottom: 1px solid #e2e8f0 !important; }
+.border-t { border-top: 1px solid #e2e8f0 !important; }
+.border-r { border-right: 1px solid #e2e8f0 !important; }
+.border-gray-200 { border-color: #e2e8f0 !important; }
+.border-gray-300 { border-color: #cbd5e1 !important; }
+.border-gray-400 { border-color: #94a3b8 !important; }
+.border-slate-700 { border-color: #334155 !important; }
+
+.bg-white { background-color: #ffffff !important; }
+.bg-gray-50 { background-color: #f8fafc !important; }
+.bg-gray-100 { background-color: #f1f5f9 !important; }
+.bg-gray-200 { background-color: #e2e8f0 !important; }
+.bg-slate-900 { background-color: #0f172a !important; }
+.bg-slate-800 { background-color: #1e293b !important; }
+.bg-slate-700 { background-color: #334155 !important; }
+.bg-blue-600 { background-color: #2563eb !important; }
+.bg-blue-700 { background-color: #1d4ed8 !important; }
+.bg-emerald-700 { background-color: #047857 !important; }
+.bg-amber-500 { background-color: #f59e0b !important; }
+
+.text-white { color: #ffffff !important; }
+.text-gray-900 { color: #0f172a !important; }
+.text-gray-800 { color: #1e293b !important; }
+.text-gray-700 { color: #334155 !important; }
+.text-gray-600 { color: #475569 !important; }
+.text-gray-500 { color: #64748b !important; }
+.text-gray-400 { color: #94a3b8 !important; }
+.text-slate-300 { color: #cbd5e1 !important; }
+.text-slate-400 { color: #94a3b8 !important; }
+.text-blue-700 { color: #1d4ed8 !important; }
+.text-emerald-700 { color: #047857 !important; }
+.text-emerald-800 { color: #065f46 !important; }
+
+.text-xs { font-size: 12px !important; }
+.text-sm { font-size: 14px !important; }
+.text-base { font-size: 16px !important; }
+.text-lg { font-size: 18px !important; }
+.text-xl { font-size: 20px !important; }
+.text-\[11px\] { font-size: 11px !important; }
+.text-\[10px\] { font-size: 10px !important; }
+
+.font-bold { font-weight: 700 !important; }
+.font-semibold { font-weight: 600 !important; }
+.font-medium { font-weight: 500 !important; }
+.font-mono { font-family: ui-monospace, monospace !important; }
+
+.rounded { border-radius: 4px !important; }
+.rounded-md { border-radius: 6px !important; }
+.rounded-lg { border-radius: 8px !important; }
+.shadow-xs { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important; }
+.shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important; }
+.cursor-pointer { cursor: pointer !important; }
+.overflow-hidden { overflow: hidden !important; }
+.overflow-auto { overflow: auto !important; }

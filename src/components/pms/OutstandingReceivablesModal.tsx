@@ -48,31 +48,31 @@ export const OutstandingReceivablesModal: React.FC<OutstandingReceivablesModalPr
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+      <div className="pms-reg-modal-backdrop" onClick={onClose}>
         <div 
-          className="bg-white rounded-lg shadow-2xl border border-gray-300 w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden text-gray-800 animate-in fade-in zoom-in-95 duration-150"
+          className="pms-reg-modal-window"
+          style={{ maxWidth: '960px' }}
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-3.5 bg-slate-900 text-white shrink-0">
-            <div className="flex items-center gap-3">
-              <span className="text-xl">{activeMode === 'receivable' ? '💰' : '💳'}</span>
+          <div className="pms-reg-header">
+            <div className="pms-reg-header-left">
+              <span className="pms-reg-header-icon">{activeMode === 'receivable' ? '💰' : '💳'}</span>
               <div>
-                <h2 className="text-base font-bold text-white tracking-wide">
-                  {activeMode === 'receivable' ? 'Outstanding Receivables Report (Debtors)' : 'Outstanding Payables Report (Creditors)'}
+                <h2 className="pms-reg-header-title">
+                  {activeMode === 'receivable' ? 'OUTSTANDING RECEIVABLES REPORT (DEBTORS)' : 'OUTSTANDING PAYABLES REPORT (CREDITORS)'}
                 </h2>
-                <div className="text-[11px] text-slate-300">
-                  {activeMode === 'receivable' 
-                    ? 'pms.hotelsai-vasudev.com/outstanding_receivable &bull; Receivables Register' 
-                    : 'pms.hotelsai-vasudev.com/outstanding_payable_result &bull; Payables Register'}
+                <div className="pms-reg-header-sub">
+                  pms.hotelsai-vasudev.com &bull; <span className="gold">HOTEL SAI VASUDEV RESIDENCY</span> &bull; {activeMode === 'receivable' ? 'Receivables Ledger & Aging' : 'Payables Ledger'}
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <button
                 type="button"
                 onClick={handlePrint}
-                className="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold rounded transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="pms-reg-btn-dark"
+                style={{ padding: '6px 12px', fontSize: '11px' }}
               >
                 <span>🖨️</span>
                 <span>Print</span>
@@ -80,7 +80,8 @@ export const OutstandingReceivablesModal: React.FC<OutstandingReceivablesModalPr
               <button
                 type="button"
                 onClick={onClose}
-                className="text-slate-400 hover:text-white text-lg leading-none p-1 rounded transition-colors cursor-pointer"
+                className="pms-reg-close-btn"
+                title="Close"
               >
                 ✕
               </button>
