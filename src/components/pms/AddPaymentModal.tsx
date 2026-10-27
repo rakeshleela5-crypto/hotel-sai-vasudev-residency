@@ -151,9 +151,13 @@ export const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+    <div 
+      className="pms-modal-backdrop" 
+      style={{ zIndex: 13000 }}
+      onClick={onClose}
+    >
       <div 
-        className="bg-white rounded-lg shadow-2xl border border-gray-300 w-full max-w-md overflow-hidden text-gray-800 animate-in fade-in zoom-in-95 duration-150"
+        className="pms-modal-container w-full max-w-md overflow-hidden text-gray-800 animate-in fade-in zoom-in-95 duration-150"
         onClick={e => e.stopPropagation()}
       >
         {/* Header - Video 16 Frame 0200 */}

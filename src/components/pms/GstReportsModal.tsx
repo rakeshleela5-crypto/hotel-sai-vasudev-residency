@@ -187,8 +187,16 @@ export const GstReportsModal: React.FC<GstReportsModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="pms-modal-backdrop" style={{ zIndex: 1200 }}>
-      <div className="pms-modal-container" style={{ width: '96%', maxWidth: 1400, maxHeight: '92vh', display: 'flex', flexDirection: 'column' }}>
+    <div 
+      className="pms-modal-backdrop" 
+      style={{ zIndex: 12000 }}
+      onClick={onClose}
+    >
+      <div 
+        className="pms-modal-container" 
+        style={{ width: '96%', maxWidth: 1400, maxHeight: '92vh', display: 'flex', flexDirection: 'column' }}
+        onClick={e => e.stopPropagation()}
+      >
         
         {/* Top Header matching Video 28 Frames 0100, 0110, 0170, 0200 */}
         <div style={{

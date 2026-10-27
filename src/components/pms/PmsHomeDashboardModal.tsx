@@ -1103,7 +1103,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn"
-          onClick={() => { setGstReportTab('consolidated'); setIsGstReportsOpen(true); }}
+          onClick={() => { setIsPaymentRegisterOpen(false); setIsReceiptRegisterOpen(false); setGstReportTab('consolidated'); setIsGstReportsOpen(true); }}
           style={{ background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)', color: '#fff', fontWeight: 800 }}
           title="Room & Food Bill GST Report (23-Column Tax Audit Sheet)"
         >
@@ -1121,7 +1121,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn"
-          onClick={() => { setGstReportTab('b2b'); setIsGstReportsOpen(true); }}
+          onClick={() => { setIsPaymentRegisterOpen(false); setIsReceiptRegisterOpen(false); setGstReportTab('b2b'); setIsGstReportsOpen(true); }}
           style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff', fontWeight: 800 }}
           title="B2B Register (Only GST Customer Invoices - GSTR-1 Table 4)"
         >
@@ -1138,7 +1138,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn"
-          onClick={() => { setGstReportTab('b2c'); setIsGstReportsOpen(true); }}
+          onClick={() => { setIsPaymentRegisterOpen(false); setIsReceiptRegisterOpen(false); setGstReportTab('b2c'); setIsGstReportsOpen(true); }}
           style={{ background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)', color: '#fff', fontWeight: 800 }}
           title="B2C Register (Without GST Invoices - GSTR-1 Table 7)"
         >
@@ -1156,7 +1156,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         <button
           type="button"
           className="hub-tile-btn"
-          onClick={() => { setGstReportTab('dashboard'); setIsGstReportsOpen(true); }}
+          onClick={() => { setIsPaymentRegisterOpen(false); setIsReceiptRegisterOpen(false); setGstReportTab('dashboard'); setIsGstReportsOpen(true); }}
           style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', color: '#fff', fontWeight: 800 }}
           title="Master Report Dashboard (/report_dashboard - All 28 Reports)"
         >

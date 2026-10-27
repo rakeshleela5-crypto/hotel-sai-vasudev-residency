@@ -500,6 +500,9 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
 
   const checkModuleAccess = (permissionKey: string, moduleName: string, onAllowed: () => void) => {
     if (PmsStore.hasPermission(permissionKey)) {
+      setIsPaymentRegisterOpen(false);
+      setIsReceiptRegisterOpen(false);
+      setIsGstReportsOpen(false);
       onAllowed();
     } else {
       setSecurityBanner(`⛔ ACCESS DENIED (Security Boundary Active): Your active staff account "${currentUser.userName}" (${currentUser.roleName}) is restricted from accessing [${moduleName}]. Contact Super-Admin to update permissions in Roles & Rights (/roles).`);
@@ -1283,16 +1286,16 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                       <span style={{ color: '#f59e0b', fontWeight: 800 }}>👮 Police Station Report</span>
                     </div>
                     {/* Video 28: GST Tax Reports Suite (Frames 0080-0330) */}
-                    <div className="pms-nav-item" onClick={() => { setGstReportTab('consolidated'); setIsGstReportsOpen(true); }}>
+                    <div className="pms-nav-item" onClick={() => { setIsPaymentRegisterOpen(false); setIsReceiptRegisterOpen(false); setGstReportTab('consolidated'); setIsGstReportsOpen(true); }}>
                       <span style={{ color: '#4ade80', fontWeight: 800 }}>📜 Room &amp; Food Bill GST Report</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => { setGstReportTab('b2b'); setIsGstReportsOpen(true); }}>
+                    <div className="pms-nav-item" onClick={() => { setIsPaymentRegisterOpen(false); setIsReceiptRegisterOpen(false); setGstReportTab('b2b'); setIsGstReportsOpen(true); }}>
                       <span style={{ color: '#38bdf8', fontWeight: 700 }}>🏢 B2B Register (Only GST Invoices)</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => { setGstReportTab('b2c'); setIsGstReportsOpen(true); }}>
+                    <div className="pms-nav-item" onClick={() => { setIsPaymentRegisterOpen(false); setIsReceiptRegisterOpen(false); setGstReportTab('b2c'); setIsGstReportsOpen(true); }}>
                       <span style={{ color: '#f87171', fontWeight: 700 }}>👥 B2C Register (Without GST Invoices)</span>
                     </div>
-                    <div className="pms-nav-item" onClick={() => { setGstReportTab('dashboard'); setIsGstReportsOpen(true); }}>
+                    <div className="pms-nav-item" onClick={() => { setIsPaymentRegisterOpen(false); setIsReceiptRegisterOpen(false); setGstReportTab('dashboard'); setIsGstReportsOpen(true); }}>
                       <span style={{ color: '#fbbf24', fontWeight: 800 }}>📊 Master Report Hub (/report_dashboard)</span>
                     </div>
                     {/* Video 29: All Hotel Reports Master Suite */}

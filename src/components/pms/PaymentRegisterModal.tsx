@@ -87,9 +87,13 @@ export const PaymentRegisterModal: React.FC<PaymentRegisterModalProps> = ({
 
   return (
     <>
-      <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3">
+      <div 
+        className="pms-modal-backdrop" 
+        style={{ zIndex: 12500 }}
+        onClick={onClose}
+      >
         <div 
-          className="bg-white rounded-lg shadow-2xl border border-gray-300 w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden text-gray-800 animate-in fade-in zoom-in-95 duration-150"
+          className="pms-modal-container w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden text-gray-800 animate-in fade-in zoom-in-95 duration-150"
           onClick={e => e.stopPropagation()}
         >
           {/* Header Bar */}
@@ -376,9 +380,13 @@ const PaymentPrintSlipModal: React.FC<PaymentPrintSlipModalProps> = ({ payment, 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
+    <div 
+      className="pms-modal-backdrop" 
+      style={{ zIndex: 13500 }}
+      onClick={onClose}
+    >
       <div 
-        className="bg-white rounded-lg shadow-2xl border border-gray-400 w-full max-w-lg p-6 text-gray-900 animate-in fade-in zoom-in-95"
+        className="pms-modal-container w-full max-w-lg p-6 text-gray-900 animate-in fade-in zoom-in-95"
         onClick={e => e.stopPropagation()}
       >
         {/* Actions Top */}
