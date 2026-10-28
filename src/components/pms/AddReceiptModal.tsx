@@ -128,8 +128,7 @@ export const AddReceiptModal: React.FC<AddReceiptModalProps> = ({
     }
 
     setIsSaving(true);
-
-    setTimeout(() => {
+    try {
       const receipt: PmsReceiptRecord = {
         id: editingReceipt?.id || `rec-${Date.now()}`,
         sNo: editingReceipt?.sNo || 1,
@@ -146,10 +145,13 @@ export const AddReceiptModal: React.FC<AddReceiptModalProps> = ({
       };
 
       PmsStore.saveReceipt(receipt);
-      setIsSaving(false);
       onReceiptSaved(receipt);
       onClose();
-    }, 400); // 400ms simulate server save with 'Please wait...' button state
+    } catch (err) {
+      console.error('[AddReceiptModal] Save failed:', err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (

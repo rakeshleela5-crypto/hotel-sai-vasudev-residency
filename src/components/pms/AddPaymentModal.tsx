@@ -127,8 +127,7 @@ export const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
     }
 
     setIsSaving(true);
-
-    setTimeout(() => {
+    try {
       const payment: PmsPaymentRecord = {
         id: editingPayment?.id || `pay-${Date.now()}`,
         sNo: editingPayment?.sNo || 1,
@@ -145,10 +144,13 @@ export const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
       };
 
       PmsStore.savePayment(payment);
-      setIsSaving(false);
       onPaymentSaved(payment);
       onClose();
-    }, 400); // 400ms simulate server save with 'Please wait...' button state
+    } catch (err) {
+      console.error('[AddPaymentModal] Save failed:', err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
