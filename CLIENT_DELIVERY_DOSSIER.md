@@ -178,7 +178,7 @@ $$₹52,400.00 + ₹5,812.00 = ₹58,212.00 \equiv (₹18,500 \text{ Cash} + ₹
 
 ```text
 [1/4] Cloudflare Pages Frontend: 200 OK (18,219 bytes served)
-      URL: https://hotel-sai-vasudev-residency.pages.dev
+      URL: ttps:h//hotel-sai-vasudev-residency.pages.dev
 [2/4] Railway Backend Health: 200 OK | Status: healthy | Database: connected | Engine: PostgreSQL
       URL: https://hotel-sai-vasudev-residency-production.up.railway.app/health
 [3/4] Live PostgreSQL Rooms: 4 official room categories active

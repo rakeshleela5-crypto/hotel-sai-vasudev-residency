@@ -1,3 +1,5 @@
+@import './components/pms/registers.css';
+
 :root {
   /* Color Palette - Luxurious Hospitality */
   --primary-900: #0a111e;
