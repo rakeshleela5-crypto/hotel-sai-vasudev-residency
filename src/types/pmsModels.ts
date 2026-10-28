@@ -1002,11 +1002,13 @@ export interface PmsWhatsAppLog {
 }
 
 export interface PmsWhatsAppConfig {
+  mode?: 'direct_wame' | 'api_gateway'; // Option 1: Direct wa.me (Click-to-Chat - 100% Free Forever) vs Option 2: Gateway API
   apiUrl: string;
   instanceId: string;
   token: string;
   ownerMobile: string;
-  validityDate: string;    // e.g. "2026-06-29"
+  validityDate: string;    // e.g. "Lifetime (100% Free Forever)" or "2026-06-29"
+  wamePhonePrefix?: string; // Default '91' for India
   autoSendOnCheckIn: boolean;
   autoSendOnCheckOut: boolean;
   autoSendOnBooking: boolean;

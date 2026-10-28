@@ -180,8 +180,8 @@ export const GstReportsModal: React.FC<GstReportsModalProps> = ({
 
     const cleanMobile = caMobile.replace(/\D/g, '');
     const mobileWithCode = cleanMobile.length === 10 ? `91${cleanMobile}` : cleanMobile;
-    const url = `https://api.whatsapp.com/send?phone=${mobileWithCode}&text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
+    const url = `https://wa.me/${mobileWithCode}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   if (!isOpen) return null;

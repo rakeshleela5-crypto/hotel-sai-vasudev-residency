@@ -190,20 +190,49 @@ export const CheckOutRegisterModal: React.FC<CheckOutRegisterModalProps> = ({
                 {antiTheftAlert.message}
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setAntiTheftAlert(null)}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: '#991b1b',
-                fontWeight: 800,
-                cursor: 'pointer',
-                fontSize: 14
-              }}
-            >
-              ✕
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const config = PmsStore.getWhatsAppConfig();
+                  const comp = PmsStore.getCompanyInfo();
+                  const ownerMsg = `Dear Owner, This is to inform you that checkout folio ${antiTheftAlert.invoiceNo} (Room ${antiTheftAlert.roomNo}, ₹${antiTheftAlert.amount.toFixed(2)}) was deleted at *${comp.firmName}* by operator "${antiTheftAlert.operator}". Please review deleted records.`;
+                  const cleanOwner = config.ownerMobile.replace(/\D/g, '') || '7999663696';
+                  const ownerWithCode = cleanOwner.length === 10 ? `91${cleanOwner}` : cleanOwner;
+                  window.open(`https://wa.me/${ownerWithCode}?text=${encodeURIComponent(ownerMsg)}`, '_blank', 'noopener,noreferrer');
+                }}
+                style={{
+                  background: '#25d366',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '4px 12px',
+                  borderRadius: 4,
+                  fontWeight: 700,
+                  fontSize: 11,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4
+                }}
+                title="Open owner fraud notification in WhatsApp Web (Option 1: wa.me)"
+              >
+                <span>💬</span> Dispatch Owner Alert (wa.me)
+              </button>
+              <button
+                type="button"
+                onClick={() => setAntiTheftAlert(null)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#991b1b',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  fontSize: 14
+                }}
+              >
+                ✕
+              </button>
+            </div>
           </div>
         )}
 

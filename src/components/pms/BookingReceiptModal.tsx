@@ -286,9 +286,9 @@ export const BookingReceiptModal: React.FC<BookingReceiptModalProps> = ({
               alignItems: 'center',
               gap: 6
             }}
-            title="Send automated booking voucher & directions to guest on WhatsApp"
+            title="Open booking confirmation voucher directly in WhatsApp Web via wa.me (Option 1: 100% Free)"
           >
-            💬 Send WhatsApp Voucher
+            💬 WhatsApp Voucher (wa.me)
           </button>
         </div>
       </div>

@@ -196,6 +196,26 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button
+              type="button"
+              onClick={handleWhatsAppSend}
+              style={{
+                background: '#25d366',
+                color: '#fff',
+                border: 'none',
+                padding: '4px 12px',
+                borderRadius: 3,
+                fontSize: 11,
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4
+              }}
+              title="Open current bill in WhatsApp Web via wa.me (Option 1: 100% Free)"
+            >
+              <span>💬</span> WhatsApp Bill (wa.me)
+            </button>
             {onOpenBrandingSettings && (
               <button
                 type="button"

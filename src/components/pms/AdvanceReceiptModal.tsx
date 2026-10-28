@@ -621,9 +621,11 @@ export const AdvanceReceiptModal: React.FC<AdvanceReceiptModalProps> = ({
               <button
                 type="button"
                 onClick={() => {
+                  const targetMobile = printingReceipt.mobile || prompt('Enter Guest WhatsApp Mobile Number (10 digits):', '9822100042') || '';
+                  if (!targetMobile) return;
                   PmsStore.sendWhatsAppNotification({
                     voucherType: 'Advance_receipt_store',
-                    recipientMobile: '9822100042',
+                    recipientMobile: targetMobile,
                     recipientName: printingReceipt.guestName,
                     voucherNo: printingReceipt.receiptNo,
                     roomNo: printingReceipt.roomNo || '',
@@ -634,9 +636,9 @@ export const AdvanceReceiptModal: React.FC<AdvanceReceiptModalProps> = ({
                   });
                 }}
                 style={{ background: '#25d366', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: 4, cursor: 'pointer', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}
-                title="Send advance payment receipt to guest WhatsApp"
+                title="Send advance payment receipt to guest WhatsApp via direct wa.me (Free)"
               >
-                <span>💬</span> WhatsApp Receipt
+                <span>💬</span> WhatsApp Receipt (wa.me)
               </button>
             </div>
           </div>

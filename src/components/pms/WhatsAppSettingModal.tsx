@@ -305,6 +305,29 @@ export const WhatsAppSettingModal: React.FC<WhatsAppSettingModalProps> = ({
           </div>
         </div>
 
+        {/* Active Architecture Mode Banner - Option 1: Direct wa.me (Click-to-Chat) */}
+        <div className="bg-emerald-50/90 border-b border-emerald-200 px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs text-emerald-950">
+          <div className="flex items-center gap-2.5">
+            <span className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-sm">✓</span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-emerald-900 text-xs">Active Architecture: Option 1 — Direct wa.me (Click-to-Chat)</span>
+                <span className="bg-emerald-200 text-emerald-900 font-extrabold px-2 py-0.5 rounded text-[10px] tracking-wide uppercase">100% Free Forever</span>
+                <span className="bg-blue-100 text-blue-900 font-semibold px-2 py-0.5 rounded text-[10px]">Zero API Fees • Zero Meta Charges</span>
+              </div>
+              <p className="text-emerald-800 text-[11px] mt-0.5">
+                Staff clicks "Send WhatsApp" ➔ Browser opens official <strong>https://wa.me</strong> in WhatsApp Web ➔ Staff reviews and presses "Send". Perfect for Check-In Slips, Checkout Bills, Food Bills & Advance Receipts with zero gateway server maintenance.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setIsConfigModalOpen(true)}
+            className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded text-[11px] font-semibold transition-colors"
+          >
+            Mode & Settings ⚙️
+          </button>
+        </div>
+
         {/* Fraud Prevention Notification Callout matching Video 22 Audio */}
         <div className="bg-amber-50/70 border-b border-amber-200 px-6 py-2.5 flex items-center justify-between text-xs text-amber-900">
           <div className="flex items-center gap-2">
@@ -747,7 +770,7 @@ export const WhatsAppSettingModal: React.FC<WhatsAppSettingModalProps> = ({
                 onClick={handleSendTest}
                 className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-md flex items-center gap-2"
               >
-                <span>💬</span> Launch WhatsApp Now
+                <span>💬</span> Open in WhatsApp Web (wa.me)
               </button>
             </div>
           </div>
@@ -755,15 +778,15 @@ export const WhatsAppSettingModal: React.FC<WhatsAppSettingModalProps> = ({
       )}
 
       {/* ======================================================================
-          SUB-MODAL 4: GATEWAY CONFIGURATION
+          SUB-MODAL 4: ARCHITECTURE & GATEWAY CONFIGURATION
       ====================================================================== */}
       {isConfigModalOpen && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in font-sans">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-xl overflow-hidden border border-slate-300 flex flex-col">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden border border-slate-300 flex flex-col">
             <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span>⚙️</span>
-                <h3 className="text-base font-bold">WhatsApp API Gateway Settings</h3>
+                <h3 className="text-base font-bold">WhatsApp Dispatch Architecture & Settings</h3>
               </div>
               <button
                 onClick={() => setIsConfigModalOpen(false)}
@@ -773,62 +796,150 @@ export const WhatsAppSettingModal: React.FC<WhatsAppSettingModalProps> = ({
               </button>
             </div>
 
-            <div className="p-6 space-y-4 text-xs">
+            <div className="p-6 space-y-4 text-xs overflow-y-auto max-h-[75vh]">
+              {/* Architecture Selector Cards */}
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Cloud API Gateway Endpoint</label>
-                <input
-                  type="text"
-                  value={config.apiUrl}
-                  onChange={(e) => setConfig({ ...config, apiUrl: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg font-mono"
-                />
+                <label className="block font-bold text-slate-800 mb-2 uppercase text-[11px] tracking-wider">
+                  Select WhatsApp Integration Architecture
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {/* Option 1 Card */}
+                  <div 
+                    onClick={() => setConfig({ ...config, mode: 'direct_wame' })}
+                    className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+                      config.mode !== 'api_gateway' 
+                        ? 'border-emerald-600 bg-emerald-50/70 shadow-sm ring-1 ring-emerald-500' 
+                        : 'border-slate-200 bg-slate-50 hover:border-slate-300 opacity-70'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="wa_mode"
+                          checked={config.mode !== 'api_gateway'}
+                          onChange={() => setConfig({ ...config, mode: 'direct_wame' })}
+                          className="text-emerald-600 focus:ring-emerald-500"
+                        />
+                        <span className="font-extrabold text-slate-900 text-xs">Option 1: Direct wa.me</span>
+                      </div>
+                      <span className="bg-emerald-600 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full uppercase shadow-xs">
+                        Active & Free
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-emerald-950 font-medium">Click-to-Chat in WhatsApp Web</p>
+                    <ul className="mt-2 space-y-1 text-[11px] text-emerald-900">
+                      <li>• <strong>Cost:</strong> 100% Free forever (₹0 API fees)</li>
+                      <li>• <strong>Setup:</strong> Zero setup. Instant from WhatsApp Web</li>
+                      <li>• <strong>Bills:</strong> Perfect for Check-In Slips & Tax Invoices</li>
+                    </ul>
+                  </div>
+
+                  {/* Option 2 Card */}
+                  <div 
+                    onClick={() => setConfig({ ...config, mode: 'api_gateway' })}
+                    className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+                      config.mode === 'api_gateway' 
+                        ? 'border-blue-600 bg-blue-50/70 shadow-sm ring-1 ring-blue-500' 
+                        : 'border-slate-200 bg-slate-50 hover:border-slate-300 opacity-60'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="wa_mode"
+                          checked={config.mode === 'api_gateway'}
+                          onChange={() => setConfig({ ...config, mode: 'api_gateway' })}
+                          className="text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="font-bold text-slate-700 text-xs">Option 2: Background Gateway</span>
+                      </div>
+                      <span className="bg-slate-200 text-slate-700 text-[10px] px-2 py-0.5 rounded font-mono">
+                        Optional
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 font-medium">Automated Background API</p>
+                    <ul className="mt-2 space-y-1 text-[11px] text-slate-600">
+                      <li>• <strong>Cost:</strong> ₹0.12–₹0.40/msg + Meta/Gateway sub</li>
+                      <li>• <strong>Setup:</strong> Meta business verification & QR server</li>
+                      <li>• <strong>Alerts:</strong> Silent server pings for bill deletions</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Instance ID</label>
-                  <input
-                    type="text"
-                    value={config.instanceId}
-                    onChange={(e) => setConfig({ ...config, instanceId: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">API Secret Token</label>
-                  <input
-                    type="password"
-                    value={config.token}
-                    onChange={(e) => setConfig({ ...config, token: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg font-mono"
-                  />
-                </div>
+              {/* Option 1 Comparison Matrix Callout */}
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                <span className="font-bold text-slate-800 text-[11px] uppercase tracking-wide block mb-1.5">
+                  Architecture Comparison Matrix:
+                </span>
+                <table className="w-full text-left text-[11px] border border-slate-200 bg-white">
+                  <thead>
+                    <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold">
+                      <th className="p-1.5 border-r">Feature</th>
+                      <th className="p-1.5 border-r bg-emerald-50 text-emerald-950">Option 1: Direct wa.me</th>
+                      <th className="p-1.5 text-slate-600">Option 2: Automated Gateway</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    <tr>
+                      <td className="p-1.5 font-semibold border-r">How it works</td>
+                      <td className="p-1.5 border-r bg-emerald-50/50">Staff clicks "Send WhatsApp" ➔ Browser opens wa.me in WhatsApp Web ➔ Staff presses "Send".</td>
+                      <td className="p-1.5 text-slate-600">System sends message silently in background from server when checkout/checkin happens.</td>
+                    </tr>
+                    <tr>
+                      <td className="p-1.5 font-semibold border-r">Cost</td>
+                      <td className="p-1.5 border-r bg-emerald-50/50 font-bold text-emerald-800">100% Free forever (Zero API fees, zero per-message charges).</td>
+                      <td className="p-1.5 text-slate-600">Meta Business API fees (~₹0.12–₹0.40/message) + gateway sub.</td>
+                    </tr>
+                    <tr>
+                      <td className="p-1.5 font-semibold border-r">Setup complexity</td>
+                      <td className="p-1.5 border-r bg-emerald-50/50 font-bold text-emerald-800">Zero setup. Works immediately from any logged-in WhatsApp Web.</td>
+                      <td className="p-1.5 text-slate-600">Requires Meta verification, approved templates, or QR-gateway server setup.</td>
+                    </tr>
+                    <tr>
+                      <td className="p-1.5 font-semibold border-r">Guest Bills & Slips</td>
+                      <td className="p-1.5 border-r bg-emerald-50/50 font-semibold text-emerald-800">✅ Perfect for Check-In Slips, Checkout Bills, and Advance Receipts.</td>
+                      <td className="p-1.5 text-slate-600">✅ Perfect for hands-free automated notifications.</td>
+                    </tr>
+                    <tr>
+                      <td className="p-1.5 font-semibold border-r">Owner Fraud Alerts</td>
+                      <td className="p-1.5 border-r bg-emerald-50/50">⚠️ Requires staff click to launch wa.me owner alert on bill deletion.</td>
+                      <td className="p-1.5 text-slate-600">✅ Automatically pings owner phone even if staff tries to conceal a deleted bill.</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
 
+              {/* Owner Alert Contact */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-rose-700 mb-1">Owner Alert Mobile (Anti-Theft)</label>
+                  <label className="block font-semibold text-rose-700 mb-1">Owner Alert Mobile (Anti-Theft Fraud Audit)</label>
                   <input
                     type="text"
                     value={config.ownerMobile}
                     onChange={(e) => setConfig({ ...config, ownerMobile: e.target.value })}
                     className="w-full px-3 py-2 border border-rose-300 rounded-lg font-mono font-bold text-rose-900 focus:ring-2 focus:ring-rose-500"
-                    placeholder="Owner 10-digit number"
+                    placeholder="Owner 10-digit number (e.g. 7999663696)"
                   />
+                  <p className="text-[10px] text-slate-500 mt-0.5">Target number when staff clicks to report bill deletions/discounts.</p>
                 </div>
                 <div>
-                  <label className="block font-semibold text-emerald-700 mb-1">WhatsApp Validity Date</label>
+                  <label className="block font-semibold text-emerald-700 mb-1">WhatsApp Plan Validity</label>
                   <input
                     type="text"
                     value={config.validityDate}
                     onChange={(e) => setConfig({ ...config, validityDate: e.target.value })}
-                    className="w-full px-3 py-2 border border-emerald-300 rounded-lg font-mono font-bold text-emerald-900"
+                    className="w-full px-3 py-2 border border-emerald-300 rounded-lg font-mono font-bold text-emerald-900 bg-emerald-50"
                   />
+                  <p className="text-[10px] text-slate-500 mt-0.5">Option 1 is lifetime free without subscription renewal.</p>
                 </div>
               </div>
 
+              {/* Dispatch Trigger Toggles */}
               <div className="p-3 bg-slate-50 border rounded-lg space-y-2">
-                <span className="font-bold text-slate-800 block">Automatic Dispatch Triggers:</span>
+                <span className="font-bold text-slate-800 block">Automatic Action Prompts & Shortcuts:</span>
                 <div className="grid grid-cols-2 gap-2">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -837,7 +948,7 @@ export const WhatsAppSettingModal: React.FC<WhatsAppSettingModalProps> = ({
                       onChange={(e) => setConfig({ ...config, autoSendOnCheckIn: e.target.checked })}
                       className="rounded text-emerald-600"
                     />
-                    <span>Auto Send Check-In Welcome</span>
+                    <span>Prompt WhatsApp on Check-In</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -846,7 +957,7 @@ export const WhatsAppSettingModal: React.FC<WhatsAppSettingModalProps> = ({
                       onChange={(e) => setConfig({ ...config, autoSendOnCheckOut: e.target.checked })}
                       className="rounded text-emerald-600"
                     />
-                    <span>Auto Send Checkout Bill</span>
+                    <span>Prompt WhatsApp on Checkout</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -855,7 +966,7 @@ export const WhatsAppSettingModal: React.FC<WhatsAppSettingModalProps> = ({
                       onChange={(e) => setConfig({ ...config, autoAlertOwnerOnDelete: e.target.checked })}
                       className="rounded text-rose-600"
                     />
-                    <span className="text-rose-800 font-semibold">Alert Owner on Bill Delete</span>
+                    <span className="text-rose-800 font-semibold">Enable Owner Alert on Bill Delete</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -864,7 +975,7 @@ export const WhatsAppSettingModal: React.FC<WhatsAppSettingModalProps> = ({
                       onChange={(e) => setConfig({ ...config, autoAlertOwnerOnUpdate: e.target.checked })}
                       className="rounded text-rose-600"
                     />
-                    <span className="text-rose-800 font-semibold">Alert Owner on Tariff Update</span>
+                    <span className="text-rose-800 font-semibold">Enable Owner Alert on Tariff Update</span>
                   </label>
                 </div>
               </div>
@@ -879,7 +990,7 @@ export const WhatsAppSettingModal: React.FC<WhatsAppSettingModalProps> = ({
               </button>
               <button
                 onClick={handleSaveConfig}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-md"
+                className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-md"
               >
                 Save Settings
               </button>

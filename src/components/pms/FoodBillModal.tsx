@@ -816,9 +816,9 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                       });
                     }}
                     style={{ background: '#25d366', color: '#fff', border: 'none', padding: '7px 16px', borderRadius: 4, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
-                    title="Send food bill receipt to guest WhatsApp"
+                    title="Open food bill directly in WhatsApp Web via wa.me (Option 1: 100% Free)"
                   >
-                    <span>💬</span> WhatsApp Food Bill
+                    <span>💬</span> WhatsApp Food Bill (wa.me)
                   </button>
                   <button
                     type="button"

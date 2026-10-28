@@ -265,9 +265,9 @@ export const CheckInSlipModal: React.FC<CheckInSlipModalProps> = ({
               alignItems: 'center',
               gap: 6
             }}
-            title="Send automatic WhatsApp welcome greeting & check-in details to guest"
+            title="Open check-in slip & welcome voucher directly in WhatsApp Web (Option 1: wa.me 100% Free)"
           >
-            💬 Send WhatsApp
+            💬 WhatsApp Slip (wa.me)
           </button>
         </div>
       </div>

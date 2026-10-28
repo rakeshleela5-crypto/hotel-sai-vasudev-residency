@@ -1557,11 +1557,13 @@ export const INITIAL_CHAIN_PROPERTIES: PmsChainProperty[] = [
 // ============================================================================
 
 export const INITIAL_WHATSAPP_CONFIG: PmsWhatsAppConfig = {
-  apiUrl: 'https://api.datahouseerp.com/whatsapp/v1/send',
+  mode: 'direct_wame', // Option 1: Direct wa.me (Click-to-Chat) - 100% Free Forever
+  apiUrl: 'https://wa.me',
   instanceId: 'DH-WA-DEMO0004-9822',
   token: 'dh_token_svr_live_9822100004',
   ownerMobile: '7999663696', // matches video demo owner contact
-  validityDate: '29-06-2026',
+  validityDate: 'Lifetime (100% Free Forever)',
+  wamePhonePrefix: '91',
   autoSendOnCheckIn: true,
   autoSendOnCheckOut: true,
   autoSendOnBooking: true,
@@ -10239,6 +10241,21 @@ export class PmsStore {
     return rendered;
   }
 
+  static formatWhatsAppPhone(phone: string): string {
+    if (!phone) return '';
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length === 10) {
+      return `91${digits}`;
+    }
+    if (digits.length === 11 && digits.startsWith('0')) {
+      return `91${digits.slice(1)}`;
+    }
+    if (digits.length === 12 && digits.startsWith('91')) {
+      return digits;
+    }
+    return digits;
+  }
+
   static sendWhatsAppNotification(params: {
     voucherType: string;
     recipientMobile: string;
@@ -10266,9 +10283,9 @@ export class PmsStore {
       messageText = `Greetings from ${this.getCurrentProperty().firmName}! Room: ${params.roomNo || '-'}, Voucher: ${params.voucherNo || '-'}.`;
     }
 
-    const cleanPhone = params.recipientMobile.replace(/[^0-9]/g, '');
-    const phoneWithCountry = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
-    const directUrl = `https://api.whatsapp.com/send?phone=${phoneWithCountry}&text=${encodeURIComponent(messageText)}`;
+    const phoneWithCountry = this.formatWhatsAppPhone(params.recipientMobile);
+    // Option 1: Direct wa.me (Click-to-Chat) - 100% Free Forever, Zero API Setup, Instant WhatsApp Web / App
+    const directUrl = `https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(messageText)}`;
 
     const log = this.addWhatsAppLog({
       recipientMobile: params.recipientMobile,
@@ -10282,7 +10299,8 @@ export class PmsStore {
       firmId: this.getCurrentProperty().firmId
     });
 
-    if (params.openDirectly && typeof window !== 'undefined') {
+    const shouldOpen = params.openDirectly !== false;
+    if (shouldOpen && typeof window !== 'undefined' && phoneWithCountry) {
       window.open(directUrl, '_blank', 'noopener,noreferrer');
     }
 

@@ -36,9 +36,9 @@ export const WhatsAppLogsModal: React.FC<WhatsAppLogsModalProps> = ({
   };
 
   const handleResend = (log: PmsWhatsAppLog) => {
-    const cleanPhone = log.recipientMobile.replace(/[^0-9]/g, '');
-    const phoneWithCountry = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
-    const directUrl = `https://api.whatsapp.com/send?phone=${phoneWithCountry}&text=${encodeURIComponent(log.message)}`;
+    const cleanDigits = log.recipientMobile.replace(/\D/g, '');
+    const phoneWithCountry = cleanDigits.length === 10 ? `91${cleanDigits}` : cleanDigits;
+    const directUrl = `https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(log.message)}`;
     window.open(directUrl, '_blank', 'noopener,noreferrer');
   };
 
