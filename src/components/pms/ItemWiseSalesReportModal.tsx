@@ -54,28 +54,30 @@ export const ItemWiseSalesReportModal: React.FC<ItemWiseSalesReportModalProps> =
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+    <div className="pms-reg-modal-backdrop" onClick={onClose}>
       <div 
-        className="bg-white rounded-lg shadow-2xl border border-gray-300 w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden text-gray-800 animate-in fade-in zoom-in-95 duration-150"
+        className="pms-reg-modal-window"
+        style={{ maxWidth: '960px' }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Header (Frame 0220) */}
-        <div className="flex items-center justify-between px-6 py-3.5 bg-slate-900 text-white shrink-0">
-          <div className="flex items-center gap-3">
-            <span className="text-xl">📊</span>
+        {/* Header */}
+        <div className="pms-reg-header">
+          <div className="pms-reg-header-left">
+            <span className="pms-reg-header-icon">📊</span>
             <div>
-              <h2 className="text-base font-bold text-white tracking-wide">
-                Item Wise Sales Report
+              <h2 className="pms-reg-header-title">
+                ITEM WISE SALES REPORT
               </h2>
-              <div className="text-[11px] text-slate-300">
-                pms.hotelsai-vasudev.com/item_wise_sale_report &bull; Restaurant &amp; Room Service Dish Sales
+              <div className="pms-reg-header-sub">
+                pms.hotelsai-vasudev.com/item_wise_sale_report &bull; <span className="gold">HOTEL SAI VASUDEV RESIDENCY</span> &bull; Restaurant &amp; Room Service Dish Sales
               </div>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-white hover:bg-slate-800 px-2.5 py-1 rounded text-sm transition-colors cursor-pointer"
+            className="pms-reg-close-btn"
+            title="Close"
           >
             ✕
           </button>

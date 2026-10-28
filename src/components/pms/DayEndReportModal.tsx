@@ -23,29 +23,31 @@ export const DayEndReportModal: React.FC<DayEndReportModalProps> = ({ isOpen, on
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-3 overflow-y-auto">
+    <div className="pms-reg-modal-backdrop" onClick={onClose}>
       <div 
-        className="bg-white rounded-lg shadow-2xl border border-gray-300 w-full max-w-5xl max-h-[94vh] flex flex-col overflow-hidden text-gray-800 animate-in fade-in zoom-in-95 duration-150"
+        className="pms-reg-modal-window"
+        style={{ maxWidth: '1080px' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Top Header */}
-        <div className="flex items-center justify-between px-5 py-3 bg-slate-900 text-white shrink-0">
-          <div className="flex items-center gap-3">
-            <span className="text-xl">🌅</span>
+        <div className="pms-reg-header">
+          <div className="pms-reg-header-left">
+            <span className="pms-reg-header-icon">🌅</span>
             <div>
-              <h2 className="text-base font-bold text-white tracking-wide">
-                Day End Report (Night Audit Paper Ledger)
+              <h2 className="pms-reg-header-title">
+                DAY END REPORT &bull; NIGHT AUDIT PAPER LEDGER
               </h2>
-              <div className="text-[11px] text-slate-300">
-                pms.hotelsai-vasudev.com/dayend_report &bull; Daily Audit Register
+              <div className="pms-reg-header-sub">
+                pms.hotelsai-vasudev.com/dayend_report &bull; <span className="gold">HOTEL SAI VASUDEV RESIDENCY</span> &bull; Daily Revenue &amp; Occupancy Audit
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button
               type="button"
               onClick={handlePrint}
-              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="pms-reg-btn-primary"
+              style={{ padding: '6px 14px', fontSize: '11px' }}
             >
               <span>🖨️</span>
               <span>Print 2-Sheet Audit Paper</span>
@@ -53,7 +55,8 @@ export const DayEndReportModal: React.FC<DayEndReportModalProps> = ({ isOpen, on
             <button
               type="button"
               onClick={onClose}
-              className="px-2.5 py-1 text-slate-400 hover:text-white hover:bg-slate-800 rounded text-sm transition-colors cursor-pointer"
+              className="pms-reg-close-btn"
+              title="Close"
             >
               ✕
             </button>
