@@ -188,7 +188,17 @@ app.include_router(pms.router, prefix=settings.API_V1_STR)
 app.include_router(uploads.router, prefix=settings.API_V1_STR)
 app.include_router(payments.router, prefix=settings.API_V1_STR)
 app.include_router(payments.router, prefix="/api")
+app.include_router(kyc.router, prefix=settings.API_V1_STR)
 app.include_router(kyc.router, prefix="/api")
+
+@app.get("/health", tags=["Observability & Health Probes"])
+@app.get(f"{settings.API_V1_STR}/health", tags=["Observability & Health Probes"])
+def root_health_alias(db: Session = Depends(get_db)):
+    """Root health alias ensuring compatibility with frontend checkHealth() (#74)."""
+    from app.routes.health import readiness_probe
+    from fastapi import Response
+    res = Response()
+    return readiness_probe(res, db)
 
 @app.post(f"{settings.API_V1_STR}/kot", tags=["KOT Offline Sync"])
 @app.post("/api/kot", tags=["KOT Offline Sync"])

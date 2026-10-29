@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db, SessionLocal
 from app import models
-from app.models import PaymentTransaction, VirtualAccount, Booking, BookingPayment, Folio, WebhookEvent, FailedWebhookDLQ
+from app.models import PaymentTransaction, VirtualAccount, Booking, BookingPayment, Folio, WebhookEvent, FailedWebhookDLQ, JournalEntry
 from app.schemas import (
     DecentroUpiQrRequest,
     DecentroUpiQrResponse,
@@ -20,7 +20,7 @@ from app.schemas import (
 from app.services.decentro import decentro_client, logger
 from app.websocket_manager import ws_manager
 from app.utils.locking import acquire_canonical_locks
-from app.utils.timezone import now_utc
+from app.utils.timezone import now_utc, now_ist, today_ist_str
 from app.utils.idempotency import require_idempotency_key
 
 router = APIRouter(tags=["Decentro Banking & Payments"])
@@ -54,47 +54,116 @@ def process_decentro_webhook_background(event_id: str, payload: dict):
             amount = float(payload.get("amount") or 0.0)
             payer_vpa = payload.get("payer_vpa") or payload.get("payer_upi") or "guest@upi"
 
-            # 1. Update or create transaction record
+            # 1. Update or create transaction record with pessimistic row locking
             txn = None
             if reference_id:
-                txn = db.query(PaymentTransaction).filter(PaymentTransaction.reference_id == reference_id).first()
+                try:
+                    txn = db.query(PaymentTransaction).filter(PaymentTransaction.reference_id == reference_id).with_for_update().first()
+                except Exception:
+                    txn = db.query(PaymentTransaction).filter(PaymentTransaction.reference_id == reference_id).first()
             if not txn and decentro_txn_id:
-                txn = db.query(PaymentTransaction).filter(PaymentTransaction.decentro_txn_id == decentro_txn_id).first()
+                try:
+                    txn = db.query(PaymentTransaction).filter(PaymentTransaction.decentro_txn_id == decentro_txn_id).with_for_update().first()
+                except Exception:
+                    txn = db.query(PaymentTransaction).filter(PaymentTransaction.decentro_txn_id == decentro_txn_id).first()
 
             if not txn:
-                txn = PaymentTransaction(
-                    reference_id=reference_id or f"DCN-DIRECT-{uuid.uuid4().hex[:8].upper()}",
-                    amount=amount,
-                    currency="INR",
-                    purpose_message="Direct Decentro Payment Callback",
-                    payment_method="VIRTUAL_ACCOUNT" if "VA-" in str(reference_id) else "UPI_QR",
-                    status="PENDING",
-                    decentro_txn_id=decentro_txn_id
-                )
-                db.add(txn)
-                db.commit()
-                db.refresh(txn)
+                try:
+                    txn = PaymentTransaction(
+                        reference_id=reference_id or f"DCN-DIRECT-{uuid.uuid4().hex[:8].upper()}",
+                        amount=amount,
+                        currency="INR",
+                        purpose_message="Direct Decentro Payment Callback",
+                        payment_method="VIRTUAL_ACCOUNT" if (reference_id and "VA-" in str(reference_id)) else "UPI_QR",
+                        status="PENDING",
+                        decentro_txn_id=decentro_txn_id
+                    )
+                    db.add(txn)
+                    db.commit()
+                    db.refresh(txn)
+                except Exception:
+                    db.rollback()
+                    if reference_id:
+                        txn = db.query(PaymentTransaction).filter(PaymentTransaction.reference_id == reference_id).first()
+                    if not txn and decentro_txn_id:
+                        txn = db.query(PaymentTransaction).filter(PaymentTransaction.decentro_txn_id == decentro_txn_id).first()
 
-            if status == "SUCCESS":
+            # Virtual Account Lookup & Linking for RTGS/NEFT/IMPS settlements
+            account_num = payload.get("account_number") or payload.get("virtual_account_number") or payload.get("payee_account")
+            va = None
+            if account_num:
+                va = db.query(VirtualAccount).filter(VirtualAccount.account_number == account_num).first()
+            if not va and reference_id:
+                va = db.query(VirtualAccount).filter(VirtualAccount.reference_id == reference_id).first()
+            if not va and decentro_txn_id:
+                va = db.query(VirtualAccount).filter(VirtualAccount.decentro_urn == decentro_txn_id).first()
+
+            if va and txn:
+                if not txn.booking_id and va.booking_id:
+                    txn.booking_id = va.booking_id
+                txn.payment_method = "VIRTUAL_ACCOUNT"
+
+            settle_amount = amount if amount > 0 else float(txn.amount or 0.0)
+            if amount > 0 and txn:
+                txn.amount = settle_amount
+
+            # Check for UTR Replay Attack / duplicate bank reference
+            if bank_ref and not bank_ref.startswith("GEN_UTR_") and status == "SUCCESS" and txn:
+                duplicate_utr = db.query(PaymentTransaction).filter(
+                    PaymentTransaction.bank_reference_number == bank_ref,
+                    PaymentTransaction.id != txn.id,
+                    PaymentTransaction.status == "SUCCESS"
+                ).first()
+                if duplicate_utr:
+                    logger.error(f"[Webhook Security] UTR replay detected! Bank Ref {bank_ref} was already settled under Txn {duplicate_utr.reference_id}.")
+                    txn.status = "UTR_REPLAY_REJECTED"
+                    if event_rec:
+                        event_rec.status = "FLAGGED_DUPLICATE_UTR"
+                        event_rec.processed_at = now_utc()
+                    db.commit()
+                    return False
+
+            # Status Idempotency Check: Prevent duplicate payment crediting
+            if txn and txn.status == "SUCCESS":
+                if status == "SUCCESS":
+                    logger.info(f"[Webhook Background] Txn {txn.reference_id} already marked SUCCESS. Skipping duplicate folio settlement.")
+                else:
+                    logger.warning(f"[Webhook Background] Refusing out-of-order downgrade of settled Txn {txn.reference_id} from SUCCESS to {status}.")
+                if event_rec:
+                    event_rec.status = "PROCESSED"
+                    event_rec.processed_at = now_utc()
+                db.commit()
+                return True
+
+            if status == "SUCCESS" and txn:
                 txn.status = "SUCCESS"
                 txn.bank_reference_number = bank_ref
                 txn.payer_vpa = payer_vpa
                 txn.updated_at = now_utc()
 
+                transfer_type = (payload.get("transfer_type") or payload.get("payment_mode") or ("RTGS" if txn.payment_method == "VIRTUAL_ACCOUNT" else "UPI")).upper()
+                if txn.payment_method == "VIRTUAL_ACCOUNT":
+                    payment_mode_str = f"Virtual Account ({transfer_type})"
+                else:
+                    payment_mode_str = "UPI (Decentro)"
+
                 # 2. Settle Guest Room Folio (#26, #38)
                 booking_id = txn.booking_id
                 room_no = txn.room_no
+                booking = None
                 if booking_id:
                     acquire_canonical_locks(db, booking_id=booking_id)
                     booking = db.query(Booking).filter(Booking.id == booking_id).first()
                     if booking:
-                        booking.total_paid = round((booking.total_paid or 0.0) + txn.amount, 2)
+                        booking.total_paid = round((booking.total_paid or 0.0) + settle_amount, 2)
                         booking.balance_due = max(0.0, round(booking.total_price - booking.total_paid, 2))
                         if booking.balance_due <= 0.0:
                             booking.payment_status = "Paid"
                         else:
                             booking.payment_status = "Partial"
-                        booking.payment_method = "UPI (Decentro)"
+                        booking.payment_method = payment_mode_str
+                        if not room_no and booking.room:
+                            room_no = booking.room.name
 
                         # Ensure invoice number & PDF key are generated (#38)
                         if not booking.invoice_number:
@@ -103,24 +172,49 @@ def process_decentro_webhook_background(event_id: str, payload: dict):
                             booking.invoice_pdf_key = f"invoices/{datetime.date.today().strftime('%Y/%m')}/{booking.invoice_number}.pdf"
 
                         # Record in booking_payments
+                        notes_str = f"Auto-Reconciled via Decentro Webhook (Ref: {txn.reference_id})"
+                        if booking.total_paid > booking.total_price:
+                            excess = round(booking.total_paid - booking.total_price, 2)
+                            notes_str += f" [Overpayment Excess: ₹{excess}]"
+
                         bp = BookingPayment(
                             booking_id=booking.id,
                             payment_type="Settlement",
-                            payment_mode="UPI (Decentro)",
-                            amount=txn.amount,
+                            payment_mode=payment_mode_str,
+                            amount=settle_amount,
                             transaction_ref=bank_ref,
-                            notes=f"Auto-Reconciled via Decentro Webhook (Ref: {txn.reference_id})"
+                            notes=notes_str
                         )
                         db.add(bp)
 
                         # Update or create Master Folio record
                         folio = db.query(Folio).filter(Folio.booking_id == booking.id).first()
                         if folio:
-                            folio.total_payments = round((folio.total_payments or 0.0) + txn.amount, 2)
+                            folio.total_payments = round((folio.total_payments or 0.0) + settle_amount, 2)
                             folio.balance_due = max(0.0, round((folio.total_charges or booking.total_price) - folio.total_payments, 2))
                             if folio.balance_due <= 0.0:
                                 folio.status = "SETTLED"
                             folio.updated_at = now_utc()
+
+                # 3. Post Double-Entry Accounting Journal Entry to Bank Ledger
+                entry_ref = bank_ref or txn.reference_id
+                guest_desc = booking.guest_name if booking else (payload.get("payer_name") or "Direct Guest")
+                credit_acc = f"Guest Ledger (Room {room_no})" if room_no else (f"Guest Ledger ({guest_desc})" if booking else "Unallocated Bank Receipts (Liability)")
+                debit_acc = f"Bank Account (Decentro {transfer_type})"
+
+                jv = JournalEntry(
+                    entry_id=f"JV-DCN-{uuid.uuid4().hex[:8].upper()}",
+                    date=datetime.date.today().isoformat(),
+                    time=now_ist().strftime("%I:%M %p"),
+                    voucher_type="Bank",
+                    reference_no=entry_ref,
+                    narration=f"Decentro auto-reconciled {payment_mode_str} settlement for {guest_desc}",
+                    debit_account=debit_acc,
+                    credit_account=credit_acc,
+                    amount_rupees=settle_amount,
+                    posted_by="Decentro Settlement Engine"
+                )
+                db.add(jv)
 
                 db.commit()
 
@@ -500,7 +594,10 @@ async def _handle_decentro_webhook(
 
     try:
         payload = json.loads(body_bytes.decode('utf-8'))
-    except Exception:
+        if not isinstance(payload, dict):
+            raise ValueError("Payload must be a valid JSON dictionary")
+    except Exception as exc:
+        logger.error(f"[Webhook Security] Malformed payload received: {exc}")
         raise HTTPException(status_code=400, detail="Invalid JSON payload")
 
     decentro_txn_id = payload.get("decentro_txn_id") or payload.get("txn_id") or payload.get("reference_id")
@@ -518,18 +615,32 @@ async def _handle_decentro_webhook(
             "duplicate": True
         }
 
-    # 3. Raw Ingestion into webhook_events (#36)
-    new_event = WebhookEvent(
-        event_id=decentro_txn_id,
-        source="DECENTRO",
-        event_type=payload.get("event_type") or payload.get("transaction_status") or "PAYMENT_SUCCESS",
-        payload_json=json.dumps(payload),
-        status="PENDING",
-        attempts=0,
-        created_at=now_utc()
-    )
-    db.add(new_event)
-    db.commit()
+    # 3. Raw Ingestion into webhook_events with concurrency collision safety (#36)
+    try:
+        new_event = WebhookEvent(
+            event_id=decentro_txn_id,
+            source="DECENTRO",
+            event_type=payload.get("event_type") or payload.get("transaction_status") or "PAYMENT_SUCCESS",
+            payload_json=json.dumps(payload),
+            status="PENDING",
+            attempts=0,
+            created_at=now_utc()
+        )
+        db.add(new_event)
+        db.commit()
+    except Exception as exc:
+        db.rollback()
+        existing_event = db.query(WebhookEvent).filter(WebhookEvent.event_id == decentro_txn_id).first()
+        if existing_event:
+            logger.info(f"[Webhook] Concurrent deduplication catch: Event '{decentro_txn_id}' already ingested.")
+            return {
+                "status": "SUCCESS",
+                "message": "Duplicate webhook callback ignored (Idempotent OK)",
+                "event_id": decentro_txn_id,
+                "duplicate": True
+            }
+        logger.error(f"[Webhook] Error ingesting event {decentro_txn_id}: {exc}")
+        raise HTTPException(status_code=500, detail=f"Database error ingesting webhook: {str(exc)}")
 
     # 4. Immediate 200 OK + Dispatch BackgroundTask for Folio Settlement & Invoice (#38)
     background_tasks.add_task(process_decentro_webhook_background, decentro_txn_id, payload)

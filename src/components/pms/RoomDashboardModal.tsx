@@ -1814,11 +1814,13 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
 
       <RoomCheckOutModal
         isOpen={isCheckoutOpen}
-        onClose={() => setIsCheckoutOpen(false)}
-        targetRoom={selectedRoomForCheckout}
-        onCheckoutComplete={() => {
+        onClose={() => {
           setIsCheckoutOpen(false);
           setSelectedDrawerRoomNo(null);
+        }}
+        targetRoom={selectedRoomForCheckout}
+        onCheckoutComplete={() => {
+          // Keep open for Tax Invoice review until onClose
         }}
       />
 

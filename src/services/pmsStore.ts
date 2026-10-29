@@ -4921,28 +4921,6 @@ export class PmsStore {
       });
     }
 
-    // Enterprise Cloud Sync: Post Booking to FastAPI PostgreSQL Database
-    hotelApi.createBooking({
-      room_id: Number(targetRoom.id) || Number(targetRoom.roomNo) || 1,
-      guest_name: booking.guestName,
-      guest_email: booking.guestEmail || `${booking.guestPhone}@saivasudevresidency.com`,
-      guest_phone: booking.guestPhone,
-      id_proof_type: booking.idProofType || 'Aadhaar Card',
-      id_proof_number: booking.idProofNumber,
-      check_in_date: booking.checkInDate,
-      check_out_date: booking.checkOutDate,
-      adults: booking.adults || 2,
-      children: booking.children || 0,
-      payment_method: booking.paymentMethod || 'Pay at Hotel',
-      advance_paid: booking.advancePaid || 0,
-      special_requests: booking.specialRequests,
-      vehicle_number: (booking as any).vehicleNumber,
-      company_name: (booking as any).companyName,
-      gstin: (booking as any).gstin
-    }).catch(err => {
-      console.warn('[PmsStore] Background FastAPI PostgreSQL booking sync notice:', err);
-    });
-
     this.notify();
     return { booking: newBooking, room: targetRoom };
   }
@@ -5574,30 +5552,8 @@ export class PmsStore {
       }
     }
 
-    // Cloud sync: mirror Reservation to Railway PostgreSQL
-    try {
-      const primaryRoom = booking.rooms?.[0];
-      const checkInISO = booking.checkInDate?.includes('T') ? booking.checkInDate.split('T')[0] : booking.checkInDate;
-      const checkOutISO = booking.checkOutDate?.includes('T') ? booking.checkOutDate.split('T')[0] : booking.checkOutDate;
-      hotelApi.createBooking({
-        room_id: parseInt(primaryRoom?.roomNo?.replace(/\D/g, '') || '101', 10),
-        guest_name: booking.guestName,
-        guest_email: booking.email || `${booking.mobile || 'guest'}@sai-vasudev.com`,
-        guest_phone: booking.mobile || '9999999999',
-        id_proof_type: booking.documentName || 'Aadhaar Card',
-        check_in_date: checkInISO || new Date().toISOString().split('T')[0],
-        check_out_date: checkOutISO || new Date(Date.now() + 86400000).toISOString().split('T')[0],
-        adults: booking.numberOfGuests || 2,
-        children: 0,
-        payment_method: (booking.paymentMode || 'Cash').toLowerCase().includes('online') ? 'Online' : 'Cash',
-        special_requests: booking.bookingRemark || `PMS Booking #${booking.bookingNo}`
-      }).catch(bkgErr => {
-        console.warn('[PmsStore] Cloud reservation sync notice:', bkgErr);
-      });
-    } catch (syncErr) {
-      console.warn('[PmsStore] Booking cloud sync dispatch notice:', syncErr);
-    }
-
+    // Cloud sync: mirror Reservation to Railway PostgreSQL safely without circular re-entry
+    // (hotelApi.createBooking calls PmsStore.createGuestBooking, so direct local persistence is already complete)
     this.notify();
   }
 
@@ -7780,13 +7736,18 @@ export class PmsStore {
       room_no: bill.roomNo,
       table_no: bill.tableNo,
       guest_name: bill.guestName,
+      kot_numbers: bill.kotNumbers || [],
       kot_numbers_json: JSON.stringify(bill.kotNumbers || []),
+      items: bill.items || [],
       items_json: JSON.stringify(bill.items || []),
+      food_gross_amount: bill.taxableAmount || 0,
       taxable_amount: bill.taxableAmount,
       gst_percent: bill.gstPercent,
       cgst_amount: bill.cgstAmount,
       sgst_amount: bill.sgstAmount,
-      discount_amount: bill.discountAmount,
+      gst_amount: Number(((bill.cgstAmount || 0) + (bill.sgstAmount || 0)).toFixed(2)),
+      discount_amount: bill.discountAmount || 0,
+      discount_percent: bill.discountPercent || 0,
       net_bill_amount: bill.netBillAmount,
       settlement_type: bill.settlementType,
       status: bill.status || 'Settled'

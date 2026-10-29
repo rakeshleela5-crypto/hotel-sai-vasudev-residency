@@ -2064,11 +2064,10 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
           onClose={() => {
             setIsDirectCheckoutOpen(false);
             setSelectedRoomForDirectCheckout(null);
+            setRoomRefreshTrigger(prev => prev + 1);
           }}
           targetRoom={selectedRoomForDirectCheckout}
           onCheckoutComplete={() => {
-            setIsDirectCheckoutOpen(false);
-            setSelectedRoomForDirectCheckout(null);
             setRoomRefreshTrigger(prev => prev + 1);
           }}
         />

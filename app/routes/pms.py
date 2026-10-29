@@ -3,42 +3,94 @@ import datetime
 import time
 import uuid
 import json
+import logging
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, Header
 from fastapi.responses import HTMLResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload, joinedload
 from sqlalchemy import text, func
 from typing import List, Optional, Dict, Any, Union
 
 from app.database import get_db
 from app import models, schemas
+from app.utils.locking import acquire_canonical_locks
+from app.utils.timezone import now_utc, now_ist, to_ist, today_ist_str
+from app.utils.idempotency import require_idempotency_key
+from app.utils.auth import require_role, HospitalityRole, revoke_user_refresh_tokens
+from app.utils.audit import record_audit_log, audit_tariff_change, audit_discount, audit_kot_void, audit_payout
+from app.utils.encryption import encrypt_pii, decrypt_pii, mask_pii
+from app.utils.caching import get_cached_menu, set_cached_menu, invalidate_menu_cache, invalidate_rooms_cache
+from app.websocket_manager import ws_manager
+
+logger = logging.getLogger("pms_routes")
 
 router = APIRouter(prefix="/pms", tags=["PMS Enterprise Operations"])
 
 def log_audit(db: Session, event_type: str, booking_ref: Optional[str], performed_by: str, details: dict):
-    audit = models.AuditLog(
-        event_type=event_type,
-        booking_ref=booking_ref,
-        performed_by=performed_by,
-        details_json=json.dumps(details, default=str)
+    """Standard audit logging helper for PMS operations (#48)."""
+    return record_audit_log(
+        db=db,
+        action=event_type,
+        entity_type="BOOKING" if booking_ref else "SYSTEM",
+        entity_id=booking_ref or "SYSTEM",
+        new_data=details,
+        staff_id=performed_by,
+        role="Front Office",
+        booking_ref=booking_ref
     )
-    db.add(audit)
 
-def find_booking_by_ref_or_room(db: Session, ref_str: Optional[str]) -> Optional[models.Booking]:
+def find_room_by_no_or_name(db: Session, room_identifier: Any) -> Optional[models.Room]:
+    """Robust resolver for Room entities by ID, slug, or name without bitwise boolean errors."""
+    if not room_identifier:
+        return None
+    clean = str(room_identifier).replace("SVR-ROOM-", "").replace("ROOM-", "").replace("SR/", "").strip()
+    if clean.isdigit():
+        room = db.query(models.Room).filter(
+            (models.Room.id == int(clean)) |
+            (models.Room.name.ilike(f"%{clean}%")) |
+            (models.Room.slug.ilike(f"%{clean}%"))
+        ).first()
+        if room:
+            return room
+    return db.query(models.Room).filter(
+        (models.Room.name.ilike(f"%{clean}%")) |
+        (models.Room.slug.ilike(f"%{clean}%"))
+    ).first()
+
+def find_booking_by_ref_or_room(
+    db: Session,
+    ref_str: Optional[str],
+    for_update: bool = False,
+    eager_load: bool = True
+) -> Optional[models.Booking]:
+    """
+    Authoritative booking resolver with eager-loading (selectinload) to eliminate N+1 queries (#5)
+    and optional pessimistic row-locking (.with_for_update()) (#26).
+    """
     if not ref_str:
         return None
     cleaned = ref_str.strip()
     
+    query = db.query(models.Booking)
+    if eager_load:
+        query = query.options(
+            selectinload(models.Booking.room),
+            selectinload(models.Booking.folio_items),
+            selectinload(models.Booking.payments),
+            selectinload(models.Booking.room_shifts)
+        )
+    if for_update:
+        try:
+            query = query.with_for_update()
+        except Exception:
+            pass
+
     # 1. Direct match on booking_ref
-    b = db.query(models.Booking).filter(
-        models.Booking.booking_ref.ilike(cleaned)
-    ).first()
+    b = query.filter(models.Booking.booking_ref.ilike(cleaned)).first()
     if b:
         return b
         
     # 2. Match on invoice_number
-    b = db.query(models.Booking).filter(
-        models.Booking.invoice_number.ilike(cleaned)
-    ).first()
+    b = query.filter(models.Booking.invoice_number.ilike(cleaned)).first()
     if b:
         return b
         
@@ -50,13 +102,9 @@ def find_booking_by_ref_or_room(db: Session, ref_str: Optional[str]) -> Optional
         room_num = cleaned
         
     if room_num:
-        room = db.query(models.Room).filter(
-            (models.Room.id == int(room_num) if room_num.isdigit() else False) |
-            (models.Room.name.ilike(f"%{room_num}%")) |
-            (models.Room.slug.ilike(f"%{room_num}%"))
-        ).first()
+        room = find_room_by_no_or_name(db, room_num)
         if room:
-            active_b = db.query(models.Booking).filter(
+            active_b = query.filter(
                 models.Booking.room_id == room.id,
                 models.Booking.status.in_(["Checked-In", "Confirmed"])
             ).order_by(models.Booking.id.desc()).first()
@@ -78,10 +126,7 @@ def execute_room_shift(payload: schemas.RoomShiftCreate, db: Session = Depends(g
     booking = find_booking_by_ref_or_room(db, payload.booking_ref)
     if not booking:
         clean_ref = payload.booking_ref.replace("SVR-ROOM-", "").replace("SR/", "").strip()
-        room_candidate = db.query(models.Room).filter(
-            (models.Room.id == int(clean_ref) if clean_ref.isdigit() else False) |
-            (models.Room.name.ilike(f"%{clean_ref}%"))
-        ).first()
+        room_candidate = find_room_by_no_or_name(db, clean_ref)
         if room_candidate:
             booking = db.query(models.Booking).filter(
                 models.Booking.room_id == room_candidate.id,
@@ -112,10 +157,7 @@ def execute_room_shift(payload: schemas.RoomShiftCreate, db: Session = Depends(g
 
     old_room = db.query(models.Room).filter(models.Room.id == booking.room_id).first()
     clean_to = str(payload.to_room_id).replace("SVR-ROOM-", "").strip()
-    new_room = db.query(models.Room).filter(
-        (models.Room.id == int(clean_to) if clean_to.isdigit() else False) |
-        (models.Room.name.ilike(f"%{clean_to}%"))
-    ).first()
+    new_room = find_room_by_no_or_name(db, clean_to)
 
     if not new_room:
         raise HTTPException(status_code=404, detail="Destination room does not exist")
@@ -155,6 +197,21 @@ def execute_room_shift(payload: schemas.RoomShiftCreate, db: Session = Depends(g
 
     db.commit()
     db.refresh(shift_record)
+    ws_manager.emit_booking_event_sync(
+        event_type="ROOM_SHIFT",
+        booking_ref=booking.booking_ref,
+        status="Checked-In",
+        room_number=new_room.name,
+        guest_name=booking.guest_name,
+        extra={"from_room": old_room.name, "to_room": new_room.name, "reason": payload.reason}
+    )
+    ws_manager.emit_room_status_event_sync(
+        room_id=old_room.id,
+        room_name=old_room.name,
+        housekeeping_status="Dirty",
+        old_status="Occupied",
+        updated_by=payload.shifted_by
+    )
     return shift_record
 
 @router.get("/room-shifts")
@@ -176,14 +233,18 @@ def get_room_shifts(db: Session = Depends(get_db)):
     } for rs in shifts]
 
 # --- 2. Multi-Tender & Split Bill Payments ---
-@router.post("/payments", response_model=schemas.BookingPaymentResponse)
+@router.post("/payments", response_model=schemas.BookingPaymentResponse, dependencies=[Depends(require_idempotency_key)])
 def record_booking_payment(payload: schemas.BookingPaymentCreate, db: Session = Depends(get_db)):
     """
     Record an advance, partial, key deposit, or final split settlement payment
+    with canonical lock ordering (Booking -> Folio -> Room) (#15, #26).
     """
-    booking = find_booking_by_ref_or_room(db, payload.booking_ref)
+    booking = find_booking_by_ref_or_room(db, payload.booking_ref, for_update=True)
     if not booking:
         raise HTTPException(status_code=404, detail="Booking reservation not found")
+
+    # Acquire canonical locks: Booking -> Folio -> Room
+    acquire_canonical_locks(db, booking_id=booking.id, room_id=booking.room_id)
 
     payment = models.BookingPayment(
         booking_id=booking.id,
@@ -222,11 +283,15 @@ def record_booking_payment(payload: schemas.BookingPaymentCreate, db: Session = 
 def add_item_to_room_folio(payload: schemas.RoomFolioItemCreate, db: Session = Depends(get_db)):
     """
     Post a Room Service Food KOT or Sundry charge directly to the Guest Room Folio
+    with canonical row locking (Booking -> Folio -> Room) (#15, #26)
     Calculates 5% Food GST (SAC 996331) or 12% Hotel Sundry (SAC 996311)
     """
-    booking = find_booking_by_ref_or_room(db, payload.booking_ref)
+    booking = find_booking_by_ref_or_room(db, payload.booking_ref, for_update=True)
     if not booking:
         raise HTTPException(status_code=404, detail="Booking reservation not found")
+
+    # Acquire canonical locks: Booking -> Folio -> Room
+    acquire_canonical_locks(db, booking_id=booking.id, room_id=booking.room_id)
 
     qty = max(1, payload.quantity)
     taxable = round(payload.unit_price * qty, 2)
@@ -275,23 +340,24 @@ def add_item_to_room_folio(payload: schemas.RoomFolioItemCreate, db: Session = D
 @router.get("/folio/{booking_ref}", response_model=schemas.MasterFolioResponse)
 def get_master_room_folio(booking_ref: str, db: Session = Depends(get_db)):
     """
-    Generate comprehensive Master Folio showing:
+    Generate comprehensive Master Folio with eager-loaded relationships (selectinload #5):
     - Room stay base tariff & room GST
     - Itemized Room Shifts
     - Restaurant / Room Service Food KOTs & 5% GST
     - Multi-tender payment receipts
     - Net Balance Due
     """
-    booking = find_booking_by_ref_or_room(db, booking_ref)
+    booking = find_booking_by_ref_or_room(db, booking_ref, eager_load=True)
     if not booking:
         raise HTTPException(status_code=404, detail="Booking reservation not found")
 
     room = booking.room or db.query(models.Room).filter(models.Room.id == booking.room_id).first()
     current_room_name = room.name if room else "Deluxe Stay"
 
-    shifts = db.query(models.RoomShift).filter(models.RoomShift.booking_id == booking.id).all()
-    folios = db.query(models.RoomFolioItem).filter(models.RoomFolioItem.booking_id == booking.id).all()
-    payments = db.query(models.BookingPayment).filter(models.BookingPayment.booking_id == booking.id).all()
+    # Eager-loaded collections from selectinload
+    shifts = booking.room_shifts if booking.room_shifts is not None else db.query(models.RoomShift).filter(models.RoomShift.booking_id == booking.id).all()
+    folios = booking.folio_items if booking.folio_items is not None else db.query(models.RoomFolioItem).filter(models.RoomFolioItem.booking_id == booking.id).all()
+    payments = booking.payments if booking.payments is not None else db.query(models.BookingPayment).filter(models.BookingPayment.booking_id == booking.id).all()
 
     # Calculations
     room_stay_charges = booking.base_amount + (booking.extra_guest_charge or 0.0)
@@ -396,6 +462,10 @@ def update_room_housekeeping_status(payload: schemas.HousekeepingStatusUpdate, d
 
     old_status = room.housekeeping_status
     room.housekeeping_status = payload.housekeeping_status
+    if payload.housekeeping_status in ["Clean", "Inspected"]:
+        room.is_available = True
+    elif payload.housekeeping_status in ["Dirty", "Under_Maintenance", "Occupied"]:
+        room.is_available = False
 
     log_audit(db, "HOUSEKEEPING_UPDATE", None, payload.updated_by or "Housekeeping Head", {
         "room_name": room.name,
@@ -404,6 +474,13 @@ def update_room_housekeeping_status(payload: schemas.HousekeepingStatusUpdate, d
     })
 
     db.commit()
+    ws_manager.emit_room_status_event_sync(
+        room_id=room.id,
+        room_name=room.name,
+        housekeeping_status=room.housekeeping_status,
+        old_status=old_status,
+        updated_by=payload.updated_by
+    )
     return {"message": f"Room {room.name} status updated to {payload.housekeeping_status}"}
 
 # --- 7. Midnight Day-End Night Audit Engine ---
@@ -514,164 +591,284 @@ def execute_night_audit(payload: schemas.NightAuditRunRequest, db: Session = Dep
 @router.post("/check-in", response_model=schemas.BookingResponse)
 def execute_walk_in_check_in(payload: schemas.WalkInCheckInRequest, db: Session = Depends(get_db)):
     """
-    Registers a walk-in guest at the front desk:
+    Registers a walk-in guest at the front desk with row-level room locking (.with_for_update()):
     1. Sets room housekeeping status to 'Occupied'
     2. Calculates authoritative pricing and Indian GST
-    3. Records advance deposit payment if provided
-    4. Automatically logs domestic/foreign police station register
+    3. Records advance deposit payment if provided and creates AdvanceReceipt voucher
+    4. Instantiates primary Master Folio record
+    5. Automatically logs domestic/foreign police station register
+    6. Ensures atomic database rollback protection
     """
-    room = db.query(models.Room).filter(models.Room.id == payload.room_id).first()
-    if not room:
-        raise HTTPException(status_code=404, detail="Selected room not found")
-    if room.housekeeping_status == "Occupied":
-        raise HTTPException(status_code=409, detail=f"Room '{room.name}' is already occupied!")
-    if room.housekeeping_status == "Dirty":
-        raise HTTPException(status_code=400, detail=f"Room '{room.name}' is marked Dirty! Housekeeping must clean and inspect before check-in.")
+    try:
+        # Acquire canonical lock on target Room (#14, #26)
+        _, _, room = acquire_canonical_locks(db, room_id=payload.room_id)
+        if not room:
+            raise HTTPException(status_code=404, detail="Selected room not found")
+        if room.housekeeping_status == "Occupied":
+            raise HTTPException(status_code=409, detail=f"Room '{room.name}' is already occupied!")
+        if room.housekeeping_status == "Dirty":
+            raise HTTPException(status_code=400, detail=f"Room '{room.name}' is marked Dirty! Housekeeping must clean and inspect before check-in.")
 
-    today_str = payload.check_in_date or datetime.date.today().isoformat()
-    start_date = datetime.date.fromisoformat(today_str)
-    end_date = datetime.date.fromisoformat(payload.check_out_date)
-    nights = max(1, (end_date - start_date).days)
+        today_str = payload.check_in_date or datetime.date.today().isoformat()
+        start_date = datetime.date.fromisoformat(today_str)
+        end_date = datetime.date.fromisoformat(payload.check_out_date)
+        nights = max(1, (end_date - start_date).days)
 
-    # Server pricing
-    base_tariff = float(room.price_per_night)
-    base_amount = round(base_tariff * nights, 2)
-    extra_adults = max(0, payload.adults - room.capacity)
-    extra_charge = round(extra_adults * 500.0 * nights, 2)
-    taxable = round(base_amount + extra_charge, 2)
-    gst_rate = 12.0 if (taxable / nights) <= 7500.0 else 18.0
-    cgst = round(taxable * (gst_rate / 200.0), 2)
-    sgst = cgst
-    total_tax = round(cgst + sgst, 2)
-    total_price = round(taxable + total_tax, 2)
+        # Server pricing
+        base_tariff = float(room.price_per_night)
+        base_amount = round(base_tariff * nights, 2)
+        extra_adults = max(0, payload.adults - room.capacity)
+        extra_charge = round(extra_adults * 500.0 * nights, 2)
+        taxable = round(base_amount + extra_charge, 2)
+        gst_rate = 12.0 if (taxable / nights) <= 7500.0 else 18.0
+        cgst = round(taxable * (gst_rate / 200.0), 2)
+        sgst = cgst
+        total_tax = round(cgst + sgst, 2)
+        total_price = round(taxable + total_tax, 2)
 
-    advance = float(payload.advance_amount or 0.0)
-    balance = max(0.0, round(total_price - advance, 2))
-    payment_status = "Paid" if balance <= 0 else ("Partial" if advance > 0 else "Pending")
+        advance = float(payload.advance_amount or 0.0)
+        balance = max(0.0, round(total_price - advance, 2))
+        payment_status = "Paid" if balance <= 0 else ("Partial" if advance > 0 else "Pending")
 
-    booking = models.Booking(
-        room_id=room.id,
-        guest_name=payload.guest_name.strip(),
-        guest_email=(payload.guest_email or "walkin@hotelsai-vasudev.com").strip().lower(),
-        guest_phone=payload.guest_phone.strip(),
-        id_proof_type=payload.id_proof_type,
-        id_proof_number=payload.id_proof_number,
-        check_in_date=today_str,
-        check_out_date=payload.check_out_date,
-        actual_check_in=datetime.datetime.utcnow(),
-        adults=payload.adults,
-        children=payload.children,
-        total_nights=nights,
-        base_rate=base_tariff,
-        base_amount=base_amount,
-        extra_guest_charge=extra_charge,
-        gst_rate=gst_rate,
-        cgst_amount=cgst,
-        sgst_amount=sgst,
-        total_tax=total_tax,
-        total_price=total_price,
-        total_paid=advance,
-        balance_due=balance,
-        payment_status=payment_status,
-        payment_method=payload.advance_payment_mode or "Cash",
-        status="Checked-In",
-        special_requests=payload.special_requests
-    )
-    db.add(booking)
-    db.flush()
-
-    # If advance paid, record payment receipt
-    if advance > 0:
-        p = models.BookingPayment(
-            booking_id=booking.id,
-            payment_type="Advance",
-            payment_mode=payload.advance_payment_mode or "Cash",
-            amount=advance,
-            transaction_ref=payload.advance_ref,
-            notes="Walk-in advance token",
-            collected_by=payload.registered_by or "Front Desk Officer"
+        booking = models.Booking(
+            room_id=room.id,
+            guest_name=payload.guest_name.strip(),
+            guest_email=(payload.guest_email or "walkin@hotelsai-vasudev.com").strip().lower(),
+            guest_phone=payload.guest_phone.strip(),
+            id_proof_type=payload.id_proof_type,
+            id_proof_number=payload.id_proof_number,
+            check_in_date=today_str,
+            check_out_date=payload.check_out_date,
+            actual_check_in=now_utc(),
+            adults=payload.adults,
+            children=payload.children,
+            total_nights=nights,
+            base_rate=base_tariff,
+            base_amount=base_amount,
+            extra_guest_charge=extra_charge,
+            gst_rate=gst_rate,
+            cgst_amount=cgst,
+            sgst_amount=sgst,
+            total_tax=total_tax,
+            total_price=total_price,
+            total_paid=advance,
+            balance_due=balance,
+            payment_status=payment_status,
+            payment_method=payload.advance_payment_mode or "Cash",
+            status="Checked-In",
+            special_requests=payload.special_requests
         )
-        db.add(p)
+        db.add(booking)
+        db.flush()
 
-    # Set room to Occupied
-    room.housekeeping_status = "Occupied"
+        # Automatically initialize primary Master Folio (#20, #26)
+        initial_folio = models.Folio(
+            booking_id=booking.id,
+            folio_number=f"FOL-{booking.booking_ref}",
+            status="OPEN",
+            total_charges=total_price,
+            total_payments=advance,
+            balance_due=balance,
+            version_id=1,
+            created_at=now_utc(),
+            updated_at=now_utc()
+        )
+        db.add(initial_folio)
 
-    # Auto-log domestic police register
-    police_log = models.PoliceStationLog(
-        booking_id=booking.id,
-        guest_name=payload.guest_name.strip(),
-        id_proof_type=payload.id_proof_type,
-        id_proof_number=payload.id_proof_number or "VERIFIED_AT_DESK",
-        permanent_address="Guest Walk-in Record",
-        origin_city="Walk-in",
-        next_destination="Return Journey",
-        purpose_of_visit="Temple Darshan"
-    )
-    db.add(police_log)
+        # If advance paid, record payment receipt and AdvanceReceipt voucher
+        if advance > 0:
+            p = models.BookingPayment(
+                booking_id=booking.id,
+                payment_type="Advance",
+                payment_mode=payload.advance_payment_mode or "Cash",
+                amount=advance,
+                transaction_ref=payload.advance_ref or f"WALKIN-ADV-{booking.booking_ref}",
+                notes="Walk-in advance token",
+                collected_by=payload.registered_by or "Front Desk Officer"
+            )
+            db.add(p)
 
-    log_audit(db, "CHECK_IN", booking.booking_ref, payload.registered_by or "Front Desk Officer", {
-        "room_name": room.name,
-        "guest_name": payload.guest_name,
-        "advance_collected": advance,
-        "nights": nights
-    })
+            adv_receipt = models.AdvanceReceipt(
+                receipt_no=f"ADV-{booking.booking_ref}",
+                voucher_no=f"V-{booking.booking_ref[-4:]}",
+                date=today_str,
+                room_no=room.name,
+                guest_name=payload.guest_name.strip(),
+                mobile=payload.guest_phone.strip() if payload.guest_phone else None,
+                amount=advance,
+                payment_mode=payload.advance_payment_mode or "Cash",
+                remark=payload.advance_ref or f"Walk-in advance deposit for Room {room.name}"
+            )
+            db.add(adv_receipt)
 
-    db.commit()
-    db.refresh(booking)
-    return booking
+        # Set room to Occupied
+        room.housekeeping_status = "Occupied"
+
+        # Auto-log domestic police register
+        police_log = models.PoliceStationLog(
+            booking_id=booking.id,
+            guest_name=payload.guest_name.strip(),
+            id_proof_type=payload.id_proof_type,
+            id_proof_number=payload.id_proof_number or "VERIFIED_AT_DESK",
+            permanent_address="Guest Walk-in Record",
+            origin_city="Walk-in",
+            next_destination="Return Journey",
+            purpose_of_visit="Temple Darshan"
+        )
+        db.add(police_log)
+
+        log_audit(db, "CHECK_IN", booking.booking_ref, payload.registered_by or "Front Desk Officer", {
+            "room_name": room.name,
+            "guest_name": payload.guest_name,
+            "advance_collected": advance,
+            "nights": nights
+        })
+
+        db.commit()
+        db.refresh(booking)
+        ws_manager.emit_booking_event_sync(
+            event_type="CHECK_IN",
+            booking_ref=booking.booking_ref,
+            status="Checked-In",
+            room_number=room.name,
+            guest_name=booking.guest_name
+        )
+        ws_manager.emit_room_status_event_sync(
+            room_id=room.id,
+            room_name=room.name,
+            housekeeping_status="Occupied",
+            old_status="Clean",
+            updated_by=payload.registered_by
+        )
+        return booking
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as exc:
+        db.rollback()
+        logger.error(f"[execute_walk_in_check_in] Transaction failed, rolled back: {exc}")
+        raise HTTPException(status_code=500, detail=f"Check-in transaction failed: {str(exc)}")
 
 # --- 9. Check-Out Settlement & Transition to Dirty ---
 @router.post("/check-out", response_model=schemas.MasterFolioResponse)
 def execute_check_out(payload: schemas.CheckOutRequest, db: Session = Depends(get_db)):
     """
-    Executes Check-Out:
+    Executes Check-Out with canonical locking (Booking -> Folio -> Room) (#15, #26):
     1. Collects remaining balance if paid
     2. Marks room as 'Dirty' for housekeeping
     3. Sets booking status to 'Checked-Out'
-    4. Generates and returns final Master Folio Invoice
+    4. Settles Master Folio and creates CheckoutRecord
+    5. Generates and returns final Master Folio Invoice
     """
-    booking = find_booking_by_ref_or_room(db, payload.booking_ref)
-    if not booking:
-        raise HTTPException(status_code=404, detail="Booking reservation not found")
+    try:
+        booking = find_booking_by_ref_or_room(db, payload.booking_ref, for_update=True)
+        if not booking:
+            raise HTTPException(status_code=404, detail="Booking reservation not found")
 
-    room = db.query(models.Room).filter(models.Room.id == booking.room_id).first()
+        # Acquire canonical locks: Booking -> Folio -> Room (#15, #26)
+        acquire_canonical_locks(db, booking_id=booking.id, room_id=booking.room_id)
+        room = db.query(models.Room).filter(models.Room.id == booking.room_id).first()
 
-    # Record final settlement payment if provided
-    settlement_amt = float(payload.settlement_amount_paid or 0.0)
-    if settlement_amt > 0:
-        p = models.BookingPayment(
-            booking_id=booking.id,
-            payment_type="Settlement",
-            payment_mode=payload.settlement_payment_mode or "Cash",
-            amount=settlement_amt,
-            transaction_ref=payload.transaction_ref,
-            notes="Check-out bill settlement",
-            collected_by=payload.processed_by or "Front Desk Officer"
+        # Record final settlement payment if provided
+        settlement_amt = float(payload.settlement_amount_paid or 0.0)
+        if settlement_amt > 0:
+            p = models.BookingPayment(
+                booking_id=booking.id,
+                payment_type="Settlement",
+                payment_mode=payload.settlement_payment_mode or "Cash",
+                amount=settlement_amt,
+                transaction_ref=payload.transaction_ref,
+                notes="Check-out bill settlement",
+                collected_by=payload.processed_by or "Front Desk Officer"
+            )
+            db.add(p)
+            booking.total_paid = round((booking.total_paid or 0.0) + settlement_amt, 2)
+            booking.balance_due = max(0.0, round(booking.total_price - booking.total_paid, 2))
+
+        if booking.balance_due <= 0:
+            booking.payment_status = "Paid"
+        elif payload.settlement_payment_mode == "Direct_BTC":
+            booking.payment_status = "BTC"
+
+        booking.status = "Checked-Out"
+        booking.actual_check_out = datetime.datetime.utcnow()
+
+        # Room must immediately transition to 'Dirty'
+        if room:
+            room.housekeeping_status = "Dirty"
+
+        # Update Master Folio to SETTLED
+        folio = db.query(models.Folio).filter(models.Folio.booking_id == booking.id).first()
+        if folio:
+            folio.total_payments = round((folio.total_payments or 0.0) + settlement_amt, 2)
+            folio.balance_due = max(0.0, round((folio.total_charges or booking.total_price) - folio.total_payments, 2))
+            if folio.balance_due <= 0.0:
+                folio.status = "SETTLED"
+            folio.updated_at = now_utc()
+
+        # Ensure CheckoutRecord is present
+        inv_no = booking.invoice_number or f"GSR/{uuid.uuid4().hex[:4].upper()}/26-27"
+        existing_chk = db.query(models.CheckoutRecord).filter(models.CheckoutRecord.invoice_no == inv_no).first()
+        if not existing_chk:
+            chk_rec = models.CheckoutRecord(
+                invoice_no=inv_no,
+                room_no=room.name if room else "101",
+                room_type=room.room_type if room else "DELUXE",
+                guest_name=booking.guest_name,
+                guest_phone=booking.guest_phone,
+                check_in_date=booking.check_in_date,
+                check_in_time="12:00 PM",
+                check_out_date=datetime.date.today().isoformat(),
+                check_out_time=datetime.datetime.now().strftime("%I:%M %p"),
+                calculation_type="12hour",
+                number_of_days=booking.total_nights,
+                per_day_tariff=booking.base_rate,
+                total_room_rent=booking.base_amount,
+                food_amount=0.0,
+                gst_percent=booking.gst_rate,
+                gst_amount=booking.total_tax,
+                cgst_amount=booking.cgst_amount,
+                sgst_amount=booking.sgst_amount,
+                add_others=0.0,
+                less_discount=booking.discount_amount or 0.0,
+                advance_deducted=booking.total_paid - settlement_amt if booking.total_paid else 0.0,
+                bill_amount=booking.total_price,
+                net_payable=booking.balance_due,
+                payment_mode=payload.settlement_payment_mode or "Cash",
+                checkout_remark="Departure processed via execute_check_out"
+            )
+            db.add(chk_rec)
+
+        log_audit(db, "CHECK_OUT", booking.booking_ref, payload.processed_by or "Front Desk Officer", {
+            "room_name": room.name if room else "Unknown",
+            "settlement_paid": settlement_amt,
+            "final_payment_status": booking.payment_status
+        })
+
+        db.commit()
+        ws_manager.emit_booking_event_sync(
+            event_type="CHECK_OUT",
+            booking_ref=booking.booking_ref,
+            status="Checked-Out",
+            room_number=room.name if room else None,
+            guest_name=booking.guest_name
         )
-        db.add(p)
-        booking.total_paid = round((booking.total_paid or 0.0) + settlement_amt, 2)
-        booking.balance_due = max(0.0, round(booking.total_price - booking.total_paid, 2))
-
-    if booking.balance_due <= 0:
-        booking.payment_status = "Paid"
-    elif payload.settlement_payment_mode == "Direct_BTC":
-        booking.payment_status = "BTC"
-
-    booking.status = "Checked-Out"
-    booking.actual_check_out = datetime.datetime.utcnow()
-
-    # Room must immediately transition to 'Dirty'
-    if room:
-        room.housekeeping_status = "Dirty"
-
-    log_audit(db, "CHECK_OUT", booking.booking_ref, payload.processed_by or "Front Desk Officer", {
-        "room_name": room.name if room else "Unknown",
-        "settlement_paid": settlement_amt,
-        "final_payment_status": booking.payment_status
-    })
-
-    db.commit()
-    return get_master_room_folio(booking.booking_ref, db)
+        if room:
+            ws_manager.emit_room_status_event_sync(
+                room_id=room.id,
+                room_name=room.name,
+                housekeeping_status="Dirty",
+                old_status="Occupied",
+                updated_by=payload.processed_by
+            )
+        return get_master_room_folio(booking.booking_ref, db)
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as exc:
+        db.rollback()
+        logger.error(f"[execute_check_out] Check-out failed, rolled back: {exc}")
+        raise HTTPException(status_code=500, detail=f"Check-out execution failed: {str(exc)}")
 
 # --- 10. Room Maintenance / Out-of-Order Blocking ---
 @router.post("/rooms/{room_id}/maintenance")
@@ -894,10 +1091,11 @@ def create_kot_ticket(payload: dict, db: Session = Depends(get_db)):
     # If linked to room, post directly to guest room folio
     if payload.get("roomNo"):
         room_no = str(payload.get("roomNo")).strip()
+        r_obj = find_room_by_no_or_name(db, room_no)
         booking = db.query(models.Booking).filter(
-            models.Booking.room_id == int(room_no) if room_no.isdigit() else False,
+            models.Booking.room_id == (r_obj.id if r_obj else -1),
             models.Booking.status == "Checked-In"
-        ).first()
+        ).first() if r_obj else None
         if booking:
             folio = models.RoomFolioItem(
                 booking_id=booking.id,
@@ -920,6 +1118,15 @@ def create_kot_ticket(payload: dict, db: Session = Depends(get_db)):
 
     db.commit()
     db.refresh(kot)
+    ws_manager.emit_kot_event_sync(
+        event_type="KOT_CREATED",
+        kot_number=kot.kot_no,
+        table_number=kot.table_no,
+        room_number=kot.room_no,
+        waiter_name=kot.waiter_name,
+        items=items,
+        status=kot.status
+    )
     return {"status": "created", "kot_no": kot.kot_no, "id": kot.id}
 
 # --- 15. Master Items CRUD (GST, OTAs, Vouchers, Lockers, Charges) ---
@@ -1743,51 +1950,66 @@ def get_full_cloud_state(db: Session = Depends(get_db)):
 # --- 17. Folio Discount Engine ---
 @router.post("/folio/discount", response_model=schemas.FolioDiscountResponse)
 def apply_folio_discount(payload: schemas.FolioDiscountCreate, db: Session = Depends(get_db)):
-    booking = find_booking_by_ref_or_room(db, payload.booking_ref)
-    if not booking and payload.room_no:
-        booking = find_booking_by_ref_or_room(db, payload.room_no)
-    
-    room_num = payload.room_no
-    if not room_num:
-        if "ROOM-" in payload.booking_ref.upper():
-            room_num = payload.booking_ref.upper().split("ROOM-")[-1].strip()
-        elif booking and booking.room:
-            room_num = booking.room.name
-        else:
-            room_num = "101"
-
-    disc_amount = float(payload.discount_amount or 0.0)
-    disc_val = float(payload.discount_value or payload.discount_percentage or 0.0)
-    disc_type = "percent" if (payload.discount_type == "percent" or (payload.discount_percentage and payload.discount_percentage > 0)) else "flat"
-    reason_str = payload.discount_reason or payload.reason or "Manager Approved Discount"
-
-    if booking:
-        if disc_type == "percent" and disc_val > 0:
-            disc_amount = round(booking.base_amount * (disc_val / 100.0), 2)
-        booking.discount_amount = round((booking.discount_amount or 0.0) + disc_amount, 2)
-        booking.total_price = max(0.0, round(booking.total_price - disc_amount, 2))
-        booking.balance_due = max(0.0, round(booking.total_price - (booking.total_paid or 0.0), 2))
-        db.add(booking)
+    try:
+        booking = find_booking_by_ref_or_room(db, payload.booking_ref)
+        if not booking and payload.room_no:
+            booking = find_booking_by_ref_or_room(db, payload.room_no)
         
-    record = models.FolioDiscountRecord(
-        booking_ref=payload.booking_ref,
-        room_no=room_num,
-        discount_type=disc_type,
-        discount_value=disc_val,
-        discount_amount=disc_amount,
-        reason=reason_str,
-        approved_by=payload.approved_by or "General Manager"
-    )
-    db.add(record)
-    log_audit(db, "FOLIO_DISCOUNT", payload.booking_ref, payload.approved_by or "General Manager", {
-        "room_no": room_num,
-        "discount_type": disc_type,
-        "amount": disc_amount,
-        "reason": reason_str
-    })
-    db.commit()
-    db.refresh(record)
-    return record
+        room_num = payload.room_no
+        if not room_num:
+            if "ROOM-" in payload.booking_ref.upper():
+                room_num = payload.booking_ref.upper().split("ROOM-")[-1].strip()
+            elif booking and booking.room:
+                room_num = booking.room.name
+            else:
+                room_num = "101"
+
+        disc_amount = float(payload.discount_amount or 0.0)
+        disc_val = float(payload.discount_value or payload.discount_percentage or 0.0)
+        disc_type = "percent" if (payload.discount_type == "percent" or (payload.discount_percentage and payload.discount_percentage > 0)) else "flat"
+        reason_str = payload.discount_reason or payload.reason or "Manager Approved Discount"
+
+        if disc_type == "flat" and disc_amount <= 0.0 and disc_val > 0.0:
+            disc_amount = disc_val
+
+        if booking:
+            if disc_type == "percent" and disc_val > 0:
+                disc_amount = round(booking.base_amount * (disc_val / 100.0), 2)
+            booking.discount_amount = round((booking.discount_amount or 0.0) + disc_amount, 2)
+            booking.total_price = max(0.0, round(booking.total_price - disc_amount, 2))
+            booking.balance_due = max(0.0, round(booking.total_price - (booking.total_paid or 0.0), 2))
+            db.add(booking)
+
+            # Synchronize primary Master Folio (#20, #26)
+            folio = db.query(models.Folio).filter(models.Folio.booking_id == booking.id).first()
+            if folio:
+                folio.total_charges = max(0.0, round((folio.total_charges or booking.total_price) - disc_amount, 2))
+                folio.balance_due = max(0.0, round(folio.total_charges - (folio.total_payments or 0.0), 2))
+                folio.updated_at = now_utc()
+            
+        record = models.FolioDiscountRecord(
+            booking_ref=payload.booking_ref,
+            room_no=room_num,
+            discount_type=disc_type,
+            discount_value=disc_val,
+            discount_amount=disc_amount,
+            reason=reason_str,
+            approved_by=payload.approved_by or "General Manager"
+        )
+        db.add(record)
+        log_audit(db, "FOLIO_DISCOUNT", payload.booking_ref, payload.approved_by or "General Manager", {
+            "room_no": room_num,
+            "discount_type": disc_type,
+            "amount": disc_amount,
+            "reason": reason_str
+        })
+        db.commit()
+        db.refresh(record)
+        return record
+    except Exception as exc:
+        db.rollback()
+        logger.error(f"[apply_folio_discount] Failed to apply discount: {exc}")
+        raise HTTPException(status_code=500, detail=f"Failed to apply discount: {str(exc)}")
 
 @router.get("/folio/discounts/{room_or_ref}")
 def get_folio_discounts(room_or_ref: str, db: Session = Depends(get_db)):
@@ -1800,70 +2022,132 @@ def get_folio_discounts(room_or_ref: str, db: Session = Depends(get_db)):
 # --- 18. Restaurant Food Bills CRUD ---
 @router.post("/food-bills", response_model=schemas.FoodBillResponse)
 def save_food_bill(payload: schemas.FoodBillCreate, db: Session = Depends(get_db)):
-    existing = db.query(models.FoodBill).filter(models.FoodBill.bill_no == payload.bill_no.strip()).first()
+    b_no = (payload.bill_no or payload.billNo or f"FB-{uuid.uuid4().hex[:6].upper()}").strip()
+    existing = db.query(models.FoodBill).filter(models.FoodBill.bill_no == b_no).first()
     if existing:
         return existing
+
+    try:
+        # Robust payload deserialization handling both lists and serialized JSON
+        if payload.kot_numbers and len(payload.kot_numbers) > 0:
+            kots_json = json.dumps(payload.kot_numbers)
+        elif payload.kot_numbers_json:
+            kots_json = payload.kot_numbers_json
+        else:
+            kots_json = "[]"
+
+        if payload.items and len(payload.items) > 0:
+            items_json = json.dumps(payload.items)
+        elif payload.items_json:
+            items_json = payload.items_json
+        else:
+            items_json = "[]"
+
+        # Correct GST amount calculation
+        gst_amt = payload.gst_amount
+        if gst_amt <= 0:
+            if (payload.cgst_amount or 0) + (payload.sgst_amount or 0) > 0:
+                gst_amt = round((payload.cgst_amount or 0) + (payload.sgst_amount or 0), 2)
+            elif payload.taxable_amount > 0 and (payload.gst_percent or 0) > 0:
+                gst_amt = round(payload.taxable_amount * (payload.gst_percent / 100.0), 2)
+
+        gross_amt = payload.food_gross_amount or payload.foodGrossAmount or payload.taxable_amount
+        net_amt = payload.net_bill_amount or payload.netBillAmount or round(payload.taxable_amount + gst_amt - (payload.discount_amount or 0), 2)
+        settle_type = payload.settlementType or payload.settlement_type or "Cash"
+        r_no = payload.roomNo or payload.room_no
+        t_no = payload.tableNo or payload.table_no
+        g_name = payload.guestName or payload.guest_name
+
+        bill_dt = payload.date or today_ist_str()
+        bill_tm = payload.time or now_ist().strftime("%I:%M %p")
+        bill = models.FoodBill(
+            bill_no=b_no,
+            date=bill_dt,
+            time=bill_tm,
+            room_no=r_no,
+            table_no=t_no,
+            guest_name=g_name,
+            kot_numbers_json=kots_json,
+            items_json=items_json,
+            food_gross_amount=gross_amt,
+            discount_percent=payload.discount_percent,
+            discount_amount=payload.discount_amount,
+            taxable_amount=payload.taxable_amount,
+            gst_amount=gst_amt,
+            net_bill_amount=net_amt,
+            settlement_type=settle_type,
+            status=payload.status or "Settled"
+        )
+        db.add(bill)
         
-    bill = models.FoodBill(
-        bill_no=payload.bill_no,
-        date=payload.date,
-        time=payload.time,
-        room_no=payload.room_no,
-        table_no=payload.table_no,
-        guest_name=payload.guest_name,
-        kot_numbers_json=json.dumps(payload.kot_numbers or []),
-        items_json=json.dumps(payload.items or []),
-        food_gross_amount=payload.food_gross_amount,
-        discount_percent=payload.discount_percent,
-        discount_amount=payload.discount_amount,
-        taxable_amount=payload.taxable_amount,
-        gst_amount=payload.gst_amount,
-        net_bill_amount=payload.net_bill_amount,
-        settlement_type=payload.settlement_type,
-        status=payload.status or "Settled"
-    )
-    db.add(bill)
-    
-    # If Settle To Room, automatically add as folio item
-    if payload.settlement_type == "Settle To Room" and payload.room_no:
-        booking = find_booking_by_ref_or_room(db, payload.room_no)
-        if booking:
-            folio_item = models.RoomFolioItem(
-                booking_id=booking.id,
-                item_type="Food_Bill",
-                description=f"Restaurant Food Bill {payload.bill_no}",
-                sac_code="996331",
-                quantity=1,
-                unit_price=payload.taxable_amount,
-                taxable_amount=payload.taxable_amount,
-                gst_rate=5.0,
-                cgst_amount=round(payload.gst_amount / 2.0, 2),
-                sgst_amount=round(payload.gst_amount / 2.0, 2),
-                total_amount=payload.net_bill_amount,
-                status="Billed"
-            )
-            db.add(folio_item)
-            booking.total_price = round(booking.total_price + payload.net_bill_amount, 2)
-            booking.balance_due = max(0.0, round(booking.total_price - (booking.total_paid or 0.0), 2))
-            
-    # If table bill, vacate dining table
-    if payload.table_no:
-        clean_code = payload.table_no.replace("Table ", "").strip()
-        t = db.query(models.DiningTable).filter(
-            (models.DiningTable.table_code == clean_code) |
-            (models.DiningTable.table_name == payload.table_no)
-        ).first()
-        if t:
-            t.status = "Vacant"
-            t.active_session_id = None
-            
-    db.commit()
-    db.refresh(bill)
-    return bill
+        # If Settle To Room, automatically add as folio item and update Folio
+        if (str(settle_type).lower() in ["settle to room", "settletoroom", "room"]) and r_no:
+            booking = find_booking_by_ref_or_room(db, r_no)
+            if booking:
+                folio_item = models.RoomFolioItem(
+                    booking_id=booking.id,
+                    item_type="Food_Bill",
+                    description=f"Restaurant Food Bill {b_no}",
+                    sac_code="996331",
+                    quantity=1,
+                    unit_price=payload.taxable_amount,
+                    taxable_amount=payload.taxable_amount,
+                    gst_rate=payload.gst_percent or 5.0,
+                    cgst_amount=round(gst_amt / 2.0, 2),
+                    sgst_amount=round(gst_amt / 2.0, 2),
+                    total_amount=net_amt,
+                    status="Billed"
+                )
+                db.add(folio_item)
+                booking.total_price = round(booking.total_price + net_amt, 2)
+                booking.balance_due = max(0.0, round(booking.total_price - (booking.total_paid or 0.0), 2))
+
+                # Synchronize primary Master Folio (#20, #26)
+                folio = db.query(models.Folio).filter(models.Folio.booking_id == booking.id).first()
+                if folio:
+                    folio.total_charges = round((folio.total_charges or booking.total_price) + net_amt, 2)
+                    folio.balance_due = max(0.0, round(folio.total_charges - (folio.total_payments or 0.0), 2))
+                    folio.updated_at = now_utc()
+                
+        # If table bill, vacate dining table
+        if t_no:
+            clean_code = t_no.replace("Table ", "").strip()
+            t = db.query(models.DiningTable).filter(
+                (models.DiningTable.table_code == clean_code) |
+                (models.DiningTable.table_name == t_no)
+            ).first()
+            if t:
+                t.status = "Vacant"
+                t.active_session_id = None
+                
+        db.commit()
+        db.refresh(bill)
+        return bill
+    except Exception as exc:
+        db.rollback()
+        logger.error(f"[save_food_bill] Transaction failed, rolled back: {exc}")
+        raise HTTPException(status_code=500, detail=f"Failed to save food bill: {str(exc)}")
 
 @router.get("/food-bills", response_model=List[schemas.FoodBillResponse])
-def list_food_bills(limit: int = 100, db: Session = Depends(get_db)):
-    return db.query(models.FoodBill).order_by(models.FoodBill.id.desc()).limit(limit).all()
+def list_food_bills(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    room_no: Optional[str] = None,
+    table_no: Optional[str] = None,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    """Retrieve food bills with date range and room/table filtering (#74)."""
+    q = db.query(models.FoodBill)
+    if start_date:
+        q = q.filter(models.FoodBill.date >= start_date)
+    if end_date:
+        q = q.filter(models.FoodBill.date <= end_date)
+    if room_no:
+        q = q.filter(models.FoodBill.room_no == room_no)
+    if table_no:
+        q = q.filter(models.FoodBill.table_no == table_no)
+    return q.order_by(models.FoodBill.id.desc()).limit(limit).all()
 
 # --- 19. Petty Cash & General Hotel Expenses CRUD ---
 @router.post("/expenses", response_model=schemas.PettyExpenseResponse)
@@ -1873,30 +2157,49 @@ def save_petty_expense(payload: schemas.PettyExpenseCreate, db: Session = Depend
     if existing:
         return existing
 
-    expense = models.PettyExpense(
-        expense_no=exp_no,
-        date=payload.date,
-        category=payload.category,
-        amount=payload.amount,
-        payment_mode=payload.payment_mode,
-        paid_to=payload.paid_to,
-        description=payload.description,
-        bill_number=payload.bill_number,
-        approved_by=payload.approved_by or "General Manager"
-    )
-    db.add(expense)
-    log_audit(db, "PETTY_EXPENSE", exp_no, payload.approved_by or "General Manager", {
-        "category": payload.category,
-        "amount": payload.amount,
-        "paid_to": payload.paid_to
-    })
-    db.commit()
-    db.refresh(expense)
-    return expense
+    try:
+        expense = models.PettyExpense(
+            expense_no=exp_no,
+            date=payload.date,
+            category=payload.category,
+            amount=payload.amount,
+            payment_mode=payload.payment_mode,
+            paid_to=payload.paid_to,
+            description=payload.description,
+            bill_number=payload.bill_number,
+            approved_by=payload.approved_by or "General Manager"
+        )
+        db.add(expense)
+        log_audit(db, "PETTY_EXPENSE", exp_no, payload.approved_by or "General Manager", {
+            "category": payload.category,
+            "amount": payload.amount,
+            "paid_to": payload.paid_to
+        })
+        db.commit()
+        db.refresh(expense)
+        return expense
+    except Exception as exc:
+        db.rollback()
+        logger.error(f"[save_petty_expense] Transaction failed, rolled back: {exc}")
+        raise HTTPException(status_code=500, detail=f"Failed to record petty expense: {str(exc)}")
 
 @router.get("/expenses", response_model=List[schemas.PettyExpenseResponse])
-def list_petty_expenses(limit: int = 150, db: Session = Depends(get_db)):
-    return db.query(models.PettyExpense).order_by(models.PettyExpense.id.desc()).limit(limit).all()
+def list_petty_expenses(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    category: Optional[str] = None,
+    limit: int = 150,
+    db: Session = Depends(get_db)
+):
+    """Retrieve petty expenses with date range and category filtering (#74)."""
+    q = db.query(models.PettyExpense)
+    if start_date:
+        q = q.filter(models.PettyExpense.date >= start_date)
+    if end_date:
+        q = q.filter(models.PettyExpense.date <= end_date)
+    if category:
+        q = q.filter(models.PettyExpense.category.ilike(f"%{category}%"))
+    return q.order_by(models.PettyExpense.id.desc()).limit(limit).all()
 
 # --- 20. Historical Daily Night Audits Query ---
 @router.get("/night-audits", response_model=List[schemas.NightAuditResponse])
@@ -2043,7 +2346,33 @@ def void_kot_item(payload: schemas.KotVoidRequest, db: Session = Depends(get_db)
         timestamp=datetime.datetime.utcnow()
     )
     db.add(void_log)
+
+    # Immutable Audit Log Entry in audit_logs table (#48)
+    record_audit_log(
+        db=db,
+        action="KOT_VOIDED",
+        entity_type="KOT",
+        entity_id=kot_num or payload.item_name,
+        new_data={
+            "item_name": payload.item_name,
+            "quantity": qty,
+            "amount": void_amount,
+            "reason": payload.void_reason,
+            "table_no": table_num
+        },
+        staff_id=payload.steward_id or "Steward",
+        role="STEWARD"
+    )
+
     db.commit()
+    ws_manager.emit_kot_event_sync(
+        event_type="KOT_VOIDED",
+        kot_number=kot_num or "KOT-MANUAL",
+        table_number=table_num,
+        room_number=room_num,
+        items=[{"item_name": payload.item_name, "quantity": qty, "amount": void_amount, "reason": payload.void_reason}],
+        status="Voided"
+    )
 
     return {
         "success": True,
@@ -2771,150 +3100,188 @@ def cancel_group_booking(group_id: str, db: Session = Depends(get_db)):
 # --- 19. Full Checkout & Folio Settlement Persistence ---
 @router.post("/checkouts")
 def save_checkout(payload: schemas.CheckoutRecordCreate, db: Session = Depends(get_db)):
-    """Persist completed guest departure, checkout bill, and ledger settlement into PostgreSQL."""
-    inv = payload.invoice_no or payload.invoiceNo or f"GSR/{uuid.uuid4().hex[:4].upper()}/26-27"
-    r_no = str(payload.room_no or payload.roomNo or "101").strip()
-    g_name = payload.guest_name or payload.guestName or "Guest"
-    g_phone = payload.guest_phone or payload.guestPhone or ""
-    cin_d = payload.check_in_date or payload.checkInDate or datetime.date.today().isoformat()
-    cin_t = payload.check_in_time or payload.checkInTime or "12:00 PM"
-    cout_d = payload.check_out_date or payload.checkOutDate or datetime.date.today().isoformat()
-    cout_t = payload.check_out_time or payload.checkOutTime or "11:00 AM"
-    calc_type = payload.calculation_type or payload.calculationType or "12hour"
-    days = int(payload.number_of_days or payload.numberOfDays or 1)
-    tariff = float(payload.per_day_tariff or payload.perDayTariff or 0.0)
-    rent = float(payload.total_room_rent or payload.totalRoomRent or 0.0)
-    food = float(payload.food_amount or payload.foodAmount or 0.0)
-    gst_pct = float(payload.gst_percent or payload.gstPercent or 12.0)
-    gst_amt = float(payload.gst_amount or payload.gstAmount or 0.0)
-    cgst_amt = float(payload.cgst_amount or payload.cgstAmount or (gst_amt / 2.0))
-    sgst_amt = float(payload.sgst_amount or payload.sgstAmount or (gst_amt / 2.0))
-    add_o = float(payload.add_others or payload.addOthers or 0.0)
-    disc = float(payload.less_discount or payload.lessDiscount or 0.0)
-    adv_ded = float(payload.advance_deducted or payload.advanceDeducted or 0.0)
-    bill_amt = float(payload.bill_amount or payload.billAmount or 0.0)
-    net = float(payload.net_payable or payload.netPayable or 0.0)
-    pmode = payload.payment_mode or payload.paymentMode or "Cash"
-    
-    pmts = payload.payments if payload.payments is not None else []
-    pmts_json = json.dumps(pmts) if isinstance(pmts, list) else (payload.payments_json or "[]")
-    rem = payload.checkout_remark or payload.checkoutRemark or "Checked out successfully"
+    """Persist completed guest departure, checkout bill, and ledger settlement into PostgreSQL with atomic rollback and Folio settlement."""
+    try:
+        inv = payload.invoice_no or payload.invoiceNo or f"GSR/{uuid.uuid4().hex[:4].upper()}/26-27"
+        r_no = str(payload.room_no or payload.roomNo or "101").strip()
+        g_name = payload.guest_name or payload.guestName or "Guest"
+        g_phone = payload.guest_phone or payload.guestPhone or ""
+        cin_d = payload.check_in_date or payload.checkInDate or datetime.date.today().isoformat()
+        cin_t = payload.check_in_time or payload.checkInTime or "12:00 PM"
+        cout_d = payload.check_out_date or payload.checkOutDate or datetime.date.today().isoformat()
+        cout_t = payload.check_out_time or payload.checkOutTime or "11:00 AM"
+        calc_type = payload.calculation_type or payload.calculationType or "12hour"
+        days = int(payload.number_of_days or payload.numberOfDays or 1)
+        tariff = float(payload.per_day_tariff or payload.perDayTariff or 0.0)
+        rent = float(payload.total_room_rent or payload.totalRoomRent or 0.0)
+        food = float(payload.food_amount or payload.foodAmount or 0.0)
+        gst_pct = float(payload.gst_percent or payload.gstPercent or 12.0)
+        gst_amt = float(payload.gst_amount or payload.gstAmount or 0.0)
+        cgst_amt = float(payload.cgst_amount or payload.cgstAmount or (gst_amt / 2.0))
+        sgst_amt = float(payload.sgst_amount or payload.sgstAmount or (gst_amt / 2.0))
+        add_o = float(payload.add_others or payload.addOthers or 0.0)
+        disc = float(payload.less_discount or payload.lessDiscount or 0.0)
+        adv_ded = float(payload.advance_deducted or payload.advanceDeducted or 0.0)
+        bill_amt = float(payload.bill_amount or payload.billAmount or 0.0)
+        net = float(payload.net_payable or payload.netPayable or 0.0)
+        pmode = payload.payment_mode or payload.paymentMode or "Cash"
+        
+        pmts = payload.payments if payload.payments is not None else []
+        pmts_json = json.dumps(pmts) if isinstance(pmts, list) else (payload.payments_json or "[]")
+        rem = payload.checkout_remark or payload.checkoutRemark or "Checked out successfully"
 
-    existing = db.query(models.CheckoutRecord).filter(models.CheckoutRecord.invoice_no == inv).first()
-    if existing:
-        existing.room_no = r_no
-        existing.guest_name = g_name
-        existing.guest_phone = g_phone
-        existing.check_in_date = cin_d
-        existing.check_in_time = cin_t
-        existing.check_out_date = cout_d
-        existing.check_out_time = cout_t
-        existing.calculation_type = calc_type
-        existing.number_of_days = days
-        existing.per_day_tariff = tariff
-        existing.total_room_rent = rent
-        existing.food_amount = food
-        existing.gst_percent = gst_pct
-        existing.gst_amount = gst_amt
-        existing.cgst_amount = cgst_amt
-        existing.sgst_amount = sgst_amt
-        existing.add_others = add_o
-        existing.less_discount = disc
-        existing.advance_deducted = adv_ded
-        existing.bill_amount = bill_amt
-        existing.net_payable = net
-        existing.payment_mode = pmode
-        existing.payments_json = pmts_json
-        existing.checkout_remark = rem
-        existing.city = payload.city
-        existing.state = payload.state
-        existing.country = payload.country or "India"
-        existing.pin_code = payload.pin_code or payload.pinCode
-        existing.sac_code = payload.sac_code or payload.sacCode or "996311"
-        existing.invoice_format = payload.invoice_format or payload.invoiceFormat or "A4_Standard"
-        chk = existing
-    else:
-        chk = models.CheckoutRecord(
-            invoice_no=inv,
-            room_no=r_no,
-            room_type=payload.room_type or payload.roomType or "DELUXE",
-            guest_name=g_name,
-            guest_phone=g_phone,
-            check_in_date=cin_d,
-            check_in_time=cin_t,
-            check_out_date=cout_d,
-            check_out_time=cout_t,
-            calculation_type=calc_type,
-            number_of_days=days,
-            per_day_tariff=tariff,
-            total_room_rent=rent,
-            food_amount=food,
-            gst_percent=gst_pct,
-            gst_amount=gst_amt,
-            cgst_amount=cgst_amt,
-            sgst_amount=sgst_amt,
-            add_others=add_o,
-            less_discount=disc,
-            advance_deducted=adv_ded,
-            bill_amount=bill_amt,
-            net_payable=net,
-            payment_mode=pmode,
-            payments_json=pmts_json,
-            checkout_remark=rem,
-            city=payload.city,
-            state=payload.state,
-            country=payload.country or "India",
-            pin_code=payload.pin_code or payload.pinCode,
-            sac_code=payload.sac_code or payload.sacCode or "996311",
-            invoice_format=payload.invoice_format or payload.invoiceFormat or "A4_Standard"
-        )
-        db.add(chk)
+        existing = db.query(models.CheckoutRecord).filter(models.CheckoutRecord.invoice_no == inv).first()
+        if existing:
+            existing.room_no = r_no
+            existing.guest_name = g_name
+            existing.guest_phone = g_phone
+            existing.check_in_date = cin_d
+            existing.check_in_time = cin_t
+            existing.check_out_date = cout_d
+            existing.check_out_time = cout_t
+            existing.calculation_type = calc_type
+            existing.number_of_days = days
+            existing.per_day_tariff = tariff
+            existing.total_room_rent = rent
+            existing.food_amount = food
+            existing.gst_percent = gst_pct
+            existing.gst_amount = gst_amt
+            existing.cgst_amount = cgst_amt
+            existing.sgst_amount = sgst_amt
+            existing.add_others = add_o
+            existing.less_discount = disc
+            existing.advance_deducted = adv_ded
+            existing.bill_amount = bill_amt
+            existing.net_payable = net
+            existing.payment_mode = pmode
+            existing.payments_json = pmts_json
+            existing.checkout_remark = rem
+            existing.city = payload.city
+            existing.state = payload.state
+            existing.country = payload.country or "India"
+            existing.pin_code = payload.pin_code or payload.pinCode
+            existing.sac_code = payload.sac_code or payload.sacCode or "996311"
+            existing.invoice_format = payload.invoice_format or payload.invoiceFormat or "A4_Standard"
+            chk = existing
+        else:
+            chk = models.CheckoutRecord(
+                invoice_no=inv,
+                room_no=r_no,
+                room_type=payload.room_type or payload.roomType or "DELUXE",
+                guest_name=g_name,
+                guest_phone=g_phone,
+                check_in_date=cin_d,
+                check_in_time=cin_t,
+                check_out_date=cout_d,
+                check_out_time=cout_t,
+                calculation_type=calc_type,
+                number_of_days=days,
+                per_day_tariff=tariff,
+                total_room_rent=rent,
+                food_amount=food,
+                gst_percent=gst_pct,
+                gst_amount=gst_amt,
+                cgst_amount=cgst_amt,
+                sgst_amount=sgst_amt,
+                add_others=add_o,
+                less_discount=disc,
+                advance_deducted=adv_ded,
+                bill_amount=bill_amt,
+                net_payable=net,
+                payment_mode=pmode,
+                payments_json=pmts_json,
+                checkout_remark=rem,
+                city=payload.city,
+                state=payload.state,
+                country=payload.country or "India",
+                pin_code=payload.pin_code or payload.pinCode,
+                sac_code=payload.sac_code or payload.sacCode or "996311",
+                invoice_format=payload.invoice_format or payload.invoiceFormat or "A4_Standard"
+            )
+            db.add(chk)
 
-    # Transition Room to 'Dirty' for Housekeeping Turnover
-    room_obj = db.query(models.Room).filter(
-        (models.Room.id == int(r_no) if r_no.isdigit() else False) |
-        (models.Room.name.ilike(f"%{r_no}%"))
-    ).first()
-    if room_obj:
-        room_obj.housekeeping_status = "Dirty"
-        room_obj.is_available = True
+        # Transition Room to 'Dirty' for Housekeeping Turnover
+        room_obj = find_room_by_no_or_name(db, r_no)
 
-        # Complete and close active booking if present
-        active_b = db.query(models.Booking).filter(
-            models.Booking.room_id == room_obj.id,
-            models.Booking.status.in_(["Checked-In", "Confirmed"])
-        ).order_by(models.Booking.id.desc()).first()
+        active_b = None
+        if room_obj:
+            room_obj.housekeeping_status = "Dirty"
+            room_obj.is_available = True
 
+            # Complete and close active booking if present
+            active_b = db.query(models.Booking).filter(
+                models.Booking.room_id == room_obj.id,
+                models.Booking.status.in_(["Checked-In", "Confirmed"])
+            ).order_by(models.Booking.id.desc()).first()
+
+            if active_b:
+                acquire_canonical_locks(db, booking_id=active_b.id, room_id=room_obj.id)
+                active_b.status = "Checked-Out"
+                active_b.actual_check_out = datetime.datetime.utcnow()
+                active_b.payment_status = "Paid"
+                active_b.balance_due = 0.0
+
+                # Record final settlement payment record
+                if net > 0:
+                    pmt_rec = models.BookingPayment(
+                        booking_id=active_b.id,
+                        payment_type="Settlement",
+                        payment_mode=pmode,
+                        amount=net,
+                        notes=f"Checkout settlement for Room {r_no} (Inv: {inv})",
+                        collected_by="Reception Cashier"
+                    )
+                    db.add(pmt_rec)
+
+                # Synchronize Master Folio to SETTLED
+                folio = db.query(models.Folio).filter(models.Folio.booking_id == active_b.id).first()
+                if folio:
+                    folio.total_payments = round((folio.total_payments or 0.0) + net, 2)
+                    folio.balance_due = 0.0
+                    folio.status = "SETTLED"
+                    folio.updated_at = now_utc()
+
+        log_audit(db, "CHECK_OUT", inv, "Reception Cashier", {
+            "room_no": r_no,
+            "guest_name": g_name,
+            "net_payable": net,
+            "payment_mode": pmode
+        })
+
+        db.commit()
+        db.refresh(chk)
+
+        # Broadcast real-time events to all connected front-desk and housekeeping terminals (#80)
         if active_b:
-            active_b.status = "Checked-Out"
-            active_b.actual_check_out = datetime.datetime.utcnow()
-            active_b.payment_status = "Paid"
-            active_b.balance_due = 0.0
+            ws_manager.emit_booking_event_sync(
+                event_type="CHECK_OUT",
+                booking_ref=active_b.booking_ref,
+                status="Checked-Out",
+                room_number=room_obj.name if room_obj else r_no,
+                guest_name=active_b.guest_name
+            )
+        if room_obj:
+            ws_manager.emit_room_status_event_sync(
+                room_id=room_obj.id,
+                room_name=room_obj.name,
+                housekeeping_status="Dirty",
+                old_status="Occupied",
+                updated_by="Reception Cashier"
+            )
 
-            # Record final settlement payment record
-            if net > 0:
-                pmt_rec = models.BookingPayment(
-                    booking_id=active_b.id,
-                    payment_type="Settlement",
-                    payment_mode=pmode,
-                    amount=net,
-                    notes=f"Checkout settlement for Room {r_no} (Inv: {inv})",
-                    collected_by="Reception Cashier"
-                )
-                db.add(pmt_rec)
-
-    db.commit()
-    db.refresh(chk)
-
-    return {
-        "success": True,
-        "message": f"Checkout invoice {chk.invoice_no} for Room {chk.room_no} securely saved to PostgreSQL database.",
-        "invoiceNo": chk.invoice_no,
-        "roomNo": chk.room_no,
-        "guestName": chk.guest_name,
-        "netPayable": chk.net_payable,
-        "paymentMode": chk.payment_mode
-    }
+        return {
+            "success": True,
+            "message": f"Checkout invoice {chk.invoice_no} for Room {chk.room_no} securely saved to PostgreSQL database.",
+            "invoiceNo": chk.invoice_no,
+            "roomNo": chk.room_no,
+            "guestName": chk.guest_name,
+            "netPayable": chk.net_payable,
+            "paymentMode": chk.payment_mode
+        }
+    except Exception as exc:
+        db.rollback()
+        logger.error(f"[save_checkout] Checkout save failed, rolled back: {exc}")
+        raise HTTPException(status_code=500, detail=f"Checkout persistence failed: {str(exc)}")
 
 @router.get("/checkouts")
 def get_checkouts(db: Session = Depends(get_db)):
@@ -3012,10 +3379,7 @@ def save_advance_receipt(payload: schemas.AdvanceReceiptCreate, db: Session = De
         db.add(adv)
 
     # Link advance to active room booking in PostgreSQL
-    room_obj = db.query(models.Room).filter(
-        (models.Room.id == int(r_no) if r_no.isdigit() else False) |
-        (models.Room.name.ilike(f"%{r_no}%"))
-    ).first()
+    room_obj = find_room_by_no_or_name(db, r_no)
     if room_obj:
         active_b = db.query(models.Booking).filter(
             models.Booking.room_id == room_obj.id,
@@ -3172,7 +3536,7 @@ def save_party_account(payload: schemas.PartyAccountCreate, db: Session = Depend
     """Save or update a party account (Customer, Vendor, Corporate, Bank) in PostgreSQL."""
     existing = db.query(models.PartyAccount).filter(
         (models.PartyAccount.name.ilike(payload.name.strip())) |
-        (models.PartyAccount.id == payload.id if payload.id else False)
+        (models.PartyAccount.id == (payload.id or "___NONE___"))
     ).first()
 
     b_type = payload.balance_type or payload.balanceType or "Dr"
@@ -3384,6 +3748,22 @@ def save_general_payment(payload: schemas.GeneralPaymentCreate, db: Session = De
         party.balance = round(party.balance + payload.amount, 2)
         party.balance_type = "Dr"
 
+    # Immutable Audit Log Entry in audit_logs (#48)
+    record_audit_log(
+        db=db,
+        action="PAYOUT_ISSUED",
+        entity_type="PAYMENT",
+        entity_id=pmt.payment_no,
+        new_data={
+            "account_name": acc_name,
+            "amount": payload.amount,
+            "payment_mode": p_mode,
+            "voucher_no": v_no
+        },
+        staff_id="Accounts",
+        role="MANAGER"
+    )
+
     db.commit()
     db.refresh(pmt)
     return {
@@ -3437,7 +3817,7 @@ def save_godown(payload: schemas.GodownCreate, db: Session = Depends(get_db)):
     """Save or update a godown/store location in PostgreSQL."""
     existing = db.query(models.Godown).filter(
         (models.Godown.name.ilike(payload.name.strip())) |
-        (models.Godown.godown_id == payload.id if payload.id else False)
+        (models.Godown.godown_id == (payload.id or "___NONE___"))
     ).first()
 
     if existing:
@@ -3497,7 +3877,7 @@ def save_item_group(payload: schemas.ItemGroupCreate, db: Session = Depends(get_
     """Save or update an inventory item group in PostgreSQL."""
     existing = db.query(models.ItemGroup).filter(
         (models.ItemGroup.name.ilike(payload.name.strip())) |
-        (models.ItemGroup.group_id == payload.id if payload.id else False)
+        (models.ItemGroup.group_id == (payload.id or "___NONE___"))
     ).first()
 
     h_group = payload.head_group or payload.headGroup or "Raw_Material"
@@ -3908,6 +4288,22 @@ def record_agent_payout_voucher(payload: schemas.AgentPayoutVoucherCreate, db: S
         agent.total_commission_paid = round(agent.total_commission_paid + payload.amount, 2)
         agent.balance_payable = max(0.0, round(agent.balance_payable - payload.amount, 2))
 
+    # Immutable Audit Log Entry in audit_logs (#48)
+    record_audit_log(
+        db=db,
+        action="PAYOUT_ISSUED",
+        entity_type="PAYOUT",
+        entity_id=voucher.voucher_no,
+        new_data={
+            "agent_id": agt_id,
+            "agent_name": agt_name,
+            "amount": payload.amount,
+            "payment_mode": payload.payment_mode or "CASH"
+        },
+        staff_id=payload.created_by or "Accounts",
+        role="MANAGER"
+    )
+
     db.commit()
     db.refresh(voucher)
     return {
@@ -3939,6 +4335,135 @@ def get_agent_payout_vouchers(db: Session = Depends(get_db)):
         "createdBy": v.created_by,
         "printTimestamp": v.created_at.strftime("%Y-%m-%d %H:%M:%S") if v.created_at else None
     } for v in vouchers]
+
+# --- 30B. Agent Commission Accruals CRUD & Status Updates ---
+@router.get("/agent-commissions")
+@router.get("/agent-commission-accruals")
+def get_agent_commissions(
+    agent_id: Optional[str] = None,
+    status: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Retrieve agent commission accrual entries from PostgreSQL (#74)."""
+    q = db.query(models.AgentCommissionAccrual)
+    if agent_id:
+        q = q.filter(models.AgentCommissionAccrual.agent_id == agent_id)
+    if status:
+        q = q.filter(models.AgentCommissionAccrual.status.ilike(status))
+    records = q.order_by(models.AgentCommissionAccrual.created_at.desc()).limit(200).all()
+    return [{
+        "id": c.commission_id or f"comm-{c.id}",
+        "commissionId": c.commission_id,
+        "agentId": c.agent_id,
+        "agentName": c.agent_name,
+        "bookingRefNo": c.booking_ref_no,
+        "roomNo": c.room_no,
+        "guestName": c.guest_name,
+        "checkInDate": c.check_in_date,
+        "checkOutDate": c.check_out_date,
+        "numberOfNights": c.number_of_nights,
+        "roomTariff": c.room_tariff,
+        "grossRoomTariff": c.gross_room_tariff,
+        "commissionType": c.commission_type,
+        "commissionRate": c.commission_rate,
+        "grossCommission": c.gross_commission,
+        "tdsPercentage": c.tds_percentage,
+        "tdsAmount": c.tds_amount,
+        "netPayableCommission": c.net_payable_commission,
+        "status": c.status,
+        "payoutVoucherNo": c.payout_voucher_no,
+        "payoutDate": c.payout_date,
+        "remarks": c.remarks,
+        "createdAt": c.created_at.isoformat() if c.created_at else None
+    } for c in records]
+
+@router.post("/agent-commissions")
+@router.post("/agent-commission-accruals")
+def save_agent_commission(payload: schemas.AgentCommissionAccrualCreate, db: Session = Depends(get_db)):
+    """Record or update an agent commission accrual in PostgreSQL (#74)."""
+    c_id = payload.commission_id or f"COMM-{int(datetime.datetime.utcnow().timestamp()) % 1000000}"
+    existing = db.query(models.AgentCommissionAccrual).filter(models.AgentCommissionAccrual.commission_id == c_id).first()
+    
+    gross_comm = payload.gross_commission or payload.grossCommission or 0.0
+    comm_rate = payload.commission_rate or payload.commissionRate or 10.0
+    comm_type = payload.commission_type or payload.commissionType or "PERCENTAGE"
+    net_comm = payload.net_payable_commission or payload.netPayableCommission or gross_comm
+    
+    if existing:
+        existing.agent_id = payload.agent_id or payload.agentId or existing.agent_id
+        existing.agent_name = payload.agent_name or payload.agentName or existing.agent_name
+        existing.room_no = payload.room_no or payload.roomNo or existing.room_no
+        existing.guest_name = payload.guest_name or payload.guestName or existing.guest_name
+        existing.gross_commission = gross_comm
+        existing.net_payable_commission = net_comm
+        existing.status = payload.status or existing.status or "Pending"
+        comm_rec = existing
+    else:
+        comm_rec = models.AgentCommissionAccrual(
+            commission_id=c_id,
+            agent_id=payload.agent_id or payload.agentId or "AGT-101",
+            agent_name=payload.agent_name or payload.agentName or "Agent",
+            booking_ref_no=payload.booking_ref_no or payload.bookingRefNo,
+            room_no=payload.room_no or payload.roomNo or "101",
+            guest_name=payload.guest_name or payload.guestName or "Guest",
+            check_in_date=payload.check_in_date or payload.checkInDate or datetime.date.today().isoformat(),
+            check_out_date=payload.check_out_date or payload.checkOutDate or datetime.date.today().isoformat(),
+            number_of_nights=payload.number_of_nights or payload.numberOfNights or 1,
+            room_tariff=payload.room_tariff or payload.roomTariff or 0.0,
+            gross_room_tariff=payload.gross_room_tariff or payload.grossRoomTariff or 0.0,
+            commission_type=comm_type,
+            commission_rate=comm_rate,
+            gross_commission=gross_comm,
+            tds_percentage=payload.tds_percentage or payload.tdsPercentage or 0.0,
+            tds_amount=payload.tds_amount or payload.tdsAmount or 0.0,
+            net_payable_commission=net_comm,
+            status=payload.status or "Pending",
+            payout_voucher_no=payload.payout_voucher_no or payload.payoutVoucherNo,
+            payout_date=payload.payout_date or payload.payoutDate,
+            remarks=payload.remarks or "Commission accrued on guest stay"
+        )
+        db.add(comm_rec)
+        
+    db.commit()
+    db.refresh(comm_rec)
+    return {"success": True, "commissionId": comm_rec.commission_id, "status": comm_rec.status}
+
+@router.put("/agent-commissions/{commission_id}/status")
+@router.put("/agent-commission-accruals/{commission_id}/status")
+def update_agent_commission_status(
+    commission_id: str,
+    payload: dict,
+    db: Session = Depends(get_db)
+):
+    """Update status of commission accrual (e.g. mark Settled upon voucher issue) (#74)."""
+    comm = db.query(models.AgentCommissionAccrual).filter(
+        (models.AgentCommissionAccrual.commission_id == commission_id) |
+        (models.AgentCommissionAccrual.id == (int(commission_id) if commission_id.isdigit() else -1))
+    ).first()
+    if not comm:
+        raise HTTPException(status_code=404, detail="Commission accrual record not found")
+        
+    if "status" in payload: comm.status = payload["status"]
+    if "payoutVoucherNo" in payload: comm.payout_voucher_no = payload["payoutVoucherNo"]
+    if "payoutDate" in payload: comm.payout_date = payload["payoutDate"]
+    
+    db.commit()
+    db.refresh(comm)
+    return {"success": True, "commissionId": comm.commission_id, "status": comm.status}
+
+@router.delete("/agent-commissions/{commission_id}")
+@router.delete("/agent-commission-accruals/{commission_id}")
+def delete_agent_commission(commission_id: str, db: Session = Depends(get_db)):
+    """Delete an agent commission record from PostgreSQL."""
+    comm = db.query(models.AgentCommissionAccrual).filter(
+        (models.AgentCommissionAccrual.commission_id == commission_id) |
+        (models.AgentCommissionAccrual.id == (int(commission_id) if commission_id.isdigit() else -1))
+    ).first()
+    if not comm:
+        raise HTTPException(status_code=404, detail="Commission accrual record not found")
+    db.delete(comm)
+    db.commit()
+    return {"success": True, "message": f"Commission {commission_id} deleted."}
 
 # --- 31. Shift Handovers & Cash Reconciliation ---
 @router.post("/shift-handovers")
@@ -3997,13 +4522,37 @@ def save_shift_handover(payload: schemas.ShiftHandoverCreate, db: Session = Depe
 
     db.commit()
     db.refresh(handover)
+
+    # Instant Revocation of Refresh Tokens upon Shift Handover (#44, #47)
+    revoked_count = revoke_user_refresh_tokens(db, user_id=u_email, reason="SHIFT_HANDOVER")
+    if u_name and u_name != u_email:
+        revoke_user_refresh_tokens(db, user_id=u_name, reason="SHIFT_HANDOVER")
+
+    # Record immutable audit log (#48)
+    record_audit_log(
+        db=db,
+        action="SHIFT_HANDOVER",
+        entity_type="SHIFT",
+        entity_id=handover.shift_id,
+        new_data={
+            "shift_id": handover.shift_id,
+            "outgoing_user": u_email,
+            "incoming_user": handover.handover_to_user,
+            "net_physical_cash": handover.net_physical_cash_in_drawer,
+            "revoked_tokens": revoked_count
+        },
+        staff_id=u_email,
+        role="RECEPTIONIST"
+    )
+
     return {
         "success": True,
-        "message": f"Shift Handover {handover.shift_id} recorded in PostgreSQL.",
+        "message": f"Shift Handover {handover.shift_id} recorded in PostgreSQL. Active sessions revoked (#44).",
         "shiftId": handover.shift_id,
         "shiftDate": handover.shift_date,
         "netPhysicalCashInDrawer": handover.net_physical_cash_in_drawer,
-        "status": handover.status
+        "status": handover.status,
+        "revoked_tokens": revoked_count
     }
 
 @router.get("/shift-handovers")
@@ -4841,11 +5390,16 @@ def delete_room_type(type_id: str, db: Session = Depends(get_db)):
 # 3. Restaurant Menu Items
 @router.get("/menu-items")
 def list_menu_items(category: Optional[str] = None, db: Session = Depends(get_db)):
+    cache_key = f"menu:{category}"
+    cached = get_cached_menu(cache_key)
+    if cached is not None:
+        return cached
+
     q = db.query(models.MenuItem)
     if category:
         q = q.filter(models.MenuItem.category == category)
     items = q.order_by(models.MenuItem.category.asc(), models.MenuItem.name.asc()).all()
-    return [{
+    res = [{
         "id": it.item_code,
         "code": it.item_code,
         "name": it.name,
@@ -4861,6 +5415,8 @@ def list_menu_items(category: Optional[str] = None, db: Session = Depends(get_db
         "sacCode": it.sac_code,
         "noDiscount": it.no_discount
     } for it in items]
+    set_cached_menu(cache_key, res)
+    return res
 
 @router.post("/menu-items")
 def save_menu_item(payload: schemas.MenuItemCreate, db: Session = Depends(get_db)):
@@ -4887,6 +5443,7 @@ def save_menu_item(payload: schemas.MenuItemCreate, db: Session = Depends(get_db
 
     db.commit()
     db.refresh(it)
+    invalidate_menu_cache()
     return {"success": True, "id": it.item_code, "name": it.name, "rate": it.rate}
 
 @router.post("/menu-items/bulk")
@@ -4905,6 +5462,7 @@ def save_menu_items_bulk(items: List[schemas.MenuItemCreate], db: Session = Depe
         if payload.unit: it.unit = payload.unit
         saved += 1
     db.commit()
+    invalidate_menu_cache()
     return {"success": True, "savedCount": saved}
 
 @router.delete("/menu-items/{item_code}")
@@ -4914,6 +5472,7 @@ def delete_menu_item(item_code: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Menu item not found")
     db.delete(it)
     db.commit()
+    invalidate_menu_cache()
     return {"success": True, "message": f"Menu item {item_code} deleted"}
 
 # 4. Housekeeping Duty Records
@@ -4952,7 +5511,7 @@ def save_housekeeping_record(payload: schemas.HousekeepingRecordCreate, db: Sess
     if payload.remarks: hk.remarks = payload.remarks
 
     # Also sync room housekeeping status
-    room = db.query(models.Room).filter(models.Room.id == int(r_no) if r_no.isdigit() else False).first()
+    room = find_room_by_no_or_name(db, r_no)
     if room:
         if "Clean" in hk.status:
             room.housekeeping_status = "Clean"
@@ -5362,11 +5921,7 @@ def extend_guest_stay(payload: schemas.ExtendStayRequest, db: Session = Depends(
     if not room_str or not new_out:
         raise HTTPException(status_code=400, detail="Room number and new checkout date are required.")
 
-    room = db.query(models.Room).filter(
-        (models.Room.id == int(room_str) if str(room_str).isdigit() else False) |
-        (models.Room.name == str(room_str)) |
-        (models.Room.name.ilike(f"%{room_str}%"))
-    ).first()
+    room = find_room_by_no_or_name(db, room_str)
 
     booking = None
     if room:
@@ -5413,11 +5968,7 @@ def extend_guest_stay(payload: schemas.ExtendStayRequest, db: Session = Depends(
 @router.post("/room-folio-items")
 def post_room_folio_item(payload: schemas.RoomFolioItemCreate, db: Session = Depends(get_db)):
     room_str = payload.room_no or payload.roomNo or "101"
-    room = db.query(models.Room).filter(
-        (models.Room.id == int(room_str) if str(room_str).isdigit() else False) |
-        (models.Room.name == str(room_str)) |
-        (models.Room.name.ilike(f"%{room_str}%"))
-    ).first()
+    room = find_room_by_no_or_name(db, room_str)
 
     booking = None
     if room:
@@ -5488,11 +6039,7 @@ def post_room_folio_item(payload: schemas.RoomFolioItemCreate, db: Session = Dep
 
 @router.get("/room-folio-items/{room_no}")
 def get_room_folio_items(room_no: str, db: Session = Depends(get_db)):
-    room = db.query(models.Room).filter(
-        (models.Room.id == int(room_no) if str(room_no).isdigit() else False) |
-        (models.Room.name == str(room_no)) |
-        (models.Room.name.ilike(f"%{room_no}%"))
-    ).first()
+    room = find_room_by_no_or_name(db, room_no)
     
     bookings = db.query(models.Booking).filter(
         (models.Booking.room_id == (room.id if room else -1)) |
@@ -5994,19 +6541,25 @@ def create_or_save_room(payload: dict, db: Session = Depends(get_db)):
         (models.Room.slug == slug) | (models.Room.name == room_no) | (models.Room.id == (int(room_no) if room_no.isdigit() else -1))
     ).first()
     if existing:
+        old_rate = existing.price_per_night
+        new_rate = float(payload.get("base_rate") or payload.get("tariff") or payload.get("price") or existing.price_per_night)
+        if new_rate != old_rate:
+            audit_tariff_change(db=db, room_id=existing.id, old_price=old_rate, new_price=new_rate)
         existing.room_type = payload.get("room_type") or payload.get("roomType") or existing.room_type
-        existing.price_per_night = float(payload.get("base_rate") or payload.get("tariff") or payload.get("price") or existing.price_per_night)
+        existing.price_per_night = new_rate
         existing.housekeeping_status = payload.get("status") or existing.housekeeping_status
         existing.amenities = str(payload.get("amenities") or payload.get("facilities") or existing.amenities)
         db.commit()
         db.refresh(existing)
+        invalidate_rooms_cache()
         return {"success": True, "action": "updated", "roomId": existing.id, "roomNo": existing.name}
     
+    init_rate = float(payload.get("base_rate") or payload.get("tariff") or payload.get("price") or 1500.0)
     room = models.Room(
         name=room_no or f"Room {uuid.uuid4().hex[:4].upper()}",
         slug=slug,
         room_type=payload.get("room_type") or payload.get("roomType") or "Deluxe",
-        price_per_night=float(payload.get("base_rate") or payload.get("tariff") or payload.get("price") or 1500.0),
+        price_per_night=init_rate,
         capacity=int(payload.get("capacity") or 2),
         total_inventory=1,
         bed_type=payload.get("bedType") or "King Bed",
@@ -6020,6 +6573,8 @@ def create_or_save_room(payload: dict, db: Session = Depends(get_db)):
     db.add(room)
     db.commit()
     db.refresh(room)
+    audit_tariff_change(db=db, room_id=room.id, old_price=0.0, new_price=init_rate)
+    invalidate_rooms_cache()
     return {"success": True, "action": "created", "roomId": room.id, "roomNo": room.name}
 
 @router.put("/rooms/{room_id}")
@@ -6034,13 +6589,18 @@ def update_room_endpoint(room_id: str, payload: dict, db: Session = Depends(get_
     if "roomType" in payload or "room_type" in payload:
         r.room_type = payload.get("room_type") or payload.get("roomType") or r.room_type
     if "tariff" in payload or "base_rate" in payload or "price" in payload:
-        r.price_per_night = float(payload.get("tariff") or payload.get("base_rate") or payload.get("price") or r.price_per_night)
+        old_tariff = r.price_per_night
+        new_tariff = float(payload.get("tariff") or payload.get("base_rate") or payload.get("price") or r.price_per_night)
+        if new_tariff != old_tariff:
+            audit_tariff_change(db=db, room_id=r.id, old_price=old_tariff, new_price=new_tariff)
+        r.price_per_night = new_tariff
     if "status" in payload:
         r.housekeeping_status = payload["status"]
     if "facilities" in payload or "amenities" in payload:
         r.amenities = str(payload.get("facilities") or payload.get("amenities") or r.amenities)
     db.commit()
     db.refresh(r)
+    invalidate_rooms_cache()
     return {"success": True, "roomId": r.id, "roomNo": r.name}
 
 @router.delete("/rooms/{room_id}")
@@ -6051,6 +6611,7 @@ def delete_room_endpoint(room_id: str, db: Session = Depends(get_db)):
         (models.Room.slug == f"room-{room_id.lower()}")
     ).delete(synchronize_session=False)
     db.commit()
+    invalidate_rooms_cache()
     return {"success": True, "deletedCount": deleted}
 
 @router.delete("/tables/{table_id}")

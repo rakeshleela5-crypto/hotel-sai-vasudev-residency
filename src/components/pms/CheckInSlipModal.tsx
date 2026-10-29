@@ -226,7 +226,7 @@ export const CheckInSlipModal: React.FC<CheckInSlipModalProps> = ({
 
         {/* Modal Action Buttons */}
         <div className="pms-btn-group" style={{ padding: '12px 16px', background: '#f8fafc' }}>
-          <button type="button" onClick={onClose} className="btn-pms-cancel">
+          <button id="close-checkin-slip-btn" type="button" onClick={onClose} className="btn-pms-cancel">
             Close
           </button>
           <button type="button" onClick={handlePrint} className="btn-pms-print">

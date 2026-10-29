@@ -1,0 +1,1360 @@
+[
+  {
+    "file": "src\\services\\api.ts",
+    "line": 96,
+    "url_raw": "`${rootUrl}/health`",
+    "method": "GET",
+    "context": "    try {\n      const rootUrl = API_BASE_URL.replace('/api/v1', '');\n      const res = await fetch(`${rootUrl}/health`, { method: 'GET' });\n      if (res.ok) {\n        return await res.json();\n      }\n      return { status: 'offline', database: 'unavailable', engine: 'Railway Postgres / SQLite' };\n    } catch {\n      return { status: 'offline', database: 'unavailable', engine: 'Railway Postgres / SQLite' };\n    }"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 277,
+    "url_raw": "`${API_BASE_URL}/bookings/${bookingRef.trim().toUpperCase()}`",
+    "method": "GET",
+    "context": "\n  async getBookingByRef(bookingRef: string): Promise<BookingResponse> {\n    const res = await fetch(`${API_BASE_URL}/bookings/${bookingRef.trim().toUpperCase()}`);\n    if (!res.ok) throw new Error(`Booking ${bookingRef} not found`);\n    return await res.json();\n  },\n\n  async getBookingInvoice(bookingRef: string): Promise<TaxInvoice> {\n    const res = await fetch(`${API_BASE_URL}/bookings/${bookingRef.trim().toUpperCase()}/invoice`);\n    if (!res.ok) throw new Error(`Tax invoice for ${bookingRef} not found`);"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 283,
+    "url_raw": "`${API_BASE_URL}/bookings/${bookingRef.trim().toUpperCase()}/invoice`",
+    "method": "GET",
+    "context": "\n  async getBookingInvoice(bookingRef: string): Promise<TaxInvoice> {\n    const res = await fetch(`${API_BASE_URL}/bookings/${bookingRef.trim().toUpperCase()}/invoice`);\n    if (!res.ok) throw new Error(`Tax invoice for ${bookingRef} not found`);\n    return await res.json();\n  },\n\n  getPrintSlipUrl(bookingRef: string): string {\n    return `${API_BASE_URL}/bookings/${bookingRef.trim().toUpperCase()}/print-slip`;\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 298,
+    "url_raw": "`${API_BASE_URL}/bookings/${encodeURIComponent(bookingRef.trim().toUpperCase())}/status`",
+    "method": "PATCH",
+    "context": "    cancellationReason?: string\n  ): Promise<BookingResponse> {\n    const res = await fetch(`${API_BASE_URL}/bookings/${encodeURIComponent(bookingRef.trim().toUpperCase())}/status`, {\n      method: 'PATCH',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify({\n        status,\n        payment_status: paymentStatus,\n        cancellation_reason: cancellationReason\n      })"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 317,
+    "url_raw": "`${API_BASE_URL}/bookings?${params.toString()}`",
+    "method": "GET",
+    "context": "    const params = new URLSearchParams();\n    if (status && status !== 'All') params.append('status', status);\n    const res = await fetch(`${API_BASE_URL}/bookings?${params.toString()}`);\n    if (!res.ok) throw new Error(`Failed to fetch bookings`);\n    return await res.json();\n  },\n\n  async submitInquiry(payload: InquiryPayload): Promise<InquiryResponse> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/inquiries`, {"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 324,
+    "url_raw": "`${API_BASE_URL}/inquiries`",
+    "method": "POST",
+    "context": "  async submitInquiry(payload: InquiryPayload): Promise<InquiryResponse> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/inquiries`, {\n        method: 'POST',\n        headers: {\n          'Content-Type': 'application/json',\n          'Accept': 'application/json'\n        },\n        body: JSON.stringify(payload)\n      });"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 349,
+    "url_raw": "`${API_BASE_URL}/pms/room-shift`",
+    "method": "POST",
+    "context": "  // --- PMS Enterprise Operations ---\n  async executeRoomShift(data: { booking_ref: string; to_room_id: number; reason: string; shifted_by?: string }) {\n    const res = await fetch(`${API_BASE_URL}/pms/room-shift`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(data)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Room shift failed');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 363,
+    "url_raw": "`${API_BASE_URL}/pms/room-shifts`",
+    "method": "GET",
+    "context": "  async getRoomShifts(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/room-shifts`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 372,
+    "url_raw": "`${API_BASE_URL}/pms/payments`",
+    "method": "POST",
+    "context": "\n  async recordPayment(data: { booking_ref: string; payment_type: string; payment_mode: string; amount: number; transaction_ref?: string; notes?: string; collected_by?: string }) {\n    const res = await fetch(`${API_BASE_URL}/pms/payments`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(data)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Payment recording failed');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 385,
+    "url_raw": "`${API_BASE_URL}/pms/folio/add-item`",
+    "method": "POST",
+    "context": "\n  async addFolioItem(data: { booking_ref: string; item_type: string; description: string; quantity: number; unit_price: number; sac_code?: string; kot_number?: string }) {\n    const res = await fetch(`${API_BASE_URL}/pms/folio/add-item`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(data)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to add folio item');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 398,
+    "url_raw": "`${API_BASE_URL}/pms/folio/${bookingRef.trim().toUpperCase()}`",
+    "method": "POST",
+    "context": "\n  async getMasterFolio(bookingRef: string) {\n    const res = await fetch(`${API_BASE_URL}/pms/folio/${bookingRef.trim().toUpperCase()}`);\n    if (!res.ok) throw new Error(`Master folio for ${bookingRef} not found`);\n    return await res.json();\n  },\n\n  async submitPoliceStationLog(data: Record<string, unknown>) {\n    const res = await fetch(`${API_BASE_URL}/pms/police-register`, {\n      method: 'POST',"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 404,
+    "url_raw": "`${API_BASE_URL}/pms/police-register`",
+    "method": "POST",
+    "context": "\n  async submitPoliceStationLog(data: Record<string, unknown>) {\n    const res = await fetch(`${API_BASE_URL}/pms/police-register`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(data)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to log police register record');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 417,
+    "url_raw": "`${API_BASE_URL}/pms/police-register`",
+    "method": "POST",
+    "context": "\n  async getPoliceStationLogs() {\n    const res = await fetch(`${API_BASE_URL}/pms/police-register`);\n    if (!res.ok) throw new Error('Failed to retrieve police station register');\n    return await res.json();\n  },\n\n  async updateHousekeeping(roomId: number, status: string, updatedBy?: string) {\n    const res = await fetch(`${API_BASE_URL}/pms/housekeeping/status`, {\n      method: 'POST',"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 423,
+    "url_raw": "`${API_BASE_URL}/pms/housekeeping/status`",
+    "method": "POST",
+    "context": "\n  async updateHousekeeping(roomId: number, status: string, updatedBy?: string) {\n    const res = await fetch(`${API_BASE_URL}/pms/housekeeping/status`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify({ room_id: roomId, housekeeping_status: status, updated_by: updatedBy })\n    });\n    if (!res.ok) throw new Error('Failed to update housekeeping status');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 433,
+    "url_raw": "`${API_BASE_URL}/pms/night-audit`",
+    "method": "POST",
+    "context": "\n  async runNightAudit(auditDate?: string, auditedBy?: string) {\n    const res = await fetch(`${API_BASE_URL}/pms/night-audit`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify({ audit_date: auditDate, audited_by: auditedBy })\n    });\n    if (!res.ok) throw new Error('Failed to run night audit');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 445,
+    "url_raw": "'http://127.0.0.1:8080/status'",
+    "method": "GET",
+    "context": "  async checkHardwareBridge(): Promise<boolean> {\n    try {\n      const res = await fetch('http://127.0.0.1:8080/status', { method: 'GET' });\n      return res.ok;\n    } catch {\n      return false;\n    }\n  },\n\n  async printThermalReceipt(receiptData: { booking_ref: string; guest_name: string; room_name: string; total_amount: number }) {"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 454,
+    "url_raw": "'http://127.0.0.1:8080/print-receipt'",
+    "method": "POST",
+    "context": "  async printThermalReceipt(receiptData: { booking_ref: string; guest_name: string; room_name: string; total_amount: number }) {\n    try {\n      const res = await fetch('http://127.0.0.1:8080/print-receipt', {\n        method: 'POST',\n        headers: { 'Content-Type': 'application/json' },\n        body: JSON.stringify(receiptData)\n      });\n      return await res.json();\n    } catch {\n      window.open(this.getPrintSlipUrl(receiptData.booking_ref), '_blank');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 468,
+    "url_raw": "'http://127.0.0.1:8080/encode-keycard'",
+    "method": "POST",
+    "context": "  async encodeRfidKeycard(keyData: { room_no: string; guest_name: string; check_out_date: string }) {\n    try {\n      const res = await fetch('http://127.0.0.1:8080/encode-keycard', {\n        method: 'POST',\n        headers: { 'Content-Type': 'application/json' },\n        body: JSON.stringify(keyData)\n      });\n      return await res.json();\n    } catch {\n      return { status: 'BRIDGE_OFFLINE', message: 'Local Hardware Bridge not running on port 8080. Start backend/hardware_bridge.py on desk PC.' };"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 481,
+    "url_raw": "`${API_BASE_URL}/pms/check-in`",
+    "method": "POST",
+    "context": "  // --- Real-Time Front-Desk Synchronization ---\n  async walkInCheckIn(payload: Record<string, unknown>): Promise<BookingResponse> {\n    const res = await fetch(`${API_BASE_URL}/pms/check-in`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Walk-in check-in failed');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 494,
+    "url_raw": "`${API_BASE_URL}/pms/check-out`",
+    "method": "POST",
+    "context": "\n  async checkOutBooking(payload: { booking_ref: string; settlement_payment_mode?: string; settlement_amount_paid?: number; transaction_ref?: string; processed_by?: string }) {\n    const res = await fetch(`${API_BASE_URL}/pms/check-out`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Check-out settlement failed');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 507,
+    "url_raw": "`${API_BASE_URL}/pms/rooms/${roomId}/maintenance`",
+    "method": "POST",
+    "context": "\n  async toggleRoomMaintenance(roomId: number, underMaintenance: boolean, reason?: string) {\n    const res = await fetch(`${API_BASE_URL}/pms/rooms/${roomId}/maintenance`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify({ room_id: roomId, is_under_maintenance: underMaintenance, reason })\n    });\n    if (!res.ok) throw new Error('Failed to toggle room maintenance');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 520,
+    "url_raw": "`${API_BASE_URL}/pms/sync/dashboard`",
+    "method": "GET",
+    "context": "      const controller = new AbortController();\n      const timeoutId = setTimeout(() => controller.abort(), 2000);\n      const res = await fetch(`${API_BASE_URL}/pms/sync/dashboard`, { signal: controller.signal });\n      clearTimeout(timeoutId);\n      const contentType = res.headers.get('content-type') || '';\n      if (!res.ok || !contentType.includes('application/json')) {\n        return null;\n      }\n      return await res.json();\n    } catch {"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 586,
+    "url_raw": "`${API_BASE_URL}/pms/backup/export`",
+    "method": "GET",
+    "context": "      if (savedKey) headers['X-API-Key'] = savedKey;\n    }\n    const res = await fetch(`${API_BASE_URL}/pms/backup/export`, { headers });\n    if (!res.ok) throw new Error('Failed to export database backup');\n    return await res.json();\n  },\n\n  // --- Real-Time Relational CRUD API Operations ---\n  async getDiningTables(): Promise<any[]> {\n    const res = await fetch(`${API_BASE_URL}/pms/tables`);"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 593,
+    "url_raw": "`${API_BASE_URL}/pms/tables`",
+    "method": "POST",
+    "context": "  // --- Real-Time Relational CRUD API Operations ---\n  async getDiningTables(): Promise<any[]> {\n    const res = await fetch(`${API_BASE_URL}/pms/tables`);\n    if (!res.ok) throw new Error('Failed to fetch dining tables');\n    return await res.json();\n  },\n\n  async saveDiningTable(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/tables`, {\n      method: 'POST',"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 599,
+    "url_raw": "`${API_BASE_URL}/pms/tables`",
+    "method": "POST",
+    "context": "\n  async saveDiningTable(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/tables`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to save dining table');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 609,
+    "url_raw": "`${API_BASE_URL}/pms/kots`",
+    "method": "GET",
+    "context": "\n  async getKotTickets(): Promise<any[]> {\n    const res = await fetch(`${API_BASE_URL}/pms/kots`);\n    if (!res.ok) throw new Error('Failed to fetch KOT tickets');\n    return await res.json();\n  },\n\n  async saveKotTicket(payload: any): Promise<any> {\n    try {\n      if (typeof window !== 'undefined' && !window.navigator.onLine) {"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 629,
+    "url_raw": "`${API_BASE_URL}/pms/masters/${category}`",
+    "method": "GET",
+    "context": "  async getMasterItems(category: string): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/masters/${category}`);\n      if (res.ok) {\n        const data = await res.json();\n        if (typeof window !== 'undefined' && (category.toLowerCase().includes('food') || category.toLowerCase().includes('menu') || category.toLowerCase().includes('item'))) {\n          cacheMenuLocally(data);\n        }\n        return data;\n      }"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 649,
+    "url_raw": "endpoint",
+    "method": "POST",
+    "context": "  async saveMasterItem(payload: any): Promise<any> {\n    const endpoint = (payload.itemData || payload.itemName) ? `${API_BASE_URL}/pms/master-items` : `${API_BASE_URL}/pms/masters`;\n    const res = await fetch(endpoint, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to save master item');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 659,
+    "url_raw": "`${API_BASE_URL}/pms/master-items/${encodeURIComponent(category)}/${encodeURIComponent(codeOrName)}`",
+    "method": "DELETE",
+    "context": "\n  async deleteMasterItem(category: string, codeOrName: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/master-items/${encodeURIComponent(category)}/${encodeURIComponent(codeOrName)}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete master item');\n    return await res.json();\n  },\n\n  async applyFolioDiscount(payload: { booking_ref: string; discount_amount: number; discount_percentage?: number; discount_reason: string; approved_by?: string }) {"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 667,
+    "url_raw": "`${API_BASE_URL}/pms/folio/discount`",
+    "method": "POST",
+    "context": "\n  async applyFolioDiscount(payload: { booking_ref: string; discount_amount: number; discount_percentage?: number; discount_reason: string; approved_by?: string }) {\n    const res = await fetch(`${API_BASE_URL}/pms/folio/discount`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to apply folio discount');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 681,
+    "url_raw": "`${API_BASE_URL}/pms/folio/discounts/${target}`",
+    "method": "POST",
+    "context": "  async getFolioDiscounts(roomOrRef?: string) {\n    const target = roomOrRef ? encodeURIComponent(roomOrRef.trim().toUpperCase()) : 'ALL';\n    const res = await fetch(`${API_BASE_URL}/pms/folio/discounts/${target}`);\n    if (!res.ok) throw new Error('Failed to fetch folio discounts');\n    return await res.json();\n  },\n\n  async saveFoodBill(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/food-bills`, {\n      method: 'POST',"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 687,
+    "url_raw": "`${API_BASE_URL}/pms/food-bills`",
+    "method": "POST",
+    "context": "\n  async saveFoodBill(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/food-bills`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to persist food bill');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 704,
+    "url_raw": "`${API_BASE_URL}/pms/food-bills${qs}`",
+    "method": "POST",
+    "context": "    if (endDate) params.append('end_date', endDate);\n    const qs = params.toString() ? `?${params.toString()}` : '';\n    const res = await fetch(`${API_BASE_URL}/pms/food-bills${qs}`);\n    if (!res.ok) throw new Error('Failed to fetch food bills');\n    return await res.json();\n  },\n\n  async savePettyExpense(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/expenses`, {\n      method: 'POST',"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 710,
+    "url_raw": "`${API_BASE_URL}/pms/expenses`",
+    "method": "POST",
+    "context": "\n  async savePettyExpense(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/expenses`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to persist expense record');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 728,
+    "url_raw": "`${API_BASE_URL}/pms/expenses${qs}`",
+    "method": "GET",
+    "context": "    if (category) params.append('category', category);\n    const qs = params.toString() ? `?${params.toString()}` : '';\n    const res = await fetch(`${API_BASE_URL}/pms/expenses${qs}`);\n    if (!res.ok) throw new Error('Failed to fetch petty expenses');\n    return await res.json();\n  },\n\n  async getNightAudits(): Promise<any[]> {\n    const res = await fetch(`${API_BASE_URL}/pms/night-audits`);\n    if (!res.ok) throw new Error('Failed to fetch night audit records');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 734,
+    "url_raw": "`${API_BASE_URL}/pms/night-audits`",
+    "method": "POST",
+    "context": "\n  async getNightAudits(): Promise<any[]> {\n    const res = await fetch(`${API_BASE_URL}/pms/night-audits`);\n    if (!res.ok) throw new Error('Failed to fetch night audit records');\n    return await res.json();\n  },\n\n  async saveInventoryPurchase(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/inventory/purchases`, {\n      method: 'POST',"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 740,
+    "url_raw": "`${API_BASE_URL}/pms/inventory/purchases`",
+    "method": "POST",
+    "context": "\n  async saveInventoryPurchase(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/inventory/purchases`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to persist purchase entry');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 753,
+    "url_raw": "`${API_BASE_URL}/pms/inventory/purchases`",
+    "method": "POST",
+    "context": "\n  async getInventoryPurchases(): Promise<any[]> {\n    const res = await fetch(`${API_BASE_URL}/pms/inventory/purchases`);\n    if (!res.ok) throw new Error('Failed to fetch inventory purchases');\n    return await res.json();\n  },\n\n  async voidKotItem(payload: { kot_id?: number; kot_number?: string; item_name: string; quantity: number; void_reason: string; voided_by?: string; table_number?: string; room_number?: string }): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/kot/void`, {\n      method: 'POST',"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 759,
+    "url_raw": "`${API_BASE_URL}/pms/kot/void`",
+    "method": "POST",
+    "context": "\n  async voidKotItem(payload: { kot_id?: number; kot_number?: string; item_name: string; quantity: number; void_reason: string; voided_by?: string; table_number?: string; room_number?: string }): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/kot/void`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to void KOT item');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 772,
+    "url_raw": "`${API_BASE_URL}/pms/kot/void-logs`",
+    "method": "POST",
+    "context": "\n  async getKotVoidLogs(): Promise<any[]> {\n    const res = await fetch(`${API_BASE_URL}/pms/kot/void-logs`);\n    if (!res.ok) throw new Error('Failed to fetch KOT void logs');\n    return await res.json();\n  },\n\n  async shiftDiningTableSession(payload: { from_table: string; to_table: string; shifted_by?: string }): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/tables/shift-session`, {\n      method: 'POST',"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 778,
+    "url_raw": "`${API_BASE_URL}/pms/tables/shift-session`",
+    "method": "POST",
+    "context": "\n  async shiftDiningTableSession(payload: { from_table: string; to_table: string; shifted_by?: string }): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/tables/shift-session`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to shift dining table');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 791,
+    "url_raw": "`${API_BASE_URL}/pms/tables/merge-sessions`",
+    "method": "POST",
+    "context": "\n  async mergeDiningTableSessions(payload: { source_table: string; target_table: string; merged_by?: string }): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/tables/merge-sessions`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to merge dining tables');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 804,
+    "url_raw": "`${API_BASE_URL}/pms/keycards/encode`",
+    "method": "POST",
+    "context": "\n  async encodeKeycardAccess(payload: { room_number: string; guest_name: string; check_out_time: string; card_number?: string; operator_name?: string }): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/keycards/encode`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to encode keycard');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 817,
+    "url_raw": "`${API_BASE_URL}/pms/keycards/extend`",
+    "method": "POST",
+    "context": "\n  async extendKeycardAccess(payload: { room_number: string; new_check_out_time: string; operator_name?: string }): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/keycards/extend`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to extend keycard');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 830,
+    "url_raw": "`${API_BASE_URL}/pms/housekeeping/audit-discrepancy`",
+    "method": "POST",
+    "context": "\n  async reportHousekeepingDiscrepancy(payload: { room_id: number; room_number: string; pms_status: string; physical_status: string; discrepancy_type: string; reported_by?: string; notes?: string }): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/housekeeping/audit-discrepancy`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to report discrepancy');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 844,
+    "url_raw": "`${API_BASE_URL}/pms/housekeeping-discrepancies`",
+    "method": "GET",
+    "context": "  async getHousekeepingDiscrepancies(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/housekeeping-discrepancies`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 856,
+    "url_raw": "`${API_BASE_URL}/pms/sync/full-state`",
+    "method": "GET",
+    "context": "      const controller = new AbortController();\n      const timeoutId = setTimeout(() => controller.abort(), 3000);\n      const res = await fetch(`${API_BASE_URL}/pms/sync/full-state`, { signal: controller.signal });\n      clearTimeout(timeoutId);\n      const contentType = res.headers.get('content-type') || '';\n      if (!res.ok || !contentType.includes('application/json')) {\n        return null;\n      }\n      return await res.json();\n    } catch {"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 869,
+    "url_raw": "`${API_BASE_URL}/pms/group-bookings`",
+    "method": "POST",
+    "context": "\n  async saveGroupBooking(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/group-bookings`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to save group booking to cloud database');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 882,
+    "url_raw": "`${API_BASE_URL}/pms/group-bookings`",
+    "method": "DELETE",
+    "context": "\n  async getGroupBookings(): Promise<any[]> {\n    const res = await fetch(`${API_BASE_URL}/pms/group-bookings`);\n    if (!res.ok) throw new Error('Failed to fetch group bookings from cloud database');\n    return await res.json();\n  },\n\n  async cancelGroupBooking(groupId: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/group-bookings/${groupId}`, {\n      method: 'DELETE'"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 888,
+    "url_raw": "`${API_BASE_URL}/pms/group-bookings/${groupId}`",
+    "method": "DELETE",
+    "context": "\n  async cancelGroupBooking(groupId: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/group-bookings/${groupId}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to cancel group booking');\n    }\n    return await res.json();"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 900,
+    "url_raw": "`${API_BASE_URL}/pms/checkouts`",
+    "method": "POST",
+    "context": "  // Module 19: Full Checkout & Folio Settlement Persistence\n  async saveCheckout(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/checkouts`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to persist checkout to PostgreSQL');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 913,
+    "url_raw": "`${API_BASE_URL}/pms/checkouts`",
+    "method": "DELETE",
+    "context": "\n  async getCheckouts(): Promise<any[]> {\n    const res = await fetch(`${API_BASE_URL}/pms/checkouts`);\n    if (!res.ok) throw new Error('Failed to fetch checkouts from PostgreSQL');\n    return await res.json();\n  },\n\n  async deleteCheckout(invoiceNo: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/checkouts/${encodeURIComponent(invoiceNo)}`, {\n      method: 'DELETE'"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 919,
+    "url_raw": "`${API_BASE_URL}/pms/checkouts/${encodeURIComponent(invoiceNo)}`",
+    "method": "DELETE",
+    "context": "\n  async deleteCheckout(invoiceNo: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/checkouts/${encodeURIComponent(invoiceNo)}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete checkout from PostgreSQL');\n    return await res.json();\n  },\n\n  // Module 20: Advance Receipts & Guest Deposits"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 928,
+    "url_raw": "`${API_BASE_URL}/pms/advance-receipts`",
+    "method": "POST",
+    "context": "  // Module 20: Advance Receipts & Guest Deposits\n  async saveAdvanceReceipt(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/advance-receipts`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to persist advance receipt to PostgreSQL');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 941,
+    "url_raw": "`${API_BASE_URL}/pms/advance-receipts`",
+    "method": "DELETE",
+    "context": "\n  async getAdvanceReceipts(): Promise<any[]> {\n    const res = await fetch(`${API_BASE_URL}/pms/advance-receipts`);\n    if (!res.ok) throw new Error('Failed to fetch advance receipts from PostgreSQL');\n    return await res.json();\n  },\n\n  async deleteAdvanceReceipt(receiptNo: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/advance-receipts/${encodeURIComponent(receiptNo)}`, {\n      method: 'DELETE'"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 947,
+    "url_raw": "`${API_BASE_URL}/pms/advance-receipts/${encodeURIComponent(receiptNo)}`",
+    "method": "DELETE",
+    "context": "\n  async deleteAdvanceReceipt(receiptNo: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/advance-receipts/${encodeURIComponent(receiptNo)}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete advance receipt from PostgreSQL');\n    return await res.json();\n  },\n\n  // Module 21: Double-Entry Financial Journal Ledger"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 956,
+    "url_raw": "`${API_BASE_URL}/pms/journal-entries`",
+    "method": "POST",
+    "context": "  // Module 21: Double-Entry Financial Journal Ledger\n  async postJournalEntry(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/journal-entries`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to post journal entry to PostgreSQL');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 970,
+    "url_raw": "`${API_BASE_URL}/pms/journal-entries`",
+    "method": "GET",
+    "context": "  async getJournalEntries(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/journal-entries`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 980,
+    "url_raw": "`${API_BASE_URL}/pms/party-accounts`",
+    "method": "POST",
+    "context": "  // Module 22: Party Accounts (Sundry Creditors & Debtors)\n  async savePartyAccount(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/party-accounts`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to save party account to PostgreSQL');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 994,
+    "url_raw": "`${API_BASE_URL}/pms/party-accounts`",
+    "method": "GET",
+    "context": "  async getPartyAccounts(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/party-accounts`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1003,
+    "url_raw": "`${API_BASE_URL}/pms/party-accounts/${encodeURIComponent(accountId)}`",
+    "method": "DELETE",
+    "context": "\n  async deletePartyAccount(accountId: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/party-accounts/${encodeURIComponent(accountId)}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete party account from PostgreSQL');\n    return await res.json();\n  },\n\n  // Module 23: General Receipts Register"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1012,
+    "url_raw": "`${API_BASE_URL}/pms/general-receipts`",
+    "method": "POST",
+    "context": "  // Module 23: General Receipts Register\n  async saveGeneralReceipt(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/general-receipts`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to persist general receipt to PostgreSQL');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1026,
+    "url_raw": "`${API_BASE_URL}/pms/general-receipts`",
+    "method": "GET",
+    "context": "  async getGeneralReceipts(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/general-receipts`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1035,
+    "url_raw": "`${API_BASE_URL}/pms/general-receipts/${encodeURIComponent(receiptNo)}`",
+    "method": "DELETE",
+    "context": "\n  async deleteGeneralReceipt(receiptNo: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/general-receipts/${encodeURIComponent(receiptNo)}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete general receipt from PostgreSQL');\n    return await res.json();\n  },\n\n  // Module 24: General Payments Register"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1044,
+    "url_raw": "`${API_BASE_URL}/pms/general-payments`",
+    "method": "POST",
+    "context": "  // Module 24: General Payments Register\n  async saveGeneralPayment(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/general-payments`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to persist general payment to PostgreSQL');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1058,
+    "url_raw": "`${API_BASE_URL}/pms/general-payments`",
+    "method": "GET",
+    "context": "  async getGeneralPayments(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/general-payments`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1067,
+    "url_raw": "`${API_BASE_URL}/pms/general-payments/${encodeURIComponent(paymentNo)}`",
+    "method": "DELETE",
+    "context": "\n  async deleteGeneralPayment(paymentNo: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/general-payments/${encodeURIComponent(paymentNo)}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete general payment from PostgreSQL');\n    return await res.json();\n  },\n\n  // Module 25: Multi-Godown Warehouse Masters"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1076,
+    "url_raw": "`${API_BASE_URL}/pms/godowns`",
+    "method": "POST",
+    "context": "  // Module 25: Multi-Godown Warehouse Masters\n  async saveGodown(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/godowns`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to save godown to PostgreSQL');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1090,
+    "url_raw": "`${API_BASE_URL}/pms/godowns`",
+    "method": "GET",
+    "context": "  async getGodowns(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/godowns`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1099,
+    "url_raw": "`${API_BASE_URL}/pms/godowns/${encodeURIComponent(godownId)}`",
+    "method": "DELETE",
+    "context": "\n  async deleteGodown(godownId: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/godowns/${encodeURIComponent(godownId)}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete godown from PostgreSQL');\n    return await res.json();\n  },\n\n  // Module 26: Inventory Item Groups Master"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1108,
+    "url_raw": "`${API_BASE_URL}/pms/item-groups`",
+    "method": "POST",
+    "context": "  // Module 26: Inventory Item Groups Master\n  async saveItemGroup(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/item-groups`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to save item group to PostgreSQL');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1122,
+    "url_raw": "`${API_BASE_URL}/pms/item-groups`",
+    "method": "GET",
+    "context": "  async getItemGroups(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/item-groups`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1131,
+    "url_raw": "`${API_BASE_URL}/pms/item-groups/${encodeURIComponent(groupId)}`",
+    "method": "DELETE",
+    "context": "\n  async deleteItemGroup(groupId: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/item-groups/${encodeURIComponent(groupId)}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete item group from PostgreSQL');\n    return await res.json();\n  },\n\n  // Module 27: Stock Transfers & Issues"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1140,
+    "url_raw": "`${API_BASE_URL}/pms/stock-transfers`",
+    "method": "POST",
+    "context": "  // Module 27: Stock Transfers & Issues\n  async saveStockTransfer(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/stock-transfers`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to persist stock transfer to PostgreSQL');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1154,
+    "url_raw": "`${API_BASE_URL}/pms/stock-transfers`",
+    "method": "GET",
+    "context": "  async getStockTransfers(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/stock-transfers`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1163,
+    "url_raw": "`${API_BASE_URL}/pms/stock-transfers/${encodeURIComponent(entryNo)}`",
+    "method": "DELETE",
+    "context": "\n  async deleteStockTransfer(entryNo: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/stock-transfers/${encodeURIComponent(entryNo)}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete stock transfer from PostgreSQL');\n    return await res.json();\n  },\n\n  // Module 28: User Staff Accounts & Roles"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1172,
+    "url_raw": "`${API_BASE_URL}/pms/users`",
+    "method": "POST",
+    "context": "  // Module 28: User Staff Accounts & Roles\n  async saveUserAccount(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/users`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to save user account to PostgreSQL');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1186,
+    "url_raw": "`${API_BASE_URL}/pms/users`",
+    "method": "GET",
+    "context": "  async getUserAccounts(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/users`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1195,
+    "url_raw": "`${API_BASE_URL}/pms/users/${encodeURIComponent(String(userId))}`",
+    "method": "DELETE",
+    "context": "\n  async deleteUserAccount(userId: number | string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/users/${encodeURIComponent(String(userId))}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete user account from PostgreSQL');\n    return await res.json();\n  },\n\n  // Module 29: Commission Agents"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1204,
+    "url_raw": "`${API_BASE_URL}/pms/commission-agents`",
+    "method": "POST",
+    "context": "  // Module 29: Commission Agents\n  async saveCommissionAgent(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/commission-agents`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to save commission agent to PostgreSQL');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1218,
+    "url_raw": "`${API_BASE_URL}/pms/commission-agents`",
+    "method": "GET",
+    "context": "  async getCommissionAgents(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/commission-agents`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1227,
+    "url_raw": "`${API_BASE_URL}/pms/commission-agents/${encodeURIComponent(agentId)}`",
+    "method": "DELETE",
+    "context": "\n  async deleteCommissionAgent(agentId: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/commission-agents/${encodeURIComponent(agentId)}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete commission agent from PostgreSQL');\n    return await res.json();\n  },\n\n  // Module 30: Agent Commission Payout Vouchers"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1236,
+    "url_raw": "`${API_BASE_URL}/pms/agent-payout-vouchers`",
+    "method": "POST",
+    "context": "  // Module 30: Agent Commission Payout Vouchers\n  async saveAgentPayoutVoucher(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/agent-payout-vouchers`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to save agent payout voucher to PostgreSQL');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1250,
+    "url_raw": "`${API_BASE_URL}/pms/agent-payout-vouchers`",
+    "method": "GET",
+    "context": "  async getAgentPayoutVouchers(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/agent-payout-vouchers`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1260,
+    "url_raw": "`${API_BASE_URL}/pms/shift-handovers`",
+    "method": "POST",
+    "context": "  // Module 31: Shift Handovers & Cash Reconciliation\n  async saveShiftHandover(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/shift-handovers`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to save shift handover to PostgreSQL');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1274,
+    "url_raw": "`${API_BASE_URL}/pms/shift-handovers`",
+    "method": "GET",
+    "context": "  async getShiftHandovers(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/shift-handovers`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1284,
+    "url_raw": "`${API_BASE_URL}/pms/banquet-venues`",
+    "method": "POST",
+    "context": "  // Module 32: Banquet Venues & Event Bookings\n  async saveBanquetVenue(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/banquet-venues`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to save banquet venue to PostgreSQL');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1298,
+    "url_raw": "`${API_BASE_URL}/pms/banquet-venues`",
+    "method": "GET",
+    "context": "  async getBanquetVenues(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/banquet-venues`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1307,
+    "url_raw": "`${API_BASE_URL}/pms/banquet-venues/${encodeURIComponent(venueId)}`",
+    "method": "DELETE",
+    "context": "\n  async deleteBanquetVenue(venueId: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/banquet-venues/${encodeURIComponent(venueId)}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete banquet venue from PostgreSQL');\n    return await res.json();\n  },\n\n  async saveBanquetBooking(payload: any): Promise<any> {"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1315,
+    "url_raw": "`${API_BASE_URL}/pms/banquet-bookings`",
+    "method": "POST",
+    "context": "\n  async saveBanquetBooking(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/banquet-bookings`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to save banquet booking to PostgreSQL');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1329,
+    "url_raw": "`${API_BASE_URL}/pms/banquet-bookings`",
+    "method": "GET",
+    "context": "  async getBanquetBookings(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/banquet-bookings`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1338,
+    "url_raw": "`${API_BASE_URL}/pms/banquet-bookings/${encodeURIComponent(bookingNo)}`",
+    "method": "DELETE",
+    "context": "\n  async deleteBanquetBooking(bookingNo: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/banquet-bookings/${encodeURIComponent(bookingNo)}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete banquet booking from PostgreSQL');\n    return await res.json();\n  },\n\n  // Module 33: Restro-Bar & Liquor Excise"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1347,
+    "url_raw": "`${API_BASE_URL}/pms/liquor-items`",
+    "method": "POST",
+    "context": "  // Module 33: Restro-Bar & Liquor Excise\n  async saveLiquorItem(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/liquor-items`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to save liquor item to PostgreSQL');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1361,
+    "url_raw": "`${API_BASE_URL}/pms/liquor-items`",
+    "method": "GET",
+    "context": "  async getLiquorItems(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/liquor-items`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1370,
+    "url_raw": "`${API_BASE_URL}/pms/liquor-items/${encodeURIComponent(itemCode)}`",
+    "method": "DELETE",
+    "context": "\n  async deleteLiquorItem(itemCode: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/liquor-items/${encodeURIComponent(itemCode)}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete liquor item from PostgreSQL');\n    return await res.json();\n  },\n\n  async saveBarInvoice(payload: any): Promise<any> {"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1378,
+    "url_raw": "`${API_BASE_URL}/pms/bar-invoices`",
+    "method": "POST",
+    "context": "\n  async saveBarInvoice(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/bar-invoices`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to save bar invoice to PostgreSQL');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1392,
+    "url_raw": "`${API_BASE_URL}/pms/bar-invoices`",
+    "method": "GET",
+    "context": "  async getBarInvoices(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/bar-invoices`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1401,
+    "url_raw": "`${API_BASE_URL}/pms/bar-invoices/${encodeURIComponent(billNo)}`",
+    "method": "DELETE",
+    "context": "\n  async deleteBarInvoice(billNo: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/bar-invoices/${encodeURIComponent(billNo)}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete bar invoice from PostgreSQL');\n    return await res.json();\n  },\n\n  // Module 34: Hotel Assets & Linen Master"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1410,
+    "url_raw": "`${API_BASE_URL}/pms/hotel-assets`",
+    "method": "POST",
+    "context": "  // Module 34: Hotel Assets & Linen Master\n  async saveHotelAsset(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/hotel-assets`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to save hotel asset to PostgreSQL');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1424,
+    "url_raw": "`${API_BASE_URL}/pms/hotel-assets`",
+    "method": "GET",
+    "context": "  async getHotelAssets(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/hotel-assets`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1433,
+    "url_raw": "`${API_BASE_URL}/pms/hotel-assets/${encodeURIComponent(assetId)}`",
+    "method": "DELETE",
+    "context": "\n  async deleteHotelAsset(assetId: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/hotel-assets/${encodeURIComponent(assetId)}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete hotel asset from PostgreSQL');\n    return await res.json();\n  },\n\n  // Module 35: Pilgrim Valuables & Lockers"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1442,
+    "url_raw": "`${API_BASE_URL}/pms/lockers`",
+    "method": "POST",
+    "context": "  // Module 35: Pilgrim Valuables & Lockers\n  async saveLocker(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/lockers`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to save locker to PostgreSQL');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1456,
+    "url_raw": "`${API_BASE_URL}/pms/lockers`",
+    "method": "GET",
+    "context": "  async getLockers(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/lockers`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1465,
+    "url_raw": "`${API_BASE_URL}/pms/lockers/${encodeURIComponent(lockerNo)}`",
+    "method": "DELETE",
+    "context": "\n  async deleteLocker(lockerNo: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/lockers/${encodeURIComponent(lockerNo)}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete locker from PostgreSQL');\n    return await res.json();\n  },\n\n  // Module 36: WhatsApp CRM & Guest Communication"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1474,
+    "url_raw": "`${API_BASE_URL}/pms/whatsapp-logs`",
+    "method": "POST",
+    "context": "  // Module 36: WhatsApp CRM & Guest Communication\n  async saveWhatsAppLog(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/whatsapp-logs`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to save WhatsApp log to PostgreSQL');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1488,
+    "url_raw": "`${API_BASE_URL}/pms/whatsapp-logs`",
+    "method": "GET",
+    "context": "  async getWhatsAppLogs(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/whatsapp-logs`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1497,
+    "url_raw": "`${API_BASE_URL}/pms/whatsapp-config`",
+    "method": "POST",
+    "context": "\n  async saveWhatsAppConfig(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/whatsapp-config`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to save WhatsApp configuration to PostgreSQL');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1511,
+    "url_raw": "`${API_BASE_URL}/pms/whatsapp-config`",
+    "method": "GET",
+    "context": "  async getWhatsAppConfig(): Promise<any> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/whatsapp-config`);\n      if (!res.ok) return null;\n      return await res.json();\n    } catch {\n      return null;\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1521,
+    "url_raw": "`${API_BASE_URL}/pms/support-tickets`",
+    "method": "POST",
+    "context": "  // Module 37: Support & Service Tickets\n  async saveSupportTicket(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/support-tickets`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || 'Failed to save support ticket to PostgreSQL');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1535,
+    "url_raw": "`${API_BASE_URL}/pms/support-tickets`",
+    "method": "GET",
+    "context": "  async getSupportTickets(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/support-tickets`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1544,
+    "url_raw": "`${API_BASE_URL}/pms/support-tickets/${encodeURIComponent(ticketNo)}`",
+    "method": "DELETE",
+    "context": "\n  async deleteSupportTicket(ticketNo: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/support-tickets/${encodeURIComponent(ticketNo)}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete support ticket from PostgreSQL');\n    return await res.json();\n  },\n\n  // Module 38: Hotel Settings & Identity"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1554,
+    "url_raw": "`${API_BASE_URL}/pms/settings`",
+    "method": "GET",
+    "context": "  async getHotelSettings(): Promise<any> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/settings`);\n      if (!res.ok) return null;\n      return await res.json();\n    } catch {\n      return null;\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1563,
+    "url_raw": "`${API_BASE_URL}/pms/settings`",
+    "method": "POST",
+    "context": "\n  async saveHotelSettings(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/settings`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to save hotel settings');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1575,
+    "url_raw": "`${API_BASE_URL}/pms/room-types`",
+    "method": "GET",
+    "context": "  async getRoomTypes(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/room-types`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1584,
+    "url_raw": "`${API_BASE_URL}/pms/room-types`",
+    "method": "POST",
+    "context": "\n  async saveRoomType(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/room-types`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to save room type');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1594,
+    "url_raw": "`${API_BASE_URL}/pms/room-types/${encodeURIComponent(typeId)}`",
+    "method": "DELETE",
+    "context": "\n  async deleteRoomType(typeId: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/room-types/${encodeURIComponent(typeId)}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete room type');\n    return await res.json();\n  },\n\n  // Module 40: Restaurant Menu Items"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1605,
+    "url_raw": "url",
+    "method": "GET",
+    "context": "    try {\n      const url = category ? `${API_BASE_URL}/pms/menu-items?category=${encodeURIComponent(category)}` : `${API_BASE_URL}/pms/menu-items`;\n      const res = await fetch(url);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1614,
+    "url_raw": "`${API_BASE_URL}/pms/menu-items`",
+    "method": "POST",
+    "context": "\n  async saveMenuItem(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/menu-items`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to save menu item');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1624,
+    "url_raw": "`${API_BASE_URL}/pms/menu-items/bulk`",
+    "method": "POST",
+    "context": "\n  async saveMenuItemsBulk(items: any[]): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/menu-items/bulk`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(items)\n    });\n    if (!res.ok) throw new Error('Failed to save menu items bulk');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1634,
+    "url_raw": "`${API_BASE_URL}/pms/menu-items/${encodeURIComponent(itemCode)}`",
+    "method": "DELETE",
+    "context": "\n  async deleteMenuItem(itemCode: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/menu-items/${encodeURIComponent(itemCode)}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete menu item');\n    return await res.json();\n  },\n\n  // Module 41: Housekeeping Duty Records"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1644,
+    "url_raw": "`${API_BASE_URL}/pms/housekeeping`",
+    "method": "GET",
+    "context": "  async getHousekeepingRecords(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/housekeeping`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1653,
+    "url_raw": "`${API_BASE_URL}/pms/housekeeping`",
+    "method": "POST",
+    "context": "\n  async saveHousekeepingRecord(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/housekeeping`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to save housekeeping record');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1669,
+    "url_raw": "url",
+    "method": "GET",
+    "context": "      if (status) params.append('status', status);\n      const url = `${API_BASE_URL}/pms/agent-commissions${params.toString() ? '?' + params.toString() : ''}`;\n      const res = await fetch(url);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1678,
+    "url_raw": "`${API_BASE_URL}/pms/agent-commissions`",
+    "method": "POST",
+    "context": "\n  async saveAgentCommission(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/agent-commissions`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to save agent commission');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1688,
+    "url_raw": "`${API_BASE_URL}/pms/agent-commissions/${encodeURIComponent(commissionId)}/status`",
+    "method": "PUT",
+    "context": "\n  async updateAgentCommissionStatus(commissionId: string, status: string, payoutVoucherNo?: string, payoutDate?: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/agent-commissions/${encodeURIComponent(commissionId)}/status`, {\n      method: 'PUT',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify({ status, payoutVoucherNo, payoutDate })\n    });\n    if (!res.ok) throw new Error('Failed to update agent commission status');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1700,
+    "url_raw": "`${API_BASE_URL}/pms/whatsapp-templates`",
+    "method": "GET",
+    "context": "  async getWhatsAppTemplates(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/whatsapp-templates`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1709,
+    "url_raw": "`${API_BASE_URL}/pms/whatsapp-templates`",
+    "method": "POST",
+    "context": "\n  async saveWhatsAppTemplate(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/whatsapp-templates`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to save whatsapp template');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1719,
+    "url_raw": "`${API_BASE_URL}/pms/whatsapp-templates/bulk`",
+    "method": "POST",
+    "context": "\n  async saveWhatsAppTemplatesBulk(templates: any[]): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/whatsapp-templates/bulk`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(templates)\n    });\n    if (!res.ok) throw new Error('Failed to bulk save whatsapp templates');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1731,
+    "url_raw": "`${API_BASE_URL}/pms/roles`",
+    "method": "GET",
+    "context": "  async getRoles(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/roles`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1740,
+    "url_raw": "`${API_BASE_URL}/pms/roles`",
+    "method": "POST",
+    "context": "\n  async saveRole(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/roles`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to save role');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1752,
+    "url_raw": "`${API_BASE_URL}/pms/no-discount-config`",
+    "method": "GET",
+    "context": "  async getNoDiscountConfig(): Promise<any> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/no-discount-config`);\n      if (!res.ok) return null;\n      return await res.json();\n    } catch {\n      return null;\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1761,
+    "url_raw": "`${API_BASE_URL}/pms/no-discount-config`",
+    "method": "POST",
+    "context": "\n  async saveNoDiscountConfig(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/no-discount-config`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to save no-discount config');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1773,
+    "url_raw": "`${API_BASE_URL}/pms/liquor-brands`",
+    "method": "GET",
+    "context": "  async getLiquorBrands(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/liquor-brands`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1782,
+    "url_raw": "`${API_BASE_URL}/pms/liquor-brands`",
+    "method": "POST",
+    "context": "\n  async saveLiquorBrand(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/liquor-brands`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to save liquor brand');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1793,
+    "url_raw": "`${API_BASE_URL}/pms/liquor-units`",
+    "method": "GET",
+    "context": "  async getLiquorUnits(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/liquor-units`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1802,
+    "url_raw": "`${API_BASE_URL}/pms/liquor-units`",
+    "method": "POST",
+    "context": "\n  async saveLiquorUnit(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/liquor-units`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to save liquor unit');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1813,
+    "url_raw": "`${API_BASE_URL}/pms/shift-handovers`",
+    "method": "POST",
+    "context": "  // Module 46: User Shift Handovers & Cash Drawer Reconciliation\n  async recordShiftHandover(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/shift-handovers`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to save shift handover');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1824,
+    "url_raw": "`${API_BASE_URL}/pms/discount-audit-logs`",
+    "method": "POST",
+    "context": "  // Module 47: Anti-Theft Discount Audit Logs\n  async recordDiscountAudit(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/discount-audit-logs`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to save discount audit log');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1835,
+    "url_raw": "`${API_BASE_URL}/pms/discount-audit-logs`",
+    "method": "GET",
+    "context": "  async getDiscountAuditLogs(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/discount-audit-logs`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1845,
+    "url_raw": "`${API_BASE_URL}/pms/properties`",
+    "method": "POST",
+    "context": "  // Module 48: Multi-Branch Hotel Properties Master\n  async saveProperty(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/properties`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to save property');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1863,
+    "url_raw": "`${API_BASE_URL}/pms/properties`",
+    "method": "GET",
+    "context": "  async getProperties(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/properties`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1873,
+    "url_raw": "`${API_BASE_URL}/pms/bookings/extend-stay`",
+    "method": "PUT",
+    "context": "  // Module 49: Extend Stay on Booking\n  async extendStay(roomNo: string, newCheckOutDate: string, extendedBy: string = 'Duty Manager'): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/bookings/extend-stay`, {\n      method: 'PUT',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify({ roomNo, newCheckOutDate, extendedBy })\n    });\n    if (!res.ok) throw new Error('Failed to extend stay');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1884,
+    "url_raw": "`${API_BASE_URL}/pms/room-folio-items`",
+    "method": "POST",
+    "context": "  // Module 50: Room Folio Incidental Charges\n  async postRoomFolioItem(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/room-folio-items`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to post room folio charge');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1895,
+    "url_raw": "`${API_BASE_URL}/pms/room-folio-items/${encodeURIComponent(roomNo)}`",
+    "method": "GET",
+    "context": "  async getRoomFolioItems(roomNo: string): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/room-folio-items/${encodeURIComponent(roomNo)}`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1905,
+    "url_raw": "`${API_BASE_URL}/pms/housekeeping-discrepancies/${encodeURIComponent(String(discrepancyId))}/resolve`",
+    "method": "PUT",
+    "context": "  // Module 51: Housekeeping Discrepancy Resolution\n  async resolveHousekeepingDiscrepancy(discrepancyId: string | number, notes?: string, resolvedBy: string = 'Duty Manager'): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/housekeeping-discrepancies/${encodeURIComponent(String(discrepancyId))}/resolve`, {\n      method: 'PUT',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify({ notes, resolvedBy })\n    });\n    if (!res.ok) throw new Error('Failed to resolve housekeeping discrepancy');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1916,
+    "url_raw": "`${API_BASE_URL}/pms/demo-requests`",
+    "method": "POST",
+    "context": "  // Module 52: Demo Requests / Enterprise Leads\n  async submitDemoRequest(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/demo-requests`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to submit demo request');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1927,
+    "url_raw": "`${API_BASE_URL}/pms/restaurant/table-shifts`",
+    "method": "POST",
+    "context": "  // Module 53: Table Shifts\n  async recordTableShift(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/restaurant/table-shifts`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to record table shift');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1938,
+    "url_raw": "`${API_BASE_URL}/pms/restaurant/table-shifts`",
+    "method": "GET",
+    "context": "  async getTableShifts(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/restaurant/table-shifts`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1948,
+    "url_raw": "`${API_BASE_URL}/pms/restaurant/table-sessions`",
+    "method": "POST",
+    "context": "  // Module 54: Table Sessions\n  async saveTableSession(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/restaurant/table-sessions`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to save table session');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1959,
+    "url_raw": "`${API_BASE_URL}/pms/restaurant/table-sessions`",
+    "method": "GET",
+    "context": "  async getTableSessions(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/restaurant/table-sessions`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1969,
+    "url_raw": "`${API_BASE_URL}/pms/housekeeping-discrepancies`",
+    "method": "POST",
+    "context": "  // Module 55: Housekeeping Discrepancies\n  async createHousekeepingDiscrepancy(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/housekeeping-discrepancies`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to create housekeeping discrepancy');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1981,
+    "url_raw": "`${API_BASE_URL}/pms/key-cards`",
+    "method": "POST",
+    "context": "  // Module 56: RFID Key Cards\n  async issueKeyCard(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/key-cards`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to issue key card');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1991,
+    "url_raw": "`${API_BASE_URL}/pms/key-cards/${encodeURIComponent(cardNumber)}/extend`",
+    "method": "PUT",
+    "context": "\n  async extendKeyCard(cardNumber: string, validUntil: string): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/key-cards/${encodeURIComponent(cardNumber)}/extend`, {\n      method: 'PUT',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify({ valid_until: validUntil })\n    });\n    if (!res.ok) throw new Error('Failed to extend key card');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 2002,
+    "url_raw": "`${API_BASE_URL}/pms/key-cards`",
+    "method": "GET",
+    "context": "  async getKeyCards(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/key-cards`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 2012,
+    "url_raw": "`${API_BASE_URL}/pms/company-info`",
+    "method": "POST",
+    "context": "  // Module 57: Company Info\n  async saveCompanyInfo(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/company-info`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to save company branding');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 2023,
+    "url_raw": "`${API_BASE_URL}/pms/company-info`",
+    "method": "GET",
+    "context": "  async getCompanyInfo(): Promise<any> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/company-info`);\n      if (!res.ok) return null;\n      return await res.json();\n    } catch {\n      return null;\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 2033,
+    "url_raw": "`${API_BASE_URL}/pms/virtual-accounts`",
+    "method": "POST",
+    "context": "  // Module 58: Virtual Accounts\n  async createVirtualAccount(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/virtual-accounts`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to record virtual account');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 2044,
+    "url_raw": "`${API_BASE_URL}/pms/virtual-accounts`",
+    "method": "GET",
+    "context": "  async getVirtualAccounts(): Promise<any[]> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/virtual-accounts`);\n      if (!res.ok) return [];\n      return await res.json();\n    } catch {\n      return [];\n    }\n  },\n"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 2054,
+    "url_raw": "`${API_BASE_URL}/pms/liquor/stock-adjustments`",
+    "method": "POST",
+    "context": "  // Module 59: Liquor Stock Adjustments\n  async recordLiquorAdjustment(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/liquor/stock-adjustments`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to record liquor adjustment');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 2066,
+    "url_raw": "`${API_BASE_URL}/pms/auth/verify-manager-pin`",
+    "method": "POST",
+    "context": "  async verifyManagerPin(pin: string): Promise<boolean> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/pms/auth/verify-manager-pin`, {\n        method: 'POST',\n        headers: { 'Content-Type': 'application/json' },\n        body: JSON.stringify({ pin })\n      });\n      return res.ok;\n    } catch {\n      return false;"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 2079,
+    "url_raw": "`${API_BASE_URL}/pms/bookings/${encodeURIComponent(String(bookingId))}/confirm`",
+    "method": "PUT",
+    "context": "  // Module 61: Confirm Booking\n  async confirmBooking(bookingId: string | number): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/bookings/${encodeURIComponent(String(bookingId))}/confirm`, {\n      method: 'PUT'\n    });\n    if (!res.ok) throw new Error('Failed to confirm booking');\n    return await res.json();\n  },\n\n  // Module 62: Deletions"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 2088,
+    "url_raw": "`${API_BASE_URL}/pms/expenses/${encodeURIComponent(String(expenseId))}`",
+    "method": "DELETE",
+    "context": "  // Module 62: Deletions\n  async deleteExpense(expenseId: string | number): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/expenses/${encodeURIComponent(String(expenseId))}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete expense');\n    return await res.json();\n  },\n\n  async deletePurchase(purchaseId: string | number): Promise<any> {"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 2096,
+    "url_raw": "`${API_BASE_URL}/pms/purchases/${encodeURIComponent(String(purchaseId))}`",
+    "method": "DELETE",
+    "context": "\n  async deletePurchase(purchaseId: string | number): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/purchases/${encodeURIComponent(String(purchaseId))}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete purchase');\n    return await res.json();\n  },\n\n  async deleteRole(roleId: string | number): Promise<any> {"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 2104,
+    "url_raw": "`${API_BASE_URL}/pms/roles/${encodeURIComponent(String(roleId))}`",
+    "method": "DELETE",
+    "context": "\n  async deleteRole(roleId: string | number): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/roles/${encodeURIComponent(String(roleId))}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete role');\n    return await res.json();\n  },\n\n  async deleteUser(userId: string | number): Promise<any> {"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 2112,
+    "url_raw": "`${API_BASE_URL}/pms/users/${encodeURIComponent(String(userId))}`",
+    "method": "DELETE",
+    "context": "\n  async deleteUser(userId: string | number): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/users/${encodeURIComponent(String(userId))}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete user');\n    return await res.json();\n  },\n\n  async deleteWhatsAppTemplate(templateId: string | number): Promise<any> {"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 2120,
+    "url_raw": "`${API_BASE_URL}/pms/whatsapp/templates/${encodeURIComponent(String(templateId))}`",
+    "method": "DELETE",
+    "context": "\n  async deleteWhatsAppTemplate(templateId: string | number): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/whatsapp/templates/${encodeURIComponent(String(templateId))}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete WhatsApp template');\n    return await res.json();\n  },\n\n  async clearWhatsAppLogs(): Promise<any> {"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 2128,
+    "url_raw": "`${API_BASE_URL}/pms/whatsapp/logs`",
+    "method": "DELETE",
+    "context": "\n  async clearWhatsAppLogs(): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/whatsapp/logs`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to clear WhatsApp logs');\n    return await res.json();\n  },\n\n  async settlePartyAccount(accountName: string, amount: number): Promise<any> {"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 2136,
+    "url_raw": "`${API_BASE_URL}/pms/party-accounts/settle`",
+    "method": "POST",
+    "context": "\n  async settlePartyAccount(accountName: string, amount: number): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/party-accounts/settle`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify({ accountName, amount })\n    });\n    if (!res.ok) throw new Error('Failed to settle party account');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 2146,
+    "url_raw": "`${API_BASE_URL}/pms/rooms`",
+    "method": "POST",
+    "context": "\n  async createRoom(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/rooms`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to create room in database');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 2156,
+    "url_raw": "`${API_BASE_URL}/pms/rooms/${roomId}`",
+    "method": "PUT",
+    "context": "\n  async updateRoom(roomId: string | number, payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/rooms/${roomId}`, {\n      method: 'PUT',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to update room in database');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 2166,
+    "url_raw": "`${API_BASE_URL}/pms/rooms/${roomId}`",
+    "method": "DELETE",
+    "context": "\n  async deleteRoom(roomId: string | number): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/rooms/${roomId}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete room in database');\n    return await res.json();\n  },\n\n  async saveTable(payload: any): Promise<any> {"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 2174,
+    "url_raw": "`${API_BASE_URL}/pms/tables`",
+    "method": "POST",
+    "context": "\n  async saveTable(payload: any): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/tables`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n    if (!res.ok) throw new Error('Failed to save table in database');\n    return await res.json();\n  },"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 2184,
+    "url_raw": "`${API_BASE_URL}/pms/tables/${tableId}`",
+    "method": "DELETE",
+    "context": "\n  async deleteTable(tableId: string | number): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/tables/${tableId}`, {\n      method: 'DELETE'\n    });\n    if (!res.ok) throw new Error('Failed to delete table in database');\n    return await res.json();\n  }\n};\n"
+  },
+  {
+    "file": "src\\services\\apiClient.ts",
+    "line": 119,
+    "url_raw": "`${API_BASE_URL}/auth/refresh`",
+    "method": "POST",
+    "context": "  refreshPromise = (async () => {\n    try {\n      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {\n        method: 'POST',\n        headers: {\n          'Content-Type': 'application/json',\n          'X-Idempotency-Key': generateUUIDv4()\n        },\n        body: JSON.stringify({ refresh_token: refreshToken })\n      });"
+  },
+  {
+    "file": "src\\services\\apiClient.ts",
+    "line": 194,
+    "url_raw": "url",
+    "method": "GET",
+    "context": "  let response: Response;\n  try {\n    response = await fetch(url, {\n      ...options,\n      method,\n      headers\n    });\n  } catch (networkError: any) {\n    // Check if network error is offline related\n    if (typeof window !== 'undefined' && !window.navigator.onLine) {"
+  },
+  {
+    "file": "src\\services\\apiClient.ts",
+    "line": 220,
+    "url_raw": "url",
+    "method": "GET",
+    "context": "      }\n\n      response = await fetch(url, {\n        ...options,\n        method,\n        headers\n      });\n    }\n  }\n"
+  },
+  {
+    "file": "src\\services\\decentroApi.ts",
+    "line": 178,
+    "url_raw": "`${API_BASE_URL}/payments/decentro/upi-qr`",
+    "method": "POST",
+    "context": "  async generateUpiQr(payload: DecentroUpiQrRequest): Promise<DecentroUpiQrResponse> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/payments/decentro/upi-qr`, {\n        method: 'POST',\n        headers: { 'Content-Type': 'application/json' },\n        body: JSON.stringify(payload)\n      });\n\n      if (!res.ok) {\n        // Try fallback without /v1 in case routed directly to /api"
+  },
+  {
+    "file": "src\\services\\decentroApi.ts",
+    "line": 186,
+    "url_raw": "`${API_BASE_URL.replace('",
+    "method": "POST",
+    "context": "      if (!res.ok) {\n        // Try fallback without /v1 in case routed directly to /api\n        const fallbackRes = await fetch(`${API_BASE_URL.replace('/v1', '')}/payments/decentro/upi-qr`, {\n          method: 'POST',\n          headers: { 'Content-Type': 'application/json' },\n          body: JSON.stringify(payload)\n        });\n        if (fallbackRes.ok) {\n          const data: DecentroUpiQrResponse = await fallbackRes.json();\n          await decentroApi._cacheQr(data, payload);"
+  },
+  {
+    "file": "src\\services\\decentroApi.ts",
+    "line": 269,
+    "url_raw": "`${API_BASE_URL}/payments/decentro/virtual-account`",
+    "method": "POST",
+    "context": "  async createVirtualAccount(payload: DecentroVirtualAccountRequest): Promise<DecentroVirtualAccountResponse> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/payments/decentro/virtual-account`, {\n        method: 'POST',\n        headers: { 'Content-Type': 'application/json' },\n        body: JSON.stringify(payload)\n      });\n\n      if (!res.ok) {\n        const fallbackRes = await fetch(`${API_BASE_URL.replace('/v1', '')}/payments/decentro/virtual-account`, {"
+  },
+  {
+    "file": "src\\services\\decentroApi.ts",
+    "line": 276,
+    "url_raw": "`${API_BASE_URL.replace('",
+    "method": "POST",
+    "context": "\n      if (!res.ok) {\n        const fallbackRes = await fetch(`${API_BASE_URL.replace('/v1', '')}/payments/decentro/virtual-account`, {\n          method: 'POST',\n          headers: { 'Content-Type': 'application/json' },\n          body: JSON.stringify(payload)\n        });\n        if (fallbackRes.ok) {\n          const data = await fallbackRes.json();\n          await decentroApi._cacheVirtualAccount(data, payload);"
+  },
+  {
+    "file": "src\\services\\decentroApi.ts",
+    "line": 361,
+    "url_raw": "`${API_BASE_URL}/kyc/decentro/verify-gstin`",
+    "method": "POST",
+    "context": "\n    try {\n      const res = await fetch(`${API_BASE_URL}/kyc/decentro/verify-gstin`, {\n        method: 'POST',\n        headers: { 'Content-Type': 'application/json' },\n        body: JSON.stringify({ gstin: cleanGst })\n      });\n\n      if (!res.ok) {\n        const fallbackRes = await fetch(`${API_BASE_URL.replace('/v1', '')}/kyc/decentro/verify-gstin`, {"
+  },
+  {
+    "file": "src\\services\\decentroApi.ts",
+    "line": 368,
+    "url_raw": "`${API_BASE_URL.replace('",
+    "method": "POST",
+    "context": "\n      if (!res.ok) {\n        const fallbackRes = await fetch(`${API_BASE_URL.replace('/v1', '')}/kyc/decentro/verify-gstin`, {\n          method: 'POST',\n          headers: { 'Content-Type': 'application/json' },\n          body: JSON.stringify({ gstin: cleanGst })\n        });\n        if (fallbackRes.ok) {\n          const data: DecentroGstinVerifyResponse = await fallbackRes.json();\n          await decentroApi._cacheGstin(data);"
+  },
+  {
+    "file": "src\\services\\decentroApi.ts",
+    "line": 472,
+    "url_raw": "`${API_BASE_URL}/payments/decentro/status/${referenceId}`",
+    "method": "GET",
+    "context": "   */\n  async getTransactionStatus(referenceId: string): Promise<PaymentTransactionResponse> {\n    const res = await fetch(`${API_BASE_URL}/payments/decentro/status/${referenceId}`);\n    if (!res.ok) {\n      throw new Error(`Failed to check payment status: ${res.status}`);\n    }\n    return res.json();\n  },\n\n  /**"
+  },
+  {
+    "file": "src\\services\\r2Storage.ts",
+    "line": 122,
+    "url_raw": "`${API_BASE_URL}/uploads/status`",
+    "method": "GET",
+    "context": "  static async getStatus(): Promise<R2StatusResponse> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/uploads/status`);\n      if (res.ok) {\n        return await res.json();\n      }\n    } catch (_e) {\n      void _e;\n    }\n"
+  },
+  {
+    "file": "src\\services\\r2Storage.ts",
+    "line": 147,
+    "url_raw": "`${API_BASE_URL}/uploads/test-connection`",
+    "method": "GET",
+    "context": "  static async testConnection(): Promise<R2TestConnectionResponse> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/uploads/test-connection`);\n      if (res.ok) {\n        return await res.json();\n      }\n    } catch (_err) {\n      void _err;\n    }\n"
+  },
+  {
+    "file": "src\\services\\r2Storage.ts",
+    "line": 180,
+    "url_raw": "`${API_BASE_URL}/uploads/presigned-url`",
+    "method": "POST",
+    "context": "    let presignedData: { upload_url?: string | null; object_key: string; public_url: string; storage: string } | null = null;\n    try {\n      const presignedRes = await fetch(`${API_BASE_URL}/uploads/presigned-url`, {\n        method: 'POST',\n        headers: { 'Content-Type': 'application/json' },\n        body: JSON.stringify({\n          filename: file.name,\n          folder,\n          content_type: file.type || 'image/jpeg',\n          expires_in: 900"
+  },
+  {
+    "file": "src\\services\\r2Storage.ts",
+    "line": 283,
+    "url_raw": "`${API_BASE_URL}/uploads/file`",
+    "method": "POST",
+    "context": "      if (onProgress) onProgress(30);\n\n      const res = await fetch(`${API_BASE_URL}/uploads/file`, {\n        method: 'POST',\n        body: formData,\n        signal: controller.signal\n      });\n\n      clearTimeout(timeoutId);\n"
+  },
+  {
+    "file": "src\\services\\r2Storage.ts",
+    "line": 352,
+    "url_raw": "url.toString(",
+    "method": "GET",
+    "context": "      url.searchParams.set('limit', String(limit));\n\n      const res = await fetch(url.toString());\n      if (res.ok) {\n        const data = await res.json();\n        return data.files || [];\n      }\n    } catch (err) {\n      console.warn('[R2Storage] listFiles failed:', err);\n    }"
+  },
+  {
+    "file": "src\\services\\r2Storage.ts",
+    "line": 368,
+    "url_raw": "`${API_BASE_URL}/uploads/${encodeURIComponent(objectKey)}`",
+    "method": "DELETE",
+    "context": "  static async deleteFile(objectKey: string): Promise<boolean> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/uploads/${encodeURIComponent(objectKey)}`, {\n        method: 'DELETE'\n      });\n      if (res.ok) {\n        const data = await res.json();\n        return Boolean(data.deleted);\n      }\n    } catch (err) {"
+  },
+  {
+    "file": "src\\services\\r2Storage.ts",
+    "line": 386,
+    "url_raw": "`${API_BASE_URL}/uploads/presigned-download`",
+    "method": "POST",
+    "context": "  static async getPresignedDownloadUrl(objectKey: string, expiresIn: number = 3600): Promise<string> {\n    try {\n      const res = await fetch(`${API_BASE_URL}/uploads/presigned-download`, {\n        method: 'POST',\n        headers: { 'Content-Type': 'application/json' },\n        body: JSON.stringify({ object_key: objectKey, expires_in: expiresIn })\n      });\n      if (res.ok) {\n        const data = await res.json();\n        return data.download_url;"
+  },
+  {
+    "file": "src\\services\\r2Storage.ts",
+    "line": 414,
+    "url_raw": "`${API_BASE_URL}/uploads/booking-kyc/${bookingId}`",
+    "method": "POST",
+    "context": "    const formData = new FormData();\n    formData.append('file', file);\n    const res = await fetch(`${API_BASE_URL}/uploads/booking-kyc/${bookingId}`, {\n      method: 'POST',\n      body: formData\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || `KYC upload failed with status ${res.status}`);\n    }"
+  },
+  {
+    "file": "src\\services\\r2Storage.ts",
+    "line": 433,
+    "url_raw": "`${API_BASE_URL}/uploads/booking-kyc/${bookingId}/presigned-url?expires_in=${expiresIn}`",
+    "method": "GET",
+    "context": "    object_key: string;\n  }> {\n    const res = await fetch(`${API_BASE_URL}/uploads/booking-kyc/${bookingId}/presigned-url?expires_in=${expiresIn}`);\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || `Failed to fetch presigned KYC URL: ${res.status}`);\n    }\n    return await res.json();\n  }\n"
+  },
+  {
+    "file": "src\\services\\r2Storage.ts",
+    "line": 445,
+    "url_raw": "`${API_BASE_URL}/uploads/booking-kyc/${bookingId}`",
+    "method": "DELETE",
+    "context": "   */\n  static async deleteBookingKyc(bookingId: number): Promise<boolean> {\n    const res = await fetch(`${API_BASE_URL}/uploads/booking-kyc/${bookingId}`, {\n      method: 'DELETE'\n    });\n    return res.ok;\n  }\n\n  /**\n   * Upload room photo to Cloudflare R2 and update room.image_url in PostgreSQL"
+  },
+  {
+    "file": "src\\services\\r2Storage.ts",
+    "line": 462,
+    "url_raw": "`${API_BASE_URL}/uploads/room-photo/${roomId}`",
+    "method": "POST",
+    "context": "    const formData = new FormData();\n    formData.append('file', file);\n    const res = await fetch(`${API_BASE_URL}/uploads/room-photo/${roomId}`, {\n      method: 'POST',\n      body: formData\n    });\n    if (!res.ok) {\n      const err = await res.json().catch(() => ({}));\n      throw new Error(err.detail || `Room photo upload failed: ${res.status}`);\n    }"
+  }
+]

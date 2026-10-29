@@ -294,12 +294,20 @@ async def upload_booking_kyc_document(
         content_type=content_type
     )
 
-    # Persist in PostgreSQL
-    booking.id_proof_document_key = object_key
-    if booking.police_log:
-        booking.police_log.id_document_key = object_key
-    db.commit()
-    db.refresh(booking)
+    # Persist in PostgreSQL with compensating rollback cleanup (#45, #50)
+    try:
+        booking.id_proof_document_key = object_key
+        if booking.police_log:
+            booking.police_log.id_document_key = object_key
+        db.commit()
+        db.refresh(booking)
+    except Exception as db_err:
+        db.rollback()
+        try:
+            r2_service.delete_file(object_key)
+        except Exception:
+            pass
+        raise HTTPException(status_code=500, detail=f"Database commit failed, R2 upload compensated: {str(db_err)}")
 
     return schemas.BookingKycUploadResponse(
         booking_id=booking.id,
@@ -432,9 +440,18 @@ async def upload_booking_invoice_pdf(
         content_type="application/pdf"
     )
 
-    booking.invoice_pdf_key = object_key
-    db.commit()
-    db.refresh(booking)
+    # Persist in PostgreSQL with compensating rollback cleanup (#45, #50)
+    try:
+        booking.invoice_pdf_key = object_key
+        db.commit()
+        db.refresh(booking)
+    except Exception as db_err:
+        db.rollback()
+        try:
+            r2_service.delete_file(object_key)
+        except Exception:
+            pass
+        raise HTTPException(status_code=500, detail=f"Database commit failed, R2 invoice upload compensated: {str(db_err)}")
 
     return {
         "status": "success",

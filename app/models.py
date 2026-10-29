@@ -1,14 +1,15 @@
 import datetime
 import uuid
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, Index, event, DDL
 from sqlalchemy.orm import relationship
 from app.database import Base
+from app.utils.timezone import now_utc, TimezoneAwareDateTime
 
 def generate_booking_ref():
     return f"SVR-{uuid.uuid4().hex[:6].upper()}"
 
 def generate_invoice_num():
-    now_ts = int(datetime.datetime.utcnow().timestamp() * 1000)
+    now_ts = int(now_utc().timestamp() * 1000)
     rand_seq = uuid.uuid4().hex[:6].upper()
     return f"INV-SVR-{now_ts}-{rand_seq}"
 
@@ -30,7 +31,8 @@ class Room(Base):
     badge = Column(String(50), nullable=True) # "Best Value", "Family Favorite", "Luxury Suite"
     is_available = Column(Boolean, default=True)
     housekeeping_status = Column(String(50), default="Clean") # Clean, Dirty, Inspected, Under_Maintenance
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    version_id = Column(Integer, default=1, nullable=False) # Optimistic locking (#25, #26)
+    created_at = Column(TimezoneAwareDateTime, default=now_utc)
 
     bookings = relationship("Booking", back_populates="room")
 
@@ -83,10 +85,16 @@ class Booking(Base):
     status = Column(String(50), default="Confirmed", index=True) # Confirmed, Checked-In, Checked-Out, Cancelled, No-Show
     special_requests = Column(Text, nullable=True)
     cancellation_reason = Column(String(255), nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    version_id = Column(Integer, default=1, nullable=False) # Optimistic locking (#25, #26)
+    created_at = Column(TimezoneAwareDateTime, default=now_utc)
+    updated_at = Column(TimezoneAwareDateTime, default=now_utc, onupdate=now_utc)
+
+    __table_args__ = (
+        Index("ix_bookings_checkin_checkout_status", "check_in_date", "check_out_date", "status"),
+    )
 
     room = relationship("Room", back_populates="bookings")
+    folios = relationship("Folio", back_populates="booking", cascade="all, delete-orphan")
     payments = relationship("BookingPayment", back_populates="booking", cascade="all, delete-orphan")
     folio_items = relationship("RoomFolioItem", back_populates="booking", cascade="all, delete-orphan")
     room_shifts = relationship("RoomShift", back_populates="booking", cascade="all, delete-orphan")
@@ -141,7 +149,11 @@ class RoomFolioItem(Base):
     sgst_amount = Column(Float, default=0.0)
     total_amount = Column(Float, nullable=False)
     status = Column(String(50), default="Billed") # Billed, Void
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(TimezoneAwareDateTime, default=now_utc)
+
+    __table_args__ = (
+        Index("ix_room_folio_items_booking_status", "booking_id", "status"),
+    )
 
     booking = relationship("Booking", back_populates="folio_items")
 
@@ -178,11 +190,21 @@ class AuditLog(Base):
     __tablename__ = "audit_logs"
 
     id = Column(Integer, primary_key=True, index=True)
-    event_type = Column(String(50), nullable=False, index=True) # CHECK_IN, CHECK_OUT, ROOM_SHIFT, PAYMENT_COLLECTED, DISCOUNT_APPLIED, CANCELLATION
+    staff_id = Column(String(100), nullable=True, index=True)
+    role = Column(String(50), nullable=True)
+    action = Column(String(100), nullable=True, index=True) # E.g. CHECK_IN, TARIFF_OVERRIDE, DISCOUNT_APPLIED
+    entity_type = Column(String(100), nullable=True, index=True) # BOOKING, FOLIO, ROOM, KOT, PAYOUT
+    entity_id = Column(String(100), nullable=True, index=True)
+    old_data = Column(Text, nullable=True)
+    new_data = Column(Text, nullable=True)
+    ip_address = Column(String(50), nullable=True)
+    created_at = Column(TimezoneAwareDateTime, default=now_utc, nullable=False)
+
+    # Legacy compatibility fields
+    event_type = Column(String(50), nullable=True, index=True)
     booking_ref = Column(String(50), nullable=True, index=True)
-    performed_by = Column(String(100), nullable=False)
-    details_json = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    performed_by = Column(String(100), nullable=True)
+    details_json = Column(Text, nullable=True)
 
 class DailyNightAudit(Base):
     __tablename__ = "night_audits"
@@ -246,7 +268,13 @@ class KotTicket(Base):
     total_amount = Column(Float, default=0.0)
     status = Column(String(50), default="Running") # Running, Billed, Cancelled
     is_printed = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    is_delta = Column(Boolean, default=False)
+    order_source = Column(String(50), default="Desktop")
+    created_at = Column(TimezoneAwareDateTime, default=now_utc)
+
+    __table_args__ = (
+        Index("ix_kot_tickets_room_status", "room_no", "status"),
+    )
 
 class KotVoidAuditLog(Base):
     __tablename__ = "kot_void_audit_logs"
@@ -321,6 +349,7 @@ class StaffUser(Base):
     email = Column(String(150), nullable=True)
     is_active = Column(Boolean, default=True)
     permissions_json = Column(Text, default="[]")
+    password_hash = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 class InventoryPurchase(Base):
@@ -626,6 +655,7 @@ class UserAccount(Base):
     department = Column(String(100), nullable=True)
     shift = Column(String(100), nullable=True)
     mobile = Column(String(50), nullable=True)
+    password_hash = Column(String(255), nullable=True)
     is_on_duty = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
@@ -1152,12 +1182,171 @@ class LiquorStockAdjustment(Base):
     reference_no = Column(String(100), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
+# =========================================================================
+# MODULE 1 & 2 ARCHITECTURAL ENTITIES (Financial Integrity & Concurrency)
+# =========================================================================
 
+class IdempotencyKey(Base):
+    """
+    Stores idempotency records for POST routes to guarantee financial integrity (#1).
+    Allows 24-hour TTL caching of response codes and bodies.
+    """
+    __tablename__ = "idempotency_keys"
 
+    id = Column(Integer, primary_key=True, index=True)
+    key = Column(String(255), unique=True, index=True, nullable=False)
+    endpoint = Column(String(255), nullable=False)
+    request_hash = Column(String(64), nullable=False)
+    response_status = Column(Integer, nullable=True)
+    response_body = Column(Text, nullable=True)
+    created_at = Column(TimezoneAwareDateTime, default=now_utc, nullable=False)
 
+class WebhookEvent(Base):
+    """
+    Immediate raw ingestion table for Decentro webhooks (#36).
+    Tracks status lifecycle: PENDING -> PROCESSED | FAILED.
+    """
+    __tablename__ = "webhook_events"
 
+    id = Column(Integer, primary_key=True, index=True)
+    event_id = Column(String(100), unique=True, index=True, nullable=False)
+    source = Column(String(50), default="DECENTRO", nullable=False)
+    event_type = Column(String(100), nullable=True)
+    payload_json = Column(Text, nullable=False)
+    status = Column(String(50), default="PENDING", index=True, nullable=False)
+    attempts = Column(Integer, default=0, nullable=False)
+    last_error = Column(Text, nullable=True)
+    created_at = Column(TimezoneAwareDateTime, default=now_utc, nullable=False)
+    processed_at = Column(TimezoneAwareDateTime, nullable=True)
 
+class FailedWebhookDLQ(Base):
+    """
+    Dead Letter Queue (DLQ) for webhooks that fail after 3 retries (#39).
+    Exposes admin recovery replay via /api/v1/admin/dlq/replay.
+    """
+    __tablename__ = "failed_webhook_dlq"
 
+    id = Column(Integer, primary_key=True, index=True)
+    event_id = Column(String(100), index=True, nullable=False)
+    source = Column(String(50), default="DECENTRO", nullable=False)
+    payload_json = Column(Text, nullable=False)
+    failure_reason = Column(Text, nullable=False)
+    retry_count = Column(Integer, default=3, nullable=False)
+    status = Column(String(50), default="FAILED", index=True, nullable=False)
+    created_at = Column(TimezoneAwareDateTime, default=now_utc, nullable=False)
+    replayed_at = Column(TimezoneAwareDateTime, nullable=True)
+    replayed_by = Column(String(100), nullable=True)
 
+class RefreshToken(Base):
+    """
+    Stores 7-day rotating refresh tokens for JWT authentication (#47, #44).
+    Supports instant revocation on shift handover, logout, or session rotation.
+    """
+    __tablename__ = "refresh_tokens"
 
+    id = Column(Integer, primary_key=True, index=True)
+    token = Column(String(500), unique=True, index=True, nullable=False)
+    user_id = Column(String(100), index=True, nullable=False) # Email or Username
+    role = Column(String(50), nullable=False) # OWNER, MANAGER, RECEPTIONIST, STEWARD, HOUSEKEEPING
+    expires_at = Column(TimezoneAwareDateTime, nullable=False)
+    is_revoked = Column(Boolean, default=False, nullable=False)
+    revoked_at = Column(TimezoneAwareDateTime, nullable=True)
+    revocation_reason = Column(String(100), nullable=True) # LOGOUT, SHIFT_HANDOVER, ROTATED
+    created_at = Column(TimezoneAwareDateTime, default=now_utc, nullable=False)
 
+class RatePlan(Base):
+    """Rate Plan entity supporting version_id optimistic locking (#25, #26)."""
+    __tablename__ = "rate_plans"
+
+    id = Column(Integer, primary_key=True, index=True)
+    plan_code = Column(String(50), unique=True, index=True, nullable=False)
+    name = Column(String(100), nullable=False)
+    room_type_id = Column(Integer, nullable=True)
+    description = Column(Text, nullable=True)
+    base_price_modifier = Column(Float, default=0.0)
+    is_active = Column(Boolean, default=True)
+    version_id = Column(Integer, default=1, nullable=False)
+    created_at = Column(TimezoneAwareDateTime, default=now_utc)
+    updated_at = Column(TimezoneAwareDateTime, default=now_utc, onupdate=now_utc)
+
+class Guest(Base):
+    """Guest master entity supporting version_id optimistic locking & composite indexing (#20, #25)."""
+    __tablename__ = "guests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(150), nullable=False)
+    phone = Column(String(50), index=True, nullable=False)
+    email = Column(String(150), nullable=True)
+    gstin = Column(String(20), index=True, nullable=True)
+    id_proof_type = Column(String(50), default="Aadhaar Card")
+    id_proof_number = Column(String(100), nullable=True)
+    address = Column(Text, nullable=True)
+    city = Column(String(100), nullable=True)
+    state = Column(String(100), nullable=True)
+    pincode = Column(String(20), nullable=True)
+    version_id = Column(Integer, default=1, nullable=False)
+    created_at = Column(TimezoneAwareDateTime, default=now_utc)
+    updated_at = Column(TimezoneAwareDateTime, default=now_utc, onupdate=now_utc)
+
+    __table_args__ = (
+        Index("ix_guests_phone_gstin", "phone", "gstin"),
+    )
+
+class Folio(Base):
+    """
+    Dedicated Master Folio record for guest stay settlement (#20, #26).
+    Maintains canonical lock target and tracks balances & version_id.
+    """
+    __tablename__ = "folios"
+
+    id = Column(Integer, primary_key=True, index=True)
+    booking_id = Column(Integer, ForeignKey("bookings.id"), nullable=False, index=True)
+    folio_number = Column(String(50), unique=True, index=True, nullable=False)
+    status = Column(String(50), default="OPEN", index=True, nullable=False) # OPEN, SETTLED, CLOSED, VOID
+    total_charges = Column(Float, default=0.0)
+    total_payments = Column(Float, default=0.0)
+    balance_due = Column(Float, default=0.0)
+    version_id = Column(Integer, default=1, nullable=False)
+    created_at = Column(TimezoneAwareDateTime, default=now_utc)
+    updated_at = Column(TimezoneAwareDateTime, default=now_utc, onupdate=now_utc)
+
+    booking = relationship("Booking", back_populates="folios")
+
+    __table_args__ = (
+        Index("ix_folios_booking_id_status", "booking_id", "status"),
+    )
+
+class KOTOrder(Base):
+    """
+    KOT Order record supporting composite index (room_id, status) (#20, #21).
+    """
+    __tablename__ = "kot_orders"
+
+    id = Column(Integer, primary_key=True, index=True)
+    kot_number = Column(String(50), unique=True, index=True, nullable=False)
+    room_id = Column(Integer, ForeignKey("rooms.id"), nullable=True, index=True)
+    room_no = Column(String(50), nullable=True)
+    table_no = Column(String(50), nullable=True)
+    status = Column(String(50), default="PLACED", index=True, nullable=False) # PLACED, PREPARING, READY, SERVED, BILLED, VOID
+    total_amount = Column(Float, default=0.0)
+    created_at = Column(TimezoneAwareDateTime, default=now_utc)
+    updated_at = Column(TimezoneAwareDateTime, default=now_utc, onupdate=now_utc)
+
+    __table_args__ = (
+        Index("ix_kot_orders_room_id_status", "room_id", "status"),
+    )
+
+# =========================================================================
+# POSTGRESQL BTREE_GIST EXCLUSION CONSTRAINT (#14)
+# =========================================================================
+# Prevents two active reservations (CONFIRMED or CHECKED_IN) from overlapping in date range for the same room_id
+event.listen(
+    Booking.__table__,
+    'after_create',
+    DDL(
+        "CREATE EXTENSION IF NOT EXISTS btree_gist; "
+        "ALTER TABLE bookings ADD CONSTRAINT no_overlapping_active_bookings "
+        "EXCLUDE USING gist (room_id WITH =, daterange(check_in_date::date, check_out_date::date) WITH &&) "
+        "WHERE (status IN ('Confirmed', 'Checked-In', 'CONFIRMED', 'CHECKED_IN'));"
+    ).execute_if(dialect='postgresql')
+)

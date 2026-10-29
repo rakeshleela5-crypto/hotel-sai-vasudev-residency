@@ -383,7 +383,7 @@ class CheckOutRequest(BaseModel):
     processed_by: Optional[str] = "Front Desk Officer"
 
 class RoomMaintenanceRequest(BaseModel):
-    room_id: int
+    room_id: Optional[int] = None
     is_under_maintenance: bool
     reason: Optional[str] = "Routine sanitization / maintenance"
     updated_by: Optional[str] = "Property Manager"
@@ -469,11 +469,13 @@ class DecentroUpiQrResponse(BaseModel):
     reference_id: str
     decentro_txn_id: Optional[str] = None
     amount: float
-    qr_code_base64: str
-    upi_intent_link: str
+    qr_code_base64: Optional[str] = ""
+    upi_intent_link: Optional[str] = ""
     status: str = "PENDING"
     expiry_time: Optional[str] = None
     message: str = "Dynamic UPI QR generated successfully"
+    decentro_unavailable: Optional[bool] = False
+    fallback_mode: Optional[str] = None
 
 class DecentroVirtualAccountRequest(BaseModel):
     corporate_name: str = Field(..., min_length=2, description="Corporate entity or guest name")
@@ -543,22 +545,34 @@ class PaymentTransactionResponse(BaseModel):
 # --- New Enterprise Operations Schemas ---
 
 class FoodBillCreate(BaseModel):
-    bill_no: str
-    date: str
-    time: str
+    bill_no: Optional[str] = None
+    billNo: Optional[str] = None
+    date: Optional[str] = None
+    time: Optional[str] = None
     room_no: Optional[str] = None
+    roomNo: Optional[str] = None
     table_no: Optional[str] = None
+    tableNo: Optional[str] = None
     guest_name: Optional[str] = None
+    guestName: Optional[str] = None
     kot_numbers: Optional[List[str]] = []
+    kot_numbers_json: Optional[str] = None
     items: Optional[List[Dict[str, Any]]] = []
+    items_json: Optional[str] = None
     food_gross_amount: float = 0.0
+    foodGrossAmount: Optional[float] = None
     discount_percent: float = 0.0
     discount_amount: float = 0.0
     taxable_amount: float = 0.0
+    gst_percent: Optional[float] = None
+    cgst_amount: Optional[float] = None
+    sgst_amount: Optional[float] = None
     gst_amount: float = 0.0
     net_bill_amount: float = 0.0
-    settlement_type: str = "Cash"
-    status: str = "Settled"
+    netBillAmount: Optional[float] = None
+    settlement_type: Optional[str] = None
+    settlementType: Optional[str] = None
+    status: Optional[str] = "Settled"
 
 class FoodBillResponse(BaseModel):
     id: int

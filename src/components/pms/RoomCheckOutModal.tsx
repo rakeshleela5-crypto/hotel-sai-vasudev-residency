@@ -675,6 +675,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
 
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                     <button
+                      id="checkout-late-half-btn"
                       type="button"
                       onClick={() => setLateCheckoutApplied('half')}
                       style={{
@@ -691,6 +692,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                       Half Day (+₹{Math.round(perDayTariff * 0.5)})
                     </button>
                     <button
+                      id="checkout-late-full-btn"
                       type="button"
                       onClick={() => setLateCheckoutApplied('full')}
                       style={{
@@ -707,12 +709,13 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                       Full Day (+₹{perDayTariff})
                     </button>
                     <button
+                      id="checkout-late-waiver-btn"
                       type="button"
                       onClick={() => {
                         const note = prompt('Enter Manager Waiver Reason (e.g. VIP Pilgrim / Delayed Darshan Aarti):', 'Complimentary extension for temple darshan aarti');
-                        if (note) {
+                        if (note !== null) {
                           setLateCheckoutApplied('waived');
-                          setLateCheckoutWaiverNote(note);
+                          setLateCheckoutWaiverNote(note || 'Complimentary extension for temple darshan aarti');
                         }
                       }}
                       style={{
@@ -958,6 +961,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                     {pendingKots.length > 0 && (
                       <button
                         type="button"
+                        id="checkout-clear-kots-btn"
                         onClick={handleClearKotsToFoodBill}
                         style={{ background: '#dc2626', color: '#fff', border: 'none', padding: '2px 6px', borderRadius: 2, fontSize: 9, fontWeight: 800, cursor: 'pointer' }}
                         title="Convert pending KOTs into Food Bill"
@@ -1242,15 +1246,35 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
 
                       {/* Split Payment Rows */}
                       <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 3, marginTop: 1 }}>
-                        <div style={{ fontSize: 10, fontWeight: 800, color: '#475569', marginBottom: 2, display: 'flex', justifyContent: 'space-between' }}>
+                        <div style={{ fontSize: 10, fontWeight: 800, color: '#475569', marginBottom: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span>Payment Allocation:</span>
-                          <button
-                            type="button"
-                            onClick={handleAddPaymentMode}
-                            style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '1px 5px', borderRadius: 2, fontSize: 9, fontWeight: 700, cursor: 'pointer' }}
-                          >
-                            + Split Mode
-                          </button>
+                          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                            <button
+                              type="button"
+                              id="checkout-decentro-qr-btn"
+                              onClick={() => setShowDecentroQrModal(true)}
+                              style={{ background: '#0284c7', color: '#fff', border: 'none', padding: '1px 6px', borderRadius: 2, fontSize: 9, fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 2 }}
+                              title="Generate Dynamic Decentro UPI QR Code for instant guest folio settlement"
+                            >
+                              ⚡ Decentro QR
+                            </button>
+                            <button
+                              type="button"
+                              id="checkout-auto-settle-btn"
+                              onClick={handleAutoSettle}
+                              style={{ background: '#059669', color: '#fff', border: 'none', padding: '1px 5px', borderRadius: 2, fontSize: 9, fontWeight: 700, cursor: 'pointer' }}
+                              title="Auto settle remaining balance to achieve ₹0.00 zero-balance checkout"
+                            >
+                              Auto-Settle
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleAddPaymentMode}
+                              style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '1px 5px', borderRadius: 2, fontSize: 9, fontWeight: 700, cursor: 'pointer' }}
+                            >
+                              + Split Mode
+                            </button>
+                          </div>
                         </div>
 
                         {paymentSplits.map((split, idx) => (
@@ -1548,7 +1572,9 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                   Back
                 </button>
                 <button
-                  type="submit"
+                  id="complete-checkout-btn"
+                  type="button"
+                  onClick={handleCheckoutSubmit as any}
                   disabled={isProcessing || (!isCityLedgerApproved && remainingToSettle > 0.01)}
                   style={{
                     background: isProcessing || (!isCityLedgerApproved && remainingToSettle > 0.01) ? '#94a3b8' : '#16a34a',
@@ -1656,6 +1682,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                   <span>💬</span> WhatsApp Bill (wa.me)
                 </button>
                 <button
+                  id="close-tax-invoice-btn"
                   type="button"
                   onClick={onClose}
                   style={{ background: '#dc2626', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: 3, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
@@ -1696,7 +1723,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                     <div style={{ marginTop: 4 }}>SAC: 996311 / 996331</div>
                   </div>
                 </div>
-                <div style={{
+                <div id="tax-invoice-final-title" style={{
                   background: '#0f172a',
                   color: '#ffffff',
                   padding: '4px 14px',
@@ -1715,7 +1742,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
               {/* Guest KYC & Stay Particulars Grid */}
               <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 12, border: '1px solid #cbd5e1', borderRadius: 4, padding: 10, marginBottom: 12, background: '#f8fafc', fontSize: 11 }}>
                 <div>
-                  <div style={{ fontWeight: 800, color: '#0369a1', borderBottom: '1px solid #cbd5e1', paddingBottom: 3, marginBottom: 5 }}>
+                  <div id="tax-invoice-guest-kyc-title" style={{ fontWeight: 800, color: '#0369a1', borderBottom: '1px solid #cbd5e1', paddingBottom: 3, marginBottom: 5 }}>
                     GUEST KYC &amp; BILLING DETAILS
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '125px 1fr', rowGap: 3 }}>

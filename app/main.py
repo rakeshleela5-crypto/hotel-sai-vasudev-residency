@@ -34,12 +34,29 @@ try:
                 ("bookings", "invoice_pdf_key", "VARCHAR(255)"),
                 ("police_station_logs", "id_document_key", "VARCHAR(255)"),
                 ("housekeeping_discrepancies", "discrepancy_id", "VARCHAR(50)"),
+                ("rooms", "version_id", "INTEGER DEFAULT 1"),
+                ("bookings", "version_id", "INTEGER DEFAULT 1"),
+                ("audit_logs", "staff_id", "VARCHAR(100)"),
+                ("audit_logs", "role", "VARCHAR(50)"),
+                ("audit_logs", "action", "VARCHAR(100)"),
+                ("audit_logs", "entity_type", "VARCHAR(100)"),
+                ("audit_logs", "entity_id", "VARCHAR(100)"),
+                ("audit_logs", "old_data", "TEXT"),
+                ("audit_logs", "new_data", "TEXT"),
+                ("audit_logs", "ip_address", "VARCHAR(50)"),
+                ("staff_users", "password_hash", "VARCHAR(255)"),
+                ("user_accounts", "password_hash", "VARCHAR(255)"),
             ]:
                 try:
-                    res = conn.execute(text(f"PRAGMA table_info({table_name})"))
+                    import re
+                    if not re.match(r'^[a-zA-Z0-9_]+$', table_name) or not re.match(r'^[a-zA-Z0-9_]+$', col_name):
+                        continue
+                    safe_table = f'"{table_name}"'
+                    safe_col = f'"{col_name}"'
+                    res = conn.execute(text(f"PRAGMA table_info({safe_table})"))
                     cols = [row[1] for row in res.fetchall()]
                     if col_name not in cols:
-                        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {col_name} {col_type}"))
+                        conn.execute(text(f"ALTER TABLE {safe_table} ADD COLUMN {safe_col} {col_type}"))
                         conn.commit()
                 except Exception as e:
                     print(f"Notice: SQLite migration for {table_name}.{col_name}: {e}")
@@ -63,6 +80,18 @@ try:
             "ALTER TABLE bookings ADD COLUMN IF NOT EXISTS invoice_pdf_key VARCHAR(255)",
             "ALTER TABLE police_station_logs ADD COLUMN IF NOT EXISTS id_document_key VARCHAR(255)",
             "ALTER TABLE housekeeping_discrepancies ADD COLUMN IF NOT EXISTS discrepancy_id VARCHAR(50)",
+            "ALTER TABLE rooms ADD COLUMN IF NOT EXISTS version_id INTEGER DEFAULT 1",
+            "ALTER TABLE bookings ADD COLUMN IF NOT EXISTS version_id INTEGER DEFAULT 1",
+            "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS staff_id VARCHAR(100)",
+            "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS role VARCHAR(50)",
+            "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS action VARCHAR(100)",
+            "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS entity_type VARCHAR(100)",
+            "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS entity_id VARCHAR(100)",
+            "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS old_data TEXT",
+            "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS new_data TEXT",
+            "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS ip_address VARCHAR(50)",
+            "ALTER TABLE staff_users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255)",
+            "ALTER TABLE user_accounts ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255)",
         ]
         for stmt in pg_migrations:
             try:
@@ -73,34 +102,115 @@ try:
 except Exception as exc:
     print(f"Notice: Initial DB schema sync deferred: {exc}")
 
+from contextlib import asynccontextmanager
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from starlette.requests import Request
+
+from app.utils.idempotency import IdempotencyMiddleware, IdempotentResponseException, idempotent_exception_handler
+from app.utils.rate_limit import limiter
+from app.utils.logging_middleware import StructuredLoggingMiddleware, global_500_exception_handler
+from app.services.scheduler import start_scheduler, stop_scheduler
+from app.routes import auth, health, ws, admin
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Start APScheduler jobs with Asia/Kolkata timezone (#41, #97)
+    start_scheduler()
+    yield
+    # Shutdown: Graceful termination of scheduler
+    stop_scheduler()
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
     description="FastAPI Backend for Hotel Sai Vasudev Residency connecting Cloudflare Pages to PostgreSQL on Railway",
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
-    docs_url=f"{settings.API_V1_STR}/docs"
+    docs_url=f"{settings.API_V1_STR}/docs",
+    lifespan=lifespan
 )
 
-# Production CORS configuration: Restricted to official Cloudflare Pages domains & localhost
+# Global 500 Unhandled Exception Handler with Webhook Alert (#101, #103, #104)
+app.add_exception_handler(Exception, global_500_exception_handler)
+
+# Structured JSON Logging with X-Request-ID (#100)
+app.add_middleware(StructuredLoggingMiddleware)
+
+# SlowAPI Rate Limiting (#2, #18)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
+
+# Idempotency Exception Handler & Middleware (#1)
+app.add_exception_handler(IdempotentResponseException, idempotent_exception_handler)
+app.add_middleware(IdempotencyMiddleware)
+
+# Security Response Headers Middleware (#2, #44)
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
+
+# Production CORS configuration: Restricted to official Cloudflare Pages domains & localhost (#18, #19)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.parsed_allowed_origins,
-    allow_origin_regex=r"^https://([a-zA-Z0-9-]+\.)?hotel-sai-vasudev-residency(-[a-z0-9]+)?\.pages\.dev$",
+    allow_origin_regex=r"^https://([a-zA-Z0-9-]+\.)?(hotel-)?sai-vasudev-residency(-[a-z0-9]+)?\.pages\.dev$",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
-# Include API Routers (mounted under /api/v1 as well as direct /api for Decentro webhooks)
+# Include API Routers (mounted under /api/v1 as well as direct /api and root paths where required)
+app.include_router(health.router, prefix=settings.API_V1_STR)
+app.include_router(health.router, prefix="/api")
+app.include_router(health.router)
+
+app.include_router(ws.router, prefix=settings.API_V1_STR)
+app.include_router(ws.router, prefix="/api")
+app.include_router(ws.router)
+
+app.include_router(admin.router, prefix=settings.API_V1_STR)
+app.include_router(admin.router, prefix="/api")
+
+app.include_router(auth.router, prefix=settings.API_V1_STR)
+app.include_router(auth.router, prefix="/api")
 app.include_router(rooms.router, prefix=settings.API_V1_STR)
 app.include_router(bookings.router, prefix=settings.API_V1_STR)
 app.include_router(inquiries.router, prefix=settings.API_V1_STR)
 app.include_router(pms.router, prefix=settings.API_V1_STR)
 app.include_router(uploads.router, prefix=settings.API_V1_STR)
 app.include_router(payments.router, prefix=settings.API_V1_STR)
-app.include_router(kyc.router, prefix=settings.API_V1_STR)
 app.include_router(payments.router, prefix="/api")
+app.include_router(kyc.router, prefix=settings.API_V1_STR)
 app.include_router(kyc.router, prefix="/api")
+
+@app.get("/health", tags=["Observability & Health Probes"])
+@app.get(f"{settings.API_V1_STR}/health", tags=["Observability & Health Probes"])
+def root_health_alias(db: Session = Depends(get_db)):
+    """Root health alias ensuring compatibility with frontend checkHealth() (#74)."""
+    from app.routes.health import readiness_probe
+    from fastapi import Response
+    res = Response()
+    return readiness_probe(res, db)
+
+@app.post(f"{settings.API_V1_STR}/kot", tags=["KOT Offline Sync"])
+@app.post("/api/kot", tags=["KOT Offline Sync"])
+def kot_sync_alias_post(payload: dict, db: Session = Depends(get_db)):
+    from app.routes.pms import create_kot_ticket
+    return create_kot_ticket(payload, db)
+
+@app.get(f"{settings.API_V1_STR}/kot", tags=["KOT Offline Sync"])
+@app.get("/api/kot", tags=["KOT Offline Sync"])
+def kot_sync_alias_get(db: Session = Depends(get_db)):
+    from app.routes.pms import get_kot_tickets
+    return get_kot_tickets(db)
 
 @app.get("/", tags=["Root"])
 def root():
@@ -112,18 +222,3 @@ def root():
         "api_v1": settings.API_V1_STR
     }
 
-@app.get("/health", tags=["Health"])
-def health_check(db: Session = Depends(get_db)):
-    """Health check endpoint for Railway deployment monitoring"""
-    db_status = "connected"
-    try:
-        db.execute(text("SELECT 1"))
-    except Exception as e:
-        db_status = f"unhealthy: {str(e)}"
-
-    return {
-        "status": "healthy" if db_status == "connected" else "degraded",
-        "database": db_status,
-        "engine": "PostgreSQL" if "postgresql" in settings.get_database_url else "SQLite",
-        "timestamp": datetime.datetime.utcnow().isoformat()
-    }

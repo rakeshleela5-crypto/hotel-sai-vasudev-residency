@@ -263,7 +263,7 @@ export const DecentroUpiQrModal: React.FC<DecentroUpiQrModalProps> = ({
               ⚡
             </div>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 900, letterSpacing: '0.02em', color: '#f8fafc' }}>
+              <div id="decentro-modal-title" style={{ fontSize: 14, fontWeight: 900, letterSpacing: '0.02em', color: '#f8fafc' }}>
                 Dynamic Decentro UPI QR
               </div>
               <div style={{ fontSize: 11, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -275,6 +275,7 @@ export const DecentroUpiQrModal: React.FC<DecentroUpiQrModalProps> = ({
           </div>
 
           <button
+            id="close-decentro-qr-btn"
             type="button"
             onClick={onClose}
             style={{

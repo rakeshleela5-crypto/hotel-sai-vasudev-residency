@@ -1,0 +1,291 @@
+[
+  {
+    "file": "src\\services\\api.ts",
+    "line": 96,
+    "issue": "URL_NOT_FOUND",
+    "url_raw": "`${rootUrl}/health`",
+    "clean_path": "/health",
+    "method": "GET",
+    "details": "No matching backend endpoint found in FastAPI routes",
+    "context": "    try {\n      const rootUrl = API_BASE_URL.replace('/api/v1', '');\n      const res = await fetch(`${rootUrl}/health`, { method: 'GET' });\n      if (res.ok) {\n        return await res.json();\n      }"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 398,
+    "issue": "METHOD_MISMATCH",
+    "url_raw": "`${API_BASE_URL}/pms/folio/${bookingRef.trim().toUpperCase()}`",
+    "clean_path": "/api/v1/pms/folio/TEST_PARAM",
+    "method": "POST",
+    "expected_methods": [
+      "GET"
+    ],
+    "matched_endpoint": "/api/v1/pms/folio/{booking_ref}",
+    "details": "Method POST not allowed on endpoint /api/v1/pms/folio/{booking_ref}",
+    "context": "\n  async getMasterFolio(bookingRef: string) {\n    const res = await fetch(`${API_BASE_URL}/pms/folio/${bookingRef.trim().toUpperCase()}`);\n    if (!res.ok) throw new Error(`Master folio for ${bookingR"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 445,
+    "issue": "URL_NOT_FOUND",
+    "url_raw": "'http://127.0.0.1:8080/status'",
+    "clean_path": "http://127.0.0.1:8080/status",
+    "method": "GET",
+    "details": "No matching backend endpoint found in FastAPI routes",
+    "context": "  async checkHardwareBridge(): Promise<boolean> {\n    try {\n      const res = await fetch('http://127.0.0.1:8080/status', { method: 'GET' });\n      return res.ok;\n    } catch {\n      return false;\n   "
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 454,
+    "issue": "URL_NOT_FOUND",
+    "url_raw": "'http://127.0.0.1:8080/print-receipt'",
+    "clean_path": "http://127.0.0.1:8080/print-receipt",
+    "method": "POST",
+    "details": "No matching backend endpoint found in FastAPI routes",
+    "context": "  async printThermalReceipt(receiptData: { booking_ref: string; guest_name: string; room_name: string; total_amount: number }) {\n    try {\n      const res = await fetch('http://127.0.0.1:8080/print-re"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 468,
+    "issue": "URL_NOT_FOUND",
+    "url_raw": "'http://127.0.0.1:8080/encode-keycard'",
+    "clean_path": "http://127.0.0.1:8080/encode-keycard",
+    "method": "POST",
+    "details": "No matching backend endpoint found in FastAPI routes",
+    "context": "  async encodeRfidKeycard(keyData: { room_no: string; guest_name: string; check_out_date: string }) {\n    try {\n      const res = await fetch('http://127.0.0.1:8080/encode-keycard', {\n        method: "
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 649,
+    "issue": "URL_NOT_FOUND",
+    "url_raw": "endpoint",
+    "clean_path": "endpoint",
+    "method": "POST",
+    "details": "No matching backend endpoint found in FastAPI routes",
+    "context": "  async saveMasterItem(payload: any): Promise<any> {\n    const endpoint = (payload.itemData || payload.itemName) ? `${API_BASE_URL}/pms/master-items` : `${API_BASE_URL}/pms/masters`;\n    const res = a"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 667,
+    "issue": "METHOD_MISMATCH",
+    "url_raw": "`${API_BASE_URL}/pms/folio/discount`",
+    "clean_path": "/api/v1/pms/folio/discount",
+    "method": "POST",
+    "expected_methods": [
+      "GET"
+    ],
+    "matched_endpoint": "/api/v1/pms/folio/{booking_ref}",
+    "details": "Method POST not allowed on endpoint /api/v1/pms/folio/{booking_ref}",
+    "context": "\n  async applyFolioDiscount(payload: { booking_ref: string; discount_amount: number; discount_percentage?: number; discount_reason: string; approved_by?: string }) {\n    const res = await fetch(`${API"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 681,
+    "issue": "METHOD_MISMATCH",
+    "url_raw": "`${API_BASE_URL}/pms/folio/discounts/${target}`",
+    "clean_path": "/api/v1/pms/folio/discounts/TEST_PARAM",
+    "method": "POST",
+    "expected_methods": [
+      "GET"
+    ],
+    "matched_endpoint": "/api/v1/pms/folio/discounts/{room_or_ref}",
+    "details": "Method POST not allowed on endpoint /api/v1/pms/folio/discounts/{room_or_ref}",
+    "context": "  async getFolioDiscounts(roomOrRef?: string) {\n    const target = roomOrRef ? encodeURIComponent(roomOrRef.trim().toUpperCase()) : 'ALL';\n    const res = await fetch(`${API_BASE_URL}/pms/folio/discou"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 704,
+    "issue": "URL_NOT_FOUND",
+    "url_raw": "`${API_BASE_URL}/pms/food-bills${qs}`",
+    "clean_path": "/api/v1/pms/food-billsTEST_PARAM",
+    "method": "POST",
+    "details": "No matching backend endpoint found in FastAPI routes",
+    "context": "    if (endDate) params.append('end_date', endDate);\n    const qs = params.toString() ? `?${params.toString()}` : '';\n    const res = await fetch(`${API_BASE_URL}/pms/food-bills${qs}`);\n    if (!res.o"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 728,
+    "issue": "URL_NOT_FOUND",
+    "url_raw": "`${API_BASE_URL}/pms/expenses${qs}`",
+    "clean_path": "/api/v1/pms/expensesTEST_PARAM",
+    "method": "GET",
+    "details": "No matching backend endpoint found in FastAPI routes",
+    "context": "    if (category) params.append('category', category);\n    const qs = params.toString() ? `?${params.toString()}` : '';\n    const res = await fetch(`${API_BASE_URL}/pms/expenses${qs}`);\n    if (!res.o"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 734,
+    "issue": "METHOD_MISMATCH",
+    "url_raw": "`${API_BASE_URL}/pms/night-audits`",
+    "clean_path": "/api/v1/pms/night-audits",
+    "method": "POST",
+    "expected_methods": [
+      "GET"
+    ],
+    "matched_endpoint": "/api/v1/pms/night-audits",
+    "details": "Method POST not allowed on endpoint /api/v1/pms/night-audits",
+    "context": "\n  async getNightAudits(): Promise<any[]> {\n    const res = await fetch(`${API_BASE_URL}/pms/night-audits`);\n    if (!res.ok) throw new Error('Failed to fetch night audit records');\n    return await r"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 772,
+    "issue": "METHOD_MISMATCH",
+    "url_raw": "`${API_BASE_URL}/pms/kot/void-logs`",
+    "clean_path": "/api/v1/pms/kot/void-logs",
+    "method": "POST",
+    "expected_methods": [
+      "GET"
+    ],
+    "matched_endpoint": "/api/v1/pms/kot/void-logs",
+    "details": "Method POST not allowed on endpoint /api/v1/pms/kot/void-logs",
+    "context": "\n  async getKotVoidLogs(): Promise<any[]> {\n    const res = await fetch(`${API_BASE_URL}/pms/kot/void-logs`);\n    if (!res.ok) throw new Error('Failed to fetch KOT void logs');\n    return await res.js"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 882,
+    "issue": "METHOD_MISMATCH",
+    "url_raw": "`${API_BASE_URL}/pms/group-bookings`",
+    "clean_path": "/api/v1/pms/group-bookings",
+    "method": "DELETE",
+    "expected_methods": [
+      "GET",
+      "POST"
+    ],
+    "matched_endpoint": "/api/v1/pms/group-bookings",
+    "details": "Method DELETE not allowed on endpoint /api/v1/pms/group-bookings",
+    "context": "\n  async getGroupBookings(): Promise<any[]> {\n    const res = await fetch(`${API_BASE_URL}/pms/group-bookings`);\n    if (!res.ok) throw new Error('Failed to fetch group bookings from cloud database');"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 913,
+    "issue": "METHOD_MISMATCH",
+    "url_raw": "`${API_BASE_URL}/pms/checkouts`",
+    "clean_path": "/api/v1/pms/checkouts",
+    "method": "DELETE",
+    "expected_methods": [
+      "GET",
+      "POST"
+    ],
+    "matched_endpoint": "/api/v1/pms/checkouts",
+    "details": "Method DELETE not allowed on endpoint /api/v1/pms/checkouts",
+    "context": "\n  async getCheckouts(): Promise<any[]> {\n    const res = await fetch(`${API_BASE_URL}/pms/checkouts`);\n    if (!res.ok) throw new Error('Failed to fetch checkouts from PostgreSQL');\n    return await "
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 941,
+    "issue": "METHOD_MISMATCH",
+    "url_raw": "`${API_BASE_URL}/pms/advance-receipts`",
+    "clean_path": "/api/v1/pms/advance-receipts",
+    "method": "DELETE",
+    "expected_methods": [
+      "GET",
+      "POST"
+    ],
+    "matched_endpoint": "/api/v1/pms/advance-receipts",
+    "details": "Method DELETE not allowed on endpoint /api/v1/pms/advance-receipts",
+    "context": "\n  async getAdvanceReceipts(): Promise<any[]> {\n    const res = await fetch(`${API_BASE_URL}/pms/advance-receipts`);\n    if (!res.ok) throw new Error('Failed to fetch advance receipts from PostgreSQL'"
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1605,
+    "issue": "URL_NOT_FOUND",
+    "url_raw": "url",
+    "clean_path": "url",
+    "method": "GET",
+    "details": "No matching backend endpoint found in FastAPI routes",
+    "context": "    try {\n      const url = category ? `${API_BASE_URL}/pms/menu-items?category=${encodeURIComponent(category)}` : `${API_BASE_URL}/pms/menu-items`;\n      const res = await fetch(url);\n      if (!res."
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 1669,
+    "issue": "URL_NOT_FOUND",
+    "url_raw": "url",
+    "clean_path": "url",
+    "method": "GET",
+    "details": "No matching backend endpoint found in FastAPI routes",
+    "context": "      if (status) params.append('status', status);\n      const url = `${API_BASE_URL}/pms/agent-commissions${params.toString() ? '?' + params.toString() : ''}`;\n      const res = await fetch(url);\n   "
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "line": 2136,
+    "issue": "METHOD_MISMATCH",
+    "url_raw": "`${API_BASE_URL}/pms/party-accounts/settle`",
+    "clean_path": "/api/v1/pms/party-accounts/settle",
+    "method": "POST",
+    "expected_methods": [
+      "DELETE"
+    ],
+    "matched_endpoint": "/api/v1/pms/party-accounts/{account_id}",
+    "details": "Method POST not allowed on endpoint /api/v1/pms/party-accounts/{account_id}",
+    "context": "\n  async settlePartyAccount(accountName: string, amount: number): Promise<any> {\n    const res = await fetch(`${API_BASE_URL}/pms/party-accounts/settle`, {\n      method: 'POST',\n      headers: { 'Cont"
+  },
+  {
+    "file": "src\\services\\apiClient.ts",
+    "line": 194,
+    "issue": "URL_NOT_FOUND",
+    "url_raw": "url",
+    "clean_path": "url",
+    "method": "GET",
+    "details": "No matching backend endpoint found in FastAPI routes",
+    "context": "  let response: Response;\n  try {\n    response = await fetch(url, {\n      ...options,\n      method,\n      headers\n    });\n  } catch (networkError: any) {\n    // Check if network error is offline relat"
+  },
+  {
+    "file": "src\\services\\apiClient.ts",
+    "line": 220,
+    "issue": "URL_NOT_FOUND",
+    "url_raw": "url",
+    "clean_path": "url",
+    "method": "GET",
+    "details": "No matching backend endpoint found in FastAPI routes",
+    "context": "      }\n\n      response = await fetch(url, {\n        ...options,\n        method,\n        headers\n      });\n    }\n  }\n"
+  },
+  {
+    "file": "src\\services\\decentroApi.ts",
+    "line": 186,
+    "issue": "URL_NOT_FOUND",
+    "url_raw": "`${API_BASE_URL.replace('",
+    "clean_path": "${API_BASE_URL.replace(",
+    "method": "POST",
+    "details": "No matching backend endpoint found in FastAPI routes",
+    "context": "      if (!res.ok) {\n        // Try fallback without /v1 in case routed directly to /api\n        const fallbackRes = await fetch(`${API_BASE_URL.replace('/v1', '')}/payments/decentro/upi-qr`, {\n      "
+  },
+  {
+    "file": "src\\services\\decentroApi.ts",
+    "line": 276,
+    "issue": "URL_NOT_FOUND",
+    "url_raw": "`${API_BASE_URL.replace('",
+    "clean_path": "${API_BASE_URL.replace(",
+    "method": "POST",
+    "details": "No matching backend endpoint found in FastAPI routes",
+    "context": "\n      if (!res.ok) {\n        const fallbackRes = await fetch(`${API_BASE_URL.replace('/v1', '')}/payments/decentro/virtual-account`, {\n          method: 'POST',\n          headers: { 'Content-Type': '"
+  },
+  {
+    "file": "src\\services\\decentroApi.ts",
+    "line": 361,
+    "issue": "URL_NOT_FOUND",
+    "url_raw": "`${API_BASE_URL}/kyc/decentro/verify-gstin`",
+    "clean_path": "/api/v1/kyc/decentro/verify-gstin",
+    "method": "POST",
+    "details": "No matching backend endpoint found in FastAPI routes",
+    "context": "\n    try {\n      const res = await fetch(`${API_BASE_URL}/kyc/decentro/verify-gstin`, {\n        method: 'POST',\n        headers: { 'Content-Type': 'application/json' },\n        body: JSON.stringify({ "
+  },
+  {
+    "file": "src\\services\\decentroApi.ts",
+    "line": 368,
+    "issue": "URL_NOT_FOUND",
+    "url_raw": "`${API_BASE_URL.replace('",
+    "clean_path": "${API_BASE_URL.replace(",
+    "method": "POST",
+    "details": "No matching backend endpoint found in FastAPI routes",
+    "context": "\n      if (!res.ok) {\n        const fallbackRes = await fetch(`${API_BASE_URL.replace('/v1', '')}/kyc/decentro/verify-gstin`, {\n          method: 'POST',\n          headers: { 'Content-Type': 'applicat"
+  },
+  {
+    "file": "src\\services\\r2Storage.ts",
+    "line": 352,
+    "issue": "URL_NOT_FOUND",
+    "url_raw": "url.toString(",
+    "clean_path": "url.toString(",
+    "method": "GET",
+    "details": "No matching backend endpoint found in FastAPI routes",
+    "context": "      url.searchParams.set('limit', String(limit));\n\n      const res = await fetch(url.toString());\n      if (res.ok) {\n        const data = await res.json();\n        return data.files || [];\n      }\n"
+  }
+]

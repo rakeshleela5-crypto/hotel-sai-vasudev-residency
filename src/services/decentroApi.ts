@@ -175,34 +175,49 @@ export const decentroApi = {
    */
   async generateUpiQr(payload: DecentroUpiQrRequest): Promise<DecentroUpiQrResponse> {
     try {
-      const res = await fetch(`${API_BASE_URL}/payments/decentro/upi-qr`, {
+      const res: any = await fetch(`${API_BASE_URL}/payments/decentro/upi-qr`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
-      if (!res.ok) {
-        // Try fallback without /v1 in case routed directly to /api
-        const fallbackRes = await fetch(`${API_BASE_URL.replace('/v1', '')}/payments/decentro/upi-qr`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        if (fallbackRes.ok) {
-          const data: DecentroUpiQrResponse = await fallbackRes.json();
-          await decentroApi._cacheQr(data, payload);
-          return data;
-        }
-        const errJson = await res.json().catch(() => ({}));
-        const err: any = new Error(errJson.detail || errJson.message || `HTTP ${res.status}: Failed to generate UPI QR`);
-        err.decentro_unavailable = errJson.decentro_unavailable || errJson.fallback_mode === 'MANUAL_CASH_CARD_POS';
-        err.fallback_mode = errJson.fallback_mode;
-        throw err;
+      // If fetch is apiClient.fetch (returns parsed body directly)
+      if (res && res.qr_code_base64) {
+        const data = res as DecentroUpiQrResponse;
+        await decentroApi._cacheQr(data, payload);
+        return data;
       }
 
-      const data: DecentroUpiQrResponse = await res.json();
-      await decentroApi._cacheQr(data, payload);
-      return data;
+      // If fetch is standard window.fetch returning a Response
+      if (res && typeof res.json === 'function') {
+        if (!res.ok) {
+          const fallbackRes: any = await fetch(`${API_BASE_URL.replace('/v1', '')}/payments/decentro/upi-qr`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (fallbackRes?.ok && typeof fallbackRes.json === 'function') {
+            const data: DecentroUpiQrResponse = await fallbackRes.json();
+            await decentroApi._cacheQr(data, payload);
+            return data;
+          }
+          const errJson = await res.json().catch(() => ({}));
+          const err: any = new Error(errJson.detail || errJson.message || `HTTP ${res.status}: Failed to generate UPI QR`);
+          err.decentro_unavailable = errJson.decentro_unavailable || errJson.fallback_mode === 'MANUAL_CASH_CARD_POS';
+          err.fallback_mode = errJson.fallback_mode;
+          throw err;
+        }
+        const data: DecentroUpiQrResponse = await res.json();
+        await decentroApi._cacheQr(data, payload);
+        return data;
+      }
+
+      if (res && (res.status === 'SUCCESS' || res.status === 'PENDING')) {
+        await decentroApi._cacheQr(res, payload);
+        return res;
+      }
+
+      throw new Error('Unable to parse UPI QR response from gateway');
     } catch (err: any) {
       console.warn('[DecentroAPI] Network or backend offline, checking Dexie cache / generating client fallback:', err);
       // Client-side fallback if backend is unreachable
@@ -224,10 +239,15 @@ export const decentroApi = {
         <rect x="90" y="100" width="100" height="80" fill="#0f172a" rx="6"/>
         <rect x="98" y="108" width="84" height="64" fill="#ffffff" rx="4"/>
         <text x="140" y="135" font-family="Arial,sans-serif" font-size="10" font-weight="900" fill="#0284c7" text-anchor="middle">HOTEL SAI VASUDEV</text>
-        <text x="140" y="152" font-family="Arial,sans-serif" font-size="11" font-weight="800" fill="#0f172a" text-anchor="middle">₹${payload.amount.toFixed(2)}</text>
+        <text x="140" y="152" font-family="Arial,sans-serif" font-size="11" font-weight="800" fill="#0f172a" text-anchor="middle">INR ${payload.amount.toFixed(2)}</text>
         <circle cx="140" cy="225" r="16" fill="#0284c7"/>
       </svg>`;
-      const base64 = `data:image/svg+xml;base64,${btoa(fallbackQrSvg)}`;
+      let base64 = '';
+      try {
+        base64 = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(fallbackQrSvg)))}`;
+      } catch {
+        base64 = `data:image/svg+xml;utf8,${encodeURIComponent(fallbackQrSvg)}`;
+      }
 
       const fallbackData: DecentroUpiQrResponse = {
         reference_id: fallbackRef,

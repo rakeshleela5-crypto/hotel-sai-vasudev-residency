@@ -93,9 +93,17 @@ export const hotelApi = {
   async checkHealth(): Promise<{ status: string; database: string; engine: string }> {
     try {
       const rootUrl = API_BASE_URL.replace('/api/v1', '');
-      const res = await fetch(`${rootUrl}/health`, { method: 'GET' });
+      let res = await fetch(`${rootUrl}/health`, { method: 'GET' });
+      if (!res.ok) {
+        res = await fetch(`${API_BASE_URL}/health/ready`, { method: 'GET' });
+      }
       if (res.ok) {
-        return await res.json();
+        const data = await res.json();
+        return {
+          status: data.status || 'ready',
+          database: data.database || 'connected',
+          engine: data.engine || 'PostgreSQL (Railway)'
+        };
       }
       return { status: 'offline', database: 'unavailable', engine: 'Railway Postgres / SQLite' };
     } catch {

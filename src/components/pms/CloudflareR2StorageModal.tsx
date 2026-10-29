@@ -248,6 +248,7 @@ export const CloudflareR2StorageModal: React.FC<CloudflareR2StorageModalProps> =
               <span>{isTesting ? '🔄 Pinging...' : '⚡ Test Connection'}</span>
             </button>
             <button
+              id="r2-modal-close-btn"
               type="button"
               onClick={onClose}
               style={{ background: 'none', border: 'none', color: '#cbd5e1', fontSize: 22, cursor: 'pointer', padding: '0 6px', fontWeight: 'bold' }}
@@ -325,6 +326,7 @@ export const CloudflareR2StorageModal: React.FC<CloudflareR2StorageModalProps> =
                 Target Folder
               </label>
               <select
+                id="r2-upload-folder-select"
                 value={uploadFolder}
                 onChange={e => setUploadFolder(e.target.value as R2Folder)}
                 className="form-select-pms"
@@ -361,6 +363,7 @@ export const CloudflareR2StorageModal: React.FC<CloudflareR2StorageModalProps> =
               }}
             >
               <input
+                id="r2-file-input"
                 ref={fileInputRef}
                 type="file"
                 disabled={isUploading}

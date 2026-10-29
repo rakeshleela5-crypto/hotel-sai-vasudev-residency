@@ -1,0 +1,258 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\rakes\\hotel SAI VASUDEV RESIDENCY\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "e2e/forensic_ui_audit.spec.ts",
+      "--headed",
+      "--timeout=90000"
+    ],
+    "configFile": "C:\\Users\\rakes\\hotel SAI VASUDEV RESIDENCY\\playwright.config.ts",
+    "rootDir": "C:/Users/rakes/hotel SAI VASUDEV RESIDENCY/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/rakes/hotel SAI VASUDEV RESIDENCY/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/Users/rakes/hotel SAI VASUDEV RESIDENCY/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 90000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\Users\\rakes\\hotel SAI VASUDEV RESIDENCY\\test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "chromium",
+        "testDir": "C:\\Users\\rakes\\hotel SAI VASUDEV RESIDENCY\\e2e",
+        "snapshotDir": "C:\\Users\\rakes\\hotel SAI VASUDEV RESIDENCY\\e2e",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 90000,
+        "use": {
+          "baseURL": "http://127.0.0.1:4173",
+          "trace": "retain-on-failure",
+          "screenshot": "only-on-failure",
+          "video": "retain-on-failure",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "actionTimeout": 15000,
+          "navigationTimeout": 45000,
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium",
+          "headless": false
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "chromium"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "e2e-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 1,
+    "webServer": {
+      "command": "npx vite preview --port 4173 --host 127.0.0.1",
+      "url": "http://127.0.0.1:4173",
+      "reuseExistingServer": true,
+      "timeout": 60000
+    }
+  },
+  "suites": [
+    {
+      "title": "forensic_ui_audit.spec.ts",
+      "file": "forensic_ui_audit.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Phase 5: Forensic UI Live Audit & End-to-End Operational Lifecycle",
+          "file": "forensic_ui_audit.spec.ts",
+          "line": 23,
+          "column": 6,
+          "specs": [
+            {
+              "title": "1. Full Operational Workflow Lifecycle (Reservation -> KYC R2 -> Check-In -> KOT -> Housekeeping -> Decentro QR -> GST Invoice)",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 36557,
+                      "error": {
+                        "message": "TimeoutError: locator.fill: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#checkin-guest-name')\u001b[22m\n",
+                        "stack": "TimeoutError: locator.fill: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#checkin-guest-name')\u001b[22m\n\n    at C:\\Users\\rakes\\hotel SAI VASUDEV RESIDENCY\\e2e\\forensic_ui_audit.spec.ts:303:47",
+                        "location": {
+                          "file": "C:\\Users\\rakes\\hotel SAI VASUDEV RESIDENCY\\e2e\\forensic_ui_audit.spec.ts",
+                          "column": 47,
+                          "line": 303
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 301 |\u001b[39m\n \u001b[90m 302 |\u001b[39m     \u001b[90m// Fill in Guest Details explicitly\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 303 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'#checkin-guest-name'\u001b[39m)\u001b[33m.\u001b[39mfill(\u001b[32m'Sunil Agrawal'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 304 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'#checkin-guest-mobile'\u001b[39m)\u001b[33m.\u001b[39mfill(\u001b[32m'9822000000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 305 |\u001b[39m     \u001b[90m// Aadhaar Card number field (placeholder: 'XXXX XXXX XXXX')\u001b[39m\n \u001b[90m 306 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'input[placeholder=\"XXXX XXXX XXXX\"]'\u001b[39m)\u001b[33m.\u001b[39mfill(\u001b[32m'765765721234'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\rakes\\hotel SAI VASUDEV RESIDENCY\\e2e\\forensic_ui_audit.spec.ts",
+                            "column": 47,
+                            "line": 303
+                          },
+                          "message": "TimeoutError: locator.fill: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#checkin-guest-name')\u001b[22m\n\n\n  301 |\n  302 |     // Fill in Guest Details explicitly\n> 303 |     await page.locator('#checkin-guest-name').fill('Sunil Agrawal');\n      |                                               ^\n  304 |     await page.locator('#checkin-guest-mobile').fill('9822000000');\n  305 |     // Aadhaar Card number field (placeholder: 'XXXX XXXX XXXX')\n  306 |     await page.locator('input[placeholder=\"XXXX XXXX XXXX\"]').fill('765765721234');\n    at C:\\Users\\rakes\\hotel SAI VASUDEV RESIDENCY\\e2e\\forensic_ui_audit.spec.ts:303:47"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-29T17:39:23.834Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\rakes\\hotel SAI VASUDEV RESIDENCY\\test-results\\forensic_ui_audit-Phase-5--3d620--Decentro-QR---GST-Invoice--chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\rakes\\hotel SAI VASUDEV RESIDENCY\\test-results\\forensic_ui_audit-Phase-5--3d620--Decentro-QR---GST-Invoice--chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\rakes\\hotel SAI VASUDEV RESIDENCY\\test-results\\forensic_ui_audit-Phase-5--3d620--Decentro-QR---GST-Invoice--chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\rakes\\hotel SAI VASUDEV RESIDENCY\\test-results\\forensic_ui_audit-Phase-5--3d620--Decentro-QR---GST-Invoice--chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\rakes\\hotel SAI VASUDEV RESIDENCY\\e2e\\forensic_ui_audit.spec.ts",
+                        "column": 47,
+                        "line": 303
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "dcada5b098647172b490-835016832906b6750ce7",
+              "file": "forensic_ui_audit.spec.ts",
+              "line": 187,
+              "column": 3
+            },
+            {
+              "title": "2. Button-to-Button Live Crawler Across All Navigation Routes and Modals",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 25851,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-29T17:40:50.985Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "dcada5b098647172b490-a1327da96c7b47309aff",
+              "file": "forensic_ui_audit.spec.ts",
+              "line": 429,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-29T17:39:19.261Z",
+    "duration": 194008.869,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

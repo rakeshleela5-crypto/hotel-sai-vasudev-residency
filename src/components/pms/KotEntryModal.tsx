@@ -602,6 +602,7 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
                   🖨️ Print 80mm Receipt
                 </button>
                 <button
+                  id="close-kot-slip-btn"
                   type="button"
                   onClick={onClose}
                   style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '7px 18px', borderRadius: 4, cursor: 'pointer', fontWeight: 800 }}
@@ -629,7 +630,7 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ fontSize: 20 }}>🍲</span>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 900, letterSpacing: 0.5, color: '#ffffff' }}>
+                  <div id="kot-modal-title" style={{ fontSize: 14, fontWeight: 900, letterSpacing: 0.5, color: '#ffffff' }}>
                     VASUDEV RASOI &bull; PURE VEG RESTAURANT POS &amp; KOT
                   </div>
                   <div style={{ fontSize: 11, color: '#93c5fd' }}>
@@ -643,6 +644,7 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
                   KOT: {kotNo}
                 </span>
                 <button
+                  id="close-kot-modal-btn"
                   type="button"
                   onClick={onClose}
                   style={{ background: 'transparent', border: 'none', color: '#ffffff', fontSize: 20, cursor: 'pointer', lineHeight: 1 }}

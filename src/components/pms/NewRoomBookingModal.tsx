@@ -277,12 +277,21 @@ export const NewRoomBookingModal: React.FC<NewRoomBookingModalProps> = ({
   return (
     <div className="pms-submodal-overlay" onClick={onClose}>
       <div className="pms-form-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 1080 }}>
-        {/* Exact Green Banner from Video 02 (Frames 0050, 0065) */}
-        <div className="pms-form-banner">
-          New Room Booking Entery
+        {/* Exact Green Banner from Video 02 (Frames 0050, 0065) with close button */}
+        <div className="pms-form-banner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 14px' }}>
+          <span>🏨 New Room Booking Entery</span>
+          <button
+            id="close-booking-x-btn"
+            type="button"
+            onClick={onClose}
+            style={{ background: 'transparent', border: 'none', color: '#1e293b', fontSize: 18, fontWeight: 'bold', cursor: 'pointer' }}
+            title="Close"
+          >
+            ✕
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="pms-form-body">
+        <form onSubmit={handleSubmit} className="pms-form-body" noValidate>
           {/* Top Customer Search & Live Image Preview Row (Frames 0050, 0065) */}
           <div style={{
             display: 'flex',
@@ -797,6 +806,7 @@ export const NewRoomBookingModal: React.FC<NewRoomBookingModalProps> = ({
           {/* Bottom Action Buttons matching Video 02 Frame 0080 */}
           <div className="pms-btn-group">
             <button
+              id="close-advance-booking-btn"
               type="button"
               onClick={onClose}
               style={{
@@ -813,7 +823,9 @@ export const NewRoomBookingModal: React.FC<NewRoomBookingModalProps> = ({
               Back
             </button>
             <button
-              type="submit"
+              id="save-advance-booking-btn"
+              type="button"
+              onClick={handleSubmit as any}
               style={{
                 background: '#2563eb',
                 color: '#ffffff',

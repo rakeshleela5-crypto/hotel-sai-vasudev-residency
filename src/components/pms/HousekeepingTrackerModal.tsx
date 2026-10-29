@@ -100,7 +100,7 @@ export const HousekeepingTrackerModal: React.FC<HousekeepingTrackerModalProps> =
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ fontSize: '24px' }}>🧹</span>
             <div>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>Housekeeping, Linen &amp; Room Maintenance Tracker</h3>
+              <h3 id="hk-modal-title" style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>Housekeeping, Linen &amp; Room Maintenance Tracker</h3>
               <p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>
                 Hotel Sai Vasudev Residency &bull; 16 Rooms Real-Time Cleanliness Board &bull; Shirdi
               </p>
@@ -170,7 +170,7 @@ export const HousekeepingTrackerModal: React.FC<HousekeepingTrackerModalProps> =
                 📊 Table View
               </button>
             </div>
-            <button type="button" className="pms-close-btn" onClick={onClose} style={{ color: '#ffffff' }}>&times;</button>
+            <button id="close-housekeeping-modal-btn" type="button" className="pms-close-btn" onClick={onClose} style={{ color: '#ffffff' }}>&times;</button>
           </div>
         </div>
 

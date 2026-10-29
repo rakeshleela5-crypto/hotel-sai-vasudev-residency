@@ -1205,6 +1205,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                   <div className="form-group-pms">
                     <label className="form-label-pms"><span className="req">*</span> Guest Full Name</label>
                     <input 
+                      id="checkin-guest-name"
                       type="text" 
                       placeholder="e.g. Ramesh Chandra Sharma" 
                       value={guestName} 
@@ -1219,6 +1220,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                       <span className="req">*</span> 10-Digit Mobile <span style={{ fontSize: 10, color: '#64748b' }}>(^[6-9]\d&#123;9&#125;$)</span>
                     </label>
                     <input 
+                      id="checkin-guest-mobile"
                       type="tel" 
                       maxLength={10} 
                       placeholder="9822000000" 
@@ -1745,7 +1747,9 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                 Back
               </button>
               <button
-                type="submit"
+                id="save-room-checkin-btn"
+                type="button"
+                onClick={handleSubmit as any}
                 disabled={isProcessing || (!isRoomClean && !supervisorOverride)}
                 style={{
                   background: isProcessing || (!isRoomClean && !supervisorOverride) ? '#94a3b8' : '#2563eb',

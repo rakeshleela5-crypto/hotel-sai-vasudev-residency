@@ -1,0 +1,644 @@
+{
+  "backend_endpoints": {
+    "/api/v1/health/live": [
+      "get"
+    ],
+    "/api/v1/health/ready": [
+      "get"
+    ],
+    "/api/v1/health/test-error-500": [
+      "get"
+    ],
+    "/api/health/live": [
+      "get"
+    ],
+    "/api/health/ready": [
+      "get"
+    ],
+    "/api/health/test-error-500": [
+      "get"
+    ],
+    "/health/live": [
+      "get"
+    ],
+    "/health/ready": [
+      "get"
+    ],
+    "/health/test-error-500": [
+      "get"
+    ],
+    "/api/v1/admin/night-audit/run": [
+      "post"
+    ],
+    "/api/v1/admin/backups/run": [
+      "post"
+    ],
+    "/api/v1/admin/backups": [
+      "get"
+    ],
+    "/api/admin/night-audit/run": [
+      "post"
+    ],
+    "/api/admin/backups/run": [
+      "post"
+    ],
+    "/api/admin/backups": [
+      "get"
+    ],
+    "/api/v1/auth/login": [
+      "post"
+    ],
+    "/api/v1/auth/refresh": [
+      "post"
+    ],
+    "/api/v1/auth/logout": [
+      "post"
+    ],
+    "/api/v1/auth/me": [
+      "get"
+    ],
+    "/api/auth/login": [
+      "post"
+    ],
+    "/api/auth/refresh": [
+      "post"
+    ],
+    "/api/auth/logout": [
+      "post"
+    ],
+    "/api/auth/me": [
+      "get"
+    ],
+    "/api/v1/rooms": [
+      "get"
+    ],
+    "/api/v1/rooms/{room_id}/availability": [
+      "get"
+    ],
+    "/api/v1/rooms/{room_id}": [
+      "get"
+    ],
+    "/api/v1/rooms/seed": [
+      "post"
+    ],
+    "/api/v1/bookings": [
+      "post",
+      "get"
+    ],
+    "/api/v1/bookings/{booking_ref}": [
+      "get"
+    ],
+    "/api/v1/bookings/{booking_ref}/status": [
+      "patch"
+    ],
+    "/api/v1/bookings/{booking_ref}/invoice": [
+      "get"
+    ],
+    "/api/v1/bookings/{booking_ref}/print-slip": [
+      "get"
+    ],
+    "/api/v1/inquiries": [
+      "post",
+      "get"
+    ],
+    "/api/v1/pms/room-shift": [
+      "post"
+    ],
+    "/api/v1/pms/room-shifts": [
+      "get"
+    ],
+    "/api/v1/pms/payments": [
+      "post"
+    ],
+    "/api/v1/pms/folio/add-item": [
+      "post"
+    ],
+    "/api/v1/pms/folio/{booking_ref}": [
+      "get"
+    ],
+    "/api/v1/pms/police-register": [
+      "post",
+      "get"
+    ],
+    "/api/v1/pms/housekeeping/status": [
+      "post"
+    ],
+    "/api/v1/pms/night-audit": [
+      "post"
+    ],
+    "/api/v1/pms/check-in": [
+      "post"
+    ],
+    "/api/v1/pms/check-out": [
+      "post"
+    ],
+    "/api/v1/pms/rooms/{room_id}/maintenance": [
+      "post"
+    ],
+    "/api/v1/pms/sync/dashboard": [
+      "get"
+    ],
+    "/api/v1/pms/backup/export": [
+      "get"
+    ],
+    "/api/v1/pms/tables": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/tables/{table_code}/status": [
+      "put"
+    ],
+    "/api/v1/pms/kots": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/masters/{category}": [
+      "get"
+    ],
+    "/api/v1/pms/masters": [
+      "post"
+    ],
+    "/api/v1/pms/masters/{category}/{code}": [
+      "delete"
+    ],
+    "/api/v1/pms/sync/full-state": [
+      "get"
+    ],
+    "/api/v1/pms/folio/discount": [
+      "post"
+    ],
+    "/api/v1/pms/folio/discounts/{room_or_ref}": [
+      "get"
+    ],
+    "/api/v1/pms/food-bills": [
+      "post",
+      "get"
+    ],
+    "/api/v1/pms/expenses": [
+      "post",
+      "get"
+    ],
+    "/api/v1/pms/night-audits": [
+      "get"
+    ],
+    "/api/v1/pms/inventory/purchases": [
+      "post",
+      "get"
+    ],
+    "/api/v1/pms/kot/void": [
+      "post"
+    ],
+    "/api/v1/pms/kot/void-logs": [
+      "get"
+    ],
+    "/api/v1/pms/tables/shift-session": [
+      "post"
+    ],
+    "/api/v1/pms/tables/merge-sessions": [
+      "post"
+    ],
+    "/api/v1/pms/night-audit/automated-midnight": [
+      "post"
+    ],
+    "/api/v1/pms/gst/gstr1-export": [
+      "get"
+    ],
+    "/api/v1/pms/housekeeping/audit-discrepancy": [
+      "post"
+    ],
+    "/api/v1/pms/keycards/encode": [
+      "post"
+    ],
+    "/api/v1/pms/keycards/extend": [
+      "post"
+    ],
+    "/api/v1/pms/group-bookings": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/group-bookings/{group_id}": [
+      "delete"
+    ],
+    "/api/v1/pms/checkouts": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/checkouts/{invoice_no}": [
+      "delete"
+    ],
+    "/api/v1/pms/advance-receipts": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/advance-receipts/{receipt_no}": [
+      "delete"
+    ],
+    "/api/v1/pms/journal-entries": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/party-accounts": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/party-accounts/{account_id}": [
+      "delete"
+    ],
+    "/api/v1/pms/general-receipts": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/general-receipts/{receipt_no}": [
+      "delete"
+    ],
+    "/api/v1/pms/general-payments": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/general-payments/{payment_no}": [
+      "delete"
+    ],
+    "/api/v1/pms/godowns": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/godowns/{godown_id}": [
+      "delete"
+    ],
+    "/api/v1/pms/item-groups": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/item-groups/{group_id}": [
+      "delete"
+    ],
+    "/api/v1/pms/stock-transfers": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/stock-transfers/{entry_no}": [
+      "delete"
+    ],
+    "/api/v1/pms/users": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/users/{user_id}": [
+      "delete"
+    ],
+    "/api/v1/pms/commission-agents": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/commission-agents/{agent_id}": [
+      "delete"
+    ],
+    "/api/v1/pms/agent-payout-vouchers": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/shift-handovers": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/banquet-venues": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/banquet-venues/{venue_id}": [
+      "delete"
+    ],
+    "/api/v1/pms/banquet-bookings": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/banquet-bookings/{booking_no}": [
+      "delete"
+    ],
+    "/api/v1/pms/liquor-items": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/liquor-items/{item_code}": [
+      "delete"
+    ],
+    "/api/v1/pms/bar-invoices": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/bar-invoices/{bill_no}": [
+      "delete"
+    ],
+    "/api/v1/pms/hotel-assets": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/hotel-assets/{asset_id}": [
+      "delete"
+    ],
+    "/api/v1/pms/lockers": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/lockers/{locker_no}": [
+      "delete"
+    ],
+    "/api/v1/pms/whatsapp-logs": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/whatsapp-config": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/support-tickets": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/support-tickets/{ticket_no}": [
+      "delete"
+    ],
+    "/api/v1/pms/settings": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/room-types": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/room-types/{type_id}": [
+      "delete"
+    ],
+    "/api/v1/pms/menu-items": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/menu-items/bulk": [
+      "post"
+    ],
+    "/api/v1/pms/menu-items/{item_code}": [
+      "delete"
+    ],
+    "/api/v1/pms/housekeeping": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/agent-commissions": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/agent-commissions/{commission_id}/status": [
+      "put"
+    ],
+    "/api/v1/pms/whatsapp-templates": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/whatsapp-templates/bulk": [
+      "post"
+    ],
+    "/api/v1/pms/roles": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/no-discount-config": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/liquor-brands": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/liquor-units": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/discount-audit-logs": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/properties": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/bookings/extend-stay": [
+      "put"
+    ],
+    "/api/v1/pms/room-folio-items": [
+      "post"
+    ],
+    "/api/v1/pms/room-folio-items/{room_no}": [
+      "get"
+    ],
+    "/api/v1/pms/housekeeping-discrepancies/{discrepancy_id}/resolve": [
+      "put"
+    ],
+    "/api/v1/pms/demo-requests": [
+      "post"
+    ],
+    "/api/v1/pms/master-items": [
+      "post"
+    ],
+    "/api/v1/pms/master-items/{category}/{item_name}": [
+      "delete"
+    ],
+    "/api/v1/pms/restaurant/table-shifts": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/restaurant/table-sessions": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/housekeeping-discrepancies": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/key-cards": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/key-cards/{card_number}/extend": [
+      "put"
+    ],
+    "/api/v1/pms/company-info": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/virtual-accounts": [
+      "get",
+      "post"
+    ],
+    "/api/v1/pms/liquor/stock-adjustments": [
+      "post"
+    ],
+    "/api/v1/pms/auth/verify-manager-pin": [
+      "post"
+    ],
+    "/api/v1/pms/bookings/{booking_id}/confirm": [
+      "put"
+    ],
+    "/api/v1/pms/expenses/{expense_id}": [
+      "delete"
+    ],
+    "/api/v1/pms/purchases/{purchase_id}": [
+      "delete"
+    ],
+    "/api/v1/pms/roles/{role_id}": [
+      "delete"
+    ],
+    "/api/v1/pms/whatsapp/templates/{template_id}": [
+      "delete"
+    ],
+    "/api/v1/pms/whatsapp/logs": [
+      "delete"
+    ],
+    "/api/v1/pms/party-accounts/settle": [
+      "post"
+    ],
+    "/api/v1/pms/rooms": [
+      "post"
+    ],
+    "/api/v1/pms/rooms/{room_id}": [
+      "put",
+      "delete"
+    ],
+    "/api/v1/pms/tables/{table_id}": [
+      "delete"
+    ],
+    "/api/v1/uploads/status": [
+      "get"
+    ],
+    "/api/v1/uploads/test-connection": [
+      "get"
+    ],
+    "/api/v1/uploads/presigned-url": [
+      "post"
+    ],
+    "/api/v1/uploads/presigned-download": [
+      "post"
+    ],
+    "/api/v1/uploads/secure-view": [
+      "post"
+    ],
+    "/api/v1/uploads/guest-id": [
+      "post"
+    ],
+    "/api/v1/uploads/invoice-pdf": [
+      "post"
+    ],
+    "/api/v1/uploads/file": [
+      "post"
+    ],
+    "/api/v1/uploads/guest-document": [
+      "post"
+    ],
+    "/api/v1/uploads/property-image": [
+      "post"
+    ],
+    "/api/v1/uploads/branding-asset": [
+      "post"
+    ],
+    "/api/v1/uploads/list": [
+      "get"
+    ],
+    "/api/v1/uploads/booking-kyc/{booking_id}": [
+      "post",
+      "delete"
+    ],
+    "/api/v1/uploads/booking-kyc/{booking_id}/presigned-url": [
+      "get"
+    ],
+    "/api/v1/uploads/room-photo/{room_id}": [
+      "post"
+    ],
+    "/api/v1/uploads/booking-invoice/{booking_id}": [
+      "post"
+    ],
+    "/api/v1/uploads/booking-invoice/{booking_id}/presigned-url": [
+      "get"
+    ],
+    "/api/v1/uploads/{object_key}": [
+      "delete"
+    ],
+    "/api/v1/uploads/files/{file_path}": [
+      "get"
+    ],
+    "/api/v1/payments/decentro/upi-qr": [
+      "post"
+    ],
+    "/api/v1/payments/decentro/virtual-account": [
+      "post"
+    ],
+    "/api/v1/folios/settle": [
+      "post"
+    ],
+    "/api/v1/kot": [
+      "get",
+      "post"
+    ],
+    "/api/v1/webhooks/decentro": [
+      "post"
+    ],
+    "/api/v1/webhooks/decentro/payment-callback": [
+      "post"
+    ],
+    "/api/v1/admin/dlq": [
+      "get"
+    ],
+    "/api/v1/admin/dlq/{dlq_id}/replay": [
+      "post"
+    ],
+    "/api/v1/payments/decentro/status/{reference_id}": [
+      "get"
+    ],
+    "/api/payments/decentro/upi-qr": [
+      "post"
+    ],
+    "/api/payments/decentro/virtual-account": [
+      "post"
+    ],
+    "/api/folios/settle": [
+      "post"
+    ],
+    "/api/kot": [
+      "get",
+      "post"
+    ],
+    "/api/webhooks/decentro": [
+      "post"
+    ],
+    "/api/webhooks/decentro/payment-callback": [
+      "post"
+    ],
+    "/api/admin/dlq": [
+      "get"
+    ],
+    "/api/admin/dlq/{dlq_id}/replay": [
+      "post"
+    ],
+    "/api/payments/decentro/status/{reference_id}": [
+      "get"
+    ],
+    "/api/kyc/decentro/verify-gstin": [
+      "post"
+    ],
+    "/": [
+      "get"
+    ]
+  },
+  "frontend_calls": [
+    {
+      "file": "src\\services\\api.ts",
+      "line": 95,
+      "endpoint": "/api/v1",
+      "snippet": "const rootUrl = API_BASE_URL.replace('/api/v1', '');"
+    },
+    {
+      "file": "src\\services\\pmsStore.ts",
+      "line": 11464,
+      "endpoint": "/rooms",
+      "snippet": "{ title: 'Room List', route: '/rooms', bgColor: '#1e293b', textColor: '#ffffff', icon: '\ud83d\udecf\ufe0f', category: 'Front Desk', actionKey: 'room_dashboard' },"
+    }
+  ]
+}

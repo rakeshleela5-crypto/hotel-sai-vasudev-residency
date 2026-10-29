@@ -52,3 +52,8 @@ uploads/
 **/uploads/
 *.wav
 *.mp3
+
+# Test artifacts
+test-results/
+playwright-report/
+blob-report/
