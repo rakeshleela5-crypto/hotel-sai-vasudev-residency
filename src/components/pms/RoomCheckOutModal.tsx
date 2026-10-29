@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { PmsRoom, PmsCheckOutDetail, PaymentSplit, PmsFoodBill, DayWiseRentItem, BillFormatType } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import { hotelApi } from '../../services/api';
@@ -303,6 +303,33 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
       { mode: paymentSplits[0]?.mode || 'Cash', amount: netPayable, referenceNo: paymentSplits[0]?.referenceNo || '', remark: 'Full Settlement' }
     ]);
   };
+
+  // Decentro Circuit Breaker Fallback Handler (#13)
+  const [circuitBreakerAlert, setCircuitBreakerAlert] = useState<string | null>(null);
+
+  const handleSwitchToManualPos = useCallback((reason?: string) => {
+    setShowDecentroQrModal(false);
+    setCircuitBreakerAlert(
+      reason || 'Decentro Banking Gateway unavailable (Circuit Breaker Tripped). Smoothly switched to Manual Cash / Card POS Reference Mode (#13).'
+    );
+    const amt = remainingToSettle > 0 ? remainingToSettle : netPayable;
+    setPaymentSplits([
+      {
+        mode: 'Card',
+        amount: amt,
+        referenceNo: `POS-MANUAL-${Date.now().toString().slice(-6)}`,
+        remark: 'Manual POS Card/Cash Terminal Settlement (Decentro Circuit Fallback)'
+      }
+    ]);
+  }, [remainingToSettle, netPayable]);
+
+  useEffect(() => {
+    const handleCircuitTripped = (e: any) => {
+      handleSwitchToManualPos(e.detail?.message);
+    };
+    window.addEventListener('svr:decentro_circuit_tripped', handleCircuitTripped);
+    return () => window.removeEventListener('svr:decentro_circuit_tripped', handleCircuitTripped);
+  }, [handleSwitchToManualPos]);
 
   const handleAddPaymentMode = () => {
     setPaymentSplits([
@@ -1127,6 +1154,33 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                     </div>
 
                     <div style={{ padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      {/* Decentro Circuit Breaker Fallback Alert Banner (#13) */}
+                      {circuitBreakerAlert && (
+                        <div style={{
+                          background: '#fffbeb',
+                          border: '1px solid #f59e0b',
+                          color: '#b45309',
+                          padding: '6px 8px',
+                          borderRadius: 4,
+                          fontSize: 10,
+                          fontWeight: 700,
+                          marginBottom: 4,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          boxShadow: '0 1px 3px rgba(245, 158, 11, 0.15)'
+                        }}>
+                          <span>⚠️ {circuitBreakerAlert}</span>
+                          <button
+                            type="button"
+                            onClick={() => setCircuitBreakerAlert(null)}
+                            style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontWeight: 800, color: '#b45309', fontSize: 13 }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      )}
+
                       {/* Less Pre-tax Discount (-) */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: 11, color: '#334155', display: 'flex', alignItems: 'center', gap: 3 }}>
@@ -1959,6 +2013,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
         purpose={`Room ${targetRoom.roomNo} Settlement (${activeInvoiceNo})`}
         roomNo={targetRoom.roomNo}
         bookingId={guest ? (guest as any).bookingId : undefined}
+        onSwitchToManualPos={() => handleSwitchToManualPos()}
         onPaymentSuccess={txn => {
           const nonUpiSplits = paymentSplits.filter(p => p.mode !== 'UPI');
           setPaymentSplits([

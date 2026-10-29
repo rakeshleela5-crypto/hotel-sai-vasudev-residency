@@ -469,11 +469,13 @@ class DecentroUpiQrResponse(BaseModel):
     reference_id: str
     decentro_txn_id: Optional[str] = None
     amount: float
-    qr_code_base64: str
-    upi_intent_link: str
+    qr_code_base64: Optional[str] = ""
+    upi_intent_link: Optional[str] = ""
     status: str = "PENDING"
     expiry_time: Optional[str] = None
     message: str = "Dynamic UPI QR generated successfully"
+    decentro_unavailable: Optional[bool] = False
+    fallback_mode: Optional[str] = None
 
 class DecentroVirtualAccountRequest(BaseModel):
     corporate_name: str = Field(..., min_length=2, description="Corporate entity or guest name")

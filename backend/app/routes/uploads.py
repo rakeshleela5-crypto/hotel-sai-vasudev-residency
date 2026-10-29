@@ -93,6 +93,75 @@ def create_presigned_download_url(req: PresignedDownloadRequest):
         **res
     }
 
+@router.post("/secure-view")
+def create_secure_view_url(req: PresignedDownloadRequest):
+    """
+    Generates a strictly time-limited 60-second pre-signed URL for private staff viewing (#50).
+    """
+    res = r2_service.generate_secure_view_url(
+        object_key=req.object_key,
+        expires_in=req.expires_in or 60
+    )
+    return {
+        "status": "success",
+        **res
+    }
+
+@router.post("/guest-id")
+async def upload_guest_id_endpoint(
+    file: UploadFile = File(...),
+    booking_ref: str = Form("WALKIN")
+):
+    """
+    Uploads and validates guest ID scan (Aadhaar/Passport/DL) to private R2 storage (#45, #50).
+    Enforces strict MIME (JPEG, PNG, PDF) and max 5MB size limit.
+    """
+    try:
+        content = await file.read()
+        object_key, file_url = r2_service.upload_guest_id_scan(
+            file_bytes=content,
+            filename=file.filename or "guest_id.jpg",
+            booking_ref=booking_ref
+        )
+        secure_view = r2_service.generate_secure_view_url(object_key, expires_in=60)
+        return {
+            "status": "success",
+            "message": "Guest ID uploaded and stored securely (#50)",
+            "object_key": object_key,
+            "url": file_url,
+            "secure_view_url": secure_view.get("download_url"),
+            "expires_in": 60
+        }
+    except ValueError as val_err:
+        raise HTTPException(status_code=400, detail=str(val_err))
+
+@router.post("/invoice-pdf")
+async def upload_invoice_pdf_endpoint(
+    file: UploadFile = File(...),
+    invoice_number: str = Form("INV-TEMP")
+):
+    """
+    Uploads and validates GST invoice PDF to private R2 storage (#45, #50).
+    Enforces strict PDF MIME type and max 5MB size limit.
+    """
+    try:
+        content = await file.read()
+        object_key, file_url = r2_service.upload_invoice_pdf(
+            pdf_bytes=content,
+            invoice_number=invoice_number
+        )
+        secure_view = r2_service.generate_secure_view_url(object_key, expires_in=60)
+        return {
+            "status": "success",
+            "message": "GST Tax Invoice uploaded to private R2 key (#50)",
+            "object_key": object_key,
+            "url": file_url,
+            "secure_view_url": secure_view.get("download_url"),
+            "expires_in": 60
+        }
+    except ValueError as val_err:
+        raise HTTPException(status_code=400, detail=str(val_err))
+
 @router.post("/file")
 async def upload_file_direct(
     file: UploadFile = File(...),

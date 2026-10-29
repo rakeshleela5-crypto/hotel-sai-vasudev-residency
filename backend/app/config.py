@@ -26,11 +26,21 @@ class Settings(BaseSettings):
         "sqlite:///./hotel_sai_vasudev.db"
     )
     
-    # Allowed origins for CORS (Cloudflare Pages, localhost)
+    # Allowed origins for CORS (Cloudflare Pages, localhost) (#18, #19)
     ALLOWED_ORIGINS: str = os.getenv(
         "ALLOWED_ORIGINS",
-        "https://hotel-sai-vasudev-residency.pages.dev,http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"
+        "https://sai-vasudev-residency.pages.dev,https://hotel-sai-vasudev-residency.pages.dev,http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"
     )
+
+    # JWT Authentication & RBAC Configuration (#47)
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "svr-hotel-jwt-super-secret-key-2026-safe-production-key")
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15  # 15-min Access Token expiry (#47)
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7     # 7-day Rotating Refresh Token expiry (#47)
+
+    # Application-Layer Field Encryption for Sensitive Guest PII (#50)
+    # 32-byte url-safe base64 key for cryptography.fernet
+    FERNET_KEY: str = os.getenv("FERNET_KEY", "WqG6nF7L9B8h1K3vX5c2M4e6T8z0R2y4P6s8U1w3Y5A=")
 
     # Decentro Banking & KYC API Credentials
     DECENTRO_BASE_URL: str = os.getenv("DECENTRO_BASE_URL", "https://in.staging.decentro.tech")
@@ -41,13 +51,31 @@ class Settings(BaseSettings):
     DECENTRO_WEBHOOK_SECRET: str = os.getenv("DECENTRO_WEBHOOK_SECRET", "")
     DECENTRO_PAYEE_ACCOUNT: str = os.getenv("DECENTRO_PAYEE_ACCOUNT", "SAIVASUDEV@icici")
 
-    # Cloudflare R2 Object Storage (S3-Compatible)
+    # Cloudflare R2 Object Storage (S3-Compatible) (#45, #50, #77)
     R2_ACCOUNT_ID: str = os.getenv("R2_ACCOUNT_ID", "")
     R2_ACCESS_KEY_ID: str = os.getenv("R2_ACCESS_KEY_ID", "")
     R2_SECRET_ACCESS_KEY: str = os.getenv("R2_SECRET_ACCESS_KEY", "")
     R2_BUCKET_NAME: str = os.getenv("R2_BUCKET_NAME", "hotel-sai-vasudev-documents")
     R2_PUBLIC_DOMAIN: str = os.getenv("R2_PUBLIC_DOMAIN") or os.getenv("R2_PUBLIC_URL") or os.getenv("VITE_R2_PUBLIC_URL") or ""
     R2_PUBLIC_URL: str = os.getenv("R2_PUBLIC_URL") or os.getenv("R2_PUBLIC_DOMAIN") or os.getenv("VITE_R2_PUBLIC_URL") or ""
+    R2_MAX_FILE_SIZE_BYTES: int = 5 * 1024 * 1024  # Strict 5MB limit (#45)
+    R2_PRESIGNED_VIEW_EXPIRES_SECONDS: int = 60    # Strict 60s pre-signed URLs (#50)
+
+    # SlowAPI Rate Limiting Configuration (#2, #18)
+    RATE_LIMIT_LOGIN: str = "5/minute"
+    RATE_LIMIT_BOOKING: str = "10/minute"
+    RATE_LIMIT_DEFAULT: str = "60/minute"
+
+    # In-Memory TTLCache Configuration (#6, #7)
+    CACHE_TTL_ROOMS: int = int(os.getenv("CACHE_TTL_ROOMS", "300"))  # 5 minutes TTL
+    CACHE_TTL_MENUS: int = int(os.getenv("CACHE_TTL_MENUS", "300"))  # 5 minutes TTL
+
+    # APScheduler & Automated R2 Backup Configuration (#41, #97, #98)
+    ENABLE_CRON_SCHEDULER: bool = os.getenv("ENABLE_CRON_SCHEDULER", "true").lower() in ("true", "1", "yes")
+    BACKUP_RETENTION_DAYS: int = int(os.getenv("BACKUP_RETENTION_DAYS", "30"))
+
+    # Observability & Webhook Alerting (#101, #103, #104)
+    ALERT_WEBHOOK_URL: str = os.getenv("ALERT_WEBHOOK_URL", "")
 
     @property
     def get_database_url(self) -> str:

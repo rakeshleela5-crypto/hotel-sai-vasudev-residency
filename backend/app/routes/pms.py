@@ -5,40 +5,71 @@ import uuid
 import json
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, Header
 from fastapi.responses import HTMLResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload, joinedload
 from sqlalchemy import text, func
 from typing import List, Optional, Dict, Any, Union
 
 from app.database import get_db
 from app import models, schemas
+from app.utils.locking import acquire_canonical_locks
+from app.utils.timezone import now_utc, now_ist, to_ist, today_ist_str
+from app.utils.idempotency import require_idempotency_key
+from app.utils.auth import require_role, HospitalityRole, revoke_user_refresh_tokens
+from app.utils.audit import record_audit_log, audit_tariff_change, audit_discount, audit_kot_void, audit_payout
+from app.utils.encryption import encrypt_pii, decrypt_pii, mask_pii
+from app.utils.caching import get_cached_menu, set_cached_menu, invalidate_menu_cache, invalidate_rooms_cache
+from app.websocket_manager import ws_manager
 
 router = APIRouter(prefix="/pms", tags=["PMS Enterprise Operations"])
 
 def log_audit(db: Session, event_type: str, booking_ref: Optional[str], performed_by: str, details: dict):
-    audit = models.AuditLog(
-        event_type=event_type,
-        booking_ref=booking_ref,
-        performed_by=performed_by,
-        details_json=json.dumps(details, default=str)
+    """Standard audit logging helper for PMS operations (#48)."""
+    return record_audit_log(
+        db=db,
+        action=event_type,
+        entity_type="BOOKING" if booking_ref else "SYSTEM",
+        entity_id=booking_ref or "SYSTEM",
+        new_data=details,
+        staff_id=performed_by,
+        role="Front Office",
+        booking_ref=booking_ref
     )
-    db.add(audit)
 
-def find_booking_by_ref_or_room(db: Session, ref_str: Optional[str]) -> Optional[models.Booking]:
+def find_booking_by_ref_or_room(
+    db: Session,
+    ref_str: Optional[str],
+    for_update: bool = False,
+    eager_load: bool = True
+) -> Optional[models.Booking]:
+    """
+    Authoritative booking resolver with eager-loading (selectinload) to eliminate N+1 queries (#5)
+    and optional pessimistic row-locking (.with_for_update()) (#26).
+    """
     if not ref_str:
         return None
     cleaned = ref_str.strip()
     
+    query = db.query(models.Booking)
+    if eager_load:
+        query = query.options(
+            selectinload(models.Booking.room),
+            selectinload(models.Booking.folio_items),
+            selectinload(models.Booking.payments),
+            selectinload(models.Booking.room_shifts)
+        )
+    if for_update:
+        try:
+            query = query.with_for_update()
+        except Exception:
+            pass
+
     # 1. Direct match on booking_ref
-    b = db.query(models.Booking).filter(
-        models.Booking.booking_ref.ilike(cleaned)
-    ).first()
+    b = query.filter(models.Booking.booking_ref.ilike(cleaned)).first()
     if b:
         return b
         
     # 2. Match on invoice_number
-    b = db.query(models.Booking).filter(
-        models.Booking.invoice_number.ilike(cleaned)
-    ).first()
+    b = query.filter(models.Booking.invoice_number.ilike(cleaned)).first()
     if b:
         return b
         
@@ -56,7 +87,7 @@ def find_booking_by_ref_or_room(db: Session, ref_str: Optional[str]) -> Optional
             (models.Room.slug.ilike(f"%{room_num}%"))
         ).first()
         if room:
-            active_b = db.query(models.Booking).filter(
+            active_b = query.filter(
                 models.Booking.room_id == room.id,
                 models.Booking.status.in_(["Checked-In", "Confirmed"])
             ).order_by(models.Booking.id.desc()).first()
@@ -155,6 +186,21 @@ def execute_room_shift(payload: schemas.RoomShiftCreate, db: Session = Depends(g
 
     db.commit()
     db.refresh(shift_record)
+    ws_manager.emit_booking_event_sync(
+        event_type="ROOM_SHIFT",
+        booking_ref=booking.booking_ref,
+        status="Checked-In",
+        room_number=new_room.name,
+        guest_name=booking.guest_name,
+        extra={"from_room": old_room.name, "to_room": new_room.name, "reason": payload.reason}
+    )
+    ws_manager.emit_room_status_event_sync(
+        room_id=old_room.id,
+        room_name=old_room.name,
+        housekeeping_status="Dirty",
+        old_status="Occupied",
+        updated_by=payload.shifted_by
+    )
     return shift_record
 
 @router.get("/room-shifts")
@@ -176,14 +222,18 @@ def get_room_shifts(db: Session = Depends(get_db)):
     } for rs in shifts]
 
 # --- 2. Multi-Tender & Split Bill Payments ---
-@router.post("/payments", response_model=schemas.BookingPaymentResponse)
+@router.post("/payments", response_model=schemas.BookingPaymentResponse, dependencies=[Depends(require_idempotency_key)])
 def record_booking_payment(payload: schemas.BookingPaymentCreate, db: Session = Depends(get_db)):
     """
     Record an advance, partial, key deposit, or final split settlement payment
+    with canonical lock ordering (Booking -> Folio -> Room) (#15, #26).
     """
-    booking = find_booking_by_ref_or_room(db, payload.booking_ref)
+    booking = find_booking_by_ref_or_room(db, payload.booking_ref, for_update=True)
     if not booking:
         raise HTTPException(status_code=404, detail="Booking reservation not found")
+
+    # Acquire canonical locks: Booking -> Folio -> Room
+    acquire_canonical_locks(db, booking_id=booking.id, room_id=booking.room_id)
 
     payment = models.BookingPayment(
         booking_id=booking.id,
@@ -222,11 +272,15 @@ def record_booking_payment(payload: schemas.BookingPaymentCreate, db: Session = 
 def add_item_to_room_folio(payload: schemas.RoomFolioItemCreate, db: Session = Depends(get_db)):
     """
     Post a Room Service Food KOT or Sundry charge directly to the Guest Room Folio
+    with canonical row locking (Booking -> Folio -> Room) (#15, #26)
     Calculates 5% Food GST (SAC 996331) or 12% Hotel Sundry (SAC 996311)
     """
-    booking = find_booking_by_ref_or_room(db, payload.booking_ref)
+    booking = find_booking_by_ref_or_room(db, payload.booking_ref, for_update=True)
     if not booking:
         raise HTTPException(status_code=404, detail="Booking reservation not found")
+
+    # Acquire canonical locks: Booking -> Folio -> Room
+    acquire_canonical_locks(db, booking_id=booking.id, room_id=booking.room_id)
 
     qty = max(1, payload.quantity)
     taxable = round(payload.unit_price * qty, 2)
@@ -275,23 +329,24 @@ def add_item_to_room_folio(payload: schemas.RoomFolioItemCreate, db: Session = D
 @router.get("/folio/{booking_ref}", response_model=schemas.MasterFolioResponse)
 def get_master_room_folio(booking_ref: str, db: Session = Depends(get_db)):
     """
-    Generate comprehensive Master Folio showing:
+    Generate comprehensive Master Folio with eager-loaded relationships (selectinload #5):
     - Room stay base tariff & room GST
     - Itemized Room Shifts
     - Restaurant / Room Service Food KOTs & 5% GST
     - Multi-tender payment receipts
     - Net Balance Due
     """
-    booking = find_booking_by_ref_or_room(db, booking_ref)
+    booking = find_booking_by_ref_or_room(db, booking_ref, eager_load=True)
     if not booking:
         raise HTTPException(status_code=404, detail="Booking reservation not found")
 
     room = booking.room or db.query(models.Room).filter(models.Room.id == booking.room_id).first()
     current_room_name = room.name if room else "Deluxe Stay"
 
-    shifts = db.query(models.RoomShift).filter(models.RoomShift.booking_id == booking.id).all()
-    folios = db.query(models.RoomFolioItem).filter(models.RoomFolioItem.booking_id == booking.id).all()
-    payments = db.query(models.BookingPayment).filter(models.BookingPayment.booking_id == booking.id).all()
+    # Eager-loaded collections from selectinload
+    shifts = booking.room_shifts if booking.room_shifts is not None else db.query(models.RoomShift).filter(models.RoomShift.booking_id == booking.id).all()
+    folios = booking.folio_items if booking.folio_items is not None else db.query(models.RoomFolioItem).filter(models.RoomFolioItem.booking_id == booking.id).all()
+    payments = booking.payments if booking.payments is not None else db.query(models.BookingPayment).filter(models.BookingPayment.booking_id == booking.id).all()
 
     # Calculations
     room_stay_charges = booking.base_amount + (booking.extra_guest_charge or 0.0)
@@ -404,6 +459,13 @@ def update_room_housekeeping_status(payload: schemas.HousekeepingStatusUpdate, d
     })
 
     db.commit()
+    ws_manager.emit_room_status_event_sync(
+        room_id=room.id,
+        room_name=room.name,
+        housekeeping_status=room.housekeeping_status,
+        old_status=old_status,
+        updated_by=payload.updated_by
+    )
     return {"message": f"Room {room.name} status updated to {payload.housekeeping_status}"}
 
 # --- 7. Midnight Day-End Night Audit Engine ---
@@ -514,13 +576,14 @@ def execute_night_audit(payload: schemas.NightAuditRunRequest, db: Session = Dep
 @router.post("/check-in", response_model=schemas.BookingResponse)
 def execute_walk_in_check_in(payload: schemas.WalkInCheckInRequest, db: Session = Depends(get_db)):
     """
-    Registers a walk-in guest at the front desk:
+    Registers a walk-in guest at the front desk with row-level room locking (.with_for_update()):
     1. Sets room housekeeping status to 'Occupied'
     2. Calculates authoritative pricing and Indian GST
     3. Records advance deposit payment if provided
     4. Automatically logs domestic/foreign police station register
     """
-    room = db.query(models.Room).filter(models.Room.id == payload.room_id).first()
+    # Acquire canonical lock on target Room (#14, #26)
+    _, _, room = acquire_canonical_locks(db, room_id=payload.room_id)
     if not room:
         raise HTTPException(status_code=404, detail="Selected room not found")
     if room.housekeeping_status == "Occupied":
@@ -558,7 +621,7 @@ def execute_walk_in_check_in(payload: schemas.WalkInCheckInRequest, db: Session 
         id_proof_number=payload.id_proof_number,
         check_in_date=today_str,
         check_out_date=payload.check_out_date,
-        actual_check_in=datetime.datetime.utcnow(),
+        actual_check_in=now_utc(),
         adults=payload.adults,
         children=payload.children,
         total_nights=nights,
@@ -618,22 +681,38 @@ def execute_walk_in_check_in(payload: schemas.WalkInCheckInRequest, db: Session 
 
     db.commit()
     db.refresh(booking)
+    ws_manager.emit_booking_event_sync(
+        event_type="CHECK_IN",
+        booking_ref=booking.booking_ref,
+        status="Checked-In",
+        room_number=room.name,
+        guest_name=booking.guest_name
+    )
+    ws_manager.emit_room_status_event_sync(
+        room_id=room.id,
+        room_name=room.name,
+        housekeeping_status="Occupied",
+        old_status="Clean",
+        updated_by=payload.registered_by
+    )
     return booking
 
 # --- 9. Check-Out Settlement & Transition to Dirty ---
 @router.post("/check-out", response_model=schemas.MasterFolioResponse)
 def execute_check_out(payload: schemas.CheckOutRequest, db: Session = Depends(get_db)):
     """
-    Executes Check-Out:
+    Executes Check-Out with canonical locking (Booking -> Folio -> Room) (#15, #26):
     1. Collects remaining balance if paid
     2. Marks room as 'Dirty' for housekeeping
     3. Sets booking status to 'Checked-Out'
     4. Generates and returns final Master Folio Invoice
     """
-    booking = find_booking_by_ref_or_room(db, payload.booking_ref)
+    booking = find_booking_by_ref_or_room(db, payload.booking_ref, for_update=True)
     if not booking:
         raise HTTPException(status_code=404, detail="Booking reservation not found")
 
+    # Acquire canonical locks: Booking -> Folio -> Room (#15, #26)
+    acquire_canonical_locks(db, booking_id=booking.id, room_id=booking.room_id)
     room = db.query(models.Room).filter(models.Room.id == booking.room_id).first()
 
     # Record final settlement payment if provided
@@ -671,6 +750,21 @@ def execute_check_out(payload: schemas.CheckOutRequest, db: Session = Depends(ge
     })
 
     db.commit()
+    ws_manager.emit_booking_event_sync(
+        event_type="CHECK_OUT",
+        booking_ref=booking.booking_ref,
+        status="Checked-Out",
+        room_number=room.name if room else None,
+        guest_name=booking.guest_name
+    )
+    if room:
+        ws_manager.emit_room_status_event_sync(
+            room_id=room.id,
+            room_name=room.name,
+            housekeeping_status="Dirty",
+            old_status="Occupied",
+            updated_by=payload.processed_by
+        )
     return get_master_room_folio(booking.booking_ref, db)
 
 # --- 10. Room Maintenance / Out-of-Order Blocking ---
@@ -920,6 +1014,15 @@ def create_kot_ticket(payload: dict, db: Session = Depends(get_db)):
 
     db.commit()
     db.refresh(kot)
+    ws_manager.emit_kot_event_sync(
+        event_type="KOT_CREATED",
+        kot_number=kot.kot_no,
+        table_number=kot.table_no,
+        room_number=kot.room_no,
+        waiter_name=kot.waiter_name,
+        items=items,
+        status=kot.status
+    )
     return {"status": "created", "kot_no": kot.kot_no, "id": kot.id}
 
 # --- 15. Master Items CRUD (GST, OTAs, Vouchers, Lockers, Charges) ---
@@ -2043,7 +2146,33 @@ def void_kot_item(payload: schemas.KotVoidRequest, db: Session = Depends(get_db)
         timestamp=datetime.datetime.utcnow()
     )
     db.add(void_log)
+
+    # Immutable Audit Log Entry in audit_logs table (#48)
+    record_audit_log(
+        db=db,
+        action="KOT_VOIDED",
+        entity_type="KOT",
+        entity_id=kot_num or payload.item_name,
+        new_data={
+            "item_name": payload.item_name,
+            "quantity": qty,
+            "amount": void_amount,
+            "reason": payload.void_reason,
+            "table_no": table_num
+        },
+        staff_id=payload.steward_id or "Steward",
+        role="STEWARD"
+    )
+
     db.commit()
+    ws_manager.emit_kot_event_sync(
+        event_type="KOT_VOIDED",
+        kot_number=kot_num or "KOT-MANUAL",
+        table_number=table_num,
+        room_number=room_num,
+        items=[{"item_name": payload.item_name, "quantity": qty, "amount": void_amount, "reason": payload.void_reason}],
+        status="Voided"
+    )
 
     return {
         "success": True,
@@ -3384,6 +3513,22 @@ def save_general_payment(payload: schemas.GeneralPaymentCreate, db: Session = De
         party.balance = round(party.balance + payload.amount, 2)
         party.balance_type = "Dr"
 
+    # Immutable Audit Log Entry in audit_logs (#48)
+    record_audit_log(
+        db=db,
+        action="PAYOUT_ISSUED",
+        entity_type="PAYMENT",
+        entity_id=pmt.payment_no,
+        new_data={
+            "account_name": acc_name,
+            "amount": payload.amount,
+            "payment_mode": p_mode,
+            "voucher_no": v_no
+        },
+        staff_id="Accounts",
+        role="MANAGER"
+    )
+
     db.commit()
     db.refresh(pmt)
     return {
@@ -3908,6 +4053,22 @@ def record_agent_payout_voucher(payload: schemas.AgentPayoutVoucherCreate, db: S
         agent.total_commission_paid = round(agent.total_commission_paid + payload.amount, 2)
         agent.balance_payable = max(0.0, round(agent.balance_payable - payload.amount, 2))
 
+    # Immutable Audit Log Entry in audit_logs (#48)
+    record_audit_log(
+        db=db,
+        action="PAYOUT_ISSUED",
+        entity_type="PAYOUT",
+        entity_id=voucher.voucher_no,
+        new_data={
+            "agent_id": agt_id,
+            "agent_name": agt_name,
+            "amount": payload.amount,
+            "payment_mode": payload.payment_mode or "CASH"
+        },
+        staff_id=payload.created_by or "Accounts",
+        role="MANAGER"
+    )
+
     db.commit()
     db.refresh(voucher)
     return {
@@ -3997,13 +4158,37 @@ def save_shift_handover(payload: schemas.ShiftHandoverCreate, db: Session = Depe
 
     db.commit()
     db.refresh(handover)
+
+    # Instant Revocation of Refresh Tokens upon Shift Handover (#44, #47)
+    revoked_count = revoke_user_refresh_tokens(db, user_id=u_email, reason="SHIFT_HANDOVER")
+    if u_name and u_name != u_email:
+        revoke_user_refresh_tokens(db, user_id=u_name, reason="SHIFT_HANDOVER")
+
+    # Record immutable audit log (#48)
+    record_audit_log(
+        db=db,
+        action="SHIFT_HANDOVER",
+        entity_type="SHIFT",
+        entity_id=handover.shift_id,
+        new_data={
+            "shift_id": handover.shift_id,
+            "outgoing_user": u_email,
+            "incoming_user": handover.handover_to_user,
+            "net_physical_cash": handover.net_physical_cash_in_drawer,
+            "revoked_tokens": revoked_count
+        },
+        staff_id=u_email,
+        role="RECEPTIONIST"
+    )
+
     return {
         "success": True,
-        "message": f"Shift Handover {handover.shift_id} recorded in PostgreSQL.",
+        "message": f"Shift Handover {handover.shift_id} recorded in PostgreSQL. Active sessions revoked (#44).",
         "shiftId": handover.shift_id,
         "shiftDate": handover.shift_date,
         "netPhysicalCashInDrawer": handover.net_physical_cash_in_drawer,
-        "status": handover.status
+        "status": handover.status,
+        "revoked_tokens": revoked_count
     }
 
 @router.get("/shift-handovers")
@@ -4841,11 +5026,16 @@ def delete_room_type(type_id: str, db: Session = Depends(get_db)):
 # 3. Restaurant Menu Items
 @router.get("/menu-items")
 def list_menu_items(category: Optional[str] = None, db: Session = Depends(get_db)):
+    cache_key = f"menu:{category}"
+    cached = get_cached_menu(cache_key)
+    if cached is not None:
+        return cached
+
     q = db.query(models.MenuItem)
     if category:
         q = q.filter(models.MenuItem.category == category)
     items = q.order_by(models.MenuItem.category.asc(), models.MenuItem.name.asc()).all()
-    return [{
+    res = [{
         "id": it.item_code,
         "code": it.item_code,
         "name": it.name,
@@ -4861,6 +5051,8 @@ def list_menu_items(category: Optional[str] = None, db: Session = Depends(get_db
         "sacCode": it.sac_code,
         "noDiscount": it.no_discount
     } for it in items]
+    set_cached_menu(cache_key, res)
+    return res
 
 @router.post("/menu-items")
 def save_menu_item(payload: schemas.MenuItemCreate, db: Session = Depends(get_db)):
@@ -4887,6 +5079,7 @@ def save_menu_item(payload: schemas.MenuItemCreate, db: Session = Depends(get_db
 
     db.commit()
     db.refresh(it)
+    invalidate_menu_cache()
     return {"success": True, "id": it.item_code, "name": it.name, "rate": it.rate}
 
 @router.post("/menu-items/bulk")
@@ -4905,6 +5098,7 @@ def save_menu_items_bulk(items: List[schemas.MenuItemCreate], db: Session = Depe
         if payload.unit: it.unit = payload.unit
         saved += 1
     db.commit()
+    invalidate_menu_cache()
     return {"success": True, "savedCount": saved}
 
 @router.delete("/menu-items/{item_code}")
@@ -4914,6 +5108,7 @@ def delete_menu_item(item_code: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Menu item not found")
     db.delete(it)
     db.commit()
+    invalidate_menu_cache()
     return {"success": True, "message": f"Menu item {item_code} deleted"}
 
 # 4. Housekeeping Duty Records
@@ -5994,19 +6189,25 @@ def create_or_save_room(payload: dict, db: Session = Depends(get_db)):
         (models.Room.slug == slug) | (models.Room.name == room_no) | (models.Room.id == (int(room_no) if room_no.isdigit() else -1))
     ).first()
     if existing:
+        old_rate = existing.price_per_night
+        new_rate = float(payload.get("base_rate") or payload.get("tariff") or payload.get("price") or existing.price_per_night)
+        if new_rate != old_rate:
+            audit_tariff_change(db=db, room_id=existing.id, old_price=old_rate, new_price=new_rate)
         existing.room_type = payload.get("room_type") or payload.get("roomType") or existing.room_type
-        existing.price_per_night = float(payload.get("base_rate") or payload.get("tariff") or payload.get("price") or existing.price_per_night)
+        existing.price_per_night = new_rate
         existing.housekeeping_status = payload.get("status") or existing.housekeeping_status
         existing.amenities = str(payload.get("amenities") or payload.get("facilities") or existing.amenities)
         db.commit()
         db.refresh(existing)
+        invalidate_rooms_cache()
         return {"success": True, "action": "updated", "roomId": existing.id, "roomNo": existing.name}
     
+    init_rate = float(payload.get("base_rate") or payload.get("tariff") or payload.get("price") or 1500.0)
     room = models.Room(
         name=room_no or f"Room {uuid.uuid4().hex[:4].upper()}",
         slug=slug,
         room_type=payload.get("room_type") or payload.get("roomType") or "Deluxe",
-        price_per_night=float(payload.get("base_rate") or payload.get("tariff") or payload.get("price") or 1500.0),
+        price_per_night=init_rate,
         capacity=int(payload.get("capacity") or 2),
         total_inventory=1,
         bed_type=payload.get("bedType") or "King Bed",
@@ -6020,6 +6221,8 @@ def create_or_save_room(payload: dict, db: Session = Depends(get_db)):
     db.add(room)
     db.commit()
     db.refresh(room)
+    audit_tariff_change(db=db, room_id=room.id, old_price=0.0, new_price=init_rate)
+    invalidate_rooms_cache()
     return {"success": True, "action": "created", "roomId": room.id, "roomNo": room.name}
 
 @router.put("/rooms/{room_id}")
@@ -6034,13 +6237,18 @@ def update_room_endpoint(room_id: str, payload: dict, db: Session = Depends(get_
     if "roomType" in payload or "room_type" in payload:
         r.room_type = payload.get("room_type") or payload.get("roomType") or r.room_type
     if "tariff" in payload or "base_rate" in payload or "price" in payload:
-        r.price_per_night = float(payload.get("tariff") or payload.get("base_rate") or payload.get("price") or r.price_per_night)
+        old_tariff = r.price_per_night
+        new_tariff = float(payload.get("tariff") or payload.get("base_rate") or payload.get("price") or r.price_per_night)
+        if new_tariff != old_tariff:
+            audit_tariff_change(db=db, room_id=r.id, old_price=old_tariff, new_price=new_tariff)
+        r.price_per_night = new_tariff
     if "status" in payload:
         r.housekeeping_status = payload["status"]
     if "facilities" in payload or "amenities" in payload:
         r.amenities = str(payload.get("facilities") or payload.get("amenities") or r.amenities)
     db.commit()
     db.refresh(r)
+    invalidate_rooms_cache()
     return {"success": True, "roomId": r.id, "roomNo": r.name}
 
 @router.delete("/rooms/{room_id}")
@@ -6051,6 +6259,7 @@ def delete_room_endpoint(room_id: str, db: Session = Depends(get_db)):
         (models.Room.slug == f"room-{room_id.lower()}")
     ).delete(synchronize_session=False)
     db.commit()
+    invalidate_rooms_cache()
     return {"success": True, "deletedCount": deleted}
 
 @router.delete("/tables/{table_id}")

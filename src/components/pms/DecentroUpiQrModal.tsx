@@ -15,6 +15,7 @@ interface DecentroUpiQrModalProps {
     amount: number;
     payer_vpa?: string;
   }) => void;
+  onSwitchToManualPos?: () => void;
 }
 
 export const DecentroUpiQrModal: React.FC<DecentroUpiQrModalProps> = ({
@@ -25,11 +26,13 @@ export const DecentroUpiQrModal: React.FC<DecentroUpiQrModalProps> = ({
   roomNo,
   bookingId,
   kotId,
-  onPaymentSuccess
+  onPaymentSuccess,
+  onSwitchToManualPos
 }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [qrData, setQrData] = useState<DecentroUpiQrResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isCircuitTripped, setIsCircuitTripped] = useState<boolean>(false);
   const [timeLeft, setTimeLeft] = useState<number>(900); // 15 minutes in seconds
   const [wsStatus, setWsStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connecting');
   const [paymentSuccess, setPaymentSuccess] = useState<DecentroPaymentSuccessEvent | null>(null);
@@ -63,6 +66,9 @@ export const DecentroUpiQrModal: React.FC<DecentroUpiQrModalProps> = ({
         if (isMounted) {
           setError(err.message || 'Failed to initialize Decentro UPI QR');
           setLoading(false);
+          if (err.decentro_unavailable || String(err.message).toLowerCase().includes('circuit')) {
+            setIsCircuitTripped(true);
+          }
         }
       });
 
@@ -317,24 +323,49 @@ export const DecentroUpiQrModal: React.FC<DecentroUpiQrModalProps> = ({
               <div style={{ fontSize: 36, marginBottom: 8 }}>⚠️</div>
               <div style={{ fontSize: 14, fontWeight: 800, color: '#dc2626' }}>{error}</div>
               <div style={{ fontSize: 12, color: '#64748b', marginTop: 6 }}>
-                Please check backend connectivity or use manual cash settlement.
+                {isCircuitTripped
+                  ? 'Decentro Banking Gateway circuit breaker is currently OPEN.'
+                  : 'Please check backend connectivity or use manual cash/card settlement.'}
               </div>
-              <button
-                type="button"
-                onClick={onClose}
-                style={{
-                  marginTop: 16,
-                  background: '#0f172a',
-                  color: '#fff',
-                  border: 'none',
-                  padding: '8px 18px',
-                  borderRadius: 6,
-                  fontWeight: 700,
-                  cursor: 'pointer'
-                }}
-              >
-                Close Window
-              </button>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 16 }}>
+                {onSwitchToManualPos && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onSwitchToManualPos();
+                      onClose();
+                    }}
+                    style={{
+                      background: '#f59e0b',
+                      color: '#ffffff',
+                      border: 'none',
+                      padding: '8px 18px',
+                      borderRadius: 6,
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      boxShadow: '0 2px 4px rgba(245, 158, 11, 0.3)'
+                    }}
+                  >
+                    ⚡ Switch to Manual POS Form
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={onClose}
+                  style={{
+                    background: '#0f172a',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '8px 18px',
+                    borderRadius: 6,
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Close Window
+                </button>
+              </div>
             </div>
           ) : paymentSuccess ? (
             /* Payment Reconciled Success Screen */

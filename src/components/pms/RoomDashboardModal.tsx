@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { PmsRoom, PmsBooking, PmsFolioSummary } from '../../types/pmsModels';
 import { PmsStore, usePmsSync } from '../../services/pmsStore';
+import { useERPWebSocket } from '../../hooks/useERPWebSocket';
 import { NewRoomBookingModal } from './NewRoomBookingModal';
 import { NewRoomCheckInModal } from './NewRoomCheckInModal';
 import { BookingReceiptModal } from './BookingReceiptModal';
@@ -22,6 +23,19 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
   onOpenCalendar: _onOpenCalendar
 }) => {
   usePmsSync();
+  const { isConnected: isWsConnected } = useERPWebSocket({ channel: 'front_desk' });
+  const [conflictAlert, setConflictAlert] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleConflict = (e: any) => {
+      const msg = e.detail?.message || 'Another staff member updated this record.';
+      setConflictAlert(msg);
+      setTimeout(() => setConflictAlert(null), 8000);
+    };
+    window.addEventListener('svr:conflict_detected', handleConflict);
+    return () => window.removeEventListener('svr:conflict_detected', handleConflict);
+  }, []);
+
   const rooms = PmsStore.getRooms();
 
   // Filters & Search
@@ -427,6 +441,33 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
 
         {/* Live Search Input */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '4px 9px',
+              borderRadius: 16,
+              background: isWsConnected ? '#ecfdf5' : '#fef2f2',
+              color: isWsConnected ? '#065f46' : '#991b1b',
+              fontSize: 10,
+              fontWeight: 800,
+              border: `1px solid ${isWsConnected ? '#a7f3d0' : '#fecaca'}`,
+              userSelect: 'none'
+            }}
+            title={isWsConnected ? "Live WebSocket connected (/api/v1/ws/front_desk)" : "Reconnecting to Front Desk WebSocket..."}
+          >
+            <span
+              style={{
+                width: 7,
+                height: 7,
+                borderRadius: '50%',
+                background: isWsConnected ? '#10b981' : '#ef4444',
+                boxShadow: isWsConnected ? '0 0 6px #10b981' : 'none'
+              }}
+            />
+            {isWsConnected ? 'LIVE WS' : 'RECONNECTING'}
+          </div>
           <input
             type="text"
             placeholder="🔍 Search Room #, Guest, Phone..."
@@ -584,6 +625,45 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Concurrency Conflict Alert Banner (#25) */}
+      {conflictAlert && (
+        <div style={{
+          background: '#fef2f2',
+          border: '1px solid #f87171',
+          color: '#991b1b',
+          padding: '8px 16px',
+          margin: '10px 16px 0 16px',
+          borderRadius: 6,
+          fontSize: 12,
+          fontWeight: 700,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          boxShadow: '0 2px 4px rgba(239, 68, 68, 0.1)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 16 }}>⚠️</span>
+            <span><strong>Optimistic Concurrency Conflict:</strong> {conflictAlert} The room rack view has been automatically refreshed with latest server data.</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setConflictAlert(null)}
+            style={{
+              background: '#ef4444',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: 3,
+              padding: '2px 8px',
+              cursor: 'pointer',
+              fontSize: 11,
+              fontWeight: 800
+            }}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Main Room Rack Interactive Grid */}
       <div style={{ flex: 1, padding: '16px', overflowY: 'auto' }}>

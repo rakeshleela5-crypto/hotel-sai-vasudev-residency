@@ -20,6 +20,8 @@ def test_parity_endpoints():
     print("Testing Full-Stack Parity Endpoints...")
     Base.metadata.create_all(bind=engine)
     db = next(get_db())
+    from app.routes.rooms import seed_rooms_if_empty
+    seed_rooms_if_empty(db)
 
     # 1. Test Folio Discount
     disc_payload = {

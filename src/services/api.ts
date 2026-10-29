@@ -9,8 +9,12 @@ import type {
 } from '../types';
 import { PmsStore } from './pmsStore';
 import { R2StorageClient, type R2UploadResult, type R2FileItem, type R2StatusResponse, type R2TestConnectionResponse } from './r2Storage';
+import { apiClient, API_BASE_URL as CLIENT_API_BASE_URL } from './apiClient';
+import { cacheRoomsLocally, cacheMenuLocally, getCachedMenu, queueOfflineKot } from './db';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+const API_BASE_URL = CLIENT_API_BASE_URL;
+// Wrap global fetch to automatically enforce UUIDv4 Idempotency Keys (#1), JWT refresh rotation (#47), and 409 handling (#25)
+const fetch = apiClient.fetch;
 
 // Official 18-Room Inventory for Hotel Sai Vasudev Residency (Shirdi)
 // Tariffs listed are INCLUSIVE of GST per the property specification sheets
@@ -122,6 +126,10 @@ export const hotelApi = {
       });
 
       let results = liveRooms;
+      // Dexie.js cache synchronization (#6, #33 Part A)
+      if (typeof window !== 'undefined' && localRooms.length > 0) {
+        cacheRoomsLocally(localRooms).catch(e => console.debug('[hotelApi.getRooms] Dexie cache note:', e));
+      }
       if (roomType && roomType !== 'All') {
         results = results.filter(r => r.room_type.toLowerCase().includes(roomType.toLowerCase()));
       }
@@ -604,19 +612,36 @@ export const hotelApi = {
   },
 
   async saveKotTicket(payload: any): Promise<any> {
-    const res = await fetch(`${API_BASE_URL}/pms/kots`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    if (!res.ok) throw new Error('Failed to save KOT ticket');
-    return await res.json();
+    try {
+      if (typeof window !== 'undefined' && !window.navigator.onLine) {
+        console.info('[hotelApi.saveKotTicket] Wi-Fi offline, queuing steward KOT in Dexie (#33)');
+        return await queueOfflineKot(payload);
+      }
+      return await apiClient.post('/kot', payload);
+    } catch (err) {
+      console.warn('[hotelApi.saveKotTicket] Network error, fallback queuing steward KOT in Dexie:', err);
+      return await queueOfflineKot(payload);
+    }
   },
 
   async getMasterItems(category: string): Promise<any[]> {
-    const res = await fetch(`${API_BASE_URL}/pms/masters/${category}`);
-    if (!res.ok) throw new Error(`Failed to fetch master items for ${category}`);
-    return await res.json();
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/masters/${category}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (typeof window !== 'undefined' && (category.toLowerCase().includes('food') || category.toLowerCase().includes('menu') || category.toLowerCase().includes('item'))) {
+          cacheMenuLocally(data);
+        }
+        return data;
+      }
+    } catch (err) {
+      console.warn(`[hotelApi.getMasterItems] Network error, reading Dexie cache for ${category}:`, err);
+    }
+    if (category.toLowerCase().includes('food') || category.toLowerCase().includes('menu')) {
+      const cached = await getCachedMenu();
+      if (cached.length > 0) return cached;
+    }
+    return [];
   },
 
   async saveMasterItem(payload: any): Promise<any> {

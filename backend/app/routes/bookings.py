@@ -1,14 +1,21 @@
 import datetime
 import html
 import threading
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, Request
 from fastapi.responses import HTMLResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import text
 from typing import List, Optional
 
 from app.database import get_db
 from app import models, schemas
+from app.utils.locking import acquire_canonical_locks
+from app.utils.timezone import now_utc
+from app.utils.idempotency import require_idempotency_key
+from app.utils.encryption import encrypt_pii, decrypt_pii
+from app.utils.rate_limit import limiter
+from app.config import settings
+from app.websocket_manager import ws_manager
 
 router = APIRouter(prefix="/bookings", tags=["Bookings"])
 
@@ -66,8 +73,9 @@ def get_overlapping_bookings_count(db: Session, room_id: int, check_in_str: str,
 
 _booking_concurrency_lock = threading.Lock()
 
-@router.post("", response_model=schemas.BookingResponse, status_code=201)
-def create_booking(payload: schemas.BookingCreate, db: Session = Depends(get_db)):
+@router.post("", response_model=schemas.BookingResponse, status_code=201, dependencies=[Depends(require_idempotency_key)])
+@limiter.limit(settings.RATE_LIMIT_BOOKING)
+def create_booking(request: Request, payload: schemas.BookingCreate, db: Session = Depends(get_db)):
     """
     Create a new atomic room booking with:
     1. Row-level concurrency locking
@@ -75,20 +83,13 @@ def create_booking(payload: schemas.BookingCreate, db: Session = Depends(get_db)
     3. Server-side Indian GST recalculation
     4. Unique invoice number generation
     """
+    # 1. Acquire canonical row lock on Room (.with_for_update()) (#14, #26)
     with _booking_concurrency_lock:
-        _, _, nights = parse_dates_and_nights(payload.check_in_date, payload.check_out_date)
-        
-        # Acquire room record with row lock to serialize concurrent bookings
-        query = db.query(models.Room).filter(models.Room.id == payload.room_id)
-        try:
-            # with_for_update() supported in PostgreSQL
-            room = query.with_for_update().first()
-        except Exception:
-            # Fallback for SQLite in local tests
-            room = query.first()
-
+        _, _, room = acquire_canonical_locks(db, room_id=payload.room_id)
         if not room:
             raise HTTPException(status_code=404, detail="Selected room does not exist")
+
+        _, _, nights = parse_dates_and_nights(payload.check_in_date, payload.check_out_date)
 
         # Verify inventory availability:
         # Individual numbered rooms (e.g. 101, 201) have strict inventory of 1.
@@ -112,44 +113,76 @@ def create_booking(payload: schemas.BookingCreate, db: Session = Depends(get_db)
                 )
             )
 
-    # Calculate authoritative server-side pricing & GST
-    pricing = compute_tax_and_pricing(room, nights, payload.adults)
+        # Calculate authoritative server-side pricing & GST
+        pricing = compute_tax_and_pricing(room, nights, payload.adults)
 
-    new_booking = models.Booking(
-        room_id=payload.room_id,
-        guest_name=payload.guest_name.strip(),
-        guest_email=payload.guest_email.strip().lower(),
-        guest_phone=payload.guest_phone.strip(),
-        id_proof_type=payload.id_proof_type or "Aadhaar Card",
-        id_proof_number=payload.id_proof_number,
-        check_in_date=payload.check_in_date,
-        check_out_date=payload.check_out_date,
-        adults=payload.adults,
-        children=payload.children,
-        total_nights=nights,
-        base_rate=pricing["base_tariff"],
-        base_amount=pricing["base_amount"],
-        extra_guest_charge=pricing["extra_guest_charge"],
-        gst_rate=pricing["gst_rate"],
-        cgst_amount=pricing["cgst_amount"],
-        sgst_amount=pricing["sgst_amount"],
-        total_tax=pricing["total_tax"],
-        total_price=pricing["grand_total"],
-        payment_status="Pending" if payload.payment_method == "Pay at Hotel" else "Paid",
-        payment_method=payload.payment_method or "Pay at Hotel",
-        status="Confirmed",
-        special_requests=payload.special_requests
+        new_booking = models.Booking(
+            room_id=payload.room_id,
+            guest_name=payload.guest_name.strip(),
+            guest_email=payload.guest_email.strip().lower(),
+            guest_phone=payload.guest_phone.strip(),
+            id_proof_type=payload.id_proof_type or "Aadhaar Card",
+            id_proof_number=encrypt_pii(payload.id_proof_number),
+            check_in_date=payload.check_in_date,
+            check_out_date=payload.check_out_date,
+            adults=payload.adults,
+            children=payload.children,
+            total_nights=nights,
+            base_rate=pricing["base_tariff"],
+            base_amount=pricing["base_amount"],
+            extra_guest_charge=pricing["extra_guest_charge"],
+            gst_rate=pricing["gst_rate"],
+            cgst_amount=pricing["cgst_amount"],
+            sgst_amount=pricing["sgst_amount"],
+            total_tax=pricing["total_tax"],
+            total_price=pricing["grand_total"],
+            payment_status="Pending" if payload.payment_method == "Pay at Hotel" else "Paid",
+            payment_method=payload.payment_method or "Pay at Hotel",
+            status="Confirmed",
+            special_requests=payload.special_requests,
+            created_at=now_utc(),
+            updated_at=now_utc()
+        )
+
+        db.add(new_booking)
+        db.flush()
+
+        # Automatically initialize primary Master Folio (#20, #26)
+        initial_folio = models.Folio(
+            booking_id=new_booking.id,
+            folio_number=f"FOL-{new_booking.booking_ref}",
+            status="OPEN",
+            total_charges=new_booking.total_price,
+            total_payments=new_booking.total_paid or 0.0,
+            balance_due=new_booking.balance_due or new_booking.total_price,
+            version_id=1,
+            created_at=now_utc(),
+            updated_at=now_utc()
+        )
+        db.add(initial_folio)
+
+        db.commit()
+        db.refresh(new_booking)
+
+    ws_manager.emit_booking_event_sync(
+        event_type="BOOKING_CREATED",
+        booking_ref=new_booking.booking_ref,
+        status=new_booking.status,
+        room_number=room.name if room else str(new_booking.room_id),
+        guest_name=new_booking.guest_name
     )
-
-    db.add(new_booking)
-    db.commit()
-    db.refresh(new_booking)
     return new_booking
 
 @router.get("/{booking_ref}", response_model=schemas.BookingResponse)
 def get_booking_by_ref(booking_ref: str, db: Session = Depends(get_db)):
-    """Lookup booking by reference number"""
-    booking = db.query(models.Booking).filter(
+    """Lookup booking by reference number with eager loading (selectinload #5)"""
+    booking = db.query(models.Booking).options(
+        selectinload(models.Booking.room),
+        selectinload(models.Booking.folio_items),
+        selectinload(models.Booking.payments),
+        selectinload(models.Booking.folios),
+        selectinload(models.Booking.room_shifts)
+    ).filter(
         models.Booking.booking_ref == booking_ref.upper().strip()
     ).first()
     if not booking:
@@ -162,20 +195,29 @@ def update_booking_status(
     update: schemas.BookingStatusUpdate, 
     db: Session = Depends(get_db)
 ):
-    """Update booking lifecycle (Confirmed, Checked-In, Checked-Out, Cancelled)"""
+    """Update booking lifecycle with canonical row lock (Booking -> Folio -> Room) (#15, #26)"""
     from app.routes.pms import find_booking_by_ref_or_room
-    booking = find_booking_by_ref_or_room(db, booking_ref)
+    booking = find_booking_by_ref_or_room(db, booking_ref, for_update=True)
     if not booking:
         raise HTTPException(status_code=404, detail="Booking reservation not found")
+
+    acquire_canonical_locks(db, booking_id=booking.id, room_id=booking.room_id)
 
     booking.status = update.status
     if update.payment_status:
         booking.payment_status = update.payment_status
     if update.cancellation_reason:
         booking.cancellation_reason = update.cancellation_reason
+    booking.updated_at = now_utc()
 
     db.commit()
     db.refresh(booking)
+    ws_manager.emit_booking_event_sync(
+        event_type="BOOKING_STATUS_CHANGED",
+        booking_ref=booking.booking_ref,
+        status=booking.status,
+        guest_name=booking.guest_name
+    )
     return booking
 
 @router.get("/{booking_ref}/invoice", response_model=schemas.TaxInvoiceVoucher)

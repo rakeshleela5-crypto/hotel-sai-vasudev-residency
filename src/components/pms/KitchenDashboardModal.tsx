@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { PmsKotRecord } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
+import { useERPWebSocket } from '../../hooks/useERPWebSocket';
 import { ManagerPinModal } from './ManagerPinModal';
 
 interface KitchenDashboardModalProps {
@@ -15,6 +16,13 @@ export const KitchenDashboardModal: React.FC<KitchenDashboardModalProps> = ({
   onOpenNewKot
 }) => {
   const [kots, setKots] = useState<PmsKotRecord[]>([]);
+  const { isConnected: isWsConnected } = useERPWebSocket({
+    channel: 'kitchen_kds',
+    enabled: isOpen,
+    onKotEvent: () => {
+      refreshKots();
+    }
+  });
   const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'ready' | 'served' | 'unprinted'>('pending');
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [countdown, setCountdown] = useState(30);
@@ -200,6 +208,35 @@ export const KitchenDashboardModal: React.FC<KitchenDashboardModalProps> = ({
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            {/* Live KDS WebSocket Status Indicator (#54) */}
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '4px 10px',
+                borderRadius: 16,
+                background: isWsConnected ? '#ecfdf5' : '#fef2f2',
+                color: isWsConnected ? '#065f46' : '#991b1b',
+                fontSize: 10,
+                fontWeight: 800,
+                border: `1px solid ${isWsConnected ? '#a7f3d0' : '#fecaca'}`,
+                userSelect: 'none'
+              }}
+              title={isWsConnected ? "Live KDS WebSocket connected (/api/v1/ws/kitchen_kds)" : "Reconnecting to Kitchen WebSocket..."}
+            >
+              <span
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: '50%',
+                  background: isWsConnected ? '#10b981' : '#ef4444',
+                  boxShadow: isWsConnected ? '0 0 6px #10b981' : 'none'
+                }}
+              />
+              {isWsConnected ? 'LIVE KDS WS' : 'RECONNECTING'}
+            </div>
+
             {/* 30s Auto Refresh Badge */}
             <div
               style={{

@@ -1,31 +1,121 @@
+import os
+import logging
+from typing import AsyncGenerator, Generator
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
+from sqlalchemy.ext.asyncio import (
+    create_async_engine,
+    AsyncSession,
+    async_sessionmaker
+)
 from app.config import settings
 
-db_url = settings.get_database_url
+logger = logging.getLogger("pms_database")
 
-# Configure connect args and pooling
-if "sqlite" in db_url:
-    engine = create_engine(
-        db_url,
-        connect_args={"check_same_thread": False}
-    )
-else:
-    # PostgreSQL configuration for Railway
-    engine = create_engine(
-        db_url,
-        pool_pre_ping=True,
-        pool_size=10,
-        max_overflow=20
-    )
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
+# Base model for all declarative entities
 Base = declarative_base()
 
-def get_db():
+def get_sync_database_url() -> str:
+    """Returns database URL formatted for synchronous SQLAlchemy engine."""
+    url = settings.get_database_url
+    # Ensure standard postgresql driver format
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql://", 1)
+    elif url.startswith("postgresql+asyncpg://"):
+        url = url.replace("postgresql+asyncpg://", "postgresql://", 1)
+    return url
+
+def get_async_database_url() -> str:
+    """Returns database URL formatted for asynchronous SQLAlchemy engine with asyncpg or aiosqlite."""
+    url = settings.get_database_url
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+    elif url.startswith("postgresql://") and not url.startswith("postgresql+asyncpg://"):
+        url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    elif url.startswith("sqlite:///") and not url.startswith("sqlite+aiosqlite:///"):
+        url = url.replace("sqlite:///", "sqlite+aiosqlite:///", 1)
+    return url
+
+sync_url = get_sync_database_url()
+async_url = get_async_database_url()
+
+# =========================================================================
+# 1. ASYNC ENGINE & CONNECTION POOL (Asyncpg / Railway PostgreSQL)
+# =========================================================================
+is_sqlite = "sqlite" in sync_url
+
+if is_sqlite:
+    async_engine = create_async_engine(
+        async_url,
+        connect_args={"check_same_thread": False},
+        echo=False
+    )
+    engine = create_engine(
+        sync_url,
+        connect_args={"check_same_thread": False},
+        echo=False
+    )
+else:
+    # Railway PostgreSQL async engine with asyncpg, pool tuning & 5s lock_timeout
+    async_engine = create_async_engine(
+        async_url,
+        pool_size=10,
+        max_overflow=20,
+        pool_timeout=30,
+        pool_pre_ping=True,
+        connect_args={
+            "server_settings": {
+                "lock_timeout": "5000"  # 5000ms = 5s session lock timeout (#15)
+            }
+        },
+        echo=False
+    )
+
+    # Railway PostgreSQL sync engine with pool tuning & 5s lock_timeout
+    engine = create_engine(
+        sync_url,
+        pool_size=10,
+        max_overflow=20,
+        pool_timeout=30,
+        pool_pre_ping=True,
+        connect_args={
+            "options": "-c lock_timeout=5000"  # 5s session lock timeout (#15)
+        },
+        echo=False
+    )
+
+# Async Session Factory
+AsyncSessionLocal = async_sessionmaker(
+    bind=async_engine,
+    class_=AsyncSession,
+    autocommit=False,
+    autoflush=False,
+    expire_on_commit=False
+)
+
+# Synchronous Session Factory (for backward compatibility)
+SessionLocal = sessionmaker(
+    bind=engine,
+    autocommit=False,
+    autoflush=False,
+    expire_on_commit=False
+)
+
+# =========================================================================
+# 2. SESSION DEPENDENCY INJECTORS
+# =========================================================================
+def get_db() -> Generator[Session, None, None]:
+    """FastAPI dependency for synchronous DB session."""
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
+async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
+    """FastAPI dependency for asynchronous DB session."""
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()

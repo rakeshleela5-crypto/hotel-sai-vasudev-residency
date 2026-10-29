@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { PmsHousekeepingRecord, PmsRoom } from '../../types/pmsModels';
 import { PmsStore, usePmsSync } from '../../services/pmsStore';
+import { useERPWebSocket } from '../../hooks/useERPWebSocket';
 
 interface HousekeepingTrackerModalProps {
   isOpen: boolean;
@@ -14,6 +15,10 @@ export const HousekeepingTrackerModal: React.FC<HousekeepingTrackerModalProps> =
   onRoomSelect: _onRoomSelect
 }) => {
   usePmsSync();
+  const { isConnected: isWsConnected } = useERPWebSocket({
+    channel: 'housekeeping',
+    enabled: isOpen
+  });
   const [activeTab, setActiveTab] = useState<'kanban' | 'table'>('kanban');
   const [filterFloor, setFilterFloor] = useState<'all' | '0' | '1'>('all');
   const [filterStaff, setFilterStaff] = useState<string>('all');
@@ -102,6 +107,35 @@ export const HousekeepingTrackerModal: React.FC<HousekeepingTrackerModalProps> =
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Live Housekeeping WebSocket Indicator (#54) */}
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '4px 9px',
+                borderRadius: 16,
+                background: isWsConnected ? 'rgba(236,253,245,0.9)' : 'rgba(254,242,242,0.9)',
+                color: isWsConnected ? '#065f46' : '#991b1b',
+                fontSize: 10,
+                fontWeight: 800,
+                border: `1px solid ${isWsConnected ? '#a7f3d0' : '#fecaca'}`,
+                userSelect: 'none'
+              }}
+              title={isWsConnected ? "Live Housekeeping WebSocket connected (/api/v1/ws/housekeeping)" : "Reconnecting..."}
+            >
+              <span
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: '50%',
+                  background: isWsConnected ? '#10b981' : '#ef4444',
+                  boxShadow: isWsConnected ? '0 0 6px #10b981' : 'none'
+                }}
+              />
+              {isWsConnected ? 'LIVE HK WS' : 'RECONNECTING'}
+            </div>
+
             <div className="view-toggle-btns" style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.15)', padding: '2px', borderRadius: '6px' }}>
               <button
                 type="button"

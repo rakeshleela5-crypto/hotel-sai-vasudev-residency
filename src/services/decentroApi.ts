@@ -1,4 +1,7 @@
 import Dexie, { type Table } from 'dexie';
+import { apiClient } from './apiClient';
+
+const fetch = apiClient.fetch;
 
 // =========================================================================
 // API & WebSocket Configuration
@@ -191,7 +194,10 @@ export const decentroApi = {
           return data;
         }
         const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.detail || `HTTP ${res.status}: Failed to generate UPI QR`);
+        const err: any = new Error(errJson.detail || errJson.message || `HTTP ${res.status}: Failed to generate UPI QR`);
+        err.decentro_unavailable = errJson.decentro_unavailable || errJson.fallback_mode === 'MANUAL_CASH_CARD_POS';
+        err.fallback_mode = errJson.fallback_mode;
+        throw err;
       }
 
       const data: DecentroUpiQrResponse = await res.json();

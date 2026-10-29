@@ -1036,6 +1036,11 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
           purpose={`KOT Bill ${billNo} - ${serviceType === 'Room Service' ? `Room ${selectedRoomNo}` : selectedTable}`}
           roomNo={serviceType === 'Room Service' ? selectedRoomNo : undefined}
           kotId={billNo}
+          onSwitchToManualPos={() => {
+            setShowDecentroQrModal(false);
+            setSettlementType('Settle To Cash');
+            setPaymentRemark('Manual Cash / Card POS Reference (Decentro Gateway Fallback)');
+          }}
           onPaymentSuccess={txn => {
             setSettlementType('Settle To Online');
             setPaymentRemark(`Decentro UPI Reconciled (UTR: ${txn.bank_reference_number})`);

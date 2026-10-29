@@ -80,13 +80,20 @@ def seed_rooms_if_empty(db: Session):
             db.add(room)
         db.commit()
 
+from app.utils.caching import get_cached_rooms, set_cached_rooms, invalidate_rooms_cache
+
 @router.get("", response_model=List[schemas.RoomResponse])
 def get_rooms(
     room_type: Optional[str] = None,
     max_price: Optional[float] = None,
     db: Session = Depends(get_db)
 ):
-    """Retrieve all available rooms with optional filters"""
+    """Retrieve all available rooms with optional filters and TTLCache (#6)"""
+    cache_key = f"rooms:{room_type}:{max_price}"
+    cached = get_cached_rooms(cache_key)
+    if cached is not None:
+        return cached
+
     seed_rooms_if_empty(db)
     
     query = db.query(models.Room).filter(models.Room.is_available == True)
@@ -95,7 +102,9 @@ def get_rooms(
     if max_price:
         query = query.filter(models.Room.price_per_night <= max_price)
     
-    return query.order_by(models.Room.price_per_night.asc()).all()
+    res = query.order_by(models.Room.price_per_night.asc()).all()
+    set_cached_rooms(cache_key, res)
+    return res
 
 @router.get("/{room_id}/availability", response_model=schemas.AvailabilityCheckResponse)
 def check_room_availability(
@@ -165,5 +174,6 @@ def trigger_seed(db: Session = Depends(get_db)):
     count = db.query(models.Room).count()
     if count == 0:
         seed_rooms_if_empty(db)
+        invalidate_rooms_cache()
         return {"message": "Rooms catalog seeded successfully", "count": db.query(models.Room).count()}
     return {"message": "Rooms catalog is already initialized", "count": count}

@@ -73,7 +73,11 @@ def test_decentro_banking_e2e():
             "purpose_message": f"Advance Settlement for {booking_ref}",
             "expiry_minutes": 15
         }
-        res_qr = client.post("/api/v1/payments/decentro/upi-qr", json=qr_payload)
+        res_qr = client.post(
+            "/api/v1/payments/decentro/upi-qr",
+            json=qr_payload,
+            headers={"X-Idempotency-Key": f"TEST-QR-{uuid.uuid4().hex}"}
+        )
         assert res_qr.status_code == 200, f"UPI QR generation failed: {res_qr.text}"
         qr_data = res_qr.json()
         reference_id = qr_data["reference_id"]
@@ -146,7 +150,11 @@ def test_decentro_banking_e2e():
             "mobile": "9466219194",
             "email": "corporate@tcs.com"
         }
-        res_va = client.post("/api/v1/payments/decentro/virtual-account", json=va_payload)
+        res_va = client.post(
+            "/api/v1/payments/decentro/virtual-account",
+            json=va_payload,
+            headers={"X-Idempotency-Key": f"TEST-VA-{uuid.uuid4().hex}"}
+        )
         assert res_va.status_code == 200, f"Virtual Account creation failed: {res_va.text}"
         va_data = res_va.json()
         assert va_data["account_number"] is not None

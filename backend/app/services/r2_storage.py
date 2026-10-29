@@ -13,6 +13,60 @@ os.makedirs(LOCAL_UPLOAD_DIR, exist_ok=True)
 
 ALLOWED_FOLDERS = {"guest_ids", "rooms", "branding", "documents", "receipts", "backups", "kyc", "invoices"}
 
+# Strict file validation constants (#45)
+STRICT_ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "application/pdf"}
+MAX_DOCUMENT_SIZE_BYTES = 5 * 1024 * 1024  # 5 MB Limit (#45)
+
+def validate_uploaded_document(
+    file_bytes: bytes,
+    filename: str,
+    content_type: Optional[str] = None
+) -> str:
+    """
+    Enforces strict file validation to prevent SSRF and malicious uploads (#45):
+      1. File size must not exceed 5MB
+      2. File extension must be .jpg, .jpeg, .png, or .pdf
+      3. MIME type must be strictly image/jpeg, image/png, or application/pdf
+      4. Magic byte inspection matches declared type
+    Returns the validated MIME type string or raises ValueError.
+    """
+    if not file_bytes:
+        raise ValueError("Uploaded file is empty.")
+
+    # 1. Size check (Max 5MB)
+    size = len(file_bytes)
+    if size > MAX_DOCUMENT_SIZE_BYTES:
+        raise ValueError(f"File size ({size / 1024 / 1024:.2f}MB) exceeds the maximum allowed limit of 5MB (#45).")
+
+    # 2. Extension check
+    ext = os.path.splitext(filename)[1].lower()
+    allowed_exts = {".jpg", ".jpeg", ".png", ".pdf"}
+    if ext not in allowed_exts:
+        raise ValueError(f"File extension '{ext}' is not permitted. Allowed: {', '.join(allowed_exts)} (#45).")
+
+    # 3. MIME type check
+    resolved_mime = content_type
+    if not resolved_mime or resolved_mime == "application/octet-stream":
+        if ext in (".jpg", ".jpeg"):
+            resolved_mime = "image/jpeg"
+        elif ext == ".png":
+            resolved_mime = "image/png"
+        elif ext == ".pdf":
+            resolved_mime = "application/pdf"
+
+    if resolved_mime not in STRICT_ALLOWED_MIME_TYPES:
+        raise ValueError(f"MIME type '{resolved_mime}' is not permitted. Allowed: image/jpeg, image/png, application/pdf (#45).")
+
+    # 4. Magic bytes inspection
+    if resolved_mime == "image/jpeg" and not file_bytes.startswith(b"\xff\xd8\xff"):
+        raise ValueError("File content does not match JPEG magic header signature (#45).")
+    elif resolved_mime == "image/png" and not file_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
+        raise ValueError("File content does not match PNG magic header signature (#45).")
+    elif resolved_mime == "application/pdf" and not file_bytes.startswith(b"%PDF"):
+        raise ValueError("File content does not match PDF magic header signature (#45).")
+
+    return resolved_mime
+
 def sanitize_filename(filename: str) -> str:
     """Sanitize filename to prevent directory traversal and remove unsafe characters"""
     base = os.path.basename(filename)
@@ -32,6 +86,7 @@ class R2StorageService:
         self.secret_key = os.getenv("R2_SECRET_ACCESS_KEY") or getattr(settings, "R2_SECRET_ACCESS_KEY", "")
         self.bucket_name = os.getenv("R2_BUCKET_NAME") or getattr(settings, "R2_BUCKET_NAME", "hotel-sai-vasudev-documents")
         self.public_domain = os.getenv("R2_PUBLIC_DOMAIN") or os.getenv("R2_PUBLIC_URL") or os.getenv("VITE_R2_PUBLIC_URL") or getattr(settings, "R2_PUBLIC_DOMAIN", "") or getattr(settings, "R2_PUBLIC_URL", "")
+        self.local_storage_path = LOCAL_UPLOAD_DIR
 
         self.s3_client = None
         if self.account_id and self.access_key and self.secret_key:
@@ -199,29 +254,87 @@ class R2StorageService:
         return {
             "download_url": f"/api/v1/uploads/files/{object_key}",
             "object_key": object_key,
-            "expires_in": 0,
+            "expires_in": expires_in,
             "storage": "Local Fallback"
         }
 
-    def upload_file(
+    def generate_secure_view_url(
+        self,
+        object_key: str,
+        expires_in: int = 60
+    ) -> Dict[str, Any]:
+        """
+        Generates a strictly time-limited 60-second S3 Pre-Signed GET URL for authorized staff viewing (#50).
+        Protects private guest ID scans and GST tax invoices from public exposure.
+        """
+        expiry = expires_in or getattr(settings, "R2_PRESIGNED_VIEW_EXPIRES_SECONDS", 60)
+        return self.generate_presigned_download_url(object_key=object_key, expires_in=expiry)
+
+    def upload_guest_id_scan(
         self,
         file_bytes: bytes,
-        original_filename: str,
+        filename: str,
+        booking_ref: str = "WALKIN"
+    ) -> Tuple[str, str]:
+        """
+        Validates and uploads Guest ID scans (Aadhaar/Passport/Driving License) to private R2 storage (#45, #50).
+        Strictly enforces JPEG, PNG, or PDF format and max 5MB size.
+        """
+        validated_mime = validate_uploaded_document(file_bytes, filename)
+        clean_ref = sanitize_filename(booking_ref)
+        safe_name = f"{clean_ref}_{sanitize_filename(filename)}"
+        return self.upload_file(
+            file_bytes=file_bytes,
+            original_filename=safe_name,
+            folder="guest_ids",
+            content_type=validated_mime
+        )
+
+    def upload_invoice_pdf(
+        self,
+        pdf_bytes: bytes,
+        invoice_number: str
+    ) -> Tuple[str, str]:
+        """
+        Validates and uploads GST Tax Invoices to private R2 storage (#45, #50).
+        Strictly enforces PDF format and max 5MB size.
+        """
+        clean_inv = sanitize_filename(invoice_number)
+        filename = f"{clean_inv}.pdf"
+        validated_mime = validate_uploaded_document(pdf_bytes, filename, content_type="application/pdf")
+        return self.upload_file(
+            file_bytes=pdf_bytes,
+            original_filename=filename,
+            folder="invoices",
+            content_type=validated_mime
+        )
+
+    def upload_file(
+        self,
+        file_bytes: bytes = None,
+        original_filename: str = None,
         folder: str = "documents",
-        content_type: str = "image/jpeg"
+        content_type: str = "image/jpeg",
+        object_key: str = None,
+        file_data: bytes = None
     ) -> Tuple[str, str]:
         """
         Directly uploads file to Cloudflare R2 bucket with automated local filesystem fallback.
         Returns (object_key, file_url).
         """
-        object_key = self.generate_object_key(original_filename, folder)
+        data = file_bytes if file_bytes is not None else file_data
+        if data is None:
+            data = b""
+
+        if not object_key:
+            object_key = self.generate_object_key(original_filename or "document.bin", folder)
 
         if self.s3_client:
             try:
                 self.s3_client.put_object(
                     Bucket=self.bucket_name,
                     Key=object_key,
-                    Body=file_bytes,
+                    Body=data,
                     ContentType=content_type
                 )
                 if self.public_domain:
@@ -237,7 +350,7 @@ class R2StorageService:
         os.makedirs(dest_folder, exist_ok=True)
         local_path = os.path.join(LOCAL_UPLOAD_DIR, object_key)
         with open(local_path, "wb") as f:
-            f.write(file_bytes)
+            f.write(data)
 
         local_url = f"/api/v1/uploads/files/{object_key}"
         return object_key, local_url

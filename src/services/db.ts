@@ -1,0 +1,360 @@
+import Dexie, { type Table } from 'dexie';
+import { apiClient, generateUUIDv4 } from './apiClient';
+
+// =========================================================================
+// TypeScript Interfaces for Dexie IndexedDB (#6, #33)
+// =========================================================================
+
+export interface CachedRoomRecord {
+  id: string | number;
+  roomNo: string;
+  roomType: string;
+  status: string; // vacant, occupied, dirty, blocked, maintenance
+  tariff: number;
+  floor: number;
+  assignedStaff?: string;
+  currentGuest?: string;
+  priority?: string;
+  lastCleaned?: string;
+  lastUpdated: string;
+  raw?: any;
+}
+
+export interface CachedMenuItemRecord {
+  id: string | number;
+  itemCode: string;
+  itemName: string;
+  category: string;
+  rate: number;
+  isAvailable: boolean;
+  sacCode?: string;
+  lastUpdated: string;
+  raw?: any;
+}
+
+export interface QueuedKotOrder {
+  id?: number; // Auto-incremented primary key
+  clientRef: string; // Unique UUIDv4 for idempotency (#1)
+  kotNo: string;
+  serviceType: 'Room' | 'Restaurant' | 'Banquet';
+  tableNo?: string;
+  roomNo?: string;
+  waiterName?: string;
+  guestName?: string;
+  items: Array<{
+    sNo?: number;
+    itemName: string;
+    itemCode?: string;
+    qty: number;
+    rate: number;
+    amount: number;
+  }>;
+  totalAmount: number;
+  status: string;
+  date: string;
+  time: string;
+  createdAt: string;
+  syncStatus: 'pending' | 'syncing' | 'synced' | 'failed';
+  retryCount: number;
+  lastError?: string;
+}
+
+// =========================================================================
+// Hotel Sai Vasudev Residency IndexedDB Database Class
+// =========================================================================
+
+export class HotelSaiVasudevDB extends Dexie {
+  rooms!: Table<CachedRoomRecord, string | number>;
+  menuItems!: Table<CachedMenuItemRecord, string | number>;
+  kotQueue!: Table<QueuedKotOrder, number>;
+
+  constructor() {
+    super('HotelSaiVasudev_ERP_Offline_DB');
+    this.version(1).stores({
+      rooms: 'id, roomNo, status, roomType, floor',
+      menuItems: 'id, itemCode, category, isAvailable',
+      kotQueue: '++id, clientRef, syncStatus, serviceType, createdAt'
+    });
+  }
+}
+
+export const offlineDb = new HotelSaiVasudevDB();
+
+// =========================================================================
+// Room Rack & Restaurant Menu Dexie Caching Helpers (#6, #33 Part A)
+// =========================================================================
+
+/**
+ * Caches room rack inventory in IndexedDB for instant UI rendering on load
+ */
+export async function cacheRoomsLocally(rooms: any[]): Promise<void> {
+  if (!rooms || rooms.length === 0) return;
+  try {
+    const records: CachedRoomRecord[] = rooms.map(r => ({
+      id: String(r.id || r.roomNo),
+      roomNo: String(r.roomNo || r.id),
+      roomType: r.roomType || r.room_type || 'Deluxe',
+      status: (r.status || 'vacant').toLowerCase(),
+      tariff: Number(r.tariff || r.price_per_night || 2000),
+      floor: Number(r.floor ?? (String(r.roomNo).startsWith('2') ? 1 : 0)),
+      assignedStaff: r.assignedStaff,
+      currentGuest: r.currentGuest,
+      priority: r.priority,
+      lastCleaned: r.lastCleaned,
+      lastUpdated: new Date().toISOString(),
+      raw: r
+    }));
+
+    await offlineDb.rooms.bulkPut(records);
+  } catch (err) {
+    console.warn('[Dexie] Failed to cache rooms in IndexedDB:', err);
+  }
+}
+
+/**
+ * Retrieves cached room records from IndexedDB
+ */
+export async function getCachedRooms(): Promise<CachedRoomRecord[]> {
+  try {
+    return await offlineDb.rooms.toArray();
+  } catch (err) {
+    console.warn('[Dexie] Failed to read rooms from IndexedDB:', err);
+    return [];
+  }
+}
+
+/**
+ * Updates a single room's status in IndexedDB (e.g. from real-time WebSocket)
+ */
+export async function updateCachedRoomStatus(roomNo: string, newStatus: string): Promise<void> {
+  try {
+    const cleanRoomNo = String(roomNo).trim();
+    const existing = await offlineDb.rooms.where('roomNo').equals(cleanRoomNo).first();
+    if (existing) {
+      await offlineDb.rooms.update(existing.id, {
+        status: newStatus.toLowerCase(),
+        lastUpdated: new Date().toISOString()
+      });
+    }
+  } catch (err) {
+    console.warn(`[Dexie] Failed to update room ${roomNo} status in IndexedDB:`, err);
+  }
+}
+
+/**
+ * Caches restaurant menu items in IndexedDB for instant offline order taking
+ */
+export async function cacheMenuLocally(menuItems: any[]): Promise<void> {
+  if (!menuItems || menuItems.length === 0) return;
+  try {
+    const records: CachedMenuItemRecord[] = menuItems.map((item, idx) => ({
+      id: String(item.id || item.itemCode || idx),
+      itemCode: String(item.itemCode || item.code || idx),
+      itemName: item.itemName || item.name || 'Menu Item',
+      category: item.category || 'Food',
+      rate: Number(item.rate || item.price || 0),
+      isAvailable: item.isAvailable !== false,
+      sacCode: item.sacCode || '996331',
+      lastUpdated: new Date().toISOString(),
+      raw: item
+    }));
+
+    await offlineDb.menuItems.bulkPut(records);
+  } catch (err) {
+    console.warn('[Dexie] Failed to cache menu items in IndexedDB:', err);
+  }
+}
+
+/**
+ * Retrieves cached menu items from IndexedDB
+ */
+export async function getCachedMenu(): Promise<CachedMenuItemRecord[]> {
+  try {
+    return await offlineDb.menuItems.toArray();
+  } catch (err) {
+    console.warn('[Dexie] Failed to read menu from IndexedDB:', err);
+    return [];
+  }
+}
+
+// =========================================================================
+// Steward Offline KOT Queue & Auto-Sync Engine (#33 Part B)
+// =========================================================================
+
+/**
+ * Saves a KOT order to IndexedDB queue if Wi-Fi drops or offline (#33)
+ */
+export async function queueOfflineKot(kotData: any): Promise<QueuedKotOrder> {
+  const clientRef = kotData.clientRef || generateUUIDv4();
+  const queuedOrder: QueuedKotOrder = {
+    clientRef,
+    kotNo: kotData.kotNo || `KOT/OFFLINE-${Date.now().toString(36).toUpperCase()}`,
+    serviceType: kotData.serviceType || (kotData.roomNo ? 'Room' : 'Restaurant'),
+    tableNo: kotData.tableNo,
+    roomNo: kotData.roomNo,
+    waiterName: kotData.waiterName || 'Steward',
+    guestName: kotData.guestName || 'Guest',
+    items: kotData.items || [],
+    totalAmount: Number(kotData.totalAmount || 0),
+    status: kotData.status || 'Running',
+    date: kotData.date || new Date().toISOString().split('T')[0],
+    time: kotData.time || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+    createdAt: new Date().toISOString(),
+    syncStatus: 'pending',
+    retryCount: 0
+  };
+
+  const id = await offlineDb.kotQueue.add(queuedOrder);
+  queuedOrder.id = id;
+
+  console.info(`[Offline KOT] Queued order ${queuedOrder.kotNo} in IndexedDB (ID: ${id})`);
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('svr:kot_offline_queued', { detail: queuedOrder }));
+  }
+
+  // If currently online, trigger background flush immediately
+  if (typeof window !== 'undefined' && window.navigator.onLine) {
+    setTimeout(() => {
+      flushKotQueue().catch(err => console.debug('[Offline KOT] Immediate flush note:', err));
+    }, 100);
+  }
+
+  return queuedOrder;
+}
+
+/**
+ * Gets count of pending offline KOT orders
+ */
+export async function getPendingKotCount(): Promise<number> {
+  try {
+    return await offlineDb.kotQueue.where('syncStatus').equals('pending').count();
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Flushes all pending KOT orders in IndexedDB to the backend API (#33)
+ * Automatically attaches clientRef as X-Idempotency-Key (#1)
+ */
+let isFlushingQueue = false;
+
+export async function flushKotQueue(): Promise<{ synced: number; failed: number; totalPending: number }> {
+  if (typeof window === 'undefined' || !window.navigator.onLine) {
+    const count = await getPendingKotCount();
+    return { synced: 0, failed: 0, totalPending: count };
+  }
+
+  if (isFlushingQueue) {
+    return { synced: 0, failed: 0, totalPending: await getPendingKotCount() };
+  }
+
+  isFlushingQueue = true;
+  let synced = 0;
+  let failed = 0;
+
+  try {
+    const pendingOrders = await offlineDb.kotQueue
+      .where('syncStatus')
+      .anyOf('pending', 'failed')
+      .toArray();
+
+    if (pendingOrders.length === 0) {
+      return { synced: 0, failed: 0, totalPending: 0 };
+    }
+
+    console.info(`[Offline KOT Sync] Wi-Fi active. Flushing ${pendingOrders.length} queued steward KOT orders to Central Kitchen...`);
+
+    for (const order of pendingOrders) {
+      if (!order.id) continue;
+
+      try {
+        await offlineDb.kotQueue.update(order.id, { syncStatus: 'syncing' });
+
+        // Map payload to FastAPI /api/v1/kot schema
+        const payload = {
+          kotNo: order.kotNo,
+          serviceType: order.serviceType,
+          tableNo: order.tableNo,
+          roomNo: order.roomNo,
+          waiterName: order.waiterName,
+          guestName: order.guestName,
+          pax: 2,
+          date: order.date,
+          time: order.time,
+          items: order.items,
+          totalAmount: order.totalAmount,
+          status: order.status,
+          isPrinted: false
+        };
+
+        // Post to backend with UUIDv4 Idempotency Key
+        await apiClient.post('/kot', payload, {
+          idempotencyKey: order.clientRef
+        });
+
+        // Mark as synced in IndexedDB
+        await offlineDb.kotQueue.update(order.id, {
+          syncStatus: 'synced',
+          retryCount: order.retryCount + 1
+        });
+
+        synced++;
+        console.info(`[Offline KOT Sync] ✓ Successfully flushed KOT: ${order.kotNo}`);
+
+        // Broadcast sync notification
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('svr:kot_synced', { detail: order }));
+        }
+      } catch (err: any) {
+        failed++;
+        console.warn(`[Offline KOT Sync] ⚠️ Failed to flush KOT ${order.kotNo}:`, err);
+        await offlineDb.kotQueue.update(order.id, {
+          syncStatus: 'failed',
+          retryCount: order.retryCount + 1,
+          lastError: err.message || String(err)
+        });
+      }
+    }
+
+    // Trigger visual toast / event if any items were flushed
+    if (synced > 0 && typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('svr:kot_queue_flushed', {
+          detail: { synced, failed, totalRemaining: await getPendingKotCount() }
+        })
+      );
+    }
+  } catch (err) {
+    console.warn('[Offline KOT Sync] Queue iteration error:', err);
+  } finally {
+    isFlushingQueue = false;
+  }
+
+  const remaining = await getPendingKotCount();
+  return { synced, failed, totalPending: remaining };
+}
+
+// =========================================================================
+// Automated Online Reconnection & Periodic Heartbeat Sync Listener (#33)
+// =========================================================================
+
+if (typeof window !== 'undefined') {
+  // Listen for Wi-Fi / Network restoration
+  window.addEventListener('online', () => {
+    console.info('[Network] Hotel Wi-Fi restored! Automatically flushing offline KOT queue...');
+    flushKotQueue().catch(err => console.warn('[Network] Auto-flush error on online event:', err));
+  });
+
+  // Periodic safety check every 25 seconds
+  setInterval(() => {
+    if (window.navigator.onLine) {
+      getPendingKotCount().then(count => {
+        if (count > 0) {
+          flushKotQueue();
+        }
+      });
+    }
+  }, 25000);
+}
