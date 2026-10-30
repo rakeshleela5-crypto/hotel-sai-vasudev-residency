@@ -4268,10 +4268,25 @@ def get_user_accounts(db: Session = Depends(get_db)):
         "regDate": u.created_at.strftime("%Y-%m-%d %H:%M:%S") if u.created_at else None
     } for u in users]
 
+@router.put("/users/{user_id}/status")
+def toggle_user_status(user_id: str, db: Session = Depends(get_db)):
+    """Toggle user status between Verified and Pending."""
+    u = db.query(models.UserAccount).filter(
+        (models.UserAccount.user_name == user_id) | (models.UserAccount.user_id == (int(user_id) if user_id.isdigit() else -1))
+    ).first()
+    if not u:
+        raise HTTPException(status_code=404, detail="User account not found")
+    u.status = "Pending" if u.status == "Verified" else "Verified"
+    db.commit()
+    db.refresh(u)
+    return {"success": True, "userId": u.user_id, "status": u.status}
+
 @router.delete("/users/{user_id}")
-def delete_user_account(user_id: int, db: Session = Depends(get_db)):
+def delete_user_account(user_id: str, db: Session = Depends(get_db)):
     """Delete a staff user account from PostgreSQL."""
-    u = db.query(models.UserAccount).filter(models.UserAccount.user_id == user_id).first()
+    u = db.query(models.UserAccount).filter(
+        (models.UserAccount.user_name == user_id) | (models.UserAccount.user_id == (int(user_id) if user_id.isdigit() else -1))
+    ).first()
     if not u:
         raise HTTPException(status_code=404, detail="User account not found")
     db.delete(u)
@@ -4733,6 +4748,80 @@ def get_shift_handovers(db: Session = Depends(get_db)):
         "status": sh.status
     } for sh in handovers]
 
+@router.get("/shift-handovers/current-metrics")
+def get_shift_handover_current_metrics(db: Session = Depends(get_db)):
+    """Aggregate live cash, UPI, card, and expense metrics for the active shift handover."""
+    today_str = datetime.date.today().isoformat()
+    
+    opening_float = 5000.0
+    room_cash = 0.0
+    card_swipes = 0.0
+    upi_online = 0.0
+    tx_count = 0
+    
+    payments = db.query(models.BookingPayment).all()
+    for p in payments:
+        tx_count += 1
+        pm = (p.payment_mode or "").upper()
+        amt = float(p.amount or 0.0)
+        if "CASH" in pm:
+            room_cash += amt
+        elif "UPI" in pm or "ONLINE" in pm:
+            upi_online += amt
+        elif "CARD" in pm:
+            card_swipes += amt
+
+    food_cash = 0.0
+    food_bills = db.query(models.FoodBill).all()
+    for fb in food_bills:
+        tx_count += 1
+        pm = str(getattr(fb, 'settlement_type', None) or getattr(fb, 'payment_mode', '') or "").upper()
+        amt = float(fb.net_bill_amount or 0.0)
+        if "CASH" in pm:
+            food_cash += amt
+        elif "UPI" in pm or "ONLINE" in pm:
+            upi_online += amt
+        elif "CARD" in pm:
+            card_swipes += amt
+
+    advance_cash = 0.0
+    advances = db.query(models.AdvanceReceipt).all()
+    for ar in advances:
+        tx_count += 1
+        pm = (ar.payment_mode or "").upper()
+        amt = float(ar.amount or 0.0)
+        if "CASH" in pm:
+            advance_cash += amt
+        elif "UPI" in pm or "ONLINE" in pm:
+            upi_online += amt
+        elif "CARD" in pm:
+            card_swipes += amt
+
+    expenses_cash = 0.0
+    expenses = db.query(models.PettyExpense).all()
+    for exp in expenses:
+        pm = (exp.payment_mode or "").upper()
+        amt = float(exp.amount or 0.0)
+        if "CASH" in pm:
+            expenses_cash += amt
+
+    net_cash = max(0.0, round(opening_float + room_cash + food_cash + advance_cash - expenses_cash, 2))
+
+    return {
+        "shiftDate": today_str,
+        "shiftTime": "07:00 AM - 03:00 PM",
+        "openingDrawerCash": opening_float,
+        "roomCashCollected": round(room_cash, 2),
+        "foodCashCollected": round(food_cash, 2),
+        "advanceCashCollected": round(advance_cash, 2),
+        "expensesPaidFromDrawer": round(expenses_cash, 2),
+        "netPhysicalCashInDrawer": net_cash,
+        "onlineUpiVerified": round(upi_online, 2),
+        "cardSwipeVerified": round(card_swipes, 2),
+        "creditAccountsAdded": 0.0,
+        "totalTransactionsHandled": tx_count
+    }
+
 # --- 32. Banquet Venues & Event Bookings ---
 @router.post("/banquet-venues")
 def save_banquet_venue(payload: schemas.BanquetVenueCreate, db: Session = Depends(get_db)):
@@ -5146,6 +5235,64 @@ def save_liquor_stock(payload: schemas.LiquorStockCreate, db: Session = Depends(
     stock.sold_pegs = payload.sold_pegs or 0.0
     stock.pegs_per_bottle = payload.pegs_per_bottle or 25
     stock.closing_bottles = payload.closing_bottles or max(0.0, (stock.opening_bottles + stock.received_bottles) - (stock.sold_pegs / stock.pegs_per_bottle))
+    db.commit()
+    db.refresh(stock)
+    return {"success": True, "brand": stock.brand, "closingBottles": stock.closing_bottles}
+
+@router.post("/liquor-stocks/audit")
+def audit_liquor_stock(payload: dict = Body(...), db: Session = Depends(get_db)):
+    """Physical excise audit reconciliation for liquor stock."""
+    brand = payload.get("brand") or "Blenders Pride"
+    physical_bottles = float(payload.get("physical_bottles") or payload.get("physicalBottles") or 0.0)
+    auditor = payload.get("auditor_name") or payload.get("auditorName") or "Excise Incharge"
+    remarks = payload.get("remarks") or "Physical excise verification"
+    
+    stock = db.query(models.LiquorStock).filter(models.LiquorStock.brand.ilike(brand.strip())).first()
+    if not stock:
+        stock = models.LiquorStock(brand=brand, bottle_size_ml=750, closing_bottles=physical_bottles)
+        db.add(stock)
+    else:
+        stock.closing_bottles = physical_bottles
+        
+    record_audit_log(
+        db=db,
+        action="LIQUOR_AUDIT",
+        entity_type="LIQUOR_STOCK",
+        entity_id=brand,
+        new_data={"physical_bottles": physical_bottles, "remarks": remarks},
+        staff_id=auditor,
+        role="BAR_MANAGER"
+    )
+    db.commit()
+    db.refresh(stock)
+    return {"success": True, "brand": stock.brand, "closingBottles": stock.closing_bottles}
+
+@router.post("/liquor-stocks/adjust")
+def adjust_liquor_stock(payload: dict = Body(...), db: Session = Depends(get_db)):
+    """Adjust liquor stock for spillage, tasting, or peg variance."""
+    brand = payload.get("brand") or "Blenders Pride"
+    adjust_pegs = float(payload.get("adjust_pegs") or payload.get("adjustPegs") or 0.0)
+    reason = payload.get("reason") or "Peg adjustment / spillage"
+    adjusted_by = payload.get("adjusted_by") or payload.get("adjustedBy") or "Bar Captain"
+    
+    stock = db.query(models.LiquorStock).filter(models.LiquorStock.brand.ilike(brand.strip())).first()
+    if not stock:
+        stock = models.LiquorStock(brand=brand, bottle_size_ml=750, opening_bottles=10.0, closing_bottles=10.0)
+        db.add(stock)
+        
+    stock.sold_pegs += adjust_pegs
+    pegs_per_btl = stock.pegs_per_bottle or 25
+    stock.closing_bottles = max(0.0, round(stock.closing_bottles - (adjust_pegs / pegs_per_btl), 2))
+    
+    record_audit_log(
+        db=db,
+        action="LIQUOR_ADJUSTMENT",
+        entity_type="LIQUOR_STOCK",
+        entity_id=brand,
+        new_data={"adjust_pegs": adjust_pegs, "reason": reason},
+        staff_id=adjusted_by,
+        role="BAR_MANAGER"
+    )
     db.commit()
     db.refresh(stock)
     return {"success": True, "brand": stock.brand, "closingBottles": stock.closing_bottles}
@@ -5999,6 +6146,25 @@ def save_role_permission(payload: schemas.RolePermissionCreate, db: Session = De
     db.refresh(r)
     return {"success": True, "roleId": r.role_id, "name": r.name}
 
+@router.put("/roles/{role_id}")
+def update_role_permission(role_id: str, payload: dict = Body(...), db: Session = Depends(get_db)):
+    """Update role details or permissions in PostgreSQL."""
+    r = db.query(models.RolePermission).filter(
+        (models.RolePermission.role_id == role_id) | (models.RolePermission.id == (int(role_id) if role_id.isdigit() else -1))
+    ).first()
+    if not r:
+        raise HTTPException(status_code=404, detail="Role not found")
+    if "name" in payload: r.name = payload["name"]
+    if "description" in payload: r.description = payload["description"]
+    if "permissions" in payload:
+        r.permissions_json = json.dumps(payload["permissions"])
+    elif "permissions_json" in payload:
+        r.permissions_json = payload["permissions_json"]
+    if "is_system" in payload: r.is_system = payload["is_system"]
+    db.commit()
+    db.refresh(r)
+    return {"success": True, "roleId": r.role_id, "name": r.name}
+
 # 8. No-Discount Margin Protection Config
 @router.get("/no-discount-config")
 def get_no_discount_config(db: Session = Depends(get_db)):
@@ -6799,24 +6965,24 @@ def confirm_booking(booking_id: str, db: Session = Depends(get_db)):
 # 10. Missing Resource Deletions
 @router.delete("/expenses/{expense_id}")
 def delete_expense(expense_id: str, db: Session = Depends(get_db)):
-    deleted = db.query(models.Expense).filter(
-        (models.Expense.voucher_no == expense_id) | (models.Expense.id == (int(expense_id) if expense_id.isdigit() else -1))
+    deleted = db.query(models.PettyExpense).filter(
+        (models.PettyExpense.expense_no == expense_id) | (models.PettyExpense.id == (int(expense_id) if expense_id.isdigit() else -1))
     ).delete(synchronize_session=False)
     db.commit()
     return {"success": True, "deletedCount": deleted}
 
 @router.delete("/purchases/{purchase_id}")
 def delete_purchase(purchase_id: str, db: Session = Depends(get_db)):
-    deleted = db.query(models.PurchaseEntry).filter(
-        (models.PurchaseEntry.bill_no == purchase_id) | (models.PurchaseEntry.id == (int(purchase_id) if purchase_id.isdigit() else -1))
+    deleted = db.query(models.InventoryPurchase).filter(
+        (models.InventoryPurchase.bill_number == purchase_id) | (models.InventoryPurchase.id == (int(purchase_id) if purchase_id.isdigit() else -1))
     ).delete(synchronize_session=False)
     db.commit()
     return {"success": True, "deletedCount": deleted}
 
 @router.delete("/roles/{role_id}")
 def delete_role(role_id: str, db: Session = Depends(get_db)):
-    deleted = db.query(models.Role).filter(
-        (models.Role.role_name == role_id) | (models.Role.id == (int(role_id) if role_id.isdigit() else -1))
+    deleted = db.query(models.RolePermission).filter(
+        (models.RolePermission.role_id == role_id) | (models.RolePermission.id == (int(role_id) if role_id.isdigit() else -1))
     ).delete(synchronize_session=False)
     db.commit()
     return {"success": True, "deletedCount": deleted}
@@ -6830,6 +6996,7 @@ def delete_user(user_id: str, db: Session = Depends(get_db)):
     return {"success": True, "deletedCount": deleted}
 
 @router.delete("/whatsapp/templates/{template_id}")
+@router.delete("/whatsapp-templates/{template_id}")
 def delete_whatsapp_template(template_id: str, db: Session = Depends(get_db)):
     deleted = db.query(models.WhatsAppTemplate).filter(
         (models.WhatsAppTemplate.template_name == template_id) | (models.WhatsAppTemplate.id == (int(template_id) if template_id.isdigit() else -1))
@@ -6838,6 +7005,7 @@ def delete_whatsapp_template(template_id: str, db: Session = Depends(get_db)):
     return {"success": True, "deletedCount": deleted}
 
 @router.delete("/whatsapp/logs")
+@router.delete("/whatsapp-logs")
 def clear_whatsapp_logs(db: Session = Depends(get_db)):
     deleted = db.query(models.WhatsAppLog).delete(synchronize_session=False)
     db.commit()

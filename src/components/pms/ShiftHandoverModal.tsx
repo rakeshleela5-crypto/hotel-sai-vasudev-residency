@@ -29,8 +29,27 @@ export const ShiftHandoverModal: React.FC<ShiftHandoverModalProps> = ({ isOpen, 
             if (match.status?.includes('Verified') || match.status?.includes('Closed')) {
               setIsSignedOff(true);
             }
+            return;
           }
         }
+        // Fetch live PostgreSQL transaction aggregates for current open shift
+        hotelApi.getCurrentShiftMetrics().then(metrics => {
+          if (metrics) {
+            setHandoverRecord(prev => ({
+              ...prev,
+              openingDrawerCash: metrics.openingDrawerCash ?? prev.openingDrawerCash,
+              roomCashCollected: metrics.roomCashCollected ?? prev.roomCashCollected,
+              foodCashCollected: metrics.foodCashCollected ?? prev.foodCashCollected,
+              advanceCashCollected: metrics.advanceCashCollected ?? prev.advanceCashCollected,
+              expensesPaidFromDrawer: metrics.expensesPaidFromDrawer ?? prev.expensesPaidFromDrawer,
+              netPhysicalCashInDrawer: metrics.netPhysicalCashInDrawer ?? prev.netPhysicalCashInDrawer,
+              onlineUpiVerified: metrics.onlineUpiVerified ?? prev.onlineUpiVerified,
+              cardSwipeVerified: metrics.cardSwipeVerified ?? prev.cardSwipeVerified,
+              creditAccountsAdded: metrics.creditAccountsAdded ?? prev.creditAccountsAdded,
+              totalTransactionsHandled: metrics.totalTransactionsHandled ?? prev.totalTransactionsHandled
+            }));
+          }
+        }).catch(err => console.warn('[ShiftHandoverModal] Current metrics note:', err));
       }).catch(err => console.warn('[ShiftHandoverModal] Cloud fetch note:', err));
     }
   }, [isOpen, shiftDate, shiftType]);

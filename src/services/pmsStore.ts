@@ -3907,6 +3907,11 @@ export class PmsStore {
     }
   }
 
+  static syncHousekeepingRecords(records: PmsHousekeepingRecord[]): void {
+    localStorage.setItem(STORAGE_KEYS.HOUSEKEEPING, JSON.stringify(records));
+    this.notify();
+  }
+
   static updateHousekeepingStatus(
     roomNo: string,
     status: PmsHousekeepingRecord['status'],

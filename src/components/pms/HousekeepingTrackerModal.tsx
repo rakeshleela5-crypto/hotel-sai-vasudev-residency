@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { PmsHousekeepingRecord, PmsRoom } from '../../types/pmsModels';
 import { PmsStore, usePmsSync } from '../../services/pmsStore';
+import { hotelApi } from '../../services/api';
 import { useERPWebSocket } from '../../hooks/useERPWebSocket';
 
 interface HousekeepingTrackerModalProps {
@@ -24,6 +25,25 @@ export const HousekeepingTrackerModal: React.FC<HousekeepingTrackerModalProps> =
   const [filterStaff, setFilterStaff] = useState<string>('all');
   const [maintenanceModalRoom, setMaintenanceModalRoom] = useState<string | null>(null);
   const [maintenanceIssueText, setMaintenanceIssueText] = useState('');
+
+  useEffect(() => {
+    if (!isOpen) return;
+    hotelApi.getHousekeepingRecords().then(cloudHk => {
+      if (Array.isArray(cloudHk) && cloudHk.length > 0) {
+        const mapped: PmsHousekeepingRecord[] = cloudHk.map((h: any) => ({
+          roomNo: h.roomNo || h.room_no,
+          status: h.status,
+          assignedStaff: h.assignedStaff || h.assigned_staff || 'Ramesh',
+          priority: h.priority || 'Normal',
+          lastCleanedTime: h.lastCleanedTime || h.last_cleaned_time || 'Today 09:00 AM',
+          cleaningStartedAt: h.cleaningStartedAt || h.cleaning_started_at,
+          maintenanceIssue: h.maintenanceIssue || h.maintenance_issue,
+          maintenanceLoggedAt: h.maintenanceLoggedAt || h.maintenance_logged_at
+        }));
+        PmsStore.syncHousekeepingRecords(mapped);
+      }
+    }).catch(err => console.warn('[HousekeepingTrackerModal] Cloud fetch note:', err));
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

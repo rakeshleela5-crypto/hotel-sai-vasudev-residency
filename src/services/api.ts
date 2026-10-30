@@ -1330,6 +1330,52 @@ export const hotelApi = {
     }
   },
 
+  // Module 30B: Agent Commission Accruals
+  async saveAgentCommission(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/agent-commissions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to save agent commission to PostgreSQL');
+    }
+    return await res.json();
+  },
+
+  async getAgentCommissions(agentId?: string, status?: string): Promise<any[]> {
+    try {
+      const params = new URLSearchParams();
+      if (agentId) params.append('agent_id', agentId);
+      if (status) params.append('status', status);
+      const q = params.toString() ? `?${params.toString()}` : '';
+      const res = await fetch(`${API_BASE_URL}/pms/agent-commissions${q}`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async updateAgentCommissionStatus(commissionId: string, status: string, payoutVoucherNo?: string, payoutDate?: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/agent-commissions/${encodeURIComponent(commissionId)}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status, payoutVoucherNo, payoutDate })
+    });
+    if (!res.ok) throw new Error('Failed to update agent commission status in PostgreSQL');
+    return await res.json();
+  },
+
+  async deleteAgentCommission(commissionId: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/agent-commissions/${encodeURIComponent(commissionId)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete agent commission from PostgreSQL');
+    return await res.json();
+  },
+
   // Module 31: Shift Handovers & Cash Reconciliation
   async saveShiftHandover(payload: any): Promise<any> {
     const res = await fetch(`${API_BASE_URL}/pms/shift-handovers`, {
@@ -1344,6 +1390,10 @@ export const hotelApi = {
     return await res.json();
   },
 
+  async recordShiftHandover(payload: any): Promise<any> {
+    return this.saveShiftHandover(payload);
+  },
+
   async getShiftHandovers(): Promise<any[]> {
     try {
       const res = await fetch(`${API_BASE_URL}/pms/shift-handovers`);
@@ -1351,6 +1401,16 @@ export const hotelApi = {
       return await res.json();
     } catch {
       return [];
+    }
+  },
+
+  async getCurrentShiftMetrics(): Promise<any> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/shift-handovers/current-metrics`);
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
     }
   },
 
@@ -1517,6 +1577,26 @@ export const hotelApi = {
       body: JSON.stringify(payload)
     });
     if (!res.ok) throw new Error('Failed to update liquor stock in PostgreSQL');
+    return await res.json();
+  },
+
+  async auditLiquorStock(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/liquor-stocks/audit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to record liquor stock audit in PostgreSQL');
+    return await res.json();
+  },
+
+  async adjustLiquorStock(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/liquor-stocks/adjust`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to adjust liquor stock in PostgreSQL');
     return await res.json();
   },
 
@@ -1774,41 +1854,6 @@ export const hotelApi = {
     return await res.json();
   },
 
-  // Module 42: Agent Commission Accruals
-  async getAgentCommissions(agentId?: string, status?: string): Promise<any[]> {
-    try {
-      const params = new URLSearchParams();
-      if (agentId) params.append('agent_id', agentId);
-      if (status) params.append('status', status);
-      const url = `${API_BASE_URL}/pms/agent-commissions${params.toString() ? '?' + params.toString() : ''}`;
-      const res = await fetch(url);
-      if (!res.ok) return [];
-      return await res.json();
-    } catch {
-      return [];
-    }
-  },
-
-  async saveAgentCommission(payload: any): Promise<any> {
-    const res = await fetch(`${API_BASE_URL}/pms/agent-commissions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    if (!res.ok) throw new Error('Failed to save agent commission');
-    return await res.json();
-  },
-
-  async updateAgentCommissionStatus(commissionId: string, status: string, payoutVoucherNo?: string, payoutDate?: string): Promise<any> {
-    const res = await fetch(`${API_BASE_URL}/pms/agent-commissions/${encodeURIComponent(commissionId)}/status`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status, payoutVoucherNo, payoutDate })
-    });
-    if (!res.ok) throw new Error('Failed to update agent commission status');
-    return await res.json();
-  },
-
   // Module 43: WhatsApp & SMS Notification Templates
   async getWhatsAppTemplates(): Promise<any[]> {
     try {
@@ -1920,17 +1965,6 @@ export const hotelApi = {
       body: JSON.stringify(payload)
     });
     if (!res.ok) throw new Error('Failed to save liquor unit');
-    return await res.json();
-  },
-
-  // Module 46: User Shift Handovers & Cash Drawer Reconciliation
-  async recordShiftHandover(payload: any): Promise<any> {
-    const res = await fetch(`${API_BASE_URL}/pms/shift-handovers`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    if (!res.ok) throw new Error('Failed to save shift handover');
     return await res.json();
   },
 
