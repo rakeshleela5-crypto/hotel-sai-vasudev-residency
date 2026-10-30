@@ -28,11 +28,16 @@ export const PaymentRegisterModal: React.FC<PaymentRegisterModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setPayments(PmsStore.getPayments());
+      const unsub = PmsStore.subscribe(() => {
+        setPayments(PmsStore.getPayments());
+      });
       hotelApi.getGeneralPayments().then(cloudList => {
         if (cloudList && cloudList.length > 0) {
+          PmsStore.syncPayments(cloudList);
           setPayments(cloudList);
         }
       }).catch(err => console.warn('[PaymentRegisterModal] Cloud payments fetch note:', err));
+      return () => unsub();
     }
   }, [isOpen]);
 

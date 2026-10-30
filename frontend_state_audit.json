@@ -1,0 +1,5368 @@
+[
+  {
+    "file": "src\\App.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleModeChange",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setPortalMode(mode);     if (mode === 'erp') {       setIsPmsOpen(true);       try {         window.history.pushState(null, '', '/erp');       } catch"
+      },
+      {
+        "name": "handleRoleChange",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "getUsers",
+          "setCurrentUser"
+        ],
+        "calls_set_state": true,
+        "body_preview": "setStaffRole(role);     const users = PmsStore.getUsers();     let matchedUser = users.find(u => {       if (role === 'admin') return u.roleName === '"
+      },
+      {
+        "name": "handleOpenRoleView",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "handleRoleChange(role);     if (role === 'housekeeping') {       setIsHousekeepingOpen(true);     } else if (role === 'steward') {       setIsFoodBill"
+      },
+      {
+        "name": "handleOpenBooking",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "getRooms"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (category) {       setSelectedCategory(category);     }     // Pre-select first room in category if available     const allRooms = PmsStore.getRoom"
+      },
+      {
+        "name": "handleSelectRoom",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setSelectedRoom(room);     setIsModalOpen(true);"
+      },
+      {
+        "name": "handleSearchAvailability",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setSearchDates({       checkIn: params.checkIn,       checkOut: params.checkOut,       guests: params.guests     });     if (params.roomType && params"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\BookingModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleCheckInChange",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setCheckIn(newCheckIn);     if (!checkOut || newCheckIn >= checkOut) {       setCheckOut(addDays(newCheckIn, 1));     }"
+      },
+      {
+        "name": "handleCheckOutChange",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (newCheckOut <= checkIn) {       setCheckOut(addDays(checkIn, 1));     } else {       setCheckOut(newCheckOut);     }"
+      },
+      {
+        "name": "handlePhoneChange",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setGuestPhone(val);     if (phoneTouched) {       const res = validateIndianPhone(val);       setPhoneError(res.isValid ? null : res.error || 'Invalid"
+      },
+      {
+        "name": "handlePhoneBlur",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setPhoneTouched(true);     const res = validateIndianPhone(guestPhone);     setPhoneError(res.isValid ? null : res.error || 'Invalid mobile number');"
+      },
+      {
+        "name": "handleEmailChange",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setGuestEmail(val);     if (val.trim() && !validateEmail(val)) {       setEmailError('Please enter a valid email address (e.g. name@domain.com)');    "
+      },
+      {
+        "name": "handleResetAndClose",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setBookingResult(null);     setErrorMsg(null);     setPhoneError(null);     setEmailError(null);     onClose();"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\ContactSection.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handlePhoneChange",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setPhone(val);     if (val.trim()) {       const res = validateIndianPhone(val);       setPhoneError(res.isValid ? null : res.error || 'Invalid mobile"
+      },
+      {
+        "name": "handleEmailChange",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setEmail(val);     if (val.trim() && !validateEmail(val)) {       setEmailError('Please enter a valid email address');     } else {       setEmailErro"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\ErrorBoundary.tsx",
+    "ls_calls": [
+      {
+        "type": "localStorage",
+        "action": "clear",
+        "arg": ""
+      },
+      {
+        "type": "sessionStorage",
+        "action": "clear",
+        "arg": ""
+      }
+    ],
+    "state_inits": [],
+    "handlers_without_api": []
+  },
+  {
+    "file": "src\\components\\Footer.tsx",
+    "ls_calls": [],
+    "state_inits": [
+      {
+        "var": "backendStatus",
+        "setter": "setBackendStatus",
+        "init_snippet": "{     status: 'checking...',     engine: 'Railway Postgres'   }"
+      }
+    ],
+    "handlers_without_api": []
+  },
+  {
+    "file": "src\\components\\Hero.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleCheckInChange",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setCheckIn(newCheckIn);     if (!checkOut || newCheckIn >= checkOut) {       setCheckOut(addDays(newCheckIn, 1));     }"
+      },
+      {
+        "name": "handleCheckOutChange",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (newCheckOut <= checkIn) {       setCheckOut(addDays(checkIn, 1));     } else {       setCheckOut(newCheckOut);     }"
+      },
+      {
+        "name": "handleSubmit",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "e.preventDefault();     onCheckAvailability({       checkIn,       checkOut,       roomType,       guests     });"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\Navbar.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleScroll",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setIsScrolled(window.scrollY > 40);     };     window.addEventListener('scroll', handleScroll);     return () => window.removeEventListener('scroll', "
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\AddKotModal.tsx",
+    "ls_calls": [],
+    "state_inits": [
+      {
+        "var": "selectedItemName",
+        "setter": "setSelectedItemName",
+        "init_snippet": "INITIAL_MENU_ITEMS[0].name"
+      },
+      {
+        "var": "itemCode",
+        "setter": "setItemCode",
+        "init_snippet": "INITIAL_MENU_ITEMS[0].code"
+      },
+      {
+        "var": "rate",
+        "setter": "setRate",
+        "init_snippet": "INITIAL_MENU_ITEMS[0].rate"
+      },
+      {
+        "var": "itemsList",
+        "setter": "setItemsList",
+        "init_snippet": "[     {       sNo: 1,       itemName: 'PANEER TIKA',       itemCode: '10005',       qty: 1,       rate: 220,       amoun"
+      }
+    ],
+    "handlers_without_api": [
+      {
+        "name": "handleItemSelect",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const found = INITIAL_MENU_ITEMS.find(m => m.name === e.target.value);     if (found) {       setSelectedItemName(found.name);       setItemCode(found"
+      },
+      {
+        "name": "handleAddItem",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (qty <= 0) return;     const newItem: KotItem = {       sNo: itemsList.length + 1,       itemName: selectedItemName,       itemCode,       qty,    "
+      },
+      {
+        "name": "handleRemoveItem",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const updated = itemsList.filter((_, i) => i !== index).map((item, idx) => ({       ...item,       sNo: idx + 1     }));     setItemsList(updated);"
+      },
+      {
+        "name": "handleSave",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveKot"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (itemsList.length === 0) {       alert('Please add at least one food item.');       return;     }      const newKot: PmsKotRecord = {       kotNo, "
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\AddPaymentModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleSubmit",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "savePayment"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (!amount || Number(amount) <= 0) {       alert('Please enter a valid payment amount.');       return;     }      let accoun"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\AddReceiptModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleSubmit",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveReceipt"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (!amount || Number(amount) <= 0) {       alert('Please enter a valid receipt amount.');       return;     }      let accoun"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\AdvanceReceiptModal.tsx",
+    "ls_calls": [
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "'svr_pms_advance_receipts', JSON.stringify(merged"
+      }
+    ],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleOpenAddModal",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const nextNum = receipts.length + 12;     setReceiptNo(`AR${nextNum}`);     setVoucherNo(`${nextNum}`);     setAmount('');     setRemark('advance');  "
+      },
+      {
+        "name": "handleDeleteReceipt",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "deleteAdvanceReceipt",
+          "getAdvanceReceipts"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (confirm(`Are you sure you want to delete Advance Receipt ${receiptNoToDelete}?`)) {       PmsStore.deleteAdvanceReceipt(receiptNoToDelete);       "
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\AgentCommissionModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleSaveNewAgent",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveCommissionAgent"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (!newAgentName.trim() || !newAgentPhone.trim()) {       alert('Please enter Agent Name and Contact Number');       return; "
+      },
+      {
+        "name": "handleOpenPayout",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const ag = agents.find(a => a.id === agentId);     if (!ag) return;     setPayoutAgentId(agentId);     const pendingComms = allCommissions.filter(c =>"
+      },
+      {
+        "name": "handleExecutePayout",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "recordAgentCommissionPayout"
+        ],
+        "calls_set_state": true,
+        "body_preview": "const ag = agents.find(a => a.id === payoutAgentId);     if (!ag) return;      const commsToSettle = allCommissions.filter(c => selectedCommissionIds."
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\BanquetHallBillingModal.tsx",
+    "ls_calls": [],
+    "state_inits": [
+      {
+        "var": "formLinkedRooms",
+        "setter": "setFormLinkedRooms",
+        "init_snippet": "['301', '302']"
+      }
+    ],
+    "handlers_without_api": [
+      {
+        "name": "handleCreateBooking",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveBanquetBooking"
+        ],
+        "calls_set_state": true,
+        "body_preview": "const selectedVenue = venues.find(v => v.id === formVenueId);     const nextBookingNum = bookings.length + 89;     const bookingNo = `RM/${nextBooking"
+      },
+      {
+        "name": "handleAddRunningKot",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "addBanquetKot"
+        ],
+        "calls_set_state": false,
+        "body_preview": "if (!selectedBooking) return;     const nextKotNo = `KOT/${Math.floor(420 + Math.random() * 50)}/24-25`;     const today = new Date().toISOString().sp"
+      },
+      {
+        "name": "handleFinalCheckout",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "settleBanquetCheckout"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (!selectedBooking) return;     const splitPayments = [       { mode: 'Online', amount: settleOnlineAmt, referenceNo: 'RTGS/ONLINE/TRANSFER' },     "
+      },
+      {
+        "name": "handleSanitizeVenue",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "sanitizeBanquetVenue"
+        ],
+        "calls_set_state": false,
+        "body_preview": "PmsStore.sanitizeBanquetVenue(venueId);     loadData();"
+      },
+      {
+        "name": "handleShareWhatsApp",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (!selectedBooking) return;     const phone = selectedBooking.contactMobile;     let text = '';     if (type === 'INVOICE') {       text = `*HOTEL S"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\BookingCalendarModal.tsx",
+    "ls_calls": [
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "'svr_pms_group_bookings', JSON.stringify(merged"
+      }
+    ],
+    "state_inits": [
+      {
+        "var": "selectedRoomNos",
+        "setter": "setSelectedRoomNos",
+        "init_snippet": "['203', '208', '107']"
+      },
+      {
+        "var": "guests",
+        "setter": "setGuests",
+        "init_snippet": "[     { name: 'Mr. ASIT KUMAR BHUYAN', phone: '+91 94402 89999', idProofType: 'Aadhaar Card', idProofNumber: '7845 1298 "
+      }
+    ],
+    "handlers_without_api": [
+      {
+        "name": "handleAddGuest",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setGuests([       ...guests,       {         name: `Guest ${guests.length + 1}`,         phone: contactPhone,         idProofType: 'Aadhaar Card',    "
+      },
+      {
+        "name": "handleUpdateGuest",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const updated = [...guests];     updated[idx] = { ...updated[idx], [field]: val };     setGuests(updated);"
+      },
+      {
+        "name": "handleRemoveGuest",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (guests.length <= 1) return;     setGuests(guests.filter((_, i) => i !== idx));"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\BookingReceiptModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handlePrint",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "window.print();"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\BusinessSettingModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleApplyTime",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setSelectedHour(h);     setSelectedMin(m);     setSelectedAmPm(ap);     setStandardCheckoutTime(`${h}:${m} ${ap}`);"
+      },
+      {
+        "name": "handleSave",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveBusinessSettings"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     const settings: PmsBusinessSetting = {       calculationType,       standardCheckoutTime,       updatedAt: new Date().toISOStr"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\CancelKotModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleConfirmCancel",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "cancelKot"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (!reason.trim()) {       alert('Please enter a cancellation reason.');       return;     }     setIsSubmitting(true);     const res = PmsStore.canc"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\ChainPropertyModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleSwitchProperty",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "setCurrentProperty"
+        ],
+        "calls_set_state": true,
+        "body_preview": "PmsStore.setCurrentProperty(prop.firmId);     refreshData();     setSuccessBanner(`Switched active branch to ${prop.firmId} - ${prop.firmName} (${prop"
+      },
+      {
+        "name": "handleOpenAdd",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setEditingProp(null);     const newId = `SVR000${properties.length + 1}`;     setFormFirmId(newId);     setFormFirmName('HOTEL SAI VASUDEV RESIDENCY')"
+      },
+      {
+        "name": "handleOpenEdit",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setEditingProp(prop);     setFormFirmId(prop.firmId);     setFormFirmName(prop.firmName);     setFormLocation(prop.location);     setFormAddress(prop."
+      },
+      {
+        "name": "handleSaveProperty",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "getProperties",
+          "saveProperties"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (!formFirmId.trim() || !formFirmName.trim()) {       alert('Firm ID and Firm Name are required.');       return;     }     "
+      },
+      {
+        "name": "handleDeleteProperty",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveProperties"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (firmId === 'DEMO0004') {       alert('Default primary property (DEMO0004) cannot be deleted.');       return;     }     if (currentProperty?.firmI"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\CheckInSlipModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handlePrint",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "window.print();"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\CheckOutRegisterModal.tsx",
+    "ls_calls": [
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "'svr_pms_checkouts', JSON.stringify(merged"
+      }
+    ],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleWhatsAppSend",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "sendWhatsAppNotification"
+        ],
+        "calls_set_state": false,
+        "body_preview": "PmsStore.sendWhatsAppNotification({       voucherType: 'Check_out_store',       recipientMobile: c.guestPhone,       recipientName: c.guestName,      "
+      },
+      {
+        "name": "handleDelete",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "getCurrentUser",
+          "triggerAntiTheftAlert",
+          "deleteCheckout",
+          "getCheckouts"
+        ],
+        "calls_set_state": true,
+        "body_preview": "const target = checkouts.find(c => c.invoiceNo === invoiceNo);     if (!target) return;      if (confirm(`\u26a0\ufe0f ANTI-THEFT AUDIT WARNING:\\nAre you sure y"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\CloudflareR2StorageModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleTestConnection",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setIsTesting(true);     try {       const res = await R2StorageClient.testConnection();       setTestResult(res);       const status = await R2Storage"
+      },
+      {
+        "name": "handleFileUpload",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (!fileList || fileList.length === 0) return;     const file = fileList[0];      setIsUploading(true);     setUploadProgress(10);     setUploadMessa"
+      },
+      {
+        "name": "handleDeleteFile",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (!window.confirm(`Are you sure you want to permanently delete '${item.filename}' from Cloudflare R2?`)) {       return;     }      try {       awai"
+      },
+      {
+        "name": "handleCopyUrl",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "navigator.clipboard.writeText(url);     setCopyToast(`Copied ${label} to clipboard!`);     setTimeout(() => setCopyToast(null), 2500);"
+      },
+      {
+        "name": "handleCopyPresignedDownload",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "try {       const downloadUrl = await R2StorageClient.getPresignedDownloadUrl(item.object_key, 3600);       navigator.clipboard.writeText(downloadUrl)"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\CompanyBrandingModal.tsx",
+    "ls_calls": [],
+    "state_inits": [
+      {
+        "var": "companyInfo",
+        "setter": "setCompanyInfo",
+        "init_snippet": "{ ...DEFAULT_COMPANY_INFO }"
+      }
+    ],
+    "handlers_without_api": [
+      {
+        "name": "handleInfoChange",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setCompanyInfo(prev => ({ ...prev, [field]: val }));"
+      },
+      {
+        "name": "handleSaveInfo",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveCompanyInfo",
+          "setDefaultBillFormat"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     const updated: PmsCompanyInfo = {       ...companyInfo,       updatedAt: new Date().toISOString()     };     PmsStore.saveComp"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\CompanyInfoModal.tsx",
+    "ls_calls": [],
+    "state_inits": [
+      {
+        "var": "formData",
+        "setter": "setFormData",
+        "init_snippet": "{ ...DEFAULT_COMPANY_INFO }"
+      }
+    ],
+    "handlers_without_api": [
+      {
+        "name": "handleChange",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setFormData(prev => {       const next = { ...prev, [field]: val };       // If GST No is changed, automatically update companyGstCode (first 2 digits"
+      },
+      {
+        "name": "handleApply",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveCompanyInfo"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     const updated: PmsCompanyInfo = {       ...formData,       updatedAt: new Date().toISOString()     };     PmsStore.saveCompany"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\DayEndReportModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleRefresh",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "getDayEndReport"
+        ],
+        "calls_set_state": true,
+        "body_preview": "setReport(PmsStore.getDayEndReport(reportDate));"
+      },
+      {
+        "name": "handlePrint",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "window.print();"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\DecentroUpiQrModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handlePrintThermal",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (!thermalPrintRef.current) return;     const printWindow = window.open('', '_blank', 'width=380,height=600');     if (!printWindow) {       alert('"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\DeviceResponsivePreviewModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleSimulateMobileKot",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "getMenuItems",
+          "saveKot"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     const menuItems = PmsStore.getMenuItems();     const foundItem = menuItems.find(m => m.name.toLowerCase() === selectedItem.toL"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\FoodBillModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleDiscountInputChange",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (val > 5 && !isManagerDiscountApproved) {       setPendingDiscountPct(val);       setShowManagerPinModal(true);       return;     }     applyDiscou"
+      },
+      {
+        "name": "handleSaveBill",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveFoodBill",
+          "getActiveTableSession",
+          "saveTableSession",
+          "vacateTable"
+        ],
+        "calls_set_state": true,
+        "body_preview": "const kotNums = pendingKots.map(k => k.kotNo);     if (kotNums.length === 0) {       kotNums.push('KOT/372/24-25', 'KOT/374/24-25');     }      const "
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\GstReportsModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleCopy",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "exportGstCsv",
+          "exportGstCsv",
+          "exportGstCsv"
+        ],
+        "calls_set_state": false,
+        "body_preview": "let text = '';     if (activeTab === 'b2b') {       text = PmsStore.exportGstCsv('b2b', fromDate, toDate);     } else if (activeTab === 'b2c') {      "
+      },
+      {
+        "name": "handleDownloadCsv",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "exportGstCsv"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (activeTab === 'dashboard') return;     const csvContent = PmsStore.exportGstCsv(activeTab, fromDate, toDate);     const blob = new Blob([csvConten"
+      },
+      {
+        "name": "handleDownloadExcel",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "// Generate native CSV that opens automatically in Microsoft Excel 2010/2016/365     handleDownloadCsv();"
+      },
+      {
+        "name": "handlePrint",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "window.print();"
+      },
+      {
+        "name": "handleSendToCaWhatsApp",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "getWhatsAppConfig"
+        ],
+        "calls_set_state": false,
+        "body_preview": "const config = PmsStore.getWhatsAppConfig();     const caMobile = config.ownerMobile || '7999663696';     const message =        `*GST Tax Return Summ"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\Gstr1ExportModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleDownloadJson",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "const jsonStr = JSON.stringify(gstr1Data, null, 2);     const blob = new Blob([jsonStr], { type: 'application/json' });     const url = URL.createObje"
+      },
+      {
+        "name": "handleCopyJson",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "navigator.clipboard.writeText(JSON.stringify(gstr1Data, null, 2));     setCopied(true);     setTimeout(() => setCopied(false), 2500);"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\GuestLogModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleCopy",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const text = filteredGuests.map(g => `${g.sNo}\\t${g.guestName}\\t${g.numberOfVisits}\\t${g.totalAmount.toFixed(2)}`).join('\\n');     navigator.clipboard"
+      },
+      {
+        "name": "handleExportCsv",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const headers = ['S.No', 'Guest Name', 'Phone', 'City', 'No. of Visits', 'Total Amount (\u20b9)', 'VIP Tier'];     const rows = filteredGuests.map(g => [  "
+      },
+      {
+        "name": "handlePrint",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "window.print();"
+      },
+      {
+        "name": "handleWhatsAppVip",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "const phone = guest.phone ? guest.phone.replace(/[^0-9]/g, '') : '9822000000';     const message = encodeURIComponent(       `Dear ${guest.guestName},"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\HelpAndSupportModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleCopy",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "navigator.clipboard.writeText(text);     setCopiedField(fieldName);     setTimeout(() => setCopiedField(null), 2000);"
+      },
+      {
+        "name": "handleCreateTicket",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "createSupportTicket",
+          "getSupportTickets"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (!ticketSubject.trim() || !ticketDescription.trim()) {       alert('Please fill in Subject and Description for the support "
+      },
+      {
+        "name": "handleSubmitDemo",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "submitDemoRequest"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (!demoHotelName || !demoPhone) {       alert('Please enter Property Name and Contact Phone.');       return;     }     cons"
+      },
+      {
+        "name": "handleShareRemoteOnWhatsApp",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "const waText = encodeURIComponent(       `Hello Hansin IT Support Team, this is ${remoteSession.hotelName}.\\n\\n` +       `We need remote support. Here"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\HotelBillFormatModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handlePrint",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setShowPrintDialogOverlay(true);"
+      },
+      {
+        "name": "handleExecutePrint",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setShowPrintDialogOverlay(false);     window.print();"
+      },
+      {
+        "name": "handleWhatsAppSend",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "sendWhatsAppNotification"
+        ],
+        "calls_set_state": false,
+        "body_preview": "PmsStore.sendWhatsAppNotification({       voucherType: 'Check_out_store',       recipientMobile: currentCheckout.guestPhone,       recipientName: curr"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\HotelPmsModal.tsx",
+    "ls_calls": [],
+    "state_inits": [
+      {
+        "var": "syncStatus",
+        "setter": "setSyncStatus",
+        "init_snippet": "{     isSyncing: false,     text: 'Railway DB Ready',     status: 'online'   }"
+      }
+    ],
+    "handlers_without_api": [
+      {
+        "name": "handleLaunchReportAction",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "switch (actionKey) {       case 'no_discount':       case 'margin_protection':       case 'discount_rules':         setIsNoDiscountOpen(true);        "
+      },
+      {
+        "name": "handleLaunchFeatureFromTop20",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "switch (targetModal) {       case 'room_dashboard':         setActiveTab('matrix');         break;       case 'room_booking':         setActiveTab('hu"
+      },
+      {
+        "name": "handleUserChanged",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "getCurrentUser",
+          "getUsers",
+          "syncWithCloudBackend"
+        ],
+        "calls_set_state": true,
+        "body_preview": "const u = PmsStore.getCurrentUser();       setCurrentUser(u);       setAllStaffUsers(PmsStore.getUsers());     };     window.addEventListener('pms_use"
+      },
+      {
+        "name": "handleQuickSwitchUser",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "setCurrentUser"
+        ],
+        "calls_set_state": true,
+        "body_preview": "PmsStore.setCurrentUser(user);     setCurrentUser(user);     setUserDropdownOpen(false);     setSecurityBanner(`\u26a1 Switched Active Staff to \"${user.use"
+      },
+      {
+        "name": "handleSearch",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "getRooms"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (e) e.preventDefault();     const query = searchQuery.trim().toLowerCase();     if (!query) return;      // 1. Direct Room Number Match     const a"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\HousekeepingDiscrepancyModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleRecordInspection",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "recordHousekeepingDiscrepancy"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (!selectedRoomNo) {       alert('Please select a room.');       return;     }     const room = rooms.find(r => r.roomNo === selectedRoomNo);     co"
+      },
+      {
+        "name": "handleResolve",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "resolveHousekeepingDiscrepancy"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (!resolveNotes.trim()) {       alert('Please enter resolution notes explaining manager findings.');       return;     }     PmsStore.resolveHouseke"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\HousekeepingTrackerModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleStartCleaning",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "updateHousekeepingStatus"
+        ],
+        "calls_set_state": false,
+        "body_preview": "PmsStore.updateHousekeepingStatus(roomNo, 'Cleaning In Progress');"
+      },
+      {
+        "name": "handleMarkClean",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "updateHousekeepingStatus"
+        ],
+        "calls_set_state": false,
+        "body_preview": "PmsStore.updateHousekeepingStatus(roomNo, 'Vacant Clean');"
+      },
+      {
+        "name": "handleOpenMaintenance",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setMaintenanceModalRoom(roomNo);     setMaintenanceIssueText('');"
+      },
+      {
+        "name": "handleSaveMaintenance",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "updateHousekeepingStatus"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (!maintenanceModalRoom) return;     const issue = maintenanceIssueText.trim() || 'General Maintenance Check';     PmsStore.updateHousekeepingStatus"
+      },
+      {
+        "name": "handleResolveMaintenance",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "resolveMaintenance"
+        ],
+        "calls_set_state": false,
+        "body_preview": "PmsStore.resolveMaintenance(roomNo);"
+      },
+      {
+        "name": "handleStaffChange",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "updateHousekeepingStatus"
+        ],
+        "calls_set_state": false,
+        "body_preview": "PmsStore.updateHousekeepingStatus(roomNo, undefined as any, newStaff);"
+      },
+      {
+        "name": "handlePriorityChange",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "updateHousekeepingStatus"
+        ],
+        "calls_set_state": false,
+        "body_preview": "PmsStore.updateHousekeepingStatus(roomNo, undefined as any, undefined, newPriority);"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\ItemMasterModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleOpenForm",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (item) {       setEditingItemId(item.id);       setFormItemName(item.name);       setFormBarcode(item.barcode || item.code);       setFormCompany(i"
+      },
+      {
+        "name": "handleGroupSelectionChange",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setFormGroup(grpName);     const matched = itemGroups.find(g => g.name.toLowerCase() === grpName.toLowerCase());     if (matched) {       setFormHeadG"
+      },
+      {
+        "name": "handleSaveItem",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveMenuItem"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (!formItemName.trim()) {       alert('Please enter Item/Product Name');       return;     }      const newItem: MenuItem = "
+      },
+      {
+        "name": "handleDeleteItem",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "deleteMenuItem"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (window.confirm(`Are you sure you want to delete item \"${name}\"?`)) {       PmsStore.deleteMenuItem(id);       setSuccessBanner(`Item \"${name}\" del"
+      },
+      {
+        "name": "handleSaveGroup",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveItemGroup"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (!newGroupName.trim()) {       alert('Please enter Item Group Name');       return;     }      const newGroup: PmsItemGroup"
+      },
+      {
+        "name": "handleSaveGodown",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveGodown"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (!newGodownName.trim()) {       alert('Please enter Godown Name');       return;     }      const newG: PmsGodown = {      "
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\ItemWiseSalesReportModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleCopy",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const text = filteredSales.map(i => `${i.sNo}\\t${i.itemName}\\t${i.qty.toFixed(2)}\\t${i.rate.toFixed(2)}\\t${i.amount.toFixed(2)}`).join('\\n');     navi"
+      },
+      {
+        "name": "handleExportCsv",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const headers = ['S.No', 'Item Name', 'Category', 'Quantity', 'Rate', 'Amount'];     const rows = filteredSales.map(i => [i.sNo, `\"${i.itemName}\"`, `\""
+      },
+      {
+        "name": "handlePrint",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "window.print();"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\ItemWiseStockModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleFetchStock",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "getItemWiseStock"
+        ],
+        "calls_set_state": true,
+        "body_preview": "setStockReport(PmsStore.getItemWiseStock(selectedItem, fromDate, toDate));"
+      },
+      {
+        "name": "handlePrint",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "window.print();"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\KitchenDashboardModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleStorage",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "playKotChime",
+          "voidKotItem"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (e.key === 'svr_kot_event') {         PmsStore.playKotChime();         refreshKots();       }     };     window.addEventListener('storage', handleS"
+      },
+      {
+        "name": "handleStartPrep",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "updateKotStatus"
+        ],
+        "calls_set_state": false,
+        "body_preview": "PmsStore.updateKotStatus(kotNo, 'Cooking');     refreshKots();"
+      },
+      {
+        "name": "handleReadyToServe",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "updateKotStatus"
+        ],
+        "calls_set_state": false,
+        "body_preview": "PmsStore.updateKotStatus(kotNo, 'Ready To Serve');     refreshKots();"
+      },
+      {
+        "name": "handleServeAndPrint",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "updateKotStatus",
+          "markKotAsPrinted"
+        ],
+        "calls_set_state": true,
+        "body_preview": "PmsStore.updateKotStatus(kot.kotNo, 'Served');     PmsStore.markKotAsPrinted(kot.kotNo);     setSelectedKotForPrint(kot);     refreshKots();"
+      },
+      {
+        "name": "handlePrintOnly",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "markKotAsPrinted"
+        ],
+        "calls_set_state": true,
+        "body_preview": "PmsStore.markKotAsPrinted(kot.kotNo);     setSelectedKotForPrint(kot);     refreshKots();"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\KotEntryModal.tsx",
+    "ls_calls": [],
+    "state_inits": [
+      {
+        "var": "cartItems",
+        "setter": "setCartItems",
+        "init_snippet": "[     {       sNo: 1,       itemName: 'South Indian Filter Coffee (Chikmagalur Blend)',       itemCode: 'BEV-106',      "
+      }
+    ],
+    "handlers_without_api": [
+      {
+        "name": "handleAddToCart",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const existingIndex = cartItems.findIndex(ci => ci.itemCode === menuItem.code);      const tags: string[] = [];     if (isJain) tags.push('Jain');    "
+      },
+      {
+        "name": "handleIncrementQty",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const updated = [...cartItems];     updated[index].qty += 1;     updated[index].amount = Number((updated[index].qty * updated[index].rate).toFixed(2))"
+      },
+      {
+        "name": "handleDecrementQty",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const updated = [...cartItems];     if (updated[index].qty <= 1) {       // Decrementing to 0 removes the item from the cart array immediately       h"
+      },
+      {
+        "name": "handleRemoveItem",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const updated = cartItems.filter((_, i) => i !== index).map((it, idx) => ({       ...it,       sNo: idx + 1     }));     setCartItems(updated);"
+      },
+      {
+        "name": "handleClearCart",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setCartItems([]);"
+      },
+      {
+        "name": "handlePunchKot",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "createOrAppendTableSession",
+          "saveKot",
+          "playKotChime",
+          "broadcastKotEvent"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (isProcessing) return;     if (cartItems.length === 0) {       alert('Cart is empty! Please add at least one item from the Vasudev Rasoi menu.');  "
+      },
+      {
+        "name": "handlePostToRoomFolio",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveKot",
+          "updateRoomFoodAmount"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (isProcessing) return;     if (cartItems.length === 0) {       alert('Cart is empty! Please add items to post to the room folio.');       return;  "
+      },
+      {
+        "name": "handleSettleCounterBill",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (isProcessing) return;     if (cartItems.length === 0) {       alert('Cart is empty! Please add items before generating a counter bill.');       re"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\KotPrintViewModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handlePrint",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "markKotAsPrinted"
+        ],
+        "calls_set_state": false,
+        "body_preview": "// Mark KOT as printed in PmsStore     PmsStore.markKotAsPrinted(kot.kotNo);     if (onPrinted) {       onPrinted();     }     window.print();"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\LiquorBarManagementModal.tsx",
+    "ls_calls": [],
+    "state_inits": [
+      {
+        "var": "posCurrentItems",
+        "setter": "setPosCurrentItems",
+        "init_snippet": "[     {       sNo: 1,       itemId: 'food-bp',       itemName: 'bread pakoda',       category: 'Food',       qty: 6,    "
+      }
+    ],
+    "handlers_without_api": [
+      {
+        "name": "handleCopyStocks",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "const filtered = stocks.filter(s => s.brand.toLowerCase().includes(searchQuery.toLowerCase()));     const text = filtered       .map((s, idx) => `${id"
+      },
+      {
+        "name": "handleExportCsv",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const headers = ['S.No', 'Brand Name', 'Bottle Size (ML)', 'Stock In (ML)', 'Stock Out (ML)', 'Closing (ML)', 'Closing (Bottles)'];     const filtered"
+      },
+      {
+        "name": "handleExportItemRegister",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const headers = ['S.No', 'Item Name', 'Brand', 'Barcode', 'Group', 'Rate', 'MRP', 'Purchase Rate', 'Unit', 'Conversion (ML)', 'VAT %', 'Surcharge %'];"
+      },
+      {
+        "name": "handleImportClick",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "fileInputRef.current?.click();"
+      },
+      {
+        "name": "handleFileImport",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveLiquorItem",
+          "saveLiquorItem"
+        ],
+        "calls_set_state": false,
+        "body_preview": "const file = e.target.files?.[0];     if (!file) return;     const reader = new FileReader();     reader.onload = (event) => {       try {         con"
+      },
+      {
+        "name": "handleAddNewUnit",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveLiquorUnit"
+        ],
+        "calls_set_state": false,
+        "body_preview": "const primaryUnit = window.prompt('Enter Primary Unit Name (e.g. 750 ML Bottle, 375 ML Half, 650 ML Beer):');     if (!primaryUnit) return;     const "
+      },
+      {
+        "name": "handleAddNewCompany",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveLiquorBrand"
+        ],
+        "calls_set_state": false,
+        "body_preview": "const compName = window.prompt('Enter Liquor Brand / Company Name:');     if (!compName) return;     const disStr = window.prompt('Enter standard disc"
+      },
+      {
+        "name": "handleAddItemToPos",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (!posSelectedItemId) return;     const found = items.find(i => i.id === posSelectedItemId);     if (!found) return;      const amount = found.rate "
+      },
+      {
+        "name": "handleRemovePosItem",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const updated = posCurrentItems.filter((_, i) => i !== idx).map((itm, i) => ({ ...itm, sNo: i + 1 }));     setPosCurrentItems(updated);"
+      },
+      {
+        "name": "handleSaveAndPrintBill",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveBarInvoice"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (posCurrentItems.length === 0) {       alert('Please add at least 1 food or liquor item to generate bill.');       return;     }      const now = n"
+      },
+      {
+        "name": "handleExecutePurchaseInward",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "recordLiquorPurchaseInward"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (purchaseBottleQty <= 0) {       alert('Please enter valid bottle quantity.');       return;     }      PmsStore.recordLiqu"
+      },
+      {
+        "name": "handleCreateLiquorItem",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveLiquorItem"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (!newItemName.trim()) {       alert('Please enter item name.');       return;     }      const newItem: PmsLiquorItem = {  "
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\MarkDirtyModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleUpdate",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "updateRoomStatus"
+        ],
+        "calls_set_state": false,
+        "body_preview": "e.preventDefault();     PmsStore.updateRoomStatus(selectedRoomNo, targetStatus);     onStatusUpdated();     onClose();"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\MonthlyHotelSaleReportModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleExportXlsx",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "exportHotelSaleReportXlsx"
+        ],
+        "calls_set_state": false,
+        "body_preview": "PmsStore.exportHotelSaleReportXlsx(selectedMonth);"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\MonthlyRestaurantSaleReportModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleExportXlsx",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "exportRestaurantSaleReportXlsx"
+        ],
+        "calls_set_state": false,
+        "body_preview": "PmsStore.exportRestaurantSaleReportXlsx(selectedMonth);"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\NcKotRegisterModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleExport",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "alert(`Exporting NC KOT Register to ${type}... Download will begin.`);"
+      },
+      {
+        "name": "handlePrint",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "window.print();"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\NewRoomBookingModal.tsx",
+    "ls_calls": [],
+    "state_inits": [
+      {
+        "var": "paymentSplits",
+        "setter": "setPaymentSplits",
+        "init_snippet": "[     { mode: 'Cash', amount: 1000, referenceNo: 'cash adv', remark: 'by raju' }   ]"
+      }
+    ],
+    "handlers_without_api": [
+      {
+        "name": "handleCustomerSearch",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const query = searchContact.trim();     if (!query) {       alert('Please enter contact number to search.');       return;     }      const matched = "
+      },
+      {
+        "name": "handleToggleRoom",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (selectedRoomNos.includes(roomNo)) {       setSelectedRoomNos(selectedRoomNos.filter(n => n !== roomNo));     } else {       setSelectedRoomNos([.."
+      },
+      {
+        "name": "handleAddPaymentMode",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setPaymentSplits([       ...paymentSplits,       { mode: 'UPI', amount: 1000, referenceNo: '', remark: '' }     ]);"
+      },
+      {
+        "name": "handleUpdateSplit",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const updated = [...paymentSplits];     updated[index] = { ...updated[index], [field]: val };     setPaymentSplits(updated);"
+      },
+      {
+        "name": "handleRemoveSplit",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (paymentSplits.length <= 1) return;     setPaymentSplits(paymentSplits.filter((_, i) => i !== index));"
+      },
+      {
+        "name": "handleSubmit",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveBooking"
+        ],
+        "calls_set_state": false,
+        "body_preview": "e.preventDefault();     if (!guestName.trim() || !mobile.trim()) {       alert('Please enter Guest Name and Mobile Number.');       return;     }     "
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\NewRoomCheckInModal.tsx",
+    "ls_calls": [],
+    "state_inits": [
+      {
+        "var": "paymentSplits",
+        "setter": "setPaymentSplits",
+        "init_snippet": "[     { mode: 'UPI', amount: 1000, referenceNo: 'UPI/2026/ADV', remark: 'PhonePe Advance' }   ]"
+      }
+    ],
+    "handlers_without_api": [
+      {
+        "name": "handleCheckInDateChange",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setCheckInDate(val);     if (checkOutDate < val) {       setCheckOutDate(val);       setNoOfDays(1);     } else {       setNoOfDays(calculateCalendarN"
+      },
+      {
+        "name": "handleCheckOutDateChange",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (val < checkInDate) {       alert('Check-Out date cannot be earlier than Check-In date. For same-day pilgrim day-use darshan stays, select the same"
+      },
+      {
+        "name": "handleDaysChange",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const valid = Math.max(1, days);     setNoOfDays(valid);     const d = new Date(checkInDate);     d.setDate(d.getDate() + valid);     setCheckOutDate("
+      },
+      {
+        "name": "handleSelectBooking",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setSelectedBookingRef(bookingNo);     if (!bookingNo) return;      const b = existingBookings.find(x => x.bookingNo === bookingNo);     if (b) {      "
+      },
+      {
+        "name": "handleSelectGuest",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const g = EXISTING_GUESTS[mobileKey];     if (g) {       setGuestName(g.name);       setMobile(g.mobile);       setAddressLine1(g.address1);       set"
+      },
+      {
+        "name": "handleAddPaymentMode",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setPaymentSplits([       ...paymentSplits,       { mode: 'Cash', amount: 500, referenceNo: '', remark: 'Cash deposit' }     ]);"
+      },
+      {
+        "name": "handleUpdateSplit",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const updated = [...paymentSplits];     updated[index] = { ...updated[index], [field]: val };     setPaymentSplits(updated);"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\NoDiscountMasterModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleToggleGroup",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveNoDiscountConfig"
+        ],
+        "calls_set_state": true,
+        "body_preview": "const updatedGroups = config.protectedGroups.includes(groupName)       ? config.protectedGroups.filter(g => g !== groupName)       : [...config.protec"
+      },
+      {
+        "name": "handleAddCustomGroup",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveNoDiscountConfig"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (!simCustomGroup.trim()) return;     if (!config.protectedGroups.includes(simCustomGroup.trim())) {       const newCfg = { "
+      },
+      {
+        "name": "handleToggleItemExemption",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveMenuItems"
+        ],
+        "calls_set_state": true,
+        "body_preview": "const updated = menuItems.map(itm => {       if (itm.id === itemId) {         return { ...itm, noDiscount: !itm.noDiscount };       }       return itm"
+      },
+      {
+        "name": "handleSaveSimAsAudit",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "recordDiscountAudit",
+          "getDiscountAuditRecords"
+        ],
+        "calls_set_state": true,
+        "body_preview": "const record: PmsDiscountAuditRecord = {       id: `audit-${Date.now()}`,       billNo: `Res/${294 + auditLogs.length}/24-25`,       tableNo: 'T-10', "
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\OnlineGuestBookingModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleSelectRoomFromGrid",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setSelectedRoom(rm);     setViewMode('form');"
+      },
+      {
+        "name": "handleCopyLink",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const url = 'https://hotel-sai-vasudev-residency.pages.dev/hotel_room';     navigator.clipboard.writeText(url);     setCopiedLink(true);     setTimeou"
+      },
+      {
+        "name": "handleSelectSuggestion",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setGuestName(sug.name);     setCity(sug.city);     setState(sug.state);     setMobile(sug.mobile);"
+      },
+      {
+        "name": "handleSaveBooking",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveBooking",
+          "saveAdvanceReceipt"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (!guestName.trim()) {       alert('Please enter Guest Name');       return;     }     if (!mobile.trim() || mobile.length <"
+      },
+      {
+        "name": "handlePrint",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "window.print();"
+      },
+      {
+        "name": "handleShareWhatsApp",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "sendWhatsAppNotification"
+        ],
+        "calls_set_state": false,
+        "body_preview": "const msg = `Namaste ${b.guestName} ji! Greetings from HOTEL SAI VASUDEV RESIDENCY, Shirdi.\\n\\nYour Online Reservation Slip:\\nBooking No: ${b.bookingN"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\OnlineVsOfflineModal.tsx",
+    "ls_calls": [],
+    "state_inits": [
+      {
+        "var": "quizAnswers",
+        "setter": "setQuizAnswers",
+        "init_snippet": "{     internet: 'reliable',     // 'none', 'intermittent', 'reliable'     locations: 'single',      // 'single', 'multip"
+      }
+    ],
+    "handlers_without_api": [
+      {
+        "name": "handleExportBackup",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "exportDatabaseBackup",
+          "getStorageMetrics"
+        ],
+        "calls_set_state": true,
+        "body_preview": "try {       const backup = PmsStore.exportDatabaseBackup();       const jsonStr = JSON.stringify(backup, null, 2);       const blob = new Blob([jsonSt"
+      },
+      {
+        "name": "handleImportBackup",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "importDatabaseBackup",
+          "getStorageMetrics"
+        ],
+        "calls_set_state": true,
+        "body_preview": "const file = e.target.files?.[0];     if (!file) return;     const reader = new FileReader();     reader.onload = (event) => {       try {         con"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\OtherMasterModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleOpenGstModal",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (g) {       setEditingGst(g);       setFormGstName(g.name);       setFormHsnNo(g.hsnNo);       setFormSgst(g.sgst);       setFormCgst(g.cgst);     "
+      },
+      {
+        "name": "handleSaveGst",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveGstMaster"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     const newGst: PmsGstMaster = {       id: editingGst ? editingGst.id : `gst-${Date.now()}`,       name: formGstName.trim(),    "
+      },
+      {
+        "name": "handleDeleteGst",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "deleteGstMaster"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (window.confirm(`Delete GST record \"${name}\"?`)) {       PmsStore.deleteGstMaster(id);       setSuccessBanner(`Deleted ${name}`);       refreshData"
+      },
+      {
+        "name": "handleOpenBsModal",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (b) {       setEditingBs(b);       setFormBsName(b.name);       setFormBsRemark(b.remark);     } else {       setEditingBs(null);       setFormBsNa"
+      },
+      {
+        "name": "handleSaveBs",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveBusinessSource"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (!formBsName.trim()) {       alert('Enter Business Source Name');       return;     }     const newBs: PmsBusinessSource = "
+      },
+      {
+        "name": "handleDeleteBs",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "deleteBusinessSource"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (window.confirm(`Delete Business Source \"${name}\"?`)) {       PmsStore.deleteBusinessSource(id);       setSuccessBanner(`Deleted ${name}`);       r"
+      },
+      {
+        "name": "handleOpenVtModal",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setEditingVt(v);     setFormVtName(v.voucherTypeName);     setFormStartingNumber(v.startingNumber);     setFormPrefix(v.prefix);     setFormSuffix(v.s"
+      },
+      {
+        "name": "handleSaveVt",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "updateVoucherType"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (!editingVt) return;     const updated: PmsVoucherType = {       ...editingVt,       startingNumber: Number(formStartingNum"
+      },
+      {
+        "name": "handleOpenLockerModal",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (locker) {       setEditingLocker(locker);       setFormLockerNo(locker.lockerNo);       setFormLockerSize(locker.lockerSize);       setFormDailyRa"
+      },
+      {
+        "name": "handleSaveLocker",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveLocker"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     const locker: PmsLocker = {       id: editingLocker ? editingLocker.id : `loc-${Date.now()}`,       lockerNo: formLockerNo.tri"
+      },
+      {
+        "name": "handleDeleteLocker",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "deleteLocker"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (window.confirm(`Are you sure you want to remove Locker \"${no}\"?`)) {       PmsStore.deleteLocker(id);       refreshData();       setSuccessBanner("
+      },
+      {
+        "name": "handleOpenChargeModal",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (charge) {       setEditingCharge(charge);       setFormChargeName(charge.chargeName);       setFormCategory(charge.category);       setFormDefault"
+      },
+      {
+        "name": "handleSaveCharge",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveOtherCharge"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     const charge: PmsOtherCharge = {       id: editingCharge ? editingCharge.id : `chg-${Date.now()}`,       chargeName: formCharg"
+      },
+      {
+        "name": "handleDeleteCharge",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "deleteOtherCharge"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (window.confirm(`Are you sure you want to remove charge \"${name}\"?`)) {       PmsStore.deleteOtherCharge(id);       refreshData();       setSuccess"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\OutstandingReceivablesModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handlePrint",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "window.print();"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\PartyLedgerModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleSelectAccount",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setSelectedAccount(accId);     setSearchTerm(accName);     setIsDropdownOpen(false);     setActiveAccount(accId);     if (accId.toLowerCase() === 'onl"
+      },
+      {
+        "name": "handleFilterSubmit",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     setActiveAccount(selectedAccount);     setIsDropdownOpen(false);"
+      },
+      {
+        "name": "handlePrint",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "window.print();"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\PaymentRegisterModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleOpenAdd",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setEditingPayment(null);     setIsAddOpen(true);"
+      },
+      {
+        "name": "handleEdit",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setEditingPayment(payment);     setIsAddOpen(true);"
+      },
+      {
+        "name": "handleDelete",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "deletePayment"
+        ],
+        "calls_set_state": false,
+        "body_preview": "if (confirm(`Are you sure you want to delete payment ${payment.paymentNo} of \u20b9${payment.amount} for ${payment.accountName}?`)) {       PmsStore.delete"
+      },
+      {
+        "name": "handlePaymentSaved",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "refreshList();     setSuccessBanner('Entery saved successfully!');     setTimeout(() => {       setSuccessBanner(null);     }, 4500);"
+      },
+      {
+        "name": "handlePrint",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "window.print();"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\PettyExpenseModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleCreateExpense",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "addExpense"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (isProcessing) return;     const numAmount = parseFloat(amount);     if (isNaN(numAmount) || numAmount <= 0) {       alert("
+      },
+      {
+        "name": "handleExecuteNightAudit",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "runNightAudit",
+          "getBusinessDate"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (isProcessing) return;     setIsProcessing(true);     try {       const record = PmsStore.runNightAudit(auditorName.trim() || 'General Manager / Sh"
+      },
+      {
+        "name": "handlePrint",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "window.print();"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\PmsHomeDashboardModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleLaunchReportAction",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "switch (actionKey) {       case 'no_discount':       case 'margin_protection':       case 'discount_rules':         setIsNoDiscountOpen(true);        "
+      },
+      {
+        "name": "handleUserChanged",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "getCurrentUser",
+          "hasPermission"
+        ],
+        "calls_set_state": true,
+        "body_preview": "setCurrentUser(PmsStore.getCurrentUser());     };     window.addEventListener('pms_user_changed', handleUserChanged);     return () => window.removeEv"
+      },
+      {
+        "name": "handleSendWhatsApp",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "sendWhatsAppNotification"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (!whatsAppMobile.trim() || whatsAppMobile.length < 10) {       alert('Please enter a valid 10-digit mobile number.');       return;     }     PmsSt"
+      },
+      {
+        "name": "handleCopyWebsiteLink",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const url = 'https://hotel-sai-vasudev-residency.pages.dev';     navigator.clipboard.writeText(url);     setCopyFeedback(true);     setTimeout(() => s"
+      },
+      {
+        "name": "handleLaunchFeatureFromTop20",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "switch (targetModal) {       case 'room_dashboard':         onOpenRoomMatrix();         break;       case 'room_booking':         setIsBookingOpen(tru"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\PoliceStationReportModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleApplyFilter",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "loadReportData(fromDate, toDate);     if (selectedFormat === 'format1') {       setViewMode('format1');     } else {       setViewMode('format2');    "
+      },
+      {
+        "name": "handleOpenProfilePrint",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setSelectedProfileCheckIn(item);     setViewMode('profile_print');"
+      },
+      {
+        "name": "handleExportCSV",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const headers = ['S.No', 'CheckIn No', 'Room No', 'Guest Name', 'Contact No', 'CheckIn Date', 'CheckIn Time', 'Document Name', 'Document No', 'Members"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\PurchaseEntryModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleSelectItem",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setSelectedItemId(item.id);     setItemSearchTerm(`${item.name}||${item.barcode || item.code}`);     setIsDropdownOpen(false);     const pRate = item."
+      },
+      {
+        "name": "handleAddItem",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (!selectedItemId || !itemSearchTerm.trim()) {       alert('Please select an item to add');       return;     }     if (currentQty <= 0) {       ale"
+      },
+      {
+        "name": "handleRemoveItem",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const updated = items.filter((_, i) => i !== index).map((itm, i) => ({       ...itm,       sNo: i + 1     }));     setItems(updated);"
+      },
+      {
+        "name": "handleSavePurchase",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "savePurchase"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (items.length === 0) {       alert('Please add at least one item to save the purchase bill.');       return;     }     if (!accountName.trim()) {  "
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\ReceiptRegisterModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleOpenAdd",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setEditingReceipt(null);     setPresetPartyForAdd(partyName);     setIsAddOpen(true);"
+      },
+      {
+        "name": "handleEdit",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setEditingReceipt(receipt);     setIsAddOpen(true);"
+      },
+      {
+        "name": "handleDelete",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "deleteReceipt"
+        ],
+        "calls_set_state": false,
+        "body_preview": "if (confirm(`Are you sure you want to delete receipt ${receipt.receiptNo} of \u20b9${receipt.amount} for ${receipt.accountName}?`)) {       PmsStore.delete"
+      },
+      {
+        "name": "handleReceiptSaved",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "refreshList();     setSuccessBanner('entery saved created successfully!');     setTimeout(() => {       setSuccessBanner(null);     }, 4500);"
+      },
+      {
+        "name": "handlePrint",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "window.print();"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\RestaurantKotRegisterModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleExportExcel",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const headers = ['S.No', 'Date', 'KOT No', 'Table/Room', 'Guest Name', 'Total Qty', 'Total Amount', 'Serve Status', 'Remark', 'Status'];     const row"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\RfidKeyCardModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleIssueCard",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "encodeKeyCard"
+        ],
+        "calls_set_state": true,
+        "body_preview": "const matchedRoom = rooms.find(r => r.roomNo === selectedRoomNo);     const guest = matchedRoom?.currentGuest?.name || 'In-House Guest';     const tod"
+      },
+      {
+        "name": "handleConfirmExtension",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "extendKeyCard"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (!extendingCard) return;     if (lateCheckoutFee < 0) {       alert('Extension fee must be >= 0.');       return;     }      const today = new Date"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\RolesPermissionsModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleOpenAddRole",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (role) {       setEditingRole(role);       setFormRoleName(role.name);       setFormRoleDesc(role.description || '');     } else {       setEditing"
+      },
+      {
+        "name": "handleSaveRole",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveRole",
+          "saveRole"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (!formRoleName.trim()) {       alert('Please enter Role Name');       return;     }      if (editingRole) {       const upd"
+      },
+      {
+        "name": "handleDeleteRole",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "deleteRole"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (role.isSystem) {       alert(`System role \"${role.name}\" cannot be deleted.`);       return;     }     if (window.confirm(`Are you sure you want t"
+      },
+      {
+        "name": "handleOpenGivePermissions",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setSelectedRoleForPermissions(role);     setSelectedPermissions([...role.permissions]);"
+      },
+      {
+        "name": "handleTogglePermission",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (selectedPermissions.includes(key)) {       setSelectedPermissions(selectedPermissions.filter(p => p !== key));     } else {       setSelectedPermi"
+      },
+      {
+        "name": "handleSelectAllPermissions",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setSelectedPermissions(PMS_ALL_PERMISSIONS.map(p => p.key));"
+      },
+      {
+        "name": "handleDeselectAllPermissions",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setSelectedPermissions([]);"
+      },
+      {
+        "name": "handleSaveRolePermissions",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "updateRolePermissions"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (!selectedRoleForPermissions) return;     PmsStore.updateRolePermissions(selectedRoleForPermissions.id, selectedPermissions);     setSuccessBanner("
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\RoomCheckInRegisterModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleUserChange",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "getCurrentUser",
+          "hasPermission",
+          "deleteCheckIn",
+          "getCheckIns"
+        ],
+        "calls_set_state": true,
+        "body_preview": "setCurrentUser(PmsStore.getCurrentUser());     };     window.addEventListener('pms_user_changed', handleUserChange);     return () => window.removeEve"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\RoomCheckOutModal.tsx",
+    "ls_calls": [],
+    "state_inits": [
+      {
+        "var": "paymentSplits",
+        "setter": "setPaymentSplits",
+        "init_snippet": "[     { mode: 'Cash', amount: netPayable > 0 ? netPayable : 0, referenceNo: '', remark: 'Cash Settlement' }   ]"
+      }
+    ],
+    "handlers_without_api": [
+      {
+        "name": "handleClearKotsToFoodBill",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveFoodBill"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (!targetRoom || pendingKots.length === 0) return;     const billRecord: PmsFoodBill = {       billNo: `VR/FB-${Math.floor(250 + Math.random() * 50)"
+      },
+      {
+        "name": "handleAutoSettle",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setPaymentSplits([       { mode: paymentSplits[0]?.mode || 'Cash', amount: netPayable, referenceNo: paymentSplits[0]?.referenceNo || '', remark: 'Full"
+      },
+      {
+        "name": "handleCircuitTripped",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "handleSwitchToManualPos(e.detail?.message);     };     window.addEventListener('svr:decentro_circuit_tripped', handleCircuitTripped);     return () =>"
+      },
+      {
+        "name": "handleUpdateSplit",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const updated = [...paymentSplits];     updated[idx] = { ...updated[idx], [field]: val };     setPaymentSplits(updated);"
+      },
+      {
+        "name": "handleRemoveSplit",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (paymentSplits.length <= 1) return;     setPaymentSplits(paymentSplits.filter((_, i) => i !== idx));"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\RoomDashboardModal.tsx",
+    "ls_calls": [],
+    "state_inits": [
+      {
+        "var": "splitFolioA",
+        "setter": "setSplitFolioA",
+        "init_snippet": "['Room Accommodation (SAC 996311)']"
+      },
+      {
+        "var": "splitFolioB",
+        "setter": "setSplitFolioB",
+        "init_snippet": "['Vasudev Rasoi Dining (SAC 996331)', 'Laundry & Extras (SAC 9997)']"
+      }
+    ],
+    "handlers_without_api": [
+      {
+        "name": "handleConflict",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "getRooms",
+          "getBookings",
+          "getFolioSummary",
+          "resetToDemoSeedData"
+        ],
+        "calls_set_state": true,
+        "body_preview": "const msg = e.detail?.message || 'Another staff member updated this record.';       setConflictAlert(msg);       setTimeout(() => setConflictAlert(nul"
+      },
+      {
+        "name": "handleRecordPayment",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "recordFolioPayment"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (!drawerRoom) return;     const num = parseFloat(paymentAmount);     if (isNaN(num) || num <= 0) {       alert('Please ente"
+      },
+      {
+        "name": "handleApplyDiscount",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "applyFolioDiscount"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (!drawerRoom) return;     const val = parseFloat(discountVal);     if (isNaN(val) || val <= 0) {       alert('Please enter "
+      },
+      {
+        "name": "handleExtendStaySubmit",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "extendStay"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (!drawerRoom || !newExtendCheckOutDate) return;     const res = PmsStore.extendStay(drawerRoom.roomNo, newExtendCheckOutDat"
+      },
+      {
+        "name": "handleSaveMaintenanceBlock",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "updateHousekeepingStatus"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (!drawerRoom) return;     const issue = maintenanceIssueText.trim() || 'General Maintenance Inspection';     PmsStore.updat"
+      },
+      {
+        "name": "handleCheckInReservedGuest",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "checkInBooking"
+        ],
+        "calls_set_state": false,
+        "body_preview": "if (!drawerRoom || !drawerRoom.currentGuest?.bookingNo) return;     const res = PmsStore.checkInBooking(drawerRoom.currentGuest.bookingNo);     alert("
+      },
+      {
+        "name": "handleCancelBooking",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "deleteBooking",
+          "updateRoomStatus"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (!drawerRoom || !drawerRoom.currentGuest?.bookingNo) return;     if (window.confirm(`Cancel reservation for ${drawerRoom.currentGuest.name}?`)) {  "
+      },
+      {
+        "name": "handleExportJson",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "exportDatabaseAsJson",
+          "getBusinessDate"
+        ],
+        "calls_set_state": false,
+        "body_preview": "const json = PmsStore.exportDatabaseAsJson();     const blob = new Blob([json], { type: 'application/json' });     const url = URL.createObjectURL(blo"
+      },
+      {
+        "name": "handleImportJson",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "importDatabaseFromJson"
+        ],
+        "calls_set_state": false,
+        "body_preview": "const file = e.target.files?.[0];     if (!file) return;     const reader = new FileReader();     reader.onload = (evt) => {       const content = evt"
+      },
+      {
+        "name": "handlePostCharge",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "postChargeToRoom",
+          "postJournalEntry",
+          "getBusinessDate"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (!drawerRoom) return;     const num = parseFloat(chargeAmount);     if (isNaN(num) || num <= 0) {       alert('Please enter"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\RoomKotRegisterModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handlePrintIndividual",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "markKotAsPrinted"
+        ],
+        "calls_set_state": true,
+        "body_preview": "PmsStore.markKotAsPrinted(kot.kotNo);     loadKots();     setSelectedKotForPrint(kot);"
+      },
+      {
+        "name": "handlePrintAllUnprinted",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "markAllKotsAsPrinted"
+        ],
+        "calls_set_state": false,
+        "body_preview": "PmsStore.markAllKotsAsPrinted(filterServiceType === 'All' ? undefined : filterServiceType);     loadKots();     alert('All Unprinted KOTs dispatched t"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\RoomMasterModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleOpenAddRoom",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (room) {       setEditingRoom(room);       setFormRoomNo(room.roomNo);       setFormRoomType(room.roomType);       setFormFloor(room.floor);       "
+      },
+      {
+        "name": "handleSaveRoom",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "updateRoom",
+          "addRoom"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (!formRoomNo.trim()) {       alert('Please enter Room Number');       return;     }      const selectedTypeObj = roomTypes."
+      },
+      {
+        "name": "handleDeleteRoom",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "deleteRoom"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (window.confirm(`Are you sure you want to delete Room ${roomNo}?`)) {       PmsStore.deleteRoom(roomNo);       setSuccessBanner(`Room ${roomNo} del"
+      },
+      {
+        "name": "handleOpenAddRoomType",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (rt) {       setEditingRoomType(rt);       setFormTypeName(rt.roomTypeName);       setFormPackage(rt.package);       setFormGstTax(rt.gstTaxString)"
+      },
+      {
+        "name": "handleSaveRoomType",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveRoomType"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (!formTypeName.trim()) {       alert('Please enter Room Type Name');       return;     }      let gstPercent = 12;     if ("
+      },
+      {
+        "name": "handleDeleteRoomType",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "deleteRoomType"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (window.confirm(`Are you sure you want to delete Room Type \"${name}\"?`)) {       PmsStore.deleteRoomType(id);       setSuccessBanner(`Room Type ${n"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\RoomShiftModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleShiftSubmit",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "shiftRoom",
+          "getRoomShifts",
+          "getRooms"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     setErrorMsg('');     setSuccessMsg('');      if (!fromRoomNo) {       setErrorMsg('Please select an occupied room to shift fro"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\ShiftHandoverModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleRefresh",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "getShiftHandoverData"
+        ],
+        "calls_set_state": true,
+        "body_preview": "setShiftType(type);     setHandoverRecord(PmsStore.getShiftHandoverData(shiftDate, type));"
+      },
+      {
+        "name": "handlePrint",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "window.print();"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\ShiftTableModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleShiftNow",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "shiftTable",
+          "getTableShifts",
+          "getTables"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (!fromTable) {       alert('Please select a source table (Select From Table).');       return;     }     if (!toTable) {       alert('Please select"
+      },
+      {
+        "name": "handleMergeNow",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "mergeTableSessions",
+          "getTables"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (!fromTable) {       alert('Please select the Primary Master Table.');       return;     }     if (!secondaryMergeTable) {       alert('Please sele"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\StockReportMasterModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleOpenItemAudit",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "getStockAuditMovements"
+        ],
+        "calls_set_state": true,
+        "body_preview": "setSelectedItemAudit(itemName);     setAuditMovements(PmsStore.getStockAuditMovements(itemName));"
+      },
+      {
+        "name": "handleSearchChange",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setSearchPerGodown(prev => ({       ...prev,       [godownName]: val     }));"
+      },
+      {
+        "name": "handleCopyGodown",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const text = rows       .map(r => `${r.sNo}\\t${r.itemName}\\t${r.stockIn}\\t${r.stockOut}\\t${r.closingStock}`)       .join('\\n');     navigator.clipboar"
+      },
+      {
+        "name": "handleExportCsvGodown",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const csvContent =       'data:text/csv;charset=utf-8,' +       ['S.No,Item Name,Stock In,Stock Out,Closing Stock']         .concat(rows.map(r => `${r"
+      },
+      {
+        "name": "handleCopyConsolidated",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const text = consolidatedRows       .map(r => `${r.sNo}\\t${r.itemName}\\t${r.category}\\t${r.totalStockIn}\\t${r.totalStockOut}\\t${r.totalClosingStock}\\t"
+      },
+      {
+        "name": "handleExportCsvConsolidated",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const csvContent =       'data:text/csv;charset=utf-8,' +       ['S.No,Item Name,Category,Stock In,Stock Out,Closing Stock,Rate,Valuation,Status']    "
+      },
+      {
+        "name": "handleSimStep1Purchase",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "savePurchase"
+        ],
+        "calls_set_state": true,
+        "body_preview": "const newPur = {       id: `pur-sim-${Date.now()}`,       billNo: '4334',       billDate: '20-07-2025',       godown: 'STORE1',       terms: 'Credit' "
+      },
+      {
+        "name": "handleSimStep2Transfer",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "recordStockTransferDirect"
+        ],
+        "calls_set_state": true,
+        "body_preview": "PmsStore.recordStockTransferDirect('STORE1', 'Main Store', 'WATER BOTLE', simTransferQty, 'S/2/24-25');     loadData();     setSimStep(3);     setSimS"
+      },
+      {
+        "name": "handleSimStep3Issue",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "recordStockTransferDirect"
+        ],
+        "calls_set_state": true,
+        "body_preview": "PmsStore.recordStockTransferDirect('Main Store', 'Consume', 'WATER BOTLE', simIssueQty, 'ISSUE/50');     loadData();     setSimStep(4);     setSimSucc"
+      },
+      {
+        "name": "handleResetSimulator",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setSimStep(1);     setSimSuccessMsg(null);     loadData();"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\StockTransferModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleSelectItem",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setSelectedItemId(item.id);     setItemSearchTerm(`${item.name}||${item.barcode || item.code}`);     setIsDropdownOpen(false);     const pRate = item."
+      },
+      {
+        "name": "handleAddItem",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (!selectedItemId || !itemSearchTerm.trim()) {       alert('Please select an item to transfer');       return;     }     if (currentQty <= 0) {     "
+      },
+      {
+        "name": "handleRemoveItem",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const updated = items.filter((_, i) => i !== index).map((itm, i) => ({       ...itm,       sNo: i + 1     }));     setItems(updated);"
+      },
+      {
+        "name": "handleSaveTransfer",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveStockTransfer"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (items.length === 0) {       alert('Please add at least one item to transfer.');       return;     }     if (fromGodown === toGodown) {       alert"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\StoreWiseStockModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleSearchChange",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setSearchPerGodown(prev => ({       ...prev,       [godownName]: val     }));"
+      },
+      {
+        "name": "handleCopy",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const text = rows       .map(r => `${r.sNo}\\t${r.itemName}\\t${r.stockIn}\\t${r.stockOut}\\t${r.closingStock}`)       .join('\\n');     navigator.clipboar"
+      },
+      {
+        "name": "handleExportCsv",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const csvContent =       'data:text/csv;charset=utf-8,' +       ['S.No,Item Name,Stock In,Stock Out,Closing Stock']         .concat(rows.map(r => `${r"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\TableMasterModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleOpenAdd",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setEditingTable(null);     setTableName('');     setTableGroup('General');     setCapacity(4);     setIsAddModalOpen(true);"
+      },
+      {
+        "name": "handleOpenEdit",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setEditingTable(t);     setTableName(t.tableName);     setTableGroup(t.tableGroup);     setCapacity(t.capacity || 4);     setIsAddModalOpen(true);"
+      },
+      {
+        "name": "handleSaveTable",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveTable"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (!tableName.trim()) {       alert('Please enter Table Name.');       return;     }      const formattedName = tableName.tri"
+      },
+      {
+        "name": "handleDeleteTable",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "deleteTable"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (window.confirm(`Are you sure you want to delete \"${name}\"?`)) {       PmsStore.deleteTable(id);       loadTables();       if (onTableChange) onTab"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\Top20FeaturesModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleLaunch",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "onClose();     onLaunchFeature(targetModal);"
+      },
+      {
+        "name": "handlePrintSummary",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "window.print();"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\UnconfirmedBookingsModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleConfirm",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "confirmBooking"
+        ],
+        "calls_set_state": true,
+        "body_preview": "const res = PmsStore.confirmBooking(booking.bookingNo);     if (res.success) {       setConfirmBannerMessage(res.message); // \"Selected Booking Confir"
+      },
+      {
+        "name": "handleDelete",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "deleteBooking"
+        ],
+        "calls_set_state": false,
+        "body_preview": "if (confirm(`Are you sure you want to delete reservation ${bookingNo}?`)) {       PmsStore.deleteBooking(bookingNo);       refreshData();     }"
+      },
+      {
+        "name": "handleOpenVoucher",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setViewingBooking(b);     setIsVoucherOpen(true);"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\UserManagementModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleOpenAddUser",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (user) {       setEditingUser(user);       setFormFirmId(user.firmId);       setFormUserName(user.userName);       setFormEmailId(user.emailId);   "
+      },
+      {
+        "name": "handleSaveUser",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveUser",
+          "saveUser"
+        ],
+        "calls_set_state": true,
+        "body_preview": "e.preventDefault();     if (!formUserName.trim()) {       alert('Please enter User Name');       return;     }     if (!formEmailId.trim()) {       al"
+      },
+      {
+        "name": "handleSwitchActiveStaff",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "setCurrentUser"
+        ],
+        "calls_set_state": true,
+        "body_preview": "PmsStore.setCurrentUser(user);     setCurrentUser(user);     setSuccessBanner(`Active Hotel Staff Switched to \"${user.userName}\" (${user.roleName}). S"
+      },
+      {
+        "name": "handleToggleVerify",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "toggleUserStatus"
+        ],
+        "calls_set_state": true,
+        "body_preview": "PmsStore.toggleUserStatus(user.id);     const newStatus = user.status === 'Verified' ? 'Pending' : 'Verified';     setSuccessBanner(`Status of ${user."
+      },
+      {
+        "name": "handleDeleteUser",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "hasPermission",
+          "deleteUser"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (!PmsStore.hasPermission('delete user')) {       alert('Permission Denied: Standard staff are restricted from deleting user accounts (\"delete user\""
+      },
+      {
+        "name": "handleExport",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "if (type.toLowerCase().includes('csv') || type.toLowerCase().includes('excel')) {       const headers = ['User Name', 'Email ID', 'Role', 'Status', 'B"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\WhatsAppLogsModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleClearLogs",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "clearWhatsAppLogs"
+        ],
+        "calls_set_state": false,
+        "body_preview": "if (window.confirm('Are you sure you want to clear all WhatsApp outbox records?')) {       PmsStore.clearWhatsAppLogs();       loadLogs();     }"
+      },
+      {
+        "name": "handleResend",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": false,
+        "body_preview": "const cleanDigits = log.recipientMobile.replace(/\\D/g, '');     const phoneWithCountry = cleanDigits.length === 10 ? `91${cleanDigits}` : cleanDigits;"
+      }
+    ]
+  },
+  {
+    "file": "src\\components\\pms\\WhatsAppSettingModal.tsx",
+    "ls_calls": [],
+    "state_inits": [],
+    "handlers_without_api": [
+      {
+        "name": "handleToggleActive",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveWhatsAppTemplate"
+        ],
+        "calls_set_state": false,
+        "body_preview": "const updated: PmsWhatsAppTemplate = {       ...tmpl,       active: tmpl.active === 'On' ? 'Off' : 'On'     };     PmsStore.saveWhatsAppTemplate(updat"
+      },
+      {
+        "name": "handleOpenEdit",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setEditingTemplate({ ...tmpl });     setIsEditModalOpen(true);"
+      },
+      {
+        "name": "handleAddNew",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "const nextId = templates.length > 0 ? Math.max(...templates.map(t => t.id)) + 1 : 1;     setEditingTemplate({       id: nextId,       sNo: nextId,    "
+      },
+      {
+        "name": "handleSaveEditing",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveWhatsAppTemplate"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (!editingTemplate) return;     PmsStore.saveWhatsAppTemplate(editingTemplate);     setIsEditModalOpen(false);     setEditingTemplate(null);     loa"
+      },
+      {
+        "name": "handleDeleteTemplate",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "deleteWhatsAppTemplate"
+        ],
+        "calls_set_state": false,
+        "body_preview": "if (window.confirm(`Are you sure you want to delete template \"${name}\"?`)) {       PmsStore.deleteWhatsAppTemplate(id);       loadData();       showSt"
+      },
+      {
+        "name": "handleOpenTest",
+        "calls_pms_store": false,
+        "pms_methods": [],
+        "calls_set_state": true,
+        "body_preview": "setTestTemplate(tmpl);     setTestMobile(tmpl.sendTo === 'Owner' ? config.ownerMobile : '9822100042');     setIsTestModalOpen(true);"
+      },
+      {
+        "name": "handleSendTest",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "sendWhatsAppNotification",
+          "getCurrentUser"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (!testTemplate) return;     if (!testMobile || testMobile.trim().length < 10) {       alert('Please enter a valid 10-digit mobile number');       r"
+      },
+      {
+        "name": "handleSaveConfig",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "saveWhatsAppConfig"
+        ],
+        "calls_set_state": true,
+        "body_preview": "PmsStore.saveWhatsAppConfig(config);     setIsConfigModalOpen(false);     showStatus('WhatsApp API Gateway settings saved successfully!');"
+      },
+      {
+        "name": "handleSendPromotional",
+        "calls_pms_store": true,
+        "pms_methods": [
+          "getWhatsAppTemplate",
+          "sendWhatsAppNotification",
+          "renderWhatsAppMessage"
+        ],
+        "calls_set_state": true,
+        "body_preview": "if (!promoMobile || promoMobile.trim().length < 10) {       alert('Please enter a valid 10-digit mobile number');       return;     }     const msg = "
+      }
+    ]
+  },
+  {
+    "file": "src\\services\\api.ts",
+    "ls_calls": [
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "'svr_admin_api_key'"
+      }
+    ],
+    "state_inits": [],
+    "handlers_without_api": []
+  },
+  {
+    "file": "src\\services\\apiClient.ts",
+    "ls_calls": [
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "AUTH_KEYS.ACCESS_TOKEN"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "AUTH_KEYS.REFRESH_TOKEN"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "AUTH_KEYS.USER_ROLE"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "AUTH_KEYS.USER_INFO"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "AUTH_KEYS.ACCESS_TOKEN, accessToken"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "AUTH_KEYS.REFRESH_TOKEN, refreshToken"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "AUTH_KEYS.USER_ROLE, role"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "AUTH_KEYS.USER_INFO, JSON.stringify(user"
+      },
+      {
+        "type": "localStorage",
+        "action": "removeItem",
+        "arg": "AUTH_KEYS.ACCESS_TOKEN"
+      },
+      {
+        "type": "localStorage",
+        "action": "removeItem",
+        "arg": "AUTH_KEYS.REFRESH_TOKEN"
+      },
+      {
+        "type": "localStorage",
+        "action": "removeItem",
+        "arg": "AUTH_KEYS.USER_ROLE"
+      },
+      {
+        "type": "localStorage",
+        "action": "removeItem",
+        "arg": "AUTH_KEYS.USER_INFO"
+      }
+    ],
+    "state_inits": [],
+    "handlers_without_api": []
+  },
+  {
+    "file": "src\\services\\pmsStore.ts",
+    "ls_calls": [
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.SCHEMA_VERSION"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.ROOMS"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.CHECKINS"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "'hotel_pms_checkins'"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.CHECKINS, localStorage.getItem('hotel_pms_checkins'"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.FOOD_BILLS"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "'hotel_pms_foodbills'"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "'hotel_pms_food_bills'"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.FOOD_BILLS, legacyFb"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.TABLE_SHIFTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "'hotel_pms_table_shifts'"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.TABLE_SHIFTS, localStorage.getItem('hotel_pms_table_shifts'"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.COMPANY_INFO"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "'hotel_pms_company_info'"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.COMPANY_INFO, localStorage.getItem('hotel_pms_company_info'"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "'hotel_pms_checkouts'"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "'hotel_pms_checkouts'"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.CHECKOUTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.CHECKOUTS, JSON.stringify(current"
+      },
+      {
+        "type": "localStorage",
+        "action": "removeItem",
+        "arg": "'hotel_pms_checkouts'"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.COMPANY_INFO"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.COMPANY_INFO, JSON.stringify(upgradedComp"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.COMPANY_INFO, JSON.stringify(DEFAULT_COMPANY_INFO"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROOMS, JSON.stringify(updated"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.TABLES, JSON.stringify(state.tables"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.GST_MASTERS, JSON.stringify(state.masters.gst"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BUSINESS_SOURCES, JSON.stringify(state.masters.business_source"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.LOCKERS, JSON.stringify(state.masters.locker"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.OTHER_CHARGES, JSON.stringify(state.masters.other_charge"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.KOTS, JSON.stringify(state.kots"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.FOOD_BILLS, JSON.stringify(state.food_bills"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "'hotel_pms_foodbills', JSON.stringify(state.food_bills"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.EXPENSES, JSON.stringify(state.expenses"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.PURCHASES, JSON.stringify(state.purchases"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.FOLIO_DISCOUNTS, JSON.stringify(discountMap"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.GROUP_BOOKINGS, JSON.stringify(state.group_bookings"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.CHECKOUTS, JSON.stringify(state.checkouts"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify(state.advance_receipts"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROOM_SHIFTS, JSON.stringify(state.room_shifts"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.JOURNAL_ENTRIES, JSON.stringify(state.journal_entries"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.PARTY_ACCOUNTS, JSON.stringify(state.party_accounts"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.RECEIPTS, JSON.stringify(state.general_receipts"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.PAYMENTS, JSON.stringify(state.general_payments"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.GODOWNS, JSON.stringify(state.godowns"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ITEM_GROUPS, JSON.stringify(state.item_groups"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.STOCK_TRANSFERS, JSON.stringify(state.stock_transfers"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.USERS, JSON.stringify(state.users"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.COMMISSION_AGENTS, JSON.stringify(state.commission_agents"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.AGENT_PAYOUT_VOUCHERS, JSON.stringify(state.agent_payout_vouchers"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BANQUET_VENUES, JSON.stringify(state.banquet_venues"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BANQUET_BOOKINGS, JSON.stringify(state.banquet_bookings"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.LIQUOR_ITEMS, JSON.stringify(state.liquor_items"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BAR_INVOICES, JSON.stringify(state.bar_invoices"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.HOTEL_ASSETS, JSON.stringify(state.hotel_assets"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.LOCKERS, JSON.stringify(state.lockers"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.WHATSAPP_LOGS, JSON.stringify(state.whatsapp_logs"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.WHATSAPP_CONFIG, JSON.stringify(state.whatsapp_config"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.SUPPORT_TICKETS, JSON.stringify(state.support_tickets"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.COMPANY_INFO, JSON.stringify(state.hotel_settings"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BUSINESS_SETTINGS, JSON.stringify(bSettings"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROOM_TYPES, JSON.stringify(state.room_types"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.MENU_ITEMS, JSON.stringify(state.menu_items"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.HOUSEKEEPING, JSON.stringify(state.housekeeping"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.AGENT_COMMISSIONS, JSON.stringify(state.agent_commissions"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.WHATSAPP_TEMPLATES, JSON.stringify(state.whatsapp_templates"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROLES, JSON.stringify(state.roles"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.NO_DISCOUNT_CONFIG, JSON.stringify(state.no_discount_config"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.LIQUOR_BRANDS, JSON.stringify(state.liquor_brands"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.LIQUOR_UNITS, JSON.stringify(state.liquor_units"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.KEY_CARDS, JSON.stringify(state.key_cards"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.KOT_VOID_AUDIT, JSON.stringify(state.kot_void_audit"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.HOUSEKEEPING_DISCREPANCIES, JSON.stringify(state.housekeeping_discrepancies"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.NIGHT_AUDITS, JSON.stringify(state.night_audits"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.DISCOUNT_AUDIT_LOGS, JSON.stringify(state.discount_audit_logs"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.PROPERTIES, JSON.stringify(state.hotel_properties"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.SCHEMA_VERSION"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.ROOMS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROOMS, JSON.stringify(INITIAL_ROOMS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.SCHEMA_VERSION, this.SCHEMA_VERSION"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROOMS, JSON.stringify(rooms"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.BUSINESS_DATE"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BUSINESS_DATE, '2026-10-20'"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BUSINESS_DATE, d"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.JOURNAL_ENTRIES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.JOURNAL_ENTRIES, JSON.stringify(initial"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.JOURNAL_ENTRIES, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.KOT_VOID_AUDIT"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.KOT_VOID_AUDIT, JSON.stringify(logs"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROOMS, JSON.stringify(d.rooms"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROOM_TYPES, JSON.stringify(d.roomTypes"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.TABLES, JSON.stringify(d.tables"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.MENU_ITEMS, JSON.stringify(d.menuItems"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BOOKINGS, JSON.stringify(d.bookings"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.CHECKINS, JSON.stringify(d.checkIns"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "'hotel_pms_checkins', JSON.stringify(d.checkIns"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.CHECKOUTS, JSON.stringify(d.checkouts"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.KOTS, JSON.stringify(d.kots"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.FOOD_BILLS, JSON.stringify(fBills"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "'hotel_pms_foodbills', JSON.stringify(fBills"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.EXPENSES, JSON.stringify(d.expenses"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.RECEIPTS, JSON.stringify(d.receipts"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.PAYMENTS, JSON.stringify(d.payments"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.PARTY_ACCOUNTS, JSON.stringify(d.partyAccounts"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.HOUSEKEEPING, JSON.stringify(d.housekeeping"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.NIGHT_AUDITS, JSON.stringify(d.nightAudits"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.FOLIO_PAYMENTS, JSON.stringify(d.folioPayments"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify(d.advanceReceipts"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.JOURNAL_ENTRIES, JSON.stringify(d.journalEntries"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.KOT_VOID_AUDIT, JSON.stringify(d.kotVoidAudit"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.GODOWNS, JSON.stringify(d.godowns"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ITEM_GROUPS, JSON.stringify(d.itemGroups"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.PURCHASES, JSON.stringify(d.purchases"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.STOCK_TRANSFERS, JSON.stringify(d.stockTransfers"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.USERS, JSON.stringify(d.users"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROLES, JSON.stringify(d.roles"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BANQUET_VENUES, JSON.stringify(d.banquetVenues"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BANQUET_BOOKINGS, JSON.stringify(d.banquetBookings"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BAR_INVOICES, JSON.stringify(d.barInvoices"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.LIQUOR_STOCKS, JSON.stringify(d.liquorStocks"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.WHATSAPP_LOGS, JSON.stringify(d.whatsAppLogs"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.COMPANY_INFO, JSON.stringify(d.companyInfo"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "'pms_company_info', JSON.stringify(d.companyInfo"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BUSINESS_DATE, d.businessDate"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.SCHEMA_VERSION, parsed.schemaVersion || this.SCHEMA_VERSION"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROOMS, JSON.stringify(INITIAL_ROOMS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROOM_TYPES, JSON.stringify(INITIAL_ROOM_TYPES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.TABLES, JSON.stringify(INITIAL_TABLES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.MENU_ITEMS, JSON.stringify(INITIAL_MENU_ITEMS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.EXPENSES, JSON.stringify(INITIAL_EXPENSES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.HOUSEKEEPING, JSON.stringify(INITIAL_HOUSEKEEPING"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.NIGHT_AUDITS, JSON.stringify(INITIAL_NIGHT_AUDITS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.FOLIO_PAYMENTS, JSON.stringify(INITIAL_FOLIO_PAYMENTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BUSINESS_DATE, '2026-10-20'"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.SCHEMA_VERSION, this.SCHEMA_VERSION"
+      },
+      {
+        "type": "localStorage",
+        "action": "removeItem",
+        "arg": "STORAGE_KEYS.JOURNAL_ENTRIES"
+      },
+      {
+        "type": "localStorage",
+        "action": "removeItem",
+        "arg": "STORAGE_KEYS.KOT_VOID_AUDIT"
+      },
+      {
+        "type": "localStorage",
+        "action": "removeItem",
+        "arg": "STORAGE_KEYS.NIGHT_AUDIT_ACCRUALS"
+      },
+      {
+        "type": "localStorage",
+        "action": "removeItem",
+        "arg": "STORAGE_KEYS.FOLIO_DISCOUNTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "removeItem",
+        "arg": "STORAGE_KEYS.BOOKINGS"
+      },
+      {
+        "type": "localStorage",
+        "action": "removeItem",
+        "arg": "STORAGE_KEYS.KOTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "removeItem",
+        "arg": "STORAGE_KEYS.CHECKOUTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.HOUSEKEEPING"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.HOUSEKEEPING, JSON.stringify(INITIAL_HOUSEKEEPING"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.HOUSEKEEPING, JSON.stringify(records"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.EXPENSES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.EXPENSES, JSON.stringify(INITIAL_EXPENSES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.EXPENSES, JSON.stringify(expenses"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.EXPENSES, JSON.stringify(remaining"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.PAYMENTS, JSON.stringify(payments"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.NIGHT_AUDITS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.NIGHT_AUDITS, JSON.stringify(INITIAL_NIGHT_AUDITS"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.NIGHT_AUDIT_ACCRUALS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.NIGHT_AUDIT_ACCRUALS, JSON.stringify(accrualMap"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.NIGHT_AUDITS, JSON.stringify(audits"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.FOLIO_PAYMENTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.FOLIO_PAYMENTS, JSON.stringify(INITIAL_FOLIO_PAYMENTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.FOLIO_PAYMENTS, JSON.stringify(all"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.FOLIO_DISCOUNTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.FOLIO_DISCOUNTS, JSON.stringify(allDiscounts"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.FOLIO_DISCOUNTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.KOTS, JSON.stringify(kots"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.FOLIO_PAYMENTS, JSON.stringify(payments"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.FOLIO_DISCOUNTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.FOLIO_DISCOUNTS, JSON.stringify(allDiscounts"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify(advanceReceipts"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.OTHER_CHARGES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.OTHER_CHARGES, JSON.stringify(charges"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.FOOD_BILLS, JSON.stringify(allFoodBills"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "'hotel_pms_foodbills', JSON.stringify(allFoodBills"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.ROOM_TYPES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROOM_TYPES, JSON.stringify(INITIAL_ROOM_TYPES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROOM_TYPES, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROOM_TYPES, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.TABLES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.TABLES, JSON.stringify(INITIAL_TABLES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.TABLES, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.TABLES, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.GST_MASTERS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.GST_MASTERS, JSON.stringify(INITIAL_GST_MASTERS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.GST_MASTERS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.GST_MASTERS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.BUSINESS_SOURCES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BUSINESS_SOURCES, JSON.stringify(INITIAL_BUSINESS_SOURCES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BUSINESS_SOURCES, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BUSINESS_SOURCES, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.VOUCHER_TYPES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.VOUCHER_TYPES, JSON.stringify(INITIAL_VOUCHER_TYPES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.VOUCHER_TYPES, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.LOCKERS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.LOCKERS, JSON.stringify(INITIAL_LOCKERS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.LOCKERS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.LOCKERS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.OTHER_CHARGES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.OTHER_CHARGES, JSON.stringify(INITIAL_OTHER_CHARGES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.OTHER_CHARGES, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.OTHER_CHARGES, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.MENU_ITEMS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.MENU_ITEMS, JSON.stringify(INITIAL_MENU_ITEMS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.MENU_ITEMS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.MENU_ITEMS, JSON.stringify(items"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.MENU_ITEMS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.BUSINESS_SETTINGS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BUSINESS_SETTINGS, JSON.stringify(DEFAULT_BUSINESS_SETTING"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BUSINESS_SETTINGS, JSON.stringify(settings"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.BOOKINGS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BOOKINGS, JSON.stringify(INITIAL_BOOKINGS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BOOKINGS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify(advances"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BOOKINGS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.CHECKINS"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "'hotel_pms_checkins'"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.CHECKINS, JSON.stringify(defaultCheckIns"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "'hotel_pms_checkins', JSON.stringify(defaultCheckIns"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.CHECKINS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "'hotel_pms_checkins', JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify(advances"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.CHECKINS, JSON.stringify(remaining"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "'hotel_pms_checkins', JSON.stringify(remaining"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.KOTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.KOTS, JSON.stringify(initialKots"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.KOTS, JSON.stringify(updated"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.KOTS, JSON.stringify(updated"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.KOTS, JSON.stringify(updated"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.KOTS, JSON.stringify(updated"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.KOTS, JSON.stringify(kots"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.TABLES, JSON.stringify(updatedTables"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.KOTS, JSON.stringify(updatedKots"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.TABLES, JSON.stringify(updatedTables"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "'hotel_pms_table_shifts'"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.TABLE_SHIFTS, JSON.stringify(shifts"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "'hotel_pms_table_shifts', JSON.stringify(shifts"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.KOTS, JSON.stringify(kots"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.TABLES, JSON.stringify(updatedTables"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.TABLE_SESSIONS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.TABLE_SESSIONS, JSON.stringify(sessions"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.TABLES, JSON.stringify(updatedTables"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.KOTS, JSON.stringify(kots"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.TABLES, JSON.stringify(tables"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.KOT_VOID_AUDIT, JSON.stringify(logs"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.NIGHT_AUDITS, JSON.stringify(audits"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.HOUSEKEEPING_DISCREPANCIES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.HOUSEKEEPING_DISCREPANCIES, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.HOUSEKEEPING_DISCREPANCIES, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.KEY_CARDS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.KEY_CARDS, JSON.stringify(defaults"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.KEY_CARDS, JSON.stringify(cards"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.KEY_CARDS, JSON.stringify(cards"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.GROUP_BOOKINGS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.GROUP_BOOKINGS, JSON.stringify([defaultGroup]"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.GROUP_BOOKINGS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.GROUP_BOOKINGS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.TABLE_SHIFTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "'hotel_pms_table_shifts'"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.FOOD_BILLS"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "'hotel_pms_foodbills'"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "'hotel_pms_food_bills'"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.FOOD_BILLS, JSON.stringify(initialBills"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "'hotel_pms_foodbills', JSON.stringify(initialBills"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.FOOD_BILLS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "'hotel_pms_foodbills', JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.CHECKOUTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.CHECKOUTS, JSON.stringify(initialCheckouts"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.CHECKOUTS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.CHECKINS, JSON.stringify(checkIns"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "'hotel_pms_checkins', JSON.stringify(checkIns"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.FOOD_BILLS, JSON.stringify(allFoodBills"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "'hotel_pms_foodbills', JSON.stringify(allFoodBills"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.CHECKOUTS, JSON.stringify(remaining"
+      },
+      {
+        "type": "localStorage",
+        "action": "removeItem",
+        "arg": "'hotel_pms_checkouts'"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.RECEIPTS, JSON.stringify(receipts"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.ADVANCE_RECEIPTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify(initialReceipts"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify(remaining"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.RECEIPTS, JSON.stringify(receipts"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "'pms_company_info'"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "'pms_company_info', JSON.stringify(DEFAULT_COMPANY_INFO"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "'pms_company_info', JSON.stringify(info"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.ROOM_SHIFTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.KOTS, JSON.stringify(updatedKots"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.FOOD_BILLS, JSON.stringify(allFoodBills"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "'hotel_pms_foodbills', JSON.stringify(allFoodBills"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.CHECKINS, JSON.stringify(checkIns"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "'hotel_pms_checkins', JSON.stringify(checkIns"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify(updatedAdvances"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.FOLIO_PAYMENTS, JSON.stringify(payments"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.OTHER_CHARGES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.OTHER_CHARGES, JSON.stringify(charges"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.FOLIO_DISCOUNTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.FOLIO_DISCOUNTS, JSON.stringify(allDiscounts"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROOM_SHIFTS, JSON.stringify(shifts"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.RECEIPTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.RECEIPTS, JSON.stringify(INITIAL_RECEIPTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.RECEIPTS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.RECEIPTS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.PARTY_ACCOUNTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.PARTY_ACCOUNTS, JSON.stringify(INITIAL_PARTY_ACCOUNTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.PARTY_ACCOUNTS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.PAYMENTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.PAYMENTS, JSON.stringify(INITIAL_PAYMENTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.PAYMENTS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.PAYMENTS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.ITEM_GROUPS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ITEM_GROUPS, JSON.stringify(INITIAL_ITEM_GROUPS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ITEM_GROUPS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ITEM_GROUPS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.GODOWNS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.GODOWNS, JSON.stringify(INITIAL_GODOWNS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.GODOWNS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.GODOWNS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.PURCHASES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.PURCHASES, JSON.stringify(INITIAL_PURCHASES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.PURCHASES, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.PURCHASES, JSON.stringify(remaining"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.PAYMENTS, JSON.stringify(payments"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.STOCK_TRANSFERS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.STOCK_TRANSFERS, JSON.stringify(INITIAL_STOCK_TRANSFERS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.STOCK_TRANSFERS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.STOCK_TRANSFERS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.ROLES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROLES, JSON.stringify(roles"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROLES, JSON.stringify(roles"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROLES, JSON.stringify(roles"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROLES, JSON.stringify(roles"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.USERS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.USERS, JSON.stringify(users"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.USERS, JSON.stringify(users"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.USERS, JSON.stringify(users"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.USERS, JSON.stringify(users"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.CURRENT_USER"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.CURRENT_USER, JSON.stringify(admin"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.CURRENT_USER, JSON.stringify(user"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.PROPERTIES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.PROPERTIES, JSON.stringify(INITIAL_CHAIN_PROPERTIES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.PROPERTIES, JSON.stringify(props"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.CURRENT_PROPERTY"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.CURRENT_PROPERTY, JSON.stringify(current"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.CURRENT_PROPERTY, JSON.stringify(selected"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.WHATSAPP_TEMPLATES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.WHATSAPP_TEMPLATES, JSON.stringify(INITIAL_WHATSAPP_TEMPLATES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.WHATSAPP_TEMPLATES, JSON.stringify(templates"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.WHATSAPP_CONFIG"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.WHATSAPP_CONFIG, JSON.stringify(INITIAL_WHATSAPP_CONFIG"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.WHATSAPP_CONFIG, JSON.stringify(config"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.WHATSAPP_LOGS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.WHATSAPP_LOGS, JSON.stringify(INITIAL_WHATSAPP_LOGS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.WHATSAPP_LOGS, JSON.stringify(trimmed"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.WHATSAPP_LOGS, JSON.stringify([]"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROOMS, JSON.stringify(d.rooms"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROOM_TYPES, JSON.stringify((d as any"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.TABLES, JSON.stringify((d as any"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.MENU_ITEMS, JSON.stringify((d as any"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BOOKINGS, JSON.stringify(d.bookings"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.CHECKINS, JSON.stringify(d.checkIns"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "'hotel_pms_checkins', JSON.stringify(d.checkIns"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.CHECKOUTS, JSON.stringify((d as any"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify((d as any"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.KOTS, JSON.stringify(d.kots"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.FOOD_BILLS, JSON.stringify(bills"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "'hotel_pms_foodbills', JSON.stringify(bills"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.PAYMENTS, JSON.stringify(d.payments"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.RECEIPTS, JSON.stringify((d as any"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.EXPENSES, JSON.stringify((d as any"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.PARTY_ACCOUNTS, JSON.stringify((d as any"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.HOUSEKEEPING, JSON.stringify((d as any"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.NIGHT_AUDITS, JSON.stringify((d as any"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.FOLIO_PAYMENTS, JSON.stringify((d as any"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.USERS, JSON.stringify(d.users"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROLES, JSON.stringify((d as any"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.GODOWNS, JSON.stringify((d as any"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ITEM_GROUPS, JSON.stringify((d as any"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.PURCHASES, JSON.stringify((d as any"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.STOCK_TRANSFERS, JSON.stringify((d as any"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BANQUET_VENUES, JSON.stringify((d as any"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BANQUET_BOOKINGS, JSON.stringify((d as any"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BAR_INVOICES, JSON.stringify((d as any"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.LIQUOR_STOCKS, JSON.stringify((d as any"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.WHATSAPP_LOGS, JSON.stringify(d.whatsAppLogs"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.COMPANY_INFO, JSON.stringify(d.companyInfo"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "'pms_company_info', JSON.stringify(d.companyInfo"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BUSINESS_DATE, (d as any"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "key"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "'pms_default_bill_format'"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "'pms_default_bill_format', format"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.SUPPORT_TICKETS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.SUPPORT_TICKETS, JSON.stringify(INITIAL_SUPPORT_TICKETS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.SUPPORT_TICKETS, JSON.stringify(tickets"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.SUPPORT_TICKETS, JSON.stringify(tickets"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.SUPPORT_TICKETS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.DEMO_REQUESTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.DEMO_REQUESTS, JSON.stringify([]"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.DEMO_REQUESTS, JSON.stringify(requests"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.COMMISSION_AGENTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.COMMISSION_AGENTS, JSON.stringify(INITIAL_COMMISSION_AGENTS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.COMMISSION_AGENTS, JSON.stringify(agents"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.AGENT_COMMISSIONS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.AGENT_COMMISSIONS, JSON.stringify(INITIAL_AGENT_COMMISSIONS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.AGENT_COMMISSIONS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.AGENT_COMMISSIONS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.AGENT_PAYOUT_VOUCHERS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.AGENT_PAYOUT_VOUCHERS, JSON.stringify(INITIAL_AGENT_PAYOUT_VOUCHERS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.AGENT_PAYOUT_VOUCHERS, JSON.stringify(vouchers"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.AGENT_COMMISSIONS, JSON.stringify(comms"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.LIQUOR_UNITS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.LIQUOR_UNITS, JSON.stringify(INITIAL_LIQUOR_UNITS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.LIQUOR_UNITS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.LIQUOR_BRANDS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.LIQUOR_BRANDS, JSON.stringify(INITIAL_LIQUOR_BRANDS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.LIQUOR_BRANDS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.LIQUOR_ITEMS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.LIQUOR_ITEMS, JSON.stringify(INITIAL_LIQUOR_ITEMS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.LIQUOR_ITEMS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.LIQUOR_ITEMS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.LIQUOR_STOCKS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.LIQUOR_STOCKS, JSON.stringify(INITIAL_LIQUOR_STOCKS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.LIQUOR_STOCKS, JSON.stringify(stocks"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.LIQUOR_STOCKS, JSON.stringify(stocks"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.BAR_INVOICES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BAR_INVOICES, JSON.stringify(INITIAL_BAR_INVOICES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BAR_INVOICES, JSON.stringify(invoices"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROOMS, JSON.stringify(rooms"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BAR_INVOICES, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.NO_DISCOUNT_CONFIG"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.NO_DISCOUNT_CONFIG, JSON.stringify(DEFAULT_NO_DISCOUNT_CONFIG"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.NO_DISCOUNT_CONFIG, JSON.stringify(cfg"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.DISCOUNT_AUDIT_LOGS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.DISCOUNT_AUDIT_LOGS, JSON.stringify(INITIAL_DISCOUNT_AUDIT_LOGS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.DISCOUNT_AUDIT_LOGS, JSON.stringify(logs"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.HOTEL_ASSETS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.HOTEL_ASSETS, JSON.stringify(INITIAL_HOTEL_ASSETS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.HOTEL_ASSETS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.HOTEL_ASSETS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.BANQUET_VENUES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BANQUET_VENUES, JSON.stringify(INITIAL_BANQUET_VENUES"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BANQUET_VENUES, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROOMS, JSON.stringify(rooms"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BANQUET_VENUES, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "getItem",
+        "arg": "STORAGE_KEYS.BANQUET_BOOKINGS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BANQUET_BOOKINGS, JSON.stringify(INITIAL_BANQUET_BOOKINGS"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BANQUET_BOOKINGS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BANQUET_VENUES, JSON.stringify(venues"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BANQUET_BOOKINGS, JSON.stringify(list"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.PARTY_ACCOUNTS, JSON.stringify(accounts"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.PARTY_ACCOUNTS, JSON.stringify(accounts"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BANQUET_VENUES, JSON.stringify(venues"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROOMS, JSON.stringify(rooms"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.BANQUET_VENUES, JSON.stringify(venues"
+      },
+      {
+        "type": "localStorage",
+        "action": "setItem",
+        "arg": "STORAGE_KEYS.ROOMS, JSON.stringify(rooms"
+      }
+    ],
+    "state_inits": [],
+    "handlers_without_api": []
+  }
+]

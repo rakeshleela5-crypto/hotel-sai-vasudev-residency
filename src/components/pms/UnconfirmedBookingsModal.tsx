@@ -48,6 +48,8 @@ export const UnconfirmedBookingsModal: React.FC<UnconfirmedBookingsModalProps> =
     if (isOpen) {
       refreshData();
       setConfirmBannerMessage(null);
+      const unsub = PmsStore.subscribe(refreshData);
+      return () => unsub();
     }
   }, [isOpen]);
 

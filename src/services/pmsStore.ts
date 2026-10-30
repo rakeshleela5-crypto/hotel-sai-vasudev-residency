@@ -2676,7 +2676,8 @@ const STORAGE_KEYS = {
   TABLE_SESSIONS: 'svr_pms_table_sessions',
   KEY_CARDS: 'svr_pms_rfid_keycards',
   HOUSEKEEPING_DISCREPANCIES: 'svr_pms_hk_discrepancies',
-  GROUP_BOOKINGS: 'svr_pms_group_bookings'
+  GROUP_BOOKINGS: 'svr_pms_group_bookings',
+  SHIFT_HANDOVERS: 'svr_pms_shift_handovers'
 };
 
 export const INITIAL_EXPENSES: PmsExpenseRecord[] = [
@@ -3999,6 +4000,11 @@ export class PmsStore {
     } catch {
       return INITIAL_EXPENSES;
     }
+  }
+
+  static syncExpenses(expenses: PmsExpenseRecord[]): void {
+    localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(expenses));
+    this.notify();
   }
 
   static addExpense(exp: Omit<PmsExpenseRecord, 'id' | 'expenseNo' | 'createdAt'>): PmsExpenseRecord {
@@ -6500,6 +6506,9 @@ export class PmsStore {
       }
     }
 
+    this.notify();
+    hotelApi.deleteKotTicket(target.kotNo).catch(e => console.warn('[PmsStore] Cloud KOT cancel note:', e));
+
     return {
       success: true,
       message: `KOT ${target.kotNo} cancelled successfully with reason: ${reason || 'NOT REQ'}`
@@ -7108,6 +7117,11 @@ export class PmsStore {
     }
   }
 
+  static syncHousekeepingDiscrepancies(discrepancies: HousekeepingDiscrepancy[]): void {
+    localStorage.setItem(STORAGE_KEYS.HOUSEKEEPING_DISCREPANCIES, JSON.stringify(discrepancies));
+    this.notify();
+  }
+
   static recordHousekeepingDiscrepancy(disc: HousekeepingDiscrepancy): void {
     const list = this.getHousekeepingDiscrepancies();
     list.unshift(disc);
@@ -7186,6 +7200,11 @@ export class PmsStore {
     }
   }
 
+  static syncKeyCards(cards: RfidKeyCard[]): void {
+    localStorage.setItem(STORAGE_KEYS.KEY_CARDS, JSON.stringify(cards));
+    this.notify();
+  }
+
   static encodeKeyCard(
     roomNo: string,
     guestName: string,
@@ -7224,6 +7243,18 @@ export class PmsStore {
     cards.unshift(newCard);
     localStorage.setItem(STORAGE_KEYS.KEY_CARDS, JSON.stringify(cards));
     this.notify();
+
+    hotelApi.encodeKeycard({
+      card_number: newCard.cardUid,
+      card_uuid: newCard.cardUid,
+      room_no: newCard.roomNo,
+      guest_name: newCard.guestName,
+      check_in_time: newCard.checkInTime,
+      valid_until: newCard.scheduledCheckoutTime,
+      status: newCard.status,
+      issued_by: encodedBy
+    }).catch(e => console.warn('[PmsStore] Keycard cloud sync note:', e));
+
     return newCard;
   }
 
@@ -9060,6 +9091,13 @@ export class PmsStore {
     }
   }
 
+  static syncCompanyInfo(info: Partial<PmsCompanyInfo>): void {
+    const current = this.getCompanyInfo();
+    const merged = { ...current, ...info };
+    localStorage.setItem('pms_company_info', JSON.stringify(merged));
+    this.notify();
+  }
+
   static saveCompanyInfo(info: PmsCompanyInfo): void {
     localStorage.setItem('pms_company_info', JSON.stringify(info));
     hotelApi.saveCompanyInfo({
@@ -9441,6 +9479,11 @@ export class PmsStore {
     }
   }
 
+  static syncReceipts(receipts: PmsReceiptRecord[]): void {
+    localStorage.setItem(STORAGE_KEYS.RECEIPTS, JSON.stringify(receipts));
+    this.notify();
+  }
+
   static saveReceipt(receipt: PmsReceiptRecord): void {
     const list = this.getReceipts();
     const idx = list.findIndex(r => r.receiptNo === receipt.receiptNo || r.id === receipt.id);
@@ -9521,6 +9564,11 @@ export class PmsStore {
     } catch {
       return INITIAL_PAYMENTS;
     }
+  }
+
+  static syncPayments(payments: PmsPaymentRecord[]): void {
+    localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(payments));
+    this.notify();
   }
 
   static savePayment(payment: PmsPaymentRecord): void {
@@ -9650,6 +9698,11 @@ export class PmsStore {
     }
   }
 
+  static syncPurchases(purchases: PmsPurchaseBill[]): void {
+    localStorage.setItem(STORAGE_KEYS.PURCHASES, JSON.stringify(purchases));
+    this.notify();
+  }
+
   static savePurchase(bill: PmsPurchaseBill): void {
     const list = this.getPurchases();
     const idx = list.findIndex(p => p.id === bill.id || p.billNo === bill.billNo);
@@ -9758,6 +9811,11 @@ export class PmsStore {
     } catch {
       return INITIAL_STOCK_TRANSFERS;
     }
+  }
+
+  static syncStockTransfers(transfers: PmsStockTransfer[]): void {
+    localStorage.setItem(STORAGE_KEYS.STOCK_TRANSFERS, JSON.stringify(transfers));
+    this.notify();
   }
 
   static saveStockTransfer(transfer: PmsStockTransfer): void {
@@ -9989,6 +10047,11 @@ export class PmsStore {
 
   static saveUsers(users: PmsUserAccount[]): void {
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+  }
+
+  static syncUsers(users: PmsUserAccount[]): void {
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+    this.notify();
   }
 
   static getUserById(id: number): PmsUserAccount | undefined {
@@ -12112,6 +12175,11 @@ export class PmsStore {
     this.notify();
   }
 
+  static syncShiftHandovers(handovers: PmsShiftHandoverRecord[]): void {
+    localStorage.setItem(STORAGE_KEYS.SHIFT_HANDOVERS, JSON.stringify(handovers));
+    this.notify();
+  }
+
   // ==========================================
   // Video 30: Training & Support Suite Methods (Frames 0060-0230)
   // ==========================================
@@ -12303,6 +12371,16 @@ export class PmsStore {
     hotelApi.saveCommissionAgent(agent).catch(e => console.warn('[PmsStore] Commission agent cloud sync note:', e));
   }
 
+  static syncCommissionAgents(agents: PmsCommissionAgent[]): void {
+    localStorage.setItem(STORAGE_KEYS.COMMISSION_AGENTS, JSON.stringify(agents));
+    this.notify();
+  }
+
+  static syncAgentCommissions(commissions: PmsAgentCommissionBooking[]): void {
+    localStorage.setItem(STORAGE_KEYS.AGENT_COMMISSIONS, JSON.stringify(commissions));
+    this.notify();
+  }
+
   static getAgentCommissionBookings(agentId?: string, status?: string): PmsAgentCommissionBooking[] {
     const raw = localStorage.getItem(STORAGE_KEYS.AGENT_COMMISSIONS);
     let list: PmsAgentCommissionBooking[];
@@ -12377,6 +12455,11 @@ export class PmsStore {
       return vouchers.filter(v => v.agentId === agentId);
     }
     return vouchers;
+  }
+
+  static syncAgentPayoutVouchers(vouchers: PmsAgentPayoutVoucher[]): void {
+    localStorage.setItem(STORAGE_KEYS.AGENT_PAYOUT_VOUCHERS, JSON.stringify(vouchers));
+    this.notify();
   }
 
   static recordAgentCommissionPayout(payload: {
@@ -12555,6 +12638,11 @@ export class PmsStore {
     hotelApi.deleteLiquorItem(itemCode).catch(e => console.warn('[PmsStore] Liquor item delete note:', e));
   }
 
+  static syncLiquorItems(items: PmsLiquorItem[]): void {
+    localStorage.setItem(STORAGE_KEYS.LIQUOR_ITEMS, JSON.stringify(items));
+    this.notify();
+  }
+
   static getBrandWiseLiquorStocks(): PmsBrandWiseLiquorStock[] {
     const raw = localStorage.getItem(STORAGE_KEYS.LIQUOR_STOCKS);
     if (!raw) {
@@ -12566,6 +12654,11 @@ export class PmsStore {
     } catch {
       return INITIAL_LIQUOR_STOCKS;
     }
+  }
+
+  static syncLiquorStocks(stocks: PmsBrandWiseLiquorStock[]): void {
+    localStorage.setItem(STORAGE_KEYS.LIQUOR_STOCKS, JSON.stringify(stocks));
+    this.notify();
   }
 
   static recordLiquorSaleDeduction(brand: string, mlSold: number): void {
@@ -12587,6 +12680,13 @@ export class PmsStore {
     record.closingBottel = Number((record.closingMl / (record.bottleMl || 750)).toFixed(2));
     record.lastUpdated = new Date().toISOString();
     localStorage.setItem(STORAGE_KEYS.LIQUOR_STOCKS, JSON.stringify(stocks));
+    hotelApi.saveLiquorStock({
+      brand: record.brand,
+      bottle_size_ml: record.bottleMl || 750,
+      opening_bottles: record.closingBottel,
+      received_bottles: 0,
+      closing_bottles: record.closingBottel
+    }).catch(e => console.warn('[PmsStore] Liquor sale stock sync note:', e));
   }
 
   static recordLiquorPurchaseInward(brand: string, bottleQty: number, bottleMl = 750): void {
@@ -12610,6 +12710,13 @@ export class PmsStore {
       record.lastUpdated = new Date().toISOString();
     }
     localStorage.setItem(STORAGE_KEYS.LIQUOR_STOCKS, JSON.stringify(stocks));
+    hotelApi.saveLiquorStock({
+      brand: record.brand,
+      bottle_size_ml: record.bottleMl || 750,
+      opening_bottles: record.closingBottel,
+      received_bottles: bottleQty,
+      closing_bottles: record.closingBottel
+    }).catch(e => console.warn('[PmsStore] Liquor purchase stock sync note:', e));
   }
 
   static getBarInvoices(): PmsBarInvoice[] {

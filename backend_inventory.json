@@ -1,0 +1,2374 @@
+{
+  "models": {
+    "Room": {
+      "table_name": "rooms",
+      "columns": [
+        "id",
+        "name",
+        "slug",
+        "room_type",
+        "price_per_night",
+        "capacity",
+        "total_inventory",
+        "bed_type",
+        "room_size",
+        "description",
+        "amenities",
+        "image_url",
+        "badge",
+        "is_available",
+        "housekeeping_status",
+        "version_id",
+        "created_at"
+      ]
+    },
+    "Booking": {
+      "table_name": "bookings",
+      "columns": [
+        "id",
+        "booking_ref",
+        "invoice_number",
+        "room_id",
+        "guest_name",
+        "guest_email",
+        "guest_phone",
+        "id_proof_type",
+        "id_proof_number",
+        "id_proof_document_key",
+        "guest_photo_url",
+        "invoice_pdf_key",
+        "check_in_date",
+        "check_out_date",
+        "actual_check_in",
+        "actual_check_out",
+        "adults",
+        "children",
+        "total_nights",
+        "base_rate",
+        "base_amount",
+        "extra_guest_charge",
+        "discount_amount",
+        "gst_rate",
+        "cgst_amount",
+        "sgst_amount",
+        "total_tax",
+        "total_price",
+        "total_paid",
+        "balance_due",
+        "key_deposit",
+        "payment_status",
+        "payment_method",
+        "status",
+        "special_requests",
+        "cancellation_reason",
+        "version_id",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    "BookingPayment": {
+      "table_name": "booking_payments",
+      "columns": [
+        "id",
+        "booking_id",
+        "receipt_number",
+        "payment_type",
+        "payment_mode",
+        "amount",
+        "transaction_ref",
+        "notes",
+        "collected_by",
+        "created_at"
+      ]
+    },
+    "RoomShift": {
+      "table_name": "room_shifts",
+      "columns": [
+        "id",
+        "booking_id",
+        "from_room_id",
+        "to_room_id",
+        "shift_date",
+        "reason",
+        "old_rate",
+        "new_rate",
+        "shifted_by",
+        "created_at"
+      ]
+    },
+    "RoomFolioItem": {
+      "table_name": "room_folio_items",
+      "columns": [
+        "id",
+        "booking_id",
+        "item_type",
+        "description",
+        "sac_code",
+        "kot_number",
+        "quantity",
+        "unit_price",
+        "taxable_amount",
+        "gst_rate",
+        "cgst_amount",
+        "sgst_amount",
+        "total_amount",
+        "status",
+        "created_at"
+      ]
+    },
+    "PoliceStationLog": {
+      "table_name": "police_station_logs",
+      "columns": [
+        "id",
+        "booking_id",
+        "guest_name",
+        "age",
+        "gender",
+        "nationality",
+        "id_proof_type",
+        "id_proof_number",
+        "permanent_address",
+        "origin_city",
+        "next_destination",
+        "purpose_of_visit",
+        "vehicle_number",
+        "is_foreign_national",
+        "passport_number",
+        "visa_number",
+        "visa_validity",
+        "port_of_arrival",
+        "date_of_entry_india",
+        "id_document_key",
+        "created_at"
+      ]
+    },
+    "AuditLog": {
+      "table_name": "audit_logs",
+      "columns": [
+        "id",
+        "staff_id",
+        "role",
+        "action",
+        "entity_type",
+        "entity_id",
+        "old_data",
+        "new_data",
+        "ip_address",
+        "created_at",
+        "event_type",
+        "booking_ref",
+        "performed_by",
+        "details_json"
+      ]
+    },
+    "DailyNightAudit": {
+      "table_name": "night_audits",
+      "columns": [
+        "id",
+        "audit_date",
+        "total_rooms_occupied",
+        "total_room_revenue",
+        "total_food_revenue",
+        "total_gst_collected",
+        "no_shows_processed",
+        "cash_in_drawer",
+        "card_total",
+        "upi_total",
+        "btc_credit_total",
+        "audited_by",
+        "audit_status",
+        "created_at"
+      ]
+    },
+    "Inquiry": {
+      "table_name": "inquiries",
+      "columns": [
+        "id",
+        "name",
+        "email",
+        "phone",
+        "subject",
+        "message",
+        "status",
+        "created_at"
+      ]
+    },
+    "DiningTable": {
+      "table_name": "dining_tables",
+      "columns": [
+        "id",
+        "table_code",
+        "table_name",
+        "table_group",
+        "capacity",
+        "status",
+        "active_session_id",
+        "merged_with_tables",
+        "created_at"
+      ]
+    },
+    "KotTicket": {
+      "table_name": "kot_tickets",
+      "columns": [
+        "id",
+        "kot_no",
+        "table_session_id",
+        "kot_sequence",
+        "date",
+        "time",
+        "table_no",
+        "room_no",
+        "waiter_name",
+        "guest_name",
+        "pax",
+        "items_json",
+        "delta_items_json",
+        "total_amount",
+        "status",
+        "is_printed",
+        "is_delta",
+        "order_source",
+        "created_at"
+      ]
+    },
+    "KotVoidAuditLog": {
+      "table_name": "kot_void_audit_logs",
+      "columns": [
+        "id",
+        "table_session_id",
+        "kot_no",
+        "table_no",
+        "item_name",
+        "qty_voided",
+        "rate",
+        "amount",
+        "steward_id",
+        "approving_manager_id",
+        "manager_pin_verified",
+        "void_reason",
+        "timestamp"
+      ]
+    },
+    "KeyCardAccess": {
+      "table_name": "key_card_access",
+      "columns": [
+        "id",
+        "card_uid",
+        "room_no",
+        "guest_name",
+        "check_in_time",
+        "scheduled_checkout_time",
+        "card_deactivation_time",
+        "status",
+        "extension_logged",
+        "extension_fee",
+        "encoded_by",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    "HousekeepingDiscrepancy": {
+      "table_name": "housekeeping_discrepancies",
+      "columns": [
+        "id",
+        "discrepancy_id",
+        "room_no",
+        "front_desk_status",
+        "housekeeping_status",
+        "reported_by",
+        "reported_at",
+        "resolved",
+        "resolved_by",
+        "resolved_at",
+        "notes",
+        "is_short_stay_suspect"
+      ]
+    },
+    "MasterItem": {
+      "table_name": "master_items",
+      "columns": [
+        "id",
+        "category",
+        "code",
+        "name",
+        "payload_json",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    "StaffUser": {
+      "table_name": "staff_users",
+      "columns": [
+        "id",
+        "username",
+        "display_name",
+        "role_name",
+        "department",
+        "phone",
+        "email",
+        "is_active",
+        "permissions_json",
+        "password_hash",
+        "created_at"
+      ]
+    },
+    "InventoryPurchase": {
+      "table_name": "inventory_purchases",
+      "columns": [
+        "id",
+        "bill_no",
+        "bill_date",
+        "godown",
+        "supplier_name",
+        "items_json",
+        "total_amount",
+        "tax_amount",
+        "net_amount",
+        "terms",
+        "created_at"
+      ]
+    },
+    "PaymentTransaction": {
+      "table_name": "payment_transactions",
+      "columns": [
+        "id",
+        "reference_id",
+        "booking_id",
+        "kot_id",
+        "room_no",
+        "amount",
+        "currency",
+        "purpose_message",
+        "payment_method",
+        "status",
+        "decentro_txn_id",
+        "bank_reference_number",
+        "payer_vpa",
+        "qr_code_base64",
+        "upi_intent_link",
+        "expiry_time",
+        "metadata_json",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    "VirtualAccount": {
+      "table_name": "virtual_accounts",
+      "columns": [
+        "id",
+        "reference_id",
+        "corporate_client_id",
+        "booking_id",
+        "group_id",
+        "account_number",
+        "ifsc_code",
+        "bank_name",
+        "account_name",
+        "upi_id",
+        "decentro_urn",
+        "status",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    "FoodBill": {
+      "table_name": "food_bills",
+      "columns": [
+        "id",
+        "bill_no",
+        "date",
+        "time",
+        "room_no",
+        "table_no",
+        "guest_name",
+        "kot_numbers_json",
+        "items_json",
+        "food_gross_amount",
+        "discount_percent",
+        "discount_amount",
+        "taxable_amount",
+        "gst_amount",
+        "net_bill_amount",
+        "settlement_type",
+        "status",
+        "created_at"
+      ]
+    },
+    "PettyExpense": {
+      "table_name": "petty_expenses",
+      "columns": [
+        "id",
+        "expense_no",
+        "date",
+        "category",
+        "amount",
+        "payment_mode",
+        "paid_to",
+        "description",
+        "bill_number",
+        "approved_by",
+        "created_at"
+      ]
+    },
+    "FolioDiscountRecord": {
+      "table_name": "folio_discount_records",
+      "columns": [
+        "id",
+        "booking_ref",
+        "room_no",
+        "discount_type",
+        "discount_value",
+        "discount_amount",
+        "reason",
+        "approved_by",
+        "created_at"
+      ]
+    },
+    "GroupBooking": {
+      "table_name": "group_bookings",
+      "columns": [
+        "id",
+        "group_id",
+        "group_name",
+        "contact_person",
+        "contact_phone",
+        "booking_source",
+        "check_in_date",
+        "check_out_date",
+        "advance_paid",
+        "balance_due",
+        "total_amount",
+        "rooms_allocated_json",
+        "guests_json",
+        "special_instructions",
+        "status",
+        "created_at"
+      ]
+    },
+    "CheckoutRecord": {
+      "table_name": "checkout_records",
+      "columns": [
+        "id",
+        "invoice_no",
+        "room_no",
+        "room_type",
+        "guest_name",
+        "guest_phone",
+        "check_in_date",
+        "check_in_time",
+        "check_out_date",
+        "check_out_time",
+        "calculation_type",
+        "number_of_days",
+        "per_day_tariff",
+        "total_room_rent",
+        "food_amount",
+        "gst_percent",
+        "gst_amount",
+        "cgst_amount",
+        "sgst_amount",
+        "add_others",
+        "less_discount",
+        "advance_deducted",
+        "bill_amount",
+        "net_payable",
+        "payment_mode",
+        "payments_json",
+        "checkout_remark",
+        "city",
+        "state",
+        "country",
+        "pin_code",
+        "sac_code",
+        "invoice_format",
+        "created_at"
+      ]
+    },
+    "AdvanceReceipt": {
+      "table_name": "advance_receipts",
+      "columns": [
+        "id",
+        "receipt_no",
+        "voucher_no",
+        "date",
+        "time",
+        "voucher_name",
+        "room_no",
+        "guest_name",
+        "mobile",
+        "amount",
+        "payment_mode",
+        "remark",
+        "created_at"
+      ]
+    },
+    "JournalEntry": {
+      "table_name": "journal_entries",
+      "columns": [
+        "id",
+        "entry_id",
+        "date",
+        "time",
+        "voucher_type",
+        "reference_no",
+        "narration",
+        "debit_account",
+        "credit_account",
+        "amount_paise",
+        "amount_rupees",
+        "posted_by",
+        "created_at"
+      ]
+    },
+    "PartyAccount": {
+      "table_name": "party_accounts",
+      "columns": [
+        "id",
+        "name",
+        "mobile",
+        "category",
+        "balance",
+        "balance_type",
+        "gstin",
+        "address",
+        "created_at"
+      ]
+    },
+    "GeneralReceipt": {
+      "table_name": "general_receipts",
+      "columns": [
+        "id",
+        "s_no",
+        "voucher_name",
+        "receipt_no",
+        "voucher_no",
+        "date",
+        "payment_mode",
+        "account_name",
+        "account_mobile",
+        "amount",
+        "remark",
+        "created_at"
+      ]
+    },
+    "GeneralPayment": {
+      "table_name": "general_payments",
+      "columns": [
+        "id",
+        "s_no",
+        "voucher_name",
+        "payment_no",
+        "voucher_no",
+        "date",
+        "payment_mode",
+        "account_name",
+        "account_mobile",
+        "amount",
+        "remark",
+        "created_at"
+      ]
+    },
+    "Godown": {
+      "table_name": "godowns",
+      "columns": [
+        "id",
+        "godown_id",
+        "s_no",
+        "name",
+        "address",
+        "created_at"
+      ]
+    },
+    "ItemGroup": {
+      "table_name": "item_groups",
+      "columns": [
+        "id",
+        "group_id",
+        "s_no",
+        "name",
+        "head_group",
+        "no_discount",
+        "created_at"
+      ]
+    },
+    "StockTransfer": {
+      "table_name": "stock_transfers",
+      "columns": [
+        "id",
+        "entry_no",
+        "date",
+        "from_godown",
+        "to_godown",
+        "bill_date",
+        "bill_no",
+        "items_json",
+        "total_qty",
+        "total_amount",
+        "total_discount",
+        "total_taxable",
+        "total_gst_amt",
+        "total_net_value",
+        "remark",
+        "created_at"
+      ]
+    },
+    "UserAccount": {
+      "table_name": "user_accounts",
+      "columns": [
+        "id",
+        "user_id",
+        "s_no",
+        "firm_id",
+        "user_name",
+        "email_id",
+        "role_id",
+        "role_name",
+        "status",
+        "department",
+        "shift",
+        "mobile",
+        "password_hash",
+        "is_on_duty",
+        "created_at"
+      ]
+    },
+    "CommissionAgent": {
+      "table_name": "commission_agents",
+      "columns": [
+        "id",
+        "agent_id",
+        "name",
+        "phone",
+        "alternate_phone",
+        "email",
+        "city",
+        "address",
+        "agent_type",
+        "commission_type",
+        "default_rate",
+        "pan_number",
+        "gst_number",
+        "total_bookings",
+        "total_revenue_generated",
+        "total_commission_earned",
+        "total_commission_paid",
+        "balance_payable",
+        "created_at"
+      ]
+    },
+    "AgentPayoutVoucher": {
+      "table_name": "agent_payout_vouchers",
+      "columns": [
+        "id",
+        "voucher_no",
+        "voucher_date",
+        "agent_id",
+        "agent_name",
+        "amount",
+        "payment_mode",
+        "reference_no",
+        "settled_commission_ids_json",
+        "tds_deducted",
+        "gross_amount",
+        "notes",
+        "created_by",
+        "created_at"
+      ]
+    },
+    "ShiftHandover": {
+      "table_name": "shift_handovers",
+      "columns": [
+        "id",
+        "shift_id",
+        "shift_date",
+        "shift_time",
+        "user_email",
+        "user_name",
+        "shift_type",
+        "opening_drawer_cash",
+        "room_cash_collected",
+        "food_cash_collected",
+        "advance_cash_collected",
+        "expenses_paid_from_drawer",
+        "net_physical_cash_in_drawer",
+        "online_upi_verified",
+        "card_swipe_verified",
+        "credit_accounts_added",
+        "total_transactions_handled",
+        "handover_to_user",
+        "handover_notes",
+        "status",
+        "created_at"
+      ]
+    },
+    "BanquetVenue": {
+      "table_name": "banquet_venues",
+      "columns": [
+        "id",
+        "venue_id",
+        "name",
+        "type",
+        "base_tariff",
+        "gst_percent",
+        "capacity_pax_min",
+        "capacity_pax_max",
+        "sq_ft_area",
+        "floor",
+        "amenities_json",
+        "status",
+        "cleaning_status",
+        "sac_code",
+        "created_at"
+      ]
+    },
+    "BanquetBooking": {
+      "table_name": "banquet_bookings",
+      "columns": [
+        "id",
+        "booking_no",
+        "event_name",
+        "event_type",
+        "host_name",
+        "contact_person",
+        "contact_mobile",
+        "contact_email",
+        "venue_id",
+        "venue_name",
+        "venue_tariff",
+        "booking_date",
+        "event_date",
+        "check_in_date",
+        "check_out_date",
+        "guaranteed_pax",
+        "actual_pax_served",
+        "per_plate_rate",
+        "total_food_amount",
+        "grand_total",
+        "advance_paid",
+        "balance_due",
+        "status",
+        "financial_summary_json",
+        "created_at"
+      ]
+    },
+    "LiquorItem": {
+      "table_name": "liquor_items",
+      "columns": [
+        "id",
+        "item_code",
+        "s_no",
+        "name",
+        "brand_name",
+        "barcode_no",
+        "group",
+        "mrp",
+        "rate",
+        "purchase_rate",
+        "unit",
+        "conversion_ml",
+        "tax_type",
+        "vat_percentage",
+        "surcharge_percentage",
+        "active",
+        "created_at"
+      ]
+    },
+    "BarInvoice": {
+      "table_name": "bar_invoices",
+      "columns": [
+        "id",
+        "bill_no",
+        "date",
+        "time",
+        "table_no",
+        "kot_no",
+        "service_type",
+        "guest_name",
+        "guest_mobile",
+        "items_json",
+        "total_items",
+        "total_quantity",
+        "basic_amount",
+        "vat_amount",
+        "surcharge_amount",
+        "grand_total",
+        "settled",
+        "payment_mode",
+        "room_no",
+        "created_at"
+      ]
+    },
+    "HotelAsset": {
+      "table_name": "hotel_assets",
+      "columns": [
+        "id",
+        "asset_id",
+        "asset_name",
+        "category",
+        "unit",
+        "total_purchased",
+        "in_rooms",
+        "in_linen_store",
+        "in_laundry",
+        "in_damaged_repair",
+        "missing_discrepancy",
+        "unit_cost",
+        "last_audit_date",
+        "created_at"
+      ]
+    },
+    "Locker": {
+      "table_name": "lockers",
+      "columns": [
+        "id",
+        "locker_no",
+        "locker_size",
+        "daily_rate",
+        "status",
+        "assigned_guest_name",
+        "assigned_room_no",
+        "key_number",
+        "security_deposit",
+        "created_at"
+      ]
+    },
+    "WhatsAppLog": {
+      "table_name": "whatsapp_logs",
+      "columns": [
+        "id",
+        "log_id",
+        "timestamp_str",
+        "recipient_mobile",
+        "recipient_name",
+        "recipient_type",
+        "voucher_type",
+        "voucher_no",
+        "room_no",
+        "message",
+        "status",
+        "firm_id",
+        "created_at"
+      ]
+    },
+    "WhatsAppConfig": {
+      "table_name": "whatsapp_configs",
+      "columns": [
+        "id",
+        "config_key",
+        "api_url",
+        "instance_id",
+        "token",
+        "owner_mobile",
+        "validity_date",
+        "auto_send_on_checkin",
+        "auto_send_on_checkout",
+        "auto_send_on_booking",
+        "auto_send_on_food_bill",
+        "created_at"
+      ]
+    },
+    "SupportTicket": {
+      "table_name": "support_tickets",
+      "columns": [
+        "id",
+        "ticket_no",
+        "date",
+        "time",
+        "staff_name",
+        "department",
+        "phone",
+        "category",
+        "priority",
+        "subject",
+        "description",
+        "status",
+        "assigned_engineer",
+        "resolution_notes",
+        "created_at"
+      ]
+    },
+    "HotelSetting": {
+      "table_name": "hotel_settings",
+      "columns": [
+        "id",
+        "key",
+        "firm_name",
+        "legal_name",
+        "trade_name",
+        "address1",
+        "address2",
+        "city",
+        "state",
+        "pincode",
+        "phone",
+        "mobile",
+        "email",
+        "website",
+        "gst_no",
+        "company_gst_code",
+        "pan_no",
+        "fssai_no",
+        "bank_name",
+        "bank_account_no",
+        "bank_ifsc",
+        "bank_branch",
+        "upi_id",
+        "calculation_type",
+        "standard_checkout_time",
+        "make_all_bill_local_gst",
+        "restaurant_food_bill_tax_inclusive",
+        "terms_and_conditions",
+        "logo_url",
+        "seal_url",
+        "signature_url",
+        "updated_at"
+      ]
+    },
+    "RoomType": {
+      "table_name": "room_types",
+      "columns": [
+        "id",
+        "type_id",
+        "room_type_name",
+        "package",
+        "gst_tax_string",
+        "gst_percent",
+        "room_tariff",
+        "discount_percent",
+        "created_at"
+      ]
+    },
+    "MenuItem": {
+      "table_name": "menu_items",
+      "columns": [
+        "id",
+        "item_code",
+        "name",
+        "category",
+        "rate",
+        "sale_rate",
+        "mrp",
+        "purchase_rate",
+        "unit",
+        "gst_percent",
+        "head_group",
+        "hsn_code",
+        "sac_code",
+        "no_discount",
+        "created_at"
+      ]
+    },
+    "HousekeepingRecord": {
+      "table_name": "housekeeping_records",
+      "columns": [
+        "id",
+        "room_no",
+        "status",
+        "assigned_staff",
+        "priority",
+        "last_cleaned_time",
+        "cleaning_started_at",
+        "maintenance_issue",
+        "maintenance_logged_at",
+        "remarks",
+        "updated_at"
+      ]
+    },
+    "AgentCommissionAccrual": {
+      "table_name": "agent_commissions",
+      "columns": [
+        "id",
+        "commission_id",
+        "agent_id",
+        "agent_name",
+        "agent_type",
+        "check_in_no",
+        "booking_ref_no",
+        "room_no",
+        "guest_name",
+        "guest_mobile",
+        "check_in_date",
+        "check_out_date",
+        "number_of_nights",
+        "room_tariff",
+        "gross_room_tariff",
+        "commission_type",
+        "commission_rate",
+        "gross_commission",
+        "tds_percentage",
+        "tds_amount",
+        "net_payable_commission",
+        "status",
+        "payout_voucher_no",
+        "payout_date",
+        "remarks",
+        "created_at"
+      ]
+    },
+    "WhatsAppTemplate": {
+      "table_name": "whatsapp_templates",
+      "columns": [
+        "id",
+        "template_id",
+        "s_no",
+        "type",
+        "voucher_type",
+        "label",
+        "message",
+        "active",
+        "send_to",
+        "created_at"
+      ]
+    },
+    "RolePermission": {
+      "table_name": "roles_permissions",
+      "columns": [
+        "id",
+        "role_id",
+        "name",
+        "description",
+        "permissions_json",
+        "is_system",
+        "created_at"
+      ]
+    },
+    "NoDiscountRule": {
+      "table_name": "no_discount_configs",
+      "columns": [
+        "id",
+        "config_key",
+        "enabled",
+        "protected_groups_json",
+        "max_allowed_discount_percent",
+        "allow_manual_override",
+        "override_role_required",
+        "reason_required_for_override",
+        "updated_at"
+      ]
+    },
+    "LiquorBrand": {
+      "table_name": "liquor_brands",
+      "columns": [
+        "id",
+        "brand_id",
+        "s_no",
+        "name",
+        "discount_percentage",
+        "status",
+        "created_at"
+      ]
+    },
+    "LiquorUnit": {
+      "table_name": "liquor_units",
+      "columns": [
+        "id",
+        "unit_id",
+        "s_no",
+        "primary_unit_name",
+        "conversion",
+        "alternate_unit_name",
+        "created_at"
+      ]
+    },
+    "DiscountAuditLog": {
+      "table_name": "discount_audit_logs",
+      "columns": [
+        "id",
+        "audit_id",
+        "bill_no",
+        "room_no",
+        "table_no",
+        "customer_name",
+        "gross_amount",
+        "discount_percent",
+        "discount_amount",
+        "reason",
+        "manager_name",
+        "manager_pin_verified",
+        "margin_saved",
+        "protected_items_prevented",
+        "created_at"
+      ]
+    },
+    "HotelProperty": {
+      "table_name": "hotel_properties",
+      "columns": [
+        "id",
+        "firm_id",
+        "name",
+        "code",
+        "address",
+        "city",
+        "state",
+        "pincode",
+        "phone",
+        "email",
+        "gst_no",
+        "is_current",
+        "total_rooms",
+        "created_at"
+      ]
+    },
+    "TableShift": {
+      "table_name": "table_shifts",
+      "columns": [
+        "id",
+        "shift_id",
+        "from_table",
+        "to_table",
+        "transferred_count",
+        "reason",
+        "shifted_by",
+        "created_at"
+      ]
+    },
+    "TableSessionRecord": {
+      "table_name": "table_sessions",
+      "columns": [
+        "id",
+        "session_id",
+        "table_no",
+        "start_time",
+        "status",
+        "kot_numbers_json",
+        "cumulative_items_json",
+        "cumulative_amount",
+        "created_at"
+      ]
+    },
+    "RfidKeyCard": {
+      "table_name": "rfid_keycards",
+      "columns": [
+        "id",
+        "card_number",
+        "card_uuid",
+        "room_no",
+        "guest_name",
+        "check_in_time",
+        "valid_until",
+        "status",
+        "issued_by",
+        "created_at"
+      ]
+    },
+    "HotelCompanyInfo": {
+      "table_name": "hotel_company_info",
+      "columns": [
+        "id",
+        "property_name",
+        "address",
+        "city",
+        "state",
+        "pincode",
+        "phone",
+        "email",
+        "gstin",
+        "logo_url",
+        "seal_url",
+        "default_bill_format",
+        "terms_and_conditions",
+        "updated_at"
+      ]
+    },
+    "LiquorStockAdjustment": {
+      "table_name": "liquor_stock_adjustments",
+      "columns": [
+        "id",
+        "brand",
+        "item_id",
+        "bottle_size_ml",
+        "transaction_type",
+        "qty_pegs",
+        "pegs_per_bottle",
+        "reference_no",
+        "created_at"
+      ]
+    },
+    "IdempotencyKey": {
+      "table_name": "idempotency_keys",
+      "columns": [
+        "id",
+        "key",
+        "endpoint",
+        "request_hash",
+        "response_status",
+        "response_body",
+        "created_at"
+      ]
+    },
+    "WebhookEvent": {
+      "table_name": "webhook_events",
+      "columns": [
+        "id",
+        "event_id",
+        "source",
+        "event_type",
+        "payload_json",
+        "status",
+        "attempts",
+        "last_error",
+        "created_at",
+        "processed_at"
+      ]
+    },
+    "FailedWebhookDLQ": {
+      "table_name": "failed_webhook_dlq",
+      "columns": [
+        "id",
+        "event_id",
+        "source",
+        "payload_json",
+        "failure_reason",
+        "retry_count",
+        "status",
+        "created_at",
+        "replayed_at",
+        "replayed_by"
+      ]
+    },
+    "RefreshToken": {
+      "table_name": "refresh_tokens",
+      "columns": [
+        "id",
+        "token",
+        "user_id",
+        "role",
+        "expires_at",
+        "is_revoked",
+        "revoked_at",
+        "revocation_reason",
+        "created_at"
+      ]
+    },
+    "RatePlan": {
+      "table_name": "rate_plans",
+      "columns": [
+        "id",
+        "plan_code",
+        "name",
+        "room_type_id",
+        "description",
+        "base_price_modifier",
+        "is_active",
+        "version_id",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    "Guest": {
+      "table_name": "guests",
+      "columns": [
+        "id",
+        "name",
+        "phone",
+        "email",
+        "gstin",
+        "id_proof_type",
+        "id_proof_number",
+        "address",
+        "city",
+        "state",
+        "pincode",
+        "version_id",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    "Folio": {
+      "table_name": "folios",
+      "columns": [
+        "id",
+        "booking_id",
+        "folio_number",
+        "status",
+        "total_charges",
+        "total_payments",
+        "balance_due",
+        "version_id",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    "KOTOrder": {
+      "table_name": "kot_orders",
+      "columns": [
+        "id",
+        "kot_number",
+        "room_id",
+        "room_no",
+        "table_no",
+        "status",
+        "total_amount",
+        "created_at",
+        "updated_at"
+      ]
+    }
+  },
+  "endpoints": [
+    {
+      "file": "admin.py",
+      "method": "POST",
+      "path": "/night-audit/run"
+    },
+    {
+      "file": "admin.py",
+      "method": "POST",
+      "path": "/backups/run"
+    },
+    {
+      "file": "admin.py",
+      "method": "GET",
+      "path": "/backups"
+    },
+    {
+      "file": "auth.py",
+      "method": "POST",
+      "path": "/login"
+    },
+    {
+      "file": "auth.py",
+      "method": "POST",
+      "path": "/refresh"
+    },
+    {
+      "file": "auth.py",
+      "method": "POST",
+      "path": "/logout"
+    },
+    {
+      "file": "auth.py",
+      "method": "GET",
+      "path": "/me"
+    },
+    {
+      "file": "bookings.py",
+      "method": "GET",
+      "path": "/{booking_ref}"
+    },
+    {
+      "file": "bookings.py",
+      "method": "PATCH",
+      "path": "/{booking_ref}/status"
+    },
+    {
+      "file": "bookings.py",
+      "method": "GET",
+      "path": "/{booking_ref}/invoice"
+    },
+    {
+      "file": "bookings.py",
+      "method": "GET",
+      "path": "/{booking_ref}/print-slip"
+    },
+    {
+      "file": "health.py",
+      "method": "GET",
+      "path": "/live"
+    },
+    {
+      "file": "health.py",
+      "method": "GET",
+      "path": "/ready"
+    },
+    {
+      "file": "health.py",
+      "method": "GET",
+      "path": "/test-error-500"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/room-shift"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/room-shifts"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/payments"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/folio/add-item"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/folio/{booking_ref}"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/police-register"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/police-register"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/housekeeping/status"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/night-audit"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/check-in"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/check-out"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/rooms/{room_id}/maintenance"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/sync/dashboard"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/backup/export"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/tables"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/tables"
+    },
+    {
+      "file": "pms.py",
+      "method": "PUT",
+      "path": "/tables/{table_code}/status"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/kots"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/kots"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/masters/{category}"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/masters"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/masters/{category}/{code}"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/sync/full-state"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/folio/discount"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/folio/discounts/{room_or_ref}"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/food-bills"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/food-bills"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/expenses"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/expenses"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/night-audits"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/inventory/purchases"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/inventory/purchases"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/kot/void"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/kot/void-logs"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/tables/shift-session"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/tables/merge-sessions"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/night-audit/automated-midnight"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/gst/gstr1-export"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/housekeeping/audit-discrepancy"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/keycards/encode"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/keycards/extend"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/group-bookings"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/group-bookings"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/group-bookings/{group_id}"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/checkouts"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/checkouts"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/checkouts/{invoice_no}"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/advance-receipts"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/advance-receipts"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/advance-receipts/{receipt_no}"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/journal-entries"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/journal-entries"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/party-accounts"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/party-accounts"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/party-accounts/{account_id}"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/general-receipts"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/general-receipts"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/general-receipts/{receipt_no}"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/general-payments"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/general-payments"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/general-payments/{payment_no}"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/godowns"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/godowns"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/godowns/{godown_id}"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/item-groups"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/item-groups"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/item-groups/{group_id}"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/stock-transfers"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/stock-transfers"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/stock-transfers/{entry_no}"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/users"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/users"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/users/{user_id}"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/commission-agents"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/commission-agents"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/commission-agents/{agent_id}"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/agent-payout-vouchers"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/agent-payout-vouchers"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/agent-commissions"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/agent-commission-accruals"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/agent-commissions"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/agent-commission-accruals"
+    },
+    {
+      "file": "pms.py",
+      "method": "PUT",
+      "path": "/agent-commissions/{commission_id}/status"
+    },
+    {
+      "file": "pms.py",
+      "method": "PUT",
+      "path": "/agent-commission-accruals/{commission_id}/status"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/agent-commissions/{commission_id}"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/agent-commission-accruals/{commission_id}"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/shift-handovers"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/shift-handovers"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/banquet-venues"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/banquet-venues"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/banquet-venues/{venue_id}"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/banquet-bookings"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/banquet-bookings"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/banquet-bookings/{booking_no}"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/liquor-items"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/liquor-items"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/liquor-items/{item_code}"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/bar-invoices"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/bar-invoices"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/bar-invoices/{bill_no}"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/hotel-assets"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/hotel-assets"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/hotel-assets/{asset_id}"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/lockers"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/lockers"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/lockers/{locker_no}"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/whatsapp-logs"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/whatsapp-logs"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/whatsapp-config"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/whatsapp-config"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/support-tickets"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/support-tickets"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/support-tickets/{ticket_no}"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/settings"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/settings"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/room-types"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/room-types"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/room-types/{type_id}"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/menu-items"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/menu-items"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/menu-items/bulk"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/menu-items/{item_code}"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/housekeeping"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/housekeeping"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/agent-commissions"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/agent-commissions"
+    },
+    {
+      "file": "pms.py",
+      "method": "PUT",
+      "path": "/agent-commissions/{commission_id}/status"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/whatsapp-templates"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/whatsapp-templates"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/whatsapp-templates/bulk"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/roles"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/roles"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/no-discount-config"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/no-discount-config"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/liquor-brands"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/liquor-brands"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/liquor-units"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/liquor-units"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/discount-audit-logs"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/discount-audit-logs"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/properties"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/properties"
+    },
+    {
+      "file": "pms.py",
+      "method": "PUT",
+      "path": "/bookings/extend-stay"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/room-folio-items"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/room-folio-items/{room_no}"
+    },
+    {
+      "file": "pms.py",
+      "method": "PUT",
+      "path": "/housekeeping-discrepancies/{discrepancy_id}/resolve"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/demo-requests"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/master-items"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/master-items/{category}/{item_name}"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/restaurant/table-shifts"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/restaurant/table-shifts"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/restaurant/table-sessions"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/restaurant/table-sessions"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/housekeeping-discrepancies"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/housekeeping-discrepancies"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/key-cards"
+    },
+    {
+      "file": "pms.py",
+      "method": "PUT",
+      "path": "/key-cards/{card_number}/extend"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/key-cards"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/company-info"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/company-info"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/virtual-accounts"
+    },
+    {
+      "file": "pms.py",
+      "method": "GET",
+      "path": "/virtual-accounts"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/liquor/stock-adjustments"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/auth/verify-manager-pin"
+    },
+    {
+      "file": "pms.py",
+      "method": "PUT",
+      "path": "/bookings/{booking_id}/confirm"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/expenses/{expense_id}"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/purchases/{purchase_id}"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/roles/{role_id}"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/users/{user_id}"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/whatsapp/templates/{template_id}"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/whatsapp/logs"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/party-accounts/settle"
+    },
+    {
+      "file": "pms.py",
+      "method": "POST",
+      "path": "/rooms"
+    },
+    {
+      "file": "pms.py",
+      "method": "PUT",
+      "path": "/rooms/{room_id}"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/rooms/{room_id}"
+    },
+    {
+      "file": "pms.py",
+      "method": "DELETE",
+      "path": "/tables/{table_id}"
+    },
+    {
+      "file": "rooms.py",
+      "method": "GET",
+      "path": "/{room_id}/availability"
+    },
+    {
+      "file": "rooms.py",
+      "method": "GET",
+      "path": "/{room_id}"
+    },
+    {
+      "file": "rooms.py",
+      "method": "POST",
+      "path": "/seed"
+    },
+    {
+      "file": "uploads.py",
+      "method": "GET",
+      "path": "/status"
+    },
+    {
+      "file": "uploads.py",
+      "method": "GET",
+      "path": "/test-connection"
+    },
+    {
+      "file": "uploads.py",
+      "method": "POST",
+      "path": "/presigned-url"
+    },
+    {
+      "file": "uploads.py",
+      "method": "POST",
+      "path": "/presigned-download"
+    },
+    {
+      "file": "uploads.py",
+      "method": "POST",
+      "path": "/secure-view"
+    },
+    {
+      "file": "uploads.py",
+      "method": "POST",
+      "path": "/guest-id"
+    },
+    {
+      "file": "uploads.py",
+      "method": "POST",
+      "path": "/invoice-pdf"
+    },
+    {
+      "file": "uploads.py",
+      "method": "POST",
+      "path": "/file"
+    },
+    {
+      "file": "uploads.py",
+      "method": "POST",
+      "path": "/guest-document"
+    },
+    {
+      "file": "uploads.py",
+      "method": "POST",
+      "path": "/property-image"
+    },
+    {
+      "file": "uploads.py",
+      "method": "POST",
+      "path": "/branding-asset"
+    },
+    {
+      "file": "uploads.py",
+      "method": "GET",
+      "path": "/list"
+    },
+    {
+      "file": "uploads.py",
+      "method": "POST",
+      "path": "/booking-kyc/{booking_id}"
+    },
+    {
+      "file": "uploads.py",
+      "method": "GET",
+      "path": "/booking-kyc/{booking_id}/presigned-url"
+    },
+    {
+      "file": "uploads.py",
+      "method": "DELETE",
+      "path": "/booking-kyc/{booking_id}"
+    },
+    {
+      "file": "uploads.py",
+      "method": "POST",
+      "path": "/room-photo/{room_id}"
+    },
+    {
+      "file": "uploads.py",
+      "method": "POST",
+      "path": "/booking-invoice/{booking_id}"
+    },
+    {
+      "file": "uploads.py",
+      "method": "GET",
+      "path": "/booking-invoice/{booking_id}/presigned-url"
+    },
+    {
+      "file": "uploads.py",
+      "method": "DELETE",
+      "path": "/{object_key:path}"
+    },
+    {
+      "file": "uploads.py",
+      "method": "GET",
+      "path": "/files/{file_path:path}"
+    }
+  ]
+}

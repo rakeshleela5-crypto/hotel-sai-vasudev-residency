@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { PmsExpenseRecord, PmsNightAuditRecord } from '../../types/pmsModels';
 import { PmsStore, usePmsSync } from '../../services/pmsStore';
+import { hotelApi } from '../../services/api';
 
 interface PettyExpenseModalProps {
   isOpen: boolean;
@@ -29,6 +30,31 @@ export const PettyExpenseModal: React.FC<PettyExpenseModalProps> = ({ isOpen, on
   const [description, setDescription] = useState<string>('');
   const [billNumber, setBillNumber] = useState<string>('');
   const [approvedBy, setApprovedBy] = useState<string>('General Manager');
+
+  useEffect(() => {
+    if (!isOpen) return;
+    hotelApi.getPettyExpenses()
+      .then(cloudList => {
+        if (Array.isArray(cloudList) && cloudList.length > 0) {
+          const mapped: PmsExpenseRecord[] = cloudList.map((item: any) => ({
+            id: item.id || `exp-${item.expense_no}`,
+            expenseNo: item.expense_no || item.expenseNo,
+            date: item.date,
+            time: item.time,
+            category: item.category,
+            amount: Number(item.amount),
+            paymentMode: item.payment_mode || item.paymentMode || 'Cash',
+            paidTo: item.paid_to || item.paidTo,
+            description: item.description,
+            billNumber: item.bill_number || item.billNumber,
+            approvedBy: item.approved_by || item.approvedBy,
+            createdAt: item.created_at || new Date().toISOString()
+          }));
+          PmsStore.syncExpenses(mapped);
+        }
+      })
+      .catch(err => console.warn('[PettyExpenseModal] Cloud fetch note:', err));
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

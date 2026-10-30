@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PmsStore } from '../../services/pmsStore';
+import { hotelApi } from '../../services/api';
 import type { RfidKeyCard, PmsRoom } from '../../types/pmsModels';
 
 interface RfidKeyCardModalProps {
@@ -33,6 +34,31 @@ export const RfidKeyCardModal: React.FC<RfidKeyCardModalProps> = ({ isOpen, onCl
   useEffect(() => {
     if (isOpen) {
       refreshData();
+      const unsub = PmsStore.subscribe(() => {
+        refreshData();
+      });
+
+      hotelApi.getKeycards().then(cloudCards => {
+        if (Array.isArray(cloudCards) && cloudCards.length > 0) {
+          const mapped: RfidKeyCard[] = cloudCards.map((c: any) => ({
+            cardUid: c.cardNumber || c.cardUuid,
+            roomNo: c.roomNo,
+            guestName: c.guestName || 'In-House Guest',
+            checkInTime: c.checkInTime || '',
+            scheduledCheckoutTime: c.validUntil || '',
+            cardDeactivationTime: c.validUntil || '',
+            status: (c.status || 'ACTIVE').toUpperCase() as any,
+            extensionLogged: false,
+            extensionFee: 0,
+            encodedBy: c.issuedBy || 'Front Desk',
+            lastUpdated: c.createdAt || new Date().toISOString()
+          }));
+          PmsStore.syncKeyCards(mapped);
+          setCards(mapped);
+        }
+      }).catch(err => console.warn('[RfidKeyCardModal] Cloud keycards fetch note:', err));
+
+      return () => unsub();
     }
   }, [isOpen]);
 

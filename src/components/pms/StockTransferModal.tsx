@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { PmsStockTransfer, PmsStockTransferItem, MenuItem, PmsGodown } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
+import { hotelApi } from '../../services/api';
 import './pmsStyles.css';
 
 interface StockTransferModalProps {
@@ -76,6 +77,19 @@ export const StockTransferModal: React.FC<StockTransferModalProps> = ({
         setToGodown('Kitchen');
         setRemark('Issue to kitchen from main store');
       }
+
+      const unsub = PmsStore.subscribe(() => {
+        refreshData();
+      });
+
+      hotelApi.getStockTransfers().then(cloudTransfers => {
+        if (Array.isArray(cloudTransfers) && cloudTransfers.length > 0) {
+          PmsStore.syncStockTransfers(cloudTransfers);
+          setTransfers(cloudTransfers);
+        }
+      }).catch(err => console.warn('[StockTransferModal] Cloud sync note:', err));
+
+      return () => unsub();
     }
   }, [isOpen, initialMode]);
 

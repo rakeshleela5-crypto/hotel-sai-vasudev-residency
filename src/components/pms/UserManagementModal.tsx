@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PmsStore } from '../../services/pmsStore';
+import { hotelApi } from '../../services/api';
 import type { PmsUserAccount, PmsRole, PmsChainProperty } from '../../types/pmsModels';
 import './pmsStyles.css';
 
@@ -49,6 +50,19 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
     if (isOpen) {
       refreshData();
       setSuccessBanner(null);
+
+      const unsub = PmsStore.subscribe(() => {
+        refreshData();
+      });
+
+      hotelApi.getUserAccounts().then(cloudUsers => {
+        if (Array.isArray(cloudUsers) && cloudUsers.length > 0) {
+          PmsStore.syncUsers(cloudUsers);
+          setUsers(cloudUsers);
+        }
+      }).catch(err => console.warn('[UserManagementModal] Cloud users fetch note:', err));
+
+      return () => unsub();
     }
   }, [isOpen]);
 

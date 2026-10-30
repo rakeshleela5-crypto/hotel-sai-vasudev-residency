@@ -1,0 +1,3782 @@
+[
+  {
+    "file": "AddKotModal.tsx",
+    "rel_path": "src\\components\\pms\\AddKotModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "saveKot",
+      "getRooms"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "selectedItemName",
+        "INITIAL_MENU_ITEMS[0].name"
+      ],
+      [
+        "itemCode",
+        "INITIAL_MENU_ITEMS[0].code"
+      ],
+      [
+        "rate",
+        "INITIAL_MENU_ITEMS[0].rate"
+      ],
+      [
+        "itemsList",
+        "[     {       sNo: 1,       itemName: 'PANEER TIKA',       itemCode: '10005',   "
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleItemSelect",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleAddItem",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleRemoveItem",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSave",
+        "has_api": false,
+        "pms_writes": [
+          "saveKot"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "AddPaymentModal.tsx",
+    "rel_path": "src\\components\\pms\\AddPaymentModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getPartyAccounts",
+      "savePayment",
+      "getPayments",
+      "getPartyLedger"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "parties",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleSubmit",
+        "has_api": false,
+        "pms_writes": [
+          "savePayment"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "AddReceiptModal.tsx",
+    "rel_path": "src\\components\\pms\\AddReceiptModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "saveReceipt",
+      "getPartyAccounts",
+      "getReceipts"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "parties",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleSubmit",
+        "has_api": false,
+        "pms_writes": [
+          "saveReceipt"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "AdvanceReceiptModal.tsx",
+    "rel_path": "src\\components\\pms\\AdvanceReceiptModal.tsx",
+    "ls_keys": [
+      "svr_pms_advance_receipts"
+    ],
+    "pms_calls": [
+      "subscribe",
+      "getAdvanceReceipts",
+      "deleteAdvanceReceipt",
+      "getCompanyInfo",
+      "sendWhatsAppNotification",
+      "getRooms",
+      "saveAdvanceReceipt"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [
+      "saveAdvanceReceipt",
+      "getAdvanceReceipts"
+    ],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "receipts",
+        "PmsStore.getAdvanceReceipts()"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleOpenAddModal",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveReceipt",
+        "has_api": true,
+        "pms_writes": [
+          "saveAdvanceReceipt"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleDeleteReceipt",
+        "has_api": false,
+        "pms_writes": [
+          "deleteAdvanceReceipt"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "AgentCommissionModal.tsx",
+    "rel_path": "src\\components\\pms\\AgentCommissionModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getCommissionAgents",
+      "getAgentPayoutVouchers",
+      "recordAgentCommissionPayout",
+      "saveCommissionAgent",
+      "getCompanyInfo",
+      "getTop15OfficialFeatures",
+      "updateAgentCommissionStatus",
+      "getAgentCommissionBookings"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "selectedCommissionIds",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleSaveNewAgent",
+        "has_api": false,
+        "pms_writes": [
+          "saveCommissionAgent"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleOpenPayout",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleExecutePayout",
+        "has_api": false,
+        "pms_writes": [
+          "recordAgentCommissionPayout"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "BanquetHallBillingModal.tsx",
+    "rel_path": "src\\components\\pms\\BanquetHallBillingModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "sanitizeBanquetVenue",
+      "addBanquetKot",
+      "getBanquetVenues",
+      "saveBanquetBooking",
+      "getBanquetBookings",
+      "settleBanquetCheckout"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "venues",
+        "[]"
+      ],
+      [
+        "bookings",
+        "[]"
+      ],
+      [
+        "formLinkedRooms",
+        "['301', '302']"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleCreateBooking",
+        "has_api": false,
+        "pms_writes": [
+          "saveBanquetBooking"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleAddRunningKot",
+        "has_api": false,
+        "pms_writes": [
+          "addBanquetKot"
+        ],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleFinalCheckout",
+        "has_api": false,
+        "pms_writes": [
+          "settleBanquetCheckout"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSanitizeVenue",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleShareWhatsApp",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "BookingCalendarModal.tsx",
+    "rel_path": "src\\components\\pms\\BookingCalendarModal.tsx",
+    "ls_keys": [
+      "svr_pms_group_bookings"
+    ],
+    "pms_calls": [
+      "saveGroupBooking",
+      "getBookings",
+      "subscribe",
+      "getGroupBookings",
+      "getRooms"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [
+      "saveGroupBooking",
+      "getGroupBookings"
+    ],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "rooms",
+        "() => PmsStore.getRooms()"
+      ],
+      [
+        "groupBookings",
+        "() => PmsStore.getGroupBookings()"
+      ],
+      [
+        "selectedRoomNos",
+        "['203', '208', '107']"
+      ],
+      [
+        "guests",
+        "[     { name: 'Mr. ASIT KUMAR BHUYAN', phone: '+91 94402 89999', idProofType: 'A"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleSaveGroupBooking",
+        "has_api": true,
+        "pms_writes": [
+          "saveGroupBooking"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleAddGuest",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleUpdateGuest",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleRemoveGuest",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "BookingReceiptModal.tsx",
+    "rel_path": "src\\components\\pms\\BookingReceiptModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "sendWhatsAppNotification",
+      "getCompanyInfo"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [],
+    "handlers": [
+      {
+        "name": "handlePrint",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "BusinessSettingModal.tsx",
+    "rel_path": "src\\components\\pms\\BusinessSettingModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "saveBusinessSettings",
+      "getBusinessSettings"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [],
+    "handlers": [
+      {
+        "name": "handleApplyTime",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSave",
+        "has_api": false,
+        "pms_writes": [
+          "saveBusinessSettings"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "CancelKotModal.tsx",
+    "rel_path": "src\\components\\pms\\CancelKotModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "cancelKot"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [],
+    "handlers": [
+      {
+        "name": "handleConfirmCancel",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "ChainPropertyModal.tsx",
+    "rel_path": "src\\components\\pms\\ChainPropertyModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getProperties",
+      "setCurrentProperty",
+      "getCurrentProperty",
+      "saveProperties"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "properties",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleSwitchProperty",
+        "has_api": false,
+        "pms_writes": [
+          "setCurrentProperty"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleOpenAdd",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleOpenEdit",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveProperty",
+        "has_api": false,
+        "pms_writes": [
+          "saveProperties"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleDeleteProperty",
+        "has_api": false,
+        "pms_writes": [
+          "saveProperties"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "CheckInSlipModal.tsx",
+    "rel_path": "src\\components\\pms\\CheckInSlipModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "sendWhatsAppNotification",
+      "getCompanyInfo"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [],
+    "handlers": [
+      {
+        "name": "handlePrint",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "CheckOutRegisterModal.tsx",
+    "rel_path": "src\\components\\pms\\CheckOutRegisterModal.tsx",
+    "ls_keys": [
+      "svr_pms_checkouts"
+    ],
+    "pms_calls": [
+      "subscribe",
+      "getWhatsAppConfig",
+      "getCurrentUser",
+      "getCheckouts",
+      "triggerAntiTheftAlert",
+      "deleteCheckout",
+      "sendWhatsAppNotification",
+      "getCompanyInfo"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [
+      "getCheckouts"
+    ],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "checkouts",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleWhatsAppSend",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleDelete",
+        "has_api": false,
+        "pms_writes": [
+          "deleteCheckout"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "CloudflareR2StorageModal.tsx",
+    "rel_path": "src\\components\\pms\\CloudflareR2StorageModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "files",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleTestConnection",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleFileUpload",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleDeleteFile",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleCopyUrl",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleCopyPresignedDownload",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "CompanyBrandingModal.tsx",
+    "rel_path": "src\\components\\pms\\CompanyBrandingModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getCompanyPicAssets",
+      "getDefaultBillFormat",
+      "saveCompanyInfo",
+      "generateUpiPaymentQrUrl",
+      "setDefaultBillFormat",
+      "getCompanyInfo",
+      "saveCompanyPicAsset"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [
+      "uploadBrandingAsset"
+    ],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "companyInfo",
+        "{ ...DEFAULT_COMPANY_INFO }"
+      ],
+      [
+        "assets",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleInfoChange",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveInfo",
+        "has_api": false,
+        "pms_writes": [
+          "setDefaultBillFormat",
+          "saveCompanyInfo"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSimulateUpload",
+        "has_api": true,
+        "pms_writes": [
+          "saveCompanyPicAsset"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "CompanyInfoModal.tsx",
+    "rel_path": "src\\components\\pms\\CompanyInfoModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getCompanyInfo",
+      "saveCompanyInfo"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "formData",
+        "{ ...DEFAULT_COMPANY_INFO }"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleChange",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleApply",
+        "has_api": false,
+        "pms_writes": [
+          "saveCompanyInfo"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "DayEndReportModal.tsx",
+    "rel_path": "src\\components\\pms\\DayEndReportModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getDayEndReport"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "report",
+        "() => PmsStore.getDayEndReport('19-07-2025')"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleRefresh",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handlePrint",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "DecentroUpiQrModal.tsx",
+    "rel_path": "src\\components\\pms\\DecentroUpiQrModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [
+      "getTransactionStatus",
+      "connectPaymentWebSocket",
+      "playSuccessChime",
+      "generateUpiQr"
+    ],
+    "state_inits": [],
+    "handlers": [
+      {
+        "name": "handlePrintThermal",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "DecentroVirtualAccountModal.tsx",
+    "rel_path": "src\\components\\pms\\DecentroVirtualAccountModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [],
+    "direct_fetch": [],
+    "hotel_api_calls": [
+      "createVirtualAccount"
+    ],
+    "decentro_calls": [
+      "createVirtualAccount"
+    ],
+    "state_inits": [],
+    "handlers": [
+      {
+        "name": "handleCreate",
+        "has_api": true,
+        "pms_writes": [],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "DeviceResponsivePreviewModal.tsx",
+    "rel_path": "src\\components\\pms\\DeviceResponsivePreviewModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getCurrentUser",
+      "saveKot",
+      "getCurrentProperty",
+      "getMenuItems",
+      "getRooms"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "rooms",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleSimulateMobileKot",
+        "has_api": false,
+        "pms_writes": [
+          "saveKot"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "FbbReportModal.tsx",
+    "rel_path": "src\\components\\pms\\FbbReportModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getFoodBills",
+      "getRooms"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [],
+    "handlers": []
+  },
+  {
+    "file": "FoodBillModal.tsx",
+    "rel_path": "src\\components\\pms\\FoodBillModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "saveFoodBill",
+      "getActiveTableSession",
+      "getKots",
+      "getTables",
+      "vacateTable",
+      "isItemDiscountExempt",
+      "getCompanyInfo",
+      "sendWhatsAppNotification",
+      "getRooms",
+      "saveTableSession"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "pendingKots",
+        "[]"
+      ],
+      [
+        "billItems",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleDiscountInputChange",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveBill",
+        "has_api": false,
+        "pms_writes": [
+          "saveTableSession",
+          "saveFoodBill"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "Gstr1ExportModal.tsx",
+    "rel_path": "src\\components\\pms\\Gstr1ExportModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "generateGstr1Json",
+      "getCompanyInfo"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [],
+    "handlers": [
+      {
+        "name": "handleDownloadJson",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleCopyJson",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "GstReportsModal.tsx",
+    "rel_path": "src\\components\\pms\\GstReportsModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getWhatsAppConfig",
+      "getReportDashboardButtons",
+      "getB2BReport",
+      "exportGstCsv",
+      "getConsolidatedGstReport",
+      "getCompanyInfo",
+      "getB2CReport"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [],
+    "handlers": [
+      {
+        "name": "handleCopy",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleDownloadCsv",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleDownloadExcel",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handlePrint",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleSendToCaWhatsApp",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "GuestLogModal.tsx",
+    "rel_path": "src\\components\\pms\\GuestLogModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getGuestLog"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [],
+    "handlers": [
+      {
+        "name": "handleCopy",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleExportCsv",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handlePrint",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleWhatsAppVip",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "HelpAndSupportModal.tsx",
+    "rel_path": "src\\components\\pms\\HelpAndSupportModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getSupportTickets",
+      "getSupportContactInfo",
+      "getRemoteSupportSession",
+      "submitDemoRequest",
+      "createSupportTicket",
+      "getHelpVideos",
+      "getDocumentationChapters"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "tickets",
+        "() => PmsStore.getSupportTickets()"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleCopy",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleCreateTicket",
+        "has_api": false,
+        "pms_writes": [
+          "createSupportTicket"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSubmitDemo",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleShareRemoteOnWhatsApp",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "HotelBillFormatModal.tsx",
+    "rel_path": "src\\components\\pms\\HotelBillFormatModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getDefaultBillFormat",
+      "getCheckouts",
+      "generateUpiPaymentQrUrl",
+      "sendWhatsAppNotification",
+      "getCompanyInfo"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "checkouts",
+        "[]"
+      ],
+      [
+        "companyInfo",
+        "PmsStore.getCompanyInfo()"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handlePrint",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleExecutePrint",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleWhatsAppSend",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "HotelPmsModal.tsx",
+    "rel_path": "src\\components\\pms\\HotelPmsModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getUnconfirmedBookings",
+      "syncWithCloudBackend",
+      "getCurrentUser",
+      "initCloudStore",
+      "runAutomatedMidnightAudit",
+      "getCurrentProperty",
+      "hasPermission",
+      "getRooms",
+      "getUsers",
+      "setCurrentUser"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "currentUser",
+        "PmsStore.getCurrentUser()"
+      ],
+      [
+        "currentProperty",
+        "PmsStore.getCurrentProperty()"
+      ],
+      [
+        "allStaffUsers",
+        "PmsStore.getUsers()"
+      ],
+      [
+        "syncStatus",
+        "{     isSyncing: false,     text: 'Railway DB Ready',     status: 'online'   }"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleLaunchReportAction",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleLaunchFeatureFromTop20",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleUserChanged",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleQuickSwitchUser",
+        "has_api": false,
+        "pms_writes": [
+          "setCurrentUser"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSearch",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "HousekeepingDiscrepancyModal.tsx",
+    "rel_path": "src\\components\\pms\\HousekeepingDiscrepancyModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "recordHousekeepingDiscrepancy",
+      "resolveHousekeepingDiscrepancy",
+      "getHousekeepingDiscrepancies",
+      "getRooms",
+      "checkShortStayAlerts"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "rooms",
+        "PmsStore.getRooms()"
+      ],
+      [
+        "discrepancies",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleRecordInspection",
+        "has_api": false,
+        "pms_writes": [
+          "recordHousekeepingDiscrepancy"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleResolve",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "HousekeepingTrackerModal.tsx",
+    "rel_path": "src\\components\\pms\\HousekeepingTrackerModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "resolveMaintenance",
+      "getHousekeepingRecords",
+      "getRooms",
+      "updateHousekeepingStatus"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [],
+    "handlers": [
+      {
+        "name": "handleStartCleaning",
+        "has_api": false,
+        "pms_writes": [
+          "updateHousekeepingStatus"
+        ],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleMarkClean",
+        "has_api": false,
+        "pms_writes": [
+          "updateHousekeepingStatus"
+        ],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleOpenMaintenance",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveMaintenance",
+        "has_api": false,
+        "pms_writes": [
+          "updateHousekeepingStatus"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleResolveMaintenance",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleStaffChange",
+        "has_api": false,
+        "pms_writes": [
+          "updateHousekeepingStatus"
+        ],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handlePriorityChange",
+        "has_api": false,
+        "pms_writes": [
+          "updateHousekeepingStatus"
+        ],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "ItemMasterModal.tsx",
+    "rel_path": "src\\components\\pms\\ItemMasterModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "deleteGodown",
+      "saveMenuItem",
+      "getGodowns",
+      "getItemGroups",
+      "deleteItemGroup",
+      "saveGodown",
+      "getMenuItems",
+      "saveItemGroup",
+      "deleteMenuItem"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "items",
+        "[]"
+      ],
+      [
+        "itemGroups",
+        "[]"
+      ],
+      [
+        "godowns",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleOpenForm",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleGroupSelectionChange",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveItem",
+        "has_api": false,
+        "pms_writes": [
+          "saveMenuItem"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleDeleteItem",
+        "has_api": false,
+        "pms_writes": [
+          "deleteMenuItem"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveGroup",
+        "has_api": false,
+        "pms_writes": [
+          "saveItemGroup"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveGodown",
+        "has_api": false,
+        "pms_writes": [
+          "saveGodown"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "ItemWiseSalesReportModal.tsx",
+    "rel_path": "src\\components\\pms\\ItemWiseSalesReportModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getItemWiseSalesReport"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [],
+    "handlers": [
+      {
+        "name": "handleCopy",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleExportCsv",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handlePrint",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "ItemWiseStockModal.tsx",
+    "rel_path": "src\\components\\pms\\ItemWiseStockModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getItemWiseStock",
+      "getPurchases",
+      "getGodownStock"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "stockReport",
+        "() =>      PmsStore.getItemWiseStock('Boondi Raita', '01-07-2025', '19-07-2025')"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleFetchStock",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handlePrint",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "KitchenDashboardModal.tsx",
+    "rel_path": "src\\components\\pms\\KitchenDashboardModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "markKotAsPrinted",
+      "playKotChime",
+      "subscribe",
+      "updateKotStatus",
+      "voidKotItem",
+      "getKots",
+      "markAllKotsAsPrinted",
+      "getKotVoidAuditLogs",
+      "voidKotItemWithPin"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "kots",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleStorage",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleStartPrep",
+        "has_api": false,
+        "pms_writes": [
+          "updateKotStatus"
+        ],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleReadyToServe",
+        "has_api": false,
+        "pms_writes": [
+          "updateKotStatus"
+        ],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleServeAndPrint",
+        "has_api": false,
+        "pms_writes": [
+          "updateKotStatus"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handlePrintOnly",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "KotEntryModal.tsx",
+    "rel_path": "src\\components\\pms\\KotEntryModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "playKotChime",
+      "createOrAppendTableSession",
+      "broadcastKotEvent",
+      "saveKot",
+      "updateRoomFoodAmount",
+      "getMenuItems",
+      "getRooms"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "cartItems",
+        "[     {       sNo: 1,       itemName: 'South Indian Filter Coffee (Chikmagalur B"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleAddToCart",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleIncrementQty",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleDecrementQty",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleRemoveItem",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleClearCart",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handlePunchKot",
+        "has_api": false,
+        "pms_writes": [
+          "createOrAppendTableSession",
+          "saveKot"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handlePostToRoomFolio",
+        "has_api": false,
+        "pms_writes": [
+          "updateRoomFoodAmount",
+          "saveKot"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSettleCounterBill",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "KotPrintViewModal.tsx",
+    "rel_path": "src\\components\\pms\\KotPrintViewModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "markKotAsPrinted"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [],
+    "handlers": [
+      {
+        "name": "handlePrint",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "LiquorBarManagementModal.tsx",
+    "rel_path": "src\\components\\pms\\LiquorBarManagementModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "saveLiquorUnit",
+      "saveLiquorBrand",
+      "saveLiquorItem",
+      "recordLiquorPurchaseInward",
+      "saveBarInvoice",
+      "getLiquorBrands",
+      "getBrandWiseLiquorStocks",
+      "getBarInvoices",
+      "getLiquorItems",
+      "getLiquorUnits"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "stocks",
+        "[]"
+      ],
+      [
+        "items",
+        "[]"
+      ],
+      [
+        "brands",
+        "[]"
+      ],
+      [
+        "units",
+        "[]"
+      ],
+      [
+        "invoices",
+        "[]"
+      ],
+      [
+        "posCurrentItems",
+        "[     {       sNo: 1,       itemId: 'food-bp',       itemName: 'bread pakoda',  "
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleCopyStocks",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleExportCsv",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleExportItemRegister",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleImportClick",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleFileImport",
+        "has_api": false,
+        "pms_writes": [
+          "saveLiquorItem"
+        ],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleAddNewUnit",
+        "has_api": false,
+        "pms_writes": [
+          "saveLiquorUnit"
+        ],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleAddNewCompany",
+        "has_api": false,
+        "pms_writes": [
+          "saveLiquorBrand"
+        ],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleAddItemToPos",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleRemovePosItem",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveAndPrintBill",
+        "has_api": false,
+        "pms_writes": [
+          "saveBarInvoice"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleExecutePurchaseInward",
+        "has_api": false,
+        "pms_writes": [
+          "recordLiquorPurchaseInward"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleCreateLiquorItem",
+        "has_api": false,
+        "pms_writes": [
+          "saveLiquorItem"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "ManagerPinModal.tsx",
+    "rel_path": "src\\components\\pms\\ManagerPinModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [],
+    "direct_fetch": [],
+    "hotel_api_calls": [
+      "verifyManagerPin"
+    ],
+    "decentro_calls": [],
+    "state_inits": [],
+    "handlers": [
+      {
+        "name": "handleSubmit",
+        "has_api": true,
+        "pms_writes": [],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "MarkDirtyModal.tsx",
+    "rel_path": "src\\components\\pms\\MarkDirtyModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "updateRoomStatus",
+      "getRooms"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [],
+    "handlers": [
+      {
+        "name": "handleUpdate",
+        "has_api": false,
+        "pms_writes": [
+          "updateRoomStatus"
+        ],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "MonthlyHotelSaleReportModal.tsx",
+    "rel_path": "src\\components\\pms\\MonthlyHotelSaleReportModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "exportHotelSaleReportXlsx",
+      "getMonthlyHotelSaleReport",
+      "getCompanyInfo"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [],
+    "handlers": [
+      {
+        "name": "handleExportXlsx",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "MonthlyRestaurantSaleReportModal.tsx",
+    "rel_path": "src\\components\\pms\\MonthlyRestaurantSaleReportModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getMonthlyRestaurantSaleReport",
+      "getCompanyInfo",
+      "exportRestaurantSaleReportXlsx"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [],
+    "handlers": [
+      {
+        "name": "handleExportXlsx",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "NcKotRegisterModal.tsx",
+    "rel_path": "src\\components\\pms\\NcKotRegisterModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getNcKots"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "ncKots",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleExport",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handlePrint",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "NewRoomBookingModal.tsx",
+    "rel_path": "src\\components\\pms\\NewRoomBookingModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "saveBooking",
+      "getRooms"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [
+      "uploadGuestDocument"
+    ],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "paymentSplits",
+        "[     { mode: 'Cash', amount: 1000, referenceNo: 'cash adv', remark: 'by raju' }"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleCustomerSearch",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleToggleRoom",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleAddPaymentMode",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleUpdateSplit",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleRemoveSplit",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSubmit",
+        "has_api": false,
+        "pms_writes": [
+          "saveBooking"
+        ],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "NewRoomCheckInModal.tsx",
+    "rel_path": "src\\components\\pms\\NewRoomCheckInModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getCommissionAgents",
+      "getBookings",
+      "isRoomVacantClean",
+      "normalizeRoomStatus",
+      "addAgentCommissionBooking",
+      "postJournalEntry",
+      "postChargeToRoom",
+      "hasPermission",
+      "getRooms",
+      "saveCheckIn",
+      "getBusinessDate"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [
+      "submitPoliceStationLog",
+      "uploadGuestDocument"
+    ],
+    "decentro_calls": [
+      "verifyGstin"
+    ],
+    "state_inits": [
+      [
+        "paymentSplits",
+        "[     { mode: 'UPI', amount: 1000, referenceNo: 'UPI/2026/ADV', remark: 'PhonePe"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleCheckInDateChange",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleCheckOutDateChange",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleDaysChange",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleVerifyGstin",
+        "has_api": true,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSelectBooking",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSelectGuest",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleAddPaymentMode",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleUpdateSplit",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSubmit",
+        "has_api": true,
+        "pms_writes": [
+          "addAgentCommissionBooking",
+          "saveCheckIn"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "NoDiscountMasterModal.tsx",
+    "rel_path": "src\\components\\pms\\NoDiscountMasterModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "saveMenuItems",
+      "isItemDiscountExempt",
+      "getMenuItems",
+      "getDiscountAuditRecords",
+      "getNoDiscountConfig",
+      "recordDiscountAudit",
+      "saveNoDiscountConfig"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "config",
+        "PmsStore.getNoDiscountConfig()"
+      ],
+      [
+        "auditLogs",
+        "[]"
+      ],
+      [
+        "menuItems",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleToggleGroup",
+        "has_api": false,
+        "pms_writes": [
+          "saveNoDiscountConfig"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleAddCustomGroup",
+        "has_api": false,
+        "pms_writes": [
+          "saveNoDiscountConfig"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleToggleItemExemption",
+        "has_api": false,
+        "pms_writes": [
+          "saveMenuItems"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveSimAsAudit",
+        "has_api": false,
+        "pms_writes": [
+          "recordDiscountAudit"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "OnlineGuestBookingModal.tsx",
+    "rel_path": "src\\components\\pms\\OnlineGuestBookingModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getAvailableRoomsForDates",
+      "saveBooking",
+      "sendWhatsAppNotification",
+      "getRooms",
+      "saveAdvanceReceipt"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "allRooms",
+        "[]"
+      ],
+      [
+        "availableRooms",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleSelectRoomFromGrid",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleCopyLink",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSelectSuggestion",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveBooking",
+        "has_api": false,
+        "pms_writes": [
+          "saveAdvanceReceipt",
+          "saveBooking"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handlePrint",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleShareWhatsApp",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "OnlineVsOfflineModal.tsx",
+    "rel_path": "src\\components\\pms\\OnlineVsOfflineModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "exportDatabaseBackup",
+      "getStorageMetrics",
+      "importDatabaseBackup"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "metrics",
+        "PmsStore.getStorageMetrics()"
+      ],
+      [
+        "quizAnswers",
+        "{     internet: 'reliable',     // 'none', 'intermittent', 'reliable'     locati"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleExportBackup",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleImportBackup",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "OtherMasterModal.tsx",
+    "rel_path": "src\\components\\pms\\OtherMasterModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "deleteLocker",
+      "getBusinessSources",
+      "deleteOtherCharge",
+      "getVoucherTypes",
+      "saveBusinessSource",
+      "saveLocker",
+      "getOtherCharges",
+      "deleteGstMaster",
+      "updateVoucherType",
+      "deleteBusinessSource",
+      "getGstMasters",
+      "getLockers",
+      "saveGstMaster",
+      "saveOtherCharge"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "gstMasters",
+        "[]"
+      ],
+      [
+        "businessSources",
+        "[]"
+      ],
+      [
+        "voucherTypes",
+        "[]"
+      ],
+      [
+        "lockers",
+        "[]"
+      ],
+      [
+        "otherCharges",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleOpenGstModal",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveGst",
+        "has_api": false,
+        "pms_writes": [
+          "saveGstMaster"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleDeleteGst",
+        "has_api": false,
+        "pms_writes": [
+          "deleteGstMaster"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleOpenBsModal",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveBs",
+        "has_api": false,
+        "pms_writes": [
+          "saveBusinessSource"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleDeleteBs",
+        "has_api": false,
+        "pms_writes": [
+          "deleteBusinessSource"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleOpenVtModal",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveVt",
+        "has_api": false,
+        "pms_writes": [
+          "updateVoucherType"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleOpenLockerModal",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveLocker",
+        "has_api": false,
+        "pms_writes": [
+          "saveLocker"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleDeleteLocker",
+        "has_api": false,
+        "pms_writes": [
+          "deleteLocker"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleOpenChargeModal",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveCharge",
+        "has_api": false,
+        "pms_writes": [
+          "saveOtherCharge"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleDeleteCharge",
+        "has_api": false,
+        "pms_writes": [
+          "deleteOtherCharge"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "OutstandingReceivablesModal.tsx",
+    "rel_path": "src\\components\\pms\\OutstandingReceivablesModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getOutstandingAccounts"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [],
+    "handlers": [
+      {
+        "name": "handlePrint",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "PartyLedgerModal.tsx",
+    "rel_path": "src\\components\\pms\\PartyLedgerModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getLedgerAccountOptions",
+      "getCompanyInfo",
+      "getPartyLedger"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [],
+    "handlers": [
+      {
+        "name": "handleSelectAccount",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleFilterSubmit",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handlePrint",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "PaymentRegisterModal.tsx",
+    "rel_path": "src\\components\\pms\\PaymentRegisterModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getCompanyInfo",
+      "deletePayment",
+      "getPayments"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [
+      "getGeneralPayments"
+    ],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "payments",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleOpenAdd",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleEdit",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleDelete",
+        "has_api": false,
+        "pms_writes": [
+          "deletePayment"
+        ],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handlePaymentSaved",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handlePrint",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "PettyExpenseModal.tsx",
+    "rel_path": "src\\components\\pms\\PettyExpenseModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getFolioSummary",
+      "getTrialBalance",
+      "getNightAuditPreCheck",
+      "runNightAudit",
+      "addExpense",
+      "isRoomOccupied",
+      "deleteExpense",
+      "getExpenses",
+      "getFolioPayments",
+      "getNightAudits",
+      "getRooms",
+      "getBusinessDate"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [],
+    "handlers": [
+      {
+        "name": "handleCreateExpense",
+        "has_api": false,
+        "pms_writes": [
+          "addExpense"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleExecuteNightAudit",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handlePrint",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "PmsHomeDashboardModal.tsx",
+    "rel_path": "src\\components\\pms\\PmsHomeDashboardModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getUnconfirmedBookings",
+      "getCurrentUser",
+      "getUnprintedRestaurantKots",
+      "sendWhatsAppNotification",
+      "hasPermission",
+      "getUnprintedRoomKots",
+      "getRooms"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "currentUser",
+        "PmsStore.getCurrentUser()"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleLaunchReportAction",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleUserChanged",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSendWhatsApp",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleCopyWebsiteLink",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleLaunchFeatureFromTop20",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "PoliceStationReportModal.tsx",
+    "rel_path": "src\\components\\pms\\PoliceStationReportModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getCurrentUser",
+      "getCurrentProperty",
+      "getPoliceStationReport"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [
+      "getPoliceStationLogs"
+    ],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "reportList",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleApplyFilter",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleOpenProfilePrint",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleExportCSV",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "PurchaseEntryModal.tsx",
+    "rel_path": "src\\components\\pms\\PurchaseEntryModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getPurchases",
+      "getMenuItems",
+      "savePurchase",
+      "getGodowns"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "godowns",
+        "[]"
+      ],
+      [
+        "menuItems",
+        "[]"
+      ],
+      [
+        "purchases",
+        "[]"
+      ],
+      [
+        "items",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleSelectItem",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleAddItem",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleRemoveItem",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSavePurchase",
+        "has_api": false,
+        "pms_writes": [
+          "savePurchase"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "ReceiptRegisterModal.tsx",
+    "rel_path": "src\\components\\pms\\ReceiptRegisterModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "deleteReceipt",
+      "getCompanyInfo",
+      "getReceipts"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [
+      "getGeneralReceipts"
+    ],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "receipts",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleOpenAdd",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleEdit",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleDelete",
+        "has_api": false,
+        "pms_writes": [
+          "deleteReceipt"
+        ],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleReceiptSaved",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handlePrint",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "RestaurantKotRegisterModal.tsx",
+    "rel_path": "src\\components\\pms\\RestaurantKotRegisterModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "markKotAsPrinted",
+      "getKots"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "kots",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleExportExcel",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "RestaurantTableDashboardModal.tsx",
+    "rel_path": "src\\components\\pms\\RestaurantTableDashboardModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getUnprintedRestaurantKots",
+      "getTables"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "tables",
+        "[]"
+      ]
+    ],
+    "handlers": []
+  },
+  {
+    "file": "RfidKeyCardModal.tsx",
+    "rel_path": "src\\components\\pms\\RfidKeyCardModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "extendKeyCard",
+      "encodeKeyCard",
+      "getKeyCards",
+      "getRooms"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "cards",
+        "[]"
+      ],
+      [
+        "rooms",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleIssueCard",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleConfirmExtension",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "RolesPermissionsModal.tsx",
+    "rel_path": "src\\components\\pms\\RolesPermissionsModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "saveRole",
+      "updateRolePermissions",
+      "deleteRole",
+      "getRoles"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "roles",
+        "[]"
+      ],
+      [
+        "selectedPermissions",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleOpenAddRole",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveRole",
+        "has_api": false,
+        "pms_writes": [
+          "saveRole"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleDeleteRole",
+        "has_api": false,
+        "pms_writes": [
+          "deleteRole"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleOpenGivePermissions",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleTogglePermission",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSelectAllPermissions",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleDeselectAllPermissions",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveRolePermissions",
+        "has_api": false,
+        "pms_writes": [
+          "updateRolePermissions"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "RoomCheckInRegisterModal.tsx",
+    "rel_path": "src\\components\\pms\\RoomCheckInRegisterModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getCurrentUser",
+      "getCheckIns",
+      "hasPermission",
+      "deleteCheckIn"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [
+      "getR2PresignedDownloadUrl"
+    ],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "checkIns",
+        "[]"
+      ],
+      [
+        "currentUser",
+        "PmsStore.getCurrentUser()"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleUserChange",
+        "has_api": false,
+        "pms_writes": [
+          "deleteCheckIn"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "RoomCheckOutModal.tsx",
+    "rel_path": "src\\components\\pms\\RoomCheckOutModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "saveFoodBill",
+      "getWhatsAppConfig",
+      "computeDayWiseRent",
+      "saveCheckout",
+      "postJournalEntry",
+      "getCheckouts",
+      "getAdvanceReceiptsByRoom",
+      "getCompanyInfo",
+      "hasPermission",
+      "getBusinessSettings",
+      "sendWhatsAppNotification",
+      "getFoodBills",
+      "getPendingKotsByRoom"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [
+      "saveCheckout"
+    ],
+    "decentro_calls": [
+      "verifyGstin"
+    ],
+    "state_inits": [
+      [
+        "dayWiseRent",
+        "[]"
+      ],
+      [
+        "pendingKots",
+        "() => targetRoom ? PmsStore.getPendingKotsByRoom(targetRoom.roomNo) : []"
+      ],
+      [
+        "paymentSplits",
+        "[     { mode: 'Cash', amount: netPayable > 0 ? netPayable : 0, referenceNo: '', "
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleVerifyGstin",
+        "has_api": true,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleClearKotsToFoodBill",
+        "has_api": false,
+        "pms_writes": [
+          "saveFoodBill"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleAutoSettle",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleCircuitTripped",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleUpdateSplit",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleRemoveSplit",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleCheckoutSubmit",
+        "has_api": true,
+        "pms_writes": [
+          "saveCheckout"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "RoomDashboardModal.tsx",
+    "rel_path": "src\\components\\pms\\RoomDashboardModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "importDatabaseFromJson",
+      "getBookings",
+      "getFolioSummary",
+      "applyFolioDiscount",
+      "resolveMaintenance",
+      "extendStay",
+      "postJournalEntry",
+      "postChargeToRoom",
+      "recordFolioPayment",
+      "checkInBooking",
+      "updateHousekeepingStatus",
+      "deleteBooking",
+      "exportDatabaseAsJson",
+      "resetToDemoSeedData",
+      "getRooms",
+      "getBusinessDate",
+      "updateRoomStatus"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "splitFolioA",
+        "['Room Accommodation (SAC 996311)']"
+      ],
+      [
+        "splitFolioB",
+        "['Vasudev Rasoi Dining (SAC 996331)', 'Laundry & Extras (SAC 9997)']"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleConflict",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleRecordPayment",
+        "has_api": false,
+        "pms_writes": [
+          "recordFolioPayment"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleApplyDiscount",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleExtendStaySubmit",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveMaintenanceBlock",
+        "has_api": false,
+        "pms_writes": [
+          "updateHousekeepingStatus"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleCheckInReservedGuest",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleCancelBooking",
+        "has_api": false,
+        "pms_writes": [
+          "updateRoomStatus",
+          "deleteBooking"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleExportJson",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleImportJson",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handlePostCharge",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "RoomKotRegisterModal.tsx",
+    "rel_path": "src\\components\\pms\\RoomKotRegisterModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "markKotAsPrinted",
+      "getKots",
+      "markAllKotsAsPrinted"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "kots",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handlePrintIndividual",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handlePrintAllUnprinted",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "RoomMasterModal.tsx",
+    "rel_path": "src\\components\\pms\\RoomMasterModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "deleteRoom",
+      "deleteRoomType",
+      "updateRoom",
+      "addRoom",
+      "getRooms",
+      "saveRoomType",
+      "getRoomTypes"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "rooms",
+        "[]"
+      ],
+      [
+        "roomTypes",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleOpenAddRoom",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveRoom",
+        "has_api": false,
+        "pms_writes": [
+          "updateRoom",
+          "addRoom"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleDeleteRoom",
+        "has_api": false,
+        "pms_writes": [
+          "deleteRoom"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleOpenAddRoomType",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveRoomType",
+        "has_api": false,
+        "pms_writes": [
+          "saveRoomType"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleDeleteRoomType",
+        "has_api": false,
+        "pms_writes": [
+          "deleteRoomType"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "RoomShiftModal.tsx",
+    "rel_path": "src\\components\\pms\\RoomShiftModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "shiftRoom",
+      "getPendingKotsByRoom",
+      "getRooms",
+      "getRoomShifts"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "rooms",
+        "[]"
+      ],
+      [
+        "pendingKots",
+        "[]"
+      ],
+      [
+        "shiftHistory",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleShiftSubmit",
+        "has_api": false,
+        "pms_writes": [
+          "shiftRoom"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "ShiftHandoverModal.tsx",
+    "rel_path": "src\\components\\pms\\ShiftHandoverModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getCurrentUser",
+      "getShiftHandoverData"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [
+      "recordShiftHandover",
+      "getShiftHandovers"
+    ],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "handoverRecord",
+        "() =>      PmsStore.getShiftHandoverData('19-07-2025', 'Morning')"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleRefresh",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleVerifyShiftHandover",
+        "has_api": true,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handlePrint",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "ShiftTableModal.tsx",
+    "rel_path": "src\\components\\pms\\ShiftTableModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "shiftTable",
+      "getTableShifts",
+      "getTables",
+      "mergeTableSessions"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "tables",
+        "[]"
+      ],
+      [
+        "shiftRecords",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleShiftNow",
+        "has_api": false,
+        "pms_writes": [
+          "shiftTable"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleMergeNow",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "StockReportMasterModal.tsx",
+    "rel_path": "src\\components\\pms\\StockReportMasterModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getStockAuditMovements",
+      "getConsolidatedStockReport",
+      "recordStockTransferDirect",
+      "getHotelAssetLinenRecords",
+      "getGodowns",
+      "savePurchase",
+      "getGodownStock"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "godowns",
+        "[]"
+      ],
+      [
+        "consolidatedRows",
+        "[]"
+      ],
+      [
+        "assetRecords",
+        "[]"
+      ],
+      [
+        "auditMovements",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleOpenItemAudit",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSearchChange",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleCopyGodown",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleExportCsvGodown",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleCopyConsolidated",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleExportCsvConsolidated",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSimStep1Purchase",
+        "has_api": false,
+        "pms_writes": [
+          "savePurchase"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSimStep2Transfer",
+        "has_api": false,
+        "pms_writes": [
+          "recordStockTransferDirect"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSimStep3Issue",
+        "has_api": false,
+        "pms_writes": [
+          "recordStockTransferDirect"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleResetSimulator",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "StockTransferModal.tsx",
+    "rel_path": "src\\components\\pms\\StockTransferModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "saveStockTransfer",
+      "getStockTransfers",
+      "getMenuItems",
+      "getGodowns"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "godowns",
+        "[]"
+      ],
+      [
+        "menuItems",
+        "[]"
+      ],
+      [
+        "transfers",
+        "[]"
+      ],
+      [
+        "items",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleSelectItem",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleAddItem",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleRemoveItem",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveTransfer",
+        "has_api": false,
+        "pms_writes": [
+          "saveStockTransfer"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "StoreWiseStockModal.tsx",
+    "rel_path": "src\\components\\pms\\StoreWiseStockModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "subscribe",
+      "getGodownStock",
+      "getGodowns"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "godowns",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleSearchChange",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleCopy",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleExportCsv",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "TableMasterModal.tsx",
+    "rel_path": "src\\components\\pms\\TableMasterModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "deleteTable",
+      "getTables",
+      "saveTable"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "tables",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleOpenAdd",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleOpenEdit",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveTable",
+        "has_api": false,
+        "pms_writes": [
+          "saveTable"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleDeleteTable",
+        "has_api": false,
+        "pms_writes": [
+          "deleteTable"
+        ],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "Top20FeaturesModal.tsx",
+    "rel_path": "src\\components\\pms\\Top20FeaturesModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getTop20Features",
+      "getRoomGPricingInfo"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [],
+    "handlers": [
+      {
+        "name": "handleLaunch",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handlePrintSummary",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "UnconfirmedBookingsModal.tsx",
+    "rel_path": "src\\components\\pms\\UnconfirmedBookingsModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getConfirmedBookings",
+      "getUnconfirmedBookings",
+      "confirmBooking",
+      "deleteBooking"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "unconfirmedList",
+        "[]"
+      ],
+      [
+        "confirmedList",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleConfirm",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleDelete",
+        "has_api": false,
+        "pms_writes": [
+          "deleteBooking"
+        ],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleOpenVoucher",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "UserManagementModal.tsx",
+    "rel_path": "src\\components\\pms\\UserManagementModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getProperties",
+      "getRoles",
+      "getCurrentUser",
+      "toggleUserStatus",
+      "hasPermission",
+      "deleteUser",
+      "getUsers",
+      "setCurrentUser",
+      "saveUser"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "users",
+        "[]"
+      ],
+      [
+        "roles",
+        "[]"
+      ],
+      [
+        "properties",
+        "[]"
+      ],
+      [
+        "currentUser",
+        "PmsStore.getCurrentUser()"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleOpenAddUser",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveUser",
+        "has_api": false,
+        "pms_writes": [
+          "saveUser"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSwitchActiveStaff",
+        "has_api": false,
+        "pms_writes": [
+          "setCurrentUser"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleToggleVerify",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleDeleteUser",
+        "has_api": false,
+        "pms_writes": [
+          "deleteUser"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleExport",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      }
+    ]
+  },
+  {
+    "file": "WhatsAppLogsModal.tsx",
+    "rel_path": "src\\components\\pms\\WhatsAppLogsModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getWhatsAppLogs",
+      "clearWhatsAppLogs"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "logs",
+        "[]"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleClearLogs",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleResend",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": false
+      }
+    ]
+  },
+  {
+    "file": "WhatsAppSettingModal.tsx",
+    "rel_path": "src\\components\\pms\\WhatsAppSettingModal.tsx",
+    "ls_keys": [],
+    "pms_calls": [
+      "getWhatsAppConfig",
+      "deleteWhatsAppTemplate",
+      "saveWhatsAppTemplate",
+      "getCurrentUser",
+      "getWhatsAppTemplate",
+      "saveWhatsAppConfig",
+      "sendWhatsAppNotification",
+      "getWhatsAppTemplates",
+      "renderWhatsAppMessage"
+    ],
+    "direct_fetch": [],
+    "hotel_api_calls": [],
+    "decentro_calls": [],
+    "state_inits": [
+      [
+        "templates",
+        "[]"
+      ],
+      [
+        "config",
+        "PmsStore.getWhatsAppConfig()"
+      ]
+    ],
+    "handlers": [
+      {
+        "name": "handleToggleActive",
+        "has_api": false,
+        "pms_writes": [
+          "saveWhatsAppTemplate"
+        ],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleOpenEdit",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleAddNew",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveEditing",
+        "has_api": false,
+        "pms_writes": [
+          "saveWhatsAppTemplate"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleDeleteTemplate",
+        "has_api": false,
+        "pms_writes": [
+          "deleteWhatsAppTemplate"
+        ],
+        "body_has_setstate": false
+      },
+      {
+        "name": "handleOpenTest",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSendTest",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSaveConfig",
+        "has_api": false,
+        "pms_writes": [
+          "saveWhatsAppConfig"
+        ],
+        "body_has_setstate": true
+      },
+      {
+        "name": "handleSendPromotional",
+        "has_api": false,
+        "pms_writes": [],
+        "body_has_setstate": true
+      }
+    ]
+  }
+]

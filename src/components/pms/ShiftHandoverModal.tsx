@@ -22,6 +22,7 @@ export const ShiftHandoverModal: React.FC<ShiftHandoverModalProps> = ({ isOpen, 
     if (isOpen) {
       hotelApi.getShiftHandovers().then(handovers => {
         if (handovers && handovers.length > 0) {
+          PmsStore.syncShiftHandovers(handovers);
           const match = handovers.find((h: any) => h.shiftDate === shiftDate && h.shiftType === shiftType);
           if (match) {
             setHandoverRecord(match);

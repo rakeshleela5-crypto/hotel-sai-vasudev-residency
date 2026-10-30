@@ -30,6 +30,33 @@ export const CompanyBrandingModal: React.FC<CompanyBrandingModalProps> = ({
       setAssets(PmsStore.getCompanyPicAssets());
       setActiveTab(initialTab);
       setSuccessBanner(null);
+
+      hotelApi.getCompanyInfo().then((cloudInfo: any) => {
+        if (cloudInfo && Object.keys(cloudInfo).length > 0) {
+          const current = PmsStore.getCompanyInfo();
+          const merged: PmsCompanyInfo = {
+            ...current,
+            ...cloudInfo,
+            firmName: cloudInfo.firm_name || cloudInfo.company_name || cloudInfo.firmName || current.firmName,
+            address1: cloudInfo.address1 || cloudInfo.address || current.address1,
+            city: cloudInfo.city || current.city,
+            pincode: cloudInfo.pincode || current.pincode,
+            state: cloudInfo.state || current.state,
+            phone: cloudInfo.phone || cloudInfo.phone_no || current.phone,
+            mobile: cloudInfo.mobile || cloudInfo.mobile_no || current.mobile,
+            email: cloudInfo.email || cloudInfo.email_id || current.email,
+            gstNo: cloudInfo.gst_no || cloudInfo.gstNo || current.gstNo,
+            bankName: cloudInfo.bank_name || cloudInfo.bankName || current.bankName,
+            bankAccountNo: cloudInfo.bank_account_no || cloudInfo.bankAccountNo || current.bankAccountNo,
+            bankIfsc: cloudInfo.bank_ifsc || cloudInfo.bankIfsc || current.bankIfsc,
+            bankBranch: cloudInfo.bank_branch || cloudInfo.bankBranch || current.bankBranch,
+            upiId: cloudInfo.upi_id || cloudInfo.upiId || current.upiId,
+            jurisdiction: cloudInfo.jurisdiction || current.jurisdiction
+          };
+          PmsStore.syncCompanyInfo(merged);
+          setCompanyInfo(merged);
+        }
+      }).catch(err => console.warn('[CompanyBrandingModal] Cloud fetch note:', err));
     }
   }, [isOpen, initialTab]);
 

@@ -8,6 +8,7 @@ import type {
   PmsBarBillItem
 } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
+import { hotelApi } from '../../services/api';
 import './pmsStyles.css';
 
 interface LiquorBarManagementModalProps {
@@ -137,11 +138,44 @@ export const LiquorBarManagementModal: React.FC<LiquorBarManagementModalProps> =
     if (!selectedInvoice && invs.length > 0) {
       setSelectedInvoice(invs[0]);
     }
+
+    hotelApi.getLiquorStocks()
+      .then(cloudStocks => {
+        if (Array.isArray(cloudStocks) && cloudStocks.length > 0) {
+          const mapped: PmsBrandWiseLiquorStock[] = cloudStocks.map((cs: any) => ({
+            brand: cs.brand,
+            bottleMl: cs.bottle_size_ml || 750,
+            stockInMl: (Number(cs.opening_bottles || 0) + Number(cs.received_bottles || 0)) * (cs.bottle_size_ml || 750),
+            stockOutMl: 0,
+            closingMl: Number(cs.closing_bottles || 0) * (cs.bottle_size_ml || 750),
+            closingBottel: Number(cs.closing_bottles || 0),
+            lastUpdated: cs.updated_at || new Date().toISOString()
+          }));
+          PmsStore.syncLiquorStocks(mapped);
+          setStocks(mapped);
+        }
+      })
+      .catch(e => console.warn('[LiquorBarManagementModal] Cloud stocks fetch note:', e));
+
+    hotelApi.getLiquorItems()
+      .then(cloudItems => {
+        if (Array.isArray(cloudItems) && cloudItems.length > 0) {
+          PmsStore.syncLiquorItems(cloudItems);
+          setItems(cloudItems);
+        }
+      })
+      .catch(e => console.warn('[LiquorBarManagementModal] Cloud items fetch note:', e));
   };
 
   useEffect(() => {
     if (isOpen) {
       loadData();
+      const unsub = PmsStore.subscribe(() => {
+        setStocks(PmsStore.getBrandWiseLiquorStocks());
+        setItems(PmsStore.getLiquorItems());
+        setInvoices(PmsStore.getBarInvoices());
+      });
+      return () => unsub();
     }
   }, [isOpen]);
 

@@ -778,6 +778,14 @@ export const hotelApi = {
     return await res.json();
   },
 
+  async deletePettyExpense(expenseId: string | number): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/expenses/${encodeURIComponent(String(expenseId))}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete petty expense');
+    return await res.json();
+  },
+
   async getNightAudits(): Promise<any[]> {
     const res = await fetch(`${API_BASE_URL}/pms/night-audits`);
     if (!res.ok) throw new Error('Failed to fetch night audit records');
@@ -911,6 +919,25 @@ export const hotelApi = {
     } catch {
       return null;
     }
+  },
+
+  async encodeKeycard(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/keycards/encode`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to encode keycard in cloud');
+    }
+    return await res.json();
+  },
+
+  async getKeycards(): Promise<any[]> {
+    const res = await fetch(`${API_BASE_URL}/pms/keycards`);
+    if (!res.ok) return [];
+    return await res.json();
   },
 
   async saveGroupBooking(payload: any): Promise<any> {

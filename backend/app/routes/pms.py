@@ -6946,3 +6946,219 @@ def delete_table_endpoint(table_id: str, db: Session = Depends(get_db)):
     db.commit()
     return {"success": True, "deletedCount": deleted}
 
+# --- 31. Inventory Purchases & Godown Stock Tracking ---
+@router.post("/inventory/purchases")
+def save_inventory_purchase(payload: dict = Body(...), db: Session = Depends(get_db)):
+    bill_no = str(payload.get("bill_no") or payload.get("billNo") or f"PUR-{int(datetime.datetime.now().timestamp())}")
+    existing = db.query(models.InventoryPurchase).filter(models.InventoryPurchase.bill_no == bill_no).first()
+    if existing:
+        existing.bill_date = payload.get("bill_date") or payload.get("billDate") or existing.bill_date
+        existing.supplier_name = payload.get("account_name") or payload.get("accountName") or payload.get("supplier_name") or existing.supplier_name
+        existing.godown = payload.get("godown") or existing.godown
+        existing.terms = payload.get("terms") or existing.terms
+        existing.items_json = json.dumps(payload.get("items") or payload.get("items_json") or []) if isinstance(payload.get("items"), list) else str(payload.get("items_json") or existing.items_json)
+        existing.total_amount = float(payload.get("total_gross_amount") or payload.get("totalAmount") or existing.total_amount)
+        existing.tax_amount = float(payload.get("total_tax") or payload.get("totalGstAmt") or existing.tax_amount)
+        existing.net_amount = float(payload.get("total_net_value") or payload.get("totalNetValue") or existing.net_amount)
+        db.commit()
+        db.refresh(existing)
+        return {"success": True, "id": existing.id, "billNo": existing.bill_no, "action": "updated"}
+    
+    new_pur = models.InventoryPurchase(
+        bill_no=bill_no,
+        bill_date=payload.get("bill_date") or payload.get("billDate") or datetime.datetime.now().strftime("%d-%m-%Y"),
+        supplier_name=payload.get("account_name") or payload.get("accountName") or payload.get("supplier_name") or "General Supplier",
+        godown=payload.get("godown") or "Main Store",
+        terms=payload.get("terms") or "Credit",
+        items_json=json.dumps(payload.get("items") or payload.get("items_json") or []) if isinstance(payload.get("items"), list) else str(payload.get("items_json") or "[]"),
+        total_amount=float(payload.get("total_gross_amount") or payload.get("totalAmount") or 0.0),
+        tax_amount=float(payload.get("total_tax") or payload.get("totalGstAmt") or 0.0),
+        net_amount=float(payload.get("total_net_value") or payload.get("totalNetValue") or 0.0)
+    )
+    db.add(new_pur)
+    db.commit()
+    db.refresh(new_pur)
+    return {"success": True, "id": new_pur.id, "billNo": new_pur.bill_no, "action": "created"}
+
+@router.get("/inventory/purchases")
+def get_inventory_purchases(db: Session = Depends(get_db)):
+    records = db.query(models.InventoryPurchase).order_by(models.InventoryPurchase.id.desc()).all()
+    return [{
+        "id": f"pur-{r.id}",
+        "billNo": r.bill_no,
+        "billDate": r.bill_date,
+        "accountName": r.supplier_name,
+        "godown": r.godown,
+        "terms": r.terms,
+        "items": json.loads(r.items_json) if r.items_json else [],
+        "totalAmount": r.total_amount,
+        "totalDiscount": 0.0,
+        "totalGstAmt": r.tax_amount,
+        "totalNetValue": r.net_amount,
+        "createdAt": r.created_at.isoformat() if r.created_at else None
+    } for r in records]
+
+# --- 32. Godown Stock Transfers ---
+@router.post("/inventory/transfers")
+def save_stock_transfer(payload: dict = Body(...), db: Session = Depends(get_db)):
+    entry_no = str(payload.get("entry_no") or payload.get("entryNo") or f"TR-{int(datetime.datetime.now().timestamp())}")
+    existing = db.query(models.StockTransfer).filter(models.StockTransfer.entry_no == entry_no).first()
+    if existing:
+        existing.date = payload.get("date") or existing.date
+        existing.from_godown = payload.get("from_godown") or payload.get("fromGodown") or existing.from_godown
+        existing.to_godown = payload.get("to_godown") or payload.get("toGodown") or existing.to_godown
+        existing.items_json = json.dumps(payload.get("items") or []) if isinstance(payload.get("items"), list) else str(payload.get("items_json") or existing.items_json)
+        existing.remark = payload.get("remarks") or payload.get("remark") or existing.remark
+        db.commit()
+        db.refresh(existing)
+        return {"success": True, "id": existing.id, "entryNo": existing.entry_no, "action": "updated"}
+
+    new_tr = models.StockTransfer(
+        entry_no=entry_no,
+        date=payload.get("date") or datetime.datetime.now().strftime("%d-%m-%Y"),
+        from_godown=payload.get("from_godown") or payload.get("fromGodown") or "Main Store",
+        to_godown=payload.get("to_godown") or payload.get("toGodown") or "Kitchen Store",
+        items_json=json.dumps(payload.get("items") or []) if isinstance(payload.get("items"), list) else str(payload.get("items_json") or "[]"),
+        total_qty=float(payload.get("total_qty") or payload.get("totalQty") or 0.0),
+        total_amount=float(payload.get("total_amount") or payload.get("totalAmount") or 0.0),
+        total_discount=float(payload.get("total_discount") or payload.get("totalDiscount") or 0.0),
+        total_taxable=float(payload.get("total_taxable") or payload.get("totalTaxable") or 0.0),
+        total_gst_amt=float(payload.get("total_gst_amt") or payload.get("totalGstAmt") or 0.0),
+        total_net_value=float(payload.get("total_net_value") or payload.get("totalNetValue") or 0.0),
+        remark=payload.get("remarks") or payload.get("remark")
+    )
+    db.add(new_tr)
+    db.commit()
+    db.refresh(new_tr)
+    return {"success": True, "id": new_tr.id, "entryNo": new_tr.entry_no, "action": "created"}
+
+@router.get("/inventory/transfers")
+def get_stock_transfers(db: Session = Depends(get_db)):
+    records = db.query(models.StockTransfer).order_by(models.StockTransfer.id.desc()).all()
+    return [{
+        "id": f"tr-{r.id}",
+        "entryNo": r.entry_no,
+        "date": r.date,
+        "fromGodown": r.from_godown,
+        "toGodown": r.to_godown,
+        "items": json.loads(r.items_json) if r.items_json else [],
+        "totalQty": r.total_qty,
+        "totalNetValue": r.total_net_value,
+        "remarks": r.remark,
+        "createdAt": r.created_at.isoformat() if r.created_at else None
+    } for r in records]
+
+# --- 33. RFID Keycard Encoding & Tracking ---
+@router.post("/keycards/encode")
+def encode_keycard(payload: dict = Body(...), db: Session = Depends(get_db)):
+    card_number = str(payload.get("card_number") or payload.get("cardNumber") or "")
+    if not card_number:
+        raise HTTPException(status_code=400, detail="Card number is required")
+    existing = db.query(models.RfidKeyCard).filter(models.RfidKeyCard.card_number == card_number).first()
+    if existing:
+        existing.room_no = payload.get("room_no") or payload.get("roomNo") or existing.room_no
+        existing.guest_name = payload.get("guest_name") or payload.get("guestName") or existing.guest_name
+        existing.check_in_time = payload.get("check_in_time") or payload.get("checkInTime") or existing.check_in_time
+        existing.valid_until = payload.get("valid_until") or payload.get("validUntil") or existing.valid_until
+        existing.status = payload.get("status") or existing.status
+        existing.issued_by = payload.get("issued_by") or payload.get("issuedBy") or existing.issued_by
+        db.commit()
+        db.refresh(existing)
+        return {"success": True, "card": card_number, "action": "updated"}
+
+    new_card = models.RfidKeyCard(
+        card_number=card_number,
+        card_uuid=payload.get("card_uuid") or payload.get("cardUuid"),
+        room_no=payload.get("room_no") or payload.get("roomNo") or "101",
+        guest_name=payload.get("guest_name") or payload.get("guestName") or "Guest",
+        check_in_time=payload.get("check_in_time") or payload.get("checkInTime") or datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+        valid_until=payload.get("valid_until") or payload.get("validUntil") or (datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%Y-%m-%d %H:%M"),
+        status=payload.get("status") or "Active",
+        issued_by=payload.get("issued_by") or payload.get("issuedBy") or "Reception"
+    )
+    db.add(new_card)
+    db.commit()
+    db.refresh(new_card)
+    return {"success": True, "card": new_card.card_number, "action": "created"}
+
+@router.get("/keycards")
+def get_keycards(db: Session = Depends(get_db)):
+    records = db.query(models.RfidKeyCard).order_by(models.RfidKeyCard.id.desc()).all()
+    return [{
+        "id": r.id,
+        "cardNumber": r.card_number,
+        "cardUuid": r.card_uuid,
+        "roomNo": r.room_no,
+        "guestName": r.guest_name,
+        "checkInTime": r.check_in_time,
+        "validUntil": r.valid_until,
+        "status": r.status,
+        "issuedBy": r.issued_by,
+        "createdAt": r.created_at.isoformat() if r.created_at else None
+    } for r in records]
+
+# --- 34. Group Reservations & Tour Blocks ---
+@router.post("/group-bookings")
+def save_group_booking(payload: dict = Body(...), db: Session = Depends(get_db)):
+    group_id = str(payload.get("group_id") or payload.get("groupId") or f"GRP-{int(datetime.datetime.now().timestamp())}")
+    existing = db.query(models.GroupBooking).filter(models.GroupBooking.group_id == group_id).first()
+    if existing:
+        existing.group_name = payload.get("group_name") or payload.get("groupName") or existing.group_name
+        existing.contact_person = payload.get("contact_person") or payload.get("contactPerson") or existing.contact_person
+        existing.contact_phone = payload.get("contact_phone") or payload.get("contactPhone") or existing.contact_phone
+        existing.booking_source = payload.get("booking_source") or payload.get("bookingSource") or existing.booking_source
+        existing.check_in_date = payload.get("check_in_date") or payload.get("checkInDate") or existing.check_in_date
+        existing.check_out_date = payload.get("check_out_date") or payload.get("checkOutDate") or existing.check_out_date
+        existing.total_amount = float(payload.get("total_amount") or payload.get("totalAmount") or existing.total_amount)
+        existing.advance_paid = float(payload.get("advance_paid") or payload.get("advancePaid") or existing.advance_paid)
+        existing.balance_due = max(0.0, existing.total_amount - existing.advance_paid)
+        existing.rooms_allocated_json = json.dumps(payload.get("rooms") or []) if isinstance(payload.get("rooms"), list) else str(payload.get("rooms_allocated_json") or existing.rooms_allocated_json)
+        existing.status = payload.get("status") or existing.status
+        existing.special_instructions = payload.get("notes") or payload.get("special_instructions") or existing.special_instructions
+        db.commit()
+        db.refresh(existing)
+        return {"success": True, "groupId": existing.group_id, "action": "updated"}
+
+    tot = float(payload.get("total_amount") or payload.get("totalAmount") or 0.0)
+    adv = float(payload.get("advance_paid") or payload.get("advancePaid") or 0.0)
+    new_grp = models.GroupBooking(
+        group_id=group_id,
+        group_name=payload.get("group_name") or payload.get("groupName") or "Tour Group",
+        contact_person=payload.get("contact_person") or payload.get("contactPerson") or "Group Leader",
+        contact_phone=payload.get("contact_phone") or payload.get("contactPhone") or "9999999999",
+        booking_source=payload.get("booking_source") or payload.get("bookingSource") or "Direct Phone Reservation",
+        check_in_date=payload.get("check_in_date") or payload.get("checkInDate") or datetime.datetime.now().strftime("%Y-%m-%d"),
+        check_out_date=payload.get("check_out_date") or payload.get("checkOutDate") or (datetime.datetime.now() + datetime.timedelta(days=2)).strftime("%Y-%m-%d"),
+        total_amount=tot,
+        advance_paid=adv,
+        balance_due=max(0.0, tot - adv),
+        rooms_allocated_json=json.dumps(payload.get("rooms") or []) if isinstance(payload.get("rooms"), list) else str(payload.get("rooms_allocated_json") or "[]"),
+        guests_json=json.dumps(payload.get("guests") or []) if isinstance(payload.get("guests"), list) else str(payload.get("guests_json") or "[]"),
+        special_instructions=payload.get("notes") or payload.get("special_instructions"),
+        status=payload.get("status") or "Confirmed"
+    )
+    db.add(new_grp)
+    db.commit()
+    db.refresh(new_grp)
+    return {"success": True, "groupId": new_grp.group_id, "action": "created"}
+
+@router.get("/group-bookings")
+def get_group_bookings(db: Session = Depends(get_db)):
+    records = db.query(models.GroupBooking).order_by(models.GroupBooking.id.desc()).all()
+    return [{
+        "groupId": r.group_id,
+        "groupName": r.group_name,
+        "contactPerson": r.contact_person,
+        "contactPhone": r.contact_phone,
+        "bookingSource": r.booking_source,
+        "roomsCount": len(json.loads(r.rooms_allocated_json)) if r.rooms_allocated_json else 1,
+        "rooms": json.loads(r.rooms_allocated_json) if r.rooms_allocated_json else [],
+        "checkInDate": r.check_in_date,
+        "checkOutDate": r.check_out_date,
+        "totalAmount": r.total_amount,
+        "advancePaid": r.advance_paid,
+        "status": r.status,
+        "notes": r.special_instructions,
+        "createdAt": r.created_at.isoformat() if r.created_at else None
+    } for r in records]
+

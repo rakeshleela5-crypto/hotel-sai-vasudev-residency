@@ -29,11 +29,16 @@ export const ReceiptRegisterModal: React.FC<ReceiptRegisterModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setReceipts(PmsStore.getReceipts());
+      const unsub = PmsStore.subscribe(() => {
+        setReceipts(PmsStore.getReceipts());
+      });
       hotelApi.getGeneralReceipts().then(cloudList => {
         if (cloudList && cloudList.length > 0) {
+          PmsStore.syncReceipts(cloudList);
           setReceipts(cloudList);
         }
       }).catch(err => console.warn('[ReceiptRegisterModal] Cloud receipts fetch note:', err));
+      return () => unsub();
     }
   }, [isOpen]);
 

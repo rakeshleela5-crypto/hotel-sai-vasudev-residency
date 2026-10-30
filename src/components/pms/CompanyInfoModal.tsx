@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { PmsCompanyInfo } from '../../types/pmsModels';
 import { PmsStore, DEFAULT_COMPANY_INFO } from '../../services/pmsStore';
+import { hotelApi } from '../../services/api';
 import './pmsStyles.css';
 
 interface CompanyInfoModalProps {
@@ -22,6 +23,32 @@ export const CompanyInfoModal: React.FC<CompanyInfoModalProps> = ({
       const current = PmsStore.getCompanyInfo();
       setFormData(current);
       setSuccessBanner(null);
+
+      hotelApi.getCompanyInfo().then((cloudInfo: any) => {
+        if (cloudInfo && Object.keys(cloudInfo).length > 0) {
+          const merged: PmsCompanyInfo = {
+            ...current,
+            ...cloudInfo,
+            firmName: cloudInfo.firm_name || cloudInfo.company_name || cloudInfo.firmName || current.firmName,
+            address1: cloudInfo.address1 || cloudInfo.address || current.address1,
+            city: cloudInfo.city || current.city,
+            pincode: cloudInfo.pincode || current.pincode,
+            state: cloudInfo.state || current.state,
+            phone: cloudInfo.phone || cloudInfo.phone_no || current.phone,
+            mobile: cloudInfo.mobile || cloudInfo.mobile_no || current.mobile,
+            email: cloudInfo.email || cloudInfo.email_id || current.email,
+            gstNo: cloudInfo.gst_no || cloudInfo.gstNo || current.gstNo,
+            bankName: cloudInfo.bank_name || cloudInfo.bankName || current.bankName,
+            bankAccountNo: cloudInfo.bank_account_no || cloudInfo.bankAccountNo || current.bankAccountNo,
+            bankIfsc: cloudInfo.bank_ifsc || cloudInfo.bankIfsc || current.bankIfsc,
+            bankBranch: cloudInfo.bank_branch || cloudInfo.bankBranch || current.bankBranch,
+            upiId: cloudInfo.upi_id || cloudInfo.upiId || current.upiId,
+            jurisdiction: cloudInfo.jurisdiction || current.jurisdiction
+          };
+          PmsStore.syncCompanyInfo(merged);
+          setFormData(merged);
+        }
+      }).catch(err => console.warn('[CompanyInfoModal] Cloud fetch note:', err));
     }
   }, [isOpen]);
 

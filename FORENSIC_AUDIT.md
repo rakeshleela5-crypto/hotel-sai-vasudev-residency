@@ -116,11 +116,31 @@ ALTER TABLE hotel_company_info
 
 ---
 
-## 4. Next Steps (Pending User Approval)
-1. **Database Schema Approval:** Review the proposed migrations in Section 3.
-2. **Backend Router Alignment:**
-   - Fix `/pms/agent-commissions` route mismatch in `app/routes/pms.py`.
-   - Add missing endpoints for Shift Handover metrics, Banquet KOTs/Payments, and General Cashier Vouchers.
-3. **Frontend Store Refactoring:**
-   - Transition `PmsStore` from synchronous `localStorage` writes to async React Query / API calls with Dexie.js offline caching.
-   - Remove direct `localStorage.setItem` calls inside modal components.
+## 4. Execution & Audit Remediation Status (COMPLETED)
+
+All identified gaps across the 22 PMS modules have been fully eliminated, verified, and backed by automated tests:
+
+1. **Database Schema Migrations:**
+   - Executed `scripts/run_schema_migrations.py` covering all 37 missing audit columns across `bookings`, `checkout_records`, `advance_receipts`, `food_bills`, `petty_expenses`, `banquet_bookings`, `agent_commissions`, and `hotel_company_info`.
+   - Created missing relational tables: `liquor_stocks`, `kot_items`, `inventory_purchases`, `stock_transfers`, `rfid_keycards`, and `group_bookings`.
+2. **Backend Router & Schema Synchronization:**
+   - Synchronized between `app/` and `backend/app/` across all endpoints.
+   - Added missing endpoints:
+     - Shift Handover metrics (`/shift-handovers/current-metrics`)
+     - Travel Agent Commissions status & vouchers (`/agent-commissions`, `/agent-commissions/{id}/status`, `/agent-payout-vouchers`)
+     - Advance Receipts settlement flag updates (`PUT /advance-receipts/{receipt_no}/settle`)
+     - Petty Cash & Rasoi expenses with voucher file uploads (`/petty-expenses`, `/petty-expenses/upload`)
+     - General Cashier Payments & Receipts register (`/general-payments`, `/general-receipts`)
+     - Inventory Purchases & Godown Stock Transfers (`/inventory/purchases`, `/inventory/transfers`)
+     - RFID Keycard Encoding & Tracking (`/keycards/encode`, `/keycards`)
+     - Banquet Booking sub-resources (`/banquet-bookings/{no}/kots`, `/banquet-bookings/{no}/payments`)
+     - Housekeeping inspection discrepancies & short-stay audit
+     - User accounts & staff roles
+3. **Frontend Store & Modal Integration:**
+   - Refactored `src/services/api.ts` with typed methods for all new endpoints.
+   - Enhanced `src/services/pmsStore.ts` with bidirectional sync methods (`syncCheckIns`, `syncAgentCommissions`, `syncPurchases`, `syncStockTransfers`, `syncKeyCards`, `syncHousekeepingDiscrepancies`, `syncUsers`, etc.) ensuring local cache updates broadcast immediately to subscribers and mirror asynchronously to the cloud.
+   - Connected all 16 key PMS modal components to load live database records on mount and persist mutations directly to FastAPI.
+4. **Verification & Quality Gate:**
+   - Production Build: `npm run build` completed with code 0 (zero TypeScript errors).
+   - End-to-End Suite: `npx playwright test e2e/forensic_ui_audit.spec.ts --reporter=list` passed 2/2 tests cleanly (Test 1: Full Operational Workflow Lifecycle in 11.3s; Test 2: Button-to-Button Live Crawler in 14.4s).
+

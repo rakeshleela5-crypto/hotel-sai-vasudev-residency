@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PmsStore } from '../../services/pmsStore';
+import { hotelApi } from '../../services/api';
 import type { HousekeepingDiscrepancy } from '../../types/pmsModels';
 
 interface HousekeepingDiscrepancyModalProps {
@@ -42,6 +43,33 @@ export const HousekeepingDiscrepancyModal: React.FC<HousekeepingDiscrepancyModal
         if (occ) setSelectedRoomNo(occ.roomNo);
         else setSelectedRoomNo('101');
       }
+
+      const unsub = PmsStore.subscribe(() => {
+        refreshData();
+      });
+
+      hotelApi.getHousekeepingDiscrepancies().then(cloudDiscs => {
+        if (Array.isArray(cloudDiscs) && cloudDiscs.length > 0) {
+          const mapped: HousekeepingDiscrepancy[] = cloudDiscs.map((d: any) => ({
+            id: d.discrepancy_id || d.id,
+            roomNo: d.room_no || d.roomNo,
+            pmsStatus: d.front_desk_status || d.pmsStatus || 'occupied',
+            housekeepingStatus: d.housekeeping_status || d.housekeepingStatus || 'Vacant Dirty',
+            guestName: d.guest_name || 'In-House Guest',
+            reportedBy: d.reported_by || 'Housekeeping Attendant',
+            reportedAt: d.reported_at || new Date().toISOString(),
+            discrepancyType: d.discrepancy_type || 'PMS_OCCUPIED_HK_VACANT',
+            severity: d.severity || 'CRITICAL_FRAUD_ALERT',
+            notes: d.remarks || d.notes || '',
+            status: d.resolved ? 'Resolved' : 'Pending',
+            resolved: d.resolved
+          }));
+          PmsStore.syncHousekeepingDiscrepancies(mapped);
+          setDiscrepancies(mapped);
+        }
+      }).catch(err => console.warn('[HousekeepingDiscrepancyModal] Cloud fetch note:', err));
+
+      return () => unsub();
     }
   }, [isOpen]);
 

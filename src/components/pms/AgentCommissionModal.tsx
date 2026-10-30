@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { 
   PmsCommissionAgent, 
   PmsAgentPayoutVoucher,
+  PmsAgentCommissionBooking,
   PmsAgentType,
   PmsCommissionCalcType
 } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
+import { hotelApi } from '../../services/api';
 import './pmsStyles.css';
 
 interface AgentCommissionModalProps {
@@ -50,11 +52,46 @@ export const AgentCommissionModal: React.FC<AgentCommissionModalProps> = ({
   // Printable Voucher State
   const [printedVoucher, setPrintedVoucher] = useState<PmsAgentPayoutVoucher | null>(null);
 
+  const [agents, setAgents] = useState<PmsCommissionAgent[]>(() => PmsStore.getCommissionAgents());
+  const [allCommissions, setAllCommissions] = useState<PmsAgentCommissionBooking[]>(() => PmsStore.getAgentCommissionBookings());
+  const [payouts, setPayouts] = useState<PmsAgentPayoutVoucher[]>(() => PmsStore.getAgentPayoutVouchers());
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setAgents(PmsStore.getCommissionAgents());
+    setAllCommissions(PmsStore.getAgentCommissionBookings());
+    setPayouts(PmsStore.getAgentPayoutVouchers());
+
+    const unsub = PmsStore.subscribe(() => {
+      setAgents(PmsStore.getCommissionAgents());
+      setAllCommissions(PmsStore.getAgentCommissionBookings());
+      setPayouts(PmsStore.getAgentPayoutVouchers());
+    });
+
+    Promise.allSettled([
+      hotelApi.getCommissionAgents(),
+      hotelApi.getAgentCommissions(),
+      hotelApi.getAgentPayoutVouchers()
+    ]).then(([agentsRes, commsRes, payoutsRes]) => {
+      if (agentsRes.status === 'fulfilled' && Array.isArray(agentsRes.value) && agentsRes.value.length > 0) {
+        PmsStore.syncCommissionAgents(agentsRes.value);
+        setAgents(PmsStore.getCommissionAgents());
+      }
+      if (commsRes.status === 'fulfilled' && Array.isArray(commsRes.value) && commsRes.value.length > 0) {
+        PmsStore.syncAgentCommissions(commsRes.value);
+        setAllCommissions(PmsStore.getAgentCommissionBookings());
+      }
+      if (payoutsRes.status === 'fulfilled' && Array.isArray(payoutsRes.value) && payoutsRes.value.length > 0) {
+        PmsStore.syncAgentPayoutVouchers(payoutsRes.value);
+        setPayouts(PmsStore.getAgentPayoutVouchers());
+      }
+    });
+
+    return () => unsub();
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
-  const agents = PmsStore.getCommissionAgents();
-  const allCommissions = PmsStore.getAgentCommissionBookings();
-  const payouts = PmsStore.getAgentPayoutVouchers();
   const top15Features = PmsStore.getTop15OfficialFeatures();
   const company = PmsStore.getCompanyInfo();
 

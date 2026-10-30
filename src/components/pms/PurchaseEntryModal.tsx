@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { PmsPurchaseBill, PmsPurchaseItem, MenuItem, PmsGodown } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
+import { hotelApi } from '../../services/api';
 import './pmsStyles.css';
 
 interface PurchaseEntryModalProps {
@@ -63,6 +64,19 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
       refreshData();
       setSuccessBanner(null);
       setSelectedBillForPrint(null);
+
+      const unsub = PmsStore.subscribe(() => {
+        refreshData();
+      });
+
+      hotelApi.getInventoryPurchases().then(cloudPurchases => {
+        if (Array.isArray(cloudPurchases) && cloudPurchases.length > 0) {
+          PmsStore.syncPurchases(cloudPurchases);
+          setPurchases(cloudPurchases);
+        }
+      }).catch(err => console.warn('[PurchaseEntryModal] Cloud sync note:', err));
+
+      return () => unsub();
     }
   }, [isOpen]);
 
