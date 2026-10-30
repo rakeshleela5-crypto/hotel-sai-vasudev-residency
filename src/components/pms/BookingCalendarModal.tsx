@@ -68,7 +68,7 @@ export const BookingCalendarModal: React.FC<BookingCalendarModalProps> = ({
           const localMap = new Map(currentLocal.map(g => [g.groupId, g]));
           pgGroups.forEach(pg => localMap.set(pg.groupId, pg));
           const merged = Array.from(localMap.values());
-          localStorage.setItem('svr_pms_group_bookings', JSON.stringify(merged));
+          PmsStore.syncGroupBookings(merged);
           setGroupBookings(merged);
         }
       })

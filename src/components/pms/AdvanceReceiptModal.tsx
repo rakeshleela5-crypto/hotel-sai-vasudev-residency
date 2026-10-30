@@ -35,7 +35,7 @@ export const AdvanceReceiptModal: React.FC<AdvanceReceiptModalProps> = ({
           const map = new Map(current.map(r => [r.receiptNo, r]));
           pgReceipts.forEach(r => map.set(r.receiptNo, r));
           const merged = Array.from(map.values());
-          localStorage.setItem('svr_pms_advance_receipts', JSON.stringify(merged));
+          PmsStore.syncAdvanceReceipts(merged);
           setReceipts(merged);
         }
       })

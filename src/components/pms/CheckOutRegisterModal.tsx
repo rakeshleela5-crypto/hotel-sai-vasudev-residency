@@ -43,7 +43,7 @@ export const CheckOutRegisterModal: React.FC<CheckOutRegisterModalProps> = ({
             const map = new Map(current.map(c => [c.invoiceNo, c]));
             pgCheckouts.forEach(c => map.set(c.invoiceNo, c));
             const merged = Array.from(map.values());
-            localStorage.setItem('svr_pms_checkouts', JSON.stringify(merged));
+            PmsStore.syncCheckouts(merged);
             setCheckouts(merged);
           }
         })

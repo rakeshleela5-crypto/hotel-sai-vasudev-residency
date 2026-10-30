@@ -54,6 +54,14 @@ class Booking(Base):
     guest_photo_url = Column(String(255), nullable=True) # Public guest photo URL
     invoice_pdf_key = Column(String(255), nullable=True) # Cloudflare R2 object key (e.g. invoices/2026/10/inv_101.pdf)
 
+    # Walk-In & Pilgrimage KYC Metadata
+    coming_from = Column(String(150), nullable=True)
+    proceeding_to = Column(String(150), nullable=True)
+    vehicle_no = Column(String(50), nullable=True)
+    darshan_slot = Column(String(100), nullable=True)
+    guest_gender = Column(String(20), nullable=True)
+    guest_age = Column(Integer, nullable=True)
+
     # Reservation Dates
     check_in_date = Column(String(50), nullable=False, index=True) # YYYY-MM-DD
     check_out_date = Column(String(50), nullable=False, index=True) # YYYY-MM-DD
@@ -276,6 +284,20 @@ class KotTicket(Base):
         Index("ix_kot_tickets_room_status", "room_no", "status"),
     )
 
+class KotItem(Base):
+    __tablename__ = "kot_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    kot_id = Column(Integer, ForeignKey("kot_tickets.id"), nullable=True, index=True)
+    kot_no = Column(String(100), index=True, nullable=False)
+    item_code = Column(String(50), nullable=True)
+    item_name = Column(String(150), nullable=False)
+    qty = Column(Float, nullable=False, default=1.0)
+    rate = Column(Float, nullable=False, default=0.0)
+    amount = Column(Float, nullable=False, default=0.0)
+    instruction = Column(String(255), nullable=True)
+    created_at = Column(TimezoneAwareDateTime, default=now_utc)
+
 class KotVoidAuditLog(Base):
     __tablename__ = "kot_void_audit_logs"
 
@@ -431,6 +453,11 @@ class FoodBill(Base):
     gst_amount = Column(Float, default=0.0)
     net_bill_amount = Column(Float, default=0.0)
     settlement_type = Column(String(50), default="Cash") # Settle To Room, Cash, Online, Card, Credit
+    discount_reason = Column(String(255), nullable=True)
+    payment_ref = Column(String(100), nullable=True)
+    billed_by = Column(String(100), default="Cashier")
+    cgst_amount = Column(Float, default=0.0)
+    sgst_amount = Column(Float, default=0.0)
     status = Column(String(50), default="Settled")
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
@@ -445,6 +472,8 @@ class PettyExpense(Base):
     payment_mode = Column(String(50), default="Cash") # Cash, Online
     paid_to = Column(String(150), nullable=False)
     description = Column(Text, nullable=True)
+    vendor_gstin = Column(String(20), nullable=True)
+    attachment_url = Column(String(500), nullable=True)
     bill_number = Column(String(100), nullable=True)
     approved_by = Column(String(100), default="General Manager")
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
@@ -511,6 +540,11 @@ class CheckoutRecord(Base):
     net_payable = Column(Float, default=0.0)
     payment_mode = Column(String(50), default="Cash")
     payments_json = Column(Text, default="[]")
+    payment_splits_json = Column(Text, default="[]")
+    settled_by_user_id = Column(String(100), nullable=True)
+    round_off_amount = Column(Float, default=0.0)
+    is_cancelled = Column(Boolean, default=False)
+    cancellation_reason = Column(String(255), nullable=True)
     checkout_remark = Column(Text, nullable=True)
     city = Column(String(100), nullable=True)
     state = Column(String(100), nullable=True)
@@ -534,6 +568,8 @@ class AdvanceReceipt(Base):
     mobile = Column(String(50), nullable=True)
     amount = Column(Float, nullable=False)
     payment_mode = Column(String(50), default="Cash")
+    transaction_ref = Column(String(100), nullable=True)
+    is_settled_in_checkout = Column(Boolean, default=False)
     remark = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
@@ -771,6 +807,10 @@ class BanquetBooking(Base):
     balance_due = Column(Float, default=0.0)
     status = Column(String(50), default="Confirmed")
     financial_summary_json = Column(Text, default="{}")
+    kots_json = Column(Text, default="[]")
+    payments_json = Column(Text, default="[]")
+    linked_rooms_json = Column(Text, default="[]")
+    seating_layout = Column(String(100), default="Standard Banquet")
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 class LiquorItem(Base):
@@ -1011,6 +1051,10 @@ class AgentCommissionAccrual(Base):
     net_payable_commission = Column(Float, default=0.0)
     status = Column(String(50), default="PENDING")
     payout_voucher_no = Column(String(100), nullable=True)
+    payout_voucher_id = Column(Integer, nullable=True)
+    approved_by = Column(String(100), default="General Manager")
+    payment_mode = Column(String(50), default="Direct Transfer")
+    utr_reference = Column(String(100), nullable=True)
     payout_date = Column(String(50), nullable=True)
     remarks = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
@@ -1167,6 +1211,15 @@ class HotelCompanyInfo(Base):
     seal_url = Column(String(500), nullable=True)
     default_bill_format = Column(String(50), default="standard")
     terms_and_conditions = Column(Text, nullable=True)
+    legal_name = Column(String(150), nullable=True)
+    pan_number = Column(String(20), nullable=True)
+    bank_name = Column(String(100), nullable=True)
+    bank_account_no = Column(String(50), nullable=True)
+    bank_ifsc = Column(String(20), nullable=True)
+    bank_branch = Column(String(100), nullable=True)
+    upi_id = Column(String(50), nullable=True)
+    phonepe_gpay = Column(String(50), nullable=True)
+    jurisdiction = Column(String(100), default="Rayagada Jurisdiction")
     updated_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 class LiquorStockAdjustment(Base):
@@ -1181,6 +1234,19 @@ class LiquorStockAdjustment(Base):
     pegs_per_bottle = Column(Integer, default=25)
     reference_no = Column(String(100), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class LiquorStock(Base):
+    __tablename__ = "liquor_stocks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    brand = Column(String(150), unique=True, index=True, nullable=False)
+    bottle_size_ml = Column(Integer, default=750)
+    opening_bottles = Column(Float, default=0.0)
+    received_bottles = Column(Float, default=0.0)
+    sold_pegs = Column(Float, default=0.0)
+    pegs_per_bottle = Column(Integer, default=25)
+    closing_bottles = Column(Float, default=0.0)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
 # =========================================================================
 # MODULE 1 & 2 ARCHITECTURAL ENTITIES (Financial Integrity & Concurrency)

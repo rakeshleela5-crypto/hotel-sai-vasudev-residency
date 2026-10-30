@@ -498,6 +498,24 @@ export const hotelApi = {
     return await res.json();
   },
 
+  async getCheckIns(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/check-ins`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async deleteCheckIn(bookingRef: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/check-ins/${encodeURIComponent(bookingRef)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to cancel check-in');
+    return await res.json();
+  },
+
   async checkOutBooking(payload: { booking_ref: string; settlement_payment_mode?: string; settlement_amount_paid?: number; transaction_ref?: string; processed_by?: string }) {
     const res = await fetch(`${API_BASE_URL}/pms/check-out`, {
       method: 'POST',
@@ -625,11 +643,25 @@ export const hotelApi = {
         console.info('[hotelApi.saveKotTicket] Wi-Fi offline, queuing steward KOT in Dexie (#33)');
         return await queueOfflineKot(payload);
       }
-      return await apiClient.post('/kot', payload);
+      const res = await fetch(`${API_BASE_URL}/pms/kots`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error('Failed to save KOT ticket to PostgreSQL');
+      return await res.json();
     } catch (err) {
       console.warn('[hotelApi.saveKotTicket] Network error, fallback queuing steward KOT in Dexie:', err);
       return await queueOfflineKot(payload);
     }
+  },
+
+  async deleteKotTicket(kotNo: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/kots/${encodeURIComponent(kotNo)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete KOT ticket');
+    return await res.json();
   },
 
   async getMasterItems(category: string): Promise<any[]> {
@@ -711,6 +743,14 @@ export const hotelApi = {
     const qs = params.toString() ? `?${params.toString()}` : '';
     const res = await fetch(`${API_BASE_URL}/pms/food-bills${qs}`);
     if (!res.ok) throw new Error('Failed to fetch food bills');
+    return await res.json();
+  },
+
+  async deleteFoodBill(billNo: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/food-bills/${encodeURIComponent(billNo)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete food bill');
     return await res.json();
   },
 
@@ -1350,6 +1390,26 @@ export const hotelApi = {
     return await res.json();
   },
 
+  async addBanquetKot(bookingNo: string, payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/banquet-bookings/${encodeURIComponent(bookingNo)}/kots`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to add catering KOT to banquet booking');
+    return await res.json();
+  },
+
+  async recordBanquetPayment(bookingNo: string, payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/banquet-bookings/${encodeURIComponent(bookingNo)}/payments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to record payment for banquet booking');
+    return await res.json();
+  },
+
   // Module 33: Restro-Bar & Liquor Excise
   async saveLiquorItem(payload: any): Promise<any> {
     const res = await fetch(`${API_BASE_URL}/pms/liquor-items`, {
@@ -1410,6 +1470,26 @@ export const hotelApi = {
       method: 'DELETE'
     });
     if (!res.ok) throw new Error('Failed to delete bar invoice from PostgreSQL');
+    return await res.json();
+  },
+
+  async getLiquorStocks(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/liquor-stocks`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async saveLiquorStock(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/liquor-stocks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to update liquor stock in PostgreSQL');
     return await res.json();
   },
 

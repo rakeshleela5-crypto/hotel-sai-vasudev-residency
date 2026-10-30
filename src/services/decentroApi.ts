@@ -6,8 +6,17 @@ const fetch = apiClient.fetch;
 // =========================================================================
 // API & WebSocket Configuration
 // =========================================================================
-const RAW_API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
-export const API_BASE_URL = RAW_API_URL.replace(/\/$/, '');
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return 'http://127.0.0.1:8000/api/v1';
+    }
+  }
+  const raw = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+  return raw.replace(/\/$/, '');
+};
+export const API_BASE_URL = getApiBaseUrl();
 
 // Determine backend host for WebSocket connection
 const getWsUrl = (): string => {

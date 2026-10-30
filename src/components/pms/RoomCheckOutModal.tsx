@@ -349,8 +349,10 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
     setPaymentSplits(paymentSplits.filter((_, i) => i !== idx));
   };
 
-  const handleCheckoutSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCheckoutSubmit = async (e?: React.FormEvent) => {
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
     if (!targetRoom) return;
 
     if (pendingKots.length > 0) {
@@ -428,109 +430,129 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
       miscGstAmount: miscTotalGst
     };
 
-    // Save checkout & automatically mark room as Dirty (VACANT_DIRTY) and enqueue high-priority housekeeping
     try {
-      await hotelApi.saveCheckout(checkoutData);
-      console.log('✅ Checkout invoice persisted directly to PostgreSQL');
-    } catch (apiErr) {
-      console.warn('⚠️ Direct PostgreSQL checkout save note:', apiErr);
-    }
-    PmsStore.saveCheckout(checkoutData);
+      // Save checkout & automatically mark room as Dirty (VACANT_DIRTY) and enqueue high-priority housekeeping
+      try {
+        await hotelApi.saveCheckout(checkoutData);
+        console.log('✅ Checkout invoice persisted directly to PostgreSQL');
+      } catch (apiErr) {
+        console.warn('⚠️ Direct PostgreSQL checkout save note:', apiErr);
+      }
+      PmsStore.saveCheckout(checkoutData);
 
-    // Double-Entry Journal Vouchers upon Final Checkout Settlement
-    try {
-      // 1. Post Receipt Vouchers for payments collected at checkout
-      paymentSplits.forEach(split => {
-        if (split.amount > 0) {
-          const debitAcc = split.mode === 'Cash'
-            ? 'Cash in Hand (Reception)'
-            : split.mode === 'Card'
-            ? 'Card EDC Receivable'
-            : (split.mode as string) === 'Credit'
-            ? 'Corporate City Ledger (Sundry Debtors)'
-            : 'HDFC Bank / UPI Settlement A/c';
-          
+      // Double-Entry Journal Vouchers upon Final Checkout Settlement
+      try {
+        // 1. Post Receipt Vouchers for payments collected at checkout
+        paymentSplits.forEach(split => {
+          if (split.amount > 0) {
+            const debitAcc = split.mode === 'Cash'
+              ? 'Cash in Hand (Reception)'
+              : split.mode === 'Card'
+              ? 'Card EDC Receivable'
+              : (split.mode as string) === 'Credit'
+              ? 'Corporate City Ledger (Sundry Debtors)'
+              : 'HDFC Bank / UPI Settlement A/c';
+            
+            PmsStore.postJournalEntry({
+              date: checkOutDate,
+              time: checkOutTime,
+              referenceNo: activeInvoiceNo,
+              voucherType: 'CheckOut',
+              debitAccount: debitAcc,
+              creditAccount: 'In-House Guest Folio Receivable',
+              amountPaise: Math.round(split.amount * 100),
+              amountRupees: split.amount,
+              narration: `Checkout settlement for Room ${targetRoom.roomNo} (${guestName}) via ${split.mode}`,
+              postedBy: 'Front Desk Mgr'
+            });
+          }
+        });
+
+        // 2. Room Revenue & Output Tax Journal
+        if (netRoomTaxable > 0) {
           PmsStore.postJournalEntry({
             date: checkOutDate,
             time: checkOutTime,
             referenceNo: activeInvoiceNo,
             voucherType: 'CheckOut',
-            debitAccount: debitAcc,
-            creditAccount: 'In-House Guest Folio Receivable',
-            amountPaise: Math.round(split.amount * 100),
-            amountRupees: split.amount,
-            narration: `Checkout settlement for Room ${targetRoom.roomNo} (${guestName}) via ${split.mode}`,
+            debitAccount: 'In-House Guest Folio Receivable',
+            creditAccount: 'Room Accommodation Revenue',
+            amountPaise: Math.round(netRoomTaxable * 100),
+            amountRupees: netRoomTaxable,
+            narration: `Room accommodation revenue finalized on checkout for Room ${targetRoom.roomNo}`,
             postedBy: 'Front Desk Mgr'
           });
         }
-      });
 
-      // 2. Room Revenue & Output Tax Journal
-      if (netRoomTaxable > 0) {
-        PmsStore.postJournalEntry({
-          date: checkOutDate,
-          time: checkOutTime,
-          referenceNo: activeInvoiceNo,
-          voucherType: 'CheckOut',
-          debitAccount: 'In-House Guest Folio Receivable',
-          creditAccount: 'Room Accommodation Revenue',
-          amountPaise: Math.round(netRoomTaxable * 100),
-          amountRupees: netRoomTaxable,
-          narration: `Room accommodation revenue finalized on checkout for Room ${targetRoom.roomNo}`,
-          postedBy: 'Front Desk Mgr'
-        });
-      }
-
-      if (isLocalGst && roomCgst > 0) {
-        PmsStore.postJournalEntry({
-          date: checkOutDate,
-          time: checkOutTime,
-          referenceNo: activeInvoiceNo,
-          voucherType: 'CheckOut',
-          debitAccount: 'In-House Guest Folio Receivable',
-          creditAccount: 'Output CGST @ 6%',
-          amountPaise: Math.round(roomCgst * 100),
-          amountRupees: roomCgst,
-          narration: `Output CGST levied on Room ${targetRoom.roomNo} invoice ${activeInvoiceNo}`,
-          postedBy: 'Front Desk Mgr'
-        });
-        PmsStore.postJournalEntry({
-          date: checkOutDate,
-          time: checkOutTime,
-          referenceNo: activeInvoiceNo,
-          voucherType: 'CheckOut',
-          debitAccount: 'In-House Guest Folio Receivable',
-          creditAccount: 'Output SGST @ 6%',
-          amountPaise: Math.round(roomSgst * 100),
-          amountRupees: roomSgst,
-          narration: `Output SGST levied on Room ${targetRoom.roomNo} invoice ${activeInvoiceNo}`,
-          postedBy: 'Front Desk Mgr'
-        });
-      }
-    } catch (jErr) {
-      console.error('Error posting checkout journal entries:', jErr);
-    }
-
-    // Auto WhatsApp on checkout
-    const waConfig = PmsStore.getWhatsAppConfig();
-    if (waConfig.autoSendOnCheckOut && guestPhone) {
-      PmsStore.sendWhatsAppNotification({
-        voucherType: 'Check_out_store',
-        recipientMobile: guestPhone,
-        recipientName: guestName,
-        voucherNo: activeInvoiceNo,
-        roomNo: targetRoom.roomNo,
-        templateParams: {
-          checkout_date: checkOutDate,
-          total_billamount: netPayable.toFixed(2)
+        if (isLocalGst && roomCgst > 0) {
+          PmsStore.postJournalEntry({
+            date: checkOutDate,
+            time: checkOutTime,
+            referenceNo: activeInvoiceNo,
+            voucherType: 'CheckOut',
+            debitAccount: 'In-House Guest Folio Receivable',
+            creditAccount: 'Output CGST @ 6%',
+            amountPaise: Math.round(roomCgst * 100),
+            amountRupees: roomCgst,
+            narration: `Output CGST levied on Room ${targetRoom.roomNo} invoice ${activeInvoiceNo}`,
+            postedBy: 'Front Desk Mgr'
+          });
+          PmsStore.postJournalEntry({
+            date: checkOutDate,
+            time: checkOutTime,
+            referenceNo: activeInvoiceNo,
+            voucherType: 'CheckOut',
+            debitAccount: 'In-House Guest Folio Receivable',
+            creditAccount: 'Output SGST @ 6%',
+            amountPaise: Math.round(roomSgst * 100),
+            amountRupees: roomSgst,
+            narration: `Output SGST levied on Room ${targetRoom.roomNo} invoice ${activeInvoiceNo}`,
+            postedBy: 'Front Desk Mgr'
+          });
         }
-      });
-    }
+      } catch (jErr) {
+        console.error('Error posting checkout journal entries:', jErr);
+      }
 
-    setIsProcessing(false);
-    onCheckoutComplete(checkoutData);
-    setShowInvoicePreview(true);
+      // Auto WhatsApp on checkout
+      try {
+        const waConfig = PmsStore.getWhatsAppConfig();
+        if (waConfig.autoSendOnCheckOut && guestPhone) {
+          PmsStore.sendWhatsAppNotification({
+            voucherType: 'Check_out_store',
+            recipientMobile: guestPhone,
+            recipientName: guestName,
+            voucherNo: activeInvoiceNo,
+            roomNo: targetRoom.roomNo,
+            templateParams: {
+              checkout_date: checkOutDate,
+              total_billamount: netPayable.toFixed(2)
+            },
+            openDirectly: false
+          });
+        }
+      } catch (waErr) {
+        console.error('Error sending WhatsApp notification:', waErr);
+      }
+    } catch (err) {
+      console.error('[handleCheckoutSubmit error]:', err);
+    } finally {
+      setIsProcessing(false);
+      try {
+        onCheckoutComplete(checkoutData);
+      } catch (ocErr) {
+        console.error('Error in onCheckoutComplete callback:', ocErr);
+      }
+      setShowInvoicePreview(true);
+    }
   };
+
+  useEffect(() => {
+    if (showInvoicePreview) {
+      const box = document.querySelector('.pms-form-box');
+      if (box) box.scrollTop = 0;
+    }
+  }, [showInvoicePreview]);
 
   if (!isOpen || !targetRoom) return null;
 

@@ -70,7 +70,16 @@ export class R2StorageError extends Error {
 }
 
 // Configurable base URL
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1').replace(/\/$/, '');
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return 'http://127.0.0.1:8000/api/v1';
+    }
+  }
+  return (import.meta.env.VITE_API_BASE_URL || 'https://hotel-sai-vasudev-residency-production.up.railway.app/api/v1').replace(/\/$/, '');
+};
+const API_BASE_URL = getApiBaseUrl();
 
 // 25 MB max limit
 const MAX_UPLOAD_SIZE = 25 * 1024 * 1024;

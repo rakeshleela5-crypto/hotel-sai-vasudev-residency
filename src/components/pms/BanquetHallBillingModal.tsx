@@ -5,6 +5,7 @@ import type {
   PmsBanquetKot
 } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
+import { hotelApi } from '../../services/api';
 
 interface BanquetHallBillingModalProps {
   isOpen: boolean;
@@ -61,6 +62,21 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
       if (preselectedVenueId) {
         setFormVenueId(preselectedVenueId);
       }
+
+      // Fetch from PostgreSQL database
+      Promise.all([
+        hotelApi.getBanquetVenues(),
+        hotelApi.getBanquetBookings()
+      ]).then(([pgVenues, pgBookings]) => {
+        if (Array.isArray(pgVenues) && pgVenues.length > 0) {
+          setVenues(pgVenues);
+        }
+        if (Array.isArray(pgBookings) && pgBookings.length > 0) {
+          setBookings(pgBookings);
+        }
+      }).catch(err => {
+        console.warn('[BanquetHallBillingModal] PostgreSQL sync fallback to cache:', err);
+      });
     }
   }, [isOpen, preselectedVenueId]);
 

@@ -4960,6 +4960,12 @@ export class PmsStore {
       guest_phone: b.guestPhone || b.mobile || '',
       id_proof_type: b.idProofType || 'Aadhaar Card',
       id_proof_number: b.idProofNumber,
+      coming_from: (b as any).comingFrom || (b as any).coming_from,
+      proceeding_to: (b as any).proceedingTo || (b as any).proceeding_to,
+      vehicle_no: (b as any).vehicleNo || (b as any).vehicle_no,
+      darshan_slot: (b as any).darshanSlot || (b as any).darshan_slot,
+      guest_gender: (b as any).guestGender || (b as any).gender,
+      guest_age: (b as any).guestAge || (b as any).age,
       check_in_date: b.checkInDate,
       check_out_date: b.checkOutDate,
       adults: b.adults || 2,
@@ -5836,6 +5842,12 @@ export class PmsStore {
     return defaultCheckIns;
   }
 
+  static syncCheckIns(checkIns: import('../types/pmsModels').PmsCheckIn[]): void {
+    localStorage.setItem(STORAGE_KEYS.CHECKINS, JSON.stringify(checkIns));
+    localStorage.removeItem('hotel_pms_checkins');
+    this.notify();
+  }
+
   static saveCheckIn(checkIn: import('../types/pmsModels').PmsCheckIn): void {
     const list = this.getCheckIns();
     list.unshift(checkIn);
@@ -5909,15 +5921,28 @@ export class PmsStore {
       room_id: roomId,
       guest_name: checkIn.guestName,
       guest_phone: checkIn.mobile,
+      guest_email: checkIn.email,
       id_proof_type: checkIn.documentName || 'Aadhaar Card',
       id_proof_number: checkIn.documentNo || 'VERIFIED_AT_DESK',
-      check_in_date: new Date().toISOString().split('T')[0],
-      check_out_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+      check_in_date: checkIn.checkInDate || new Date().toISOString().split('T')[0],
+      check_out_date: checkIn.checkOutDate || new Date(Date.now() + 86400000).toISOString().split('T')[0],
       adults: checkIn.numberOfGuests || 2,
       children: 0,
       advance_amount: checkIn.advancePaid || 0,
       advance_payment_mode: checkIn.paymentMode || 'Cash',
-      registered_by: 'Reception Desk'
+      registered_by: 'Reception Desk',
+      coming_from: checkIn.comingFrom,
+      comingFrom: checkIn.comingFrom,
+      proceeding_to: checkIn.goingTo,
+      proceedingTo: checkIn.goingTo,
+      vehicle_no: (checkIn as any).vehicleNo,
+      vehicleNo: (checkIn as any).vehicleNo,
+      darshan_slot: (checkIn as any).darshanSlot,
+      darshanSlot: (checkIn as any).darshanSlot,
+      guest_gender: (checkIn as any).guestGender,
+      guestGender: (checkIn as any).guestGender,
+      guest_age: (checkIn as any).guestAge,
+      guestAge: (checkIn as any).guestAge
     }).catch(e => console.warn('[PmsStore] Background cloud check-in sync note:', e));
   }
 
@@ -5929,6 +5954,9 @@ export class PmsStore {
     const remaining = list.filter(c => c.checkInNo !== checkInNo);
     localStorage.setItem(STORAGE_KEYS.CHECKINS, JSON.stringify(remaining));
     localStorage.setItem('hotel_pms_checkins', JSON.stringify(remaining));
+
+    // Delete from PostgreSQL
+    hotelApi.deleteCheckIn(checkInNo).catch(e => console.warn('[PmsStore] Background delete check-in note:', e));
 
     // Delete mirrored cashier advance receipt if any
     try {
@@ -7261,6 +7289,11 @@ export class PmsStore {
   // MODULE 8: Group Booking Engine
   // =========================================================================
 
+  static syncGroupBookings(groups: GroupBookingMetadata[]): void {
+    localStorage.setItem(STORAGE_KEYS.GROUP_BOOKINGS, JSON.stringify(groups));
+    this.notify();
+  }
+
   static getGroupBookings(): GroupBookingMetadata[] {
     const raw = localStorage.getItem(STORAGE_KEYS.GROUP_BOOKINGS);
     if (!raw) {
@@ -7756,6 +7789,12 @@ export class PmsStore {
     this.notify();
   }
 
+  static syncCheckouts(checkouts: PmsCheckOutDetail[]): void {
+    localStorage.setItem(STORAGE_KEYS.CHECKOUTS, JSON.stringify(checkouts));
+    localStorage.removeItem('hotel_pms_checkouts');
+    this.notify();
+  }
+
   static getCheckouts(): PmsCheckOutDetail[] {
     const raw = localStorage.getItem(STORAGE_KEYS.CHECKOUTS);
     if (raw) {
@@ -8151,6 +8190,11 @@ export class PmsStore {
 
     this.notify();
     return true;
+  }
+
+  static syncAdvanceReceipts(receipts: PmsAdvanceReceipt[]): void {
+    localStorage.setItem(STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify(receipts));
+    this.notify();
   }
 
   static getAdvanceReceipts(): PmsAdvanceReceipt[] {
@@ -9029,7 +9073,16 @@ export class PmsStore {
       gstin: info.gstin || info.gstNo,
       logo_url: (info as any).logoUrl || '',
       seal_url: (info as any).sealUrl || '',
-      default_bill_format: (info as any).billFormat || 'standard'
+      default_bill_format: (info as any).billFormat || 'standard',
+      legal_name: info.legalName,
+      pan_number: info.pencardNo || (info as any).panNo,
+      bank_name: info.bankName,
+      bank_account_no: info.bankAccountNo,
+      bank_ifsc: info.bankIfsc,
+      bank_branch: info.bankBranch,
+      upi_id: info.upiId,
+      phonepe_gpay: info.phonePeGpay,
+      jurisdiction: info.jurisdiction
     }).catch((e: any) => console.warn('[PmsStore] Company info cloud sync note:', e));
   }
 

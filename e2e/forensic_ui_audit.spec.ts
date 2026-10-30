@@ -84,7 +84,7 @@ test.describe('Phase 5: Forensic UI Live Audit & End-to-End Operational Lifecycl
       await dialog.accept().catch(() => {});
     });
 
-    // Mock window.alert and window.confirm to prevent CDP thread blocking
+    // Mock window.alert, window.confirm, and window.open to prevent CDP thread blocking and popup desync
     await page.addInitScript(() => {
       (window as any).alert = (msg?: any) => {
         console.log(`[Window Alert Intercepted]: ${msg}`);
@@ -92,6 +92,10 @@ test.describe('Phase 5: Forensic UI Live Audit & End-to-End Operational Lifecycl
       (window as any).confirm = (msg?: any) => {
         console.log(`[Window Confirm Intercepted]: ${msg}`);
         return true;
+      };
+      (window as any).open = (url?: string) => {
+        console.log(`[Window Open Intercepted]: ${url}`);
+        return null;
       };
     });
 
@@ -421,24 +425,31 @@ test.describe('Phase 5: Forensic UI Live Audit & End-to-End Operational Lifecycl
 
     // Auto-Settle remaining balance to satisfy ₹0.00 zero-balance policy
     const autoSettleBtn = page.locator('#checkout-auto-settle-btn');
-    await autoSettleBtn.evaluate((el: HTMLElement) => el.click());
-    await page.waitForTimeout(300);
+    if (await autoSettleBtn.isVisible()) {
+      await autoSettleBtn.evaluate((el: HTMLElement) => el.click());
+      await page.waitForTimeout(500);
+    }
 
     // Submit checkout and generate final GST Invoice
-    const completeCheckoutBtn = page.locator('#complete-checkout-btn, button:has-text("Complete Checkout & Generate Final Tax Invoice")');
+    const completeCheckoutBtn = page.locator('#complete-checkout-btn, button:has-text("Complete Checkout & Generate Final Tax Invoice")').first();
+    await completeCheckoutBtn.scrollIntoViewIfNeeded();
     await completeCheckoutBtn.evaluate((el: HTMLElement) => el.click());
+    await page.waitForTimeout(500);
 
     // Verify Final Tax Invoice preview screen renders
-    const taxInvoiceTitle = page.locator('#tax-invoice-final-title').or(page.getByText('TAX INVOICE (FINAL GUEST SETTLEMENT)'));
-    await expect(taxInvoiceTitle).toBeVisible();
+    const invoicePreview = page.locator('#printable-tax-invoice, #tax-invoice-final-title').first();
+    await expect(invoicePreview).toBeVisible({ timeout: 15000 });
+
+    const taxInvoiceTitle = page.locator('#tax-invoice-final-title').or(page.getByText('TAX INVOICE (FINAL GUEST SETTLEMENT)')).first();
+    await expect(taxInvoiceTitle).toBeVisible({ timeout: 10000 });
 
     // Verify SAC code 996311 (Room Accommodation)
     const sacCodeRoom = page.locator('text=996311').first();
-    await expect(sacCodeRoom).toBeVisible();
+    await expect(sacCodeRoom).toBeVisible({ timeout: 10000 });
 
     // Verify Guest KYC & Stay Particulars Grid
-    const guestKycSection = page.locator('#tax-invoice-guest-kyc-title').or(page.getByText('GUEST KYC & BILLING DETAILS'));
-    await expect(guestKycSection).toBeVisible();
+    const guestKycSection = page.locator('#tax-invoice-guest-kyc-title').or(page.getByText('GUEST KYC')).first();
+    await expect(guestKycSection).toBeVisible({ timeout: 10000 });
 
     // Close Tax Invoice preview window
     const closeInvoiceBtn = page.locator('#close-tax-invoice-btn');

@@ -374,6 +374,18 @@ class WalkInCheckInRequest(BaseModel):
     advance_ref: Optional[str] = None
     special_requests: Optional[str] = None
     registered_by: Optional[str] = "Front Desk Officer"
+    coming_from: Optional[str] = None
+    comingFrom: Optional[str] = None
+    proceeding_to: Optional[str] = None
+    proceedingTo: Optional[str] = None
+    vehicle_no: Optional[str] = None
+    vehicleNo: Optional[str] = None
+    darshan_slot: Optional[str] = None
+    darshanSlot: Optional[str] = None
+    guest_gender: Optional[str] = None
+    guestGender: Optional[str] = None
+    guest_age: Optional[int] = None
+    guestAge: Optional[int] = None
 
 class CheckOutRequest(BaseModel):
     booking_ref: str
@@ -405,6 +417,57 @@ class PmsDashboardSyncResponse(BaseModel):
     active_bookings: List[BookingResponse]
 
 # --- Module 1 & 2 Schemas ---
+class KotItemCreate(BaseModel):
+    item_code: Optional[str] = None
+    itemCode: Optional[str] = None
+    item_name: Optional[str] = None
+    itemName: Optional[str] = None
+    qty: float = 1.0
+    rate: float = 0.0
+    amount: float = 0.0
+    instruction: Optional[str] = None
+
+class KotCreate(BaseModel):
+    kot_no: Optional[str] = None
+    kotNo: Optional[str] = None
+    date: Optional[str] = None
+    time: Optional[str] = None
+    table_no: Optional[str] = None
+    tableNo: Optional[str] = None
+    room_no: Optional[str] = None
+    roomNo: Optional[str] = None
+    waiter_name: Optional[str] = "Captain"
+    waiterName: Optional[str] = None
+    guest_name: Optional[str] = None
+    guestName: Optional[str] = None
+    pax: int = 2
+    items: Optional[List[Dict[str, Any]]] = []
+    items_json: Optional[str] = None
+    total_amount: Optional[float] = None
+    totalAmount: Optional[float] = None
+    status: Optional[str] = "Running"
+    is_printed: Optional[bool] = True
+    isPrinted: Optional[bool] = None
+
+class KotResponse(BaseModel):
+    id: int
+    kot_no: str
+    date: str
+    time: str
+    table_no: Optional[str] = None
+    room_no: Optional[str] = None
+    waiter_name: Optional[str] = None
+    guest_name: Optional[str] = None
+    pax: int = 2
+    items: List[Dict[str, Any]] = []
+    total_amount: float = 0.0
+    status: str = "Running"
+    is_printed: bool = True
+    created_at: Optional[datetime.datetime] = None
+
+    class Config:
+        from_attributes = True
+
 class KotVoidRequest(BaseModel):
     kot_no: str
     item_name: str
@@ -572,6 +635,12 @@ class FoodBillCreate(BaseModel):
     netBillAmount: Optional[float] = None
     settlement_type: Optional[str] = None
     settlementType: Optional[str] = None
+    discount_reason: Optional[str] = None
+    discountReason: Optional[str] = None
+    payment_ref: Optional[str] = None
+    paymentRef: Optional[str] = None
+    billed_by: Optional[str] = "Cashier"
+    billedBy: Optional[str] = None
     status: Optional[str] = "Settled"
 
 class FoodBillResponse(BaseModel):
@@ -579,16 +648,24 @@ class FoodBillResponse(BaseModel):
     bill_no: str
     date: str
     time: str
-    room_no: Optional[str]
-    table_no: Optional[str]
-    guest_name: Optional[str]
-    food_gross_amount: float
-    discount_amount: float
-    taxable_amount: float
-    gst_amount: float
-    net_bill_amount: float
-    settlement_type: str
-    status: str
+    room_no: Optional[str] = None
+    table_no: Optional[str] = None
+    guest_name: Optional[str] = None
+    kot_numbers_json: Optional[str] = "[]"
+    items_json: Optional[str] = "[]"
+    food_gross_amount: float = 0.0
+    discount_percent: Optional[float] = 0.0
+    discount_amount: float = 0.0
+    taxable_amount: float = 0.0
+    cgst_amount: Optional[float] = 0.0
+    sgst_amount: Optional[float] = 0.0
+    gst_amount: float = 0.0
+    net_bill_amount: float = 0.0
+    settlement_type: str = "Cash"
+    discount_reason: Optional[str] = None
+    payment_ref: Optional[str] = None
+    billed_by: Optional[str] = "Cashier"
+    status: str = "Settled"
     created_at: datetime.datetime
 
     class Config:
@@ -820,6 +897,15 @@ class CheckoutRecordCreate(BaseModel):
     paymentMode: Optional[str] = None
     payments: Optional[List[Dict[str, Any]]] = None
     payments_json: Optional[str] = None
+    payment_splits: Optional[List[Dict[str, Any]]] = None
+    paymentSplits: Optional[List[Dict[str, Any]]] = None
+    payment_splits_json: Optional[str] = None
+    settled_by_user_id: Optional[str] = None
+    settledByUserId: Optional[str] = None
+    round_off_amount: Optional[float] = 0.0
+    roundOffAmount: Optional[float] = None
+    is_cancelled: Optional[bool] = False
+    cancellation_reason: Optional[str] = None
     checkout_remark: Optional[str] = None
     checkoutRemark: Optional[str] = None
     city: Optional[str] = None
@@ -849,6 +935,9 @@ class AdvanceReceiptCreate(BaseModel):
     amount: Optional[float] = 0.0
     payment_mode: Optional[str] = "Cash"
     paymentMode: Optional[str] = None
+    transaction_ref: Optional[str] = None
+    transactionRef: Optional[str] = None
+    is_settled_in_checkout: Optional[bool] = False
     remark: Optional[str] = None
 
 class JournalEntryCreate(BaseModel):
@@ -1163,7 +1252,72 @@ class BanquetBookingCreate(BaseModel):
     balanceDue: Optional[float] = None
     status: Optional[str] = "Confirmed"
     financial_summary: Optional[Dict[str, Any]] = None
+    financialSummary: Optional[Dict[str, Any]] = None
     financial_summary_json: Optional[str] = None
+    kots: Optional[List[Dict[str, Any]]] = None
+    kots_json: Optional[str] = None
+    payments: Optional[List[Dict[str, Any]]] = None
+    payments_json: Optional[str] = None
+    linked_rooms: Optional[List[str]] = None
+    linkedRooms: Optional[List[str]] = None
+    linked_rooms_json: Optional[str] = None
+    seating_layout: Optional[str] = "Standard Banquet"
+    seatingLayout: Optional[str] = None
+
+class BanquetKotCreate(BaseModel):
+    kot_no: Optional[str] = None
+    kotNo: Optional[str] = None
+    date_time: Optional[str] = None
+    dateTime: Optional[str] = None
+    service_type: Optional[str] = "Banquet"
+    serviceType: Optional[str] = None
+    room_or_venue: Optional[str] = None
+    roomOrVenue: Optional[str] = None
+    items: Optional[List[Dict[str, Any]]] = []
+    total_amount: Optional[float] = None
+    totalAmount: Optional[float] = None
+
+class BanquetPaymentCreate(BaseModel):
+    id: Optional[str] = None
+    date: Optional[str] = None
+    type: Optional[str] = "Pre-Function Installment"
+    mode: Optional[str] = "Online"
+    amount: float = 0.0
+    reference_no: Optional[str] = None
+    referenceNo: Optional[str] = None
+    remark: Optional[str] = None
+
+class BanquetBookingResponse(BaseModel):
+    id: int
+    booking_no: str
+    event_name: str
+    event_type: str
+    host_name: str
+    contact_person: str
+    contact_mobile: str
+    contact_email: Optional[str] = None
+    venue_id: str
+    venue_name: str
+    venue_tariff: float
+    booking_date: str
+    event_date: str
+    guaranteed_pax: int
+    actual_pax_served: int
+    per_plate_rate: float
+    total_food_amount: float
+    grand_total: float
+    advance_paid: float
+    balance_due: float
+    status: str
+    financial_summary: Dict[str, Any] = {}
+    kots: List[Dict[str, Any]] = []
+    payments: List[Dict[str, Any]] = []
+    linked_rooms: List[str] = []
+    seating_layout: str = "Standard Banquet"
+    created_at: Optional[datetime.datetime] = None
+
+    class Config:
+        from_attributes = True
 
 class LiquorItemCreate(BaseModel):
     id: Optional[str] = None
@@ -1721,6 +1875,23 @@ class HotelCompanyInfoCreate(BaseModel):
     seal_url: Optional[str] = None
     default_bill_format: Optional[str] = "standard"
     terms_and_conditions: Optional[str] = None
+    legal_name: Optional[str] = None
+    legalName: Optional[str] = None
+    pan_number: Optional[str] = None
+    panNumber: Optional[str] = None
+    bank_name: Optional[str] = None
+    bankName: Optional[str] = None
+    bank_account_no: Optional[str] = None
+    bankAccountNo: Optional[str] = None
+    bank_ifsc: Optional[str] = None
+    bankIfsc: Optional[str] = None
+    bank_branch: Optional[str] = None
+    bankBranch: Optional[str] = None
+    upi_id: Optional[str] = None
+    upiId: Optional[str] = None
+    phonepe_gpay: Optional[str] = None
+    phonePeGpay: Optional[str] = None
+    jurisdiction: Optional[str] = "Rayagada Jurisdiction"
 
 class VirtualAccountCreate(BaseModel):
     account_number: str
@@ -1741,6 +1912,30 @@ class LiquorStockAdjustmentCreate(BaseModel):
 
 class ManagerPinVerifyRequest(BaseModel):
     pin: str
+
+class LiquorStockCreate(BaseModel):
+    brand: str
+    bottle_size_ml: Optional[int] = 750
+    opening_bottles: Optional[float] = 0.0
+    received_bottles: Optional[float] = 0.0
+    sold_pegs: Optional[float] = 0.0
+    pegs_per_bottle: Optional[int] = 25
+    closing_bottles: Optional[float] = 0.0
+
+class LiquorStockResponse(BaseModel):
+    id: int
+    brand: str
+    bottle_size_ml: int
+    opening_bottles: float
+    received_bottles: float
+    sold_pegs: float
+    pegs_per_bottle: int
+    closing_bottles: float
+    updated_at: Optional[datetime.datetime] = None
+
+    class Config:
+        from_attributes = True
+
 
 
 

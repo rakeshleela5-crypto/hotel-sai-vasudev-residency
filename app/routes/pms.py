@@ -4,7 +4,7 @@ import time
 import uuid
 import json
 import logging
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, Header
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, Header, Body
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session, selectinload, joinedload
 from sqlalchemy import text, func
@@ -589,6 +589,7 @@ def execute_night_audit(payload: schemas.NightAuditRunRequest, db: Session = Dep
 
 # --- 8. Walk-In Direct Check-In ---
 @router.post("/check-in", response_model=schemas.BookingResponse)
+@router.post("/walkin-checkin", response_model=schemas.BookingResponse)
 def execute_walk_in_check_in(payload: schemas.WalkInCheckInRequest, db: Session = Depends(get_db)):
     """
     Registers a walk-in guest at the front desk with row-level room locking (.with_for_update()):
@@ -637,6 +638,12 @@ def execute_walk_in_check_in(payload: schemas.WalkInCheckInRequest, db: Session 
             guest_phone=payload.guest_phone.strip(),
             id_proof_type=payload.id_proof_type,
             id_proof_number=payload.id_proof_number,
+            coming_from=payload.coming_from or payload.comingFrom,
+            proceeding_to=payload.proceeding_to or payload.proceedingTo,
+            vehicle_no=payload.vehicle_no or payload.vehicleNo,
+            darshan_slot=payload.darshan_slot or payload.darshanSlot,
+            guest_gender=payload.guest_gender or payload.guestGender,
+            guest_age=payload.guest_age or payload.guestAge,
             check_in_date=today_str,
             check_out_date=payload.check_out_date,
             actual_check_in=now_utc(),
@@ -748,6 +755,59 @@ def execute_walk_in_check_in(payload: schemas.WalkInCheckInRequest, db: Session 
         db.rollback()
         logger.error(f"[execute_walk_in_check_in] Transaction failed, rolled back: {exc}")
         raise HTTPException(status_code=500, detail=f"Check-in transaction failed: {str(exc)}")
+
+@router.get("/check-ins")
+@router.get("/checkins")
+def get_check_ins(db: Session = Depends(get_db)):
+    """Retrieve all active and past check-in records directly from PostgreSQL."""
+    bookings = db.query(models.Booking).order_by(models.Booking.id.desc()).limit(200).all()
+    results = []
+    for b in bookings:
+        room_name = b.room.name if b.room else str(b.room_id)
+        room_type = b.room.room_type if b.room else "Standard"
+        results.append({
+            "id": b.id,
+            "checkInNo": b.booking_ref,
+            "bookingRefNo": b.booking_ref,
+            "roomNo": room_name,
+            "roomType": room_type,
+            "guestName": b.guest_name,
+            "mobile": b.guest_phone,
+            "email": b.guest_email,
+            "checkInDate": b.check_in_date,
+            "checkOutDate": b.check_out_date,
+            "stayDays": b.total_nights,
+            "adults": b.adults,
+            "children": b.children,
+            "tariff": b.base_rate,
+            "totalAmount": b.total_price,
+            "advancePaid": b.total_paid,
+            "balanceDue": b.balance_due,
+            "paymentMode": b.payment_method or "Cash",
+            "documentName": b.id_proof_type,
+            "documentNo": b.id_proof_number,
+            "comingFrom": b.coming_from or "",
+            "goingTo": b.proceeding_to or "",
+            "vehicleNo": b.vehicle_no or "",
+            "darshanSlot": b.darshan_slot or "",
+            "guestGender": b.guest_gender or "Male",
+            "guestAge": b.guest_age or 30,
+            "status": b.status,
+            "createdAt": b.created_at.isoformat() if b.created_at else None
+        })
+    return results
+
+@router.delete("/check-ins/{booking_ref}")
+def cancel_check_in(booking_ref: str, db: Session = Depends(get_db)):
+    """Cancel a check-in and release room back to Clean/Vacant."""
+    b = db.query(models.Booking).filter(models.Booking.booking_ref == booking_ref).first()
+    if not b:
+        raise HTTPException(status_code=404, detail="Check-in booking not found")
+    b.status = "Cancelled"
+    if b.room:
+        b.room.housekeeping_status = "Clean"
+    db.commit()
+    return {"success": True, "message": f"Check-in {booking_ref} cancelled successfully"}
 
 # --- 9. Check-Out Settlement & Transition to Dirty ---
 @router.post("/check-out", response_model=schemas.MasterFolioResponse)
@@ -1080,6 +1140,21 @@ def create_kot_ticket(payload: dict, db: Session = Depends(get_db)):
         is_printed=payload.get("isPrinted", True)
     )
     db.add(kot)
+    db.flush()
+
+    # Populate relational kot_items table
+    for itm in items:
+        k_item = models.KotItem(
+            kot_id=kot.id,
+            kot_no=kot.kot_no,
+            item_code=itm.get("item_code") or itm.get("itemCode") or itm.get("code"),
+            item_name=itm.get("item_name") or itm.get("itemName") or itm.get("name") or "Food Item",
+            qty=float(itm.get("qty") or 1.0),
+            rate=float(itm.get("rate") or 0.0),
+            amount=float(itm.get("amount") or 0.0),
+            instruction=itm.get("instruction")
+        )
+        db.add(k_item)
 
     # If linked to dining table, mark table Running
     if payload.get("tableNo"):
@@ -1128,6 +1203,30 @@ def create_kot_ticket(payload: dict, db: Session = Depends(get_db)):
         status=kot.status
     )
     return {"status": "created", "kot_no": kot.kot_no, "id": kot.id}
+
+@router.delete("/kots/{kot_no}")
+def delete_kot_ticket(kot_no: str, db: Session = Depends(get_db)):
+    """Void or cancel a KOT ticket from PostgreSQL and reverse charges."""
+    kot = db.query(models.KotTicket).filter(models.KotTicket.kot_no == kot_no).first()
+    if not kot:
+        raise HTTPException(status_code=404, detail="KOT ticket not found")
+    
+    # Remove relational kot_items
+    db.query(models.KotItem).filter(models.KotItem.kot_no == kot_no).delete()
+
+    # If linked to room folio, reverse folio charge
+    if kot.room_no:
+        folio_item = db.query(models.RoomFolioItem).filter(models.RoomFolioItem.kot_number == kot_no).first()
+        if folio_item:
+            booking = db.query(models.Booking).filter(models.Booking.id == folio_item.booking_id).first()
+            if booking:
+                booking.total_price = max(0.0, round(booking.total_price - folio_item.total_amount, 2))
+                booking.balance_due = max(0.0, round(booking.total_price - (booking.total_paid or 0.0), 2))
+            db.delete(folio_item)
+
+    db.delete(kot)
+    db.commit()
+    return {"success": True, "message": f"KOT {kot_no} voided and removed from database."}
 
 # --- 15. Master Items CRUD (GST, OTAs, Vouchers, Lockers, Charges) ---
 @router.get("/masters/{category}")
@@ -2073,9 +2172,14 @@ def save_food_bill(payload: schemas.FoodBillCreate, db: Session = Depends(get_db
             discount_percent=payload.discount_percent,
             discount_amount=payload.discount_amount,
             taxable_amount=payload.taxable_amount,
+            cgst_amount=payload.cgst_amount or round(gst_amt / 2.0, 2),
+            sgst_amount=payload.sgst_amount or round(gst_amt / 2.0, 2),
             gst_amount=gst_amt,
             net_bill_amount=net_amt,
             settlement_type=settle_type,
+            discount_reason=payload.discount_reason or payload.discountReason,
+            payment_ref=payload.payment_ref or payload.paymentRef,
+            billed_by=payload.billed_by or payload.billedBy or "Cashier",
             status=payload.status or "Settled"
         )
         db.add(bill)
@@ -2148,6 +2252,27 @@ def list_food_bills(
     if table_no:
         q = q.filter(models.FoodBill.table_no == table_no)
     return q.order_by(models.FoodBill.id.desc()).limit(limit).all()
+
+@router.delete("/food-bills/{bill_no}")
+def delete_food_bill(bill_no: str, db: Session = Depends(get_db)):
+    """Cancel and remove a food bill from PostgreSQL."""
+    b = db.query(models.FoodBill).filter(models.FoodBill.bill_no == bill_no).first()
+    if not b:
+        raise HTTPException(status_code=404, detail="Food bill not found")
+    # If settled to room, reverse folio
+    if b.room_no and "room" in (b.settlement_type or "").lower():
+        folio_item = db.query(models.RoomFolioItem).filter(
+            models.RoomFolioItem.description.contains(bill_no)
+        ).first()
+        if folio_item:
+            booking = db.query(models.Booking).filter(models.Booking.id == folio_item.booking_id).first()
+            if booking:
+                booking.total_price = max(0.0, round(booking.total_price - b.net_bill_amount, 2))
+                booking.balance_due = max(0.0, round(booking.total_price - (booking.total_paid or 0.0), 2))
+            db.delete(folio_item)
+    db.delete(b)
+    db.commit()
+    return {"success": True, "message": f"Food bill {bill_no} cancelled and removed from database."}
 
 # --- 19. Petty Cash & General Hotel Expenses CRUD ---
 @router.post("/expenses", response_model=schemas.PettyExpenseResponse)
@@ -3128,6 +3253,10 @@ def save_checkout(payload: schemas.CheckoutRecordCreate, db: Session = Depends(g
         
         pmts = payload.payments if payload.payments is not None else []
         pmts_json = json.dumps(pmts) if isinstance(pmts, list) else (payload.payments_json or "[]")
+        splits = payload.payment_splits or payload.paymentSplits or []
+        splits_json = json.dumps(splits) if isinstance(splits, list) else (payload.payment_splits_json or "[]")
+        settled_by = payload.settled_by_user_id or payload.settledByUserId or "Front Desk Cashier"
+        round_off = float(payload.round_off_amount or payload.roundOffAmount or 0.0)
         rem = payload.checkout_remark or payload.checkoutRemark or "Checked out successfully"
 
         existing = db.query(models.CheckoutRecord).filter(models.CheckoutRecord.invoice_no == inv).first()
@@ -3155,6 +3284,9 @@ def save_checkout(payload: schemas.CheckoutRecordCreate, db: Session = Depends(g
             existing.net_payable = net
             existing.payment_mode = pmode
             existing.payments_json = pmts_json
+            existing.payment_splits_json = splits_json
+            existing.settled_by_user_id = settled_by
+            existing.round_off_amount = round_off
             existing.checkout_remark = rem
             existing.city = payload.city
             existing.state = payload.state
@@ -3190,6 +3322,9 @@ def save_checkout(payload: schemas.CheckoutRecordCreate, db: Session = Depends(g
                 net_payable=net,
                 payment_mode=pmode,
                 payments_json=pmts_json,
+                payment_splits_json=splits_json,
+                settled_by_user_id=settled_by,
+                round_off_amount=round_off,
                 checkout_remark=rem,
                 city=payload.city,
                 state=payload.state,
@@ -3313,6 +3448,11 @@ def get_checkouts(db: Session = Depends(get_db)):
         "netPayable": c.net_payable,
         "paymentMode": c.payment_mode,
         "payments": json.loads(c.payments_json) if c.payments_json else [],
+        "paymentSplits": json.loads(c.payment_splits_json) if c.payment_splits_json else [],
+        "settledByUserId": c.settled_by_user_id,
+        "roundOffAmount": c.round_off_amount,
+        "isCancelled": c.is_cancelled,
+        "cancellationReason": c.cancellation_reason,
         "checkoutRemark": c.checkout_remark,
         "city": c.city,
         "state": c.state,
@@ -3322,6 +3462,17 @@ def get_checkouts(db: Session = Depends(get_db)):
         "invoiceFormat": c.invoice_format,
         "createdAt": c.created_at.isoformat() if c.created_at else None
     } for c in records]
+
+@router.put("/checkouts/{invoice_no}/cancel")
+def cancel_checkout(invoice_no: str, payload: dict = Body(...), db: Session = Depends(get_db)):
+    """Soft-cancel a checkout invoice with reason."""
+    rec = db.query(models.CheckoutRecord).filter(models.CheckoutRecord.invoice_no == invoice_no).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail="Checkout record not found")
+    rec.is_cancelled = True
+    rec.cancellation_reason = payload.get("reason") or payload.get("cancellationReason") or "Cancelled by Front Desk"
+    db.commit()
+    return {"success": True, "message": f"Checkout invoice {invoice_no} cancelled."}
 
 @router.delete("/checkouts/{invoice_no}")
 def delete_checkout(invoice_no: str, db: Session = Depends(get_db)):
@@ -4692,6 +4843,10 @@ def save_banquet_booking(payload: schemas.BanquetBookingCreate, db: Session = De
         existing.balance_due = payload.balance_due or payload.balanceDue or 0.0
         existing.status = payload.status or "Confirmed"
         existing.financial_summary_json = fin_json
+        existing.kots_json = payload.kots_json or json.dumps(payload.kots or [])
+        existing.payments_json = payload.payments_json or json.dumps(payload.payments or [])
+        existing.linked_rooms_json = payload.linked_rooms_json or json.dumps(payload.linked_rooms or payload.linkedRooms or [])
+        existing.seating_layout = payload.seating_layout or payload.seatingLayout or existing.seating_layout or "Standard Banquet"
         b = existing
     else:
         b = models.BanquetBooking(
@@ -4717,7 +4872,11 @@ def save_banquet_booking(payload: schemas.BanquetBookingCreate, db: Session = De
             advance_paid=payload.advance_paid or payload.advancePaid or 0.0,
             balance_due=payload.balance_due or payload.balanceDue or 0.0,
             status=payload.status or "Confirmed",
-            financial_summary_json=fin_json
+            financial_summary_json=fin_json,
+            kots_json=payload.kots_json or json.dumps(payload.kots or []),
+            payments_json=payload.payments_json or json.dumps(payload.payments or []),
+            linked_rooms_json=payload.linked_rooms_json or json.dumps(payload.linked_rooms or payload.linkedRooms or []),
+            seating_layout=payload.seating_layout or payload.seatingLayout or "Standard Banquet"
         )
         db.add(b)
 
@@ -4759,13 +4918,99 @@ def get_banquet_bookings(db: Session = Depends(get_db)):
         "advancePaid": b.advance_paid,
         "balanceDue": b.balance_due,
         "status": b.status,
-        "financialSummary": json.loads(b.financial_summary_json) if b.financial_summary_json else {}
+        "financialSummary": json.loads(b.financial_summary_json) if b.financial_summary_json else {},
+        "kots": json.loads(b.kots_json) if b.kots_json else [],
+        "payments": json.loads(b.payments_json) if b.payments_json else [],
+        "linkedRooms": json.loads(b.linked_rooms_json) if b.linked_rooms_json else [],
+        "seatingLayout": b.seating_layout or "Standard Banquet"
     } for b in bookings]
+
+@router.post("/banquet-bookings/{booking_no}/kots")
+def add_banquet_kot(booking_no: str, payload: schemas.BanquetKotCreate, db: Session = Depends(get_db)):
+    """Add a catering KOT to an existing banquet booking in PostgreSQL."""
+    b = db.query(models.BanquetBooking).filter(
+        (models.BanquetBooking.booking_no == booking_no) | (models.BanquetBooking.id == booking_no)
+    ).first()
+    if not b:
+        raise HTTPException(status_code=404, detail="Banquet booking not found")
+    
+    kots = json.loads(b.kots_json) if b.kots_json else []
+    kot_dict = {
+        "kotNo": payload.kot_no or payload.kotNo or f"KOT/{int(datetime.datetime.utcnow().timestamp()) % 1000}/24-25",
+        "dateTime": payload.date_time or payload.dateTime or datetime.datetime.utcnow().strftime("%d-%m-%Y %I:%M %p"),
+        "serviceType": payload.service_type or payload.serviceType or "Banquet",
+        "roomOrVenue": payload.room_or_venue or payload.roomOrVenue or b.venue_name,
+        "items": payload.items or [],
+        "totalAmount": payload.total_amount or payload.totalAmount or sum(float(i.get("amount", 0)) for i in (payload.items or []))
+    }
+    kots.append(kot_dict)
+    b.kots_json = json.dumps(kots)
+    
+    # Recalculate financial summary
+    fin = json.loads(b.financial_summary_json) if b.financial_summary_json else {}
+    additional_food = kot_dict["totalAmount"]
+    fin["foodAndServicesTaxable"] = round((fin.get("foodAndServicesTaxable", 0.0) + additional_food), 2)
+    fin["foodAndServicesGstAmount"] = round(fin["foodAndServicesTaxable"] * 0.12, 2)
+    fin["foodAndServicesTotal"] = round(fin["foodAndServicesTaxable"] * 1.12, 2)
+    fin["grossBillAmount"] = round((fin.get("venueRent", b.venue_tariff) * 1.12) + fin["foodAndServicesTotal"], 2)
+    fin["balanceRemaining"] = max(0.0, round(fin["grossBillAmount"] - fin.get("advancePaid", b.advance_paid) - fin.get("midInstallmentsPaid", 0.0) - fin.get("paidAtCheckout", 0.0), 2))
+    
+    b.financial_summary_json = json.dumps(fin)
+    b.total_food_amount = fin["foodAndServicesTotal"]
+    b.grand_total = fin["grossBillAmount"]
+    b.balance_due = fin["balanceRemaining"]
+    
+    db.commit()
+    db.refresh(b)
+    return {"success": True, "kotNo": kot_dict["kotNo"], "grandTotal": b.grand_total, "balanceDue": b.balance_due}
+
+@router.post("/banquet-bookings/{booking_no}/payments")
+def add_banquet_payment(booking_no: str, payload: schemas.BanquetPaymentCreate, db: Session = Depends(get_db)):
+    """Record milestone payment or checkout settlement for a banquet booking in PostgreSQL."""
+    b = db.query(models.BanquetBooking).filter(
+        (models.BanquetBooking.booking_no == booking_no) | (models.BanquetBooking.id == booking_no)
+    ).first()
+    if not b:
+        raise HTTPException(status_code=404, detail="Banquet booking not found")
+        
+    payments = json.loads(b.payments_json) if b.payments_json else []
+    pmt_dict = {
+        "id": payload.id or f"pmt-{int(datetime.datetime.utcnow().timestamp())}",
+        "date": payload.date or datetime.date.today().strftime("%d-%m-%Y"),
+        "type": payload.type or "Pre-Function Installment",
+        "mode": payload.mode or "Online",
+        "amount": float(payload.amount),
+        "referenceNo": payload.reference_no or payload.referenceNo or f"TXN-{int(datetime.datetime.utcnow().timestamp()) % 100000}",
+        "remark": payload.remark or f"Banquet payment received for {b.venue_name}"
+    }
+    payments.append(pmt_dict)
+    b.payments_json = json.dumps(payments)
+    
+    fin = json.loads(b.financial_summary_json) if b.financial_summary_json else {}
+    if pmt_dict["type"] == "Booking Advance":
+        fin["advancePaid"] = round(fin.get("advancePaid", 0.0) + pmt_dict["amount"], 2)
+        b.advance_paid = fin["advancePaid"]
+    elif pmt_dict["type"] == "Pre-Function Installment":
+        fin["midInstallmentsPaid"] = round(fin.get("midInstallmentsPaid", 0.0) + pmt_dict["amount"], 2)
+    elif pmt_dict["type"] == "Checkout Settlement":
+        fin["paidAtCheckout"] = round(fin.get("paidAtCheckout", 0.0) + pmt_dict["amount"], 2)
+        b.status = "Settled & Checked Out"
+        
+    total_paid = fin.get("advancePaid", 0.0) + fin.get("midInstallmentsPaid", 0.0) + fin.get("paidAtCheckout", 0.0)
+    fin["balanceRemaining"] = max(0.0, round(fin.get("grossBillAmount", b.grand_total) - total_paid, 2))
+    b.financial_summary_json = json.dumps(fin)
+    b.balance_due = fin["balanceRemaining"]
+    
+    db.commit()
+    db.refresh(b)
+    return {"success": True, "paymentId": pmt_dict["id"], "balanceDue": b.balance_due, "status": b.status}
 
 @router.delete("/banquet-bookings/{booking_no}")
 def delete_banquet_booking(booking_no: str, db: Session = Depends(get_db)):
     """Delete a banquet booking from PostgreSQL."""
-    b = db.query(models.BanquetBooking).filter(models.BanquetBooking.booking_no == booking_no).first()
+    b = db.query(models.BanquetBooking).filter(
+        (models.BanquetBooking.booking_no == booking_no) | (models.BanquetBooking.id == booking_no)
+    ).first()
     if not b:
         raise HTTPException(status_code=404, detail="Banquet booking not found")
     db.delete(b)
@@ -4854,6 +5099,56 @@ def delete_liquor_item(item_code: str, db: Session = Depends(get_db)):
     db.delete(it)
     db.commit()
     return {"success": True, "message": f"Liquor item {item_code} deleted."}
+
+# --- 34. Restro-Bar & Liquor Excise Stock Management ---
+@router.get("/liquor-stocks")
+def get_liquor_stocks(db: Session = Depends(get_db)):
+    """Retrieve all physical liquor stocks from PostgreSQL."""
+    stocks = db.query(models.LiquorStock).all()
+    if not stocks:
+        seed_brands = ["Royal Challenge Whisky", "Blenders Pride", "Antiquity Blue", "Signature Rare", "Smirnoff Vodka", "Kingfisher Premium Beer", "Bacardi Carta Blanca Rum"]
+        for b in seed_brands:
+            stk = models.LiquorStock(
+                brand=b,
+                bottle_size_ml=750,
+                opening_bottles=24.0,
+                received_bottles=12.0,
+                sold_pegs=45.0,
+                pegs_per_bottle=25,
+                closing_bottles=34.2
+            )
+            db.add(stk)
+        db.commit()
+        stocks = db.query(models.LiquorStock).all()
+
+    return [{
+        "id": s.id,
+        "brand": s.brand,
+        "bottleSizeMl": s.bottle_size_ml,
+        "openingBottles": s.opening_bottles,
+        "receivedBottles": s.received_bottles,
+        "soldPegs": s.sold_pegs,
+        "pegsPerBottle": s.pegs_per_bottle,
+        "closingBottles": s.closing_bottles,
+        "balancePegs": round(s.closing_bottles * s.pegs_per_bottle, 1)
+    } for s in stocks]
+
+@router.post("/liquor-stocks")
+def save_liquor_stock(payload: schemas.LiquorStockCreate, db: Session = Depends(get_db)):
+    """Save or update liquor brand physical stock level."""
+    stock = db.query(models.LiquorStock).filter(models.LiquorStock.brand == payload.brand).first()
+    if not stock:
+        stock = models.LiquorStock(brand=payload.brand)
+        db.add(stock)
+    stock.bottle_size_ml = payload.bottle_size_ml or 750
+    stock.opening_bottles = payload.opening_bottles or 0.0
+    stock.received_bottles = payload.received_bottles or 0.0
+    stock.sold_pegs = payload.sold_pegs or 0.0
+    stock.pegs_per_bottle = payload.pegs_per_bottle or 25
+    stock.closing_bottles = payload.closing_bottles or max(0.0, (stock.opening_bottles + stock.received_bottles) - (stock.sold_pegs / stock.pegs_per_bottle))
+    db.commit()
+    db.refresh(stock)
+    return {"success": True, "brand": stock.brand, "closingBottles": stock.closing_bottles}
 
 @router.post("/bar-invoices")
 def save_bar_invoice(payload: schemas.BarInvoiceCreate, db: Session = Depends(get_db)):
@@ -6359,6 +6654,24 @@ def save_company_info(payload: schemas.HotelCompanyInfoCreate, db: Session = Dep
     if payload.seal_url is not None: info.seal_url = payload.seal_url
     if payload.default_bill_format is not None: info.default_bill_format = payload.default_bill_format
     if payload.terms_and_conditions is not None: info.terms_and_conditions = payload.terms_and_conditions
+    if getattr(payload, 'legal_name', None) or getattr(payload, 'legalName', None):
+        info.legal_name = payload.legal_name or payload.legalName
+    if getattr(payload, 'pan_number', None) or getattr(payload, 'panNumber', None):
+        info.pan_number = payload.pan_number or payload.panNumber
+    if getattr(payload, 'bank_name', None) or getattr(payload, 'bankName', None):
+        info.bank_name = payload.bank_name or payload.bankName
+    if getattr(payload, 'bank_account_no', None) or getattr(payload, 'bankAccountNo', None):
+        info.bank_account_no = payload.bank_account_no or payload.bankAccountNo
+    if getattr(payload, 'bank_ifsc', None) or getattr(payload, 'bankIfsc', None):
+        info.bank_ifsc = payload.bank_ifsc or payload.bankIfsc
+    if getattr(payload, 'bank_branch', None) or getattr(payload, 'bankBranch', None):
+        info.bank_branch = payload.bank_branch or payload.bankBranch
+    if getattr(payload, 'upi_id', None) or getattr(payload, 'upiId', None):
+        info.upi_id = payload.upi_id or payload.upiId
+    if getattr(payload, 'phonepe_gpay', None) or getattr(payload, 'phonePeGpay', None):
+        info.phonepe_gpay = payload.phonepe_gpay or payload.phonePeGpay
+    if getattr(payload, 'jurisdiction', None):
+        info.jurisdiction = payload.jurisdiction
     info.updated_at = datetime.datetime.utcnow()
     db.commit()
     db.refresh(info)
@@ -6393,7 +6706,16 @@ def get_company_info(db: Session = Depends(get_db)):
         "logoUrl": info.logo_url,
         "sealUrl": info.seal_url,
         "defaultBillFormat": info.default_bill_format,
-        "termsAndConditions": info.terms_and_conditions
+        "termsAndConditions": info.terms_and_conditions,
+        "legalName": info.legal_name,
+        "panNumber": info.pan_number,
+        "bankName": info.bank_name,
+        "bankAccountNo": info.bank_account_no,
+        "bankIfsc": info.bank_ifsc,
+        "bankBranch": info.bank_branch,
+        "upiId": info.upi_id,
+        "phonePeGpay": info.phonepe_gpay,
+        "jurisdiction": info.jurisdiction or "Rayagada Jurisdiction"
     }
 
 # 6. Virtual Accounts
