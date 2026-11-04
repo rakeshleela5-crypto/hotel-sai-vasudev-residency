@@ -6,9 +6,12 @@ import asyncio
 from typing import Dict, Any, Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Header, Request, BackgroundTasks, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 
 from app.database import get_db, SessionLocal
 from app import models
+from app.config import settings
+from app.utils.rate_limit import limiter
 from app.models import PaymentTransaction, VirtualAccount, Booking, BookingPayment, Folio, WebhookEvent, FailedWebhookDLQ, JournalEntry
 from app.schemas import (
     DecentroUpiQrRequest,
@@ -226,7 +229,7 @@ def process_decentro_webhook_background(event_id: str, payload: dict):
 
                 # 3. Broadcast real-time WebSocket notification (#80)
                 try:
-                    asyncio.run(ws_manager.broadcast_payment_success(
+                    ws_manager.emit_payment_success_sync(
                         reference_id=txn.reference_id,
                         amount=txn.amount,
                         bank_reference_number=bank_ref,
@@ -234,7 +237,7 @@ def process_decentro_webhook_background(event_id: str, payload: dict):
                         kot_id=txn.kot_id,
                         room_no=room_no,
                         payer_vpa=payer_vpa
-                    ))
+                    )
                 except Exception as ws_err:
                     logger.debug(f"[Webhook Background] WebSocket broadcast notice: {ws_err}")
 
@@ -288,7 +291,9 @@ def process_decentro_webhook_background(event_id: str, payload: dict):
     summary="Generate Dynamic UPI QR Code via Decentro",
     dependencies=[Depends(require_idempotency_key)]
 )
+@limiter.limit(settings.RATE_LIMIT_QR)
 async def generate_upi_qr(
+    request: Request,
     req: DecentroUpiQrRequest,
     db: Session = Depends(get_db)
 ):
@@ -296,7 +301,24 @@ async def generate_upi_qr(
     Accepts booking_id (or kot_id), amount, and purpose_message.
     Protected by X-Idempotency-Key (#1) to prevent duplicate transactions.
     """
-    reference_id = f"SVR-UPI-{uuid.uuid4().hex[:10].upper()}"
+    # Verify reference_id against database first (#37)
+    requested_ref = getattr(req, "reference_id", None)
+    if requested_ref:
+        existing_txn = db.query(PaymentTransaction).filter(
+            PaymentTransaction.reference_id == requested_ref
+        ).first()
+        if existing_txn:
+            logger.info(f"[UPI QR Idempotency] Reference {requested_ref} already exists. Returning 200 OK immediately (#37).")
+            return DecentroUpiQrResponse(
+                reference_id=existing_txn.reference_id,
+                decentro_txn_id=existing_txn.decentro_txn_id,
+                amount=existing_txn.amount,
+                qr_code_base64=existing_txn.qr_code_base64 or "",
+                upi_intent_link=existing_txn.upi_intent_link or "",
+                status=existing_txn.status
+            )
+
+    reference_id = requested_ref or f"SVR-UPI-{uuid.uuid4().hex[:10].upper()}"
     expiry_time = now_utc() + datetime.timedelta(minutes=req.expiry_minutes or 30)
 
     # 1. Create PENDING record in payment_transactions
@@ -448,6 +470,17 @@ def settle_room_folio(payload: Dict[str, Any], db: Session = Depends(get_db)):
 
     settlement_amt = float(payload.get("amount") or payload.get("settle_amount") or booking.balance_due or 0.0)
     payment_mode = payload.get("payment_mode") or payload.get("paymentMode") or "Cash"
+    txn_ref = payload.get("transaction_ref")
+
+    # Idempotency check: verify transaction_ref against database first (#37)
+    if txn_ref and settlement_amt > 0:
+        existing_bp = db.query(models.BookingPayment).filter(
+            models.BookingPayment.booking_id == booking.id,
+            models.BookingPayment.transaction_ref == txn_ref
+        ).first()
+        if existing_bp:
+            logger.info(f"[Folio Settle Idempotency] Transaction ref {txn_ref} already settled. Skipping duplicate payment.")
+            settlement_amt = 0.0
 
     if settlement_amt > 0:
         bp = models.BookingPayment(
@@ -601,13 +634,33 @@ async def _handle_decentro_webhook(
         raise HTTPException(status_code=400, detail="Invalid JSON payload")
 
     decentro_txn_id = payload.get("decentro_txn_id") or payload.get("txn_id") or payload.get("reference_id")
+    reference_id = payload.get("reference_id")
     if not decentro_txn_id:
         decentro_txn_id = f"EVT-{uuid.uuid4().hex[:12].upper()}"
 
-    # 2. Webhook Event Deduplication in webhook_events (#36)
+    # 1b. Idempotency Check: Verify against PaymentTransaction database first (#37)
+    if reference_id or decentro_txn_id:
+        filter_q = []
+        if reference_id:
+            filter_q.append(PaymentTransaction.reference_id == reference_id)
+        if decentro_txn_id:
+            filter_q.append(PaymentTransaction.decentro_txn_id == decentro_txn_id)
+        existing_txn = db.query(PaymentTransaction).filter(or_(*filter_q)).first()
+        if existing_txn and existing_txn.status in ["SUCCESS", "SETTLED"]:
+            logger.info(f"[Webhook Idempotency] Txn {existing_txn.reference_id} / {existing_txn.decentro_txn_id} was already settled. Returning 200 OK immediately (#37).")
+            return {
+                "status": "SUCCESS",
+                "message": "Transaction already processed and settled (Idempotent OK)",
+                "event_id": decentro_txn_id,
+                "reference_id": existing_txn.reference_id,
+                "decentro_txn_id": existing_txn.decentro_txn_id,
+                "duplicate": True
+            }
+
+    # 2. Webhook Event Deduplication in webhook_events (#36, #37)
     existing_event = db.query(WebhookEvent).filter(WebhookEvent.event_id == decentro_txn_id).first()
     if existing_event:
-        logger.info(f"[Webhook] Deduplication hit: Event '{decentro_txn_id}' already ingested (status: {existing_event.status}).")
+        logger.info(f"[Webhook] Deduplication hit: Event '{decentro_txn_id}' already ingested (status: {existing_event.status}). Returning 200 OK immediately.")
         return {
             "status": "SUCCESS",
             "message": "Duplicate webhook callback ignored (Idempotent OK)",
@@ -655,6 +708,7 @@ async def _handle_decentro_webhook(
     "/webhooks/decentro",
     summary="Decentro Banking Inbound Webhook Listener (#17, #36, #38)"
 )
+@limiter.limit(settings.RATE_LIMIT_WEBHOOK)
 async def decentro_webhook_endpoint(
     request: Request,
     background_tasks: BackgroundTasks,
@@ -667,6 +721,7 @@ async def decentro_webhook_endpoint(
     "/webhooks/decentro/payment-callback",
     summary="Alias for Decentro Payment Callback (#17, #36, #38)"
 )
+@limiter.limit(settings.RATE_LIMIT_WEBHOOK)
 async def decentro_payment_callback_alias(
     request: Request,
     background_tasks: BackgroundTasks,
@@ -752,6 +807,52 @@ def replay_dlq_event(
 # =========================================================================
 # 5. TRANSACTION STATUS POLLING ENDPOINT
 # =========================================================================
+# =========================================================================
+# 5. TRANSACTION STATUS POLLING ENDPOINT (#98)
+# =========================================================================
+@router.get(
+    "/payments/{txn_id}/status",
+    summary="Lightweight polling endpoint for real-time payment status (#98)"
+)
+@router.get(
+    "/payments/status/{txn_id}",
+    summary="Lightweight polling endpoint alias"
+)
+def get_payment_status_by_id(txn_id: str, db: Session = Depends(get_db)):
+    clean_id = txn_id.strip()
+    txn = db.query(PaymentTransaction).filter(
+        or_(
+            PaymentTransaction.reference_id == clean_id,
+            PaymentTransaction.decentro_txn_id == clean_id,
+            PaymentTransaction.bank_reference_number == clean_id
+        )
+    ).first()
+    if not txn:
+        return {
+            "status": "PENDING",
+            "reference_id": clean_id,
+            "decentro_txn_id": None,
+            "amount": 0.0,
+            "bank_reference_number": None,
+            "paid": False,
+            "is_success": False
+        }
+    is_success = (txn.status or "").upper() in ("SUCCESS", "SETTLED")
+    return {
+        "status": txn.status,
+        "reference_id": txn.reference_id,
+        "decentro_txn_id": txn.decentro_txn_id,
+        "amount": float(txn.amount or 0.0),
+        "bank_reference_number": txn.bank_reference_number,
+        "booking_id": txn.booking_id,
+        "kot_id": txn.kot_id,
+        "room_no": txn.room_no,
+        "payer_vpa": txn.payer_vpa,
+        "paid": is_success,
+        "is_success": is_success,
+        "updated_at": txn.updated_at.isoformat() if txn.updated_at else None
+    }
+
 @router.get(
     "/payments/decentro/status/{reference_id}",
     response_model=PaymentTransactionResponse,
@@ -768,14 +869,14 @@ def get_payment_status(reference_id: str, db: Session = Depends(get_db)):
 # =========================================================================
 @router.websocket("/ws/payments")
 async def websocket_payments_endpoint(websocket: WebSocket):
-    await ws_manager.connect(websocket)
+    await ws_manager.connect(websocket, "payments")
     try:
         while True:
             data = await websocket.receive_text()
             if data == "ping":
                 await websocket.send_text("pong")
     except WebSocketDisconnect:
-        ws_manager.disconnect(websocket)
+        await ws_manager.disconnect(websocket, "payments")
     except Exception as e:
         logger.warning(f"[WebSocket] Error: {e}")
-        ws_manager.disconnect(websocket)
+        await ws_manager.disconnect(websocket, "payments")

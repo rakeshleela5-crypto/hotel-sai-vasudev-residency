@@ -94,7 +94,7 @@ export const DecentroUpiQrModal: React.FC<DecentroUpiQrModalProps> = ({
     return () => clearInterval(timer);
   }, [isOpen, timeLeft, paymentSuccess]);
 
-  // 3. Real-Time WebSocket Listener
+  // 3. Real-Time WebSocket Listener (#97)
   useEffect(() => {
     if (!isOpen || !qrData || paymentSuccess) return;
 
@@ -122,11 +122,64 @@ export const DecentroUpiQrModal: React.FC<DecentroUpiQrModalProps> = ({
           }
         }
       },
-      (status) => setWsStatus(status)
+      (status) => setWsStatus(status),
+      currentRef
     );
 
     return () => unsubscribe();
   }, [isOpen, qrData, paymentSuccess, roomNo, kotId, onPaymentSuccess]);
+
+  // 4. Lightweight Polling Fallback (every 3 seconds while QR modal is open) (#98)
+  useEffect(() => {
+    if (!isOpen || !qrData || paymentSuccess) return;
+
+    const currentRef = qrData.reference_id;
+    let isCancelled = false;
+
+    const pollPaymentStatus = async () => {
+      try {
+        const txn = await decentroApi.getTransactionStatus(currentRef);
+        if (isCancelled) return;
+        const status = (txn.status || '').toUpperCase();
+        const isPaid = status === 'SUCCESS' || status === 'SETTLED' || (txn as any).paid === true || (txn as any).is_success === true;
+
+        if (isPaid) {
+          console.log('[Decentro Modal] 3-second polling detected payment success:', txn);
+          decentroApi.playSuccessChime();
+          const successEvt: DecentroPaymentSuccessEvent = {
+            event: 'PAYMENT_SUCCESS',
+            reference_id: txn.reference_id || currentRef,
+            amount: Number(txn.amount) || amount,
+            bank_reference_number: txn.bank_reference_number || `UTR-${Date.now().toString(36).toUpperCase()}`,
+            booking_id: txn.booking_id || bookingId || null,
+            kot_id: txn.kot_id || kotId || null,
+            room_no: txn.room_no || roomNo || null,
+            payer_vpa: txn.payer_vpa || undefined,
+            timestamp: new Date().toISOString()
+          };
+          setPaymentSuccess(successEvt);
+          if (onPaymentSuccess) {
+            onPaymentSuccess({
+              reference_id: successEvt.reference_id,
+              bank_reference_number: successEvt.bank_reference_number,
+              amount: successEvt.amount,
+              payer_vpa: successEvt.payer_vpa
+            });
+          }
+        }
+      } catch (e) {
+        // Silently ignore transient polling network errors
+      }
+    };
+
+    const pollInterval = setInterval(pollPaymentStatus, 3000);
+    pollPaymentStatus();
+
+    return () => {
+      isCancelled = true;
+      clearInterval(pollInterval);
+    };
+  }, [isOpen, qrData, paymentSuccess, amount, roomNo, bookingId, kotId, onPaymentSuccess]);
 
   if (!isOpen) return null;
 

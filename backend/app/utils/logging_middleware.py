@@ -15,6 +15,33 @@ from app.config import settings
 
 logger = logging.getLogger("pms_observability")
 
+SENSITIVE_FIELD_PATTERNS = ["secret", "signature", "token", "password", "key", "authorization"]
+SENSITIVE_ACCOUNT_PATTERNS = ["account_number", "virtual_account_number", "payee_account", "aadhaar", "pan"]
+
+def mask_sensitive_value(key: str, val: Any) -> Any:
+    """Masks secrets, tokens, credentials, and full account numbers for privacy and PCI compliance (#79)."""
+    if not isinstance(val, str) or not val:
+        return val
+    key_lower = str(key).lower()
+    if any(p in key_lower for p in SENSITIVE_FIELD_PATTERNS):
+        if len(val) > 8:
+            return f"{val[:3]}...{val[-3:]}"
+        return "***MASKED***"
+    if any(p in key_lower for p in SENSITIVE_ACCOUNT_PATTERNS):
+        if len(val) > 4:
+            return f"{val[:2]}****{val[-4:]}"
+        return "****"
+    return val
+
+def mask_sensitive_dict(data: Any) -> Any:
+    """Recursively masks sensitive dictionaries and lists."""
+    if isinstance(data, dict):
+        return {k: (mask_sensitive_dict(v) if isinstance(v, (dict, list)) else mask_sensitive_value(k, v)) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [mask_sensitive_dict(item) for item in data]
+    return data
+
+
 class StructuredLoggingMiddleware(BaseHTTPMiddleware):
     """
     Structured JSON Logging Middleware with X-Request-ID correlation (#100).
@@ -33,6 +60,37 @@ class StructuredLoggingMiddleware(BaseHTTPMiddleware):
         client_ip = request.headers.get("CF-Connecting-IP") or \
                     request.headers.get("X-Forwarded-For", "").split(",")[0].strip() or \
                     (request.client.host if request.client else "unknown")
+
+        # Masked audit logging for incoming Decentro webhooks (#79)
+        path = request.url.path
+        if "decentro" in path and "webhook" in path:
+            try:
+                body_bytes = await request.body()
+                masked_payload = {}
+                if body_bytes:
+                    try:
+                        raw_json = json.loads(body_bytes.decode('utf-8'))
+                        masked_payload = mask_sensitive_dict(raw_json)
+                    except Exception:
+                        masked_payload = {"raw_size": len(body_bytes)}
+
+                masked_headers = {}
+                for h_key, h_val in request.headers.items():
+                    masked_headers[h_key] = mask_sensitive_value(h_key, h_val)
+
+                logger.info(json.dumps({
+                    "event": "DECENTRO_INBOUND_WEBHOOK_RECEIVED",
+                    "request_id": request_id,
+                    "method": request.method,
+                    "path": path,
+                    "client_ip": client_ip,
+                    "headers": masked_headers,
+                    "payload": masked_payload,
+                    "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
+                }))
+            except Exception as w_err:
+                logger.debug(f"[LoggingMiddleware] Webhook inspection note: {w_err}")
+
 
         try:
             response = await call_next(request)

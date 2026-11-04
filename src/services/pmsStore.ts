@@ -6315,17 +6315,33 @@ export class PmsStore {
 
   static updateKotStatus(kotNo: string, newStatus: PmsKotRecord['status']): void {
     const kots = this.getKots();
+    let updatedKot: PmsKotRecord | null = null;
     const updated = kots.map(k => {
       if (k.kotNo === kotNo || k.kotNo.includes(kotNo)) {
-        return {
+        updatedKot = {
           ...k,
           status: newStatus,
           serveStatus: newStatus === 'Ready To Serve' ? 'Ready To Serve' : (newStatus === 'Served' ? 'Served' : k.serveStatus)
         };
+        return updatedKot;
       }
       return k;
     });
     localStorage.setItem(STORAGE_KEYS.KOTS, JSON.stringify(updated));
+    this.notify();
+    this.broadcastKotEvent({
+      type: 'KOT_STATUS_CHANGED',
+      payload: {
+        kot_no: kotNo,
+        status: newStatus,
+        kot: updatedKot
+      }
+    });
+
+    // Cloud DB sync via FastAPI (#97)
+    hotelApi.updateKotStatus(kotNo, newStatus).catch(e => {
+      console.warn('[PmsStore.updateKotStatus] Cloud sync note:', e);
+    });
   }
 
   static markKotsAsBilled(kotNumbers: string[]): void {
@@ -6338,6 +6354,11 @@ export class PmsStore {
       return k;
     });
     localStorage.setItem(STORAGE_KEYS.KOTS, JSON.stringify(updated));
+    this.notify();
+    this.broadcastKotEvent({
+      type: 'KOTS_BILLED',
+      payload: { kot_numbers: kotNumbers }
+    });
   }
 
   static saveKot(kot: PmsKotRecord): void {

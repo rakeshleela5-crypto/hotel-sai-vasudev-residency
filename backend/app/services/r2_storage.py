@@ -6,6 +6,7 @@ import datetime
 import mimetypes
 from typing import Optional, Tuple, List, Dict, Any
 from app.config import settings
+from app.utils.retry import retry_network_or_5xx
 
 # Local filesystem fallback directory if Cloudflare R2 credentials are not configured
 LOCAL_UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "uploads")
@@ -110,6 +111,17 @@ class R2StorageService:
                 print(f"[Cloudflare R2] S3 Client initialized successfully for bucket '{self.bucket_name}'")
             except Exception as e:
                 print(f"[Cloudflare R2] Initialization error ({e}), operating in local storage mode.")
+
+
+    @retry_network_or_5xx
+    def _s3_put_object_with_retry(self, **kwargs):
+        """Executes S3 put_object with Tenacity exponential backoff (#68, #69)."""
+        return self._s3_put_object_with_retry(**kwargs)
+
+    @retry_network_or_5xx
+    def _s3_upload_fileobj_with_retry(self, **kwargs):
+        """Executes S3 upload_fileobj with Tenacity exponential backoff (#68, #69)."""
+        return self._s3_upload_fileobj_with_retry(**kwargs)
 
     def is_configured(self) -> bool:
         """Returns True if Cloudflare R2 credentials and S3 client are active"""
@@ -331,7 +343,7 @@ class R2StorageService:
 
         if self.s3_client:
             try:
-                self.s3_client.put_object(
+                self._s3_put_object_with_retry(
                     Bucket=self.bucket_name,
                     Key=object_key,
                     Body=data,
@@ -380,7 +392,7 @@ class R2StorageService:
                         file_obj.seek(0)
                     except Exception:
                         pass
-                self.s3_client.upload_fileobj(
+                self._s3_upload_fileobj_with_retry(
                     Fileobj=file_obj,
                     Bucket=self.bucket_name,
                     Key=object_key,

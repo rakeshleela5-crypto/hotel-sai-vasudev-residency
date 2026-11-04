@@ -11,6 +11,7 @@ import httpx
 from tenacity import retry, stop_after_attempt, wait_random_exponential, retry_if_exception_type
 
 from app.config import settings
+from app.utils.retry import retry_network_or_5xx
 
 logger = logging.getLogger("decentro_banking")
 logging.basicConfig(level=logging.INFO)
@@ -121,6 +122,24 @@ class DecentroClient:
         self.payee_account = settings.DECENTRO_PAYEE_ACCOUNT or "SAIVASUDEV@icici"
         self.circuit_breaker = circuit_breaker
 
+
+    # Outbound execution wrappers protected by Tenacity Retry (#68, #69)
+    @retry_network_or_5xx
+    async def _execute_post_with_retry(self, endpoint: str, payload: dict, headers: dict) -> httpx.Response:
+        async with httpx.AsyncClient(timeout=DECENTRO_TIMEOUT) as client:
+            resp = await client.post(endpoint, json=payload, headers=headers)
+            if resp.status_code >= 500:
+                resp.raise_for_status()
+            return resp
+
+    @retry_network_or_5xx
+    async def _execute_get_with_retry(self, endpoint: str, headers: dict) -> httpx.Response:
+        async with httpx.AsyncClient(timeout=DECENTRO_TIMEOUT) as client:
+            resp = await client.get(endpoint, headers=headers)
+            if resp.status_code >= 500:
+                resp.raise_for_status()
+            return resp
+
     def _get_headers(self, module_secret: str) -> Dict[str, str]:
         return {
             "client_id": self.client_id,
@@ -175,33 +194,28 @@ class DecentroClient:
         if self.client_id and self.client_secret and self.payment_secret:
             headers = self._get_headers(self.payment_secret)
             try:
-                async with httpx.AsyncClient(timeout=DECENTRO_TIMEOUT) as client:
-                    response = await client.post(endpoint, json=payload, headers=headers)
-                    if response.status_code >= 500:
-                        await self.circuit_breaker.record_failure()
-                        raise httpx.HTTPStatusError("Decentro server error", request=response.request, response=response)
+                response = await self._execute_post_with_retry(endpoint, payload, headers)
+                res_data = response.json()
+                if response.status_code in [200, 201] and res_data.get("status") == "SUCCESS":
+                    await self.circuit_breaker.record_success()
+                    data = res_data.get("data", {})
+                    qr_code = data.get("qr_code") or data.get("encoded_dynamic_qr_code") or ""
+                    upi_link = data.get("generated_link") or f"upi://pay?pa={self.payee_account}&pn=Sri+Sai+Vasudev+Residency&am={clean_amount}&tr={clean_ref}&cu=INR"
+                    decentro_txn_id = res_data.get("decentro_txn_id") or f"URN-{uuid.uuid4().hex[:12].upper()}"
 
-                    res_data = response.json()
-                    if response.status_code in [200, 201] and res_data.get("status") == "SUCCESS":
-                        await self.circuit_breaker.record_success()
-                        data = res_data.get("data", {})
-                        qr_code = data.get("qr_code") or data.get("encoded_dynamic_qr_code") or ""
-                        upi_link = data.get("generated_link") or f"upi://pay?pa={self.payee_account}&pn=Sri+Sai+Vasudev+Residency&am={clean_amount}&tr={clean_ref}&cu=INR"
-                        decentro_txn_id = res_data.get("decentro_txn_id") or f"URN-{uuid.uuid4().hex[:12].upper()}"
-
-                        return {
-                            "success": True,
-                            "decentro_unavailable": False,
-                            "reference_id": clean_ref,
-                            "decentro_txn_id": decentro_txn_id,
-                            "amount": clean_amount,
-                            "qr_code_base64": qr_code,
-                            "upi_intent_link": upi_link,
-                            "status": "PENDING"
-                        }
-                    else:
-                        err_msg = res_data.get("message") or "Decentro returned unsuccessful status"
-                        logger.warning(f"[Decentro] API warning: {err_msg}")
+                    return {
+                        "success": True,
+                        "decentro_unavailable": False,
+                        "reference_id": clean_ref,
+                        "decentro_txn_id": decentro_txn_id,
+                        "amount": clean_amount,
+                        "qr_code_base64": qr_code,
+                        "upi_intent_link": upi_link,
+                        "status": "PENDING"
+                    }
+                else:
+                    err_msg = res_data.get("message") or "Decentro returned unsuccessful status"
+                    logger.warning(f"[Decentro] API warning: {err_msg}")
             except (httpx.TimeoutException, httpx.NetworkError) as exc:
                 logger.error(f"[Decentro] Network error during UPI QR: {exc}")
                 await self.circuit_breaker.record_failure()
@@ -275,27 +289,22 @@ class DecentroClient:
         if self.client_id and self.client_secret and self.payment_secret:
             headers = self._get_headers(self.payment_secret)
             try:
-                async with httpx.AsyncClient(timeout=DECENTRO_TIMEOUT) as client:
-                    response = await client.post(endpoint, json=payload, headers=headers)
-                    if response.status_code >= 500:
-                        await self.circuit_breaker.record_failure()
-                        raise httpx.HTTPStatusError("Decentro server error", request=response.request, response=response)
-
-                    res_data = response.json()
-                    if response.status_code in [200, 201] and res_data.get("status") == "SUCCESS":
-                        await self.circuit_breaker.record_success()
-                        data = res_data.get("data", {})
-                        return {
-                            "success": True,
-                            "decentro_unavailable": False,
-                            "reference_id": clean_ref,
-                            "account_number": data.get("account_number"),
-                            "ifsc_code": data.get("ifsc", "YESB0CMSNOC"),
-                            "bank_name": "YES BANK",
-                            "account_name": payload["name"],
-                            "upi_id": data.get("upi_id"),
-                            "decentro_urn": res_data.get("decentro_txn_id")
-                        }
+                response = await self._execute_post_with_retry(endpoint, payload, headers)
+                res_data = response.json()
+                if response.status_code in [200, 201] and res_data.get("status") == "SUCCESS":
+                    await self.circuit_breaker.record_success()
+                    data = res_data.get("data", {})
+                    return {
+                        "success": True,
+                        "decentro_unavailable": False,
+                        "reference_id": clean_ref,
+                        "account_number": data.get("account_number"),
+                        "ifsc_code": data.get("ifsc", "YESB0CMSNOC"),
+                        "bank_name": "YES BANK",
+                        "account_name": payload["name"],
+                        "upi_id": data.get("upi_id"),
+                        "decentro_urn": res_data.get("decentro_txn_id")
+                    }
             except (httpx.TimeoutException, httpx.NetworkError) as exc:
                 logger.error(f"[Decentro] Virtual account network error: {exc}")
                 await self.circuit_breaker.record_failure()
@@ -352,15 +361,9 @@ class DecentroClient:
         if self.client_id and self.client_secret and self.payment_secret:
             headers = self._get_headers(self.payment_secret)
 
-            @make_idempotent_retry()
-            async def _fetch_status():
-                async with httpx.AsyncClient(timeout=DECENTRO_TIMEOUT) as client:
-                    resp = await client.get(endpoint, headers=headers)
-                    resp.raise_for_status()
-                    return resp.json()
-
             try:
-                res_data = await _fetch_status()
+                resp = await self._execute_get_with_retry(endpoint, headers)
+                res_data = resp.json()
                 await self.circuit_breaker.record_success()
                 return {
                     "success": True,
@@ -423,15 +426,9 @@ class DecentroClient:
         if self.client_id and self.client_secret and self.kyc_secret:
             headers = self._get_headers(self.kyc_secret)
 
-            @make_idempotent_retry()
-            async def _execute_kyc():
-                async with httpx.AsyncClient(timeout=DECENTRO_TIMEOUT) as client:
-                    resp = await client.post(endpoint, json=payload, headers=headers)
-                    resp.raise_for_status()
-                    return resp.json()
-
             try:
-                res_data = await _execute_kyc()
+                resp = await self._execute_post_with_retry(endpoint, payload, headers)
+                res_data = resp.json()
                 await self.circuit_breaker.record_success()
                 data = res_data.get("data", {})
                 legal_name = data.get("legal_name") or data.get("business_name") or ""

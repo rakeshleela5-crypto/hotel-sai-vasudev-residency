@@ -19,13 +19,15 @@ const getApiBaseUrl = () => {
 export const API_BASE_URL = getApiBaseUrl();
 
 // Determine backend host for WebSocket connection
-const getWsUrl = (): string => {
+export const getWsUrl = (txnId?: string): string => {
   try {
     const parsed = new URL(API_BASE_URL);
     const protocol = parsed.protocol === 'https:' ? 'wss:' : 'ws:';
-    return `${protocol}//${parsed.host}${parsed.pathname}/ws/payments`.replace(/\/+/g, '/').replace('ws:/', 'ws://').replace('wss:/', 'wss://');
+    const subPath = txnId ? `ws/payments/${encodeURIComponent(txnId.trim())}` : 'ws/payments';
+    return `${protocol}//${parsed.host}${parsed.pathname}/${subPath}`.replace(/\/+/g, '/').replace('ws:/', 'ws://').replace('wss:/', 'wss://');
   } catch {
-    return 'ws://localhost:8000/api/v1/ws/payments';
+    const subPath = txnId ? `ws/payments/${encodeURIComponent(txnId.trim())}` : 'ws/payments';
+    return `ws://localhost:8000/api/v1/${subPath}`;
   }
 };
 
@@ -495,43 +497,54 @@ export const decentroApi = {
   },
 
   /**
-   * 4. Check Transaction Status (Manual poll or fallback)
+   * 4. Check Transaction Status (Manual poll or fallback) (#98)
    */
   async getTransactionStatus(referenceId: string): Promise<PaymentTransactionResponse> {
-    const res = await fetch(`${API_BASE_URL}/payments/decentro/status/${referenceId}`);
-    if (!res.ok) {
-      throw new Error(`Failed to check payment status: ${res.status}`);
+    const cleanRef = referenceId.trim();
+    try {
+      const res = await fetch(`${API_BASE_URL}/payments/${encodeURIComponent(cleanRef)}/status`);
+      if (res && res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // fallback
+    }
+    const res = await fetch(`${API_BASE_URL}/payments/decentro/status/${encodeURIComponent(cleanRef)}`);
+    if (!res || !res.ok) {
+      throw new Error(`Failed to check payment status: ${res?.status || 'network error'}`);
     }
     return res.json();
   },
 
   /**
-   * 5. Real-Time Payment WebSocket Connection
-   * Connects to backend WebSocket and triggers callback when PAYMENT_SUCCESS is broadcast
-   * Auto-reconnects on disconnection
+   * 5. Real-Time Payment WebSocket Connection (#97)
+   * Connects to backend WebSocket (/ws/payments/{txn_id} or /ws/payments)
+   * Triggers callback when PAYMENT_SUCCESS is broadcast. Auto-reconnects on disconnection.
    */
   connectPaymentWebSocket(
     onSuccess: (event: DecentroPaymentSuccessEvent) => void,
-    onStatusChange?: (status: 'connected' | 'connecting' | 'disconnected') => void
+    onStatusChange?: (status: 'connected' | 'connecting' | 'disconnected') => void,
+    txnId?: string
   ): () => void {
     let ws: WebSocket | null = null;
     let isDestroyed = false;
     let reconnectTimer: any = null;
     let pingInterval: any = null;
+    const socketUrl = getWsUrl(txnId);
 
     const connect = () => {
       if (isDestroyed) return;
       if (onStatusChange) onStatusChange('connecting');
 
       try {
-        ws = new WebSocket(WS_PAYMENTS_URL);
+        ws = new WebSocket(socketUrl);
 
         ws.onopen = () => {
           if (isDestroyed) {
             ws?.close();
             return;
           }
-          console.log('[Decentro WS] Connected to payment stream:', WS_PAYMENTS_URL);
+          console.log('[Decentro WS] Connected to payment stream:', socketUrl);
           if (onStatusChange) onStatusChange('connected');
 
           // Keep alive ping

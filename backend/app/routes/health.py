@@ -12,6 +12,32 @@ from app.services.decentro import circuit_breaker
 logger = logging.getLogger("pms_health")
 router = APIRouter(prefix="/health", tags=["Observability & Health Probes"])
 
+@router.get("", status_code=status.HTTP_200_OK)
+def general_health_check(response: Response, db: Session = Depends(get_db)):
+    """
+    Railway Zero-Downtime Deployment & Observability Health Probe (#85).
+    Runs a fast SELECT 1 query against PostgreSQL and returns:
+    200 OK {"status": "healthy", "database": "connected"} on success,
+    or 503 Service Unavailable {"status": "unhealthy", "database": "disconnected"} on failure.
+    """
+    try:
+        db.execute(text("SELECT 1"))
+        return {
+            "status": "healthy",
+            "database": "connected",
+            "engine": "PostgreSQL" if "postgresql" in str(engine.url) else "SQLite",
+            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        }
+    except Exception as exc:
+        logger.error(f"[Health] Database SELECT 1 check failed: {exc}")
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return {
+            "status": "unhealthy",
+            "database": "disconnected",
+            "detail": str(exc),
+            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        }
+
 @router.get("/live", status_code=status.HTTP_200_OK)
 def liveness_probe():
     """

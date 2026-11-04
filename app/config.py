@@ -61,9 +61,11 @@ class Settings(BaseSettings):
     R2_MAX_FILE_SIZE_BYTES: int = 5 * 1024 * 1024  # Strict 5MB limit (#45)
     R2_PRESIGNED_VIEW_EXPIRES_SECONDS: int = 60    # Strict 60s pre-signed URLs (#50)
 
-    # SlowAPI Rate Limiting Configuration (#2, #18)
+    # SlowAPI Rate Limiting Configuration (#2, #18, #56)
     RATE_LIMIT_LOGIN: str = "5/minute"
-    RATE_LIMIT_BOOKING: str = "10/minute"
+    RATE_LIMIT_BOOKING: str = "20/minute"
+    RATE_LIMIT_QR: str = "15/minute"
+    RATE_LIMIT_WEBHOOK: str = "120/minute"
     RATE_LIMIT_DEFAULT: str = "60/minute"
 
     # In-Memory TTLCache Configuration (#6, #7)

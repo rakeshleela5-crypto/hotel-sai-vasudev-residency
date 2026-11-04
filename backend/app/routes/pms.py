@@ -7,7 +7,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, Header, Body
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session, selectinload, joinedload
-from sqlalchemy import text, func
+from sqlalchemy import text, func, or_
 from typing import List, Optional, Dict, Any, Union
 
 from app.database import get_db
@@ -354,10 +354,10 @@ def get_master_room_folio(booking_ref: str, db: Session = Depends(get_db)):
     room = booking.room or db.query(models.Room).filter(models.Room.id == booking.room_id).first()
     current_room_name = room.name if room else "Deluxe Stay"
 
-    # Eager-loaded collections from selectinload
-    shifts = booking.room_shifts if booking.room_shifts is not None else db.query(models.RoomShift).filter(models.RoomShift.booking_id == booking.id).all()
-    folios = booking.folio_items if booking.folio_items is not None else db.query(models.RoomFolioItem).filter(models.RoomFolioItem.booking_id == booking.id).all()
-    payments = booking.payments if booking.payments is not None else db.query(models.BookingPayment).filter(models.BookingPayment.booking_id == booking.id).all()
+    # Eager-loaded collections from selectinload with authoritative DB query
+    shifts = db.query(models.RoomShift).filter(models.RoomShift.booking_id == booking.id).all()
+    folios = db.query(models.RoomFolioItem).filter(models.RoomFolioItem.booking_id == booking.id).all()
+    payments = db.query(models.BookingPayment).filter(models.BookingPayment.booking_id == booking.id).all()
 
     # Calculations
     room_stay_charges = booking.base_amount + (booking.extra_guest_charge or 0.0)
@@ -831,6 +831,16 @@ def execute_check_out(payload: schemas.CheckOutRequest, db: Session = Depends(ge
 
         # Record final settlement payment if provided
         settlement_amt = float(payload.settlement_amount_paid or 0.0)
+        # Idempotency check on settlement transaction reference (#37)
+        if payload.transaction_ref and settlement_amt > 0:
+            existing_p = db.query(models.BookingPayment).filter(
+                models.BookingPayment.booking_id == booking.id,
+                models.BookingPayment.transaction_ref == payload.transaction_ref
+            ).first()
+            if existing_p:
+                logger.info(f"[CheckOut Idempotency] Payment {payload.transaction_ref} already recorded. Skipping duplicate.")
+                settlement_amt = 0.0
+
         if settlement_amt > 0:
             p = models.BookingPayment(
                 booking_id=booking.id,
@@ -906,6 +916,7 @@ def execute_check_out(payload: schemas.CheckOutRequest, db: Session = Depends(ge
         })
 
         db.commit()
+        db.refresh(booking)
         ws_manager.emit_booking_event_sync(
             event_type="CHECK_OUT",
             booking_ref=booking.booking_ref,
@@ -1224,9 +1235,79 @@ def delete_kot_ticket(kot_no: str, db: Session = Depends(get_db)):
                 booking.balance_due = max(0.0, round(booking.total_price - (booking.total_paid or 0.0), 2))
             db.delete(folio_item)
 
+    ws_manager.emit_kot_event_sync(
+        event_type="KOT_VOIDED",
+        kot_number=kot.kot_no,
+        table_number=kot.table_no,
+        room_number=kot.room_no,
+        waiter_name=kot.waiter_name,
+        status="Voided"
+    )
     db.delete(kot)
     db.commit()
     return {"success": True, "message": f"KOT {kot_no} voided and removed from database."}
+
+@router.patch("/kots/{kot_no}/status")
+@router.post("/kots/{kot_no}/status")
+def update_kot_status(kot_no: str, payload: dict, db: Session = Depends(get_db)):
+    """
+    Update KOT status in PostgreSQL and broadcast live event to kitchen_kds and front_desk (#97).
+    """
+    status = payload.get("status") or payload.get("kot_status")
+    if not status:
+        raise HTTPException(status_code=400, detail="Missing status field")
+    
+    clean_no = kot_no.strip()
+    kot = db.query(models.KotTicket).filter(
+        or_(
+            models.KotTicket.kot_no == clean_no,
+            models.KotTicket.kot_no.ilike(f"%{clean_no}%")
+        )
+    ).first()
+    
+    order = None
+    try:
+        order = db.query(models.KotOrder).filter(models.KotOrder.kot_no == clean_no).first()
+    except Exception:
+        pass
+
+    if not kot and not order:
+        raise HTTPException(status_code=404, detail=f"KOT {kot_no} not found")
+
+    if kot:
+        kot.status = status
+    if order:
+        order.kot_status = status
+
+    db.commit()
+
+    table_no = kot.table_no if kot else (order.table_number if order else None)
+    room_no = kot.room_no if kot else (order.room_number if order else None)
+    waiter_name = kot.waiter_name if kot else (order.waiter_name if order else None)
+    kot_items = []
+    if kot and kot.items_json:
+        try:
+            kot_items = json.loads(kot.items_json)
+        except Exception:
+            pass
+
+    ws_manager.emit_kot_event_sync(
+        event_type="KOT_STATUS_CHANGED",
+        kot_number=clean_no,
+        table_number=table_no,
+        room_number=room_no,
+        waiter_name=waiter_name,
+        items=kot_items,
+        status=status
+    )
+    return {
+        "success": True,
+        "kot_no": clean_no,
+        "status": status,
+        "table_no": table_no,
+        "room_no": room_no
+    }
+
 
 # --- 15. Master Items CRUD (GST, OTAs, Vouchers, Lockers, Charges) ---
 @router.get("/masters/{category}")
@@ -2125,6 +2206,13 @@ def save_food_bill(payload: schemas.FoodBillCreate, db: Session = Depends(get_db
     existing = db.query(models.FoodBill).filter(models.FoodBill.bill_no == b_no).first()
     if existing:
         return existing
+
+    pay_ref = payload.payment_ref or payload.paymentRef
+    if pay_ref:
+        existing_by_ref = db.query(models.FoodBill).filter(models.FoodBill.payment_ref == pay_ref).first()
+        if existing_by_ref:
+            logger.info(f"[FoodBill Idempotency] Bill with payment ref '{pay_ref}' already processed ({existing_by_ref.bill_no}). Returning existing bill.")
+            return existing_by_ref
 
     try:
         # Robust payload deserialization handling both lists and serialized JSON
@@ -5275,13 +5363,30 @@ def adjust_liquor_stock(payload: dict = Body(...), db: Session = Depends(get_db)
     reason = payload.get("reason") or "Peg adjustment / spillage"
     adjusted_by = payload.get("adjusted_by") or payload.get("adjustedBy") or "Bar Captain"
     
-    stock = db.query(models.LiquorStock).filter(models.LiquorStock.brand.ilike(brand.strip())).first()
+    # Row-level locking (.with_for_update()) to prevent negative stock and concurrency races (#29, #38)
+    try:
+        stock = db.query(models.LiquorStock).filter(
+            models.LiquorStock.brand.ilike(brand.strip())
+        ).with_for_update().first()
+    except Exception:
+        stock = db.query(models.LiquorStock).filter(
+            models.LiquorStock.brand.ilike(brand.strip())
+        ).first()
+
     if not stock:
         stock = models.LiquorStock(brand=brand, bottle_size_ml=750, opening_bottles=10.0, closing_bottles=10.0)
         db.add(stock)
-        
-    stock.sold_pegs += adjust_pegs
+        db.flush()
+
     pegs_per_btl = stock.pegs_per_bottle or 25
+    available_pegs = round((stock.closing_bottles or 0.0) * pegs_per_btl, 2)
+    if adjust_pegs > 0 and available_pegs < adjust_pegs:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Insufficient inventory stock for '{brand}'. Available: {stock.closing_bottles} bottles ({available_pegs:.1f} pegs), Requested deduction: {adjust_pegs} pegs."
+        )
+
+    stock.sold_pegs += adjust_pegs
     stock.closing_bottles = max(0.0, round(stock.closing_bottles - (adjust_pegs / pegs_per_btl), 2))
     
     record_audit_log(

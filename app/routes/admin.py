@@ -7,10 +7,25 @@ from app.database import get_db
 from app.utils.auth import require_role
 from app.services.scheduler import run_night_audit, run_database_backup
 from app.services.r2_storage import r2_service
+from app.utils.backup import create_and_upload_db_backup
 from app.config import settings
 
 logger = logging.getLogger("pms_admin")
 router = APIRouter(prefix="/admin", tags=["Administrative Operations & DevOps"])
+
+@router.post("/backup-db", summary="Export Compressed Database Snapshot to Cloudflare R2 (#18)")
+def trigger_backup_db_endpoint(
+    current_user: dict = Depends(require_role(["OWNER", "MANAGER", "ADMIN"])),
+    db: Session = Depends(get_db)
+) -> Dict[str, Any]:
+    """
+    Exports a compressed snapshot of PostgreSQL database and uploads it to
+    Cloudflare R2 under backups/sai_vasudev_db_YYYY_MM_DD.json.gz, keeping the last 30 days (#18).
+    Restricted strictly to OWNER, MANAGER, and ADMIN roles.
+    """
+    admin_id = current_user.get("email") or current_user.get("sub") or "Admin"
+    logger.info(f"[Admin] DB snapshot backup manually triggered by {admin_id}")
+    return create_and_upload_db_backup(db=db)
 
 @router.post("/night-audit/run")
 def trigger_manual_night_audit(

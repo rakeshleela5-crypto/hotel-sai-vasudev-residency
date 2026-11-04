@@ -1,4 +1,4 @@
-import type { 
+                                                                                                import type { 
   Room, 
   BookingPayload, 
   BookingResponse, 
@@ -662,6 +662,29 @@ export const hotelApi = {
     });
     if (!res.ok) throw new Error('Failed to delete KOT ticket');
     return await res.json();
+  },
+
+  async updateKotStatus(kotNo: string, status: string): Promise<any> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/kots/${encodeURIComponent(kotNo)}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      if (res && res.ok) return await res.json();
+    } catch {
+      // fallback
+    }
+    try {
+      const res2 = await fetch(`${API_BASE_URL}/pms/kots/${encodeURIComponent(kotNo)}/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      if (res2 && res2.ok) return await res2.json();
+    } catch (e) {
+      console.warn('[hotelApi.updateKotStatus] Offline note:', e);
+    }
   },
 
   async getMasterItems(category: string): Promise<any[]> {

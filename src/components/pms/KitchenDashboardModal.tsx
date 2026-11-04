@@ -51,7 +51,7 @@ export const KitchenDashboardModal: React.FC<KitchenDashboardModalProps> = ({
     setCountdown(30);
   };
 
-  // Module 2: Zero-refresh WebSocket / Event Listener with Web Audio Chime
+  // Module 2: Zero-refresh WebSocket / Event Listener with Web Audio Chime (#97)
   useEffect(() => {
     if (!isOpen) return;
     const unsub = PmsStore.subscribe(() => {
@@ -63,10 +63,18 @@ export const KitchenDashboardModal: React.FC<KitchenDashboardModalProps> = ({
         refreshKots();
       }
     };
+    const handleCustomKotEvent = () => {
+      PmsStore.playKotChime();
+      refreshKots();
+    };
     window.addEventListener('storage', handleStorage);
+    window.addEventListener('svr_kot_event', handleCustomKotEvent);
+    window.addEventListener('svr:ws_message', handleCustomKotEvent);
     return () => {
       unsub();
       window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('svr_kot_event', handleCustomKotEvent);
+      window.removeEventListener('svr:ws_message', handleCustomKotEvent);
     };
   }, [isOpen]);
 

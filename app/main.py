@@ -1,5 +1,5 @@
 import datetime
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Response
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -173,6 +173,42 @@ try:
                     conn.execute(text(stmt))
             except Exception as e:
                 print(f"Notice: PG migration step: {e}")
+        # Safe high-frequency database index creation (#21)
+        safe_indexes = [
+            "CREATE INDEX IF NOT EXISTS ix_bookings_guest_phone ON bookings (guest_phone)",
+            "CREATE INDEX IF NOT EXISTS ix_bookings_check_in_date ON bookings (check_in_date)",
+            "CREATE INDEX IF NOT EXISTS ix_bookings_check_out_date ON bookings (check_out_date)",
+            "CREATE INDEX IF NOT EXISTS ix_bookings_status ON bookings (status)",
+            "CREATE INDEX IF NOT EXISTS ix_room_shift_logs_from_room ON room_shift_logs (from_room_id)",
+            "CREATE INDEX IF NOT EXISTS ix_room_shift_logs_to_room ON room_shift_logs (to_room_id)",
+            "CREATE INDEX IF NOT EXISTS ix_police_station_logs_booking_id ON police_station_logs (booking_id)",
+            "CREATE INDEX IF NOT EXISTS ix_kot_tickets_status ON kot_tickets (status)",
+            "CREATE INDEX IF NOT EXISTS ix_kot_tickets_room_no ON kot_tickets (room_no)",
+            "CREATE INDEX IF NOT EXISTS ix_food_bills_date ON food_bills (date)",
+            "CREATE INDEX IF NOT EXISTS ix_food_bills_room_no ON food_bills (room_no)",
+            "CREATE INDEX IF NOT EXISTS ix_payment_transactions_decentro_txn_id ON payment_transactions (decentro_txn_id)",
+            "CREATE INDEX IF NOT EXISTS ix_payment_transactions_reference_id ON payment_transactions (reference_id)",
+            "CREATE INDEX IF NOT EXISTS ix_payment_transactions_room_no ON payment_transactions (room_no)",
+            "CREATE INDEX IF NOT EXISTS ix_checkout_records_guest_phone ON checkout_records (guest_phone)",
+            "CREATE INDEX IF NOT EXISTS ix_checkout_records_check_in_date ON checkout_records (check_in_date)",
+            "CREATE INDEX IF NOT EXISTS ix_checkout_records_check_out_date ON checkout_records (check_out_date)",
+            "CREATE INDEX IF NOT EXISTS ix_checkout_records_room_no ON checkout_records (room_no)",
+            "CREATE INDEX IF NOT EXISTS ix_advance_receipts_date ON advance_receipts (date)",
+            "CREATE INDEX IF NOT EXISTS ix_advance_receipts_mobile ON advance_receipts (mobile)",
+            "CREATE INDEX IF NOT EXISTS ix_advance_receipts_room_no ON advance_receipts (room_no)",
+            "CREATE INDEX IF NOT EXISTS ix_booking_payments_transaction_ref ON booking_payments (transaction_ref)",
+            "CREATE INDEX IF NOT EXISTS ix_group_bookings_contact_phone ON group_bookings (contact_phone)",
+            "CREATE INDEX IF NOT EXISTS ix_group_bookings_check_in_date ON group_bookings (check_in_date)",
+            "CREATE INDEX IF NOT EXISTS ix_group_bookings_check_out_date ON group_bookings (check_out_date)",
+            "CREATE INDEX IF NOT EXISTS ix_group_bookings_status ON group_bookings (status)",
+            "CREATE INDEX IF NOT EXISTS ix_inventory_purchases_bill_date ON inventory_purchases (bill_date)"
+        ]
+        with engine.begin() as conn:
+            for idx_stmt in safe_indexes:
+                try:
+                    conn.execute(text(idx_stmt))
+                except Exception as e:
+                    print(f"Notice: Safe index creation step: {e}")
 except Exception as exc:
     print(f"Notice: Initial DB schema sync deferred: {exc}")
 
@@ -259,20 +295,21 @@ app.include_router(rooms.router, prefix=settings.API_V1_STR)
 app.include_router(bookings.router, prefix=settings.API_V1_STR)
 app.include_router(inquiries.router, prefix=settings.API_V1_STR)
 app.include_router(pms.router, prefix=settings.API_V1_STR)
+app.include_router(pms.router, prefix="/api")
 app.include_router(uploads.router, prefix=settings.API_V1_STR)
 app.include_router(payments.router, prefix=settings.API_V1_STR)
 app.include_router(payments.router, prefix="/api")
+app.include_router(payments.router)
 app.include_router(kyc.router, prefix=settings.API_V1_STR)
 app.include_router(kyc.router, prefix="/api")
 
 @app.get("/health", tags=["Observability & Health Probes"])
+@app.get("/api/health", tags=["Observability & Health Probes"])
 @app.get(f"{settings.API_V1_STR}/health", tags=["Observability & Health Probes"])
-def root_health_alias(db: Session = Depends(get_db)):
-    """Root health alias ensuring compatibility with frontend checkHealth() (#74)."""
-    from app.routes.health import readiness_probe
-    from fastapi import Response
-    res = Response()
-    return readiness_probe(res, db)
+def root_health_alias(response: Response, db: Session = Depends(get_db)):
+    """Railway zero-downtime deployment health probe (#85)."""
+    from app.routes.health import general_health_check
+    return general_health_check(response, db)
 
 @app.post(f"{settings.API_V1_STR}/kot", tags=["KOT Offline Sync"])
 @app.post("/api/kot", tags=["KOT Offline Sync"])

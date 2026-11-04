@@ -62,6 +62,7 @@ else:
         pool_size=10,
         max_overflow=20,
         pool_timeout=30,
+        pool_recycle=1800,
         pool_pre_ping=True,
         connect_args={
             "server_settings": {
@@ -77,6 +78,7 @@ else:
         pool_size=10,
         max_overflow=20,
         pool_timeout=30,
+        pool_recycle=1800,
         pool_pre_ping=True,
         connect_args={
             "options": "-c lock_timeout=5000"  # 5s session lock timeout (#15)

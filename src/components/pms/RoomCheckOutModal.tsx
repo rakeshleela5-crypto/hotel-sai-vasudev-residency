@@ -2075,6 +2075,8 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
             }
           ]);
           setShowDecentroQrModal(false);
+          // Auto-trigger invoice preview & receipt view (#97, #98)
+          setShowInvoicePreview(true);
         }}
       />
 

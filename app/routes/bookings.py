@@ -62,14 +62,20 @@ def compute_tax_and_pricing(room: models.Room, nights: int, adults: int):
         "grand_total": grand_total
     }
 
-def get_overlapping_bookings_count(db: Session, room_id: int, check_in_str: str, check_out_str: str) -> int:
-    """Calculates active bookings overlapping with [check_in, check_out)"""
-    return db.query(models.Booking).filter(
+def get_overlapping_bookings_count(db: Session, room_id: int, check_in_str: str, check_out_str: str, for_update: bool = True) -> int:
+    """Calculates active bookings overlapping with [check_in, check_out) with row-level locking (#38)."""
+    q = db.query(models.Booking).filter(
         models.Booking.room_id == room_id,
         models.Booking.status.notin_(["Cancelled", "Checked-Out"]),
         models.Booking.check_in_date < check_out_str,
         models.Booking.check_out_date > check_in_str
-    ).count()
+    )
+    if for_update:
+        try:
+            return q.with_for_update().count()
+        except Exception:
+            return q.count()
+    return q.count()
 
 _booking_concurrency_lock = threading.Lock()
 
@@ -85,21 +91,21 @@ def create_booking(request: Request, payload: schemas.BookingCreate, db: Session
     """
     # 1. Acquire canonical row lock on Room (.with_for_update()) (#14, #26)
     with _booking_concurrency_lock:
+        # Row-level pessimistic locking (.with_for_update()) on target Room (#14, #26, #38)
         _, _, room = acquire_canonical_locks(db, room_id=payload.room_id)
         if not room:
             raise HTTPException(status_code=404, detail="Selected room does not exist")
 
         _, _, nights = parse_dates_and_nights(payload.check_in_date, payload.check_out_date)
 
-        # Verify inventory availability:
-        # Individual numbered rooms (e.g. 101, 201) have strict inventory of 1.
+        # Verify inventory availability under row lock:
         if getattr(room, "room_number", None):
             inventory_limit = 1
         else:
             inventory_limit = getattr(room, "total_inventory", 1) or 1
 
         booked_count = get_overlapping_bookings_count(
-            db, payload.room_id, payload.check_in_date, payload.check_out_date
+            db, payload.room_id, payload.check_in_date, payload.check_out_date, for_update=True
         )
         
         if booked_count >= inventory_limit:

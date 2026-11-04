@@ -100,23 +100,34 @@ export function useERPWebSocket(options: UseERPWebSocketOptions): UseERPWebSocke
       }
     }
 
-    // 2. Steward KOT Punch & Void Events
+    // 2. Steward KOT Punch, Status Update & Void Events (#97)
     if (eventName.includes('KOT')) {
       if (onKotEvent) onKotEvent(eventData);
 
-      // Audio notification for kitchen & front desk
+      // Audio chime for kitchen & front desk
       PmsStore.playKotChime();
 
-      // If new KOT placed, prepend or update in PmsStore
-      if (payload.kot_no) {
+      const kotId = payload.kot_no || payload.kot_number;
+      if (kotId) {
         const kots = PmsStore.getKots();
-        const exists = kots.find(k => k.kotNo === payload.kot_no);
-        if (!exists && payload.items) {
+        const existing = kots.find(k => k.kotNo === kotId || k.kotNo.includes(kotId));
+
+        if (eventName === 'KOT_VOIDED' && existing) {
+          existing.status = 'Cancelled';
+          PmsStore.saveKot(existing);
+          PmsStore.notify();
+        } else if (eventName === 'KOT_STATUS_CHANGED' && existing && payload.status) {
+          existing.status = payload.status;
+          if (payload.status === 'Ready To Serve') existing.serveStatus = 'Ready To Serve';
+          else if (payload.status === 'Served') existing.serveStatus = 'Served';
+          PmsStore.saveKot(existing);
+          PmsStore.notify();
+        } else if (!existing && payload.items) {
           PmsStore.saveKot({
-            kotNo: payload.kot_no,
+            kotNo: kotId,
             serviceType: payload.service_type || 'Restaurant',
-            tableNo: payload.table_no,
-            roomNo: payload.room_no,
+            tableNo: payload.table_no || payload.table_number,
+            roomNo: payload.room_no || payload.room_number,
             guestName: payload.guest_name,
             totalAmount: payload.total_amount || 0,
             status: payload.status || 'Running',
@@ -126,6 +137,7 @@ export function useERPWebSocket(options: UseERPWebSocketOptions): UseERPWebSocke
             createdAt: new Date().toISOString(),
             isPrinted: false
           });
+          PmsStore.notify();
         } else {
           PmsStore.notify();
         }

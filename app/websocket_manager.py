@@ -212,15 +212,37 @@ class WebSocketManager:
         }
         await self.broadcast_to_channel("front_desk", payload)
         await self.broadcast_to_channel("payments", payload)
+        if reference_id:
+            clean_ref = reference_id.strip()
+            await self.broadcast_to_channel(f"payment_{clean_ref}", payload)
 
     def _dispatch_sync(self, coro):
         """Dispatches an async coroutine from synchronous route contexts."""
+        if not any(self.channels.values()):
+            try:
+                coro.close()
+            except Exception:
+                pass
+            return
         try:
             loop = asyncio.get_running_loop()
             loop.create_task(coro)
         except RuntimeError:
             try:
-                asyncio.run(coro)
+                val = None
+                stack = [coro]
+                while stack:
+                    curr = stack[-1]
+                    try:
+                        yielded = curr.send(val)
+                        val = None
+                        if hasattr(yielded, "send"):
+                            stack.append(yielded)
+                        else:
+                            val = yielded
+                    except StopIteration as e:
+                        stack.pop()
+                        val = e.value
             except Exception as e:
                 logger.debug(f"[WebSocket] Sync dispatch failed: {e}")
 
@@ -235,6 +257,10 @@ class WebSocketManager:
     def emit_room_status_event_sync(self, *args, **kwargs):
         """Sync-friendly trigger for live room status events."""
         self._dispatch_sync(self.broadcast_room_status_event(*args, **kwargs))
+
+    def emit_payment_success_sync(self, *args, **kwargs):
+        """Sync-friendly trigger for live payment settlement notices (#97)."""
+        self._dispatch_sync(self.broadcast_payment_success(*args, **kwargs))
 
 
 # Singleton instances

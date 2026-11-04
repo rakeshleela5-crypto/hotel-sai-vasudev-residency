@@ -47,7 +47,7 @@ class Booking(Base):
     # Guest Profile
     guest_name = Column(String(150), nullable=False)
     guest_email = Column(String(150), nullable=False)
-    guest_phone = Column(String(50), nullable=False)
+    guest_phone = Column(String(50), nullable=False, index=True)
     id_proof_type = Column(String(50), default="Aadhaar Card")
     id_proof_number = Column(String(50), nullable=True)
     id_proof_document_key = Column(String(255), nullable=True) # Cloudflare R2 object key (e.g. kyc/2026/10/guest_442.pdf)
@@ -117,7 +117,7 @@ class BookingPayment(Base):
     payment_type = Column(String(50), default="Partial") # Advance, Partial, Settlement, Key_Deposit, Refund
     payment_mode = Column(String(50), nullable=False) # Cash, Card, UPI, Direct_BTC
     amount = Column(Float, nullable=False)
-    transaction_ref = Column(String(100), nullable=True) # UPI UTR or Card Auth Code
+    transaction_ref = Column(String(100), nullable=True, index=True) # UPI UTR or Card Auth Code
     notes = Column(String(255), nullable=True)
     collected_by = Column(String(100), default="Front Desk Cashier")
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
@@ -129,8 +129,8 @@ class RoomShift(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     booking_id = Column(Integer, ForeignKey("bookings.id"), nullable=False, index=True)
-    from_room_id = Column(Integer, ForeignKey("rooms.id"), nullable=False)
-    to_room_id = Column(Integer, ForeignKey("rooms.id"), nullable=False)
+    from_room_id = Column(Integer, ForeignKey("rooms.id"), nullable=False, index=True)
+    to_room_id = Column(Integer, ForeignKey("rooms.id"), nullable=False, index=True)
     shift_date = Column(String(50), nullable=False) # YYYY-MM-DD
     reason = Column(String(255), nullable=False) # AC issue, Guest upgrade, Maintenance
     old_rate = Column(Float, nullable=False)
@@ -156,7 +156,7 @@ class RoomFolioItem(Base):
     cgst_amount = Column(Float, default=0.0)
     sgst_amount = Column(Float, default=0.0)
     total_amount = Column(Float, nullable=False)
-    status = Column(String(50), default="Billed") # Billed, Void
+    status = Column(String(50), default="Billed", index=True) # Billed, Void
     created_at = Column(TimezoneAwareDateTime, default=now_utc)
 
     __table_args__ = (
@@ -169,7 +169,7 @@ class PoliceStationLog(Base):
     __tablename__ = "police_station_logs"
 
     id = Column(Integer, primary_key=True, index=True)
-    booking_id = Column(Integer, ForeignKey("bookings.id"), unique=True, nullable=False)
+    booking_id = Column(Integer, ForeignKey("bookings.id"), unique=True, nullable=False, index=True)
     guest_name = Column(String(150), nullable=False)
     age = Column(Integer, default=35)
     gender = Column(String(20), default="Male")
@@ -274,7 +274,7 @@ class KotTicket(Base):
     items_json = Column(Text, nullable=False) # JSON array of {itemName, qty, rate, amount}
     delta_items_json = Column(Text, nullable=True) # Newly added items in this running KOT
     total_amount = Column(Float, default=0.0)
-    status = Column(String(50), default="Running") # Running, Billed, Cancelled
+    status = Column(String(50), default="Running", index=True) # Running, Billed, Cancelled
     is_printed = Column(Boolean, default=True)
     is_delta = Column(Boolean, default=False)
     order_source = Column(String(50), default="Desktop")
@@ -379,7 +379,7 @@ class InventoryPurchase(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     bill_no = Column(String(100), index=True, nullable=False)
-    bill_date = Column(String(50), nullable=False)
+    bill_date = Column(String(50), nullable=False, index=True)
     godown = Column(String(100), nullable=False)
     supplier_name = Column(String(150), nullable=False)
     items_json = Column(Text, nullable=False)
@@ -396,7 +396,7 @@ class PaymentTransaction(Base):
     reference_id = Column(String(100), unique=True, index=True, nullable=False) # Decentro reference_id UUID
     booking_id = Column(Integer, ForeignKey("bookings.id", ondelete="SET NULL"), nullable=True, index=True)
     kot_id = Column(String(100), nullable=True, index=True)
-    room_no = Column(String(50), nullable=True)
+    room_no = Column(String(50), nullable=True, index=True)
     amount = Column(Float, nullable=False)
     currency = Column(String(10), default="INR")
     purpose_message = Column(String(255), nullable=True)
@@ -439,7 +439,7 @@ class FoodBill(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     bill_no = Column(String(100), unique=True, index=True, nullable=False)
-    date = Column(String(50), nullable=False)
+    date = Column(String(50), nullable=False, index=True)
     time = Column(String(50), nullable=False)
     room_no = Column(String(50), nullable=True, index=True)
     table_no = Column(String(50), nullable=True, index=True)
@@ -498,17 +498,17 @@ class GroupBooking(Base):
     group_id = Column(String(100), unique=True, index=True, nullable=False)
     group_name = Column(String(200), nullable=False)
     contact_person = Column(String(150), nullable=False)
-    contact_phone = Column(String(50), nullable=False)
+    contact_phone = Column(String(50), nullable=False, index=True)
     booking_source = Column(String(100), default="Direct Phone Reservation")
-    check_in_date = Column(String(50), nullable=False)
-    check_out_date = Column(String(50), nullable=False)
+    check_in_date = Column(String(50), nullable=False, index=True)
+    check_out_date = Column(String(50), nullable=False, index=True)
     advance_paid = Column(Float, default=0.0)
     balance_due = Column(Float, default=0.0)
     total_amount = Column(Float, default=0.0)
     rooms_allocated_json = Column(Text, default="[]")
     guests_json = Column(Text, default="[]")
     special_instructions = Column(Text, nullable=True)
-    status = Column(String(50), default="Confirmed")
+    status = Column(String(50), default="Confirmed", index=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 class CheckoutRecord(Base):
@@ -519,10 +519,10 @@ class CheckoutRecord(Base):
     room_no = Column(String(50), index=True, nullable=False)
     room_type = Column(String(100), default="DELUXE")
     guest_name = Column(String(150), nullable=False)
-    guest_phone = Column(String(50), nullable=True)
-    check_in_date = Column(String(50), nullable=False)
+    guest_phone = Column(String(50), nullable=True, index=True)
+    check_in_date = Column(String(50), nullable=False, index=True)
     check_in_time = Column(String(50), nullable=True)
-    check_out_date = Column(String(50), nullable=False)
+    check_out_date = Column(String(50), nullable=False, index=True)
     check_out_time = Column(String(50), nullable=True)
     calculation_type = Column(String(50), default="12hour")
     number_of_days = Column(Integer, default=1)
@@ -560,12 +560,12 @@ class AdvanceReceipt(Base):
     id = Column(Integer, primary_key=True, index=True)
     receipt_no = Column(String(100), unique=True, index=True, nullable=False)
     voucher_no = Column(String(50), nullable=True)
-    date = Column(String(50), nullable=False)
+    date = Column(String(50), nullable=False, index=True)
     time = Column(String(50), nullable=True)
     voucher_name = Column(String(100), default="Advance_Receipt")
     room_no = Column(String(50), index=True, nullable=False)
     guest_name = Column(String(150), nullable=False)
-    mobile = Column(String(50), nullable=True)
+    mobile = Column(String(50), nullable=True, index=True)
     amount = Column(Float, nullable=False)
     payment_mode = Column(String(50), default="Cash")
     transaction_ref = Column(String(100), nullable=True)
@@ -614,7 +614,7 @@ class GeneralReceipt(Base):
     date = Column(String(50), nullable=False)
     payment_mode = Column(String(50), default="Cash") # Cash, Online, Card, UPI, Cheque
     account_name = Column(String(200), index=True, nullable=False)
-    account_mobile = Column(String(50), nullable=True)
+    account_mobile = Column(String(50), nullable=True, index=True)
     amount = Column(Float, nullable=False)
     remark = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
@@ -630,7 +630,7 @@ class GeneralPayment(Base):
     date = Column(String(50), nullable=False)
     payment_mode = Column(String(50), default="Cash") # Cash, Online, Card, UPI, Cheque
     account_name = Column(String(200), index=True, nullable=False)
-    account_mobile = Column(String(50), nullable=True)
+    account_mobile = Column(String(50), nullable=True, index=True)
     amount = Column(Float, nullable=False)
     remark = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
@@ -1391,7 +1391,7 @@ class KOTOrder(Base):
     id = Column(Integer, primary_key=True, index=True)
     kot_number = Column(String(50), unique=True, index=True, nullable=False)
     room_id = Column(Integer, ForeignKey("rooms.id"), nullable=True, index=True)
-    room_no = Column(String(50), nullable=True)
+    room_no = Column(String(50), nullable=True, index=True)
     table_no = Column(String(50), nullable=True)
     status = Column(String(50), default="PLACED", index=True, nullable=False) # PLACED, PREPARING, READY, SERVED, BILLED, VOID
     total_amount = Column(Float, default=0.0)

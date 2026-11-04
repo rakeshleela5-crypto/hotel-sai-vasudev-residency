@@ -35,9 +35,30 @@ export const RestaurantTableDashboardModal: React.FC<RestaurantTableDashboardMod
   };
 
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) return;
+
+    loadTables();
+
+    // 1. Subscribe to reactive PMS Store changes (#97)
+    const unsub = PmsStore.subscribe(() => {
       loadTables();
-    }
+    });
+
+    // 2. Listen to real-time KOT events and WebSocket broadcasts (#97, #98)
+    const handleSync = () => {
+      loadTables();
+    };
+
+    window.addEventListener('svr_kot_event', handleSync);
+    window.addEventListener('svr:ws_message', handleSync);
+    window.addEventListener('storage', handleSync);
+
+    return () => {
+      unsub();
+      window.removeEventListener('svr_kot_event', handleSync);
+      window.removeEventListener('svr:ws_message', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
   }, [isOpen]);
 
   if (!isOpen) return null;
