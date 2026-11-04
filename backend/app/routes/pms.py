@@ -76,7 +76,8 @@ def find_booking_by_ref_or_room(
             selectinload(models.Booking.room),
             selectinload(models.Booking.folio_items),
             selectinload(models.Booking.payments),
-            selectinload(models.Booking.room_shifts)
+            selectinload(models.Booking.room_shifts),
+            selectinload(models.Booking.folios)
         )
     if for_update:
         try:
@@ -355,9 +356,9 @@ def get_master_room_folio(booking_ref: str, db: Session = Depends(get_db)):
     current_room_name = room.name if room else "Deluxe Stay"
 
     # Eager-loaded collections from selectinload with authoritative DB query
-    shifts = db.query(models.RoomShift).filter(models.RoomShift.booking_id == booking.id).all()
-    folios = db.query(models.RoomFolioItem).filter(models.RoomFolioItem.booking_id == booking.id).all()
-    payments = db.query(models.BookingPayment).filter(models.BookingPayment.booking_id == booking.id).all()
+    shifts = booking.room_shifts or []
+    folios = [f for f in (booking.folio_items or []) if not getattr(f, 'is_deleted', False) and f.status != 'Void']
+    payments = booking.payments or []
 
     # Calculations
     room_stay_charges = booking.base_amount + (booking.extra_guest_charge or 0.0)
@@ -610,6 +611,18 @@ def execute_walk_in_check_in(payload: schemas.WalkInCheckInRequest, db: Session 
         if room.housekeeping_status == "Dirty":
             raise HTTPException(status_code=400, detail=f"Room '{room.name}' is marked Dirty! Housekeeping must clean and inspect before check-in.")
 
+        # Concurrency race-condition check: prevent double-booking if another active reservation holds this room (#14, #38)
+        active_booking = db.query(models.Booking).filter(
+            models.Booking.room_id == room.id,
+            models.Booking.status.in_(["Checked-In", "Confirmed"]),
+            models.Booking.is_deleted == False
+        ).first()
+        if active_booking:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Room '{room.name}' is already occupied or locked by active reservation '{active_booking.booking_ref}'!"
+            )
+
         today_str = payload.check_in_date or datetime.date.today().isoformat()
         start_date = datetime.date.fromisoformat(today_str)
         end_date = datetime.date.fromisoformat(payload.check_out_date)
@@ -760,7 +773,7 @@ def execute_walk_in_check_in(payload: schemas.WalkInCheckInRequest, db: Session 
 @router.get("/checkins")
 def get_check_ins(db: Session = Depends(get_db)):
     """Retrieve all active and past check-in records directly from PostgreSQL."""
-    bookings = db.query(models.Booking).order_by(models.Booking.id.desc()).limit(200).all()
+    bookings = db.query(models.Booking).options(selectinload(models.Booking.room), selectinload(models.Booking.folio_items), selectinload(models.Booking.payments)).filter(models.Booking.is_deleted == False).order_by(models.Booking.id.desc()).limit(200).all()
     results = []
     for b in bookings:
         room_name = b.room.name if b.room else str(b.room_id)
@@ -803,7 +816,9 @@ def cancel_check_in(booking_ref: str, db: Session = Depends(get_db)):
     b = db.query(models.Booking).filter(models.Booking.booking_ref == booking_ref).first()
     if not b:
         raise HTTPException(status_code=404, detail="Check-in booking not found")
+    b.is_deleted = True
     b.status = "Cancelled"
+    b.void_reason = "Check-in cancelled at front desk"
     if b.room:
         b.room.housekeeping_status = "Clean"
     db.commit()
@@ -827,7 +842,16 @@ def execute_check_out(payload: schemas.CheckOutRequest, db: Session = Depends(ge
 
         # Acquire canonical locks: Booking -> Folio -> Room (#15, #26)
         acquire_canonical_locks(db, booking_id=booking.id, room_id=booking.room_id)
-        room = db.query(models.Room).filter(models.Room.id == booking.room_id).first()
+        folio = db.query(models.Folio).filter(models.Folio.booking_id == booking.id).with_for_update().first()
+        room = db.query(models.Room).filter(models.Room.id == booking.room_id).with_for_update().first()
+
+        # Concurrency & Double-Settlement Guard: Prevent two browser tabs from double-settling the same bill (#38)
+        if booking.status == "Checked-Out" or (folio and folio.status in ["SETTLED", "CLOSED"] and booking.balance_due <= 0.0):
+            if payload.settlement_amount_paid and float(payload.settlement_amount_paid) > 0:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"Booking '{booking.booking_ref}' or folio is already checked out and settled! Cannot settle bill twice."
+                )
 
         # Record final settlement payment if provided
         settlement_amt = float(payload.settlement_amount_paid or 0.0)
@@ -1225,7 +1249,7 @@ def delete_kot_ticket(kot_no: str, db: Session = Depends(get_db)):
     # Remove relational kot_items
     db.query(models.KotItem).filter(models.KotItem.kot_no == kot_no).delete()
 
-    # If linked to room folio, reverse folio charge
+    # If linked to room folio, reverse folio charge via soft delete
     if kot.room_no:
         folio_item = db.query(models.RoomFolioItem).filter(models.RoomFolioItem.kot_number == kot_no).first()
         if folio_item:
@@ -1233,7 +1257,13 @@ def delete_kot_ticket(kot_no: str, db: Session = Depends(get_db)):
             if booking:
                 booking.total_price = max(0.0, round(booking.total_price - folio_item.total_amount, 2))
                 booking.balance_due = max(0.0, round(booking.total_price - (booking.total_paid or 0.0), 2))
-            db.delete(folio_item)
+            folio_item.is_deleted = True
+            folio_item.status = "Void"
+            folio_item.void_reason = f"KOT {kot_no} voided"
+
+    kot.is_deleted = True
+    kot.status = "Voided"
+    kot.void_reason = "KOT voided by user/cashier"
 
     ws_manager.emit_kot_event_sync(
         event_type="KOT_VOIDED",
@@ -1243,7 +1273,6 @@ def delete_kot_ticket(kot_no: str, db: Session = Depends(get_db)):
         waiter_name=kot.waiter_name,
         status="Voided"
     )
-    db.delete(kot)
     db.commit()
     return {"success": True, "message": f"KOT {kot_no} voided and removed from database."}
 
@@ -2357,8 +2386,12 @@ def delete_food_bill(bill_no: str, db: Session = Depends(get_db)):
             if booking:
                 booking.total_price = max(0.0, round(booking.total_price - b.net_bill_amount, 2))
                 booking.balance_due = max(0.0, round(booking.total_price - (booking.total_paid or 0.0), 2))
-            db.delete(folio_item)
-    db.delete(b)
+            folio_item.is_deleted = True
+            folio_item.status = "Void"
+            folio_item.void_reason = f"Food bill {bill_no} cancelled"
+    b.is_deleted = True
+    b.status = "CANCELLED"
+    b.void_reason = "Food bill cancelled by cashier"
     db.commit()
     return {"success": True, "message": f"Food bill {bill_no} cancelled and removed from database."}
 

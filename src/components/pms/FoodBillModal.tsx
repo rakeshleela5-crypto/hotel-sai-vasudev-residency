@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PmsStore } from '../../services/pmsStore';
 import type { FoodBillItem, PmsFoodBill, PmsKotRecord, TableSession } from '../../types/pmsModels';
 import { ManagerPinModal } from './ManagerPinModal';
@@ -67,6 +67,9 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
   const [showPrintSlip, setShowPrintSlip] = useState<boolean>(false);
   const [savedBill, setSavedBill] = useState<PmsFoodBill | null>(null);
   const [showDecentroQrModal, setShowDecentroQrModal] = useState<boolean>(false);
+  const [isSavingBill, setIsSavingBill] = useState<boolean>(false);
+  const isSubmittingBillRef = useRef<boolean>(false);
+  const isQrButtonLockedRef = useRef<boolean>(false);
 
   // Load KOTs & Active Table Session
   useEffect(() => {
@@ -265,6 +268,10 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
   const amountInWords = convertNumberToWords(netBillAmount);
 
   const handleSaveBill = (printSlip: boolean = true) => {
+    if (isSubmittingBillRef.current) return;
+    isSubmittingBillRef.current = true;
+    setIsSavingBill(true);
+    try {
     const kotNums = pendingKots.map(k => k.kotNo);
     if (kotNums.length === 0) {
       kotNums.push('KOT/372/24-25', 'KOT/374/24-25');
@@ -321,6 +328,10 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
       alert(`Restaurant Food Bill ${billNo} saved & settled! Table ${selectedTable} has been vacated.`);
       onClose();
     }
+    } finally {
+      isSubmittingBillRef.current = false;
+      setIsSavingBill(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -369,19 +380,20 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                   <button
                     type="button"
                     onClick={() => handleSaveBill(true)}
+                    disabled={isSavingBill}
                     style={{
-                      background: '#0284c7',
+                      background: isSavingBill ? '#94a3b8' : '#0284c7',
                       color: '#fff',
                       border: 'none',
                       padding: '6px 20px',
                       borderRadius: 4,
                       fontSize: 13,
                       fontWeight: 800,
-                      cursor: 'pointer',
+                      cursor: isSavingBill ? 'not-allowed' : 'pointer',
                       boxShadow: '0 2px 4px rgba(2,132,199,0.3)'
                     }}
                   >
-                    Save &amp; Print
+                    {isSavingBill ? '⏳ Saving...' : 'Save & Print'}
                   </button>
                 </div>
               </div>
@@ -822,7 +834,12 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                   </button>
                   <button
                     type="button"
-                    onClick={() => setShowDecentroQrModal(true)}
+                    onClick={() => {
+                      if (isQrButtonLockedRef.current) return;
+                      isQrButtonLockedRef.current = true;
+                      setShowDecentroQrModal(true);
+                      setTimeout(() => { isQrButtonLockedRef.current = false; }, 400);
+                    }}
                     style={{
                       background: '#0284c7',
                       color: '#fff',
@@ -842,9 +859,18 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                   <button
                     type="button"
                     onClick={() => handleSaveBill(true)}
-                    style={{ background: '#15803d', color: '#fff', border: 'none', padding: '7px 22px', borderRadius: 4, fontWeight: 800, cursor: 'pointer' }}
+                    disabled={isSavingBill}
+                    style={{
+                      background: isSavingBill ? '#94a3b8' : '#15803d',
+                      color: '#fff',
+                      border: 'none',
+                      padding: '7px 22px',
+                      borderRadius: 4,
+                      fontWeight: 800,
+                      cursor: isSavingBill ? 'not-allowed' : 'pointer'
+                    }}
                   >
-                    Save &amp; Settle Bill
+                    {isSavingBill ? '⏳ Settling Bill...' : 'Save & Settle Bill'}
                   </button>
                 </div>
               </div>

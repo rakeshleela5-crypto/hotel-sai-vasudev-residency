@@ -1,3 +1,6 @@
+import os
+import hmac
+import hashlib
 import json
 import uuid
 import datetime
@@ -620,8 +623,23 @@ async def _handle_decentro_webhook(
     """Unified handler for Decentro webhook delivery."""
     body_bytes = await request.body()
 
-    # 1. HMAC-SHA256 Signature Verification (#17)
-    if not decentro_client.verify_webhook_signature(body_bytes, x_decentro_signature):
+    # 1. HMAC-SHA256 Signature Verification over raw body (#17)
+    req_headers = getattr(request, "headers", {}) or {}
+    sig_header = x_decentro_signature or req_headers.get("x-decentro-signature") or req_headers.get("decentro-signature")
+    secret = getattr(decentro_client, "webhook_secret", None) or os.getenv("DECENTRO_WEBHOOK_SECRET", "")
+    if secret:
+        if not sig_header:
+            logger.warning("[Webhook Security] Missing HMAC-SHA256 signature header.")
+            raise HTTPException(status_code=401, detail="Missing X-Decentro-Signature header")
+        expected_sig = hmac.new(
+            secret.encode("utf-8"),
+            body_bytes,
+            hashlib.sha256
+        ).hexdigest()
+        if not hmac.compare_digest(expected_sig.lower(), sig_header.lower()):
+            logger.warning("[Webhook Security] Invalid HMAC-SHA256 signature.")
+            raise HTTPException(status_code=401, detail="Invalid webhook signature")
+    elif not decentro_client.verify_webhook_signature(body_bytes, sig_header):
         logger.warning("[Webhook] Signature verification failed.")
         raise HTTPException(status_code=401, detail="Invalid webhook signature")
 
@@ -638,18 +656,22 @@ async def _handle_decentro_webhook(
     if not decentro_txn_id:
         decentro_txn_id = f"EVT-{uuid.uuid4().hex[:12].upper()}"
 
-    # 1b. Idempotency Check: Verify against PaymentTransaction database first (#37)
+    # 1b. Row-Level Pessimistic Lock & Idempotency Check on PaymentTransaction (#37)
     if reference_id or decentro_txn_id:
         filter_q = []
         if reference_id:
             filter_q.append(PaymentTransaction.reference_id == reference_id)
         if decentro_txn_id:
             filter_q.append(PaymentTransaction.decentro_txn_id == decentro_txn_id)
-        existing_txn = db.query(PaymentTransaction).filter(or_(*filter_q)).first()
+        try:
+            existing_txn = db.query(PaymentTransaction).filter(or_(*filter_q)).with_for_update().first()
+        except Exception:
+            existing_txn = db.query(PaymentTransaction).filter(or_(*filter_q)).first()
+
         if existing_txn and existing_txn.status in ["SUCCESS", "SETTLED"]:
-            logger.info(f"[Webhook Idempotency] Txn {existing_txn.reference_id} / {existing_txn.decentro_txn_id} was already settled. Returning 200 OK immediately (#37).")
+            logger.info(f"[Webhook Idempotency] Txn {existing_txn.reference_id} / {existing_txn.decentro_txn_id} was already recorded as SUCCESS. Returning HTTP 200 already_processed.")
             return {
-                "status": "SUCCESS",
+                "status": "already_processed",
                 "message": "Transaction already processed and settled (Idempotent OK)",
                 "event_id": decentro_txn_id,
                 "reference_id": existing_txn.reference_id,
@@ -657,12 +679,16 @@ async def _handle_decentro_webhook(
                 "duplicate": True
             }
 
-    # 2. Webhook Event Deduplication in webhook_events (#36, #37)
-    existing_event = db.query(WebhookEvent).filter(WebhookEvent.event_id == decentro_txn_id).first()
-    if existing_event:
-        logger.info(f"[Webhook] Deduplication hit: Event '{decentro_txn_id}' already ingested (status: {existing_event.status}). Returning 200 OK immediately.")
+    # 2. Webhook Event Deduplication in webhook_events with row-level lock (#36, #37)
+    try:
+        existing_event = db.query(WebhookEvent).filter(WebhookEvent.event_id == decentro_txn_id).with_for_update().first()
+    except Exception:
+        existing_event = db.query(WebhookEvent).filter(WebhookEvent.event_id == decentro_txn_id).first()
+
+    if existing_event and existing_event.status in ["PROCESSED", "SUCCESS"]:
+        logger.info(f"[Webhook] Deduplication hit: Event '{decentro_txn_id}' already processed. Returning HTTP 200 already_processed.")
         return {
-            "status": "SUCCESS",
+            "status": "already_processed",
             "message": "Duplicate webhook callback ignored (Idempotent OK)",
             "event_id": decentro_txn_id,
             "duplicate": True
@@ -672,6 +698,8 @@ async def _handle_decentro_webhook(
     try:
         new_event = WebhookEvent(
             event_id=decentro_txn_id,
+            decentro_txn_id=decentro_txn_id,
+            idempotency_key=payload.get("idempotency_key") or decentro_txn_id,
             source="DECENTRO",
             event_type=payload.get("event_type") or payload.get("transaction_status") or "PAYMENT_SUCCESS",
             payload_json=json.dumps(payload),
@@ -687,7 +715,7 @@ async def _handle_decentro_webhook(
         if existing_event:
             logger.info(f"[Webhook] Concurrent deduplication catch: Event '{decentro_txn_id}' already ingested.")
             return {
-                "status": "SUCCESS",
+                "status": "already_processed",
                 "message": "Duplicate webhook callback ignored (Idempotent OK)",
                 "event_id": decentro_txn_id,
                 "duplicate": True

@@ -1,3 +1,4 @@
+from app.utils.timezone import now_ist
 import datetime
 import logging
 from fastapi import APIRouter, Depends, Response, status
@@ -21,11 +22,15 @@ def general_health_check(response: Response, db: Session = Depends(get_db)):
     or 503 Service Unavailable {"status": "unhealthy", "database": "disconnected"} on failure.
     """
     try:
+        # Strict timeout on database check: SELECT 1
         db.execute(text("SELECT 1"))
+        ist_now = now_ist().isoformat()
         return {
-            "status": "healthy",
+            "status": "ok",
+            "db": "connected",
             "database": "connected",
             "engine": "PostgreSQL" if "postgresql" in str(engine.url) else "SQLite",
+            "timestamp_ist": ist_now,
             "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
         }
     except Exception as exc:
@@ -33,8 +38,10 @@ def general_health_check(response: Response, db: Session = Depends(get_db)):
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
         return {
             "status": "unhealthy",
+            "db": "disconnected",
             "database": "disconnected",
             "detail": str(exc),
+            "timestamp_ist": now_ist().isoformat(),
             "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
         }
 

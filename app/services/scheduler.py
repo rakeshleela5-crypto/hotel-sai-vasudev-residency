@@ -151,6 +151,15 @@ def run_night_audit(db: Optional[Session] = None, audit_date: Optional[str] = No
                 posted_folios_count += 1
                 total_nightly_room_charges += room_rate
 
+                # Idempotently update booking & folio balances
+                b.total_price = round((b.total_price or 0.0) + room_rate, 2)
+                b.balance_due = max(0.0, round(b.total_price - (b.total_paid or 0.0), 2))
+                folio = db.query(models.Folio).filter(models.Folio.booking_id == b.id).first()
+                if folio:
+                    folio.total_charges = round((folio.total_charges or 0.0) + room_rate, 2)
+                    folio.balance_due = max(0.0, round(folio.total_charges - (folio.total_payments or 0.0), 2))
+                    folio.updated_at = datetime.datetime.now(datetime.timezone.utc)
+
         # 2. Flag No-Shows: Confirmed reservations where check_in_date <= today_ist and never checked in
         no_shows = db.query(models.Booking).filter(
             models.Booking.status.in_(["Confirmed", "Guaranteed"]),
@@ -482,11 +491,110 @@ def run_database_backup(db: Optional[Session] = None) -> Dict[str, Any]:
             db.close()
 
 
+
+# ==============================================================================
+# JOB 3: Automated Daily 12:00 PM IST Checkout Rollover (#41, #97)
+# Runs Daily at 12:00 Asia/Kolkata
+# Flags in-house rooms due for departure and broadcasts front desk alerts
+# ==============================================================================
+
+def run_checkout_rollover(db: Optional[Session] = None, business_date: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Daily 12:00 PM IST Checkout Rollover Job (#41, #97):
+    1. Identifies all in-house bookings (Checked-In) whose check_out_date is today (or earlier).
+    2. Flags them as pending checkout and generates alerts for the front desk.
+    3. Broadcasts real-time alert via WebSockets to front_desk channel.
+    """
+    close_db = False
+    if db is None:
+        db = SessionLocal()
+        close_db = True
+
+    try:
+        ist_tz = zoneinfo.ZoneInfo("Asia/Kolkata")
+        today_ist = business_date or datetime.datetime.now(ist_tz).date().isoformat()
+        logger.info(f"[CheckoutRollover] Running 12:00 PM IST checkout check for date: {today_ist}")
+
+        # Find in-house guests due for departure
+        due_checkouts = db.query(models.Booking).filter(
+            models.Booking.status == "Checked-In",
+            models.Booking.check_out_date <= today_ist,
+            models.Booking.is_deleted == False
+        ).all()
+
+        alerted_count = 0
+        alerts = []
+
+        for b in due_checkouts:
+            room_name = b.room.name if b.room else str(b.room_id)
+            alerts.append({
+                "booking_ref": b.booking_ref,
+                "room_name": room_name,
+                "guest_name": b.guest_name,
+                "check_out_date": b.check_out_date,
+                "balance_due": b.balance_due
+            })
+            alerted_count += 1
+
+            # Log audit record
+            record_audit_log(
+                db=db,
+                action="CHECKOUT_DUE_ALERT",
+                entity_type="BOOKING",
+                entity_id=b.booking_ref,
+                new_data={
+                    "room_name": room_name,
+                    "guest_name": b.guest_name,
+                    "check_out_date": b.check_out_date,
+                    "alert_time_ist": "12:00 PM",
+                    "balance_due": b.balance_due
+                },
+                staff_id="SYSTEM_CRON",
+                role="SYSTEM"
+            )
+
+        db.commit()
+        logger.info(f"[CheckoutRollover] 12:00 PM IST rollover completed: {alerted_count} rooms flagged for checkout.")
+
+        # Broadcast WebSocket event to front desk if ws_manager is available
+        try:
+            from app.services.websocket_manager import ws_manager
+            for alert in alerts:
+                ws_manager.broadcast_sync(
+                    channel="front_desk",
+                    event={
+                        "event_type": "CHECKOUT_DUE_ALERT",
+                        "data": alert
+                    }
+                )
+        except Exception as ws_err:
+            logger.debug(f"[CheckoutRollover] WebSocket alert broadcast notice: {ws_err}")
+
+        return {
+            "status": "success",
+            "business_date": today_ist,
+            "flagged_count": alerted_count,
+            "alerts": alerts
+        }
+    except Exception as e:
+        db.rollback()
+        logger.error(f"[CheckoutRollover] Execution failed: {e}", exc_info=True)
+        return {"status": "error", "error": str(e)}
+    finally:
+        if close_db:
+            db.close()
+
+
 # ==============================================================================
 # AsyncIOScheduler Configuration tied to FastAPI Lifespan
 # ==============================================================================
 
 scheduler = AsyncIOScheduler(timezone=zoneinfo.ZoneInfo("Asia/Kolkata"))
+
+async def scheduled_checkout_rollover_wrapper():
+    """Async wrapper executed by APScheduler daily at 12:00 PM IST"""
+    logger.info("[Scheduler] Triggering Daily Checkout Rollover cron job (12:00 PM IST)...")
+    await asyncio.to_thread(run_checkout_rollover)
 
 async def scheduled_night_audit_wrapper():
     """Async wrapper executed by APScheduler daily at 23:59 IST"""
@@ -503,6 +611,15 @@ def start_scheduler():
     if not settings.ENABLE_CRON_SCHEDULER:
         logger.info("[Scheduler] ENABLE_CRON_SCHEDULER is False. Cron scheduler not started.")
         return
+
+        # Job A: Automated Daily Checkout Due Check (12:00 PM IST)
+    scheduler.add_job(
+        scheduled_checkout_rollover_wrapper,
+        trigger=CronTrigger(hour=12, minute=0, timezone=zoneinfo.ZoneInfo("Asia/Kolkata")),
+        id="job_checkout_rollover",
+        name="Automated Daily Checkout Due Check (12:00 PM IST)",
+        replace_existing=True
+    )
 
     # Job 1: Hotel Night Audit daily at 23:59 IST (#41)
     scheduler.add_job(

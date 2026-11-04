@@ -49,6 +49,15 @@ def today_ist_str() -> str:
     """Returns today's date in IST as YYYY-MM-DD."""
     return now_ist().strftime("%Y-%m-%d")
 
+def now_ist_str() -> str:
+    """Returns current IST timestamp in ISO 8601 format."""
+    return now_ist().isoformat()
+
+def now_ist_time_str() -> str:
+    """Returns current IST time formatted as 12-hour AM/PM (e.g. 08:30 PM)."""
+    return now_ist().strftime("%I:%M %p")
+
+
 class TimezoneAwareDateTime(TypeDecorator):
     """
     SQLAlchemy TypeDecorator that persists datetimes as PostgreSQL TIMESTAMPTZ (or DateTime with tz in SQLite)

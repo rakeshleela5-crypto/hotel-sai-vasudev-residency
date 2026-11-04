@@ -1,7 +1,8 @@
 import os
 import logging
 from typing import AsyncGenerator, Generator
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
+from sqlalchemy.orm import with_loader_criteria
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
@@ -102,6 +103,30 @@ SessionLocal = sessionmaker(
     autoflush=False,
     expire_on_commit=False
 )
+
+# =========================================================================
+# 1B. GLOBAL SOFT-DELETE ORM FILTER (GST & AUDIT COMPLIANCE #21, #38)
+# =========================================================================
+@event.listens_for(Session, "do_orm_execute")
+def _soft_delete_filter(execute_state):
+    """
+    Automatic soft-delete filter for GST and audit compliance.
+    Transparently filters out records with is_deleted=True from standard ORM queries,
+    unless execution_options(include_deleted=True) is explicitly specified for audit trails.
+    """
+    if (
+        execute_state.is_orm_statement
+        and not execute_state.is_relationship_load
+        and not execute_state.execution_options.get("include_deleted", False)
+    ):
+        execute_state.statement = execute_state.statement.options(
+            with_loader_criteria(
+                Base,
+                lambda cls: cls.is_deleted == False if hasattr(cls, "is_deleted") else True,
+                include_aliases=True
+            )
+        )
+
 
 # =========================================================================
 # 2. SESSION DEPENDENCY INJECTORS

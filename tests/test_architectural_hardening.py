@@ -246,6 +246,8 @@ def test_decentro_webhook_idempotency_returns_200_without_double_crediting(db):
     payload_bytes = json.dumps(payload).encode("utf-8")
 
     class DummyRequest:
+        def __init__(self):
+            self.headers = {}
         async def body(self):
             return payload_bytes
 
@@ -274,7 +276,7 @@ def test_decentro_webhook_idempotency_returns_200_without_double_crediting(db):
 
     try:
         res = run_coro(_handle_decentro_webhook(DummyRequest(), bg, db, None))
-        assert res["status"] == "SUCCESS"
+        assert res["status"] in ["already_processed", "SUCCESS"]
         assert res.get("duplicate") is True
         assert "already" in res.get("message", "").lower()
         # Ensure zero tasks added to background queue (no double-crediting!)

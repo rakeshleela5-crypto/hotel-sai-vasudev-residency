@@ -92,6 +92,7 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
 
   const [isCpBreakfast, setIsCpBreakfast] = useState<boolean>(isCpRoom);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const isSubmittingRef = React.useRef<boolean>(false);
 
   // Active Cart State (Module 3)
   const [cartItems, setCartItems] = useState<KotItem[]>([
@@ -226,12 +227,13 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
 
   // Workflow 1: [🔥 Punch KOT to Kitchen]
   const handlePunchKot = () => {
-    if (isProcessing) return;
+    if (isSubmittingRef.current || isProcessing) return;
     if (cartItems.length === 0) {
       alert('Cart is empty! Please add at least one item from the Vasudev Rasoi menu.');
       return;
     }
 
+    isSubmittingRef.current = true;
     setIsProcessing(true);
     try {
       const nowTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
@@ -295,6 +297,9 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
         setShowSlipPreview(true);
       }
     } finally {
+      setTimeout(() => {
+        isSubmittingRef.current = false;
+      }, 350);
       setIsProcessing(false);
     }
   };
@@ -354,6 +359,9 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
       alert(`✅ Food Charge Posted to Room ${selectedRoomNo} (${targetGuest})!\n\nTaxable Amount: ₹${taxableAmount.toFixed(2)} (SAC 996331 @ 5% GST: ₹${totalTaxAmount.toFixed(2)})\nTotal Posted: ₹${grandTotal.toFixed(2)}\nLive Folio Balance updated successfully.`);
       onClose();
     } finally {
+      setTimeout(() => {
+        isSubmittingRef.current = false;
+      }, 350);
       setIsProcessing(false);
     }
   };
@@ -386,6 +394,9 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
       setBillReceiptRecord(billRecord);
       setShowCounterBillModal(true);
     } finally {
+      setTimeout(() => {
+        isSubmittingRef.current = false;
+      }, 350);
       setIsProcessing(false);
     }
   };

@@ -15,7 +15,7 @@ os.makedirs(LOCAL_UPLOAD_DIR, exist_ok=True)
 ALLOWED_FOLDERS = {"guest_ids", "rooms", "branding", "documents", "receipts", "backups", "kyc", "invoices"}
 
 # Strict file validation constants (#45)
-STRICT_ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "application/pdf"}
+STRICT_ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/webp", "application/pdf"}
 MAX_DOCUMENT_SIZE_BYTES = 5 * 1024 * 1024  # 5 MB Limit (#45)
 
 def validate_uploaded_document(
@@ -41,7 +41,7 @@ def validate_uploaded_document(
 
     # 2. Extension check
     ext = os.path.splitext(filename)[1].lower()
-    allowed_exts = {".jpg", ".jpeg", ".png", ".pdf"}
+    allowed_exts = {".jpg", ".jpeg", ".png", ".webp", ".pdf"}
     if ext not in allowed_exts:
         raise ValueError(f"File extension '{ext}' is not permitted. Allowed: {', '.join(allowed_exts)} (#45).")
 
@@ -52,6 +52,8 @@ def validate_uploaded_document(
             resolved_mime = "image/jpeg"
         elif ext == ".png":
             resolved_mime = "image/png"
+        elif ext == ".webp":
+            resolved_mime = "image/webp"
         elif ext == ".pdf":
             resolved_mime = "application/pdf"
 
@@ -63,6 +65,8 @@ def validate_uploaded_document(
         raise ValueError("File content does not match JPEG magic header signature (#45).")
     elif resolved_mime == "image/png" and not file_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
         raise ValueError("File content does not match PNG magic header signature (#45).")
+    elif resolved_mime == "image/webp" and not (file_bytes.startswith(b"RIFF") and b"WEBP" in file_bytes[:16]):
+        raise ValueError("File content does not match WebP magic header signature (#45).")
     elif resolved_mime == "application/pdf" and not file_bytes.startswith(b"%PDF"):
         raise ValueError("File content does not match PDF magic header signature (#45).")
 

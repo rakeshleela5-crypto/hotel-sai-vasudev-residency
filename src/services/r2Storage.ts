@@ -4,6 +4,8 @@
  * upload progress tracking, file validations, and resilient fallback handling.
  */
 
+import { compressKycImage } from '../utils/imageCompression';
+
 export type R2Folder = 'guest_ids' | 'rooms' | 'branding' | 'documents' | 'receipts' | 'backups' | 'kyc' | 'invoices';
 
 export interface R2UploadOptions {
@@ -336,10 +338,11 @@ export class R2StorageClient {
   }
 
   /**
-   * Upload guest KYC & identity proof documents to `guest_ids/`
+   * Upload guest KYC & identity proof documents to `guest_ids/` with client-side canvas compression (#45, #50)
    */
   static async uploadGuestKycDocument(file: File, onProgress?: (pct: number) => void): Promise<R2UploadResult> {
-    return this.uploadFile(file, { folder: 'guest_ids', onProgress });
+    const compressed = await compressKycImage(file, { maxDimension: 1600, quality: 0.75, maxSizeBytes: 500 * 1024 });
+    return this.uploadFile(compressed, { folder: 'guest_ids', onProgress });
   }
 
   /**

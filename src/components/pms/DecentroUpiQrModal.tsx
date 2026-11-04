@@ -36,11 +36,16 @@ export const DecentroUpiQrModal: React.FC<DecentroUpiQrModalProps> = ({
   const [timeLeft, setTimeLeft] = useState<number>(900); // 15 minutes in seconds
   const [wsStatus, setWsStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connecting');
   const [paymentSuccess, setPaymentSuccess] = useState<DecentroPaymentSuccessEvent | null>(null);
+  const [isCheckingStatus, setIsCheckingStatus] = useState<boolean>(false);
   const thermalPrintRef = useRef<HTMLDivElement>(null);
+  const isGeneratingRef = useRef<boolean>(false);
+  const isCheckingStatusRef = useRef<boolean>(false);
 
   // 1. Generate Dynamic QR when modal opens
   useEffect(() => {
     if (!isOpen || amount <= 0) return;
+    if (isGeneratingRef.current) return;
+    isGeneratingRef.current = true;
 
     let isMounted = true;
     setLoading(true);
@@ -70,10 +75,14 @@ export const DecentroUpiQrModal: React.FC<DecentroUpiQrModalProps> = ({
             setIsCircuitTripped(true);
           }
         }
+      })
+      .finally(() => {
+        isGeneratingRef.current = false;
       });
 
     return () => {
       isMounted = false;
+      isGeneratingRef.current = false;
     };
   }, [isOpen, amount, roomNo, bookingId, kotId, purpose]);
 
@@ -696,8 +705,11 @@ export const DecentroUpiQrModal: React.FC<DecentroUpiQrModalProps> = ({
 
                 <button
                   type="button"
+                  disabled={isCheckingStatus}
                   onClick={async () => {
-                    if (!qrData?.reference_id) return;
+                    if (!qrData?.reference_id || isCheckingStatusRef.current) return;
+                    isCheckingStatusRef.current = true;
+                    setIsCheckingStatus(true);
                     try {
                       const res = await decentroApi.getTransactionStatus(qrData.reference_id);
                       if (res.status === 'SUCCESS') {
@@ -723,20 +735,23 @@ export const DecentroUpiQrModal: React.FC<DecentroUpiQrModalProps> = ({
                       }
                     } catch (e: any) {
                       alert('Status check note: Payment pending confirmation from bank.');
+                    } finally {
+                      isCheckingStatusRef.current = false;
+                      setIsCheckingStatus(false);
                     }
                   }}
                   style={{
-                    background: '#f1f5f9',
-                    color: '#334155',
+                    background: isCheckingStatus ? '#e2e8f0' : '#f1f5f9',
+                    color: isCheckingStatus ? '#94a3b8' : '#334155',
                     border: '1px solid #cbd5e1',
                     padding: '10px 14px',
                     borderRadius: 8,
                     fontSize: 12,
                     fontWeight: 700,
-                    cursor: 'pointer'
+                    cursor: isCheckingStatus ? 'not-allowed' : 'pointer'
                   }}
                 >
-                  🔄 Check Status
+                  {isCheckingStatus ? '⏳ Checking...' : '🔄 Check Status'}
                 </button>
               </div>
             </div>

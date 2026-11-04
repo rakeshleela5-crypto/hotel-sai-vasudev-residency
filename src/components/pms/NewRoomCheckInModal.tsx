@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { PmsCheckIn, PmsRoom, PaymentSplit } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import { hotelApi } from '../../services/api';
@@ -104,6 +104,8 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
   const [checkInNo] = useState(defaultCheckInNo);
   const [selectedBookingRef, setSelectedBookingRef] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const isSubmittingCheckInRef = useRef<boolean>(false);
+  const isQrButtonLockedRef = useRef<boolean>(false);
 
   // Strict Date & Night Calculation (Module 2 Requirement)
   const [checkInDate, setCheckInDate] = useState(todayStr);
@@ -410,6 +412,8 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
   // Strict Form Validation (Module 2 Requirement)
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Synchronous lock against rapid multi-clicks (<300ms)
+    if (isSubmittingCheckInRef.current) return;
 
     // 0. Hard Room Status Machine Check: Block if not clean unless supervisor override
     if (!isRoomClean && !supervisorOverride) {
@@ -470,7 +474,11 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
       }
     }
 
-    const checkInRecord: PmsCheckIn = {
+    isSubmittingCheckInRef.current = true;
+    setIsProcessing(true);
+
+    try {
+      const checkInRecord: PmsCheckIn = {
       checkInNo,
       roomNo: selectedRoomNo,
       roomType: currentRoomType,
@@ -655,10 +663,13 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
       }
     }
 
-    setIsProcessing(false);
     setCompletedCheckIn(checkInRecord);
     setIsSlipOpen(true);
     onCheckInCompleted(checkInRecord);
+    } finally {
+      isSubmittingCheckInRef.current = false;
+      setIsProcessing(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -1673,7 +1684,12 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                         </button>
                         <button
                           type="button"
-                          onClick={() => setShowDecentroAdvanceQr(true)}
+                          onClick={() => {
+                            if (isQrButtonLockedRef.current) return;
+                            isQrButtonLockedRef.current = true;
+                            setShowDecentroAdvanceQr(true);
+                            setTimeout(() => { isQrButtonLockedRef.current = false; }, 400);
+                          }}
                           style={{
                             background: '#0284c7',
                             color: '#ffffff',
@@ -1762,7 +1778,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                   cursor: isProcessing || (!isRoomClean && !supervisorOverride) ? 'not-allowed' : 'pointer'
                 }}
               >
-                {isProcessing ? 'Saving Check-In...' : 'Save CheckIn'}
+                {isProcessing ? '⏳ Confirming Check-In...' : '💾 Confirm Check-In & Print Slip'}
               </button>
             </div>
           </form>

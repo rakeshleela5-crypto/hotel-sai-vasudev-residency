@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { PmsRoom, PmsCheckOutDetail, PaymentSplit, PmsFoodBill, DayWiseRentItem, BillFormatType } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import { hotelApi } from '../../services/api';
@@ -151,6 +151,10 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
   // Security locks
   const canChangeTariff = PmsStore.hasPermission('Change_Room_Tariff');
   const canChangeDateTime = PmsStore.hasPermission('Change_Date&Time');
+  
+  // In-flight submission lock to block rapid (<300ms) double-clicks
+  const isSubmittingCheckoutRef = useRef<boolean>(false);
+  const isQrButtonLockedRef = useRef<boolean>(false);
   
   // Dynamic Advance Calculation
   const roomAdvanceReceipts = targetRoom ? PmsStore.getAdvanceReceiptsByRoom(targetRoom.roomNo) : [];
@@ -353,6 +357,8 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
     if (e && typeof e.preventDefault === 'function') {
       e.preventDefault();
     }
+    // Block rapid double-click in-flight
+    if (isSubmittingCheckoutRef.current) return;
     if (!targetRoom) return;
 
     if (pendingKots.length > 0) {
@@ -370,6 +376,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
       return;
     }
 
+    isSubmittingCheckoutRef.current = true;
     setIsProcessing(true);
 
     const checkoutData: PmsCheckOutDetail = {
@@ -537,6 +544,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
     } catch (err) {
       console.error('[handleCheckoutSubmit error]:', err);
     } finally {
+      isSubmittingCheckoutRef.current = false;
       setIsProcessing(false);
       try {
         onCheckoutComplete(checkoutData);
@@ -1144,7 +1152,12 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                       <div style={{ display: 'flex', gap: 4 }}>
                         <button
                           type="button"
-                          onClick={() => setShowDecentroQrModal(true)}
+                          onClick={() => {
+                            if (isQrButtonLockedRef.current) return;
+                            isQrButtonLockedRef.current = true;
+                            setShowDecentroQrModal(true);
+                            setTimeout(() => { isQrButtonLockedRef.current = false; }, 400);
+                          }}
                           style={{
                             background: '#0284c7',
                             color: '#fff',
@@ -1274,7 +1287,12 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                             <button
                               type="button"
                               id="checkout-decentro-qr-btn"
-                              onClick={() => setShowDecentroQrModal(true)}
+                              onClick={() => {
+                                if (isQrButtonLockedRef.current) return;
+                                isQrButtonLockedRef.current = true;
+                                setShowDecentroQrModal(true);
+                                setTimeout(() => { isQrButtonLockedRef.current = false; }, 400);
+                              }}
                               style={{ background: '#0284c7', color: '#fff', border: 'none', padding: '1px 6px', borderRadius: 2, fontSize: 9, fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 2 }}
                               title="Generate Dynamic Decentro UPI QR Code for instant guest folio settlement"
                             >
@@ -1609,7 +1627,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                     cursor: isProcessing || (!isCityLedgerApproved && remainingToSettle > 0.01) ? 'not-allowed' : 'pointer'
                   }}
                 >
-                  {isProcessing ? '⏳ Finalizing Checkout & Syncing PostgreSQL...' : '✓ Complete Checkout & Generate Final Tax Invoice'}
+                  {isProcessing ? '⏳ Finalizing & Settling Folio...' : '✓ Complete Checkout & Settle Folio'}
                 </button>
               </div>
             </form>

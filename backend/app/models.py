@@ -32,6 +32,8 @@ class Room(Base):
     is_available = Column(Boolean, default=True)
     housekeeping_status = Column(String(50), default="Clean") # Clean, Dirty, Inspected, Under_Maintenance
     version_id = Column(Integer, default=1, nullable=False) # Optimistic locking (#25, #26)
+    is_deleted = Column(Boolean, default=False, nullable=False, index=True) # Soft delete for GST compliance (#21, #38)
+    void_reason = Column(String(255), nullable=True)
     created_at = Column(TimezoneAwareDateTime, default=now_utc)
 
     bookings = relationship("Booking", back_populates="room")
@@ -94,6 +96,8 @@ class Booking(Base):
     special_requests = Column(Text, nullable=True)
     cancellation_reason = Column(String(255), nullable=True)
     version_id = Column(Integer, default=1, nullable=False) # Optimistic locking (#25, #26)
+    is_deleted = Column(Boolean, default=False, nullable=False, index=True) # Soft delete for GST compliance (#21, #38)
+    void_reason = Column(String(255), nullable=True)
     created_at = Column(TimezoneAwareDateTime, default=now_utc)
     updated_at = Column(TimezoneAwareDateTime, default=now_utc, onupdate=now_utc)
 
@@ -157,6 +161,8 @@ class RoomFolioItem(Base):
     sgst_amount = Column(Float, default=0.0)
     total_amount = Column(Float, nullable=False)
     status = Column(String(50), default="Billed", index=True) # Billed, Void
+    is_deleted = Column(Boolean, default=False, nullable=False, index=True)
+    void_reason = Column(String(255), nullable=True)
     created_at = Column(TimezoneAwareDateTime, default=now_utc)
 
     __table_args__ = (
@@ -278,6 +284,8 @@ class KotTicket(Base):
     is_printed = Column(Boolean, default=True)
     is_delta = Column(Boolean, default=False)
     order_source = Column(String(50), default="Desktop")
+    is_deleted = Column(Boolean, default=False, nullable=False, index=True)
+    void_reason = Column(String(255), nullable=True)
     created_at = Column(TimezoneAwareDateTime, default=now_utc)
 
     __table_args__ = (
@@ -402,7 +410,8 @@ class PaymentTransaction(Base):
     purpose_message = Column(String(255), nullable=True)
     payment_method = Column(String(50), default="UPI_QR") # UPI_QR, VIRTUAL_ACCOUNT, CARD, NETBANKING
     status = Column(String(50), default="PENDING", index=True) # PENDING, SUCCESS, FAILURE, EXPIRED, CANCELLED
-    decentro_txn_id = Column(String(150), nullable=True, index=True)
+    decentro_txn_id = Column(String(150), unique=True, index=True, nullable=True)
+    idempotency_key = Column(String(255), unique=True, index=True, nullable=True)
     bank_reference_number = Column(String(100), nullable=True, index=True) # UTR
     payer_vpa = Column(String(100), nullable=True)
     qr_code_base64 = Column(Text, nullable=True)
@@ -459,6 +468,8 @@ class FoodBill(Base):
     cgst_amount = Column(Float, default=0.0)
     sgst_amount = Column(Float, default=0.0)
     status = Column(String(50), default="Settled")
+    is_deleted = Column(Boolean, default=False, nullable=False, index=True)
+    void_reason = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 class PettyExpense(Base):
@@ -552,6 +563,8 @@ class CheckoutRecord(Base):
     pin_code = Column(String(20), nullable=True)
     sac_code = Column(String(20), default="996311")
     invoice_format = Column(String(50), default="A4_Standard")
+    is_deleted = Column(Boolean, default=False, nullable=False, index=True)
+    void_reason = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 class AdvanceReceipt(Base):
@@ -856,6 +869,8 @@ class BarInvoice(Base):
     settled = Column(Boolean, default=True)
     payment_mode = Column(String(50), default="CASH")
     room_no = Column(String(50), nullable=True)
+    is_deleted = Column(Boolean, default=False, nullable=False, index=True)
+    void_reason = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 class HotelAsset(Base):
@@ -1276,6 +1291,8 @@ class WebhookEvent(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     event_id = Column(String(100), unique=True, index=True, nullable=False)
+    decentro_txn_id = Column(String(150), unique=True, index=True, nullable=True)
+    idempotency_key = Column(String(255), unique=True, index=True, nullable=True)
     source = Column(String(50), default="DECENTRO", nullable=False)
     event_type = Column(String(100), nullable=True)
     payload_json = Column(Text, nullable=False)
@@ -1373,6 +1390,8 @@ class Folio(Base):
     total_payments = Column(Float, default=0.0)
     balance_due = Column(Float, default=0.0)
     version_id = Column(Integer, default=1, nullable=False)
+    is_deleted = Column(Boolean, default=False, nullable=False, index=True)
+    void_reason = Column(String(255), nullable=True)
     created_at = Column(TimezoneAwareDateTime, default=now_utc)
     updated_at = Column(TimezoneAwareDateTime, default=now_utc, onupdate=now_utc)
 
@@ -1395,6 +1414,8 @@ class KOTOrder(Base):
     table_no = Column(String(50), nullable=True)
     status = Column(String(50), default="PLACED", index=True, nullable=False) # PLACED, PREPARING, READY, SERVED, BILLED, VOID
     total_amount = Column(Float, default=0.0)
+    is_deleted = Column(Boolean, default=False, nullable=False, index=True)
+    void_reason = Column(String(255), nullable=True)
     created_at = Column(TimezoneAwareDateTime, default=now_utc)
     updated_at = Column(TimezoneAwareDateTime, default=now_utc, onupdate=now_utc)
 

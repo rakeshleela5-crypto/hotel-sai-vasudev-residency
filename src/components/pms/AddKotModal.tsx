@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { PmsKotRecord, KotItem, PmsRoom } from '../../types/pmsModels';
 import { PmsStore, INITIAL_MENU_ITEMS } from '../../services/pmsStore';
+import { useInFlightLock } from '../../hooks/useInFlightLock';
 
 interface AddKotModalProps {
   isOpen: boolean;
@@ -81,31 +82,35 @@ export const AddKotModal: React.FC<AddKotModalProps> = ({
 
   const totalKotAmount = itemsList.reduce((sum, it) => sum + it.amount, 0);
 
+  const { isSubmitting, runWithLock } = useInFlightLock(400);
+
   const handleSave = (printAfter = false) => {
-    if (itemsList.length === 0) {
-      alert('Please add at least one food item.');
-      return;
-    }
+    runWithLock(async () => {
+      if (itemsList.length === 0) {
+        alert('Please add at least one food item.');
+        return;
+      }
 
-    const newKot: PmsKotRecord = {
-      kotNo,
-      serviceType,
-      roomNo: selectedRoomNo,
-      guestName,
-      kotRemark,
-      items: itemsList,
-      totalAmount: totalKotAmount,
-      createdAt: new Date().toISOString(),
-      status: 'Served'
-    };
+      const newKot: PmsKotRecord = {
+        kotNo,
+        serviceType,
+        roomNo: selectedRoomNo,
+        guestName,
+        kotRemark,
+        items: itemsList,
+        totalAmount: totalKotAmount,
+        createdAt: new Date().toISOString(),
+        status: 'Served'
+      };
 
-    PmsStore.saveKot(newKot);
-    onKotSaved(newKot);
+      PmsStore.saveKot(newKot);
+      onKotSaved(newKot);
 
-    if (printAfter) {
-      setTimeout(() => window.print(), 200);
-    }
-    onClose();
+      if (printAfter) {
+        setTimeout(() => window.print(), 200);
+      }
+      onClose();
+    });
   };
 
   return (
@@ -139,17 +144,19 @@ export const AddKotModal: React.FC<AddKotModalProps> = ({
               </button>
               <button
                 type="button"
+                disabled={isSubmitting}
                 onClick={() => handleSave(false)}
-                style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '5px 14px', borderRadius: 3, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                style={{ background: isSubmitting ? '#94a3b8' : '#2563eb', color: '#fff', border: 'none', padding: '5px 14px', borderRadius: 3, fontSize: 12, fontWeight: 700, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
               >
-                Save
+                {isSubmitting ? '⏳ Saving...' : 'Save'}
               </button>
               <button
                 type="button"
+                disabled={isSubmitting}
                 onClick={() => handleSave(true)}
-                style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '5px 14px', borderRadius: 3, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                style={{ background: isSubmitting ? '#475569' : '#0f172a', color: '#fff', border: 'none', padding: '5px 14px', borderRadius: 3, fontSize: 12, fontWeight: 700, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
               >
-                Save & Print
+                {isSubmitting ? '⏳ Creating KOT...' : 'Save & Print'}
               </button>
             </div>
           </div>

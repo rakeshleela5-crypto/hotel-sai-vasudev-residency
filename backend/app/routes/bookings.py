@@ -209,6 +209,24 @@ def update_booking_status(
 
     acquire_canonical_locks(db, booking_id=booking.id, room_id=booking.room_id)
 
+    # Race Condition & Double-Booking Guard (#14, #38)
+    if update.status == "Checked-In":
+        room = db.query(models.Room).filter(models.Room.id == booking.room_id).with_for_update().first()
+        if room:
+            if room.housekeeping_status == "Occupied":
+                other_b = db.query(models.Booking).filter(
+                    models.Booking.room_id == room.id,
+                    models.Booking.id != booking.id,
+                    models.Booking.status == "Checked-In",
+                    models.Booking.is_deleted == False
+                ).first()
+                if other_b:
+                    raise HTTPException(
+                        status_code=409,
+                        detail=f"Room '{room.name}' is already occupied by active reservation '{other_b.booking_ref}'"
+                    )
+            room.housekeeping_status = "Occupied"
+
     booking.status = update.status
     if update.payment_status:
         booking.payment_status = update.payment_status
@@ -499,10 +517,13 @@ def get_printable_slip(booking_ref: str, db: Session = Depends(get_db)):
 def list_bookings(
     status: Optional[str] = None,
     limit: int = 50, 
+    include_deleted: bool = False,
     db: Session = Depends(get_db)
 ):
-    """List recent bookings with optional status filter for front desk management"""
-    q = db.query(models.Booking)
+    """List recent bookings with optional status filter and selectinload N+1 query elimination (#5)"""
+    q = db.query(models.Booking).options(selectinload(models.Booking.room))
+    if not include_deleted:
+        q = q.filter(models.Booking.is_deleted == False)
     if status and status != "All":
         q = q.filter(models.Booking.status == status)
     return q.order_by(models.Booking.created_at.desc()).limit(limit).all()

@@ -28,6 +28,7 @@ ALLOWED_MIME_TYPES = {
 }
 
 MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024  # 25 MB Limit
+KYC_MAX_FILE_SIZE = 5 * 1024 * 1024    # 5 MB Strict Limit for KYC Documents
 
 class PresignedUploadRequest(BaseModel):
     filename: str
@@ -114,10 +115,25 @@ async def upload_guest_id_endpoint(
 ):
     """
     Uploads and validates guest ID scan (Aadhaar/Passport/DL) to private R2 storage (#45, #50).
-    Enforces strict MIME (JPEG, PNG, PDF) and max 5MB size limit.
+    Enforces strict MIME (JPEG, PNG, WEBP, PDF) and max 5MB size limit (HTTP 413).
     """
+    KYC_MAX_FILE_SIZE = 5 * 1024 * 1024
+    KYC_ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/webp", "application/pdf"}
+
+    content_type = file.content_type or "image/jpeg"
+    if content_type not in KYC_ALLOWED_MIME_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid KYC file type '{content_type}'. Allowed types: JPG, PNG, WEBP, PDF."
+        )
+
     try:
         content = await file.read()
+        if len(content) > KYC_MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File size ({len(content) / (1024 * 1024):.2f}MB) exceeds the maximum allowed 5 MB limit for KYC/ID documents."
+            )
         object_key, file_url = r2_service.upload_guest_id_scan(
             file_bytes=content,
             filename=file.filename or "guest_id.jpg",
@@ -132,8 +148,13 @@ async def upload_guest_id_endpoint(
             "secure_view_url": secure_view.get("download_url"),
             "expires_in": 60
         }
+    except HTTPException:
+        raise
     except ValueError as val_err:
-        raise HTTPException(status_code=400, detail=str(val_err))
+        err_msg = str(val_err)
+        if "exceeds" in err_msg.lower() or "5mb" in err_msg.lower():
+            raise HTTPException(status_code=413, detail=err_msg)
+        raise HTTPException(status_code=400, detail=err_msg)
 
 @router.post("/invoice-pdf")
 async def upload_invoice_pdf_endpoint(
@@ -177,9 +198,20 @@ async def upload_file_direct(
             detail=f"Invalid folder '{folder}'. Allowed: {list(ALLOWED_FOLDERS)}"
         )
 
+    # Check if folder is for KYC documents
+    is_kyc = folder in ["guest_ids", "kyc"]
+    kyc_max_bytes = 5 * 1024 * 1024  # Strict 5 MB Limit for KYC
+    kyc_allowed_mimes = {"image/jpeg", "image/png", "image/webp", "application/pdf"}
+
     # Validate MIME type
     content_type = file.content_type or "application/octet-stream"
-    if content_type not in ALLOWED_MIME_TYPES:
+    if is_kyc:
+        if content_type not in kyc_allowed_mimes:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid KYC file type '{content_type}'. Allowed types: JPG, PNG, WEBP, PDF."
+            )
+    elif content_type not in ALLOWED_MIME_TYPES:
         raise HTTPException(
             status_code=400,
             detail=f"Invalid file type '{content_type}'. Allowed types: JPG, PNG, WEBP, SVG, PDF, CSV, Excel."
@@ -187,7 +219,12 @@ async def upload_file_direct(
 
     # Read contents with size limit
     contents = await file.read()
-    if len(contents) > MAX_FILE_SIZE_BYTES:
+    if is_kyc and len(contents) > kyc_max_bytes:
+        raise HTTPException(
+            status_code=413,
+            detail=f"File size ({len(contents) / (1024 * 1024):.2f}MB) exceeds maximum allowed 5 MB limit for guest KYC/ID documents."
+        )
+    elif len(contents) > MAX_FILE_SIZE_BYTES:
         raise HTTPException(
             status_code=400,
             detail=f"File size ({len(contents) / (1024 * 1024):.2f}MB) exceeds maximum {MAX_FILE_SIZE_BYTES / (1024 * 1024):.0f}MB limit."
@@ -266,18 +303,21 @@ async def upload_booking_kyc_document(
     if not booking:
         raise HTTPException(status_code=404, detail=f"Booking with ID {booking_id} not found.")
 
+    KYC_MAX_FILE_SIZE = 5 * 1024 * 1024
+    KYC_ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/webp", "application/pdf"}
+
     content_type = file.content_type or "application/octet-stream"
-    if content_type not in ALLOWED_MIME_TYPES:
+    if content_type not in KYC_ALLOWED_MIME_TYPES:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid file type '{content_type}'. Allowed types: JPG, PNG, WEBP, PDF."
+            detail=f"Invalid KYC file type '{content_type}'. Allowed types: JPG, PNG, WEBP, PDF."
         )
 
     contents = await file.read()
-    if len(contents) > MAX_FILE_SIZE_BYTES:
+    if len(contents) > KYC_MAX_FILE_SIZE:
         raise HTTPException(
-            status_code=400,
-            detail=f"File exceeds maximum size limit of {MAX_FILE_SIZE_BYTES // (1024 * 1024)}MB."
+            status_code=413,
+            detail=f"File size ({len(contents) / (1024 * 1024):.2f}MB) exceeds maximum allowed 5 MB limit for guest KYC documents."
         )
 
     # Clean up old KYC document if replaced

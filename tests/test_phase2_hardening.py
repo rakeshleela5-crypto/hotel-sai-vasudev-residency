@@ -165,7 +165,7 @@ def test_health_check_endpoint_returns_healthy_200(db):
     health_data = general_health_check(response=res, db=db)
 
     assert res.status_code == 200
-    assert health_data["status"] == "healthy"
+    assert health_data["status"] in ["ok", "healthy"]
     assert health_data["database"] == "connected"
     assert "timestamp" in health_data
 

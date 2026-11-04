@@ -15,6 +15,7 @@ import { HousekeepingTrackerModal } from './components/pms/HousekeepingTrackerMo
 import { PettyExpenseModal } from './components/pms/PettyExpenseModal';
 import { KotEntryModal } from './components/pms/KotEntryModal';
 import { FoodBillModal } from './components/pms/FoodBillModal';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { PmsStore } from './services/pmsStore';
 import type { Room } from './types';
 import './App.css';
@@ -209,60 +210,74 @@ export function App() {
 
       {/* Guest Public Reservation Modal (Direct Live Room Booking Modal with Strict KYC & Tariff) */}
       {isModalOpen && (
-        <BookingModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          selectedRoom={selectedRoom}
-          initialDates={searchDates}
-        />
+        <ErrorBoundary moduleName="Billing & Direct Reservation" onReset={() => setIsModalOpen(false)}>
+          <BookingModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            selectedRoom={selectedRoom}
+            initialDates={searchDates}
+          />
+        </ErrorBoundary>
       )}
 
       {/* Video 20 Public Guest Web Booking Engine Portal (/hotel_room/DEMO0004) */}
       {isGuestEngineOpen && (
-        <OnlineGuestBookingModal
-          isOpen={isGuestEngineOpen}
-          onClose={() => setIsGuestEngineOpen(false)}
-        />
+        <ErrorBoundary moduleName="Online Guest Booking Engine" onReset={() => setIsGuestEngineOpen(false)}>
+          <OnlineGuestBookingModal
+            isOpen={isGuestEngineOpen}
+            onClose={() => setIsGuestEngineOpen(false)}
+          />
+        </ErrorBoundary>
       )}
 
-      {/* Receptionist Enterprise PMS Portal (Video 01-20 Cloned) */}
+      {/* Receptionist Enterprise PMS Portal (Front Desk) */}
       {isPmsOpen && (
-        <HotelPmsModal
-          isOpen={isPmsOpen}
-          onClose={() => setIsPmsOpen(false)}
-        />
+        <ErrorBoundary moduleName="Front Desk & Reception PMS" onReset={() => setIsPmsOpen(false)}>
+          <HotelPmsModal
+            isOpen={isPmsOpen}
+            onClose={() => setIsPmsOpen(false)}
+          />
+        </ErrorBoundary>
       )}
 
       {/* Housekeeping 16-Room Cleanliness & Maintenance Kanban Board */}
       {isHousekeepingOpen && (
-        <HousekeepingTrackerModal
-          isOpen={isHousekeepingOpen}
-          onClose={() => setIsHousekeepingOpen(false)}
-        />
+        <ErrorBoundary moduleName="Housekeeping & Maintenance" onReset={() => setIsHousekeepingOpen(false)}>
+          <HousekeepingTrackerModal
+            isOpen={isHousekeepingOpen}
+            onClose={() => setIsHousekeepingOpen(false)}
+          />
+        </ErrorBoundary>
       )}
 
       {/* Petty Cash & 1-Click Night Audit Ledger */}
       {isPettyCashOpen && (
-        <PettyExpenseModal
-          isOpen={isPettyCashOpen}
-          onClose={() => setIsPettyCashOpen(false)}
-        />
+        <ErrorBoundary moduleName="Petty Cash & Audit Ledger" onReset={() => setIsPettyCashOpen(false)}>
+          <PettyExpenseModal
+            isOpen={isPettyCashOpen}
+            onClose={() => setIsPettyCashOpen(false)}
+          />
+        </ErrorBoundary>
       )}
 
       {/* Vasudev Rasoi KOT Entry Modal */}
       {isKotOpen && (
-        <KotEntryModal
-          isOpen={isKotOpen}
-          onClose={() => setIsKotOpen(false)}
-        />
+        <ErrorBoundary moduleName="Vasudev Rasoi POS (KOT Entry)" onReset={() => setIsKotOpen(false)}>
+          <KotEntryModal
+            isOpen={isKotOpen}
+            onClose={() => setIsKotOpen(false)}
+          />
+        </ErrorBoundary>
       )}
 
       {/* Vasudev Rasoi Food Bill & POS Modal */}
       {isFoodBillOpen && (
-        <FoodBillModal
-          isOpen={isFoodBillOpen}
-          onClose={() => setIsFoodBillOpen(false)}
-        />
+        <ErrorBoundary moduleName="Vasudev Rasoi POS (Billing & Settlement)" onReset={() => setIsFoodBillOpen(false)}>
+          <FoodBillModal
+            isOpen={isFoodBillOpen}
+            onClose={() => setIsFoodBillOpen(false)}
+          />
+        </ErrorBoundary>
       )}
     </div>
   );
