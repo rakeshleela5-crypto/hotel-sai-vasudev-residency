@@ -1,10 +1,11 @@
+from app.core.limiter import limit_concurrency
 import os
 import datetime
 import time
 import uuid
 import json
 import logging
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, Header, Body
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, Header, Body, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session, selectinload, joinedload
 from sqlalchemy import text, func, or_
@@ -19,6 +20,7 @@ from app.utils.auth import require_role, HospitalityRole, revoke_user_refresh_to
 from app.utils.audit import record_audit_log, audit_tariff_change, audit_discount, audit_kot_void, audit_payout
 from app.utils.encryption import encrypt_pii, decrypt_pii, mask_pii
 from app.utils.caching import get_cached_menu, set_cached_menu, invalidate_menu_cache, invalidate_rooms_cache
+from app.core.cache import cache_response, invalidate_cache_prefix
 from app.websocket_manager import ws_manager
 
 logger = logging.getLogger("pms_routes")
@@ -116,7 +118,7 @@ def find_booking_by_ref_or_room(
 
 # --- 1. Atomic Room Shifting ---
 @router.post("/room-shift", response_model=schemas.RoomShiftResponse)
-def execute_room_shift(payload: schemas.RoomShiftCreate, db: Session = Depends(get_db)):
+async def execute_room_shift(payload: schemas.RoomShiftCreate, db: Session = Depends(get_db)):
     """
     Execute an atomic Room Shift mid-stay:
     1. Mark previous room as 'Dirty' for housekeeping
@@ -152,6 +154,7 @@ def execute_room_shift(payload: schemas.RoomShiftCreate, db: Session = Depends(g
                 db.add(booking)
                 db.commit()
                 db.refresh(booking)
+        invalidate_rooms_cache()
 
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found for room shift")
@@ -473,7 +476,7 @@ def get_daily_police_register(limit: int = 50, db: Session = Depends(get_db)):
 
 # --- 6. Housekeeping 4-Stage Lifecycle ---
 @router.post("/housekeeping/status")
-def update_room_housekeeping_status(payload: schemas.HousekeepingStatusUpdate, db: Session = Depends(get_db)):
+async def update_room_housekeeping_status(payload: schemas.HousekeepingStatusUpdate, db: Session = Depends(get_db)):
     """Update room state: Clean, Dirty, Inspected, Under_Maintenance"""
     room = db.query(models.Room).filter(models.Room.id == payload.room_id).first()
     if not room:
@@ -504,6 +507,7 @@ def update_room_housekeeping_status(payload: schemas.HousekeepingStatusUpdate, d
         old_status=old_status,
         updated_by=payload.updated_by
     )
+    await invalidate_cache_prefix("rooms")
     return {"message": f"Room {room.name} status updated to {payload.housekeeping_status}"}
 
 # --- 7. Midnight Day-End Night Audit Engine ---
@@ -768,6 +772,7 @@ def execute_walk_in_check_in(payload: schemas.WalkInCheckInRequest, db: Session 
 
         db.commit()
         db.refresh(booking)
+        invalidate_rooms_cache()
         ws_manager.emit_booking_event_sync(
             event_type="CHECK_IN",
             booking_ref=booking.booking_ref,
@@ -844,6 +849,7 @@ def cancel_check_in(booking_ref: str, db: Session = Depends(get_db)):
     if b.room:
         b.room.housekeeping_status = "Clean"
     db.commit()
+    invalidate_rooms_cache()
     return {"success": True, "message": f"Check-in {booking_ref} cancelled successfully"}
 
 # --- 9. Check-Out Settlement & Transition to Dirty ---
@@ -963,6 +969,13 @@ def execute_check_out(payload: schemas.CheckOutRequest, db: Session = Depends(ge
 
         db.commit()
         db.refresh(booking)
+        invalidate_rooms_cache()
+        try:
+            from app.workers.queue import enqueue_task_sync
+            from app.workers.tasks import generate_and_upload_invoice_pdf_task
+            enqueue_task_sync(generate_and_upload_invoice_pdf_task, booking.id, {"invoice_no": booking.invoice_number or inv_no})
+        except Exception as q_err:
+            logger.warning(f"[CheckOut] Could not enqueue invoice PDF task: {q_err}")
         ws_manager.emit_booking_event_sync(
             event_type="CHECK_OUT",
             booking_ref=booking.booking_ref,
@@ -989,7 +1002,7 @@ def execute_check_out(payload: schemas.CheckOutRequest, db: Session = Depends(ge
 
 # --- 10. Room Maintenance / Out-of-Order Blocking ---
 @router.post("/rooms/{room_id}/maintenance")
-def toggle_room_maintenance(
+async def toggle_room_maintenance(
     room_id: int, 
     payload: schemas.RoomMaintenanceRequest, 
     db: Session = Depends(get_db)
@@ -1065,7 +1078,7 @@ def get_pms_dashboard_sync(db: Session = Depends(get_db)):
 # --- 12. Full Database Snapshot Export / Backup ---
 ADMIN_API_KEY = os.getenv("ADMIN_API_KEY", "")
 
-@router.get("/backup/export")
+@router.get("/backup/export", dependencies=[Depends(limit_concurrency)])
 def export_pms_database_backup(
     x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
     db: Session = Depends(get_db)
@@ -2908,7 +2921,7 @@ def execute_automated_midnight_audit(db: Session = Depends(get_db)):
 # MODULE 4: CA-Ready GSTR-1 JSON Export Engine (HSN/SAC Mapped)
 # =========================================================================
 
-@router.get("/gst/gstr1-export")
+@router.get("/gst/gstr1-export", dependencies=[Depends(limit_concurrency)])
 def export_gstr1_json(month: str = Query("062026", description="Format MMYYYY, e.g. 062026"), db: Session = Depends(get_db)):
     """
     Module 4: One-Click Chartered Accountant Export.
@@ -3389,7 +3402,7 @@ def cancel_group_booking(group_id: str, db: Session = Depends(get_db)):
 
 # --- 19. Full Checkout & Folio Settlement Persistence ---
 @router.post("/checkouts")
-def save_checkout(payload: schemas.CheckoutRecordCreate, db: Session = Depends(get_db)):
+async def save_checkout(payload: schemas.CheckoutRecordCreate, db: Session = Depends(get_db)):
     """Persist completed guest departure, checkout bill, and ledger settlement into PostgreSQL with atomic rollback and Folio settlement."""
     try:
         inv = payload.invoice_no or payload.invoiceNo or f"GSR/{uuid.uuid4().hex[:4].upper()}/26-27"
@@ -3569,6 +3582,7 @@ def save_checkout(payload: schemas.CheckoutRecordCreate, db: Session = Depends(g
                 updated_by="Reception Cashier"
             )
 
+        await invalidate_cache_prefix("rooms")
         return {
             "success": True,
             "message": f"Checkout invoice {chk.invoice_no} for Room {chk.room_no} securely saved to PostgreSQL database.",
@@ -6024,7 +6038,8 @@ def update_hotel_settings(payload: schemas.HotelSettingCreate, db: Session = Dep
 
 # 2. Room Types Master
 @router.get("/room-types")
-def list_room_types(db: Session = Depends(get_db)):
+@cache_response(prefix="rooms", ttl=600)
+def list_room_types(request: Request, db: Session = Depends(get_db)):
     rts = db.query(models.RoomType).order_by(models.RoomType.id.asc()).all()
     return [{
         "id": rt.type_id,
@@ -6037,7 +6052,7 @@ def list_room_types(db: Session = Depends(get_db)):
     } for rt in rts]
 
 @router.post("/room-types")
-def save_room_type(payload: schemas.RoomTypeCreate, db: Session = Depends(get_db)):
+async def save_room_type(payload: schemas.RoomTypeCreate, db: Session = Depends(get_db)):
     tid = payload.type_id or payload.id or (payload.room_type_name or payload.roomTypeName or "RT").replace(" ", "_").upper()
     rt = db.query(models.RoomType).filter(models.RoomType.type_id == tid).first()
     if not rt:
@@ -6056,20 +6071,25 @@ def save_room_type(payload: schemas.RoomTypeCreate, db: Session = Depends(get_db
 
     db.commit()
     db.refresh(rt)
+    await invalidate_cache_prefix("rooms")
+    invalidate_rooms_cache()
     return {"success": True, "id": rt.type_id, "roomTypeName": rt.room_type_name, "tariff": rt.room_tariff}
 
 @router.delete("/room-types/{type_id}")
-def delete_room_type(type_id: str, db: Session = Depends(get_db)):
+async def delete_room_type(type_id: str, db: Session = Depends(get_db)):
     rt = db.query(models.RoomType).filter(models.RoomType.type_id == type_id).first()
     if not rt:
         raise HTTPException(status_code=404, detail="Room type not found")
     db.delete(rt)
     db.commit()
+    await invalidate_cache_prefix("rooms")
+    invalidate_rooms_cache()
     return {"success": True, "message": f"Room type {type_id} deleted"}
 
 # 3. Restaurant Menu Items
 @router.get("/menu-items")
-def list_menu_items(category: Optional[str] = None, db: Session = Depends(get_db)):
+@cache_response(prefix="menu", ttl=600)
+def list_menu_items(request: Request, category: Optional[str] = None, db: Session = Depends(get_db)):
     cache_key = f"menu:{category}"
     cached = get_cached_menu(cache_key)
     if cached is not None:
@@ -6099,7 +6119,7 @@ def list_menu_items(category: Optional[str] = None, db: Session = Depends(get_db
     return res
 
 @router.post("/menu-items")
-def save_menu_item(payload: schemas.MenuItemCreate, db: Session = Depends(get_db)):
+async def save_menu_item(payload: schemas.MenuItemCreate, db: Session = Depends(get_db)):
     code = payload.item_code or payload.code or payload.id or payload.name.replace(" ", "_").upper()
     it = db.query(models.MenuItem).filter(models.MenuItem.item_code == code).first()
     if not it:
@@ -6124,10 +6144,11 @@ def save_menu_item(payload: schemas.MenuItemCreate, db: Session = Depends(get_db
     db.commit()
     db.refresh(it)
     invalidate_menu_cache()
+    await invalidate_cache_prefix("menu")
     return {"success": True, "id": it.item_code, "name": it.name, "rate": it.rate}
 
 @router.post("/menu-items/bulk")
-def save_menu_items_bulk(items: List[schemas.MenuItemCreate], db: Session = Depends(get_db)):
+async def save_menu_items_bulk(items: List[schemas.MenuItemCreate], db: Session = Depends(get_db)):
     saved = 0
     for payload in items:
         code = payload.item_code or payload.code or payload.id or payload.name.replace(" ", "_").upper()
@@ -6143,16 +6164,18 @@ def save_menu_items_bulk(items: List[schemas.MenuItemCreate], db: Session = Depe
         saved += 1
     db.commit()
     invalidate_menu_cache()
+    await invalidate_cache_prefix("menu")
     return {"success": True, "savedCount": saved}
 
 @router.delete("/menu-items/{item_code}")
-def delete_menu_item(item_code: str, db: Session = Depends(get_db)):
+async def delete_menu_item(item_code: str, db: Session = Depends(get_db)):
     it = db.query(models.MenuItem).filter(models.MenuItem.item_code == item_code).first()
     if not it:
         raise HTTPException(status_code=404, detail="Menu item not found")
     db.delete(it)
     db.commit()
     invalidate_menu_cache()
+    await invalidate_cache_prefix("menu")
     return {"success": True, "message": f"Menu item {item_code} deleted"}
 
 # 4. Housekeeping Duty Records
@@ -6172,7 +6195,7 @@ def list_housekeeping_records(db: Session = Depends(get_db)):
     } for r in recs]
 
 @router.post("/housekeeping")
-def save_housekeeping_record(payload: schemas.HousekeepingRecordCreate, db: Session = Depends(get_db)):
+async def save_housekeeping_record(payload: schemas.HousekeepingRecordCreate, db: Session = Depends(get_db)):
     r_no = payload.room_no or payload.roomNo
     if not r_no:
         raise HTTPException(status_code=400, detail="room_no is required")
@@ -6614,7 +6637,7 @@ def list_properties(db: Session = Depends(get_db)):
 
 # --- 43. Extend Stay on Active Booking ---
 @router.put("/bookings/extend-stay")
-def extend_guest_stay(payload: schemas.ExtendStayRequest, db: Session = Depends(get_db)):
+async def extend_guest_stay(payload: schemas.ExtendStayRequest, db: Session = Depends(get_db)):
     room_str = payload.room_no or payload.roomNo
     new_out = payload.new_checkout_date or payload.newCheckOutDate
     if not room_str or not new_out:
@@ -6649,6 +6672,7 @@ def extend_guest_stay(payload: schemas.ExtendStayRequest, db: Session = Depends(
             pass
         db.commit()
         db.refresh(booking)
+        invalidate_rooms_cache()
 
     b_ref = getattr(booking, 'booking_ref', f"BK-{booking.id}") if booking else f"RM-{room_str}"
     log_audit(db, "EXTEND_STAY", b_ref, payload.extended_by or payload.extendedBy or "Duty Manager", {
@@ -6665,7 +6689,7 @@ def extend_guest_stay(payload: schemas.ExtendStayRequest, db: Session = Depends(
 
 # --- 44. Room Folio Incidental Charges ---
 @router.post("/room-folio-items")
-def post_room_folio_item(payload: schemas.RoomFolioItemCreate, db: Session = Depends(get_db)):
+async def post_room_folio_item(payload: schemas.RoomFolioItemCreate, db: Session = Depends(get_db)):
     room_str = payload.room_no or payload.roomNo or "101"
     room = find_room_by_no_or_name(db, room_str)
 
@@ -6702,6 +6726,7 @@ def post_room_folio_item(payload: schemas.RoomFolioItemCreate, db: Session = Dep
         db.add(booking)
         db.commit()
         db.refresh(booking)
+        invalidate_rooms_cache()
 
     amt = float(payload.amount)
     gst_rate = float(payload.gst_percent or payload.gstPercent or 12.0)
@@ -7189,7 +7214,7 @@ def verify_manager_pin(payload: schemas.ManagerPinVerifyRequest, db: Session = D
 
 # 9. Booking Confirmation Transition
 @router.put("/bookings/{booking_id}/confirm")
-def confirm_booking(booking_id: str, db: Session = Depends(get_db)):
+async def confirm_booking(booking_id: str, db: Session = Depends(get_db)):
     b = db.query(models.Booking).filter(
         (models.Booking.id == (int(booking_id) if booking_id.isdigit() else -1)) |
         (models.Booking.booking_ref == booking_id)
@@ -7198,6 +7223,7 @@ def confirm_booking(booking_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Booking not found")
     b.status = "Confirmed"
     db.commit()
+    await invalidate_cache_prefix("rooms")
     return {"success": True, "bookingId": b.id, "status": b.status}
 
 # 10. Missing Resource Deletions
@@ -7318,7 +7344,7 @@ def settle_party_account(payload: Dict[str, Any], db: Session = Depends(get_db))
 
 # 11. Room and Table Master CRUD Endpoints
 @router.post("/rooms")
-def create_or_save_room(payload: dict, db: Session = Depends(get_db)):
+async def create_or_save_room(payload: dict, db: Session = Depends(get_db)):
     room_no = str(payload.get("room_no") or payload.get("roomNo") or payload.get("name") or "").strip()
     slug = f"room-{room_no.lower().replace(' ', '-')}" if room_no else f"room-{uuid.uuid4().hex[:6]}"
     existing = db.query(models.Room).filter(
@@ -7336,6 +7362,7 @@ def create_or_save_room(payload: dict, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(existing)
         invalidate_rooms_cache()
+        await invalidate_cache_prefix("rooms")
         return {"success": True, "action": "updated", "roomId": existing.id, "roomNo": existing.name}
     
     init_rate = float(payload.get("base_rate") or payload.get("tariff") or payload.get("price") or 1500.0)
@@ -7359,10 +7386,11 @@ def create_or_save_room(payload: dict, db: Session = Depends(get_db)):
     db.refresh(room)
     audit_tariff_change(db=db, room_id=room.id, old_price=0.0, new_price=init_rate)
     invalidate_rooms_cache()
+    await invalidate_cache_prefix("rooms")
     return {"success": True, "action": "created", "roomId": room.id, "roomNo": room.name}
 
 @router.put("/rooms/{room_id}")
-def update_room_endpoint(room_id: str, payload: dict, db: Session = Depends(get_db)):
+async def update_room_endpoint(room_id: str, payload: dict, db: Session = Depends(get_db)):
     r = db.query(models.Room).filter(
         (models.Room.id == (int(room_id) if room_id.isdigit() else -1)) |
         (models.Room.name == room_id) |
@@ -7385,10 +7413,11 @@ def update_room_endpoint(room_id: str, payload: dict, db: Session = Depends(get_
     db.commit()
     db.refresh(r)
     invalidate_rooms_cache()
+    await invalidate_cache_prefix("rooms")
     return {"success": True, "roomId": r.id, "roomNo": r.name}
 
 @router.delete("/rooms/{room_id}")
-def delete_room_endpoint(room_id: str, db: Session = Depends(get_db)):
+async def delete_room_endpoint(room_id: str, db: Session = Depends(get_db)):
     deleted = db.query(models.Room).filter(
         (models.Room.id == (int(room_id) if room_id.isdigit() else -1)) |
         (models.Room.name == room_id) |
@@ -7396,6 +7425,7 @@ def delete_room_endpoint(room_id: str, db: Session = Depends(get_db)):
     ).delete(synchronize_session=False)
     db.commit()
     invalidate_rooms_cache()
+    await invalidate_cache_prefix("rooms")
     return {"success": True, "deletedCount": deleted}
 
 @router.delete("/tables/{table_id}")

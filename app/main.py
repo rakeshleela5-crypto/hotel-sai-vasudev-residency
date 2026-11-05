@@ -220,7 +220,7 @@ from slowapi import _rate_limit_exceeded_handler
 from starlette.requests import Request
 
 from app.utils.idempotency import IdempotencyMiddleware, IdempotentResponseException, idempotent_exception_handler
-from app.utils.rate_limit import limiter, rate_limit_exceeded_handler
+from app.core.limiter import limiter, rate_limit_exceeded_handler
 from app.utils.logging_middleware import StructuredLoggingMiddleware, global_500_exception_handler
 from app.services.scheduler import start_scheduler, stop_scheduler
 from app.routes import auth, health, ws, admin
@@ -247,6 +247,16 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown: Graceful termination of scheduler
     stop_scheduler()
+    try:
+        from app.core.cache import close_redis
+        await close_redis()
+    except Exception:
+        pass
+    try:
+        from app.workers.queue import close_arq_pool
+        await close_arq_pool()
+    except Exception:
+        pass
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -329,7 +339,8 @@ def root_health_alias(response: Response, db: Session = Depends(get_db)):
 
 @app.post(f"{settings.API_V1_STR}/kot", tags=["KOT Offline Sync"])
 @app.post("/api/kot", tags=["KOT Offline Sync"])
-def kot_sync_alias_post(payload: dict, db: Session = Depends(get_db)):
+@limiter.limit(getattr(settings, "RATE_LIMIT_KOT", "120/minute"))
+def kot_sync_alias_post(request: Request, payload: dict, db: Session = Depends(get_db)):
     from app.routes.pms import create_kot_ticket
     return create_kot_ticket(payload, db)
 

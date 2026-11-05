@@ -14,6 +14,7 @@ from app.utils.timezone import now_utc
 from app.utils.idempotency import require_idempotency_key
 from app.utils.encryption import encrypt_pii, decrypt_pii
 from app.utils.rate_limit import limiter
+from app.core.cache import invalidate_cache_prefix
 from app.config import settings
 from app.websocket_manager import ws_manager
 
@@ -81,7 +82,7 @@ _booking_concurrency_lock = threading.Lock()
 
 @router.post("", response_model=schemas.BookingResponse, status_code=201, dependencies=[Depends(require_idempotency_key)])
 @limiter.limit(settings.RATE_LIMIT_BOOKING)
-def create_booking(request: Request, payload: schemas.BookingCreate, db: Session = Depends(get_db)):
+async def create_booking(request: Request, payload: schemas.BookingCreate, db: Session = Depends(get_db)):
     """
     Create a new atomic room booking with:
     1. Row-level concurrency locking
@@ -169,6 +170,7 @@ def create_booking(request: Request, payload: schemas.BookingCreate, db: Session
 
         db.commit()
         db.refresh(new_booking)
+        await invalidate_cache_prefix("rooms")
 
     ws_manager.emit_booking_event_sync(
         event_type="BOOKING_CREATED",
@@ -236,6 +238,8 @@ def update_booking_status(
 
     db.commit()
     db.refresh(booking)
+    from app.utils.caching import invalidate_rooms_cache
+    invalidate_rooms_cache()
     ws_manager.emit_booking_event_sync(
         event_type="BOOKING_STATUS_CHANGED",
         booking_ref=booking.booking_ref,

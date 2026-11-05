@@ -38,6 +38,11 @@ def invalidate_rooms_cache() -> int:
     """
     cleared_count = len(rooms_cache)
     rooms_cache.clear()
+    try:
+        from app.core.cache import invalidate_cache_prefix_sync
+        invalidate_cache_prefix_sync("rooms")
+    except Exception:
+        pass
     logger.info(f"[TTLCache] Room categories & tariffs cache INVALIDATED ({cleared_count} keys evicted)")
     return cleared_count
 
@@ -67,5 +72,10 @@ def invalidate_menu_cache() -> int:
     """
     cleared_count = len(menu_cache)
     menu_cache.clear()
+    try:
+        from app.core.cache import invalidate_cache_prefix_sync
+        invalidate_cache_prefix_sync("menu")
+    except Exception:
+        pass
     logger.info(f"[TTLCache] Restaurant menu cache INVALIDATED ({cleared_count} keys evicted)")
     return cleared_count

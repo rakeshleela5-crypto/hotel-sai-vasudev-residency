@@ -1,3 +1,4 @@
+from app.core.limiter import limit_concurrency
 import logging
 from typing import Dict, Any, List
 from fastapi import APIRouter, Depends, HTTPException
@@ -55,7 +56,7 @@ def trigger_manual_backup(
     result = run_database_backup(db=db)
     return result
 
-@router.post("/backups/trigger", summary="Trigger Automated Database Backup to Cloudflare R2 (#3)")
+@router.post("/backups/trigger", summary="Trigger Automated Database Backup to Cloudflare R2 (#3)", dependencies=[Depends(limit_concurrency)])
 def trigger_backup_endpoint(
     current_user: dict = Depends(require_role(["OWNER", "MANAGER", "ADMIN"])),
     db: Session = Depends(get_db)
@@ -74,6 +75,43 @@ def trigger_backup_endpoint(
     except Exception as exc:
         logger.warning(f"[Admin] backup_db_to_r2 run_backup error ({exc}), using create_and_upload_db_backup fallback.")
         return create_and_upload_db_backup(db=db)
+
+@router.post(
+    "/system/backup-now",
+    summary="Trigger Immediate PostgreSQL Database Backup to Cloudflare R2 (Phase 3)",
+    dependencies=[Depends(limit_concurrency)]
+)
+async def trigger_system_backup_now(
+    current_user: dict = Depends(require_role(["OWNER", "MANAGER", "ADMIN"]))
+) -> Dict[str, Any]:
+    """
+    Triggers an immediate database backup pipeline:
+    - Runs pg_dump --no-owner --no-acl via asyncio.create_subprocess_exec
+    - Compresses to sai_vasudev_backup_YYYY_MM_DD_HHMMSS.sql.gz
+    - Uploads to Cloudflare R2 under db-backups/sai-vasudev-residency/daily/
+    - Cleans up local temp file immediately
+    - Enforces 30-day retention cleanup
+    Restricted strictly to OWNER, MANAGER, and ADMIN roles.
+    """
+    from app.services.backup_service import run_postgres_backup_to_r2
+    admin_id = current_user.get("email") or current_user.get("sub") or "Admin"
+    logger.info(f"[Admin] Immediate database backup to Cloudflare R2 triggered by {admin_id}")
+    result = await run_postgres_backup_to_r2(retention_days=getattr(settings, "BACKUP_RETENTION_DAYS", 30))
+    return result
+
+@router.get(
+    "/system/backups",
+    summary="List Database Backups in Cloudflare R2 (Phase 3)"
+)
+async def list_system_backups(
+    current_user: dict = Depends(require_role(["OWNER", "MANAGER", "ADMIN"]))
+) -> Dict[str, Any]:
+    """
+    Lists existing database backups in Cloudflare R2 under db-backups/sai-vasudev-residency/daily/
+    with timestamps and file sizes. Restricted to OWNER, MANAGER, and ADMIN roles.
+    """
+    from app.services.backup_service import list_r2_backups
+    return await list_r2_backups()
 
 @router.get("/backups")
 def list_database_backups(

@@ -1,0 +1,15 @@
+# Nixpacks configuration for Railway to run the FastAPI backend
+providers = ["python"]
+
+[phases.setup]
+nixPkgs = ["python311", "gcc", "postgresql"]
+
+[phases.install]
+cmds = [
+  "python3 -m pip install --upgrade pip",
+  "pip install -r requirements.txt"
+]
+
+[start]
+cmd = "sh -c \"uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}\""
+

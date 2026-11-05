@@ -1,3 +1,4 @@
+from app.core.limiter import limit_concurrency
 import os
 from typing import Optional, List
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Query, Depends
@@ -156,7 +157,7 @@ async def upload_guest_id_endpoint(
             raise HTTPException(status_code=413, detail=err_msg)
         raise HTTPException(status_code=400, detail=err_msg)
 
-@router.post("/invoice-pdf")
+@router.post("/invoice-pdf", dependencies=[Depends(limit_concurrency)])
 async def upload_invoice_pdf_endpoint(
     file: UploadFile = File(...),
     invoice_number: str = Form("INV-TEMP")
@@ -459,7 +460,7 @@ async def upload_room_photo_and_update(
         message=f"Room photo successfully uploaded to Cloudflare R2 and updated for {room.name} in PostgreSQL."
     )
 
-@router.post("/booking-invoice/{booking_id}")
+@router.post("/booking-invoice/{booking_id}", dependencies=[Depends(limit_concurrency)])
 async def upload_booking_invoice_pdf(
     booking_id: int,
     file: UploadFile = File(...),
@@ -501,7 +502,7 @@ async def upload_booking_invoice_pdf(
         "message": "GST Invoice PDF securely archived in Cloudflare R2 and bound to reservation in PostgreSQL."
     }
 
-@router.get("/booking-invoice/{booking_id}/presigned-url")
+@router.get("/booking-invoice/{booking_id}/presigned-url", dependencies=[Depends(limit_concurrency)])
 def get_booking_invoice_presigned_url(
     booking_id: int,
     expires_in: int = Query(900, ge=60, le=86400),

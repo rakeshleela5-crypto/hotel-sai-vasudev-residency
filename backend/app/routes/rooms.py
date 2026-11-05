@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import datetime
@@ -6,6 +6,8 @@ import datetime
 from app.database import get_db
 from app import models, schemas
 from app.routes.bookings import parse_dates_and_nights, compute_tax_and_pricing, get_overlapping_bookings_count
+from app.core.cache import cache_response, invalidate_cache_prefix
+from app.utils.caching import get_cached_rooms, set_cached_rooms, invalidate_rooms_cache
 
 router = APIRouter(prefix="/rooms", tags=["Rooms"])
 
@@ -83,17 +85,14 @@ def seed_rooms_if_empty(db: Session):
 from app.utils.caching import get_cached_rooms, set_cached_rooms, invalidate_rooms_cache
 
 @router.get("", response_model=List[schemas.RoomResponse])
+@cache_response(prefix="rooms", ttl=600)
 def get_rooms(
+    request: Request,
     room_type: Optional[str] = None,
     max_price: Optional[float] = None,
     db: Session = Depends(get_db)
 ):
-    """Retrieve all available rooms with optional filters and TTLCache (#6)"""
-    cache_key = f"rooms:{room_type}:{max_price}"
-    cached = get_cached_rooms(cache_key)
-    if cached is not None:
-        return cached
-
+    """Retrieve all available rooms with optional filters and distributed caching (#6, #7)"""
     seed_rooms_if_empty(db)
     
     query = db.query(models.Room).filter(models.Room.is_available == True)
@@ -102,9 +101,7 @@ def get_rooms(
     if max_price:
         query = query.filter(models.Room.price_per_night <= max_price)
     
-    res = query.order_by(models.Room.price_per_night.asc()).all()
-    set_cached_rooms(cache_key, res)
-    return res
+    return query.order_by(models.Room.price_per_night.asc()).all()
 
 @router.get("/{room_id}/availability", response_model=schemas.AvailabilityCheckResponse)
 def check_room_availability(
@@ -161,19 +158,21 @@ def check_room_availability(
     )
 
 @router.get("/{room_id}", response_model=schemas.RoomResponse)
-def get_room(room_id: int, db: Session = Depends(get_db)):
-    """Retrieve a single room by ID"""
+@cache_response(prefix="rooms", ttl=600)
+def get_room(room_id: int, request: Request, db: Session = Depends(get_db)):
+    """Retrieve a single room by ID with caching"""
     room = db.query(models.Room).filter(models.Room.id == room_id).first()
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
     return room
 
 @router.post("/seed", response_model=dict)
-def trigger_seed(db: Session = Depends(get_db)):
-    """Seed rooms catalog idempotently if empty; prevents unauthorized catalog manipulation"""
+async def trigger_seed(db: Session = Depends(get_db)):
+    """Seed rooms catalog idempotently if empty; invalidates rooms cache"""
     count = db.query(models.Room).count()
     if count == 0:
         seed_rooms_if_empty(db)
+        await invalidate_cache_prefix("rooms")
         invalidate_rooms_cache()
         return {"message": "Rooms catalog seeded successfully", "count": db.query(models.Room).count()}
     return {"message": "Rooms catalog is already initialized", "count": count}

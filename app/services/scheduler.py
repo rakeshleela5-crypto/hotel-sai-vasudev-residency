@@ -602,9 +602,15 @@ async def scheduled_night_audit_wrapper():
     await asyncio.to_thread(run_night_audit)
 
 async def scheduled_db_backup_wrapper():
-    """Async wrapper executed by APScheduler daily at 03:00 IST"""
-    logger.info("[Scheduler] Triggering Daily DB Backup cron job (03:00 IST)...")
-    await asyncio.to_thread(run_database_backup)
+    """Async wrapper executed by APScheduler daily at 03:00 AM IST (Asia/Kolkata) to run run_postgres_backup_to_r2()"""
+    logger.info("[Scheduler] Triggering Daily PostgreSQL Database Backup to Cloudflare R2 (03:00 AM IST)...")
+    try:
+        from app.services.backup_service import run_postgres_backup_to_r2
+        result = await run_postgres_backup_to_r2(retention_days=getattr(settings, "BACKUP_RETENTION_DAYS", 30))
+        logger.info(f"[Scheduler] Daily DB Backup completed: key={result.get('object_key')}, size={result.get('file_size')} bytes")
+    except Exception as exc:
+        logger.error(f"[Scheduler] Daily DB Backup failed: {exc}", exc_info=True)
+        await asyncio.to_thread(run_database_backup)
 
 def start_scheduler():
     """Initializes and starts APScheduler jobs with Asia/Kolkata timezone (#41, #97)."""

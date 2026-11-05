@@ -14,7 +14,9 @@ from sqlalchemy import or_
 from app.database import get_db, SessionLocal
 from app import models
 from app.config import settings
-from app.utils.rate_limit import limiter
+from app.core.limiter import limiter
+from app.workers.queue import enqueue_task
+from app.workers.tasks import reconcile_decentro_webhook_task
 from app.models import PaymentTransaction, VirtualAccount, Booking, BookingPayment, Folio, WebhookEvent, FailedWebhookDLQ, JournalEntry
 from app.schemas import (
     DecentroUpiQrRequest,
@@ -539,7 +541,8 @@ def settle_room_folio(payload: Dict[str, Any], db: Session = Depends(get_db)):
     summary="Create KOT Order with Idempotency Protection (#1, #20)",
     dependencies=[Depends(require_idempotency_key)]
 )
-def create_kot_endpoint(payload: Dict[str, Any], db: Session = Depends(get_db)):
+@limiter.limit(settings.RATE_LIMIT_KOT)
+def create_kot_endpoint(request: Request, payload: Dict[str, Any], db: Session = Depends(get_db)):
     """
     Submits a Kitchen Order Ticket (KOT) with mandatory idempotency key (#1).
     Persists to kot_tickets and kot_orders tables.
@@ -724,7 +727,7 @@ async def _handle_decentro_webhook(
         raise HTTPException(status_code=500, detail=f"Database error ingesting webhook: {str(exc)}")
 
     # 4. Immediate 200 OK + Dispatch BackgroundTask for Folio Settlement & Invoice (#38)
-    background_tasks.add_task(process_decentro_webhook_background, decentro_txn_id, payload)
+    await enqueue_task(reconcile_decentro_webhook_task, decentro_txn_id, payload, background_tasks=background_tasks)
 
     return {
         "status": "SUCCESS",

@@ -52,6 +52,7 @@ class Settings(BaseSettings):
     DECENTRO_PAYEE_ACCOUNT: str = os.getenv("DECENTRO_PAYEE_ACCOUNT", "SAIVASUDEV@icici")
 
     # Cloudflare R2 Object Storage (S3-Compatible) (#45, #50, #77)
+    R2_ENDPOINT_URL: str = os.getenv("R2_ENDPOINT_URL", "")
     R2_ACCOUNT_ID: str = os.getenv("R2_ACCOUNT_ID", "")
     R2_ACCESS_KEY_ID: str = os.getenv("R2_ACCESS_KEY_ID", "")
     R2_SECRET_ACCESS_KEY: str = os.getenv("R2_SECRET_ACCESS_KEY", "")
@@ -62,15 +63,19 @@ class Settings(BaseSettings):
     R2_PRESIGNED_VIEW_EXPIRES_SECONDS: int = 60    # Strict 60s pre-signed URLs (#50)
 
     # SlowAPI Rate Limiting Configuration (#2, #18, #56)
-    RATE_LIMIT_LOGIN: str = "5/minute"
+    RATE_LIMIT_LOGIN: str = "15/minute"
     RATE_LIMIT_BOOKING: str = "60/minute"
     RATE_LIMIT_QR: str = "60/minute"
-    RATE_LIMIT_WEBHOOK: str = "60/minute"
+    RATE_LIMIT_WEBHOOK: str = "120/minute"
+    RATE_LIMIT_KOT: str = "120/minute"
     RATE_LIMIT_DEFAULT: str = "60/minute"
 
     # Backend Error Tracking & Observability (Sentry)
     SENTRY_DSN: str = os.getenv("SENTRY_DSN", "")
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "production")
+
+    # Redis & Distributed Caching Configuration
+    REDIS_URL: str = os.getenv("REDIS_URL", "")
 
     # In-Memory TTLCache Configuration (#6, #7)
     CACHE_TTL_ROOMS: int = int(os.getenv("CACHE_TTL_ROOMS", "300"))  # 5 minutes TTL

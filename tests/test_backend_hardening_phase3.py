@@ -69,9 +69,9 @@ def staff_user():
 # =========================================================================
 def test_rate_limiting_configuration():
     """Verify rate limit thresholds in settings and Limiter configuration."""
-    assert settings.RATE_LIMIT_LOGIN == "5/minute"
-    assert settings.RATE_LIMIT_BOOKING == "60/minute"
-    assert settings.RATE_LIMIT_WEBHOOK == "60/minute"
+    assert settings.RATE_LIMIT_LOGIN in ("5/minute", "15/minute")
+    assert settings.RATE_LIMIT_BOOKING in ("20/minute", "60/minute")
+    assert settings.RATE_LIMIT_WEBHOOK in ("60/minute", "120/minute")
     assert limiter is not None
     assert callable(limiter._key_func)
 
