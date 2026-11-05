@@ -897,13 +897,13 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
               {/* Hotel Header */}
               <div style={{ textAlign: 'center', borderBottom: '1px dashed #334155', paddingBottom: 8, marginBottom: 8 }}>
                 <h3 style={{ margin: 0, fontSize: 15, fontWeight: 900 }}>
-                  {companyInfo.firmName || 'HOTEL SAI VASUDEV RESIDENCY'}
+                  {companyInfo.firmName || 'SRI SAI VASUDEV RESIDENCY'}
                 </h3>
                 <p style={{ margin: '2px 0', fontSize: 10 }}>
-                  {companyInfo.address1 || 'Plot No. 14-B VIP Temple Road, Shirdi - 423109'}
+                  {companyInfo.address1 || 'SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY, Rayagada, Odisha - 765001'}
                 </p>
                 <p style={{ margin: '2px 0', fontSize: 10 }}>
-                  GSTIN: {companyInfo.gstNo || '27ABCDE1234F1Z5'} &bull; SAC: 996331
+                  GSTIN: {companyInfo.gstNo || '21AEKPP8689J1ZS'} &bull; SAC: 996331 &bull; State: Odisha (21)
                 </p>
                 <div
                   style={{

@@ -31,7 +31,7 @@ def generate_database_json_snapshot(db: Session) -> str:
 
     snapshot_data: Dict[str, Any] = {
         "metadata": {
-            "app": "Hotel Sai Vasudev Residency",
+            "app": "SRI SAI VASUDEV RESIDENCY",
             "version": getattr(settings, "VERSION", "2.0.0"),
             "database_engine": str(bind.url.drivername),
             "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),

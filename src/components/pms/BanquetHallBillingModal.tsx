@@ -191,7 +191,7 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
         bankName: 'STATE BANK OF INDIA',
         accountNo: '923020035404769',
         ifsc: 'SBIN000390',
-        branch: 'MAIN BRANCH HARIDWAR'
+        branch: 'RAYAGADA BRANCH'
       },
       beoNotes: {
         stageRequirements: 'Elevated wooden mandap platform with fresh flower backdrop',
@@ -267,7 +267,7 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
     const phone = selectedBooking.contactMobile;
     let text = '';
     if (type === 'INVOICE') {
-      text = `*HOTEL SAI VASUDEV RESIDENCY - TAX INVOICE*\n` +
+      text = `*SRI SAI VASUDEV RESIDENCY - TAX INVOICE*\n` +
              `Namaste ${selectedBooking.hostName},\n` +
              `Invoice No: ${selectedBooking.invoiceNo || 'GSR/258/24-25'}\n` +
              `Event: ${selectedBooking.eventName}\n` +
@@ -278,7 +278,7 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
              `Balance Remaining: ₹0.00 (Fully Settled)\n\n` +
              `Thank you for celebrating with us! Download Official GST PDF: https://hotel-sai-vasudev-residency.pages.dev/invoice/${selectedBooking.invoiceNo || '258'}`;
     } else if (type === 'BEO') {
-      text = `*HOTEL SAI VASUDEV RESIDENCY - BANQUET EVENT ORDER (BEO)*\n` +
+      text = `*SRI SAI VASUDEV RESIDENCY - BANQUET EVENT ORDER (BEO)*\n` +
              `Host: ${selectedBooking.hostName}\n` +
              `Event: ${selectedBooking.eventName} on ${selectedBooking.eventDate}\n` +
              `Venue: ${selectedBooking.venueName} (Guaranteed Pax: ${selectedBooking.guaranteedPax})\n` +
@@ -287,12 +287,12 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
              `Buffet Timings: ${selectedBooking.beoNotes?.buffetTimings}\n\n` +
              `Our banquet coordinators are at your service!`;
     } else {
-      text = `*HOTEL SAI VASUDEV RESIDENCY - BANQUET BOOKING VOUCHER*\n` +
+      text = `*SRI SAI VASUDEV RESIDENCY - BANQUET BOOKING VOUCHER*\n` +
              `Booking No: ${selectedBooking.bookingNo}\n` +
              `Host: ${selectedBooking.hostName}\n` +
              `Venue: ${selectedBooking.venueName} | Date: ${selectedBooking.eventDate}\n` +
              `Advance Received: ₹${selectedBooking.financialSummary.advancePaid.toLocaleString('en-IN')}\n` +
-             `Thank you for trusting Hotel Sai Vasudev Residency.`;
+             `Thank you for trusting SRI SAI VASUDEV RESIDENCY.`;
     }
 
     const encoded = encodeURIComponent(text);
@@ -673,7 +673,7 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
                     value={formState}
                     onChange={e => setFormState(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
-                    placeholder="e.g. M.P / U.P / Maharashtra"
+                    placeholder="e.g. Odisha / A.P / Chhattisgarh"
                   />
                 </div>
 
@@ -1156,7 +1156,7 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
                 
                 {/* Yellow Top Banner (Exact Frame 0700 header) */}
                 <div className="bg-[#FFFF00] text-black px-4 py-1.5 text-center text-xs font-semibold border-b border-black/20">
-                  Phone Mobile 9466219198 website https://mmazz-hotel-hotels-in-etawah-hotels-in-etawah.business.site/
+                  Phone Mobile +91 94402 89999 website https://hotel-sai-vasudev-residency.pages.dev
                 </div>
 
                 {/* Dual Column Header */}
@@ -1284,13 +1284,16 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
                     Bank Name: <strong className="text-blue-900">STATE BANK OF INDIA</strong> &nbsp;|&nbsp; 
                     Bank A/C No: <strong className="font-mono">923020035404769</strong> &nbsp;|&nbsp; 
                     Bank IFSC: <strong className="font-mono">SBIN000390</strong> &nbsp;|&nbsp; 
-                    Bank Branch: <strong className="text-black">MAIN BRANCH HARIDWAR</strong>
+                    Bank Branch: <strong className="text-black">RAYAGADA BRANCH</strong>
                   </div>
 
                   {/* Signatures */}
                   <div className="flex justify-between items-end pt-8 text-xs font-semibold px-4 pb-2">
                     <div>Guest Signature / Acceptance</div>
                     <div>For {selectedBooking.venueName} / Authorized Signatory</div>
+                  </div>
+                  <div className="text-center text-[10px] font-bold text-slate-600 uppercase tracking-wider py-1 border-t border-black/20 mt-2">
+                    The registration certificate is required to be prominently displayed at all places of business in the State
                   </div>
                 </div>
               </div>
@@ -1418,7 +1421,7 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
                         </div>
                         <button
                           onClick={() => {
-                            const msg = encodeURIComponent(`Warm greetings from Hotel Sai Vasudev Residency! Wishing ${b.hostName} a very happy upcoming wedding anniversary! We would be delighted to host your celebration again with special privileges.`);
+                            const msg = encodeURIComponent(`Warm greetings from SRI SAI VASUDEV RESIDENCY! Wishing ${b.hostName} a very happy upcoming wedding anniversary! We would be delighted to host your celebration again with special privileges.`);
                             window.open(`https://wa.me/91${b.contactMobile}?text=${msg}`, '_blank');
                           }}
                           className="px-2.5 py-1 bg-amber-600/30 hover:bg-amber-600/50 border border-amber-500/50 text-amber-300 rounded text-[11px] font-bold"
@@ -1439,7 +1442,7 @@ export const BanquetHallBillingModal: React.FC<BanquetHallBillingModalProps> = (
         <div className="bg-slate-900 border-t border-slate-800 px-6 py-3 flex flex-wrap items-center justify-between gap-4 text-xs">
           <div className="flex items-center gap-2 text-slate-400">
             <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span>Hotel Sai Vasudev Residency Banquet Billing Suite</span>
+            <span>SRI SAI VASUDEV RESIDENCY Banquet Billing Suite</span>
           </div>
           <div className="flex items-center gap-2">
             <button

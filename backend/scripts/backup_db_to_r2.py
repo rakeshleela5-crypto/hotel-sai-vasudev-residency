@@ -99,7 +99,7 @@ def dump_database_sql(database_url: str) -> bytes:
         db = SessionLocal()
         try:
             sql_lines = [
-                "-- Hotel Sai Vasudev Residency Database SQL Dump",
+                "-- SRI SAI VASUDEV RESIDENCY Database SQL Dump",
                 f"-- Generated: {datetime.datetime.now(datetime.timezone.utc).isoformat()}",
                 "-- Engine: " + str(engine.url.drivername),
                 "BEGIN TRANSACTION;\n"
@@ -219,7 +219,7 @@ def run_backup(retention_days: int = 30) -> Dict[str, Any]:
                 ContentType="application/gzip",
                 Metadata={
                     "created_at": now_utc.isoformat(),
-                    "app": "Hotel Sai Vasudev Residency",
+                    "app": "SRI SAI VASUDEV RESIDENCY",
                     "retention_days": str(retention_days)
                 }
             )

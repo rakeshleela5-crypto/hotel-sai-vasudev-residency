@@ -1494,7 +1494,7 @@ export const LiquorBarManagementModal: React.FC<LiquorBarManagementModalProps> =
           }}
         >
           <div style={{ color: '#94a3b8' }}>
-            <span>Hotel Sai Vasudev Residency &bull; Bar &amp; Beverage Management</span>
+            <span>Hotel SRI SAI VASUDEV RESIDENCY &bull; Bar &amp; Beverage Management</span>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
             {onOpenTableDashboard && (

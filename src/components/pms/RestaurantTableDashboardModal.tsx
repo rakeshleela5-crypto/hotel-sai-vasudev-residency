@@ -225,7 +225,7 @@ export const RestaurantTableDashboardModal: React.FC<RestaurantTableDashboardMod
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ fontSize: 18 }}>🏬</span>
             <span style={{ fontWeight: 800, fontSize: 16, letterSpacing: '0.02em' }}>
-              HOTEL SAI VASUDEV RESIDENCY — Restaurant Table Matrix
+              SRI SAI VASUDEV RESIDENCY — Restaurant Table Matrix
             </span>
             <span
               style={{

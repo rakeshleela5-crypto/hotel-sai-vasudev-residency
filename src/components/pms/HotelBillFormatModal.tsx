@@ -921,7 +921,7 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
                       <img src={upiQrUrl} alt="QR" style={{ width: 68, height: 68, border: '1px solid #cbd5e1' }} />
                     </div>
                     <div style={{ padding: '6px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ fontSize: 10, fontWeight: 800 }}>For {companyInfo.firmName || 'HALL OF KNOTS'}</div>
+                      <div style={{ fontSize: 10, fontWeight: 800 }}>For {companyInfo.firmName || 'SRI SAI VASUDEV RESIDENCY'}</div>
                       <div style={{ border: '2px solid #581c87', borderRadius: 6, padding: '2px 8px', background: '#faf5ff', textAlign: 'center' }}>
                         <div style={{ fontSize: 7, color: '#2563eb', fontWeight: 800 }}>Payment Completed</div>
                         <div style={{ fontSize: 14 }}>🟢</div>
@@ -950,7 +950,7 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
                       letterSpacing: 1
                     }}
                   >
-                    {companyInfo.firmName || 'HOTEL SAI VASUDEV RESIDENCY'}
+                    {companyInfo.firmName || 'SRI SAI VASUDEV RESIDENCY'}
                   </h1>
                   <div style={{ fontSize: 11, marginTop: 2 }}>
                     {companyInfo.address1}, {companyInfo.city} - {companyInfo.pincode} ({companyInfo.state})
@@ -959,7 +959,7 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
                     Phone Mobile {companyInfo.mobile} website {companyInfo.website} India Email: {companyInfo.email}
                   </div>
                   <div style={{ fontSize: 10, fontWeight: 700, marginTop: 2 }}>
-                    GSTIN: {companyInfo.gstNo} &bull; STATE CODE: {companyInfo.companyGstCode || '27'}
+                    GSTIN: {companyInfo.gstNo} &bull; STATE CODE: {companyInfo.companyGstCode || '21'}
                   </div>
                 </div>
 
@@ -1324,6 +1324,9 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, marginTop: 10, paddingTop: 4, borderTop: '1px solid #cbd5e1' }}>
                   <span>Guest Signature</span>
                   <span>Payment Completed &bull; Auth Signatory</span>
+                </div>
+                <div style={{ fontSize: 8, fontWeight: 700, color: '#475569', textAlign: 'center', marginTop: 4, textTransform: 'uppercase' }}>
+                  The registration certificate is required to be prominently displayed at all places of business in the State
                 </div>
               </div>
             )}

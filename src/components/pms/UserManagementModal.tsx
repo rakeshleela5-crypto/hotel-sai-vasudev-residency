@@ -685,7 +685,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
                   Hotel Staff Management &amp; Security Protection Matrix
                 </h4>
                 <p style={{ margin: '4px 0 0 0', fontSize: 12, color: '#334155', lineHeight: 1.5 }}>
-                  In Hotel Sai Vasudev Residency ERP, every staff member is assigned a dedicated User ID tied to a specific Role.
+                  In SRI SAI VASUDEV RESIDENCY ERP, every staff member is assigned a dedicated User ID tied to a specific Role.
                   Removing delete rights prevents front desk staff from deleting guest bills to pocket cash.
                   Restricting tariff changes prevents unauthorized discounts, and anti-backdating prevents fraudulent retroactive ledger tampering.
                 </p>

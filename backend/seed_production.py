@@ -331,7 +331,7 @@ REAL_HOTEL_ROOMS = [
 
 def seed_database(reset: bool = False):
     print("==================================================")
-    print("Hotel Sai Vasudev Residency - Database Seeder")
+    print("SRI SAI VASUDEV RESIDENCY - Database Seeder")
     print(f"Target Database: {engine.url}")
     print("==================================================")
 

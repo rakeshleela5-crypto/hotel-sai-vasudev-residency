@@ -48,14 +48,22 @@ is_sqlite = "sqlite" in sync_url
 if is_sqlite:
     async_engine = create_async_engine(
         async_url,
-        connect_args={"check_same_thread": False},
+        connect_args={"check_same_thread": False, "timeout": 30},
         echo=False
     )
     engine = create_engine(
         sync_url,
-        connect_args={"check_same_thread": False},
+        connect_args={"check_same_thread": False, "timeout": 30},
         echo=False
     )
+
+    @event.listens_for(engine, "connect")
+    def set_sqlite_pragma(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA busy_timeout=30000")
+        cursor.execute("PRAGMA synchronous=NORMAL")
+        cursor.close()
 else:
     # Railway PostgreSQL async engine with asyncpg, pool tuning & 5s lock_timeout
     async_engine = create_async_engine(

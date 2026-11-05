@@ -513,7 +513,7 @@ export const HousekeepingDiscrepancyModal: React.FC<HousekeepingDiscrepancyModal
         {/* Footer */}
         <div style={{ padding: '12px 20px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ fontSize: 11, color: '#64748b' }}>
-            Hotel Sai Vasudev Residency &bull; Security &amp; Loss Prevention Protocol
+            Hotel SRI SAI VASUDEV RESIDENCY &bull; Security &amp; Loss Prevention Protocol
           </div>
           <button type="button" onClick={onClose} className="btn-pms-cancel">
             Close

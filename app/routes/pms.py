@@ -399,7 +399,7 @@ def get_master_room_folio(booking_ref: str, db: Session = Depends(get_db)):
     net_due = max(0.0, round(gross_bill - total_paid, 2))
 
     return schemas.MasterFolioResponse(
-        hotel_name="Hotel Sai Vasudev Residency",
+        hotel_name="Sri Sai Vasudev Residency",
         hotel_gstin="37AAACH7409R1ZZ",
         hotel_phone="+91 94402 89999 / +91 98480 12345",
         invoice_number=booking.invoice_number,
@@ -1097,7 +1097,7 @@ def export_pms_database_backup(
 
     return {
         "export_timestamp": datetime.datetime.utcnow().isoformat(),
-        "hotel": "Hotel Sai Vasudev Residency",
+        "hotel": "Sri Sai Vasudev Residency",
         "gstin": "37AAACH7409R1ZZ",
         "total_rooms": len(rooms),
         "total_bookings": len(bookings),
@@ -6602,15 +6602,15 @@ def list_properties(db: Session = Depends(get_db)):
     if not props:
         default_prop = models.HotelProperty(
             firm_id="firm-01",
-            name="HOTEL SAI VASUDEV RESIDENCY",
-            code="SVR-SHIRDI",
-            address="Near Andhra Bank, New Colony, Shirdi",
-            city="Shirdi",
-            state="Maharashtra",
-            pincode="423109",
+            name="SRI SAI VASUDEV RESIDENCY",
+            code="SVR-RAYAGADA",
+            address="SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY",
+            city="Rayagada",
+            state="Odisha",
+            pincode="765001",
             phone="+91 94402 89999",
             email="reservations@hotelsai-vasudev.com",
-            gst_no="27AAAAA0000A1Z5",
+            gst_no="21AEKPP8689J1ZS",
             is_current=True,
             total_rooms=12
         )
@@ -7111,14 +7111,28 @@ def get_company_info(db: Session = Depends(get_db)):
     info = db.query(models.HotelCompanyInfo).first()
     if not info:
         return {
-            "propertyName": "Hotel Sai Vasudev Residency",
-            "address": "Opp. Shirdi Sai Baba Temple, Shirdi",
-            "city": "Shirdi",
-            "state": "Maharashtra",
-            "pincode": "423109",
+            "propertyName": "SRI SAI VASUDEV RESIDENCY",
+            "tradeName": "SRI SAI VASUDEV RESIDENCY",
+            "legalName": "PAIDISETTY MANMADHA RAO",
+            "constitution": "Proprietorship",
+            "proprietorResidence": "Odisha",
+            "building": "SR RESIDENCY",
+            "landmark": "NEAR ANDHRA BANK, NEW COLONY",
+            "address": "SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY, Rayagada",
+            "city": "Rayagada",
+            "district": "Rayagada",
+            "state": "Odisha",
+            "stateCode": "21",
+            "pincode": "765001",
             "phone": "+91 94402 89999",
             "email": "stay@saivasudevresidency.com",
-            "gstin": "27AABCS1234F1Z5",
+            "gstin": "21AEKPP8689J1ZS",
+            "dateOfLiability": "05/02/2025",
+            "periodOfValidity": "Not Applicable",
+            "jurisdiction": "RAYAGADA DIVISION",
+            "approvingOfficer": "Superintendent Gulshan Sanodiya",
+            "additionalPlaces": 0,
+            "gstNotice": "The registration certificate is required to be prominently displayed at all places of business in the State",
             "logoUrl": "",
             "sealUrl": "",
             "defaultBillFormat": "standard"

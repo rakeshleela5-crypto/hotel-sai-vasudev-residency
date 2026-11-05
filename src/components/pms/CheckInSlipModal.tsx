@@ -57,13 +57,13 @@ export const CheckInSlipModal: React.FC<CheckInSlipModalProps> = ({
           }}>
             <div>
               <h2 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#1c1917', letterSpacing: 1 }}>
-                {company.firmName || 'HOTEL SAI VASUDEV RESIDENCY'}
+                {company.firmName || 'SRI SAI VASUDEV RESIDENCY'}
               </h2>
               <div style={{ fontSize: 12, fontWeight: 600, color: '#44403c', marginTop: 3 }}>
-                {[company.address1, company.address2, company.city, company.state, company.pincode].filter(Boolean).join(', ') || 'Opp. Gate No. 2, Pimpalwadi Road, Shirdi, Maharashtra - 423109'}
+                {[company.address1, company.address2, company.city, company.state, company.pincode].filter(Boolean).join(', ') || 'SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY, Rayagada, Odisha - 765001'}
               </div>
               <div style={{ fontSize: 11, color: '#44403c', marginTop: 2 }}>
-                Email: {company.email || 'info@saivasudevresidency.com'} &bull; Phone: {company.phone || '02423-255555'} &bull; Mobile: {company.mobile || company.phone || '+91 98765 43210'}
+                Email: {company.email || 'reservations@hotelsai-vasudev.com'} &bull; Phone: {company.phone || '+91 94402 89999'} &bull; Mobile: {company.mobile || company.phone || '+91 94402 89999'}
               </div>
             </div>
 
@@ -217,7 +217,7 @@ export const CheckInSlipModal: React.FC<CheckInSlipModalProps> = ({
 
                 <div style={{ textAlign: 'center', borderTop: '1px solid #94a3b8', width: 160, paddingTop: 4 }}>
                   <strong>Authorized Signatory</strong>
-                  <div style={{ fontSize: 9 }}>For Hotel Sai Vasudev</div>
+                  <div style={{ fontSize: 9 }}>For SRI SAI VASUDEV RESIDENCY</div>
                 </div>
               </div>
             </div>

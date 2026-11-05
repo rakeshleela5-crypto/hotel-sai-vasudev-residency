@@ -159,7 +159,7 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
 
   // Reset to Demo Seed Data
   const handleResetToDemoSeed = () => {
-    if (window.confirm('⚠️ Are you sure you want to reset Hotel Sai Vasudev Residency to authentic Demo Seed Data?\n\nThis will re-initialize all 18 rooms, bookings, restaurant menu, housekeeping records, and financial ledger.')) {
+    if (window.confirm('⚠️ Are you sure you want to reset SRI SAI VASUDEV RESIDENCY to authentic Demo Seed Data?\n\nThis will re-initialize all 18 rooms, bookings, restaurant menu, housekeeping records, and financial ledger.')) {
       PmsStore.resetToDemoSeedData();
       setSelectedDrawerRoomNo(null);
       alert('✓ Data reset to demo seed inventory (18 rooms) successfully!');
@@ -317,7 +317,7 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
         <div style={{ background: 'rgba(255,255,255,0.06)', padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)' }}>
           <div style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800 }}>Total Rooms</div>
           <div style={{ fontSize: '18px', fontWeight: 900, color: '#f8fafc', marginTop: '2px' }}>{totalRoomsCount}</div>
-          <div style={{ fontSize: '10px', color: '#38bdf8' }}>Sai Vasudev Residency</div>
+          <div style={{ fontSize: '10px', color: '#38bdf8' }}>SRI SAI VASUDEV RESIDENCY</div>
         </div>
 
         <div style={{ background: 'rgba(37,99,235,0.15)', padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(59,130,246,0.3)' }}>
@@ -619,7 +619,7 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
               alignItems: 'center',
               gap: '4px'
             }}
-            title="Reset All 18 Rooms, Inventory & Folios to Authentic Shirdi Demo Seed Data"
+            title="Reset All 18 Rooms, Inventory & Folios to Authentic Rayagada Demo Seed Data"
           >
             ↺ Reset Seed (18 Rms)
           </button>
@@ -1678,8 +1678,8 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
           <div className="pms-modal-window" style={{ maxWidth: '600px', padding: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #0f172a', paddingBottom: '8px', marginBottom: '12px' }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 900 }}>HOTEL SAI VASUDEV RESIDENCY</h3>
-                <small style={{ fontSize: '11px', color: '#64748b' }}>Near Sai Baba Temple, Shirdi &bull; GSTIN: 27ABCDE1234F1Z5</small>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 900 }}>SRI SAI VASUDEV RESIDENCY</h3>
+                <small style={{ fontSize: '11px', color: '#64748b' }}>SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY, Rayagada, Odisha - 765001 &bull; GSTIN: 21AEKPP8689J1ZS</small>
               </div>
               <button type="button" onClick={() => setProformaOpen(false)} style={{ border: 'none', background: 'transparent', fontSize: '20px', cursor: 'pointer' }}>&times;</button>
             </div>

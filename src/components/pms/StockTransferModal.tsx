@@ -236,7 +236,7 @@ export const StockTransferModal: React.FC<StockTransferModalProps> = ({
           <div className="pms-header-left" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 18 }}>🔄</span>
             <h2 className="pms-brand-title" style={{ fontSize: 15, margin: 0, fontWeight: 700, letterSpacing: 0.5 }}>
-              HOTEL SAI VASUDEV RESIDENCY &bull; STOCK TRANSFER &amp; ISSUE (/stocktransfers/create)
+              SRI SAI VASUDEV RESIDENCY &bull; STOCK TRANSFER &amp; ISSUE (/stocktransfers/create)
             </h2>
           </div>
           <div className="pms-header-right" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

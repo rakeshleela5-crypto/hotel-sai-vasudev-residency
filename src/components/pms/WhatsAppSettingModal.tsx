@@ -147,7 +147,7 @@ export const WhatsAppSettingModal: React.FC<WhatsAppSettingModalProps> = ({
       alert('Please enter a valid 10-digit mobile number');
       return;
     }
-    const msg = promoMessage || PmsStore.getWhatsAppTemplate('Promotional')?.message || 'Greetings from Hotel Sai Vasudev Residency!';
+    const msg = promoMessage || PmsStore.getWhatsAppTemplate('Promotional')?.message || 'Greetings from SRI SAI VASUDEV RESIDENCY!';
     
     PmsStore.sendWhatsAppNotification({
       voucherType: 'Promotional',

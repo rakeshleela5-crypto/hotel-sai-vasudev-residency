@@ -50,7 +50,7 @@ export const Hero: React.FC<HeroProps> = ({ onCheckAvailability }) => {
       <div className="hero-bg-wrapper">
         <img 
           src="/images/hero.jpg" 
-          alt="Hotel Sai Vasudev Residency Twilight View" 
+          alt="Sri Sai Vasudev Residency Twilight View" 
           className="hero-bg-img"
           width={1920}
           height={1080}
@@ -77,8 +77,8 @@ export const Hero: React.FC<HeroProps> = ({ onCheckAvailability }) => {
           </h1>
 
           <p className="hero-description animate-fade">
-            Welcome to <strong>Hotel Sai Vasudev Residency</strong>. Your serene retreat just footsteps away 
-            from the sacred temple shrine. Designed with plush Italian marble, acoustic soundproof rooms, 
+            Welcome to <strong>Sri Sai Vasudev Residency</strong>. Your serene retreat in Rayagada, Odisha. 
+            Designed with plush Italian marble, acoustic soundproof rooms, 
             pure vegetarian gourmet dining, and warm traditional hospitality.
           </p>
 

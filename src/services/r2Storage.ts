@@ -1,5 +1,5 @@
 /**
- * Hotel SAI VASUDEV RESIDENCY - Cloudflare R2 Object Storage Service
+ * SRI SAI VASUDEV RESIDENCY - Cloudflare R2 Object Storage Service
  * S3-compatible, zero-frontend-credential storage layer with presigned URLs,
  * upload progress tracking, file validations, and resilient fallback handling.
  */

@@ -268,7 +268,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
   // Pre-fill WhatsApp inquiry text with user selected values
   const whatsappQueryText = encodeURIComponent(
-    `Namaste Hotel Sai Vasudev Residency! I would like to inquire about booking:
+    `Namaste SRI SAI VASUDEV RESIDENCY! I would like to inquire about booking:
 • Room: ${selectedRoom?.name || 'Deluxe Room'}
 • Check-In: ${checkIn}
 • Check-Out: ${checkOut} (${totalNights} Night${totalNights > 1 ? 's' : ''})
@@ -294,7 +294,7 @@ Please share availability and direct booking assistance.`
               <span className="badge badge-gold">DIRECT RESERVATION</span>
               <h2 className="modal-title">Confirm Your Stay</h2>
               <p className="modal-subtitle">
-                Hotel Sai Vasudev Residency &bull; Guaranteed Best Rate &bull; {totalNights} {totalNights === 1 ? 'Night' : 'Nights'}
+                SRI SAI VASUDEV RESIDENCY &bull; Guaranteed Best Rate &bull; {totalNights} {totalNights === 1 ? 'Night' : 'Nights'}
               </p>
             </div>
 
@@ -641,7 +641,7 @@ Please share availability and direct booking assistance.`
             <div className="success-icon-badge">✓</div>
             <h2 className="success-title">Reservation Confirmed!</h2>
             <p className="success-subtitle">
-              Thank you for choosing Hotel Sai Vasudev Residency. Your sacred retreat is secured.
+              Thank you for choosing SRI SAI VASUDEV RESIDENCY. Your reservation is secured.
             </p>
 
             <div className="booking-confirmation-ticket">
@@ -689,7 +689,7 @@ Please share availability and direct booking assistance.`
               </div>
 
               <div className="ticket-footer-note">
-                📍 <strong>Hotel Sai Vasudev Residency</strong> &bull; Near Temple Main Gate No. 2, Shirdi
+                📍 <strong>Sri Sai Vasudev Residency</strong> &bull; SR Residency, Near Andhra Bank, New Colony, Rayagada, Odisha - 765001
                 <br />
                 A confirmation SMS &amp; Email has been dispatched to {bookingResult.guest_phone}.
               </div>
@@ -706,7 +706,7 @@ Please share availability and direct booking assistance.`
                 <span>🖨️ View &amp; Print Official Voucher</span>
               </a>
               <a
-                href={`https://wa.me/919440289999?text=${encodeURIComponent(`Namaste Hotel Sai Vasudev Residency, my booking reference is ${bookingResult.booking_ref} for ${bookingResult.guest_name}. Please confirm my check-in details.`)}`}
+                href={`https://wa.me/919440289999?text=${encodeURIComponent(`Namaste Sri Sai Vasudev Residency, my booking reference is ${bookingResult.booking_ref} for ${bookingResult.guest_name}. Please confirm my check-in details.`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-outline-gold"

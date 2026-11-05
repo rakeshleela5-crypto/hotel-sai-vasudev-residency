@@ -221,7 +221,7 @@ export const RoomMasterModal: React.FC<RoomMasterModalProps> = ({
           <div className="pms-header-left">
             <span style={{ fontSize: 16 }}>🏢</span>
             <h2 className="pms-brand-title" style={{ fontSize: 15 }}>
-              HOTEL SAI VASUDEV RESIDENCY &bull; {activeTab === 'rooms' ? 'ROOM MASTER (/rooms)' : 'ROOM TYPE MASTER (/roomtypes)'}
+              SRI SAI VASUDEV RESIDENCY &bull; {activeTab === 'rooms' ? 'ROOM MASTER (/rooms)' : 'ROOM TYPE MASTER (/roomtypes)'}
             </h2>
           </div>
           <div className="pms-header-right">
@@ -521,7 +521,7 @@ export const RoomMasterModal: React.FC<RoomMasterModalProps> = ({
           <span>
             Showing 1 to {activeTab === 'rooms' ? filteredRooms.length : filteredRoomTypes.length} of {activeTab === 'rooms' ? rooms.length : roomTypes.length} entries
           </span>
-          <span>HOTEL SAI VASUDEV RESIDENCY &bull; SHIRDI PMS</span>
+          <span>SRI SAI VASUDEV RESIDENCY &bull; RAYAGADA PMS</span>
         </div>
       </div>
 

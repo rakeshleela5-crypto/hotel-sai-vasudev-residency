@@ -102,7 +102,7 @@ export const ShiftHandoverModal: React.FC<ShiftHandoverModalProps> = ({ isOpen, 
                 HANDOVER (USER SHIFT) RECONCILIATION REPORT
               </h2>
               <div className="pms-reg-header-sub">
-                pms.hotelsai-vasudev.com/shift_handover &bull; <span className="gold">HOTEL SAI VASUDEV RESIDENCY</span> &bull; Front Office Cash Drawer Handover
+                pms.hotelsai-vasudev.com/shift_handover &bull; <span className="gold">SRI SAI VASUDEV RESIDENCY</span> &bull; Front Office Cash Drawer Handover
               </div>
             </div>
           </div>

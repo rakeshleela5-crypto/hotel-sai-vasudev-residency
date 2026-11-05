@@ -146,7 +146,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 letterSpacing: '0.5px',
               }}
             >
-              HOTEL SAI VASUDEV RESIDENCY
+              SRI SAI VASUDEV RESIDENCY
             </h1>
             <p style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '20px' }}>
               {this.props.moduleName ? `${this.props.moduleName} • Self-Recovery Guard` : 'System Self-Recovery & Diagnostic Guard'}
@@ -267,7 +267,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
 
             <p style={{ color: '#64748b', fontSize: '11px', marginTop: '18px', marginBottom: 0 }}>
-              Front Desk Hotline: +91 94402 89999 &bull; Shirdi VIP Road &bull; 24x7 IT Operations
+              Front Desk Hotline: +91 94402 89999 &bull; Rayagada, Odisha &bull; 24x7 IT Operations
             </p>
           </div>
         </div>

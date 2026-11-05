@@ -1,5 +1,5 @@
 /**
- * Enterprise API Client for Hotel Sai Vasudev Residency (Cloudflare Pages Frontend)
+ * Enterprise API Client for SRI SAI VASUDEV RESIDENCY (Cloudflare Pages Frontend)
  * Implements:
  * 1. Automatic UUIDv4 X-Idempotency-Key injection on all POST/PUT/PATCH/DELETE mutations (#1)
  * 2. Silent JWT refresh token rotation with mutex queue on 401 Unauthorized (#47)

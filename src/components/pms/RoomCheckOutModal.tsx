@@ -81,7 +81,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
   const [proceedingTo] = useState((guest as any)?.proceedingTo || 'Pune');
   const [purpose] = useState((guest as any)?.purpose || 'Temple Darshan');
   const [companyName, setCompanyName] = useState((guest as any)?.companyName || '');
-  const [companyAddress, setCompanyAddress] = useState('Main Road, Shirdi');
+  const [companyAddress, setCompanyAddress] = useState('SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY, Rayagada, Odisha - 765001');
   const [gstNumber, setGstNumber] = useState((guest as any)?.gstNumber || (guest as any)?.gstin || '');
   const [checkoutRemark, setCheckoutRemark] = useState('Checked out peacefully. Key returned.');
   
@@ -241,8 +241,8 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
   const netRoomTaxable = Math.max(0, baseRoomRent - lessDiscount);
 
   // Place of Supply Rule (Section 12(3)(c) of IGST Act 2017):
-  // Immovable property accommodation (SAC 996311) and dining (SAC 996331) in Shirdi (MH)
-  // always have Place of Supply = 27 (Maharashtra).
+  // Immovable property accommodation (SAC 996311) and dining (SAC 996331) in Rayagada (Odisha)
+  // always have Place of Supply = 21 (Odisha).
   // CGST + SGST is ALWAYS levied for both domestic and out-of-state guests, UNLESS SEZ Unit with LUT.
   const isLocalGst = !isSezUnitWithLut;
 
@@ -414,10 +414,10 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
       gstNumber,
       companyName,
       companyAddress,
-      city: 'Shirdi',
-      state: 'Maharashtra',
+      city: 'Rayagada',
+      state: 'Odisha',
       country: 'India',
-      pinCode: '423109',
+      pinCode: '765001',
       sacCode: '996311',
       invoiceFormat,
       isTaxInclusive,
@@ -577,7 +577,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
             <div className="pms-form-banner" style={{ background: '#84cc16', color: '#000', fontWeight: 800, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>Room Checkout &amp; Dual-Slab Settlement &bull; Room {targetRoom.roomNo} ({targetRoom.roomType})</span>
               <span style={{ fontSize: 11, background: '#0f172a', color: '#fff', padding: '2px 8px', borderRadius: 2, fontWeight: 800 }}>
-                Inv: {activeInvoiceNo} &bull; Hotel Sai Vasudev Residency
+                Inv: {activeInvoiceNo} &bull; SRI SAI VASUDEV RESIDENCY
               </span>
             </div>
 
@@ -637,7 +637,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                       const taxVal = Number((rawRent / 1.12).toFixed(2));
                       const gstVal = Number((rawRent - taxVal).toFixed(2));
                       setIsTaxInclusive(true);
-                      alert(`Hotel Sai Vasudev Residency:\n\nRoom Rent Tax Inclusive (12%):\nTaxable Base: ₹${taxVal}\nGST (CGST 6% + SGST 6%): ₹${gstVal}\nTotal Tariff: ₹${rawRent}`);
+                      alert(`SRI SAI VASUDEV RESIDENCY:\n\nRoom Rent Tax Inclusive (12%):\nTaxable Base: ₹${taxVal}\nGST (CGST 6% + SGST 6%): ₹${gstVal}\nTotal Tariff: ₹${rawRent}`);
                     }}
                     style={{
                       background: '#0f172a',
@@ -1543,13 +1543,13 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                     {isComplimentary
                       ? 'EXEMPT (0% GST)'
                       : isLocalGst
-                      ? 'MAHARASHTRA LOCAL SALES (SGST + CGST)'
+                      ? 'ODISHA LOCAL SALES (SGST + CGST)'
                       : `INTERSTATE SALES (IGST ${gstPercent}%)`}
                   </span>
                   <span style={{ color: '#475569', fontSize: 10 }}>
                     {isSezUnitWithLut
                       ? '✓ Zero-Rated IGST per SEZ Unit with LUT filing'
-                      : '✓ Sec 12(3)(c) IGST Act: Hotel Immovable Property Place of Supply = 27 Maharashtra (Intrastate CGST + SGST)'}
+                      : '✓ Sec 12(3)(c) IGST Act: Hotel Immovable Property Place of Supply = 21 Odisha (Intrastate CGST + SGST)'}
                   </span>
                 </div>
 
@@ -1750,7 +1750,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                       Proprietorship: PAIDISETTY MANMADHA RAO
                     </div>
                     <div style={{ fontSize: 11, color: '#334155' }}>
-                      Near Andhra Bank, New Colony, Rayagada, Odisha 765001
+                      SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY, Rayagada, Odisha - 765001
                     </div>
                     <div style={{ fontSize: 11, color: '#334155' }}>
                       Phone: <strong>+91 94402 89999</strong> &bull; Email: reservations@hotelsai-vasudev.com
@@ -1962,7 +1962,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                   <div><strong>Amount Paid at Checkout:</strong> ₹{totalPaidAtCheckout.toFixed(2)}</div>
                   {advanceDeducted > 0 && <div><strong>Advance Receipts Deducted:</strong> ₹{advanceDeducted.toFixed(2)}</div>}
                   <div><strong>Electronic Transfer:</strong> {companyInfo.bankName} &bull; A/C: {companyInfo.bankAccountNo} &bull; IFSC: {companyInfo.bankIfsc}</div>
-                  <div><strong>UPI ID:</strong> {companyInfo.upiId} &bull; Main Branch Shirdi</div>
+                  <div><strong>UPI ID:</strong> {companyInfo.upiId} &bull; Rayagada Branch</div>
                 </div>
 
                 <div style={{ border: '1px solid #cbd5e1', borderRadius: 4, padding: 10, background: '#ffffff', fontSize: 11, lineHeight: 1.8 }}>
@@ -2012,7 +2012,10 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                   <div style={{ fontSize: 12, fontWeight: 800, color: '#b45309', fontStyle: 'normal' }}>
                     🕉️ Om Sai Ram!
                   </div>
-                  <div>Thank you for staying at Hotel Sai Vasudev Residency. May Shri Sai Baba bless you with peace &amp; prosperity. Have a blessed journey!</div>
+                  <div>Thank you for staying at SRI SAI VASUDEV RESIDENCY. Have a blessed stay and safe journey!</div>
+                  <div style={{ marginTop: '5px', fontSize: '10px', fontWeight: 800, color: '#334155', letterSpacing: '0.4px', textTransform: 'uppercase' }}>
+                    The registration certificate is required to be prominently displayed at all places of business in the State
+                  </div>
                   <div style={{ fontWeight: 700, marginTop: 4, color: '#0f172a', fontStyle: 'normal' }}>
                     🔑 Please return your room key card to the reception desk.
                   </div>
@@ -2021,7 +2024,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ height: 40 }}></div>
                   <div style={{ borderTop: '1px dashed #64748b', paddingTop: 4, fontWeight: 700 }}>
-                    For HOTEL SAI VASUDEV RESIDENCY<br />
+                    For SRI SAI VASUDEV RESIDENCY<br />
                     <span style={{ fontSize: 9, color: '#64748b' }}>Authorized Signatory</span>
                   </div>
                 </div>
@@ -2063,10 +2066,10 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
           paymentMode: paymentSplits[0]?.mode || 'Cash',
           payments: paymentSplits,
           checkoutRemark,
-          city: 'Shirdi',
-          state: 'Maharashtra',
+          city: 'Rayagada',
+          state: 'Odisha',
           country: 'India',
-          pinCode: '423109',
+          pinCode: '765001',
           sacCode: '996311',
           invoiceFormat: 'A4_Standard'
         }}

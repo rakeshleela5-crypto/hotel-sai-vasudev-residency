@@ -43,24 +43,24 @@ export const LocationSection: React.FC = () => {
                 <div className="map-marker-pin">📍</div>
                 <div>
                   <h3>Sri Sai Vasudev Residency</h3>
-                  <p>Near Andhra Bank, New Colony, Rayagada, Odisha - 765001</p>
+                  <p>SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY, Rayagada, Odisha - 765001</p>
                 </div>
               </div>
 
               <div className="map-visual-placeholder">
                 <div className="map-radar-pulse"></div>
                 <div className="temple-pin">
-                  🛕 Temple Shrine (250m)
+                  🛕 Jagannath Temple (Rayagada)
                 </div>
                 <div className="hotel-pin">
-                  🏨 Hotel Sai Vasudev Residency
+                  🏨 Sri Sai Vasudev Residency
                 </div>
                 <div className="path-dotted-line"></div>
               </div>
 
               <div className="map-actions">
                 <a 
-                  href="https://maps.google.com/?q=Hotel+Sai+Vasudev+Residency" 
+                  href="https://maps.google.com/?q=Sri+Sai+Vasudev+Residency+Rayagada" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="btn btn-outline-gold"

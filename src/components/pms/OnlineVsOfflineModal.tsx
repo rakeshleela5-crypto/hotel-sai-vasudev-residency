@@ -572,7 +572,7 @@ export const OnlineVsOfflineModal: React.FC<OnlineVsOfflineModalProps> = ({ isOp
 
             <div style={{ padding: '8px 18px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', fontSize: 11, color: '#64748b', display: 'flex', justifyContent: 'space-between' }}>
               <div>Showing {filteredItems.length} of 30 architectural dimensions</div>
-              <div>Hotel Sai Vasudev Residency ERP features a <strong>Hybrid Cloud-First Architecture</strong> with zero data loss.</div>
+              <div>Hotel SRI SAI VASUDEV RESIDENCY ERP features a <strong>Hybrid Cloud-First Architecture</strong> with zero data loss.</div>
             </div>
           </div>
         )}

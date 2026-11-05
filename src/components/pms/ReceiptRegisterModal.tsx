@@ -112,7 +112,7 @@ export const ReceiptRegisterModal: React.FC<ReceiptRegisterModalProps> = ({
                   ADD RECEIPT &amp; COLLECTIONS
                 </h2>
                 <div className="pms-reg-header-sub">
-                  pms.hotelsai-vasudev.com/reciepts &bull; <span className="gold">HOTEL SAI VASUDEV RESIDENCY</span> &bull; General Payment Receipts &amp; Ledger
+                  pms.hotelsai-vasudev.com/reciepts &bull; <span className="gold">SRI SAI VASUDEV RESIDENCY</span> &bull; General Payment Receipts &amp; Ledger
                 </div>
               </div>
             </div>

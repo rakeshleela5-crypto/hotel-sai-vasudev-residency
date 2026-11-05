@@ -1,5 +1,5 @@
 /**
- * Hotel SAI VASUDEV RESIDENCY - Client-Side KYC Image Compression Helper
+ * SRI SAI VASUDEV RESIDENCY - Client-Side KYC Image Compression Helper
  * Uses HTML5 <canvas> to resize and compress high-resolution mobile camera photos
  * before transmission to FastAPI / Cloudflare R2.
  *

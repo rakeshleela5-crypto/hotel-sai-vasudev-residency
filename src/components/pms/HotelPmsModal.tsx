@@ -706,7 +706,7 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                 style={{ background: '#047857', color: '#ffffff' }}
               >
                 <span>📍</span>
-                <span>Shirdi (Main)</span>
+                <span>Rayagada (Main)</span>
               </button>
 
               {/* Video 21: Mobile Responsive View Toggle */}

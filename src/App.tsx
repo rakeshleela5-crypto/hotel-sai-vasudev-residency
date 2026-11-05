@@ -145,7 +145,7 @@ function HotelMainLanding({ defaultErpOpen = false }: HotelMainLandingProps) {
         capacity: defaultRm.capacity || 2,
         bed_type: defaultRm.roomType.includes('Suite') ? 'King Bed' : defaultRm.roomType.includes('Family') ? 'Two Queen Beds' : 'Queen Bed',
         room_size: defaultRm.roomType.includes('Suite') ? '720 sq ft' : defaultRm.roomType.includes('Family') ? '480 sq ft' : '340 sq ft',
-        description: `Experience supreme comfort in ${defaultRm.roomType} at Hotel Sai Vasudev Residency Shirdi.`,
+        description: `Experience supreme comfort in ${defaultRm.roomType} at Sri Sai Vasudev Residency Rayagada.`,
         amenities: defaultRm.facilities,
         image_url: defaultRm.roomType.includes('Suite') ? '/images/rooms/suite.jpg' : defaultRm.roomType.includes('Family') ? '/images/rooms/family.jpg' : '/images/rooms/deluxe.jpg',
         is_available: defaultRm.status === 'vacant'

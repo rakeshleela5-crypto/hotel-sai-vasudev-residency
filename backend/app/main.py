@@ -261,7 +261,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="FastAPI Backend for Hotel Sai Vasudev Residency connecting Cloudflare Pages to PostgreSQL on Railway",
+    description="FastAPI Backend for SRI SAI VASUDEV RESIDENCY connecting Cloudflare Pages to PostgreSQL on Railway",
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     docs_url=f"{settings.API_V1_STR}/docs",
     lifespan=lifespan
@@ -353,7 +353,7 @@ def kot_sync_alias_get(db: Session = Depends(get_db)):
 @app.get("/", tags=["Root"])
 def root():
     return {
-        "hotel": "Hotel Sai Vasudev Residency",
+        "hotel": "SRI SAI VASUDEV RESIDENCY",
         "system": "FastAPI + PostgreSQL (Railway) <-> Cloudflare Pages Frontend",
         "status": "Operational",
         "docs": f"{settings.API_V1_STR}/docs",

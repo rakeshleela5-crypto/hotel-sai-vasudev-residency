@@ -78,7 +78,7 @@ export const ContactSection: React.FC = () => {
   };
 
   const prefilledWhatsAppUrl = `https://wa.me/919440289999?text=${encodeURIComponent(
-    `Namaste Hotel Sai Vasudev Residency! I would like to inquire about room reservations & darshan guidance.`
+    `Namaste Sri Sai Vasudev Residency! I would like to inquire about room reservations & tariff details.`
   )}`;
 
   return (
@@ -130,7 +130,7 @@ export const ContactSection: React.FC = () => {
                 <span className="channel-icon" aria-hidden="true">📍</span>
                 <div>
                   <strong>Hotel Address</strong>
-                  <p>Near Andhra Bank, New Colony, Rayagada, Odisha 765001</p>
+                  <p>SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY, Rayagada, Odisha - 765001</p>
                 </div>
               </div>
             </div>

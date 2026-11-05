@@ -234,7 +234,7 @@ class BookingResponse(BaseModel):
 
 # --- Master Folio Invoice Schema ---
 class MasterFolioResponse(BaseModel):
-    hotel_name: str = "Hotel Sai Vasudev Residency"
+    hotel_name: str = "SRI SAI VASUDEV RESIDENCY"
     hotel_gstin: str = "37AAACH7409R1ZZ"
     hotel_phone: str = "+91 94402 89999 / +91 98480 12345"
     invoice_number: str
@@ -288,7 +288,7 @@ class NightAuditResponse(BaseModel):
 
 # --- Tax Invoice & Voucher Details ---
 class TaxInvoiceVoucher(BaseModel):
-    hotel_name: str = "Hotel Sai Vasudev Residency"
+    hotel_name: str = "SRI SAI VASUDEV RESIDENCY"
     tagline: str = "Sanctuary of Peace, Comfort & Divine Hospitality"
     hotel_address: str = "Near Temple Road, Holy Pilgrimage Town, AP, India"
     hotel_phone: str = "+91 94402 89999 / +91 98480 12345"
@@ -517,7 +517,7 @@ class DecentroUpiQrRequest(BaseModel):
     booking_id: Optional[int] = None
     kot_id: Optional[str] = None
     room_no: Optional[str] = None
-    purpose_message: Optional[str] = "Hotel Sai Vasudev Residency Settlement"
+    purpose_message: Optional[str] = "SRI SAI VASUDEV RESIDENCY Settlement"
     expiry_minutes: Optional[int] = 30
 
 class DecentroUpiQrResponse(BaseModel):
@@ -1723,8 +1723,8 @@ class HotelPropertyCreate(BaseModel):
     name: str
     code: Optional[str] = None
     address: Optional[str] = None
-    city: Optional[str] = "Shirdi"
-    state: Optional[str] = "Maharashtra"
+    city: Optional[str] = "Rayagada"
+    state: Optional[str] = "Odisha"
     pincode: Optional[str] = None
     phone: Optional[str] = None
     email: Optional[str] = None
@@ -1852,7 +1852,7 @@ class RfidKeyCardExtend(BaseModel):
     extended_by: Optional[str] = "Front Desk"
 
 class HotelCompanyInfoCreate(BaseModel):
-    property_name: Optional[str] = "Hotel Sai Vasudev Residency"
+    property_name: Optional[str] = "SRI SAI VASUDEV RESIDENCY"
     address: Optional[str] = None
     city: Optional[str] = None
     state: Optional[str] = None

@@ -53,7 +53,7 @@ export const Amenities: React.FC = () => {
           </div>
           <h2 className="section-title">Amenities Designed For Your Solace</h2>
           <p className="section-subtitle">
-            Every facility at Hotel Sai Vasudev Residency is curated to make your pilgrimage and vacation thoroughly peaceful and revitalizing.
+            Every facility at SRI SAI VASUDEV RESIDENCY is curated to make your stay and travel thoroughly peaceful and revitalizing.
           </p>
         </div>
 

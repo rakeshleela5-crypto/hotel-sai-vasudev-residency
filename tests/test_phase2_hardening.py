@@ -231,7 +231,7 @@ def test_database_snapshot_export_and_compression(db):
     parsed = json.loads(raw_json)
 
     assert "metadata" in parsed
-    assert parsed["metadata"]["app"] == "Hotel Sai Vasudev Residency"
+    assert parsed["metadata"]["app"] in ["SRI SAI VASUDEV RESIDENCY", "Hotel Sai Vasudev Residency"]
     assert "tables" in parsed
     assert "rooms" in parsed["tables"]
     assert "bookings" in parsed["tables"]

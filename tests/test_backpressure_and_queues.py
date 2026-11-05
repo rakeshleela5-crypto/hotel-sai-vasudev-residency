@@ -369,7 +369,7 @@ def test_minimal_gst_invoice_pdf_format():
     assert isinstance(pdf_bytes, bytes)
     assert pdf_bytes.startswith(b"%PDF-1.4"), "Generated PDF does not start with %PDF-1.4 magic header"
     assert b"%%EOF" in pdf_bytes, "Generated PDF does not contain %%EOF trailer"
-    assert b"HOTEL SAI VASUDEV RESIDENCY" in pdf_bytes
+    assert b"SRI SAI VASUDEV RESIDENCY" in pdf_bytes
 
 def test_generate_and_upload_invoice_pdf_task(db_session):
     """

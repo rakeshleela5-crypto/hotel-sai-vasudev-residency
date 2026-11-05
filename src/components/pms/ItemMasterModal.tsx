@@ -216,7 +216,7 @@ export const ItemMasterModal: React.FC<ItemMasterModalProps> = ({
           <div className="pms-header-left" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 18 }}>🍽️</span>
             <h2 className="pms-brand-title" style={{ fontSize: 15, margin: 0, fontWeight: 700 }}>
-              HOTEL SAI VASUDEV RESIDENCY &bull; {
+              HOTEL SRI SAI VASUDEV RESIDENCY &bull; {
                 viewMode === 'form' ? 'ADD / EDIT ITEM (/itemform)' :
                 viewMode === 'groups' ? 'ITEM GROUP LIST (/itemgroups)' :
                 viewMode === 'godowns' ? 'GODOWN LIST (/godowns)' :
@@ -446,7 +446,7 @@ export const ItemMasterModal: React.FC<ItemMasterModalProps> = ({
 
             <div style={{ background: '#f8fafc', padding: '8px 18px', borderTop: '1px solid #e2e8f0', fontSize: 12, color: '#64748b', display: 'flex', justifyContent: 'space-between' }}>
               <span>Showing 1 to {Math.min(filteredItems.length, entriesPerPage)} of {filteredItems.length} entries</span>
-              <span>HOTEL SAI VASUDEV RESIDENCY &bull; STORE &amp; RESTAURANT PMS</span>
+              <span>HOTEL SRI SAI VASUDEV RESIDENCY &bull; STORE &amp; RESTAURANT PMS</span>
             </div>
           </div>
         )}

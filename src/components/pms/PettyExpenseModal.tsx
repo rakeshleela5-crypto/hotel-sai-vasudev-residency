@@ -145,7 +145,7 @@ export const PettyExpenseModal: React.FC<PettyExpenseModalProps> = ({ isOpen, on
                 </span>
               </div>
               <p style={{ margin: '2px 0 0', fontSize: '12px', opacity: 0.9 }}>
-                Hotel Sai Vasudev Residency &bull; Section 170 CGST Act Compliant &bull; Double-Entry Accrual Engine
+                SRI SAI VASUDEV RESIDENCY &bull; Section 170 CGST Act Compliant &bull; Double-Entry Accrual Engine
               </p>
             </div>
           </div>
@@ -1126,7 +1126,7 @@ export const PettyExpenseModal: React.FC<PettyExpenseModalProps> = ({ isOpen, on
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Shirdi Fresh Veggies Mandi / Sai Electricals"
+                    placeholder="e.g. Rayagada Fresh Veggies Mandi / Sai Electricals"
                     value={paidTo}
                     onChange={e => setPaidTo(e.target.value)}
                     disabled={isProcessing}

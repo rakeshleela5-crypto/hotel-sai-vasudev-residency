@@ -243,10 +243,10 @@ export const NewRoomBookingModal: React.FC<NewRoomBookingModalProps> = ({
       email,
       addressLine1,
       addressLine2,
-      city: city || 'Shirdi',
-      state: state || 'Maharashtra',
+      city: city || 'Rayagada',
+      state: state || 'Odisha',
       country,
-      pinCode: pinCode || '423109',
+      pinCode: pinCode || '765001',
       agent,
       documentName,
       documentNo,
@@ -548,7 +548,7 @@ export const NewRoomBookingModal: React.FC<NewRoomBookingModalProps> = ({
                 </div>
                 <div className="form-group-pms">
                   <label className="form-label-pms">GST NO</label>
-                  <input type="text" placeholder="27AAAAA0000A1Z5" value={gstNo} onChange={e => setGstNo(e.target.value)} className="form-input-pms" />
+                  <input type="text" placeholder="21AEKPP8689J1ZS" value={gstNo} onChange={e => setGstNo(e.target.value)} className="form-input-pms" />
                 </div>
               </div>
 

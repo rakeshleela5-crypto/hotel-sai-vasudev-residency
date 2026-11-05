@@ -421,7 +421,7 @@ def get_printable_slip(booking_ref: str, db: Session = Depends(get_db)):
 <body>
 <div class="ticket">
   <div class="header">
-    <h1 class="hotel-title">Hotel Sai Vasudev Residency</h1>
+    <h1 class="hotel-title">SRI SAI VASUDEV RESIDENCY</h1>
     <p class="hotel-sub">Near Temple Main Road, Holy Town</p>
     <p class="hotel-sub">Tel: +91 94402 89999 / +91 98480 12345</p>
     <div class="gstin">GSTIN: 37AAACH7409R1ZZ | SAC: 996311 (Accommodation)</div>
@@ -505,7 +505,7 @@ def get_printable_slip(booking_ref: str, db: Session = Depends(get_db)):
   </div>
 
   <div class="footer">
-    <p>Thank you for choosing Hotel Sai Vasudev Residency.</p>
+    <p>Thank you for choosing SRI SAI VASUDEV RESIDENCY.</p>
     <p>May Lord Sai bless your pilgrimage with peace and prosperity.</p>
     <p style="margin-top: 14px;">Guest Signature: ___________________________</p>
   </div>

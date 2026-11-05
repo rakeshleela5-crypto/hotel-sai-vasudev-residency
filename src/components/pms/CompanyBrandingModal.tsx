@@ -145,7 +145,7 @@ export const CompanyBrandingModal: React.FC<CompanyBrandingModalProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 18 }}>🏢</span>
             <span style={{ fontWeight: 800, fontSize: 14 }}>
-              HOTEL SAI VASUDEV RESIDENCY &bull; SETTINGS &amp; BRANDING SUITE
+              SRI SAI VASUDEV RESIDENCY &bull; SETTINGS &amp; BRANDING SUITE
             </span>
             <div
               style={{
@@ -456,7 +456,7 @@ export const CompanyBrandingModal: React.FC<CompanyBrandingModalProps> = ({
                     value={companyInfo.bankBranch || ''}
                     onChange={e => handleInfoChange('bankBranch', e.target.value)}
                     className="form-input-pms"
-                    placeholder="e.g. MAIN BRANCH SHIRDI"
+                    placeholder="e.g. RAYAGADA BRANCH"
                   />
                 </div>
               </div>

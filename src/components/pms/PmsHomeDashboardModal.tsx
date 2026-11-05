@@ -471,7 +471,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
       {/* Top Brand & Metadata Banner from Frame 0100 */}
       <div className="home-hub-header">
         <h1 className="hotel-hub-title">
-          HOTEL SAI VASUDEV RESIDENCY
+          HOTEL SRI SAI VASUDEV RESIDENCY
         </h1>
         <div className="hotel-hub-meta">
           <span>Hotel Dashboard Date: {currentTime}</span>
@@ -548,7 +548,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           <span style={{ fontSize: 20 }}>🏆</span>
           <div>
             <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.3px' }}>
-              Top 20 Enterprise Features | Hotel Sai Vasudev Residency ERP
+              Top 20 Enterprise Features | SRI SAI VASUDEV RESIDENCY ERP
             </div>
             <div style={{ fontSize: 11, fontWeight: 500, opacity: 0.9 }}>
               Anti-Theft Security &bull; Auto Dirty Status &bull; Instant Bill UPI QR &bull; Multi-Payment Splits &bull; Live Feature Showcase

@@ -60,7 +60,7 @@ export interface QueuedKotOrder {
 }
 
 // =========================================================================
-// Hotel Sai Vasudev Residency IndexedDB Database Class
+// SRI SAI VASUDEV RESIDENCY IndexedDB Database Class
 // =========================================================================
 
 export class HotelSaiVasudevDB extends Dexie {

@@ -349,7 +349,7 @@ export const DeviceResponsivePreviewModal: React.FC<DeviceResponsivePreviewModal
                     SAI VASUDEV
                   </div>
                   <div style={{ fontSize: '9px', color: '#38bdf8' }}>
-                    {currentProperty?.firmId || 'DEMO0004'} • {currentProperty?.location || 'Shirdi'}
+                    {currentProperty?.firmId || 'DEMO0004'} • {currentProperty?.location || 'Rayagada'}
                   </div>
                 </div>
               </div>

@@ -853,7 +853,7 @@ export const KitchenDashboardModal: React.FC<KitchenDashboardModalProps> = ({
                   KOT
                 </div>
                 <div style={{ fontSize: 13, fontWeight: 800, color: '#1e293b', marginTop: 2 }}>
-                  HOTEL SAI VASUDEV RESIDENCY
+                  HOTEL SRI SAI VASUDEV RESIDENCY
                 </div>
               </div>
 

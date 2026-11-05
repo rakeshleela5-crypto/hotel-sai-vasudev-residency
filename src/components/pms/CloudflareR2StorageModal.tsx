@@ -221,7 +221,7 @@ export const CloudflareR2StorageModal: React.FC<CloudflareR2StorageModalProps> =
                 </span>
               </div>
               <p style={{ margin: '2px 0 0', fontSize: 12, color: '#94a3b8' }}>
-                Secure, zero-egress cloud asset storage for Hotel Sai Vasudev Residency (Shirdi)
+                Secure, zero-egress cloud asset storage for SRI SAI VASUDEV RESIDENCY (Rayagada)
               </p>
             </div>
           </div>
@@ -605,7 +605,7 @@ export const CloudflareR2StorageModal: React.FC<CloudflareR2StorageModalProps> =
             Showing {filteredFiles.length} of {files.length} objects &bull; Cloudflare R2 Storage Bucket
           </div>
           <div>
-            HOTEL SAI VASUDEV RESIDENCY &bull; SHIRDI PMS STORAGE ENGINE
+            SRI SAI VASUDEV RESIDENCY &bull; RAYAGADA PMS STORAGE ENGINE
           </div>
         </div>
       </div>

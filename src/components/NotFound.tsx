@@ -83,7 +83,7 @@ export const NotFound: React.FC = () => {
         </h1>
 
         <div style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 600, marginBottom: '22px' }}>
-          HOTEL SAI VASUDEV RESIDENCY &bull; SHIRDI VIP ROAD
+          SRI SAI VASUDEV RESIDENCY &bull; RAYAGADA, ODISHA
         </div>
 
         <p
@@ -206,7 +206,7 @@ export const NotFound: React.FC = () => {
             color: '#64748b',
           }}
         >
-          24/7 Front Desk Hotline: +91 94402 89999 &bull; Shirdi VIP Road &bull; Near Sai Baba Temple
+          24/7 Front Desk Hotline: +91 94402 89999 &bull; Rayagada, Odisha &bull; SR Residency, Near Andhra Bank
         </div>
       </div>
     </div>

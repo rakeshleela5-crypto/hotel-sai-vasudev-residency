@@ -147,7 +147,7 @@ export const PartyLedgerModal: React.FC<PartyLedgerModalProps> = ({
                   </div>
                   <div>
                     <h1 style={{ margin: 0, fontSize: 18, fontWeight: 800, letterSpacing: 0.5, color: '#0f172a' }}>
-                      {companyInfo.firmName || 'HOTEL SAI VASUDEV RESIDENCY'}
+                      {companyInfo.firmName || 'HOTEL SRI SAI VASUDEV RESIDENCY'}
                     </h1>
                     <div style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>
                       {companyInfo.address1 || 'NEAR RAILWAY STATION, MAIN ROAD, BILASPUR CHHATTISGARH 495220'}

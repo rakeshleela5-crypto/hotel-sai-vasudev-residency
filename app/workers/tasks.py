@@ -47,7 +47,7 @@ def build_minimal_gst_invoice_pdf(
     booking_ref: str,
     room_no: str = "101"
 ) -> bytes:
-    """Generates a valid, lightweight GST Tax Invoice PDF binary stream for Hotel Sai Vasudev Residency."""
+    """Generates a valid, lightweight GST Tax Invoice PDF binary stream for SRI SAI VASUDEV RESIDENCY."""
     clean_inv = str(invoice_no).replace("(", "").replace(")", "")
     clean_guest = str(guest_name).replace("(", "").replace(")", "")
     clean_ref = str(booking_ref).replace("(", "").replace(")", "")
@@ -63,7 +63,7 @@ def build_minimal_gst_invoice_pdf(
         f"BT\n"
         f"/F1 16 Tf\n"
         f"50 740 Td\n"
-        f"(HOTEL SAI VASUDEV RESIDENCY - GST TAX INVOICE) Tj\n"
+        f"(SRI SAI VASUDEV RESIDENCY - GST TAX INVOICE) Tj\n"
         f"/F1 11 Tf\n"
         f"0 -28 Td\n"
         f"(Invoice Number: {clean_inv}) Tj\n"

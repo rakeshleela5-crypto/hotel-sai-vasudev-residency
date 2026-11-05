@@ -180,7 +180,7 @@ export const StaffPasswordResetModal: React.FC<StaffPasswordResetModalProps> = (
                 Reset Staff Password
               </h3>
               <p style={{ margin: 0, fontSize: '11px', color: '#94a3b8' }}>
-                Admin &amp; Manager Security Controls • Hotel Sai Vasudev Residency
+                Admin &amp; Manager Security Controls • SRI SAI VASUDEV RESIDENCY
               </p>
             </div>
           </div>

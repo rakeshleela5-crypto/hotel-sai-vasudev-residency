@@ -16,7 +16,7 @@ const API_BASE_URL = CLIENT_API_BASE_URL;
 // Wrap global fetch to automatically enforce UUIDv4 Idempotency Keys (#1), JWT refresh rotation (#47), and 409 handling (#25)
 const fetch = apiClient.fetch;
 
-// Official 18-Room Inventory for Hotel Sai Vasudev Residency (Shirdi)
+// Official 18-Room Inventory for Sri Sai Vasudev Residency (Rayagada)
 // Tariffs listed are INCLUSIVE of GST per the property specification sheets
 const FALLBACK_ROOMS: Room[] = [
   {

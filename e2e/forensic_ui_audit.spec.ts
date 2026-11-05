@@ -2,7 +2,7 @@ import { test, expect, Page } from '@playwright/test';
 
 /**
  * FORENSIC LIVE UI AUDIT & COMPLETE OPERATIONAL WORKFLOW TEST SUITE
- * Hotel Sai Vasudev Residency (Shirdi)
+ * SRI SAI VASUDEV RESIDENCY (Rayagada, Odisha)
  *
  * Requirements:
  * 1. Full Operational Workflow:
@@ -275,7 +275,7 @@ test.describe('Phase 5: Forensic UI Live Audit & End-to-End Operational Lifecycl
     await fileInput.setInputFiles({
       name: 'guest_aadhaar_kyc_svr.pdf',
       mimeType: 'application/pdf',
-      buffer: Buffer.from('%PDF-1.4 Mock Aadhaar KYC Document for Hotel Sai Vasudev Residency Shirdi')
+      buffer: Buffer.from('%PDF-1.4 Mock Aadhaar KYC Document for SRI SAI VASUDEV RESIDENCY Rayagada')
     });
 
     // Verify confirmation message
@@ -311,7 +311,7 @@ test.describe('Phase 5: Forensic UI Live Audit & End-to-End Operational Lifecycl
     // Coming From city (placeholder: 'e.g. Hyderabad / Mumbai')
     await page.locator('input[placeholder*="Hyderabad"]').fill('Mumbai');
     // Proceeding To (placeholder: 'e.g. Shani Shingnapur')
-    await page.locator('input[placeholder*="Shani"]').fill('Shirdi');
+    await page.locator('input[placeholder*="Shani"]').fill('Rayagada');
 
     // Submit check-in
     const saveCheckInBtn = page.locator('#save-room-checkin-btn');
@@ -480,7 +480,7 @@ test.describe('Phase 5: Forensic UI Live Audit & End-to-End Operational Lifecycl
       { name: 'Housekeeping Kanban', selector: 'button.pms-header-btn:has-text("Housekeeping")' },
       { name: 'Petty Cash & Audit', selector: 'button.pms-header-btn:has-text("Cash & Night Audit")' },
       { name: 'Cloudflare R2 Explorer', selector: 'button.pms-header-btn:has-text("Cloudflare R2")' },
-      { name: 'Chain Property Switcher', selector: 'button.pms-header-btn:has-text("Shirdi (Main)")' },
+      { name: 'Chain Property Switcher', selector: 'button.pms-header-btn:has-text("Main")' },
       { name: 'WhatsApp Gateway Setting', selector: 'button.pms-header-btn:has-text("WhatsApp Active")' },
       { name: 'Hybrid Sync Architecture', selector: 'button.pms-header-btn:has-text("Hybrid Sync")' },
       { name: 'Top 20 Features Matrix', selector: 'button.pms-header-btn:has-text("Top 20 Features")' },

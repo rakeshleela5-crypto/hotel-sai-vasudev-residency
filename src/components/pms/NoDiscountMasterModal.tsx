@@ -693,7 +693,7 @@ export const NoDiscountMasterModal: React.FC<NoDiscountMasterModalProps> = ({
           }}
         >
           <div style={{ color: '#94a3b8' }}>
-            <span>Hotel Sai Vasudev Residency &bull; Price Integrity &bull; Margin Protection</span>
+            <span>Hotel SRI SAI VASUDEV RESIDENCY &bull; Price Integrity &bull; Margin Protection</span>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
             {onOpenFoodBill && (

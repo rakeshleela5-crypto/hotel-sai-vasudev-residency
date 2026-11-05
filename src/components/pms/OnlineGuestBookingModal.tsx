@@ -88,9 +88,9 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
     { name: 'vinod kumar jain', city: 'jabalpur', state: 'madhya pradesh', mobile: '78657656754' },
     { name: 'hariom gautam ji', city: 'jabalpur', state: 'madhya pradesh', mobile: '76675763433' },
     { name: 'vikash sharma', city: 'delhi', state: 'delhi', mobile: '8872757274' },
-    { name: 'anupam ji', city: 'nagpur', state: 'maharashtra', mobile: '65448987' },
+    { name: 'anupam ji', city: 'Rayagada', state: 'Odisha', mobile: '65448987' },
     { name: 'RAM KISHOR', city: 'indore', state: 'madhya pradesh', mobile: '9827011223' },
-    { name: 'ADITI MEHNDIRATTA', city: 'pune', state: 'maharashtra', mobile: '9823456789' }
+    { name: 'ADITI MEHNDIRATTA', city: 'Bhubaneswar', state: 'Odisha', mobile: '9823456789' }
   ];
 
   // Refresh available rooms whenever dates change (Video 20 core feature [06:25 - 07:35])
@@ -240,7 +240,7 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
   };
 
   const handleShareWhatsApp = (b: PmsBooking) => {
-    const msg = `Namaste ${b.guestName} ji! Greetings from HOTEL SAI VASUDEV RESIDENCY, Shirdi.\n\nYour Online Reservation Slip:\nBooking No: ${b.bookingNo}\nRoom No: ${b.rooms[0]?.roomNo} (${b.rooms[0]?.roomType})\nDates: ${b.checkInDate} to ${b.checkOutDate} (${b.numberOfDays} Nights)\nTariff: Rs. ${b.totalAmount}\nAdvance Received: Rs. ${b.bookingAmount}\n\nOur team will confirm your reservation shortly. Shirdi Temple assistance available. Helpline: +91 9822000000.`;
+    const msg = `Namaste ${b.guestName} ji! Greetings from SRI SAI VASUDEV RESIDENCY, Rayagada, Odisha.\n\nYour Online Reservation Slip:\nBooking No: ${b.bookingNo}\nRoom No: ${b.rooms[0]?.roomNo} (${b.rooms[0]?.roomType})\nDates: ${b.checkInDate} to ${b.checkOutDate} (${b.numberOfDays} Nights)\nTariff: Rs. ${b.totalAmount}\nAdvance Received: Rs. ${b.bookingAmount}\n\nOur team will confirm your reservation shortly. Majhigouri Temple and local travel assistance available. Helpline: +91 94402 89999.`;
     PmsStore.sendWhatsAppNotification({
       voucherType: 'Booking Confirmation',
       recipientMobile: b.mobile,
@@ -283,7 +283,7 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ fontSize: 16 }}>🌐</span>
             <span style={{ fontWeight: 800, fontSize: 13, letterSpacing: 0.5 }}>
-              HOTEL SAI VASUDEV RESIDENCY &bull; ONLINE GUEST BOOKING ENGINE
+              HOTEL SRI SAI VASUDEV RESIDENCY &bull; ONLINE GUEST BOOKING ENGINE
             </span>
             <span style={{ 
               background: '#0284c7', 
@@ -405,10 +405,10 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
                   <span style={{ fontSize: 28 }}>🪷</span>
                   <div>
                     <h2 style={{ margin: 0, fontSize: 18, fontWeight: 900, color: '#0f172a' }}>
-                      HOTEL SAI VASUDEV RESIDENCY
+                      HOTEL SRI SAI VASUDEV RESIDENCY
                     </h2>
                     <div style={{ fontSize: 11, color: '#64748b' }}>
-                      Shirdi Divine Sanctuary &bull; Pure Veg Hospitality
+                      Rayagada Boutique Sanctuary &bull; Pure Veg Hospitality
                     </div>
                   </div>
                 </div>
@@ -1139,7 +1139,7 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
                         marginTop: 4
                       }}>
                         <div style={{ fontSize: 11, color: '#475569', lineHeight: 1.4 }}>
-                          <div><strong>Bank:</strong> HDFC Bank / SBI Shirdi</div>
+                          <div><strong>Bank:</strong> STATE BANK OF INDIA / Rayagada</div>
                           <div><strong>A/C No:</strong> 50200087654321</div>
                           <div><strong>IFSC:</strong> HDFC0001234</div>
                         </div>
@@ -1231,8 +1231,8 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
                   <div style={{ fontSize: 12, color: '#065f46', lineHeight: 1.6 }}>
                     <div><strong>Guest Name:</strong> {savedBooking.guestName}</div>
                     <div><strong>Add:</strong> {savedBooking.addressLine1 || 'Main Road'} {savedBooking.addressLine2}</div>
-                    <div><strong>city:</strong> {savedBooking.city || 'Shirdi'}</div>
-                    <div><strong>State:</strong> {savedBooking.state || 'Maharashtra'}</div>
+                    <div><strong>city:</strong> {savedBooking.city || 'Rayagada'}</div>
+                    <div><strong>State:</strong> {savedBooking.state || 'Odisha'}</div>
                     <div><strong>Mob:</strong> {savedBooking.mobile}</div>
                     <div><strong>Email:</strong> {savedBooking.email || 'N/A'}</div>
                   </div>
@@ -1329,14 +1329,14 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
                     <div><strong>Bank Name:</strong> STATE BANK OF INDIA / HDFC BANK</div>
                     <div><strong>Bank A/C No:</strong> 50200087654321</div>
                     <div><strong>Bank IFSC:</strong> SBIN0001234 / HDFC0001234</div>
-                    <div><strong>Bank Branch:</strong> Shirdi Temple Road, Rahata</div>
+                    <div><strong>Bank Branch:</strong> RAYAGADA BRANCH</div>
                   </div>
                 </div>
 
                 {/* Right Stamp & QR Code */}
                 <div style={{ padding: 14, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                   <div style={{ fontSize: 12, fontWeight: 900, color: '#0f172a', marginBottom: 8 }}>
-                    For HOTEL SAI VASUDEV RESIDENCY
+                    For HOTEL SRI SAI VASUDEV RESIDENCY
                   </div>
                   <div style={{
                     width: 70,

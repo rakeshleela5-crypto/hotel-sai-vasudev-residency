@@ -110,7 +110,7 @@ export const PaymentRegisterModal: React.FC<PaymentRegisterModalProps> = ({
                   PAYMENT REGISTER &amp; OUTFLOWS
                 </h2>
                 <div className="pms-reg-header-sub">
-                  pms.hotelsai-vasudev.com/payments &bull; <span className="gold">HOTEL SAI VASUDEV RESIDENCY</span> &bull; Vendor Payouts, Commissions &amp; Expenses
+                  pms.hotelsai-vasudev.com/payments &bull; <span className="gold">SRI SAI VASUDEV RESIDENCY</span> &bull; Vendor Payouts, Commissions &amp; Expenses
                 </div>
               </div>
             </div>

@@ -548,7 +548,7 @@ export const NcKotRegisterModal: React.FC<NcKotRegisterModalProps> = ({
           >
             <div style={{ textAlign: 'center', borderBottom: '1px dashed #ca8a04', paddingBottom: 10 }}>
               <h3 style={{ margin: 0, fontSize: 16 }}>*** NC KOT SLIP ***</h3>
-              <p style={{ margin: '4px 0 0', fontSize: 12 }}>HOTEL SAI VASUDEV RESIDENCY</p>
+              <p style={{ margin: '4px 0 0', fontSize: 12 }}>HOTEL SRI SAI VASUDEV RESIDENCY</p>
               <p style={{ margin: '2px 0 0', fontSize: 11, fontWeight: 700, color: '#b91c1c' }}>
                 NON-CHARGEABLE ORDER
               </p>

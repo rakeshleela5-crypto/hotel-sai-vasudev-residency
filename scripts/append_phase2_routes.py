@@ -184,14 +184,14 @@ def get_company_info(db: Session = Depends(get_db)):
     info = db.query(models.HotelCompanyInfo).first()
     if not info:
         return {
-            "propertyName": "Hotel Sai Vasudev Residency",
-            "address": "Opp. Shirdi Sai Baba Temple, Shirdi",
-            "city": "Shirdi",
-            "state": "Maharashtra",
-            "pincode": "423109",
+            "propertyName": "SRI SAI VASUDEV RESIDENCY",
+            "address": "SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY",
+            "city": "Rayagada",
+            "state": "Odisha",
+            "pincode": "765001",
             "phone": "+91 94402 89999",
             "email": "stay@saivasudevresidency.com",
-            "gstin": "27AABCS1234F1Z5",
+            "gstin": "21AEKPP8689J1ZS",
             "logoUrl": "",
             "sealUrl": "",
             "defaultBillFormat": "standard"

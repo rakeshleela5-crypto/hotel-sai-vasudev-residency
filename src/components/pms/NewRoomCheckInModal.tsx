@@ -256,7 +256,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
   const [addressLine1, setAddressLine1] = useState('');
   const [addressLine2, setAddressLine2] = useState('');
   const [city, setCity] = useState('');
-  const [state, setState] = useState('Maharashtra');
+  const [state, setState] = useState('Odisha');
   const [country] = useState('India');
   const [pinCode, setPinCode] = useState('');
   const [nationality, setNationality] = useState('India');
@@ -354,7 +354,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
       setGuestName(b.guestName);
       setMobile(b.mobile);
       setCity(b.city || '');
-      setState(b.state || 'Maharashtra');
+      setState(b.state || 'Odisha');
       setPinCode(b.pinCode || '');
       setDocumentName(b.documentName || 'Aadhaar Card');
       setDocumentNo(b.documentNo || '');
@@ -469,7 +469,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
       const cleanGst = gstNo.trim().toUpperCase();
       const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
       if (!gstRegex.test(cleanGst) && cleanGst.length !== 15) {
-        alert(`Invalid GSTIN "${gstNo}". Indian B2B Tax Invoices require a 15-character valid GSTIN (e.g. 27AAAAA0000A1Z5).`);
+        alert(`Invalid GSTIN "${gstNo}". Indian B2B Tax Invoices require a 15-character valid GSTIN (e.g. 21AEKPP8689J1ZS).`);
         return;
       }
     }
@@ -487,7 +487,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
       addressLine1,
       addressLine2,
       city: city.trim() || 'Renukot',
-      state: state.trim() || 'Maharashtra',
+      state: state.trim() || 'Odisha',
       country,
       pinCode,
       nationality,
@@ -552,7 +552,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
       id_proof_type: documentName || 'Aadhaar Card',
       id_proof_number: documentNo.trim() || 'VERIFIED_AT_DESK',
       permanent_address: `${addressLine1} ${city} ${state} ${pinCode}`.trim() || 'Not Provided',
-      origin_city: comingFrom.trim() || 'Shirdi',
+      origin_city: comingFrom.trim() || 'Rayagada',
       next_destination: goingTo.trim() || 'Home',
       purpose_of_visit: purposeOfVisit || 'Temple Darshan',
       vehicle_number: undefined,
@@ -736,7 +736,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      const reason = prompt('Enter Supervisor Override Authorization Note (e.g., Quick Darshan inspection passed):', 'Supervisor inspected - Guest arrived early for Shirdi Darshan');
+                      const reason = prompt('Enter Supervisor Override Authorization Note (e.g., Quick visit inspection passed):', 'Supervisor inspected - Guest arrived early for business visit');
                       if (reason) {
                         setSupervisorOverride(true);
                         setOverrideReason(reason);
@@ -1262,7 +1262,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                   </div>
                   <div className="form-group-pms">
                     <label className="form-label-pms">State</label>
-                    <input type="text" placeholder="Maharashtra" value={state} onChange={e => setState(e.target.value)} className="form-input-pms" />
+                    <input type="text" placeholder="Odisha" value={state} onChange={e => setState(e.target.value)} className="form-input-pms" />
                   </div>
                   <div className="form-group-pms">
                     <label className="form-label-pms">Country</label>

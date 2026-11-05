@@ -170,13 +170,13 @@ export const GstReportsModal: React.FC<GstReportsModalProps> = ({
     const message = 
       `*GST Tax Return Summary - ${companyInfo.firmName}*\n` +
       `*Report Period:* ${fromDate} to ${toDate}\n` +
-      `*GSTIN:* ${companyInfo.gstNo || '27AABCU9603R1ZX'}\n\n` +
+      `*GSTIN:* ${companyInfo.gstNo || '21AEKPP8689J1ZS'}\n\n` +
       `*1. B2B Sales (Registered):* ₹${b2bTotals.invoiceValue.toFixed(2)} (Taxable: ₹${b2bTotals.taxableValue.toFixed(2)})\n` +
       `*2. B2C Sales (Unregistered):* Taxable ₹${b2cTotals.taxableValue.toFixed(2)}\n` +
       `*3. Total Tax Liability:* CGST: ₹${consolidatedTotals.cgst.toFixed(2)} | SGST: ₹${consolidatedTotals.sgst.toFixed(2)} | IGST: ₹${consolidatedTotals.igst.toFixed(2)}\n` +
       `*Total Tax Payable:* ₹${consolidatedTotals.totalGst.toFixed(2)}\n` +
       `*Total Turnover (Gross):* ₹${consolidatedTotals.billAmount.toFixed(2)}\n\n` +
-      `_Generated via Hotel Sai Vasudev Residency ERP. Please file GSTR-1 and GSTR-3B accordingly._`;
+      `_Generated via SRI SAI VASUDEV RESIDENCY ERP. Please file GSTR-1 and GSTR-3B accordingly._`;
 
     const cleanMobile = caMobile.replace(/\D/g, '');
     const mobileWithCode = cleanMobile.length === 10 ? `91${cleanMobile}` : cleanMobile;

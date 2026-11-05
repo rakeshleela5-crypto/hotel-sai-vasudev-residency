@@ -70,9 +70,9 @@ export const ChainPropertyModal: React.FC<ChainPropertyModalProps> = ({
     setEditingProp(null);
     const newId = `SVR000${properties.length + 1}`;
     setFormFirmId(newId);
-    setFormFirmName('HOTEL SAI VASUDEV RESIDENCY');
+    setFormFirmName('SRI SAI VASUDEV RESIDENCY');
     setFormLocation('Mumbai Highway Branch');
-    setFormAddress('Near Sai Teerth, Shirdi, Maharashtra - 423109');
+    setFormAddress('SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY, Rayagada, Odisha - 765001');
     setFormPhone('+91 98765 43210');
     setFormEmail('residency@saivasudev.com');
     setFormGstin('27AAACH1234F1Z8');
@@ -812,7 +812,7 @@ export const ChainPropertyModal: React.FC<ChainPropertyModalProps> = ({
 
                   <div>
                     <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
-                      Branch Location * (e.g. Pune / Shirdi)
+                      Branch Location * (e.g. Rayagada / Koraput)
                     </label>
                     <input
                       type="text"

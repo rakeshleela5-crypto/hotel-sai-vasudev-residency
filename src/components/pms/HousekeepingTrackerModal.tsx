@@ -122,7 +122,7 @@ export const HousekeepingTrackerModal: React.FC<HousekeepingTrackerModalProps> =
             <div>
               <h3 id="hk-modal-title" style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>Housekeeping, Linen &amp; Room Maintenance Tracker</h3>
               <p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>
-                Hotel Sai Vasudev Residency &bull; 16 Rooms Real-Time Cleanliness Board &bull; Shirdi
+                SRI SAI VASUDEV RESIDENCY &bull; 16 Rooms Real-Time Cleanliness Board &bull; Rayagada
               </p>
             </div>
           </div>

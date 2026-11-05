@@ -109,7 +109,7 @@ def _generate_fallback_sql_dump() -> bytes:
     db = SessionLocal()
     try:
         sql_lines = [
-            "-- Hotel Sai Vasudev Residency Database SQL Dump (Fallback)",
+            "-- SRI SAI VASUDEV RESIDENCY Database SQL Dump (Fallback)",
             f"-- Generated: {datetime.datetime.now(datetime.timezone.utc).isoformat()}",
             f"-- Engine: {engine.url.drivername}",
             "BEGIN TRANSACTION;\n"
@@ -252,7 +252,7 @@ async def run_postgres_backup_to_r2(retention_days: int = 30) -> Dict[str, Any]:
                         ContentType="application/gzip",
                         Metadata={
                             "created_at": now_utc.isoformat(),
-                            "app": "Hotel Sai Vasudev Residency",
+                            "app": "SRI SAI VASUDEV RESIDENCY",
                             "retention_days": str(retention_days)
                         }
                     )

@@ -60,9 +60,9 @@ export const TermsAndConditions: React.FC = () => {
             </div>
             <div>
               <div style={{ fontWeight: 800, fontSize: '15px', color: '#fae084', letterSpacing: '0.5px' }}>
-                HOTEL SAI VASUDEV RESIDENCY
+                SRI SAI VASUDEV RESIDENCY
               </div>
-              <div style={{ fontSize: '10px', color: '#94a3b8' }}>SHIRDI VIP ROAD • DIVINE HOSPITALITY</div>
+              <div style={{ fontSize: '10px', color: '#94a3b8' }}>RAYAGADA, ODISHA • DIVINE HOSPITALITY</div>
             </div>
           </div>
 
@@ -125,7 +125,7 @@ export const TermsAndConditions: React.FC = () => {
             Terms &amp; Conditions of Stay
           </h1>
           <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>
-            Effective Date: April 1, 2026 &bull; Hotel Sai Vasudev Residency, Shirdi
+            Effective Date: April 1, 2026 &bull; Sri Sai Vasudev Residency, Rayagada, Odisha
           </p>
         </div>
 
@@ -154,7 +154,7 @@ export const TermsAndConditions: React.FC = () => {
             2. Mandatory Guest KYC Verification
           </h2>
           <p style={{ fontSize: '14px', color: '#cbd5e1' }}>
-            In strict compliance with directives from the Maharashtra Police Department and Shirdi Local Administration:
+            In strict compliance with directives from the Odisha Police Department and Rayagada District Administration:
           </p>
           <ul style={{ fontSize: '14px', color: '#cbd5e1', paddingLeft: 24, marginTop: 8 }}>
             <li>Every adult occupant must present an original, valid government-issued photo ID (Aadhaar Card, Passport, Voter ID, or Driving License).</li>
@@ -222,7 +222,7 @@ export const TermsAndConditions: React.FC = () => {
           <ul style={{ fontSize: '14px', color: '#cbd5e1', paddingLeft: 24, margin: 0 }}>
             <li>All rooms and public corridors are strictly non-smoking zones. A sanitization fee of ₹2,500 applies for smoking inside guest rooms.</li>
             <li>Consuming narcotics or illegal substances is strictly prohibited and subject to immediate police reporting.</li>
-            <li>To preserve the divine pilgrimage atmosphere of Shirdi, loud music, rowdy behavior, or disturbances after 10:00 PM IST are prohibited.</li>
+            <li>To preserve the peaceful and divine atmosphere of Rayagada, loud music, rowdy behavior, or disturbances after 10:00 PM IST are prohibited.</li>
             <li>Non-registered external visitors are not permitted in guest rooms between 10:00 PM and 07:00 AM IST.</li>
           </ul>
         </section>
@@ -234,7 +234,7 @@ export const TermsAndConditions: React.FC = () => {
           </h2>
           <p style={{ fontSize: '14px', color: '#cbd5e1' }}>
             Any disputes, legal claims, or arbitration arising from reservations, stays, or billing shall be governed strictly by Indian Law
-            under the exclusive jurisdiction of the competent courts in Rahata / Ahmednagar District, Maharashtra, India.
+            under the exclusive jurisdiction of the competent courts in Rayagada District, Odisha, India.
           </p>
         </section>
       </main>

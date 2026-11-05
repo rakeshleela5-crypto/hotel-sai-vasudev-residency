@@ -97,7 +97,7 @@ export const CompanyInfoModal: React.FC<CompanyInfoModalProps> = ({
           <div className="pms-header-left">
             <span style={{ fontSize: 16 }}>🏢</span>
             <h2 className="pms-brand-title" style={{ fontSize: 14 }}>
-              HOTEL SAI VASUDEV RESIDENCY &bull; COMPANY / FIRM / BUSINESS DETAILS (/company_info_form)
+              SRI SAI VASUDEV RESIDENCY &bull; COMPANY / FIRM / BUSINESS DETAILS (/company_info_form)
             </h2>
           </div>
           <div className="pms-header-right">

@@ -1,5 +1,5 @@
 /**
- * Validation and Date Utilities for Hotel Sai Vasudev Residency
+ * Validation and Date Utilities for SRI SAI VASUDEV RESIDENCY
  * Strictly compliant with IST timezone, Indian mobile number formats, and hotel math.
  */
 

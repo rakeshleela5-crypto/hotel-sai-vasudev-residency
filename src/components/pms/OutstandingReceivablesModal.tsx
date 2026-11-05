@@ -63,7 +63,7 @@ export const OutstandingReceivablesModal: React.FC<OutstandingReceivablesModalPr
                   {activeMode === 'receivable' ? 'OUTSTANDING RECEIVABLES REPORT (DEBTORS)' : 'OUTSTANDING PAYABLES REPORT (CREDITORS)'}
                 </h2>
                 <div className="pms-reg-header-sub">
-                  pms.hotelsai-vasudev.com &bull; <span className="gold">HOTEL SAI VASUDEV RESIDENCY</span> &bull; {activeMode === 'receivable' ? 'Receivables Ledger & Aging' : 'Payables Ledger'}
+                  pms.hotelsai-vasudev.com &bull; <span className="gold">HOTEL SRI SAI VASUDEV RESIDENCY</span> &bull; {activeMode === 'receivable' ? 'Receivables Ledger & Aging' : 'Payables Ledger'}
                 </div>
               </div>
             </div>
@@ -238,7 +238,7 @@ export const OutstandingReceivablesModal: React.FC<OutstandingReceivablesModalPr
 
           {/* Footer note */}
           <div className="px-6 py-2.5 bg-gray-50 border-t border-gray-200 flex items-center justify-between text-[11px] text-gray-500 shrink-0">
-            <span>Hotel Sai Vasudev Residency ERP &bull; Receivables &amp; Payables Master</span>
+            <span>Hotel SRI SAI VASUDEV RESIDENCY ERP &bull; Receivables &amp; Payables Master</span>
             <button
               type="button"
               onClick={onClose}

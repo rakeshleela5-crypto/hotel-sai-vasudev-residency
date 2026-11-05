@@ -210,7 +210,7 @@ export const DecentroUpiQrModal: React.FC<DecentroUpiQrModalProps> = ({
       <!DOCTYPE html>
       <html>
         <head>
-          <title>UPI QR Thermal Slip - Hotel Sai Vasudev Residency</title>
+          <title>UPI QR Thermal Slip - SRI SAI VASUDEV RESIDENCY</title>
           <style>
             @page { size: 80mm auto; margin: 0; }
             body {
@@ -232,7 +232,7 @@ export const DecentroUpiQrModal: React.FC<DecentroUpiQrModalProps> = ({
           </style>
         </head>
         <body>
-          <div class="title">HOTEL SAI VASUDEV RESIDENCY</div>
+          <div class="title">SRI SAI VASUDEV RESIDENCY</div>
           <div class="subtitle">Near Andhra Bank, New Colony, Rayagada, Odisha - 765001</div>
           <div class="subtitle">GSTIN: 21AEKPP8689J1ZS</div>
           <div class="divider"></div>

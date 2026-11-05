@@ -60,9 +60,9 @@ export const PrivacyPolicy: React.FC = () => {
             </div>
             <div>
               <div style={{ fontWeight: 800, fontSize: '15px', color: '#fae084', letterSpacing: '0.5px' }}>
-                HOTEL SAI VASUDEV RESIDENCY
+                SRI SAI VASUDEV RESIDENCY
               </div>
-              <div style={{ fontSize: '10px', color: '#94a3b8' }}>SHIRDI VIP ROAD • DIVINE HOSPITALITY</div>
+              <div style={{ fontSize: '10px', color: '#94a3b8' }}>RAYAGADA, ODISHA • DIVINE HOSPITALITY</div>
             </div>
           </div>
 
@@ -125,7 +125,7 @@ export const PrivacyPolicy: React.FC = () => {
             Privacy Policy &amp; Guest Data Protection
           </h1>
           <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>
-            Effective Date: April 1, 2026 &bull; Hotel Sai Vasudev Residency, Shirdi
+            Effective Date: April 1, 2026 &bull; Sri Sai Vasudev Residency, Rayagada, Odisha
           </p>
         </div>
 
@@ -135,8 +135,7 @@ export const PrivacyPolicy: React.FC = () => {
             1. Hotel Identity &amp; Commitment to Guest Privacy
           </h2>
           <p style={{ fontSize: '14px', color: '#cbd5e1' }}>
-            Hotel Sai Vasudev Residency (&ldquo;we&rdquo;, &ldquo;our&rdquo;, or &ldquo;the Hotel&rdquo;), located on VIP Road, Shirdi,
-            Maharashtra 423109, is dedicated to protecting the privacy, security, and confidentiality of our pilgrimage guests,
+            Sri Sai Vasudev Residency (&ldquo;we&rdquo;, &ldquo;our&rdquo;, or &ldquo;the Hotel&rdquo;), owned and operated by PAIDISETTY MANMADHA RAO (Proprietorship), located at SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY, Rayagada, Odisha - 765001 (GSTIN: 21AEKPP8689J1ZS), is dedicated to protecting the privacy, security, and confidentiality of our pilgrimage guests,
             corporate clients, and restaurant patrons. This policy details how personal data, statutory identity documents, and payment details
             are processed under Indian Information Technology laws and local hospitality police regulations.
           </p>
@@ -148,8 +147,8 @@ export const PrivacyPolicy: React.FC = () => {
             2. Guest KYC Document Storage &amp; Police C-Form Compliance
           </h2>
           <p style={{ fontSize: '14px', color: '#cbd5e1' }}>
-            Under Maharashtra Police Regulations and the Bureau of Immigration (Ministry of Home Affairs), every hospitality property
-            in Shirdi is legally required to verify and maintain the identity proof of all arriving guests.
+            Under Odisha Police Regulations and the Bureau of Immigration (Ministry of Home Affairs), every hospitality property
+            in Rayagada is legally required to verify and maintain the identity proof of all arriving guests.
           </p>
           <ul style={{ fontSize: '14px', color: '#cbd5e1', paddingLeft: 24, marginTop: 8 }}>
             <li>
@@ -178,7 +177,7 @@ export const PrivacyPolicy: React.FC = () => {
           </p>
           <ul style={{ fontSize: '14px', color: '#cbd5e1', paddingLeft: 24, marginTop: 8 }}>
             <li>
-              <strong>Zero Storage of Sensitive Credentials:</strong> Hotel Sai Vasudev Residency never sees, collects, or stores guest UPI PINs,
+              <strong>Zero Storage of Sensitive Credentials:</strong> Sri Sai Vasudev Residency never sees, collects, or stores guest UPI PINs,
               debit/credit card CVV numbers, or net banking passwords.
             </li>
             <li>
@@ -239,8 +238,9 @@ export const PrivacyPolicy: React.FC = () => {
               marginTop: 10,
             }}
           >
-            <div><strong>General Manager:</strong> Hotel Sai Vasudev Residency</div>
-            <div><strong>Address:</strong> VIP Road, Shirdi, Taluka Rahata, District Ahmednagar, Maharashtra 423109</div>
+            <div><strong>Proprietor:</strong> PAIDISETTY MANMADHA RAO (Sri Sai Vasudev Residency)</div>
+            <div><strong>Address:</strong> SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY, Rayagada, Odisha - 765001</div>
+            <div><strong>GSTIN:</strong> 21AEKPP8689J1ZS</div>
             <div><strong>24/7 Telephone:</strong> +91 94402 89999</div>
             <div><strong>Official Email:</strong> privacy@hotelsai-vasudev.com</div>
           </div>

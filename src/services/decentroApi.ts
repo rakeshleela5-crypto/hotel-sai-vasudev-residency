@@ -249,7 +249,7 @@ export const decentroApi = {
         <rect x="110" y="40" width="60" height="15" fill="#0f172a"/>
         <rect x="90" y="100" width="100" height="80" fill="#0f172a" rx="6"/>
         <rect x="98" y="108" width="84" height="64" fill="#ffffff" rx="4"/>
-        <text x="140" y="135" font-family="Arial,sans-serif" font-size="10" font-weight="900" fill="#0284c7" text-anchor="middle">HOTEL SAI VASUDEV</text>
+        <text x="140" y="135" font-family="Arial,sans-serif" font-size="10" font-weight="900" fill="#0284c7" text-anchor="middle">SRI SAI VASUDEV</text>
         <text x="140" y="152" font-family="Arial,sans-serif" font-size="11" font-weight="800" fill="#0f172a" text-anchor="middle">INR ${payload.amount.toFixed(2)}</text>
         <circle cx="140" cy="225" r="16" fill="#0284c7"/>
       </svg>`;

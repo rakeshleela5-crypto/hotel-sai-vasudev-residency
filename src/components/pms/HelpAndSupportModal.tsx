@@ -50,7 +50,7 @@ export const HelpAndSupportModal: React.FC<HelpAndSupportModalProps> = ({
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   // Demo Request Form State
-  const [demoHotelName, setDemoHotelName] = useState<string>('HOTEL SAI VASUDEV RESIDENCY');
+  const [demoHotelName, setDemoHotelName] = useState<string>('HOTEL SRI SAI VASUDEV RESIDENCY');
   const [demoContactPerson, setDemoContactPerson] = useState<string>('Rakesh Sharma');
   const [demoPhone, setDemoPhone] = useState<string>('9822000000');
   const [demoWhatsapp, setDemoWhatsapp] = useState<string>('9822000000');
@@ -58,8 +58,8 @@ export const HelpAndSupportModal: React.FC<HelpAndSupportModalProps> = ({
   const [demoPropertyType, setDemoPropertyType] = useState<PmsDemoRequest['propertyType']>('Hotel');
   const [demoRoomCount, setDemoRoomCount] = useState<number>(54);
   const [demoHasRestaurant, setDemoHasRestaurant] = useState<boolean>(true);
-  const [demoCity, setDemoCity] = useState<string>('Shirdi');
-  const [demoState, setDemoState] = useState<string>('Maharashtra');
+  const [demoCity, setDemoCity] = useState<string>('Rayagada');
+  const [demoState, setDemoState] = useState<string>('Odisha');
   const [demoPreferredDate, setDemoPreferredDate] = useState<string>('2025-07-22');
   const [demoNotes, setDemoNotes] = useState<string>('Requesting live demo for multi-user mobile KOT and Night Audit setup.');
   const [demoSuccessMsg, setDemoSuccessMsg] = useState<string>('');
@@ -126,7 +126,7 @@ export const HelpAndSupportModal: React.FC<HelpAndSupportModalProps> = ({
     
     // Open WhatsApp inquiry
     const waText = encodeURIComponent(
-      `Hello! I would like to request technical assistance or setup for Hotel Sai Vasudev Residency ERP.\n\n` +
+      `Hello! I would like to request technical assistance or setup for SRI SAI VASUDEV RESIDENCY ERP.\n\n` +
       `Property: ${demoHotelName}\n` +
       `Contact Person: ${demoContactPerson}\n` +
       `Phone: ${demoPhone}\n` +
@@ -1728,7 +1728,7 @@ export const HelpAndSupportModal: React.FC<HelpAndSupportModalProps> = ({
             Copyright &copy; Hansin IT Services 2024-26 | Privacy Policy &bull; Terms &amp; Conditions
           </div>
           <div>
-            Hotel Sai Vasudev Residency PMS &bull; Enterprise Edition
+            SRI SAI VASUDEV RESIDENCY PMS &bull; Enterprise Edition
           </div>
         </div>
       </div>

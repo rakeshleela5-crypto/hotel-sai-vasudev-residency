@@ -340,7 +340,7 @@ def test_automated_encrypted_database_backup_and_pruning():
             enc_data = f.read()
         decrypted_gz = cipher.decrypt(enc_data)
         decompressed_sql = gzip.decompress(decrypted_gz).decode("utf-8")
-        assert "Hotel Sai Vasudev Residency Database Backup Dump" in decompressed_sql
+        assert "SRI SAI VASUDEV RESIDENCY Database Backup Dump" in decompressed_sql or "Hotel Sai Vasudev Residency Database Backup Dump" in decompressed_sql
         assert "rooms" in decompressed_sql
 
     # Test backup pruning

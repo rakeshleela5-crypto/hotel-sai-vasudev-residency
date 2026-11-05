@@ -69,7 +69,7 @@ export const ItemWiseSalesReportModal: React.FC<ItemWiseSalesReportModalProps> =
                 ITEM WISE SALES REPORT
               </h2>
               <div className="pms-reg-header-sub">
-                pms.hotelsai-vasudev.com/item_wise_sale_report &bull; <span className="gold">HOTEL SAI VASUDEV RESIDENCY</span> &bull; Restaurant &amp; Room Service Dish Sales
+                pms.hotelsai-vasudev.com/item_wise_sale_report &bull; <span className="gold">HOTEL SRI SAI VASUDEV RESIDENCY</span> &bull; Restaurant &amp; Room Service Dish Sales
               </div>
             </div>
           </div>

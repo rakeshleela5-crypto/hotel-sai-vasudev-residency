@@ -249,7 +249,7 @@ export const StockReportMasterModal: React.FC<StockReportMasterModalProps> = ({
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <h2 style={{ margin: 0, fontSize: 16, fontWeight: 800, letterSpacing: '0.5px', color: '#f8fafc' }}>
-                  HOTEL SAI VASUDEV RESIDENCY &bull; STOCK REPORT &amp; INVENTORY CONTROL
+                  SRI SAI VASUDEV RESIDENCY &bull; STOCK REPORT &amp; INVENTORY CONTROL
                 </h2>
                 <span style={{ background: '#3b82f6', color: '#fff', fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 4 }}>
                   Enterprise Inventory Suite

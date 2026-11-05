@@ -30,7 +30,7 @@ export const AgentCommissionModal: React.FC<AgentCommissionModalProps> = ({
   const [isAddingAgent, setIsAddingAgent] = useState(false);
   const [newAgentName, setNewAgentName] = useState('');
   const [newAgentPhone, setNewAgentPhone] = useState('');
-  const [newAgentCity, setNewAgentCity] = useState('Shirdi');
+  const [newAgentCity, setNewAgentCity] = useState('Rayagada');
   const [newAgentType, setNewAgentType] = useState<PmsAgentType>('Travel_Agent');
   const [newCommType, setNewCommType] = useState<PmsCommissionCalcType>('PERCENTAGE');
   const [newCommRate, setNewCommRate] = useState<number>(15);
@@ -131,7 +131,7 @@ export const AgentCommissionModal: React.FC<AgentCommissionModalProps> = ({
       id: newId,
       name: newAgentName.trim(),
       phone: newAgentPhone.trim(),
-      city: newAgentCity.trim() || 'Shirdi',
+      city: newAgentCity.trim() || 'Rayagada',
       agentType: newAgentType,
       commissionType: newCommType,
       defaultRate: Number(newCommRate) || 10,
@@ -779,7 +779,7 @@ export const AgentCommissionModal: React.FC<AgentCommissionModalProps> = ({
                         </label>
                         <input
                           type="text"
-                          placeholder="Shirdi, Nashik, Pune, Mumbai"
+                          placeholder="Rayagada, Koraput, Visakhapatnam, Bhubaneswar"
                           value={newAgentCity}
                           onChange={e => setNewAgentCity(e.target.value)}
                           style={{ width: '100%', padding: '8px 10px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 13 }}

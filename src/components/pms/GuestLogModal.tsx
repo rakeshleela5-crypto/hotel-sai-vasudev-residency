@@ -70,7 +70,7 @@ export const GuestLogModal: React.FC<GuestLogModalProps> = ({
   const handleWhatsAppVip = (guest: PmsGuestLogEntry) => {
     const phone = guest.phone ? guest.phone.replace(/[^0-9]/g, '') : '9822000000';
     const message = encodeURIComponent(
-      `Dear ${guest.guestName},\nThank you for choosing Hotel Sai Vasudev Residency! As a valued guest with ${guest.numberOfVisits} visits, we are delighted to offer you exclusive VIP member privileges on your next stay. 🙏\nReservations: 7999663696`
+      `Dear ${guest.guestName},\nThank you for choosing SRI SAI VASUDEV RESIDENCY! As a valued guest with ${guest.numberOfVisits} visits, we are delighted to offer you exclusive VIP member privileges on your next stay. 🙏\nReservations: 7999663696`
     );
     window.open(`https://wa.me/91${phone}?text=${message}`, '_blank');
   };
@@ -91,7 +91,7 @@ export const GuestLogModal: React.FC<GuestLogModalProps> = ({
                 GUEST LOG &amp; VIP FREQUENT GUEST REGISTER
               </h2>
               <div className="pms-reg-header-sub">
-                pms.hotelsai-vasudev.com/guestlog &bull; <span className="gold">HOTEL SAI VASUDEV RESIDENCY</span> &bull; Guest Lifetime Value Audit
+                pms.hotelsai-vasudev.com/guestlog &bull; <span className="gold">SRI SAI VASUDEV RESIDENCY</span> &bull; Guest Lifetime Value Audit
               </div>
             </div>
           </div>

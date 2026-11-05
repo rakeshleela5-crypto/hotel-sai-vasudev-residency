@@ -76,7 +76,7 @@ export const KotPrintViewModal: React.FC<KotPrintViewModalProps> = ({
                 letterSpacing: 0.5
               }}
             >
-              HOTEL SAI VASUDEV RESIDENCY
+              HOTEL SRI SAI VASUDEV RESIDENCY
             </div>
           </div>
 

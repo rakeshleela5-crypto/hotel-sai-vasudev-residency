@@ -11,7 +11,7 @@ if backend_dir not in sys.path:
 
 from fastapi.testclient import TestClient
 from app.main import app
-from app.database import Base, engine, get_db
+from app.database import Base, engine, SessionLocal
 from app import models
 
 client = TestClient(app)
@@ -19,9 +19,9 @@ client = TestClient(app)
 def test_parity_endpoints():
     print("Testing Full-Stack Parity Endpoints...")
     Base.metadata.create_all(bind=engine)
-    db = next(get_db())
-    from app.routes.rooms import seed_rooms_if_empty
-    seed_rooms_if_empty(db)
+    with SessionLocal() as db_init:
+        from app.routes.rooms import seed_rooms_if_empty
+        seed_rooms_if_empty(db_init)
 
     # 1. Test Folio Discount
     disc_payload = {
@@ -96,7 +96,7 @@ def test_parity_endpoints():
     pur_payload = {
         "bill_no": "PUR-2026-001",
         "bill_date": "2026-10-26",
-        "account_name": "Shirdi Dairy Cooperative",
+        "account_name": "Rayagada Dairy Cooperative",
         "godown": "Main Kitchen Store",
         "terms": "Cash",
         "items_json": '[{"itemName": "Pure Ghee 15L", "qty": 2, "rate": 8500, "total": 17000}]',
@@ -633,7 +633,7 @@ def test_parity_endpoints():
         "lockerSize": "Large",
         "dailyRate": 150.0,
         "status": "Occupied",
-        "assignedGuestName": "Shirdi Pilgrim Devotee",
+        "assignedGuestName": "Rayagada Executive Guest",
         "assignedRoomNo": "205",
         "keyNumber": "K-TEST-12",
         "securityDeposit": 500.0
@@ -662,7 +662,7 @@ def test_parity_endpoints():
         "recipientType": "Guest",
         "voucherType": "Check-In",
         "roomNo": "101",
-        "message": "Welcome to Hotel Sai Vasudev Residency Shirdi. Your Room 101 key is active.",
+        "message": "Welcome to SRI SAI VASUDEV RESIDENCY Rayagada. Your Room 101 key is active.",
         "status": "Sent"
     }
     r = client.post("/api/v1/pms/whatsapp-logs", json=wa_log_payload)
@@ -693,10 +693,10 @@ def test_parity_endpoints():
 
     # 32. Test Hotel Settings & Identity
     settings_payload = {
-        "firmName": "Hotel Sai Vasudev Residency",
-        "legalName": "Hotel Sai Vasudev Residency Pvt Ltd",
-        "gstNo": "27AAAAA0000A1Z5",
-        "city": "Shirdi",
+        "firmName": "SRI SAI VASUDEV RESIDENCY",
+        "legalName": "PAIDISETTY MANMADHA RAO",
+        "gstNo": "21AEKPP8689J1ZS",
+        "city": "Rayagada",
         "calculationType": "12hour",
         "standardCheckoutTime": "11:00 AM"
     }
@@ -706,7 +706,7 @@ def test_parity_endpoints():
 
     r = client.get("/api/v1/pms/settings")
     assert r.status_code == 200
-    assert r.json()["gstNo"] == "27AAAAA0000A1Z5"
+    assert r.json()["gstNo"] == "21AEKPP8689J1ZS"
     print(f"   [OK] Hotel Settings Query: GSTIN={r.json()['gstNo']}, Policy={r.json()['calculationType']}")
 
     # 33. Test Room Types Master
@@ -730,7 +730,7 @@ def test_parity_endpoints():
     # 34. Test Restaurant Menu Items
     menu_payload = {
         "code": "MENU-TEST-01",
-        "name": "Shirdi Special Paneer Tikka",
+        "name": "Rayagada Special Paneer Tikka",
         "category": "Starter",
         "rate": 280.0,
         "unit": "Plate",
@@ -766,7 +766,7 @@ def test_parity_endpoints():
     # 36. Test Agent Commission Accruals
     comm_payload = {
         "commissionId": "COMM-TEST-001",
-        "agentId": "AGT-SHIRDI-01",
+        "agentId": "AGT-RAYAGADA-01",
         "agentName": "Sai Pilgrim Tours & Travels",
         "roomNo": "101",
         "guestName": "Rajesh Sharma",
@@ -796,7 +796,7 @@ def test_parity_endpoints():
         "templateId": "tpl-checkout-test",
         "label": "Checkout Bill & Thanks",
         "voucherType": "Check_out_store",
-        "message": "Dear {{guest_name}}, thank you for staying at Hotel Sai Vasudev Residency.",
+        "message": "Dear {{guest_name}}, thank you for staying at SRI SAI VASUDEV RESIDENCY.",
         "active": "On",
         "sendTo": "Guest"
     }
@@ -886,9 +886,9 @@ def test_parity_endpoints():
     # 42. Test Multi-Branch Hotel Properties Master
     prop_payload = {
         "firmId": "branch-02",
-        "name": "HOTEL SAI VASUDEV RESIDENCY (EXECUTIVE ANNEX)",
+        "name": "SRI SAI VASUDEV RESIDENCY (EXECUTIVE ANNEX)",
         "code": "SVR-ANNEX",
-        "city": "Shirdi",
+        "city": "Rayagada",
         "totalRooms": 24
     }
     r = client.post("/api/v1/pms/properties", json=prop_payload)
@@ -937,7 +937,7 @@ def test_parity_endpoints():
         "name": "Prasad Rao",
         "hotelName": "Hotel Sai Grand Residency",
         "phone": "9822334455",
-        "city": "Shirdi",
+        "city": "Rayagada",
         "roomCount": 35,
         "message": "Interested in cloud PMS deployment with GST invoicing"
     }
@@ -1037,14 +1037,14 @@ def test_parity_endpoints():
 
     # 52. Test Hotel Company Info
     company_payload = {
-        "property_name": "Hotel Sai Vasudev Residency",
-        "address": "Main Road, Near Temple, Shirdi",
-        "city": "Shirdi",
-        "state": "Maharashtra",
-        "pincode": "423109",
+        "property_name": "SRI SAI VASUDEV RESIDENCY",
+        "address": "SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY",
+        "city": "Rayagada",
+        "state": "Odisha",
+        "pincode": "765001",
         "phone": "+91 94402 89999",
-        "email": "info@saivasudevresidency.com",
-        "gstin": "27AABCS1234F1Z5",
+        "email": "reservations@hotelsai-vasudev.com",
+        "gstin": "21AEKPP8689J1ZS",
         "default_bill_format": "standard"
     }
     r = client.post("/api/v1/pms/company-info", json=company_payload)
@@ -1053,7 +1053,7 @@ def test_parity_endpoints():
 
     r = client.get("/api/v1/pms/company-info")
     assert r.status_code == 200
-    assert r.json()['propertyName'] == "Hotel Sai Vasudev Residency"
+    assert r.json()['propertyName'] == "SRI SAI VASUDEV RESIDENCY"
     print(f"   [OK] Hotel Company Info Query: {r.json()['propertyName']} ({r.json()['city']})")
 
     # 53. Test Virtual Accounts
@@ -1100,14 +1100,16 @@ def test_parity_endpoints():
         total_price=2000.0,
         status="Pending"
     )
-    db.add(b_test)
-    db.commit()
-    db.refresh(b_test)
+    with SessionLocal() as db_booking:
+        db_booking.add(b_test)
+        db_booking.commit()
+        db_booking.refresh(b_test)
+        b_test_id = b_test.id
 
-    r = client.put(f"/api/v1/pms/bookings/{b_test.id}/confirm")
+    r = client.put(f"/api/v1/pms/bookings/{b_test_id}/confirm")
     assert r.status_code == 200
     assert r.json()["status"] == "Confirmed"
-    print(f"   [OK] Booking Confirmation Transition Persisted: Booking {b_test.id} -> Confirmed")
+    print(f"   [OK] Booking Confirmation Transition Persisted: Booking {b_test_id} -> Confirmed")
 
     print("\n=== ALL PARITY ENDPOINTS TESTED & PASSED 100%! ===")
 

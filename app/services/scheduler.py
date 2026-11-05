@@ -313,7 +313,7 @@ def generate_database_dump_sql(db: Session) -> str:
 
     # Universal SQL schema + data dump fallback (works on SQLite, PostgreSQL, testing engines)
     dump_lines = [
-        f"-- Hotel Sai Vasudev Residency Database Backup Dump",
+        f"-- SRI SAI VASUDEV RESIDENCY Database Backup Dump",
         f"-- Generated: {datetime.datetime.now(datetime.timezone.utc).isoformat()}",
         f"-- Engine: {engine.url.drivername}",
         "BEGIN TRANSACTION;"

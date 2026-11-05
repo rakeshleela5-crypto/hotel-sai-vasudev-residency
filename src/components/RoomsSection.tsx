@@ -87,7 +87,7 @@ export const RoomsSection: React.FC<RoomsSectionProps> = ({ onSelectRoom, select
                 <div className="room-image-box">
                   <img 
                     src={room.image_url} 
-                    alt={`${room.name} at Hotel Sai Vasudev Residency`} 
+                    alt={`${room.name} at SRI SAI VASUDEV RESIDENCY`} 
                     width={600}
                     height={400}
                     loading="lazy" 

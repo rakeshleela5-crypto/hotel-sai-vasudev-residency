@@ -1,5 +1,5 @@
 /**
- * Hotel SAI VASUDEV RESIDENCY - Enterprise Hotel PMS Models & Data Contracts
+ * SRI SAI VASUDEV RESIDENCY - Enterprise Hotel PMS Models & Data Contracts
  * Derived from Video 01: RoomG PMS Training & Feature Analysis
  */
 
@@ -616,7 +616,7 @@ export interface PmsCompanyInfo {
   email: string;
   website?: string;
   gstNo: string;
-  companyGstCode: string; // 2-digit state code, e.g. "27" (Maharashtra) or "22" (Chhattisgarh)
+  companyGstCode: string; // 2-digit state code, e.g. "21" (Odisha)
   pencardNo?: string;
   regNo2?: string;
   gstNotApplicable: boolean;
@@ -626,6 +626,16 @@ export interface PmsCompanyInfo {
   gstin?: string;
   pan?: string;
   panNo?: string;
+  constitution?: string;
+  proprietorName?: string;
+  proprietorResidence?: string;
+  buildingPremises?: string;
+  landmarkStreet?: string;
+  dateOfLiability?: string;
+  periodOfValidity?: string;
+  approvingOfficer?: string;
+  additionalPlaces?: number;
+  gstNotice?: string;
   
   // Video 26 Banking, UPI & Branding Details (Frames 0240, 0250, 0255)
   bankName?: string;
@@ -855,8 +865,8 @@ export interface PmsUserAccount {
 
 export interface PmsChainProperty {
   firmId: string; // e.g. "DEMO0004", "SVR0001", "SVR0002"
-  firmName: string; // e.g. "HALL OF KNOTS / SAI VASUDEV RESIDENCY"
-  location: string; // e.g. "Shirdi", "Pune", "Nashik"
+  firmName: string; // e.g. "SRI SAI VASUDEV RESIDENCY"
+  location: string; // e.g. "Rayagada", "Bhubaneswar", "Visakhapatnam"
   address: string;
   phone: string;
   email: string;

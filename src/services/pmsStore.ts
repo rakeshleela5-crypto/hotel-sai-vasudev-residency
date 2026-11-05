@@ -100,23 +100,34 @@ export const DEFAULT_BUSINESS_SETTING: PmsBusinessSetting = {
 
 export const DEFAULT_COMPANY_INFO: PmsCompanyInfo = {
   firmName: 'SRI SAI VASUDEV RESIDENCY',
+  tradeName: 'SRI SAI VASUDEV RESIDENCY',
   legalName: 'PAIDISETTY MANMADHA RAO',
-  address1: 'Near Andhra Bank, New Colony',
-  address2: 'SRI SAI VASUDEV RESIDENCY',
+  constitution: 'Proprietorship',
+  proprietorName: 'PAIDISETTY MANMADHA RAO',
+  proprietorResidence: 'Odisha',
+  buildingPremises: 'SR RESIDENCY',
+  landmarkStreet: 'NEAR ANDHRA BANK, NEW COLONY',
+  address1: 'SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY',
+  address2: 'Rayagada',
   city: 'Rayagada',
   district: 'Rayagada',
   pincode: '765001',
-  state: 'ODISHA',
+  state: 'Odisha',
   phone: '+91 94402 89999',
   mobile: '+91 94402 89999',
   email: 'reservations@hotelsai-vasudev.com',
-  website: 'https://hotel-sai-vasudev-residency.pages.dev',
+  website: 'https://sai-vasudev-residency.pages.dev',
   gstNo: '21AEKPP8689J1ZS',
   companyGstCode: '21',
   pencardNo: 'AEKPP8689J',
   regNo2: '21AEKPP8689J1ZS',
   gstNotApplicable: false,
   makeAllBillLocalGst: true, // Odisha (21) local sales default
+  dateOfLiability: '05/02/2025',
+  periodOfValidity: 'Not Applicable',
+  approvingOfficer: 'Superintendent Gulshan Sanodiya',
+  additionalPlaces: 0,
+  gstNotice: 'The registration certificate is required to be prominently displayed at all places of business in the State',
   
   // Banking & Digital Assets
   bankName: 'STATE BANK OF INDIA',
@@ -125,12 +136,12 @@ export const DEFAULT_COMPANY_INFO: PmsCompanyInfo = {
   bankBranch: 'RAYAGADA BRANCH',
   upiId: '7999663696@YBL',
   phonePeGpay: '07999663696',
-  jurisdiction: 'Rayagada Division / Rayagada Jurisdiction',
+  jurisdiction: 'RAYAGADA DIVISION',
   country: 'India',
   currency: '₹ Indian Rupee (INR)',
   taxSystem: 'GST',
   restaurantFoodBillTaxInclusive: false,
-  termsAndConditions: '1. Check-out time is 11:00 AM sharp. Late checkout will be billed as extra day.\n2. In case of dispute, Rayagada Jurisdiction will apply.\n3. Room key must be deposited at reception desk while going outside and at checkout.\n4. Management is not responsible for valuables left inside the room without safe deposit.',
+  termsAndConditions: '1. Check-out time is 11:00 AM sharp. Late checkout will be billed as extra day.\n2. In case of dispute, Rayagada Jurisdiction will apply.\n3. Room key must be deposited at reception desk while going outside and at checkout.\n4. Management is not responsible for valuables left inside the room without safe deposit.\n5. The registration certificate is required to be prominently displayed at all places of business in the State.',
   voucherPrefix: '.',
   voucherSuffix: '.',
   voucherNote: '.'
@@ -621,13 +632,13 @@ export const INITIAL_LOCKERS: PmsLocker[] = [
 export const INITIAL_OTHER_CHARGES: PmsOtherCharge[] = [
   { id: 'CHG-01', chargeName: 'Extra Mattress / Extra Bed (Executive/Family)', category: 'Room', defaultRate: 500, gstRate: 12, hsnCode: '996311', isTaxIncluded: false, remark: 'Rollaway extra bed per night' },
   { id: 'CHG-02', chargeName: 'Extra Mattress / Extra Bed (Suite)', category: 'Room', defaultRate: 800, gstRate: 12, hsnCode: '996311', isTaxIncluded: false, remark: 'Suite extra rollaway mattress per night' },
-  { id: 'CHG-03', chargeName: 'Pilgrim Darshan Cab Drop (Shirdi Temple)', category: 'Travel', defaultRate: 300, gstRate: 5, hsnCode: '996412', isTaxIncluded: true, remark: 'Direct drop to VIP Gate No. 2' },
+  { id: 'CHG-03', chargeName: 'Local Sightseeing Cab Drop (Majhigouri Temple)', category: 'Travel', defaultRate: 300, gstRate: 5, hsnCode: '996412', isTaxIncluded: true, remark: 'Direct drop to Temple Complex' },
   { id: 'CHG-04', chargeName: 'Express Laundry Service', category: 'Housekeeping', defaultRate: 250, gstRate: 18, hsnCode: '998721', isTaxIncluded: false, remark: 'Same day wash & press' }
 ];
 
 export const INITIAL_MENU_ITEMS: MenuItem[] = [
   // 1. Morning Breakfast (7:00 AM–10:30 AM)
-  { id: 'm-101', name: 'Shirdi Special Poha', code: '101', barcode: '890101', company: 'Vasudev Rasoi', rate: 80, saleRate: 80, mrp: 80, purchaseRate: 25, unit: 'Plate', gstPercent: 5, category: 'Morning Breakfast (7:00 AM–10:30 AM)', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-101', name: 'Rayagada Special Poha', code: '101', barcode: '890101', company: 'Vasudev Rasoi', rate: 80, saleRate: 80, mrp: 80, purchaseRate: 25, unit: 'Plate', gstPercent: 5, category: 'Morning Breakfast (7:00 AM–10:30 AM)', headGroup: 'Restaurant_Item', hsnCode: '996331' },
   { id: 'm-102', name: 'Steamed Idli Sambar (2 Pcs)', code: '102', barcode: '890102', company: 'Vasudev Rasoi', rate: 90, saleRate: 90, mrp: 90, purchaseRate: 35, unit: 'Plate', gstPercent: 5, category: 'Morning Breakfast (7:00 AM–10:30 AM)', headGroup: 'Restaurant_Item', hsnCode: '996331' },
   { id: 'm-103', name: 'Medu Vada Sambar (2 Pcs)', code: '103', barcode: '890103', company: 'Vasudev Rasoi', rate: 110, saleRate: 110, mrp: 110, purchaseRate: 40, unit: 'Plate', gstPercent: 5, category: 'Morning Breakfast (7:00 AM–10:30 AM)', headGroup: 'Restaurant_Item', hsnCode: '996331' },
   { id: 'm-104', name: 'Special Masala Dosa', code: '104', barcode: '890104', company: 'Vasudev Rasoi', rate: 130, saleRate: 130, mrp: 130, purchaseRate: 50, unit: 'Plate', gstPercent: 5, category: 'Morning Breakfast (7:00 AM–10:30 AM)', headGroup: 'Restaurant_Item', hsnCode: '996331' },
@@ -638,11 +649,11 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
   { id: 'm-201', name: 'Sai Prasad Maha Thali (Pure Desi Ghee)', code: '201', barcode: '890201', company: 'Vasudev Rasoi', rate: 280, saleRate: 280, mrp: 300, purchaseRate: 110, unit: 'Thali', gstPercent: 5, category: 'Sattvic & Jain Thalis', headGroup: 'Restaurant_Item', hsnCode: '996331' },
   { id: 'm-202', name: 'Jain Special Thali (No Onion/Garlic)', code: '202', barcode: '890202', company: 'Vasudev Rasoi', rate: 260, saleRate: 260, mrp: 280, purchaseRate: 100, unit: 'Thali', gstPercent: 5, category: 'Sattvic & Jain Thalis', headGroup: 'Restaurant_Item', hsnCode: '996331' },
   { id: 'm-203', name: 'Gujarati Sattvic Bhojan Thali', code: '203', barcode: '890203', company: 'Vasudev Rasoi', rate: 240, saleRate: 240, mrp: 260, purchaseRate: 90, unit: 'Thali', gstPercent: 5, category: 'Sattvic & Jain Thalis', headGroup: 'Restaurant_Item', hsnCode: '996331' },
-  { id: 'm-204', name: 'Shirdi Temple Mini Prasad Thali', code: '204', barcode: '890204', company: 'Vasudev Rasoi', rate: 180, saleRate: 180, mrp: 200, purchaseRate: 70, unit: 'Thali', gstPercent: 5, category: 'Sattvic & Jain Thalis', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-204', name: 'Temple Mini Prasad Thali', code: '204', barcode: '890204', company: 'Vasudev Rasoi', rate: 180, saleRate: 180, mrp: 200, purchaseRate: 70, unit: 'Thali', gstPercent: 5, category: 'Sattvic & Jain Thalis', headGroup: 'Restaurant_Item', hsnCode: '996331' },
 
   // 3. Main Course Curries & Paneer
   { id: 'm-301', name: 'Paneer Butter Masala', code: '301', barcode: '890301', company: 'Vasudev Rasoi', rate: 240, saleRate: 240, mrp: 260, purchaseRate: 110, unit: 'Portion', gstPercent: 5, category: 'Main Course Curries & Paneer', headGroup: 'Restaurant_Item', hsnCode: '996331' },
-  { id: 'm-302', name: 'Shirdi Special Kaju Kari', code: '302', barcode: '890302', company: 'Vasudev Rasoi', rate: 260, saleRate: 260, mrp: 280, purchaseRate: 130, unit: 'Portion', gstPercent: 5, category: 'Main Course Curries & Paneer', headGroup: 'Restaurant_Item', hsnCode: '996331' },
+  { id: 'm-302', name: 'Special Kaju Kari', code: '302', barcode: '890302', company: 'Vasudev Rasoi', rate: 260, saleRate: 260, mrp: 280, purchaseRate: 130, unit: 'Portion', gstPercent: 5, category: 'Main Course Curries & Paneer', headGroup: 'Restaurant_Item', hsnCode: '996331' },
   { id: 'm-303', name: 'Dal Tadka Desi Ghee', code: '303', barcode: '890303', company: 'Vasudev Rasoi', rate: 160, saleRate: 160, mrp: 180, purchaseRate: 60, unit: 'Bowl', gstPercent: 5, category: 'Main Course Curries & Paneer', headGroup: 'Restaurant_Item', hsnCode: '996331' },
   { id: 'm-304', name: 'Khandeshi Sev Tomato Curry', code: '304', barcode: '890304', company: 'Vasudev Rasoi', rate: 170, saleRate: 170, mrp: 190, purchaseRate: 65, unit: 'Portion', gstPercent: 5, category: 'Main Course Curries & Paneer', headGroup: 'Restaurant_Item', hsnCode: '996331' },
   { id: 'm-305', name: 'Palak Paneer (Fresh Cottage Cheese)', code: '305', barcode: '890305', company: 'Vasudev Rasoi', rate: 230, saleRate: 230, mrp: 250, purchaseRate: 95, unit: 'Portion', gstPercent: 5, category: 'Main Course Curries & Paneer', headGroup: 'Restaurant_Item', hsnCode: '996331' },
@@ -1127,7 +1138,7 @@ export const INITIAL_BOOKINGS: PmsBooking[] = [
     guestName: 'GUHFYGVUYFT',
     mobile: '46549889',
     city: 'Mumbai',
-    state: 'Maharashtra',
+    state: 'Odisha',
     country: 'India',
     rooms: [
       {
@@ -1158,7 +1169,7 @@ export const INITIAL_BOOKINGS: PmsBooking[] = [
     guestName: 'anupam ji',
     mobile: '65448987',
     city: 'Nagpur',
-    state: 'Maharashtra',
+    state: 'Odisha',
     country: 'India',
     rooms: [
       {
@@ -1639,7 +1650,7 @@ export const INITIAL_WHATSAPP_TEMPLATES: PmsWhatsAppTemplate[] = [
     type: 'WhatsApp',
     voucherType: 'Room_booking_store',
     label: 'Room Booking Instant Confirmation Voucher',
-    message: 'Namaste {guest_name}! Greetings from *{firm_name}*. Your room booking is confirmed! *Booking No:* {voucher_no} *Room Category:* {room_no} *Check-in:* {checkin_date} *Check-out:* {checkout_date} *Advance Paid:* ₹{total_billamount}. Download voucher: https://hotel-sai-vasudev-residency.pages.dev Reception: {phone}. We look forward to hosting you in Shirdi!',
+    message: 'Namaste {guest_name}! Greetings from *{firm_name}*. Your room booking is confirmed! *Booking No:* {voucher_no} *Room Category:* {room_no} *Check-in:* {checkin_date} *Check-out:* {checkout_date} *Advance Paid:* ₹{total_billamount}. Download voucher: https://hotel-sai-vasudev-residency.pages.dev Reception: {phone}. We look forward to hosting you in Rayagada, Odisha!',
     active: 'On',
     sendTo: 'Guest'
   },
@@ -1669,7 +1680,7 @@ export const INITIAL_WHATSAPP_TEMPLATES: PmsWhatsAppTemplate[] = [
     type: 'WhatsApp',
     voucherType: 'Promotional',
     label: 'Promotional Website Link & Special Offer',
-    message: 'Namaste! Greetings from *{firm_name}*, Shirdi. Book directly through our website to get 15% off and complimentary breakfast for your upcoming Shirdi Pilgrimage: https://hotel-sai-vasudev-residency.pages.dev Call: {phone}',
+    message: 'Namaste! Greetings from *{firm_name}*, Rayagada. Book directly through our website to get 15% off and complimentary breakfast for your stay in Rayagada, Odisha: https://hotel-sai-vasudev-residency.pages.dev Call: {phone}',
     active: 'On',
     sendTo: 'Guest'
   }
@@ -1685,7 +1696,7 @@ export const INITIAL_WHATSAPP_LOGS: PmsWhatsAppLog[] = [
     voucherType: 'Check_out_store',
     voucherNo: 'RM/63/24-25',
     roomNo: '101',
-    message: 'Dear Sir/Madam, Thank you for choosing to stay with us at *HOTEL SAI VASUDEV RESIDENCY*...',
+    message: 'Dear Sir/Madam, Thank you for choosing to stay with us at *SRI SAI VASUDEV RESIDENCY*...',
     status: 'Delivered',
     firmId: 'DEMO0004'
   },
@@ -1698,7 +1709,7 @@ export const INITIAL_WHATSAPP_LOGS: PmsWhatsAppLog[] = [
     voucherType: 'Check_out_update',
     voucherNo: 'RM/62/24-25',
     roomNo: '104',
-    message: 'Dear Owner, This is to inform you that a guest bill has been updated at *HOTEL SAI VASUDEV RESIDENCY*...',
+    message: 'Dear Owner, This is to inform you that a guest bill has been updated at *SRI SAI VASUDEV RESIDENCY*...',
     status: 'Delivered',
     firmId: 'DEMO0004'
   },
@@ -1711,7 +1722,7 @@ export const INITIAL_WHATSAPP_LOGS: PmsWhatsAppLog[] = [
     voucherType: 'Check_in_store',
     voucherNo: 'CI/88/24-25',
     roomNo: '202',
-    message: 'Dear Sir/Madam, Welcome to *HOTEL SAI VASUDEV RESIDENCY*! We are delighted to have you stay with us...',
+    message: 'Dear Sir/Madam, Welcome to *SRI SAI VASUDEV RESIDENCY*! We are delighted to have you stay with us...',
     status: 'Delivered',
     firmId: 'DEMO0004'
   }
@@ -2689,7 +2700,7 @@ export const INITIAL_EXPENSES: PmsExpenseRecord[] = [
     category: 'Vegetables & Dairy',
     amount: 1450,
     paymentMode: 'Cash',
-    paidTo: 'Shirdi Kisan Mandi Fresh Veggies',
+    paidTo: 'Rayagada Kisan Mandi Fresh Veggies',
     description: 'Fresh Paneer (5kg), Tomatoes, Green Chillies, Coriander for Rasoi',
     billNumber: 'BILL-8921',
     approvedBy: 'General Manager',
@@ -2717,7 +2728,7 @@ export const INITIAL_EXPENSES: PmsExpenseRecord[] = [
     category: 'Electricity/DG Fuel',
     amount: 2200,
     paymentMode: 'UPI',
-    paidTo: 'HPCL Petrol Pump Shirdi',
+    paidTo: 'HPCL Petrol Pump Rayagada',
     description: 'Diesel for generator backup (25 Litres)',
     billNumber: 'HP-90124',
     approvedBy: 'General Manager',
@@ -2930,7 +2941,7 @@ export class PmsStore {
               pencardNo: 'AEKPP8689J',
               regNo2: '21AEKPP8689J1ZS',
               jurisdiction: 'Rayagada Division / Rayagada Jurisdiction',
-              bankBranch: comp.bankBranch?.includes('SHIRDI') ? 'RAYAGADA BRANCH' : (comp.bankBranch || 'RAYAGADA BRANCH')
+              bankBranch: comp.bankBranch || 'RAYAGADA BRANCH'
             };
             localStorage.setItem(STORAGE_KEYS.COMPANY_INFO, JSON.stringify(upgradedComp));
           }
@@ -3768,7 +3779,7 @@ export class PmsStore {
     const payload = {
       schemaVersion: this.SCHEMA_VERSION,
       exportedAt: new Date().toISOString(),
-      property: 'Hotel Sai Vasudev Residency & Vasudev Rasoi Dining',
+      property: 'Sri Sai Vasudev Residency & Vasudev Rasoi Dining',
       data: {
         rooms: this.getRooms(),
         roomTypes: this.getRoomTypes(),
@@ -3869,7 +3880,7 @@ export class PmsStore {
     }
   }
 
-  // 1. Reset to Demo Seed Data (Guaranteed Zero State Loss / Authentic Shirdi)
+  // 1. Reset to Demo Seed Data (Guaranteed Zero State Loss / Authentic Rayagada, Odisha)
   static resetToDemoSeedData(): void {
     localStorage.setItem(STORAGE_KEYS.ROOMS, JSON.stringify(INITIAL_ROOMS));
     localStorage.setItem(STORAGE_KEYS.ROOM_TYPES, JSON.stringify(INITIAL_ROOM_TYPES));
@@ -4767,10 +4778,10 @@ export class PmsStore {
         remark: p.notes
       })),
       checkoutRemark: settlement.notes || 'Normal Checkout Completed',
-      city: 'Shirdi',
-      state: 'Maharashtra',
+      city: 'Rayagada',
+      state: 'Odisha',
       country: 'India',
-      pinCode: '423109',
+      pinCode: '765001',
       sacCode: '996311',
       invoiceFormat: 'A4_Standard'
     };
@@ -5805,7 +5816,7 @@ export class PmsStore {
         addressLine1: 'Main Market Road',
         addressLine2: '0',
         city: 'Pune',
-        state: 'Maharashtra',
+        state: 'Odisha',
         country: 'India',
         pinCode: '411001',
         nationality: 'India',
@@ -10323,9 +10334,9 @@ export class PmsStore {
       firm_id: prop.firmId,
       address1: prop.address.split(',')[0] || prop.address,
       address2: prop.address.split(',')[1] || '',
-      city: prop.location.split(' ')[0] || 'Shirdi',
-      pincode: '423109',
-      state: 'Maharashtra',
+      city: prop.location.split(' ')[0] || 'Rayagada',
+      pincode: '765001',
+      state: 'Odisha',
       email: prop.email,
       website: 'https://hotel-sai-vasudev-residency.pages.dev',
       phone: prop.phone,
@@ -10674,7 +10685,7 @@ export class PmsStore {
       return comp.qrCodeUrl;
     }
     const upiId = comp.upiId || '7999663696@YBL';
-    const payeeName = comp.firmName || 'HOTEL SAI VASUDEV RESIDENCY';
+    const payeeName = comp.firmName || 'SRI SAI VASUDEV RESIDENCY';
     const note = billNo ? `Bill ${billNo}${guestName ? ' - ' + guestName : ''}` : (guestName ? `Room Settlement - ${guestName}` : 'Hotel Room Settlement');
     const cleanAmount = amount > 0 ? amount.toFixed(2) : '1.00';
     
@@ -10764,7 +10775,7 @@ export class PmsStore {
         invoiceNumber: 'GSR/233/24-25',
         invoiceDate: '17-06-2025',
         invoiceValue: 4740.00,
-        placeOfSupply: '27-Maharashtra',
+        placeOfSupply: '21-Odisha',
         reverseCharge: 'N',
         applicableTaxRate: 'N',
         invoiceType: 'Regular B2B',
@@ -10853,7 +10864,7 @@ export class PmsStore {
           invoiceNumber: co.invoiceNo || 'GSR/240/24-25',
           invoiceDate: co.checkOutDate,
           invoiceValue: co.netPayable || co.billAmount,
-          placeOfSupply: co.state ? `${co.state}` : '27-Maharashtra',
+          placeOfSupply: co.state ? `${co.state}` : '21-Odisha',
           reverseCharge: 'N',
           applicableTaxRate: 'N',
           invoiceType: 'Regular B2B',
@@ -10914,7 +10925,7 @@ export class PmsStore {
       {
         sNo: 1,
         type: 'OE',
-        placeOfSupply: '27-Maharashtra',
+        placeOfSupply: '21-Odisha',
         applicableTaxRate: 'N',
         rate: 5,
         taxableValue: Math.round(baselineFood * 100) / 100,
@@ -10924,7 +10935,7 @@ export class PmsStore {
       {
         sNo: 2,
         type: 'OE',
-        placeOfSupply: '27-Maharashtra',
+        placeOfSupply: '21-Odisha',
         applicableTaxRate: 'N',
         rate: 12,
         taxableValue: Math.round(baselineRoom * 100) / 100,
@@ -11001,7 +11012,7 @@ export class PmsStore {
         guestName: 'ARJUN',
         address: 'Station Road',
         city: 'Nagpur',
-        state: 'Maharashtra',
+        state: 'Odisha',
         mobile: '95487417',
         firmName: '',
         gstin: '',
@@ -11075,8 +11086,8 @@ export class PmsStore {
         roomNoOrTable: '202',
         guestName: 'RAMESH',
         address: 'Near Temple',
-        city: 'Shirdi',
-        state: 'Maharashtra',
+        city: 'Rayagada',
+        state: 'Odisha',
         mobile: '36698',
         firmName: '',
         gstin: '',
@@ -11101,7 +11112,7 @@ export class PmsStore {
         guestName: 'vivek',
         address: 'Sector 5',
         city: 'Pune',
-        state: 'Maharashtra',
+        state: 'Odisha',
         mobile: '987965',
         firmName: '',
         gstin: '',
@@ -11126,7 +11137,7 @@ export class PmsStore {
         guestName: 'NEELESH JAIN',
         address: 'Kalyan Nagar',
         city: 'Mumbai',
-        state: 'Maharashtra',
+        state: 'Odisha',
         mobile: '9425131930',
         firmName: '',
         gstin: '',
@@ -11151,7 +11162,7 @@ export class PmsStore {
         guestName: 'ANMOL JI',
         address: 'Bandra West',
         city: 'Mumbai',
-        state: 'Maharashtra',
+        state: 'Odisha',
         mobile: '9927383644',
         firmName: '',
         gstin: '',
@@ -11201,7 +11212,7 @@ export class PmsStore {
         guestName: 'ANMOL JI',
         address: 'Bandra West',
         city: 'Mumbai',
-        state: 'Maharashtra',
+        state: 'Odisha',
         mobile: '9927383644',
         firmName: '',
         gstin: '',
@@ -11301,7 +11312,7 @@ export class PmsStore {
     // Merge active checkouts
     const checkouts = this.getCheckouts();
     checkouts.forEach((co: PmsCheckOutDetail) => {
-      const isInterstate = co.state && !co.state.toLowerCase().includes('maharashtra') && !co.state.toLowerCase().includes('mh');
+      const isInterstate = co.state && !co.state.toLowerCase().includes('odisha') && !co.state.toLowerCase().includes('orissa') && !co.state.toLowerCase().includes('21');
       const rate = co.gstPercent || 12.00;
       const taxable = co.totalRoomRent ? (co.totalRoomRent / 1.12) : (co.billAmount / 1.12);
       const totalTax = co.gstAmount || (co.billAmount - taxable);
@@ -11315,8 +11326,8 @@ export class PmsStore {
         roomNoOrTable: co.roomNo || '101',
         guestName: co.guestName,
         address: co.addressLine1 || 'Local',
-        city: co.city || 'Shirdi',
-        state: co.state || 'Maharashtra',
+        city: co.city || 'Rayagada',
+        state: co.state || 'Odisha',
         mobile: co.guestPhone || '',
         firmName: co.companyName || '',
         gstin: co.gstNumber || '',
@@ -11347,8 +11358,8 @@ export class PmsStore {
           roomNoOrTable: fb.roomNo || fb.tableNo || 'Restaurant',
           guestName: fb.guestName || 'Dining Guest',
           address: 'Station Road',
-          city: 'Shirdi',
-          state: 'Maharashtra',
+          city: 'Rayagada',
+          state: 'Odisha',
           mobile: '',
           firmName: '',
           gstin: '',
@@ -11383,8 +11394,8 @@ export class PmsStore {
           roomNoOrTable: bq.venueName || 'Banquet Hall',
           guestName: bq.contactPerson || bq.hostName || 'Banquet Client',
           address: bq.addressLine1 || 'Main Road',
-          city: bq.city || 'Shirdi',
-          state: bq.state || 'Maharashtra',
+          city: bq.city || 'Rayagada',
+          state: bq.state || 'Odisha',
           mobile: bq.contactMobile || '',
           firmName: bq.hostName || '',
           gstin: '',
@@ -11420,8 +11431,8 @@ export class PmsStore {
           roomNoOrTable: bar.tableNo || bar.roomNo || 'Bar Counter',
           guestName: bar.guestName || 'Bar Customer',
           address: bar.guestAddress || 'Lounge',
-          city: 'Shirdi',
-          state: 'Maharashtra',
+          city: 'Rayagada',
+          state: 'Odisha',
           mobile: bar.guestMobile || '',
           firmName: '',
           gstin: bar.gstin || '',
@@ -11922,7 +11933,7 @@ export class PmsStore {
     const grandTotalCredit = groups.reduce((s, g) => s + g.totalCredit, 0);
 
     return {
-      hotelName: company.firmName || 'HOTEL SAI VASUDEV RESIDENCY',
+      hotelName: company.firmName || 'SRI SAI VASUDEV RESIDENCY',
       address: `${company.address1}, ${company.address2}, ${company.city} - ${company.pincode}`,
       phone: company.phone || company.mobile,
       email: company.email,
@@ -11966,7 +11977,7 @@ export class PmsStore {
           sNo: canonicalGuests.length + 1,
           guestName: co.guestName,
           phone: co.guestPhone,
-          city: co.addressLine1 || 'Shirdi',
+          city: co.addressLine1 || 'Rayagada',
           numberOfVisits: 1,
           totalAmount: co.netPayable,
           lastVisitDate: co.checkOutDate,
@@ -12307,7 +12318,7 @@ export class PmsStore {
       partnerId: '98 811 274',
       passcode: '37551',
       status: 'Ready',
-      hotelName: 'HOTEL SAI VASUDEV RESIDENCY',
+      hotelName: 'SRI SAI VASUDEV RESIDENCY',
       contactPhone: '7999663696'
     };
   }
@@ -12359,7 +12370,7 @@ export class PmsStore {
       ultraViewerDownloadUrl: 'https://ultraviewer.net/en/download.html',
       anyDeskDownloadUrl: 'https://anydesk.com/en/downloads',
       licenseInfo: {
-        hotelName: 'HOTEL SAI VASUDEV RESIDENCY',
+        hotelName: 'SRI SAI VASUDEV RESIDENCY',
         activationDate: '17-12-2024',
         renewDate: '17-12-2025',
         daysRemaining: 149,
@@ -14009,9 +14020,9 @@ export const INITIAL_COMMISSION_AGENTS: PmsCommissionAgent[] = [
     name: 'Sharma Travels & Tours (Ramesh Sharma)',
     phone: '9822154321',
     alternatePhone: '02423-255111',
-    email: 'sharmatravelsshirdi@gmail.com',
-    city: 'Shirdi',
-    address: 'Near Sai Baba Mandir Gate 3, Shirdi, Maharashtra',
+    email: 'rayagadatravels@gmail.com',
+    city: 'Rayagada',
+    address: 'Near Railway Station, Rayagada, Odisha - 765001',
     agentType: 'Travel_Agent',
     commissionType: 'PERCENTAGE',
     defaultRate: 15,
@@ -14057,15 +14068,15 @@ export const INITIAL_COMMISSION_AGENTS: PmsCommissionAgent[] = [
     totalCommissionEarned: 2400,
     totalCommissionPaid: 600,
     balancePayable: 1800,
-    notes: 'Medical representative bringing pharma doctors and delegates visiting Shirdi & Ahmednagar hospitals.',
+    notes: 'Medical representative bringing pharma doctors and delegates visiting Rayagada & JK Hospital.',
     createdAt: '2026-02-05'
   },
   {
     id: 'AGT-103',
-    name: 'Sainagar Shirdi Station Auto Union (Raju Bhai)',
+    name: 'Rayagada Station Auto Union (Raju Bhai)',
     phone: '9890123456',
-    city: 'Sainagar Shirdi',
-    address: 'Station Auto Stand, Shirdi Railway Station',
+    city: 'Rayagada',
+    address: 'Station Auto Stand, Rayagada Railway Station',
     agentType: 'Auto_Taxi_Driver',
     commissionType: 'FIXED_PER_ROOM',
     defaultRate: 300,
@@ -14074,7 +14085,7 @@ export const INITIAL_COMMISSION_AGENTS: PmsCommissionAgent[] = [
       accountNo: '31234567890',
       ifsc: 'SBIN0000390',
       accountHolder: 'Raju Auto Union Rep',
-      upiId: 'rajushirdiauto@ybl'
+      upiId: 'rajurayagadaauto@ybl'
     },
     status: 'ACTIVE',
     totalBookings: 12,
@@ -14087,17 +14098,17 @@ export const INITIAL_COMMISSION_AGENTS: PmsCommissionAgent[] = [
   },
   {
     id: 'AGT-104',
-    name: 'Maharashtra Darshan Yatra (Anil Jadhav)',
+    name: 'Odisha Tour & Travels (Anil Patro)',
     phone: '9422001122',
     email: 'anildarshan@rediffmail.com',
     city: 'Nashik',
-    address: 'CBS Road, Nashik, Maharashtra',
+    address: 'Main Road, Rayagada, Odisha',
     agentType: 'Tour_Operator',
     commissionType: 'PERCENTAGE',
     defaultRate: 20,
     panNumber: 'AAAPJ9988H',
     bankDetails: {
-      bankName: 'BANK OF MAHARASHTRA',
+      bankName: 'STATE BANK OF INDIA',
       accountNo: '60123456789',
       ifsc: 'MAHB0000123',
       accountHolder: 'Anil Jadhav',
@@ -14109,7 +14120,7 @@ export const INITIAL_COMMISSION_AGENTS: PmsCommissionAgent[] = [
     totalCommissionEarned: 13600,
     totalCommissionPaid: 9000,
     balancePayable: 4600,
-    notes: 'Large luxury bus tour operator conducting Shirdi-Shani Shingnapur-Trimbakeshwar circuit tours.',
+    notes: 'Luxury bus tour operator conducting Rayagada-Majhigouri-Koraput circuit tours.',
     createdAt: '2026-01-15'
   },
   {
@@ -14191,7 +14202,7 @@ export const INITIAL_AGENT_COMMISSIONS: PmsAgentCommissionBooking[] = [
   {
     id: 'COMM-2026-003',
     agentId: 'AGT-103',
-    agentName: 'Sainagar Shirdi Station Auto Union (Raju Bhai)',
+    agentName: 'Rayagada Station Auto Union (Raju Bhai)',
     agentType: 'Auto_Taxi_Driver',
     checkInNo: 'SR/195/24-25',
     roomNo: '103',
@@ -14215,7 +14226,7 @@ export const INITIAL_AGENT_COMMISSIONS: PmsAgentCommissionBooking[] = [
   {
     id: 'COMM-2026-004',
     agentId: 'AGT-104',
-    agentName: 'Maharashtra Darshan Yatra (Anil Jadhav)',
+    agentName: 'Odisha Tour & Travels (Anil Patro)',
     agentType: 'Tour_Operator',
     checkInNo: 'SR/176/24-25',
     bookingRefNo: 'BK-2026-029',
@@ -14246,7 +14257,7 @@ export const INITIAL_AGENT_PAYOUT_VOUCHERS: PmsAgentPayoutVoucher[] = [
     voucherNo: 'AGTPAY-1001',
     voucherDate: '2026-10-15',
     agentId: 'AGT-104',
-    agentName: 'Maharashtra Darshan Yatra (Anil Jadhav)',
+    agentName: 'Odisha Tour & Travels (Anil Patro)',
     grossAmount: 1400,
     tdsDeducted: 70,
     amount: 1330,
@@ -14346,7 +14357,7 @@ export const TOP_15_OFFICIAL_FEATURES: PmsTop15OfficialFeature[] = [
     title: 'Multiple Tariff & Day-Based Pricing',
     hindiTitle: 'मल्टी-टैरिफ व डे-बेस्ड प्राइसिंग (12-घंटे vs 24-घंटे)',
     bulletSummary: 'Set tariffs based on weekends, holidays, peak season, or corporate/client rates.',
-    fullDetail: 'Flexible hotel rate engine supporting 12-Hour fixed checkout (11:00 AM standard) and 24-Hour rolling check-in to checkout cycles. Allows day-wise pricing overrides for weekend surges, festival seasons (Shirdi Sai Baba festivals), corporate company contracts, and custom seasonal rate cards.',
+    fullDetail: 'Flexible hotel rate engine supporting 12-Hour fixed checkout (11:00 AM standard) and 24-Hour rolling check-in to checkout cycles. Allows day-wise pricing overrides for weekend surges, festival seasons (Majhigouri Chaitra Yatra & local festivals), corporate company contracts, and custom seasonal rate cards.',
     targetModal: 'day_end_report',
     route: 'pms.hotelsai-vasudev.com/business_setting',
     icon: '💰',

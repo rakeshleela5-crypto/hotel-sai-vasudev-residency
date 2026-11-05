@@ -76,7 +76,7 @@ export const Top20FeaturesModal: React.FC<Top20FeaturesModalProps> = ({
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ fontWeight: 900, fontSize: 16, letterSpacing: '0.5px' }}>
-                  TOP 20 ENTERPRISE FEATURES OF HOTEL SAI VASUDEV RESIDENCY ERP
+                  TOP 20 ENTERPRISE FEATURES OF SRI SAI VASUDEV RESIDENCY ERP
                 </span>
                 <span
                   style={{
@@ -149,7 +149,7 @@ export const Top20FeaturesModal: React.FC<Top20FeaturesModalProps> = ({
               </span>
             </div>
             <div style={{ fontSize: 13, color: '#e2e8f0', maxWidth: 680, lineHeight: 1.5 }}>
-              Hotel Sai Vasudev Residency ERP integrates front desk guest management, automated KOT kitchen printing, double-entry financial accounting, central warehouse inventory, anti-theft deletion guards, and direct WhatsApp guest marketing into a single real-time platform.
+              SRI SAI VASUDEV RESIDENCY ERP integrates front desk guest management, automated KOT kitchen printing, double-entry financial accounting, central warehouse inventory, anti-theft deletion guards, and direct WhatsApp guest marketing into a single real-time platform.
             </div>
           </div>
 
@@ -321,7 +321,7 @@ export const Top20FeaturesModal: React.FC<Top20FeaturesModalProps> = ({
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid #0284c7', paddingBottom: 16 }}>
                 <div>
                   <h2 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#0f172a' }}>
-                    Hotel Sai Vasudev Residency ERP &bull; Master Enterprise Architecture
+                    SRI SAI VASUDEV RESIDENCY ERP &bull; Master Enterprise Architecture
                   </h2>
                   <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
                     Direct Enterprise Package from Data House ERP &bull; Frames 0055 &amp; 0060

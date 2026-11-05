@@ -59,7 +59,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   }, [mobileMenuOpen]);
 
   const whatsappDirectUrl = `https://wa.me/919440289999?text=${encodeURIComponent(
-    'Namaste Hotel Sai Vasudev Residency! I would like assistance with room booking, darshan information, and tariff details.'
+    'Namaste Sri Sai Vasudev Residency! I would like assistance with room booking, tariff details, and pilgrimage guidance.'
   )}`;
 
   // Precise smooth scrolling with dynamic navbar offset compensation
@@ -415,15 +415,15 @@ export const Navbar: React.FC<NavbarProps> = ({
           <a 
             href="#overview" 
             className="brand-logo" 
-            aria-label="Hotel Sai Vasudev Residency Homepage"
+            aria-label="Sri Sai Vasudev Residency Homepage"
             onClick={(e) => scrollToSection(e, 'overview')}
           >
             <div className="logo-emblem">
               <span className="emblem-text">SVR</span>
             </div>
             <div className="brand-text-block">
-              <span className="brand-title">SAI VASUDEV</span>
-              <span className="brand-subtitle">RESIDENCY &bull; BOUTIQUE HOTEL &bull; SHIRDI</span>
+              <span className="brand-title">SRI SAI VASUDEV</span>
+              <span className="brand-subtitle">RESIDENCY &bull; BOUTIQUE HOTEL &bull; RAYAGADA</span>
             </div>
           </a>
 

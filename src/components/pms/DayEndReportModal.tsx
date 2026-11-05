@@ -38,7 +38,7 @@ export const DayEndReportModal: React.FC<DayEndReportModalProps> = ({ isOpen, on
                 DAY END REPORT &bull; NIGHT AUDIT PAPER LEDGER
               </h2>
               <div className="pms-reg-header-sub">
-                pms.hotelsai-vasudev.com/dayend_report &bull; <span className="gold">HOTEL SAI VASUDEV RESIDENCY</span> &bull; Daily Revenue &amp; Occupancy Audit
+                pms.hotelsai-vasudev.com/dayend_report &bull; <span className="gold">SRI SAI VASUDEV RESIDENCY</span> &bull; Daily Revenue &amp; Occupancy Audit
               </div>
             </div>
           </div>

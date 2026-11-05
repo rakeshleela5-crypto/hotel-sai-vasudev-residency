@@ -645,7 +645,7 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
                     VASUDEV RASOI &bull; PURE VEG RESTAURANT POS &amp; KOT
                   </div>
                   <div style={{ fontSize: 11, color: '#93c5fd' }}>
-                    Shirdi Temple Darshan Sattvic &amp; Jain Dining &bull; GST SAC 996331 (5%)
+                    Vasudev Rasoi Sattvic &amp; Pure Veg Dining &bull; GST SAC 996331 (5%)
                   </div>
                 </div>
               </div>

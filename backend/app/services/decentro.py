@@ -165,7 +165,7 @@ class DecentroClient:
         """
         clean_ref = reference_id or f"SVR-UPI-{uuid.uuid4().hex[:10].upper()}"
         clean_amount = round(float(amount), 2)
-        clean_purpose = purpose_message[:40] if purpose_message else "Hotel Sai Vasudev Bill"
+        clean_purpose = purpose_message[:40] if purpose_message else "Sri Sai Vasudev Bill"
 
         # Check circuit breaker before outbound call
         if not await self.circuit_breaker.can_execute():
@@ -556,7 +556,7 @@ class DecentroClient:
           <circle cx="130" cy="225" r="6" fill="#0f172a"/>
           <circle cx="170" cy="225" r="6" fill="#0f172a"/>
           <rect x="80" y="132" width="140" height="36" fill="#0f172a" rx="6" stroke="#ffffff" stroke-width="2"/>
-          <text x="150" y="148" font-family="Arial, sans-serif" font-size="10" font-weight="900" fill="#38bdf8" text-anchor="middle">HOTEL SAI VASUDEV</text>
+          <text x="150" y="148" font-family="Arial, sans-serif" font-size="10" font-weight="900" fill="#38bdf8" text-anchor="middle">SRI SAI VASUDEV</text>
           <text x="150" y="160" font-family="Arial, sans-serif" font-size="8" font-weight="700" fill="#ffffff" text-anchor="middle">₹{amount:.2f} &bull; UPI SCAN</text>
         </svg>'''
 

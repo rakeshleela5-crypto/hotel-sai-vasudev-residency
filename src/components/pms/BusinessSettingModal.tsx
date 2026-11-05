@@ -77,7 +77,7 @@ export const BusinessSettingModal: React.FC<BusinessSettingModalProps> = ({
           <div className="pms-header-left">
             <span style={{ fontSize: 16 }}>⚙️</span>
             <h2 className="pms-brand-title" style={{ fontSize: 15 }}>
-              HOTEL SAI VASUDEV RESIDENCY &bull; BUSINESS SETTING (/businesssettings/create)
+              SRI SAI VASUDEV RESIDENCY &bull; BUSINESS SETTING (/businesssettings/create)
             </h2>
           </div>
           <div className="pms-header-right">
@@ -306,7 +306,7 @@ export const BusinessSettingModal: React.FC<BusinessSettingModalProps> = ({
 
         {/* Footer */}
         <div style={{ background: '#f8f9fa', padding: '10px 20px', borderTop: '1px solid #dee2e6', fontSize: 12, color: '#6c757d', textAlign: 'right' }}>
-          HOTEL SAI VASUDEV RESIDENCY &bull; SHIRDI PMS SYSTEM
+          SRI SAI VASUDEV RESIDENCY &bull; RAYAGADA PMS SYSTEM
         </div>
       </div>
     </div>

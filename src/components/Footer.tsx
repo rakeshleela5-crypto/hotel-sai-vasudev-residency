@@ -22,7 +22,7 @@ export const Footer: React.FC = () => {
           <div className="footer-brand-col">
             <div className="footer-logo">
               <span className="logo-emblem">SVR</span>
-              <span className="logo-title">Hotel Sai Vasudev Residency</span>
+              <span className="logo-title">Sri Sai Vasudev Residency</span>
             </div>
             <p className="footer-desc">
               A luxury boutique sanctuary dedicated to offering sacred comfort, peace of mind, 
@@ -89,7 +89,7 @@ export const Footer: React.FC = () => {
         </div>
 
         <div className="footer-bottom-bar">
-          <p>&copy; {new Date().getFullYear()} Hotel Sai Vasudev Residency. All Rights Reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Sri Sai Vasudev Residency. All Rights Reserved.</p>
           <div className="footer-bottom-links">
             <Link to="/privacy-policy" title="Verified Hotel Guest Privacy & Statutory KYC Policy">Privacy Policy</Link>
             <span>•</span>

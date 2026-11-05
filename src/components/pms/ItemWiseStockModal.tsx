@@ -80,7 +80,7 @@ export const ItemWiseStockModal: React.FC<ItemWiseStockModalProps> = ({
                 ITEM WISE STOCK LEDGER
               </h2>
               <div className="pms-reg-header-sub">
-                pms.hotelsai-vasudev.com/item_wise_stock &bull; <span className="gold">HOTEL SAI VASUDEV RESIDENCY</span> &bull; Kitchen Stock Audit &amp; Movements
+                pms.hotelsai-vasudev.com/item_wise_stock &bull; <span className="gold">HOTEL SRI SAI VASUDEV RESIDENCY</span> &bull; Kitchen Stock Audit &amp; Movements
               </div>
             </div>
           </div>

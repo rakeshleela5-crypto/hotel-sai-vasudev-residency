@@ -5,20 +5,31 @@ from typing import List
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(case_sensitive=True, extra="ignore")
 
-    PROJECT_NAME: str = "Hotel Sai Vasudev Residency API"
+    PROJECT_NAME: str = "SRI SAI VASUDEV RESIDENCY API"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
 
     # Official Government of India Form GST REG-06 Registration Details
     HOTEL_TRADE_NAME: str = "SRI SAI VASUDEV RESIDENCY"
     HOTEL_LEGAL_NAME: str = "PAIDISETTY MANMADHA RAO"
+    HOTEL_CONSTITUTION: str = "Proprietorship"
+    HOTEL_PROPRIETOR_RESIDENCE: str = "Odisha"
     HOTEL_GSTIN: str = "21AEKPP8689J1ZS"
     HOTEL_STATE_CODE: str = "21"
     HOTEL_PAN: str = "AEKPP8689J"
-    HOTEL_ADDRESS: str = "Near Andhra Bank, New Colony, Rayagada, Odisha - 765001"
+    HOTEL_BUILDING: str = "SR RESIDENCY"
+    HOTEL_STREET: str = "NEAR ANDHRA BANK, NEW COLONY"
+    HOTEL_ADDRESS: str = "SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY, Rayagada, Odisha - 765001"
+    HOTEL_CITY: str = "Rayagada"
+    HOTEL_DISTRICT: str = "Rayagada"
     HOTEL_STATE: str = "Odisha"
     HOTEL_PINCODE: str = "765001"
     HOTEL_JURISDICTION: str = "RAYAGADA DIVISION"
+    HOTEL_APPROVING_OFFICER: str = "Superintendent Gulshan Sanodiya"
+    HOTEL_DATE_OF_LIABILITY: str = "05/02/2025"
+    HOTEL_PERIOD_OF_VALIDITY: str = "Not Applicable"
+    HOTEL_ADDITIONAL_PLACES_OF_BUSINESS: int = 0
+    HOTEL_GST_NOTICE: str = "The registration certificate is required to be prominently displayed at all places of business in the State"
     
     # Railway passes DATABASE_URL when PostgreSQL is attached
     DATABASE_URL: str = os.getenv(

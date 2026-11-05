@@ -77,7 +77,7 @@ export const UnconfirmedBookingsModal: React.FC<UnconfirmedBookingsModalProps> =
 
       // Automated WhatsApp notification (Video 02 [17:15] & Video 20 [11:40])
       const msg = encodeURIComponent(
-        `Namaste ${booking.guestName} ji! Your reservation ${booking.bookingNo} for Room ${booking.rooms[0]?.roomNo} (${booking.checkInDate} to ${booking.checkOutDate}) is now CONFIRMED at HOTEL SAI VASUDEV RESIDENCY, Shirdi. Looking forward to welcoming you!`
+        `Namaste ${booking.guestName} ji! Your reservation ${booking.bookingNo} for Room ${booking.rooms[0]?.roomNo} (${booking.checkInDate} to ${booking.checkOutDate}) is now CONFIRMED at SRI SAI VASUDEV RESIDENCY, Rayagada. Looking forward to welcoming you!`
       );
       // Auto open or log
       console.log('WhatsApp notification ready:', msg);
@@ -509,8 +509,8 @@ export const UnconfirmedBookingsModal: React.FC<UnconfirmedBookingsModalProps> =
                 <div style={{ fontSize: 12, color: '#065f46', lineHeight: 1.6 }}>
                   <div><strong>Guest Name:</strong> {viewingBooking.guestName}</div>
                   <div><strong>Add:</strong> {viewingBooking.addressLine1 || 'Main Road'} {viewingBooking.addressLine2}</div>
-                  <div><strong>city:</strong> {viewingBooking.city || 'Shirdi'}</div>
-                  <div><strong>State:</strong> {viewingBooking.state || 'Maharashtra'}</div>
+                  <div><strong>city:</strong> {viewingBooking.city || 'Rayagada'}</div>
+                  <div><strong>State:</strong> {viewingBooking.state || 'Odisha'}</div>
                   <div><strong>Mob:</strong> {viewingBooking.mobile}</div>
                   <div><strong>Email:</strong> {viewingBooking.email || 'N/A'}</div>
                 </div>
