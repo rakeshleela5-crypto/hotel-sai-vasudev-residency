@@ -645,6 +645,9 @@ export const CompanyBrandingModal: React.FC<CompanyBrandingModalProps> = ({
                   <option value="Format_2_Summary">Format 2 (Summary Invoice / View 1)</option>
                   <option value="Format_4_A5_Compact">Format 4(A5) (Half-Page Condensed)</option>
                   <option value="Format_5_Enterprise_Folio">Format 5 (Enterprise Dot-Matrix Folio - Document 3)</option>
+                  <option value="Format_6_Restaurant_DineIn">Format 6 (Restaurant Dine-In Bill - Document 1)</option>
+                  <option value="Format_7_RoomService">Format 7 (Room Service Bill - Document 2)</option>
+                  <option value="Format_8_Card_EDC_Slip">Format 8 (Card POS / EDC Slip - Document 4)</option>
                 </select>
 
                 <div
@@ -666,6 +669,9 @@ export const CompanyBrandingModal: React.FC<CompanyBrandingModalProps> = ({
                     {defaultFormat === 'Format_2_Summary' && 'General clean 2-column invoice layout with guest address box, days count, and advance deduction.'}
                     {defaultFormat === 'Format_4_A5_Compact' && 'Half-sheet format designed specifically for A5 stationery and thermal printers, eliminating margin overspills.'}
                     {defaultFormat === 'Format_5_Enterprise_Folio' && 'Enterprise continuous-feed master guest folio matching premier Indian hotels (Empires/IDS Next style) with multi-column debit/credit ledger, voucher cross-postings, and dual tax summary grid.'}
+                    {defaultFormat === 'Format_6_Restaurant_DineIn' && 'Authentic restaurant dine-in bill with Table No, Covers, Steward, SAC codes, discount line, and left-side Room Charge Transfer Sign-off Block.'}
+                    {defaultFormat === 'Format_7_RoomService' && 'In-room dining guest bill with prominent ROOM SERVICE header, Room No, Steward, SAC 996332, and guest room charge authorization signature block.'}
+                    {defaultFormat === 'Format_8_Card_EDC_Slip' && 'Authentic 80mm/58mm HDFC Bank / Mosambee thermal card POS swipe terminal receipt with MID, TID, Batch, Invoice No, masked card, and PIN Verified OK approval.'}
                   </div>
                 </div>
 

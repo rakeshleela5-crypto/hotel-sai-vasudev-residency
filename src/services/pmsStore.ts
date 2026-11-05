@@ -10617,13 +10617,40 @@ export class PmsStore {
         paperSize: 'A4',
         buttonColor: '#4338ca',
         description: 'Authentic enterprise continuous-feed master guest folio matching premier Indian hotel systems (Empires/IDS Next) with multi-column debit/credit ledger, voucher cross-postings, and dual tax summary grid.'
+      },
+      {
+        id: 'Format_6_Restaurant_DineIn',
+        name: 'Format 6 / Restaurant Dine-In Bill (/restaurant_bill) [DOCUMENT 1]',
+        label: 'Format 6 (Dine-In Bill ★)',
+        route: '/restaurant_bill',
+        paperSize: 'A4',
+        buttonColor: '#059669',
+        description: 'Authentic restaurant dine-in bill with Table No, Covers, Steward, HSN/SAC codes, discount line, and left-side Room Charge Transfer Sign-off Block for cross-posting to checkout folios.'
+      },
+      {
+        id: 'Format_7_RoomService',
+        name: 'Format 7 / In-Room Dining Service Bill (/room_service_bill) [DOCUMENT 2]',
+        label: 'Format 7 (Room Service ★)',
+        route: '/room_service_bill',
+        paperSize: 'A4',
+        buttonColor: '#ea580c',
+        description: 'In-room dining guest bill with prominent ROOM SERVICE header, Room No, Steward, SAC 996332, CGST/SGST, and guest room charge authorization signature block.'
+      },
+      {
+        id: 'Format_8_Card_EDC_Slip',
+        name: 'Format 8 / EDC Thermal Card Swipe Settlement Slip (/pos_card_slip) [DOCUMENT 4]',
+        label: 'Format 8 (Card EDC Slip ★)',
+        route: '/pos_card_slip',
+        paperSize: 'A5',
+        buttonColor: '#0284c7',
+        description: 'Authentic 80mm/58mm HDFC Bank / Mosambee thermal card POS swipe terminal receipt with MID, TID, Batch, Invoice No, masked card, and PIN Verified OK approval.'
       }
     ];
   }
 
   static getDefaultBillFormat(): BillFormatType {
     const saved = localStorage.getItem('pms_default_bill_format');
-    if (saved && ['Format_1_DayWise', 'Format_2_Summary', 'Format_3_A4_Standard', 'Format_4_A5_Compact', 'Format_5_Enterprise_Folio'].includes(saved)) {
+    if (saved && ['Format_1_DayWise', 'Format_2_Summary', 'Format_3_A4_Standard', 'Format_4_A5_Compact', 'Format_5_Enterprise_Folio', 'Format_6_Restaurant_DineIn', 'Format_7_RoomService', 'Format_8_Card_EDC_Slip'].includes(saved)) {
       return saved as BillFormatType;
     }
     return 'Format_3_A4_Standard';

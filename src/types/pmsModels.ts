@@ -394,6 +394,9 @@ export interface PmsFoodBill {
   kotNumbers: string[];       // e.g. ['372', '374']
   items: (KotItem | FoodBillItem)[];
   taxableAmount: number;
+  steward?: string;           // e.g. Dilip, Ranjan
+  covers?: number;            // Number of dining guests / covers (e.g. 2)
+  outlet?: string;            // e.g. PEARL RESTAURANT, Vasudev Rasoi
   gstPercent: number;         // 5.0000%
   cgstAmount: number;         // 2.5%
   sgstAmount: number;         // 2.5%
@@ -453,7 +456,7 @@ export interface PmsCheckOutDetail {
   pinCode?: string;
   email?: string;
   sacCode?: string;           // 996311 (Hotel Accommodation)
-  invoiceFormat?: 'A4_Standard' | 'A5_HalfPage' | 'Detailed' | 'Enterprise_Folio';
+  invoiceFormat?: 'A4_Standard' | 'A5_HalfPage' | 'Detailed' | 'Enterprise_Folio' | 'Card_EDC_Slip' | 'Restaurant_DineIn' | 'RoomService';
   isTaxInclusive?: boolean;
   isComplimentary?: boolean;
   billingOfficer?: string;    // e.g. DEMO0004
@@ -1094,7 +1097,10 @@ export type BillFormatType =
   | 'Format_2_Summary'       // /room_checkout_view/:id - General Tax Invoice with guest & room details
   | 'Format_3_A4_Standard'   // /room_checkout_view3/:id - A4 Standard Format with key drop notice, GST table & signatures (RECOMMENDED)
   | 'Format_4_A5_Compact'    // /room_checkout_view4/:id - A5 Half-Page condensed format for thermal/A5 stationery
-  | 'Format_5_Enterprise_Folio'; // /enterprise_folio/:id - Classic Dot-Matrix Master Folio (Document 3) with SAC ledger & dual tax breakdown
+  | 'Format_5_Enterprise_Folio' // /enterprise_folio/:id - Classic Dot-Matrix Master Folio (Document 3) with SAC ledger & dual tax breakdown
+  | 'Format_6_Restaurant_DineIn' // /restaurant_bill/:id - Restaurant Dine-In Bill with Room Transfer Block (Document 1)
+  | 'Format_7_RoomService'   // /room_service_bill/:id - In-Room Dining Service Bill with Guest Authorization (Document 2)
+  | 'Format_8_Card_EDC_Slip'; // /pos_card_slip/:id - EDC Thermal Card Swipe Settlement Slip (Document 4)
 
 export interface BillFormatOption {
   id: BillFormatType;

@@ -119,7 +119,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
   const [noOfDays, setNoOfDays] = useState(1);
   const [perDayTariff, setPerDayTariff] = useState(targetRoom?.tariff || 1800);
   const [dayWiseRent, setDayWiseRent] = useState<DayWiseRentItem[]>([]);
-  const [invoiceFormat, setInvoiceFormat] = useState<'A4_Standard' | 'A5_HalfPage' | 'Detailed' | 'Enterprise_Folio'>('Enterprise_Folio');
+  const [invoiceFormat, setInvoiceFormat] = useState<'A4_Standard' | 'A5_HalfPage' | 'Detailed' | 'Enterprise_Folio' | 'Card_EDC_Slip' | 'Restaurant_DineIn' | 'RoomService'>('Enterprise_Folio');
   const [showInvoicePreview, setShowInvoicePreview] = useState(false);
   const [isFullBillFormatOpen, setIsFullBillFormatOpen] = useState(false);
   const [fullBillFormat, setFullBillFormat] = useState<BillFormatType>('Format_3_A4_Standard');
@@ -1746,6 +1746,22 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                 >
                   Detailed Breakdown
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setInvoiceFormat('Card_EDC_Slip')}
+                  style={{
+                    background: invoiceFormat === 'Card_EDC_Slip' ? '#38bdf8' : '#334155',
+                    color: invoiceFormat === 'Card_EDC_Slip' ? '#0f172a' : '#fff',
+                    border: 'none',
+                    padding: '3px 10px',
+                    borderRadius: 3,
+                    fontSize: 11,
+                    fontWeight: 800,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Card POS Slip (Doc 4 ★)
+                </button>
               </div>
 
               <div style={{ display: 'flex', gap: 8 }}>
@@ -1759,6 +1775,17 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                   title="Open Multi-Format Bill Suite"
                 >
                   <span>🧾</span> Multi-Format Bill Suite
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setInvoiceFormat('Card_EDC_Slip');
+                    setTimeout(() => window.print(), 100);
+                  }}
+                  style={{ background: '#0284c7', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: 3, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                  title="Print HDFC Bank / Mosambee EDC Card Settlement Thermal Receipt (Document 4)"
+                >
+                  <span>💳</span> Print Card EDC Slip (Doc 4)
                 </button>
                 <button
                   type="button"
@@ -1802,11 +1829,14 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
 
             {/* Printable Tax Invoice Document (Isolated by @media print) */}
             <div id="printable-tax-invoice" style={{
-              padding: 24,
+              padding: invoiceFormat === 'Card_EDC_Slip' ? 16 : 24,
               background: '#ffffff',
               fontSize: 12,
               color: '#0f172a',
-              fontFamily: invoiceFormat === 'Enterprise_Folio' ? "'Courier New', Courier, monospace" : 'Arial, Helvetica, sans-serif'
+              maxWidth: invoiceFormat === 'Card_EDC_Slip' ? 360 : undefined,
+              margin: invoiceFormat === 'Card_EDC_Slip' ? '0 auto' : undefined,
+              boxShadow: invoiceFormat === 'Card_EDC_Slip' ? '0 4px 12px rgba(0,0,0,0.15)' : undefined,
+              fontFamily: invoiceFormat === 'Enterprise_Folio' || invoiceFormat === 'Card_EDC_Slip' ? "'Courier New', Courier, monospace" : 'Arial, Helvetica, sans-serif'
             }}>
               {invoiceFormat === 'Enterprise_Folio' ? (
                 /* ========================================================================= */
@@ -2193,6 +2223,130 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                     </div>
                   );
                 })()
+              ) : invoiceFormat === 'Card_EDC_Slip' ? (
+                /* ========================================================================= */
+                /* DOCUMENT 4: EDC / POS CARD MACHINE SETTLEMENT THERMAL SLIP                */
+                /* ========================================================================= */
+                <div style={{ fontSize: 11, lineHeight: 1.45, fontFamily: "'Courier New', Courier, monospace", color: '#000' }}>
+                  {/* Bank & Merchant Header */}
+                  <div style={{ textAlign: 'center', borderBottom: '1px dashed #000', paddingBottom: 6, marginBottom: 6 }}>
+                    <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: 0.5 }}>
+                      [■] HDFC BANK
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 800, marginTop: 2 }}>
+                      EMPIRES / SRI SAI VASUDEV RESIDENCY
+                    </div>
+                    <div style={{ fontSize: 9.5 }}>
+                      SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY
+                    </div>
+                    <div style={{ fontSize: 9.5 }}>
+                      RAYAGADA, ODISHA 765001
+                    </div>
+                  </div>
+
+                  {/* Terminal Metadata Grid */}
+                  <div style={{ fontSize: 10, marginBottom: 6 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>DATE: {checkOutDate}</span>
+                      <span>TIME: {checkOutTime}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>MID: E31758</span>
+                      <span>TID: 67005863</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Batch No: 001163</span>
+                      <span>Invoice: 008106</span>
+                    </div>
+                  </div>
+
+                  {/* Status Box */}
+                  <div style={{ textAlign: 'center', borderTop: '1px dashed #000', borderBottom: '1px dashed #000', padding: '6px 0', margin: '6px 0' }}>
+                    <div style={{ fontWeight: 900, fontSize: 12 }}>Transaction Approved</div>
+                    <div style={{ fontWeight: 800, fontSize: 11 }}>Sale</div>
+                  </div>
+
+                  {/* Card Security Parameters */}
+                  <div style={{ fontSize: 9.5, lineHeight: 1.4 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Card No:</span>
+                      <strong>XXXXXXXXXXXX8884</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Card Entry Mode:</span>
+                      <span>CHIP</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Card Type:</span>
+                      <span>VISA</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Exp Date:</span>
+                      <span>**/**</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>App Label:</span>
+                      <span>VISA CREDIT</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>AID:</span>
+                      <span>A0000000031010</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>APPR CODE:</span>
+                      <strong>029844</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>RRN:</span>
+                      <span>000000008164</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>TXN ID:</span>
+                      <span>6109548993</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>TVR: 0080048000</span>
+                      <span>TSI: E800</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>TC:</span>
+                      <span>5C76CD64387ECA31</span>
+                    </div>
+                  </div>
+
+                  {/* Net Sale Amount Banner */}
+                  <div style={{
+                    borderTop: '2px solid #000',
+                    borderBottom: '2px solid #000',
+                    padding: '6px 0',
+                    margin: '8px 0',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    fontSize: 13,
+                    fontWeight: 900
+                  }}>
+                    <span>SALE AMT:</span>
+                    <span>INR {netPayable.toFixed(2)}</span>
+                  </div>
+
+                  {/* Cardholder Verification & Agreement */}
+                  <div style={{ textAlign: 'center', margin: '6px 0', fontSize: 10 }}>
+                    <div style={{ fontWeight: 900 }}>PIN VERIFIED OK</div>
+                    <div style={{ fontSize: 9 }}>SIGNATURE NOT REQUIRED</div>
+                  </div>
+
+                  <div style={{ textAlign: 'center', marginTop: 6, borderTop: '1px dashed #000', paddingTop: 6, fontSize: 9 }}>
+                    <div style={{ fontWeight: 800, textTransform: 'uppercase' }}>{(guestName || 'AMMU VENKATA KARTIK').toUpperCase()}</div>
+                    <div style={{ fontStyle: 'italic', fontSize: 8.5, color: '#334155' }}>
+                      I AGREE TO PAY AS PER THE CARD ISSUER AGREEMENT
+                    </div>
+                    <div style={{ fontWeight: 900, marginTop: 4, letterSpacing: 1 }}>CUSTOMER COPY</div>
+                    <div style={{ fontSize: 8, color: '#64748b', marginTop: 2 }}>
+                      Version 2.1.107.259 &bull; Powered by Mosambee
+                    </div>
+                  </div>
+                </div>
               ) : (
                 /* EXISTING A4 / DETAILED FORMAT */
                 <div>

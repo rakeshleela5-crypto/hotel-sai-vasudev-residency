@@ -175,6 +175,12 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
         return `pms.hotelsai-vasudev.com/room_checkout_view4/${currentCheckout.invoiceNo.replace(/[^0-9]/g, '').slice(-3) || '238'}`;
       case 'Format_5_Enterprise_Folio':
         return `pms.hotelsai-vasudev.com/enterprise_folio/${currentCheckout.invoiceNo.replace(/[^0-9]/g, '').slice(-3) || '903'}`;
+      case 'Format_6_Restaurant_DineIn':
+        return `pms.hotelsai-vasudev.com/restaurant_bill/1032`;
+      case 'Format_7_RoomService':
+        return `pms.hotelsai-vasudev.com/room_service_bill/1059`;
+      case 'Format_8_Card_EDC_Slip':
+        return `pms.hotelsai-vasudev.com/pos_card_slip/008106`;
     }
   };
 
@@ -421,6 +427,54 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
               }}
             >
               Format 5 (Enterprise Folio ★)
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveFormat('Format_6_Restaurant_DineIn')}
+              style={{
+                background: activeFormat === 'Format_6_Restaurant_DineIn' ? '#059669' : '#1e293b',
+                color: '#fff',
+                border: activeFormat === 'Format_6_Restaurant_DineIn' ? '1px solid #34d399' : '1px solid #475569',
+                padding: '4px 10px',
+                borderRadius: 4,
+                fontSize: 11,
+                fontWeight: 800,
+                cursor: 'pointer'
+              }}
+            >
+              Format 6 (Dine-In Doc 1 ★)
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveFormat('Format_7_RoomService')}
+              style={{
+                background: activeFormat === 'Format_7_RoomService' ? '#ea580c' : '#1e293b',
+                color: '#fff',
+                border: activeFormat === 'Format_7_RoomService' ? '1px solid #fb923c' : '1px solid #475569',
+                padding: '4px 10px',
+                borderRadius: 4,
+                fontSize: 11,
+                fontWeight: 800,
+                cursor: 'pointer'
+              }}
+            >
+              Format 7 (Room Service Doc 2 ★)
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveFormat('Format_8_Card_EDC_Slip')}
+              style={{
+                background: activeFormat === 'Format_8_Card_EDC_Slip' ? '#0284c7' : '#1e293b',
+                color: '#fff',
+                border: activeFormat === 'Format_8_Card_EDC_Slip' ? '1px solid #38bdf8' : '1px solid #475569',
+                padding: '4px 10px',
+                borderRadius: 4,
+                fontSize: 11,
+                fontWeight: 800,
+                cursor: 'pointer'
+              }}
+            >
+              Format 8 (Card EDC Doc 4 ★)
             </button>
           </div>
         </div>
@@ -1802,6 +1856,506 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
                 </div>
               );
             })()}
+
+            {/* ========================================================================= */}
+            {/* FORMAT 6: RESTAURANT DINE-IN BILL WITH ROOM FOLIO TRANSFER (DOCUMENT 1)   */}
+            {/* ========================================================================= */}
+            {activeFormat === 'Format_6_Restaurant_DineIn' && (
+              <div
+                style={{
+                  background: '#ffffff',
+                  padding: 24,
+                  fontSize: 12,
+                  color: '#0f172a',
+                  fontFamily: "'Courier New', Courier, monospace"
+                }}
+              >
+                {/* Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px dashed #000', paddingBottom: 8, marginBottom: 8 }}>
+                  <div style={{ textAlign: 'left' }}>
+                    <div style={{ fontSize: 14, fontWeight: 900, letterSpacing: 0.5 }}>PEARL RESTAURANT</div>
+                    <div style={{ fontSize: 10, color: '#475569' }}>FINE DINE &bull; MULTI-CUISINE OUTLET</div>
+                    <div style={{ fontSize: 9.5, color: '#64748b', marginTop: 2 }}>
+                      FSSAI LIC NO: 12017026000083
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 15, fontWeight: 900, color: '#0f172a' }}>
+                      {companyInfo.firmName || 'SRI SAI VASUDEV RESIDENCY'}
+                    </div>
+                    <div style={{ fontSize: 10.5 }}>
+                      {companyInfo.address1 || 'SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY'}
+                    </div>
+                    <div style={{ fontSize: 10.5 }}>
+                      Rayagada, Odisha - 765001 &bull; Ph: 06856-222001
+                    </div>
+                    <div style={{ fontSize: 10.5, fontWeight: 700 }}>
+                      GSTIN: {companyInfo.gstNo || '21AEKPP8689J1ZS'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Metadata Strip */}
+                <div style={{
+                  border: '1px solid #000',
+                  display: 'grid',
+                  gridTemplateColumns: '1.2fr 1fr 0.8fr 0.9fr 1fr 1.1fr',
+                  fontSize: 11,
+                  padding: '4px 8px',
+                  marginBottom: 12,
+                  background: '#f8fafc'
+                }}>
+                  <div><strong>STEWARD:</strong> Dilip</div>
+                  <div><strong>TABLE NO:</strong> 28</div>
+                  <div><strong>COVERS:</strong> 2</div>
+                  <div><strong>TIME:</strong> 18:29</div>
+                  <div><strong>DATE:</strong> 08/05/26</div>
+                  <div><strong>BILL NO:</strong> 1032</div>
+                </div>
+
+                {/* 2-Column Split */}
+                <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: 16, alignItems: 'start' }}>
+                  {/* Left Room Transfer Box */}
+                  <div style={{
+                    border: '1.5px solid #000',
+                    borderRadius: 4,
+                    padding: '8px 10px',
+                    fontSize: 10,
+                    lineHeight: 1.45,
+                    background: '#fff'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #000', paddingBottom: 4, marginBottom: 4, fontWeight: 900 }}>
+                      <span>ROOM NO:</span>
+                      <span style={{ fontSize: 12, background: '#f1f5f9', padding: '0 6px', border: '1px solid #94a3b8' }}>
+                        28 (# 368)
+                      </span>
+                    </div>
+
+                    <div style={{ fontWeight: 800, textAlign: 'center', margin: '4px 0', fontSize: 9, color: '#dc2626' }}>
+                      DO NOT SIGN IF PAID CASH
+                    </div>
+
+                    <div style={{ margin: '8px 0 4px', borderBottom: '1px solid #000', paddingBottom: 2 }}>
+                      <strong>GUEST SIGNATURE:</strong>
+                      <div style={{ fontStyle: 'italic', fontFamily: 'cursive', color: '#1e40af', fontSize: 12, marginTop: 4 }}>
+                        {currentCheckout.guestName || 'A. V. Kartik'}
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: 6, fontSize: 9.5 }}>
+                      <div><strong>NAME:</strong> {currentCheckout.guestName}</div>
+                      <div><strong>COMPANY:</strong> _________________</div>
+                      <div><strong>GSTIN:</strong> ___________________</div>
+                      <div><strong>ADDRESS:</strong> Rayagada, Odisha</div>
+                    </div>
+
+                    <div style={{ borderTop: '1px solid #000', marginTop: 6, paddingTop: 4, fontSize: 8.5 }}>
+                      UNCONSUMED FOOD AND DRINKS NOT TO BE TAKEN AWAY
+                    </div>
+                    <div style={{ fontWeight: 800, fontSize: 8.5, marginTop: 2 }}>
+                      &bull; ALL DISPUTES ARE SUBJECT TO RAYAGADA JURISDICTION
+                    </div>
+                    <div style={{ fontSize: 8.5, color: '#475569', marginTop: 2 }}>
+                      FSSAI LIC NO: 12017026000083
+                    </div>
+                    <div style={{ fontSize: 8, fontStyle: 'italic', marginTop: 2 }}>
+                      (A UNIT OF {companyInfo.firmName || 'SRI SAI VASUDEV RESIDENCY'})
+                    </div>
+                  </div>
+
+                  {/* Right Items & Taxes */}
+                  <div>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, marginBottom: 8 }}>
+                      <thead>
+                        <tr style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', textAlign: 'left' }}>
+                          <th style={{ padding: '4px' }}>DESCRIPTION</th>
+                          <th style={{ padding: '4px', textAlign: 'center', width: 65 }}>HSN/SAC</th>
+                          <th style={{ padding: '4px', textAlign: 'center', width: 40 }}>QTY.</th>
+                          <th style={{ padding: '4px', textAlign: 'right', width: 60 }}>RATE</th>
+                          <th style={{ padding: '4px', textAlign: 'right', width: 70 }}>AMOUNT</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr style={{ borderBottom: '1px dotted #cbd5e1' }}>
+                          <td style={{ padding: '3px 4px', fontWeight: 700 }}>ROTI PLAIN</td>
+                          <td style={{ padding: '3px 4px', textAlign: 'center' }}>996332</td>
+                          <td style={{ padding: '3px 4px', textAlign: 'center' }}>2</td>
+                          <td style={{ padding: '3px 4px', textAlign: 'right' }}>60.00</td>
+                          <td style={{ padding: '3px 4px', textAlign: 'right', fontWeight: 800 }}>120.00</td>
+                        </tr>
+                        <tr style={{ borderBottom: '1px dotted #cbd5e1' }}>
+                          <td style={{ padding: '3px 4px', fontWeight: 700 }}>KULCHA MASALA</td>
+                          <td style={{ padding: '3px 4px', textAlign: 'center' }}>996332</td>
+                          <td style={{ padding: '3px 4px', textAlign: 'center' }}>3</td>
+                          <td style={{ padding: '3px 4px', textAlign: 'right' }}>110.00</td>
+                          <td style={{ padding: '3px 4px', textAlign: 'right', fontWeight: 800 }}>330.00</td>
+                        </tr>
+                        <tr style={{ borderBottom: '1px dotted #cbd5e1' }}>
+                          <td style={{ padding: '3px 4px', fontWeight: 700 }}>ROTI BUTTER</td>
+                          <td style={{ padding: '3px 4px', textAlign: 'center' }}>996332</td>
+                          <td style={{ padding: '3px 4px', textAlign: 'center' }}>1</td>
+                          <td style={{ padding: '3px 4px', textAlign: 'right' }}>60.00</td>
+                          <td style={{ padding: '3px 4px', textAlign: 'right', fontWeight: 800 }}>60.00</td>
+                        </tr>
+                        <tr style={{ borderBottom: '1px dotted #cbd5e1' }}>
+                          <td style={{ padding: '3px 4px', fontWeight: 700 }}>WATER HIMALAYA</td>
+                          <td style={{ padding: '3px 4px', textAlign: 'center' }}>996334</td>
+                          <td style={{ padding: '3px 4px', textAlign: 'center' }}>1</td>
+                          <td style={{ padding: '3px 4px', textAlign: 'right' }}>110.00</td>
+                          <td style={{ padding: '3px 4px', textAlign: 'right', fontWeight: 800 }}>110.00</td>
+                        </tr>
+                      </tbody>
+                    </table>
+
+                    {/* Financial Summary */}
+                    <div style={{ borderTop: '1px solid #000', paddingTop: 6, fontSize: 11, lineHeight: 1.6 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Total Amount:</span>
+                        <strong>620.00</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#dc2626' }}>
+                        <span>Discount:</span>
+                        <span>-102.00</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>State GST 9.00 %:</span>
+                        <span>46.62</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Central GST 9.00 %:</span>
+                        <span>46.62</span>
+                      </div>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        borderTop: '1.5px solid #000',
+                        borderBottom: '1.5px solid #000',
+                        padding: '4px 0',
+                        marginTop: 4,
+                        fontSize: 13,
+                        fontWeight: 900
+                      }}>
+                        <span>Net Amount:</span>
+                        <span>₹611.00</span>
+                      </div>
+                      <div style={{ fontSize: 9.5, fontStyle: 'italic', marginTop: 3 }}>
+                        (Rupees Six Hundred Eleven Only)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Statutory Notice */}
+                <div style={{ borderTop: '1px dashed #000', marginTop: 12, paddingTop: 6, textAlign: 'center', fontSize: 9 }}>
+                  &quot;The registration certificate is required to be prominently displayed at all places of business in the State&quot;
+                </div>
+              </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* FORMAT 7: IN-ROOM DINING / ROOM SERVICE BILL (DOCUMENT 2)                 */}
+            {/* ========================================================================= */}
+            {activeFormat === 'Format_7_RoomService' && (
+              <div
+                style={{
+                  background: '#ffffff',
+                  padding: 24,
+                  fontSize: 12,
+                  color: '#0f172a',
+                  fontFamily: "'Courier New', Courier, monospace"
+                }}
+              >
+                {/* Header */}
+                <div style={{ borderBottom: '1px dashed #000', paddingBottom: 6, marginBottom: 8, textAlign: 'center' }}>
+                  <div style={{ fontSize: 15, fontWeight: 900, color: '#0f172a' }}>
+                    {companyInfo.firmName || 'SRI SAI VASUDEV RESIDENCY'}
+                  </div>
+                  <div style={{ fontSize: 10.5 }}>
+                    {companyInfo.address1 || 'SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY, Rayagada, Odisha - 765001'}
+                  </div>
+                  <div style={{ fontSize: 10.5 }}>
+                    Ph: 06856-222001 &bull; GSTIN: {companyInfo.gstNo || '21AEKPP8689J1ZS'}
+                  </div>
+                  <div style={{
+                    display: 'inline-block',
+                    border: '1.5px solid #000',
+                    padding: '2px 18px',
+                    fontSize: 13,
+                    fontWeight: 900,
+                    letterSpacing: 1.5,
+                    marginTop: 6,
+                    background: '#f8fafc'
+                  }}>
+                    ROOM SERVICE
+                  </div>
+                </div>
+
+                {/* Metadata Strip */}
+                <div style={{
+                  border: '1px solid #000',
+                  display: 'grid',
+                  gridTemplateColumns: '1.2fr 1fr 0.8fr 0.9fr 1fr 1.1fr',
+                  fontSize: 11,
+                  padding: '4px 8px',
+                  marginBottom: 12,
+                  background: '#f8fafc'
+                }}>
+                  <div><strong>STEWARD:</strong> Ranjan</div>
+                  <div><strong>TABLE/ROOM:</strong> {currentCheckout.roomNo || '368'}</div>
+                  <div><strong>COVERS:</strong> 2</div>
+                  <div><strong>TIME:</strong> 11:29</div>
+                  <div><strong>DATE:</strong> 08/05/26</div>
+                  <div><strong>BILL NO:</strong> 1059</div>
+                </div>
+
+                {/* 2-Column Split */}
+                <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: 16, alignItems: 'start' }}>
+                  {/* Left Room Transfer Box */}
+                  <div style={{
+                    border: '1.5px solid #000',
+                    borderRadius: 4,
+                    padding: '8px 10px',
+                    fontSize: 10,
+                    lineHeight: 1.45,
+                    background: '#fff'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #000', paddingBottom: 4, marginBottom: 4, fontWeight: 900 }}>
+                      <span>ROOM NO:</span>
+                      <span style={{ fontSize: 13, background: '#f1f5f9', padding: '0 8px', border: '1px solid #94a3b8' }}>
+                        {currentCheckout.roomNo || '368'}
+                      </span>
+                    </div>
+
+                    <div style={{ fontWeight: 800, textAlign: 'center', margin: '4px 0', fontSize: 9, color: '#dc2626' }}>
+                      DO NOT SIGN IF PAID CASH
+                    </div>
+
+                    <div style={{ margin: '8px 0 4px', borderBottom: '1px solid #000', paddingBottom: 2 }}>
+                      <strong>GUEST SIGNATURE:</strong>
+                      <div style={{ fontStyle: 'italic', fontFamily: 'cursive', color: '#1e40af', fontSize: 12, marginTop: 4 }}>
+                        {currentCheckout.guestName || 'A. V. Kartik'}
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: 6, fontSize: 9.5 }}>
+                      <div><strong>GUEST:</strong> {currentCheckout.guestName}</div>
+                      <div><strong>MOBILE:</strong> {currentCheckout.guestPhone}</div>
+                    </div>
+
+                    <div style={{ borderTop: '1px solid #000', marginTop: 8, paddingTop: 4, fontSize: 8.5 }}>
+                      UNCONSUMED FOOD AND DRINKS NOT TO BE TAKEN AWAY
+                    </div>
+                    <div style={{ fontWeight: 800, fontSize: 8.5, marginTop: 2 }}>
+                      &bull; ALL DISPUTES ARE SUBJECT TO RAYAGADA JURISDICTION
+                    </div>
+                    <div style={{ fontSize: 8.5, color: '#475569', marginTop: 2 }}>
+                      FSSAI LIC NO: 12017026000083
+                    </div>
+                    <div style={{ fontSize: 8, fontStyle: 'italic', marginTop: 2 }}>
+                      (A UNIT OF {companyInfo.firmName || 'SRI SAI VASUDEV RESIDENCY'})
+                    </div>
+                  </div>
+
+                  {/* Right Items & Taxes */}
+                  <div>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, marginBottom: 8 }}>
+                      <thead>
+                        <tr style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', textAlign: 'left' }}>
+                          <th style={{ padding: '4px' }}>DESCRIPTION</th>
+                          <th style={{ padding: '4px', textAlign: 'center', width: 65 }}>HSN/SAC</th>
+                          <th style={{ padding: '4px', textAlign: 'center', width: 40 }}>QTY.</th>
+                          <th style={{ padding: '4px', textAlign: 'right', width: 60 }}>RATE</th>
+                          <th style={{ padding: '4px', textAlign: 'right', width: 70 }}>AMOUNT</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr style={{ borderBottom: '1px dotted #cbd5e1' }}>
+                          <td style={{ padding: '3px 4px', fontWeight: 700 }}>TEA / COFFEE</td>
+                          <td style={{ padding: '3px 4px', textAlign: 'center' }}>996332</td>
+                          <td style={{ padding: '3px 4px', textAlign: 'center' }}>1</td>
+                          <td style={{ padding: '3px 4px', textAlign: 'right' }}>120.00</td>
+                          <td style={{ padding: '3px 4px', textAlign: 'right', fontWeight: 800 }}>120.00</td>
+                        </tr>
+                      </tbody>
+                    </table>
+
+                    {/* Summary */}
+                    <div style={{ borderTop: '1px solid #000', paddingTop: 6, fontSize: 11, lineHeight: 1.6 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Total Amount:</span>
+                        <strong>120.00</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>State GST 9.00 %:</span>
+                        <span>10.80</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Central GST 9.00 %:</span>
+                        <span>10.80</span>
+                      </div>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        borderTop: '1.5px solid #000',
+                        borderBottom: '1.5px solid #000',
+                        padding: '4px 0',
+                        marginTop: 4,
+                        fontSize: 13,
+                        fontWeight: 900
+                      }}>
+                        <span>Net Amount:</span>
+                        <span>₹142.00</span>
+                      </div>
+                      <div style={{ fontSize: 9.5, fontStyle: 'italic', marginTop: 3 }}>
+                        (Rupees One Hundred Forty Two Only)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Statutory Notice */}
+                <div style={{ borderTop: '1px dashed #000', marginTop: 12, paddingTop: 6, textAlign: 'center', fontSize: 9 }}>
+                  &quot;The registration certificate is required to be prominently displayed at all places of business in the State&quot;
+                </div>
+              </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* FORMAT 8: EDC / POS CARD MACHINE SETTLEMENT THERMAL SLIP (DOCUMENT 4)     */}
+            {/* ========================================================================= */}
+            {activeFormat === 'Format_8_Card_EDC_Slip' && (
+              <div
+                style={{
+                  background: '#ffffff',
+                  padding: '24px 16px',
+                  maxWidth: 360,
+                  margin: '0 auto',
+                  fontSize: 11,
+                  lineHeight: 1.45,
+                  fontFamily: "'Courier New', Courier, monospace",
+                  boxShadow: '0 4px 14px rgba(0,0,0,0.1)'
+                }}
+              >
+                {/* Bank & Merchant Header */}
+                <div style={{ textAlign: 'center', borderBottom: '1px dashed #000', paddingBottom: 6, marginBottom: 6 }}>
+                  <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: 0.5 }}>
+                    [■] HDFC BANK
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 800, marginTop: 2 }}>
+                    EMPIRES / {companyInfo.firmName || 'SRI SAI VASUDEV RESIDENCY'}
+                  </div>
+                  <div style={{ fontSize: 9.5 }}>
+                    {companyInfo.address1 || 'SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY'}
+                  </div>
+                  <div style={{ fontSize: 9.5 }}>
+                    RAYAGADA, ODISHA 765001
+                  </div>
+                </div>
+
+                {/* Terminal Metadata Grid */}
+                <div style={{ fontSize: 10, marginBottom: 6 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>DATE: {currentCheckout.checkOutDate}</span>
+                    <span>TIME: {currentCheckout.checkOutTime || '10:00:21'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>MID: E31758</span>
+                    <span>TID: 67005863</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Batch No: 001163</span>
+                    <span>Invoice: 008106</span>
+                  </div>
+                </div>
+
+                {/* Status Box */}
+                <div style={{ textAlign: 'center', borderTop: '1px dashed #000', borderBottom: '1px dashed #000', padding: '6px 0', margin: '6px 0' }}>
+                  <div style={{ fontWeight: 900, fontSize: 12 }}>Transaction Approved</div>
+                  <div style={{ fontWeight: 800, fontSize: 11 }}>Sale</div>
+                </div>
+
+                {/* Card Security Parameters */}
+                <div style={{ fontSize: 9.5, lineHeight: 1.4 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Card No:</span>
+                    <strong>XXXXXXXXXXXX8884</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Card Entry Mode:</span>
+                    <span>CHIP</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Card Type:</span>
+                    <span>VISA</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Exp Date:</span>
+                    <span>**/**</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>App Label:</span>
+                    <span>VISA CREDIT</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>AID:</span>
+                    <span>A0000000031010</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>APPR CODE:</span>
+                    <strong>029844</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>RRN:</span>
+                    <span>000000008164</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>TXN ID:</span>
+                    <span>6109548993</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>TVR: 0080048000</span>
+                    <span>TSI: E800</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>TC:</span>
+                    <span>5C76CD64387ECA31</span>
+                  </div>
+                </div>
+
+                {/* Net Sale Amount Banner */}
+                <div style={{
+                  borderTop: '2px solid #000',
+                  borderBottom: '2px solid #000',
+                  padding: '6px 0',
+                  margin: '8px 0',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  fontSize: 13,
+                  fontWeight: 900
+                }}>
+                  <span>SALE AMT:</span>
+                  <span>INR {currentCheckout.netPayable.toFixed(2)}</span>
+                </div>
+
+                {/* Cardholder Verification & Agreement */}
+                <div style={{ textAlign: 'center', margin: '6px 0', fontSize: 10 }}>
+                  <div style={{ fontWeight: 900 }}>PIN VERIFIED OK</div>
+                  <div style={{ fontSize: 9 }}>SIGNATURE NOT REQUIRED</div>
+                </div>
+
+                <div style={{ textAlign: 'center', marginTop: 6, borderTop: '1px dashed #000', paddingTop: 6, fontSize: 9 }}>
+                  <div style={{ fontWeight: 800, textTransform: 'uppercase' }}>{(currentCheckout.guestName || 'AMMU VENKATA KARTIK').toUpperCase()}</div>
+                  <div style={{ fontStyle: 'italic', fontSize: 8.5, color: '#334155' }}>
+                    I AGREE TO PAY AS PER THE CARD ISSUER AGREEMENT
+                  </div>
+                  <div style={{ fontWeight: 900, marginTop: 4, letterSpacing: 1 }}>CUSTOMER COPY</div>
+                  <div style={{ fontSize: 8, color: '#64748b', marginTop: 2 }}>
+                    Version 2.1.107.259 &bull; Powered by Mosambee
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1884,7 +2438,7 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
               background: '#ca8a04',
               color: '#ffffff',
               border: 'none',
-              padding: '8px 20px',
+              padding: '8px 16px',
               borderRadius: 4,
               fontSize: 13,
               fontWeight: 800,
@@ -1892,6 +2446,78 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
             }}
           >
             Format 4(A5)
+          </button>
+
+          {/* [Format 5] Enterprise Folio (Doc 3) */}
+          <button
+            type="button"
+            onClick={() => setActiveFormat('Format_5_Enterprise_Folio')}
+            style={{
+              background: '#4338ca',
+              color: '#ffffff',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: 4,
+              fontSize: 13,
+              fontWeight: 800,
+              cursor: 'pointer'
+            }}
+          >
+            Format 5 (Doc 3)
+          </button>
+
+          {/* [Format 6] Dine-In Bill (Doc 1) */}
+          <button
+            type="button"
+            onClick={() => setActiveFormat('Format_6_Restaurant_DineIn')}
+            style={{
+              background: '#059669',
+              color: '#ffffff',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: 4,
+              fontSize: 13,
+              fontWeight: 800,
+              cursor: 'pointer'
+            }}
+          >
+            Format 6 (Doc 1)
+          </button>
+
+          {/* [Format 7] Room Service Bill (Doc 2) */}
+          <button
+            type="button"
+            onClick={() => setActiveFormat('Format_7_RoomService')}
+            style={{
+              background: '#ea580c',
+              color: '#ffffff',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: 4,
+              fontSize: 13,
+              fontWeight: 800,
+              cursor: 'pointer'
+            }}
+          >
+            Format 7 (Doc 2)
+          </button>
+
+          {/* [Format 8] Card EDC Slip (Doc 4) */}
+          <button
+            type="button"
+            onClick={() => setActiveFormat('Format_8_Card_EDC_Slip')}
+            style={{
+              background: '#0284c7',
+              color: '#ffffff',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: 4,
+              fontSize: 13,
+              fontWeight: 800,
+              cursor: 'pointer'
+            }}
+          >
+            Format 8 (Doc 4)
           </button>
 
           {/* WhatsApp Bill Dispatch */}
