@@ -303,7 +303,14 @@ export const RoomKotRegisterModal: React.FC<RoomKotRegisterModalProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {filteredKots.slice(0, entriesPerPage).map((kot, idx) => {
+                {filteredKots.length === 0 ? (
+                  <tr>
+                    <td colSpan={10} style={{ textAlign: 'center', padding: '30px 10px', color: '#64748b' }}>
+                      No room KOT orders found.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredKots.slice(0, entriesPerPage).map((kot, idx) => {
                   const isUnprinted = kot.isPrinted === false && kot.status !== 'Cancelled';
                   const isCancelled = kot.status === 'Cancelled';
                   
@@ -502,7 +509,7 @@ export const RoomKotRegisterModal: React.FC<RoomKotRegisterModalProps> = ({
                       </td>
                     </tr>
                   );
-                })}
+                }))}
               </tbody>
             </table>
           </div>

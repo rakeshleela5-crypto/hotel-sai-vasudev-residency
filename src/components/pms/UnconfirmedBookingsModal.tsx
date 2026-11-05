@@ -362,7 +362,7 @@ export const UnconfirmedBookingsModal: React.FC<UnconfirmedBookingsModalProps> =
               </thead>
               <tbody>
                 {filteredList.slice(0, entriesPerPage).map((b, idx) => {
-                  const roomStr = b.rooms.map(r => r.roomNo).join(', ');
+                  const roomStr = Array.isArray(b.rooms) ? b.rooms.map(r => r.roomNo).join(', ') : (b.roomNo || '—');
 
                   return (
                     <tr 

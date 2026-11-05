@@ -148,7 +148,7 @@ export const DEFAULT_COMPANY_INFO: PmsCompanyInfo = {
 };
 
 export const INITIAL_ROOMS: PmsRoom[] = [
-  // =========================================================================
+// =========================================================================
   // GROUND FLOOR (Rooms 101–107) — Official 7-Room Inventory
   // Tariffs are INCLUSIVE of GST as per property specification sheets
   // =========================================================================
@@ -157,7 +157,7 @@ export const INITIAL_ROOMS: PmsRoom[] = [
     roomNo: '101',
     roomType: 'Deluxe',
     tariff: 1500,
-    status: 'occupied',
+    status: 'vacant',
     floor: 0,
     facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker',
     capacity: 1,
@@ -167,23 +167,7 @@ export const INITIAL_ROOMS: PmsRoom[] = [
     image1: '/images/deluxe_room.jpg',
     image2: '/images/hero.jpg',
     image3: '/images/suite_room.jpg',
-    currentGuest: {
-      name: 'Rajesh Sharma',
-      phone: '9822114455',
-      email: 'rajesh.sharma@gmail.com',
-      checkInDate: '2026-10-19',
-      checkInTime: '11:00 AM',
-      checkOutDate: '2026-10-21',
-      checkOutTime: '11:00 AM',
-      bookingNo: 'SR/201/26-27',
-      advancePaid: 1500,
-      calculationType: '12hour',
-      darshanSlot: 'Morning Kakad Aarti (05:15 AM)',
-      vehicleNo: 'MH-15-AB-1234',
-      idProofType: 'Aadhaar Card',
-      idProofNumber: '7845 1298 3456'
-    },
-    foodAmount: 0,
+        foodAmount: 0,
     assignedStaff: 'Ramesh',
     priority: 'Normal',
     lastCleaned: '19-10-2026 10:30 AM'
@@ -231,7 +215,7 @@ export const INITIAL_ROOMS: PmsRoom[] = [
     roomNo: '104',
     roomType: 'Classic Studio',
     tariff: 2000,
-    status: 'dirty',
+    status: 'vacant',
     floor: 0,
     facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Queen Bed',
     capacity: 2,
@@ -242,7 +226,7 @@ export const INITIAL_ROOMS: PmsRoom[] = [
     image2: '/images/hero.jpg',
     image3: '/images/suite_room.jpg',
     assignedStaff: 'Ramesh',
-    priority: 'High - Guest Waiting',
+    priority: 'Normal',
     lastCleaned: '18-10-2026 04:00 PM'
   },
   {
@@ -331,7 +315,7 @@ export const INITIAL_ROOMS: PmsRoom[] = [
     roomNo: '202',
     roomType: 'Deluxe',
     tariff: 1500,
-    status: 'occupied',
+    status: 'vacant',
     floor: 1,
     facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker',
     capacity: 1,
@@ -341,23 +325,7 @@ export const INITIAL_ROOMS: PmsRoom[] = [
     image1: '/images/hero.jpg',
     image2: '/images/suite_room.jpg',
     image3: '/images/deluxe_room.jpg',
-    currentGuest: {
-      name: 'Vikram Malhotra',
-      phone: '9811223344',
-      email: 'malhotra.vikram@gmail.com',
-      checkInDate: '2026-10-20',
-      checkInTime: '09:30 AM',
-      checkOutDate: '2026-10-23',
-      checkOutTime: '11:00 AM',
-      bookingNo: 'SR/203/26-27',
-      advancePaid: 1500,
-      calculationType: '12hour',
-      darshanSlot: 'Dhoop Aarti (06:30 PM)',
-      vehicleNo: 'DL-3C-AZ-4509',
-      idProofType: 'Passport',
-      idProofNumber: 'Z8941024'
-    },
-    foodAmount: 0,
+        foodAmount: 0,
     assignedStaff: 'Ganesh',
     priority: 'Normal',
     lastCleaned: '20-10-2026 09:00 AM'
@@ -386,7 +354,7 @@ export const INITIAL_ROOMS: PmsRoom[] = [
     roomNo: '204',
     roomType: 'Classic Studio',
     tariff: 2000,
-    status: 'booked',
+    status: 'vacant',
     floor: 1,
     facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Queen Bed',
     capacity: 2,
@@ -396,23 +364,8 @@ export const INITIAL_ROOMS: PmsRoom[] = [
     image1: '/images/hero.jpg',
     image2: '/images/suite_room.jpg',
     image3: '/images/deluxe_room.jpg',
-    currentGuest: {
-      name: 'Dr. Ananya Deshmukh',
-      phone: '9123456780',
-      email: 'ananya.deshmukh@aims.org',
-      checkInDate: '2026-10-20',
-      checkInTime: '02:00 PM',
-      checkOutDate: '2026-10-22',
-      checkOutTime: '11:00 AM',
-      bookingNo: 'BKG-2026-104',
-      advancePaid: 2000,
-      calculationType: '12hour',
-      darshanSlot: 'Shej Aarti (10:00 PM)',
-      idProofType: 'Aadhaar Card',
-      idProofNumber: '3456 7890 1234'
-    },
-    assignedStaff: 'Priya',
-    priority: 'High - Guest Waiting',
+        assignedStaff: 'Priya',
+    priority: 'Normal',
     lastCleaned: '20-10-2026 10:15 AM'
   },
   {
@@ -534,7 +487,7 @@ export const INITIAL_ROOMS: PmsRoom[] = [
     roomNo: '211',
     roomType: 'Premium',
     tariff: 3000,
-    status: 'occupied',
+    status: 'vacant',
     floor: 1,
     facilities: 'Free Wi-Fi, Flat-screen TV, 24/7 Hot Water, Coffee Maker, Sofa Seating, Hair Dryer, Mini Fridge',
     capacity: 2,
@@ -544,25 +497,7 @@ export const INITIAL_ROOMS: PmsRoom[] = [
     image1: '/images/hero.jpg',
     image2: '/images/deluxe_room.jpg',
     image3: '/images/suite_room.jpg',
-    currentGuest: {
-      name: 'Arvind Kirloskar',
-      phone: '9876501234',
-      email: 'kirloskar.arvind@kirloskargroup.com',
-      checkInDate: '2026-10-20',
-      checkInTime: '08:00 AM',
-      checkOutDate: '2026-10-21',
-      checkOutTime: '11:00 AM',
-      bookingNo: 'SR/204/26-27',
-      advancePaid: 3000,
-      calculationType: '12hour',
-      darshanSlot: 'VIP Darshan Pass Gate 2',
-      vehicleNo: 'MH-12-PA-0001',
-      idProofType: 'Aadhaar Card',
-      idProofNumber: '4455 6677 8899',
-      companyName: 'Kirloskar Engineering Ltd',
-      gstin: '27AAACK5678B1Z9'
-    },
-    foodAmount: 0,
+        foodAmount: 0,
     assignedStaff: 'Sunita',
     priority: 'Normal',
     lastCleaned: '20-10-2026 07:30 AM'
@@ -616,11 +551,11 @@ export const INITIAL_BUSINESS_SOURCES: PmsBusinessSource[] = [
 ];
 
 export const INITIAL_VOUCHER_TYPES: PmsVoucherType[] = [
-  { id: 'vt-1', voucherTypeName: 'Check_In', startingNumber: 575, prefix: 'SR/', suffix: '/24-25', numberingStyle: 'Continue', printName: 'Check In', remark: 'Check In' },
-  { id: 'vt-2', voucherTypeName: 'Check_Out', startingNumber: 229, prefix: 'GSR/', suffix: '/24-25', numberingStyle: 'Continue', printName: 'Tax Invoice', remark: 'Room Checkout Invoice' },
-  { id: 'vt-3', voucherTypeName: 'Advance_Receipt', startingNumber: 12, prefix: 'AR/', suffix: '/24-25', numberingStyle: 'Continue', printName: 'Advance Receipt', remark: 'Guest Advance Receipt' },
-  { id: 'vt-4', voucherTypeName: 'KOT', startingNumber: 352, prefix: 'KOT/', suffix: '/24-25', numberingStyle: 'Continue', printName: 'KOT Slip', remark: 'Kitchen Order Ticket' },
-  { id: 'vt-5', voucherTypeName: 'Food_Bill', startingNumber: 254, prefix: 'SHRI/', suffix: '/24-25', numberingStyle: 'Continue', printName: 'Food Bill', remark: 'Food & Beverage Bill' },
+  { id: 'vt-1', voucherTypeName: 'Check_In', startingNumber: 1, prefix: 'SR/', suffix: '/25-26', numberingStyle: 'Continue', printName: 'Check In', remark: 'Check In' },
+  { id: 'vt-2', voucherTypeName: 'Check_Out', startingNumber: 1, prefix: 'GSR/', suffix: '/25-26', numberingStyle: 'Continue', printName: 'Tax Invoice', remark: 'Room Checkout Invoice' },
+  { id: 'vt-3', voucherTypeName: 'Advance_Receipt', startingNumber: 1, prefix: 'AR/', suffix: '/25-26', numberingStyle: 'Continue', printName: 'Advance Receipt', remark: 'Guest Advance Receipt' },
+  { id: 'vt-4', voucherTypeName: 'KOT', startingNumber: 1, prefix: 'KOT/', suffix: '/25-26', numberingStyle: 'Continue', printName: 'KOT Slip', remark: 'Kitchen Order Ticket' },
+  { id: 'vt-5', voucherTypeName: 'Food_Bill', startingNumber: 1, prefix: 'SHRI/', suffix: '/25-26', numberingStyle: 'Continue', printName: 'Food Bill', remark: 'Food & Beverage Bill' },
 ];
 
 export const INITIAL_LOCKERS: PmsLocker[] = [
@@ -686,229 +621,19 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
 
 // Video 15: Party Accounts & Receivables Seed Data (Frame 0130)
 export const INITIAL_PARTY_ACCOUNTS: PmsPartyAccount[] = [
-  { id: 'pa-1', name: 'Cash', category: 'General', balance: 1100217.77, balanceType: 'Dr' },
-  { id: 'pa-2', name: 'Online', category: 'General', balance: 397440.39, balanceType: 'Dr' },
-  { id: 'pa-3', name: 'Card', category: 'General', balance: 30842.00, balanceType: 'Dr' },
-  { id: 'pa-4', name: 'Purchase', category: 'General', balance: 28040.20, balanceType: 'Dr' },
-  { id: 'pa-5', name: 'TILAK', mobile: '52198789754', category: 'Customer', balance: 1414.00, balanceType: 'Dr' },
-  { id: 'pa-6', name: 'tata moters', mobile: '9827011223', category: 'Corporate', balance: 15662.00, balanceType: 'Dr' },
-  { id: 'pa-7', name: 'pankaj sahni', mobile: '534534534', category: 'Customer', balance: 17950.00, balanceType: 'Dr' },
-  { id: 'pa-8', name: 'PAY TM', category: 'Bank', balance: 10982.99, balanceType: 'Dr' },
-  { id: 'pa-9', name: 'Riyaz', mobile: '8876579769', category: 'Customer', balance: 1500.00, balanceType: 'Dr' },
-  { id: 'pa-10', name: 'jay sharma', mobile: '1265787544', category: 'Customer', balance: 14073.00, balanceType: 'Dr' },
-  { id: 'pa-11', name: 'monish', mobile: '704701', category: 'Customer', balance: 2000.00, balanceType: 'Dr' },
-  { id: 'pa-12', name: 'Vivek', mobile: '9741523421', category: 'Customer', balance: 7500.00, balanceType: 'Dr' },
-  { id: 'pa-13', name: 'N', mobile: '9241755581', category: 'Customer', balance: 10000.00, balanceType: 'Dr' },
-  { id: 'pa-14', name: 'STATE BANK OF INDIA', mobile: '07599999114', category: 'Bank', balance: 25100.00, balanceType: 'Dr' },
-  { id: 'pa-15', name: 'raj', mobile: '9898989898', category: 'Owner', balance: 0.00, balanceType: 'Dr' },
-  { id: 'pa-16', name: 'ajay ji', mobile: '9811223344', category: 'Customer', balance: 0.00, balanceType: 'Dr' },
-  { id: 'pa-17', name: 'hariom gautam ji', mobile: '9425123456', category: 'Customer', balance: 0.00, balanceType: 'Dr' },
-  { id: 'pa-18', name: 'AKASH YADAV', mobile: '9123456780', category: 'Customer', balance: 0.00, balanceType: 'Dr' },
-  { id: 'pa-19', name: 'Guruprasad pol', mobile: '9876501234', category: 'Customer', balance: 0.00, balanceType: 'Dr' },
-  { id: 'pa-20', name: 'shri sunder lal tiwari(owner)', mobile: '9822114455', category: 'Owner', balance: 0.00, balanceType: 'Dr' },
-  { id: 'pa-21', name: 'auto commision', mobile: '9876543210', category: 'Customer', balance: 0.00, balanceType: 'Dr' },
-  { id: 'pa-22', name: 'GUPTA JII', mobile: '9999663696', category: 'Corporate', balance: 24867.50, balanceType: 'Cr' }
+  { id: 'pa-1', name: 'Cash', category: 'General', balance: 0.00, balanceType: 'Dr' },
+  { id: 'pa-2', name: 'Online', category: 'General', balance: 0.00, balanceType: 'Dr' },
+  { id: 'pa-3', name: 'Card', category: 'General', balance: 0.00, balanceType: 'Dr' },
+  { id: 'pa-4', name: 'Purchase', category: 'General', balance: 0.00, balanceType: 'Dr' },
+  { id: 'pa-5', name: 'Bank - SBI', category: 'Bank', balance: 0.00, balanceType: 'Dr' },
+  { id: 'pa-6', name: 'UPI / QR', category: 'Bank', balance: 0.00, balanceType: 'Dr' }
 ];
 
 // Video 15: General Receipt Register Seed Data (Frames 0090, 0230, 0250)
-export const INITIAL_RECEIPTS: PmsReceiptRecord[] = [
-  {
-    id: 'rec-12',
-    sNo: 1,
-    voucherName: 'Receipts',
-    receiptNo: 'REC/12/24-25',
-    voucherNo: 12,
-    date: '2025-06-16',
-    paymentMode: 'Cash',
-    accountName: 'raj',
-    accountMobile: '9898989898',
-    amount: 2000,
-    remark: 'reciept by owner',
-    createdAt: '2025-06-16T07:51:00Z'
-  },
-  {
-    id: 'rec-11',
-    sNo: 2,
-    voucherName: 'Receipts',
-    receiptNo: 'REC/11/24-25',
-    voucherNo: 11,
-    date: '2025-06-16',
-    paymentMode: 'Cash',
-    accountName: 'Vivek',
-    accountMobile: '9741523421',
-    amount: 7500,
-    remark: 'old bill',
-    createdAt: '2025-06-16T07:49:00Z'
-  },
-  {
-    id: 'rec-10',
-    sNo: 3,
-    voucherName: 'Receipts',
-    receiptNo: 'REC/10/24-25',
-    voucherNo: 10,
-    date: '2025-06-07',
-    paymentMode: 'Cash',
-    accountName: 'ajay ji',
-    accountMobile: '9811223344',
-    amount: 3000,
-    remark: '',
-    createdAt: '2025-06-07T10:00:00Z'
-  },
-  {
-    id: 'rec-9',
-    sNo: 4,
-    voucherName: 'Receipts',
-    receiptNo: 'REC/9/24-25',
-    voucherNo: 9,
-    date: '2025-06-06',
-    paymentMode: 'Cash',
-    accountName: 'hariom gautam ji',
-    accountMobile: '9425123456',
-    amount: 2000,
-    remark: 'advance booking',
-    createdAt: '2025-06-06T11:20:00Z'
-  },
-  {
-    id: 'rec-8',
-    sNo: 5,
-    voucherName: 'Receipts',
-    receiptNo: 'REC/8/24-25',
-    voucherNo: 8,
-    date: '2025-05-24',
-    paymentMode: 'Cash',
-    accountName: 'AKASH YADAV',
-    accountMobile: '9123456780',
-    amount: 1000,
-    remark: '',
-    createdAt: '2025-05-24T14:30:00Z'
-  },
-  {
-    id: 'rec-7',
-    sNo: 6,
-    voucherName: 'Receipts',
-    receiptNo: 'REC/7/24-25',
-    voucherNo: 7,
-    date: '2025-05-20',
-    paymentMode: 'Cash',
-    accountName: 'Vivek',
-    accountMobile: '9741523421',
-    amount: 4000,
-    remark: '',
-    createdAt: '2025-05-20T16:15:00Z'
-  },
-  {
-    id: 'rec-6',
-    sNo: 7,
-    voucherName: 'Receipts',
-    receiptNo: 'REC/6/24-25',
-    voucherNo: 6,
-    date: '2025-05-04',
-    paymentMode: 'Cash',
-    accountName: 'Guruprasad pol',
-    accountMobile: '9876501234',
-    amount: 2200,
-    remark: 'tariff',
-    createdAt: '2025-05-04T12:00:00Z'
-  },
-  {
-    id: 'rec-5',
-    sNo: 8,
-    voucherName: 'Receipts',
-    receiptNo: 'REC/5/24-25',
-    voucherNo: 5,
-    date: '2025-04-30',
-    paymentMode: 'Cash',
-    accountName: 'Guruprasad pol',
-    accountMobile: '9876501234',
-    amount: 200,
-    remark: '',
-    createdAt: '2025-04-30T09:45:00Z'
-  },
-  {
-    id: 'rec-4',
-    sNo: 9,
-    voucherName: 'Receipts',
-    receiptNo: 'REC/4/24-25',
-    voucherNo: 4,
-    date: '2025-01-27',
-    paymentMode: 'Online',
-    accountName: 'tata moters',
-    accountMobile: '9827011223',
-    amount: 2200,
-    remark: '103 room ki payment',
-    createdAt: '2025-01-27T15:00:00Z'
-  },
-  {
-    id: 'rec-3',
-    sNo: 10,
-    voucherName: 'Receipts',
-    receiptNo: 'REC/3/24-25',
-    voucherNo: 3,
-    date: '2024-12-24',
-    paymentMode: 'Cash',
-    accountName: 'HARIOM',
-    accountMobile: '9425123456',
-    amount: 11900,
-    remark: 'balance',
-    createdAt: '2024-12-24T18:00:00Z'
-  }
-];
+export const INITIAL_RECEIPTS: PmsReceiptRecord[] = [];
 
 // Video 16: General Payment Register Seed Data (Frames 0200, 0290, 0320)
-export const INITIAL_PAYMENTS: PmsPaymentRecord[] = [
-  {
-    id: 'pay-5',
-    sNo: 1,
-    voucherName: 'Payments',
-    paymentNo: 'PAY/5/24-25',
-    voucherNo: 5,
-    date: '2025-06-16',
-    paymentMode: 'Online',
-    accountName: 'shri sunder lal tiwari(owner)',
-    amount: 50000,
-    remark: 'paymnet -4757344',
-    createdAt: '2025-06-16T08:01:00Z'
-  },
-  {
-    id: 'pay-4',
-    sNo: 2,
-    voucherName: 'Payments',
-    paymentNo: 'PAY/4/24-25',
-    voucherNo: 4,
-    date: '2025-06-16',
-    paymentMode: 'Cash',
-    accountName: 'auto commision',
-    amount: 1000,
-    remark: '101 ka commision',
-    createdAt: '2025-06-16T07:59:00Z'
-  },
-  {
-    id: 'pay-3',
-    sNo: 3,
-    voucherName: 'Payments',
-    paymentNo: 'PAY/3/24-25',
-    voucherNo: 3,
-    date: '2025-06-16',
-    paymentMode: 'Cash',
-    accountName: 'shri sunder lal tiwari(owner)',
-    amount: 98717,
-    remark: 'cash handover',
-    createdAt: '2025-06-16T07:58:00Z'
-  },
-  {
-    id: 'pay-2',
-    sNo: 4,
-    voucherName: 'Payments',
-    paymentNo: 'PAY/2/24-25',
-    voucherNo: 2,
-    date: '2025-06-16',
-    paymentMode: 'Cash',
-    accountName: 'shri sunder lal tiwari(owner)',
-    amount: 11000,
-    remark: '',
-    createdAt: '2025-06-16T07:57:00Z'
-  }
-];
+export const INITIAL_PAYMENTS: PmsPaymentRecord[] = [];
 
 // Video 19: Store & Inventory Seed Data (Frames 0150, 0230, 0280, 0335)
 export const INITIAL_ITEM_GROUPS: PmsItemGroup[] = [
@@ -931,325 +656,12 @@ export const INITIAL_GODOWNS: PmsGodown[] = [
   { id: 'g-4', sNo: 4, name: 'STORE1', address: 'TOP FLOOR' }
 ];
 
-export const INITIAL_PURCHASES: PmsPurchaseBill[] = [
-  {
-    id: 'pur-6',
-    billNo: '6',
-    billDate: '06-07-2025',
-    godown: 'Main Store',
-    terms: 'Credit',
-    accountName: 'GUPTA JII',
-    items: [
-      {
-        sNo: 1,
-        itemId: 'm-daal-rahar',
-        itemName: 'Daal Rahar',
-        barcode: '10058',
-        qty: 50,
-        rate: 175,
-        amount: 8750,
-        discountPercent: 0,
-        discountAmt: 0,
-        totalDiscount: 0,
-        taxable: 8750,
-        gstPercent: 5,
-        gstAmt: 437.5,
-        netValue: 9187.50
-      },
-      {
-        sNo: 2,
-        itemId: 'm-refine-oil',
-        itemName: 'Refine Oil',
-        barcode: '10069',
-        qty: 100,
-        rate: 140,
-        amount: 14000,
-        discountPercent: 0,
-        discountAmt: 0,
-        totalDiscount: 0,
-        taxable: 14000,
-        gstPercent: 12,
-        gstAmt: 1680,
-        netValue: 15680.00
-      }
-    ],
-    totalQty: 150,
-    totalAmount: 22750,
-    totalDiscount: 0,
-    totalTaxable: 22750,
-    totalGstAmt: 2117.5,
-    totalNetValue: 24867.50,
-    createdAt: '2025-07-06T10:00:00Z'
-  }
-];
+export const INITIAL_PURCHASES: PmsPurchaseBill[] = [];
 
-export const INITIAL_STOCK_TRANSFERS: PmsStockTransfer[] = [
-  {
-    id: 'st-1',
-    entryNo: 'ST/1/24-25',
-    date: '06-07-2025',
-    fromGodown: 'Main Store',
-    toGodown: 'Kitchen',
-    billDate: '06-07-2025',
-    billNo: '1',
-    items: [
-      {
-        sNo: 1,
-        itemId: 'm-daal-rahar',
-        itemName: 'Daal Rahar',
-        barcode: '10058',
-        qty: 5,
-        rate: 175,
-        amount: 875,
-        discountAmt: 0,
-        totalDiscount: 0,
-        gstPercent: 5,
-        gstAmt: 43.75,
-        netValue: 918.75
-      },
-      {
-        sNo: 2,
-        itemId: 'm-refine-oil',
-        itemName: 'Refine Oil',
-        barcode: '10069',
-        qty: 10,
-        rate: 140,
-        amount: 1400,
-        discountAmt: 0,
-        totalDiscount: 0,
-        gstPercent: 12,
-        gstAmt: 168,
-        netValue: 1568.00
-      }
-    ],
-    totalQty: 15,
-    totalAmount: 2275,
-    totalDiscount: 0,
-    totalTaxable: 2275,
-    totalGstAmt: 211.75,
-    totalNetValue: 2486.75,
-    remark: 'Issue to kitchen for morning cooking',
-    createdAt: '2025-07-06T11:00:00Z'
-  },
-  {
-    id: 'st-2',
-    entryNo: 'ST/2/24-25',
-    date: '06-07-2025',
-    fromGodown: 'Kitchen',
-    toGodown: 'Consume',
-    billDate: '06-07-2025',
-    billNo: '2',
-    items: [
-      {
-        sNo: 1,
-        itemId: 'm-daal-rahar',
-        itemName: 'Daal Rahar',
-        barcode: '10058',
-        qty: 4,
-        rate: 175,
-        amount: 700,
-        discountAmt: 0,
-        totalDiscount: 0,
-        gstPercent: 5,
-        gstAmt: 35,
-        netValue: 735.00
-      },
-      {
-        sNo: 2,
-        itemId: 'm-refine-oil',
-        itemName: 'Refine Oil',
-        barcode: '10069',
-        qty: 8,
-        rate: 140,
-        amount: 1120,
-        discountAmt: 0,
-        totalDiscount: 0,
-        gstPercent: 12,
-        gstAmt: 134.4,
-        netValue: 1254.40
-      }
-    ],
-    totalQty: 12,
-    totalAmount: 1820,
-    totalDiscount: 0,
-    totalTaxable: 1820,
-    totalGstAmt: 169.4,
-    totalNetValue: 1989.40,
-    remark: 'Daily kitchen consumption entry',
-    createdAt: '2025-07-06T18:00:00Z'
-  }
-];
+export const INITIAL_STOCK_TRANSFERS: PmsStockTransfer[] = [];
 
 // Video 20: Online Room Booking & Reservation Seed Data (Frames 0210, 0250, 0280, 0290, 0350, 0360)
-export const INITIAL_BOOKINGS: PmsBooking[] = [
-  // Frame 0210, 0250, 0280, 0290: New online booking submitted by guest
-  {
-    bookingNo: 'RM/80/24-25',
-    bookingDate: '06-07-2025',
-    bookingTime: '10:11 PM',
-    checkInDate: '08-07-2025',
-    checkInTime: '10:11 PM',
-    checkOutDate: '12-07-2025',
-    checkOutTime: '10:11 PM',
-    numberOfDays: 4,
-    numberOfGuests: 2,
-    businessSource: 'Online',
-    package: 'ROOM ONLY || 0',
-    guestName: 'vinod kumar jain',
-    mobile: '78657656754',
-    email: 'vinod.jain@example.com',
-    addressLine1: 'main road sadar',
-    addressLine2: 'near ekta chowk',
-    city: 'jabalpur',
-    state: 'madhya pradesh',
-    country: 'India',
-    pinCode: '482001',
-    nationality: 'Indian',
-    documentName: 'Aadhaar Card',
-    documentNo: '789456123012',
-    rooms: [
-      {
-        roomNo: '103',
-        roomType: 'DELUXE',
-        tariff: 2000
-      }
-    ],
-    totalAmount: 8000,
-    bookingAmount: 2000,
-    paymentMode: 'UPI',
-    paymentReferenceNo: 'UPI/ONLINE/789123',
-    paymentRemark: 'Advance transfer via QR code by Vinod Kumar Jain',
-    status: 'Unconfirmed',
-    createdAt: '2025-07-06T22:11:00Z'
-  },
-  // Frame 0360: Pending online booking for confirmation
-  {
-    bookingNo: 'RM/74/24-25',
-    bookingDate: '21-06-2025',
-    bookingTime: '02:30 PM',
-    checkInDate: '21-06-2025',
-    checkInTime: '02:30 PM',
-    checkOutDate: '21-06-2025',
-    checkOutTime: '08:00 PM',
-    numberOfDays: 1,
-    numberOfGuests: 2,
-    businessSource: 'Online',
-    package: 'ROOM ONLY || 0',
-    guestName: 'GUHFYGVUYFT',
-    mobile: '46549889',
-    city: 'Mumbai',
-    state: 'Odisha',
-    country: 'India',
-    rooms: [
-      {
-        roomNo: '205',
-        roomType: 'SUITE ROOM',
-        tariff: 3200
-      }
-    ],
-    totalAmount: 3200,
-    bookingAmount: 0,
-    paymentMode: 'Online',
-    status: 'Unconfirmed',
-    createdAt: '2025-06-21T14:30:00Z'
-  },
-  // Frame 0350: Confirmed Bookings in Room Booking Register
-  {
-    bookingNo: 'RM/79/24-25',
-    bookingDate: '05-07-2025',
-    bookingTime: '01:00 PM',
-    checkInDate: '10-07-2025',
-    checkInTime: '01:00 PM',
-    checkOutDate: '11-07-2025',
-    checkOutTime: '01:00 PM',
-    numberOfDays: 1,
-    numberOfGuests: 1,
-    businessSource: 'Walk-in',
-    package: 'Regular',
-    guestName: 'anupam ji',
-    mobile: '65448987',
-    city: 'Nagpur',
-    state: 'Odisha',
-    country: 'India',
-    rooms: [
-      {
-        roomNo: 'DL-20',
-        roomType: 'DELUXE',
-        tariff: 2000
-      }
-    ],
-    totalAmount: 2000,
-    bookingAmount: 1000,
-    paymentMode: 'Cash',
-    status: 'Confirmed',
-    createdAt: '2025-07-05T13:00:00Z'
-  },
-  {
-    bookingNo: 'RM/75/24-25',
-    bookingDate: '26-06-2025',
-    bookingTime: '05:11 PM',
-    checkInDate: '01-07-2025',
-    checkInTime: '05:11 PM',
-    checkOutDate: '10-07-2025',
-    checkOutTime: '05:11 PM',
-    numberOfDays: 10,
-    numberOfGuests: 2,
-    businessSource: 'OYO',
-    package: 'WITH BREAKFAST || 0',
-    guestName: 'vikash sharma',
-    mobile: '8872757274',
-    city: 'Delhi',
-    state: 'Delhi',
-    country: 'India',
-    rooms: [
-      {
-        roomNo: '101',
-        roomType: 'DELUXE',
-        tariff: 4000
-      }
-    ],
-    totalAmount: 40000,
-    bookingAmount: 10000,
-    paymentMode: 'Card',
-    status: 'Confirmed',
-    createdAt: '2025-06-26T17:11:00Z'
-  },
-  {
-    bookingNo: 'RM/58/24-25',
-    bookingDate: '02-06-2025',
-    bookingTime: '02:29 PM',
-    checkInDate: '10-06-2025',
-    checkInTime: '02:29 PM',
-    checkOutDate: '02-06-2025',
-    checkOutTime: '02:29 PM',
-    numberOfDays: 1,
-    numberOfGuests: 2,
-    businessSource: 'Corporate',
-    package: 'Regular',
-    guestName: 'CHANDRA PRAKASH',
-    mobile: '9303667616',
-    city: 'Indore',
-    state: 'Madhya Pradesh',
-    country: 'India',
-    rooms: [
-      {
-        roomNo: '11',
-        roomType: 'STANDARD',
-        tariff: 2000
-      },
-      {
-        roomNo: '302',
-        roomType: 'DELUXE',
-        tariff: 2000
-      }
-    ],
-    totalAmount: 4000,
-    bookingAmount: 2000,
-    paymentMode: 'Cash',
-    status: 'Confirmed',
-    createdAt: '2025-06-02T14:29:00Z'
-  }
-];
+export const INITIAL_BOOKINGS: PmsBooking[] = [];
 
 // Video 23: Roles & Permissions Seed Data (Frame 0135, 0140, 0155)
 export const INITIAL_ROLES: PmsRole[] = [
@@ -1356,163 +768,51 @@ export const INITIAL_ROLES: PmsRole[] = [
 // Video 23: Staff User Accounts Seed Data (Frame 0120 & Frame 0165)
 export const INITIAL_USER_ACCOUNTS: PmsUserAccount[] = [
   {
-    id: 63,
-    sNo: 63,
-    firmId: 'DEMO0004',
-    userName: 'Reception',
-    emailId: 'reception10@gmail.com',
-    roleId: 8,
-    roleName: 'Receptionist',
-    status: 'Verified',
-    regDate: '2025-06-21 14:37:11',
-    verifiedDate: '2025-06-21 14:37:11',
-    mobile: '9822100010',
-    department: 'Front Office',
-    shift: 'Evening (15:00 - 23:00)',
-    isOnDuty: true
-  },
-  {
-    id: 62,
-    sNo: 62,
-    firmId: 'DEMO0004',
-    userName: 'Reception',
-    emailId: 'reception@gmail.com',
-    roleId: 3,
-    roleName: 'staff',
-    status: 'Verified',
-    regDate: '2025-06-21 14:36:36',
-    verifiedDate: '2025-06-21 14:38:38',
-    mobile: '9822100001',
-    department: 'Front Office',
-    shift: 'Morning (07:00 - 15:00)',
-    isOnDuty: true
-  },
-  {
-    id: 44,
-    sNo: 44,
-    firmId: 'DEMO0004',
-    userName: 'whatsapp',
-    emailId: 'whatsapp2025@gmail.com',
-    roleId: 9,
-    roleName: 'Only_Whatsapp',
-    status: 'Verified',
-    regDate: '2025-06-01 18:16:13',
-    verifiedDate: '2025-06-01 18:16:52',
-    mobile: '9822100044',
-    department: 'Front Office',
-    shift: 'General (09:00 - 18:00)',
-    isOnDuty: true
-  },
-  {
-    id: 42,
-    sNo: 42,
-    firmId: 'DEMO0004',
-    userName: 'Demo user',
-    emailId: 'demo4@gmail.com',
-    roleId: 4,
-    roleName: 'user',
-    status: 'Verified',
-    regDate: '2025-06-01 04:04:16',
-    verifiedDate: '2025-06-01 04:04:59',
-    mobile: '9822100042',
-    department: 'Security & Audit',
-    shift: 'General (09:00 - 18:00)',
-    isOnDuty: false
-  },
-  {
-    id: 18,
-    sNo: 18,
+    id: 1,
+    sNo: 1,
     firmId: 'DEMO0004',
     userName: 'Admin',
-    emailId: 'DEMO0004_admin@gmail.com',
-    roleId: 2,
-    roleName: 'admin',
-    status: 'Verified',
-    regDate: '2024-12-17 08:58:38',
-    verifiedDate: '2025-01-10 12:15:40',
-    mobile: '9822100018',
-    department: 'General Management',
-    shift: 'General (09:00 - 18:00)',
-    isOnDuty: true
-  },
-  {
-    id: 19,
-    sNo: 19,
-    firmId: 'DEMO0004',
-    userName: 'Staff',
-    emailId: 'DEMO0004_staff@gmail.com',
-    roleId: 3,
-    roleName: 'staff',
-    status: 'Verified',
-    regDate: '2024-12-17 08:58:38',
-    verifiedDate: '2025-01-18 06:48:23',
-    mobile: '9822100019',
-    department: 'Housekeeping',
-    shift: 'Morning (07:00 - 15:00)',
-    isOnDuty: true
-  },
-  {
-    id: 15,
-    sNo: 15,
-    firmId: 'DEMO0004',
-    userName: 'RIFAT ULLAH',
-    emailId: 'sales.bsgbd@gmail.com',
-    roleId: 5,
-    roleName: 'Lead Managment',
-    status: 'Verified',
-    regDate: '2024-12-17 08:58:37',
-    verifiedDate: '2025-05-16 10:32:45',
-    mobile: '9822100015',
-    department: 'Front Office',
-    shift: 'General (09:00 - 18:00)',
-    isOnDuty: false
-  },
-  {
-    id: 16,
-    sNo: 16,
-    firmId: 'DEMO0004',
-    userName: 'Data House',
-    emailId: 'DEMO0004_datahouset@gmail.com',
+    emailId: 'admin@hotelsai-vasudev.com',
     roleId: 1,
     roleName: 'super-admin',
     status: 'Verified',
-    regDate: '2024-12-17 08:58:37',
-    verifiedDate: '2024-12-17 08:58:37',
-    mobile: '7999663696',
+    regDate: '2025-02-05 10:00:00',
+    verifiedDate: '2025-02-05 10:00:00',
+    mobile: '9440289999',
     department: 'General Management',
     shift: 'General (09:00 - 18:00)',
     isOnDuty: true
   },
   {
-    id: 21,
-    sNo: 21,
+    id: 2,
+    sNo: 2,
     firmId: 'DEMO0004',
-    userName: 'Chef Sanjeev',
-    emailId: 'kitchen@hotelsai.com',
-    roleId: 6,
-    roleName: 'Restaurent',
+    userName: 'Rakesh Nandyala',
+    emailId: 'rakesh@sai-vasudev.com',
+    roleId: 2,
+    roleName: 'admin',
     status: 'Verified',
-    regDate: '2025-01-01 10:00:00',
-    verifiedDate: '2025-01-01 10:00:00',
-    mobile: '9822100021',
-    department: 'Kitchen',
-    shift: 'Morning (07:00 - 15:00)',
+    regDate: '2025-02-05 10:00:00',
+    verifiedDate: '2025-02-05 10:00:00',
+    mobile: '9440289999',
+    department: 'General Management',
+    shift: 'General (09:00 - 18:00)',
     isOnDuty: true
   },
   {
-    id: 22,
-    sNo: 22,
+    id: 3,
+    sNo: 3,
     firmId: 'DEMO0004',
-    userName: 'Cashier Rahul',
-    emailId: 'cashier@hotelsai.com',
-    roleId: 7,
-    roleName: 'Billing',
+    userName: 'Front Desk',
+    emailId: 'reservations@hotelsai-vasudev.com',
+    roleId: 8,
+    roleName: 'Receptionist',
     status: 'Verified',
-    regDate: '2025-01-01 10:00:00',
-    verifiedDate: '2025-01-01 10:00:00',
-    mobile: '9822100022',
-    department: 'Accounts & Cashier',
-    shift: 'Evening (15:00 - 23:00)',
+    regDate: '2025-02-05 10:00:00',
+    verifiedDate: '2025-02-05 10:00:00',
+    mobile: '9440289999',
+    department: 'Front Office',
+    shift: 'Morning (07:00 - 15:00)',
     isOnDuty: true
   }
 ];
@@ -1532,34 +832,6 @@ export const INITIAL_CHAIN_PROPERTIES: PmsChainProperty[] = [
     renewDate: '05-02-35',
     whatsAppValidity: '29-06-2030',
     isCurrent: true
-  },
-  {
-    firmId: 'SVR0002',
-    firmName: 'SAI VASUDEV SUITES & EXECUTIVE RESIDENCY',
-    location: 'Pune (Mumbai-Pune Expressway Branch)',
-    address: 'Survey 48, Near Hinjawadi IT Park, Pune - 411057',
-    phone: '020-67890000',
-    email: 'pune.branch@saivasudev.com',
-    gstin: '27XYZAB5678G2Z1',
-    totalRooms: 36,
-    activationDate: '01-01-25',
-    renewDate: '01-01-26',
-    whatsAppValidity: '29-06-2026',
-    isCurrent: false
-  },
-  {
-    firmId: 'SVR0003',
-    firmName: 'SAI VASUDEV GRAND & BANQUET RESORT',
-    location: 'Nashik (Airport Road Branch)',
-    address: 'Plot 12, Ozar Airport Road, Nashik - 422206',
-    phone: '0253-2991000',
-    email: 'nashik.resort@saivasudev.com',
-    gstin: '27PQRST9012H3Z8',
-    totalRooms: 48,
-    activationDate: '15-02-25',
-    renewDate: '15-02-26',
-    whatsAppValidity: '29-06-2026',
-    isCurrent: false
   }
 ];
 
@@ -1686,47 +958,7 @@ export const INITIAL_WHATSAPP_TEMPLATES: PmsWhatsAppTemplate[] = [
   }
 ];
 
-export const INITIAL_WHATSAPP_LOGS: PmsWhatsAppLog[] = [
-  {
-    id: 'wal-101',
-    timestamp: '2025-07-06 22:45:10',
-    recipientMobile: '9822100042',
-    recipientName: 'Rahul Sharma',
-    recipientType: 'Guest',
-    voucherType: 'Check_out_store',
-    voucherNo: 'RM/63/24-25',
-    roomNo: '101',
-    message: 'Dear Sir/Madam, Thank you for choosing to stay with us at *SRI SAI VASUDEV RESIDENCY*...',
-    status: 'Delivered',
-    firmId: 'DEMO0004'
-  },
-  {
-    id: 'wal-102',
-    timestamp: '2025-07-06 22:46:15',
-    recipientMobile: '7999663696',
-    recipientName: 'Hotel Owner',
-    recipientType: 'Owner',
-    voucherType: 'Check_out_update',
-    voucherNo: 'RM/62/24-25',
-    roomNo: '104',
-    message: 'Dear Owner, This is to inform you that a guest bill has been updated at *SRI SAI VASUDEV RESIDENCY*...',
-    status: 'Delivered',
-    firmId: 'DEMO0004'
-  },
-  {
-    id: 'wal-103',
-    timestamp: '2025-07-06 22:48:30',
-    recipientMobile: '9822100099',
-    recipientName: 'Pooja Verma',
-    recipientType: 'Guest',
-    voucherType: 'Check_in_store',
-    voucherNo: 'CI/88/24-25',
-    roomNo: '202',
-    message: 'Dear Sir/Madam, Welcome to *SRI SAI VASUDEV RESIDENCY*! We are delighted to have you stay with us...',
-    status: 'Delivered',
-    firmId: 'DEMO0004'
-  }
-];
+export const INITIAL_WHATSAPP_LOGS: PmsWhatsAppLog[] = [];
 
 // ==========================================
 // Video 30: Training Videos, Documentation Chapters & Support Tickets Seed Data
@@ -2192,80 +1424,7 @@ export const INITIAL_DOCUMENTATION_CHAPTERS: PmsDocumentationChapter[] = [
   }
 ];
 
-export const INITIAL_SUPPORT_TICKETS: PmsSupportTicket[] = [
-  {
-    id: 'tkt-842',
-    ticketNo: 'TKT-2026-0842',
-    date: '18-07-2025',
-    time: '11:30 AM',
-    staffName: 'Ramesh Patel (Manager)',
-    department: 'Front Desk',
-    phone: '9822000000',
-    category: 'Hardware & Printer',
-    priority: 'Medium',
-    subject: 'Thermal Printer 80mm Margin Alignment for KOT Printing',
-    description: 'When printing kitchen orders on the newly installed Posiflex 80mm thermal printer, the right margin is clipping item quantity. Need remote setup via UltraViewer.',
-    preferredCallbackTime: '12:00 PM – 02:00 PM',
-    status: 'Resolved',
-    assignedEngineer: 'Vikas Sharma (Senior Support Engineer - Hansin IT)',
-    resolutionNotes: 'Connected via UltraViewer session 98 811 274. Adjusted ESC/POS print driver page size to 72mm printable width. Test KOT printed successfully with full item and quantity alignment.',
-    createdAt: '2025-07-18 11:30:00',
-    updatedAt: '2025-07-18 12:15:00'
-  },
-  {
-    id: 'tkt-850',
-    ticketNo: 'TKT-2026-0850',
-    date: '19-07-2025',
-    time: '02:45 PM',
-    staffName: 'Sunita Rao (Accountant)',
-    department: 'Accounts',
-    phone: '9822100099',
-    category: 'GST & Tax Reports',
-    priority: 'High',
-    subject: 'GST SAC Code 996331 Configuration on Day-Wise Invoices',
-    description: 'We need to confirm that room tariff above ₹7,500 applies 18% GST while standard rooms under ₹7,500 apply 12% GST in the GSTR-1 register.',
-    preferredCallbackTime: '03:00 PM – 04:00 PM',
-    status: 'Resolved',
-    assignedEngineer: 'Amit Verma (Taxation & ERP Lead - Hansin IT)',
-    resolutionNotes: 'Verified GST master slabs. Configured automatic slab switching rule in Business Settings (/businesssettings/create). Verified on demo checkout invoice SR/204.',
-    createdAt: '2025-07-19 14:45:00',
-    updatedAt: '2025-07-19 15:20:00'
-  },
-  {
-    id: 'tkt-863',
-    ticketNo: 'TKT-2026-0863',
-    date: '20-07-2025',
-    time: '09:15 AM',
-    staffName: 'Vikram Joshi (Front Desk)',
-    department: 'Front Desk',
-    phone: '9822450012',
-    category: 'User Roles & Access',
-    priority: 'Medium',
-    subject: 'Staff Operator Role Permission for Check-Out Deletion Alert',
-    description: 'Owner wants to ensure cashier operators cannot edit settled checkout bills without manager passcode override.',
-    preferredCallbackTime: '11:00 AM – 01:00 PM',
-    status: 'In Progress',
-    assignedEngineer: 'Rahul Mishra (Support Team)',
-    resolutionNotes: 'Role permissions reviewed. Disabling "delete checkout" toggle for role "Operator" in Roles & Permissions (/roles).',
-    createdAt: '2025-07-20 09:15:00'
-  },
-  {
-    id: 'tkt-871',
-    ticketNo: 'TKT-2026-0871',
-    date: '20-07-2025',
-    time: '10:00 AM',
-    staffName: 'Kishore Kumar (Night Auditor)',
-    department: 'Accounts',
-    phone: '9822780033',
-    category: 'Night Audit & Day End',
-    priority: 'Low',
-    subject: 'Night Audit Day End Cash Drawer Float Reconciliation Check',
-    description: 'Requesting guidance on how to record petty cash advances given to housekeeping before running the midnight 11:59 PM day end statement.',
-    preferredCallbackTime: '04:00 PM – 06:00 PM',
-    status: 'Open',
-    createdAt: '2025-07-20 10:00:00'
-  }
-];
+export const INITIAL_SUPPORT_TICKETS: PmsSupportTicket[] = [];
 
 // ==========================================
 // Video 35: Banquet Hall Venues & Event Bookings Initial Data
@@ -2397,231 +1556,7 @@ export const INITIAL_BANQUET_VENUES: PmsBanquetVenue[] = [
   }
 ];
 
-export const INITIAL_BANQUET_BOOKINGS: PmsBanquetBooking[] = [
-  {
-    id: 'bq-235',
-    bookingNo: 'RM/89/24-25',
-    eventName: 'Panday Parivar Grand Wedding Reception',
-    eventType: 'Wedding / Reception',
-    hostName: 'PANDAY PARIVAR',
-    contactPerson: 'Shri Ramakant Panday',
-    contactMobile: '76763636645',
-    contactEmail: 'panday.parivar@gmail.com',
-    addressLine1: 'Civil Lines, Near Circuit House',
-    city: 'Etawah / Jabalpur',
-    state: 'M.P',
-    pincode: '206001',
-    venueId: 'marriage-garden-1',
-    venueName: 'MARRIAGE GARDEN1',
-    venueTariff: 50000,
-    venueGstPercent: 12,
-    linkedRoomNos: ['301', '302'],
-    linkedRoomsTariff: 0,
-    bookingDate: '20-07-2025',
-    eventDate: '30-07-2025',
-    checkInDate: '30-07-2025',
-    checkInTime: '06:26 AM',
-    checkOutDate: '31-07-2025',
-    checkOutTime: '06:26 AM',
-    guaranteedPax: 400,
-    actualPaxServed: 500,
-    seatingLayout: 'Open Lawn Reception',
-    perPlateMenuName: 'Royal Shahi Wedding Feast (Paneer Lababdar, Dal Makhani, Pulao, Gulab Jamun, Starters)',
-    perPlateRate: 475,
-    foodPaxCount: 500,
-    totalFoodAmount: 237500,
-    ancillaryServices: [
-      {
-        id: 'anc-1',
-        serviceName: 'DJ CHARGE',
-        rate: 10000,
-        taxPercent: 12,
-        amount: 10000
-      },
-      {
-        id: 'anc-2',
-        serviceName: 'DECORATION CHARGE',
-        rate: 15000,
-        taxPercent: 12,
-        amount: 15000
-      }
-    ],
-    kots: [
-      {
-        kotNo: 'KOT/419/24-25',
-        dateTime: '30-07-2025 07:30 PM',
-        serviceType: 'Banquet',
-        roomOrVenue: 'MARRIAGE GARDEN1',
-        items: [
-          { itemName: 'PER PLATE FOOD', qty: 450, rate: 475, amount: 213750, gstPercent: 12 },
-          { itemName: 'DJ CHARGE', qty: 1, rate: 10000, amount: 10000, gstPercent: 12 },
-          { itemName: 'DECORATION CHARGE', qty: 1, rate: 15000, amount: 15000, gstPercent: 12 }
-        ],
-        totalAmount: 238750
-      },
-      {
-        kotNo: 'KOT/420/24-25',
-        dateTime: '30-07-2025 10:15 PM',
-        serviceType: 'Banquet',
-        roomOrVenue: 'MARRIAGE GARDEN1',
-        items: [
-          { itemName: 'PER PLATE FOOD', qty: 50, rate: 475, amount: 23750, gstPercent: 12 }
-        ],
-        totalAmount: 23750
-      }
-    ],
-    financialSummary: {
-      venueRent: 50000,
-      venueGstAmount: 6000,
-      foodAndServicesTaxable: 262500,
-      foodAndServicesGstAmount: 31500,
-      foodAndServicesTotal: 294000,
-      grossBillAmount: 350000,
-      advancePaid: 15000,
-      midInstallmentsPaid: 0,
-      netPayable: 335000,
-      paidAtCheckout: 335000,
-      balanceRemaining: 0,
-      sacCode: '996311'
-    },
-    payments: [
-      {
-        id: 'pmt-adv-1',
-        date: '20-07-2025',
-        type: 'Booking Advance',
-        mode: 'Online',
-        amount: 15000,
-        referenceNo: 'UPI/98337291039',
-        remark: 'Initial booking token advance for Marriage Garden 1 + Rooms 301, 302'
-      },
-      {
-        id: 'pmt-co-1',
-        date: '31-07-2025',
-        type: 'Checkout Settlement',
-        mode: 'Online',
-        amount: 200000,
-        referenceNo: 'NEFT/SBI/923020035404769',
-        remark: 'RTGS / Online Transfer received from Panday Parivar'
-      },
-      {
-        id: 'pmt-co-2',
-        date: '31-07-2025',
-        type: 'Checkout Settlement',
-        mode: 'STATE BANK OF INDIA',
-        amount: 130000,
-        referenceNo: 'CHQ/492019',
-        remark: 'Direct account deposit into SBI Haridwar Branch'
-      },
-      {
-        id: 'pmt-co-3',
-        date: '31-07-2025',
-        type: 'Checkout Settlement',
-        mode: 'Cash',
-        amount: 5000,
-        remark: 'Cash settlement of remaining minor balance'
-      }
-    ],
-    billingMode: 'Consolidated (Settle To Room)',
-    status: 'Settled & Checked Out',
-    invoiceNo: 'GSR/258/24-25',
-    invoiceDate: '20-07-2025',
-    billingOfficer: 'DEMO0004',
-    bankDetails: {
-      bankName: 'STATE BANK OF INDIA',
-      accountNo: '923020035404769',
-      ifsc: 'SBIN000390',
-      branch: 'MAIN BRANCH HARIDWAR'
-    },
-    beoNotes: {
-      stageRequirements: '40x25 ft elevated wooden stage with floral backdrop in pastel peach & marigold',
-      mandapNotes: 'Vedic circular mandap with 4 pillars and havan kund ventilation exhaust',
-      buffetTimings: 'Dinner buffet active 07:30 PM to 12:30 AM with chaat live counter',
-      soundPermitNumber: 'ADM/SDM/SOUND/2025/4412 (Valid till 11:30 PM)',
-      specialMenuRequests: 'Jain counter with satvik paneer, pure ghee sweets, sugar-free desserts'
-    }
-  },
-  {
-    id: 'bq-236',
-    bookingNo: 'RM/92/24-25',
-    eventName: 'Sharma & Varma Sangeet & Cocktail Evening',
-    eventType: 'Sangeet / Mehendi',
-    hostName: 'SHARMA JI & FAMILY',
-    contactPerson: 'Er. Rajesh Sharma',
-    contactMobile: '9827011223',
-    city: 'Jabalpur',
-    state: 'M.P',
-    venueId: 'big-hall',
-    venueName: 'BIG HALL',
-    venueTariff: 15000,
-    venueGstPercent: 18,
-    linkedRoomNos: ['102'],
-    linkedRoomsTariff: 3000,
-    bookingDate: '22-07-2025',
-    eventDate: '05-08-2025',
-    checkInDate: '05-08-2025',
-    checkInTime: '05:00 PM',
-    checkOutDate: '06-08-2025',
-    checkOutTime: '01:00 AM',
-    guaranteedPax: 180,
-    actualPaxServed: 180,
-    seatingLayout: 'Round Table / Cluster',
-    perPlateMenuName: 'Premium Sangeet Buffet with Mocktails & Live Counters',
-    perPlateRate: 550,
-    foodPaxCount: 180,
-    totalFoodAmount: 99000,
-    ancillaryServices: [
-      { id: 'anc-3', serviceName: 'DJ CHARGE', rate: 10000, taxPercent: 12, amount: 10000 },
-      { id: 'anc-4', serviceName: 'PROJECTOR & LED WALL', rate: 8000, taxPercent: 18, amount: 8000 }
-    ],
-    kots: [
-      {
-        kotNo: 'KOT/431/24-25',
-        dateTime: '05-08-2025 06:00 PM',
-        serviceType: 'Banquet',
-        roomOrVenue: 'BIG HALL',
-        items: [
-          { itemName: 'PER PLATE FOOD', qty: 180, rate: 550, amount: 99000, gstPercent: 12 },
-          { itemName: 'DJ CHARGE', qty: 1, rate: 10000, amount: 10000, gstPercent: 12 },
-          { itemName: 'PROJECTOR & LED WALL', qty: 1, rate: 8000, amount: 8000, gstPercent: 18 }
-        ],
-        totalAmount: 117000
-      }
-    ],
-    financialSummary: {
-      venueRent: 15000,
-      venueGstAmount: 2700,
-      foodAndServicesTaxable: 117000,
-      foodAndServicesGstAmount: 14040,
-      foodAndServicesTotal: 131040,
-      grossBillAmount: 148740,
-      advancePaid: 30000,
-      midInstallmentsPaid: 0,
-      netPayable: 118740,
-      paidAtCheckout: 0,
-      balanceRemaining: 118740,
-      sacCode: '996311'
-    },
-    payments: [
-      {
-        id: 'pmt-sharma-1',
-        date: '22-07-2025',
-        type: 'Booking Advance',
-        mode: 'UPI',
-        amount: 30000,
-        referenceNo: 'UPI/77192003881',
-        remark: 'Booking advance token for Big Hall'
-      }
-    ],
-    billingMode: 'Consolidated (Settle To Room)',
-    status: 'CheckedIn / In-Progress',
-    bankDetails: {
-      bankName: 'STATE BANK OF INDIA',
-      accountNo: '923020035404769',
-      ifsc: 'SBIN000390',
-      branch: 'MAIN BRANCH HARIDWAR'
-    }
-  }
-];
+export const INITIAL_BANQUET_BOOKINGS: PmsBanquetBooking[] = [];
 
 const STORAGE_KEYS = {
   ROOMS: 'svr_pms_rooms',
@@ -2691,152 +1626,32 @@ const STORAGE_KEYS = {
   SHIFT_HANDOVERS: 'svr_pms_shift_handovers'
 };
 
-export const INITIAL_EXPENSES: PmsExpenseRecord[] = [
-  {
-    id: 'exp-1',
-    expenseNo: 'EXP-2026-001',
-    date: '2026-10-20',
-    time: '08:30 AM',
-    category: 'Vegetables & Dairy',
-    amount: 1450,
-    paymentMode: 'Cash',
-    paidTo: 'Rayagada Kisan Mandi Fresh Veggies',
-    description: 'Fresh Paneer (5kg), Tomatoes, Green Chillies, Coriander for Rasoi',
-    billNumber: 'BILL-8921',
-    approvedBy: 'General Manager',
-    createdAt: '2026-10-20T08:30:00.000Z'
-  },
-  {
-    id: 'exp-2',
-    expenseNo: 'EXP-2026-002',
-    date: '2026-10-20',
-    time: '09:15 AM',
-    category: 'Housekeeping Supplies',
-    amount: 850,
-    paymentMode: 'Cash',
-    paidTo: 'Om Sai Cleaners & Chemicals',
-    description: 'Floor disinfectant (5L), Toilet cleaner cans, microfiber cloths',
-    billNumber: 'INV-4412',
-    approvedBy: 'Housekeeping Head',
-    createdAt: '2026-10-20T09:15:00.000Z'
-  },
-  {
-    id: 'exp-3',
-    expenseNo: 'EXP-2026-003',
-    date: '2026-10-19',
-    time: '06:00 PM',
-    category: 'Electricity/DG Fuel',
-    amount: 2200,
-    paymentMode: 'UPI',
-    paidTo: 'HPCL Petrol Pump Rayagada',
-    description: 'Diesel for generator backup (25 Litres)',
-    billNumber: 'HP-90124',
-    approvedBy: 'General Manager',
-    createdAt: '2026-10-19T18:00:00.000Z'
-  },
-  {
-    id: 'exp-4',
-    expenseNo: 'EXP-2026-004',
-    date: '2026-10-19',
-    time: '07:30 PM',
-    category: 'Maintenance Repair',
-    amount: 600,
-    paymentMode: 'Cash',
-    paidTo: 'Sai Refrigeration & AC Care',
-    description: 'Capacitor replacement & gas check for Room 106 AC',
-    billNumber: 'REC-309',
-    approvedBy: 'Front Desk Lead',
-    createdAt: '2026-10-19T19:30:00.000Z'
-  }
-];
+export const INITIAL_EXPENSES: PmsExpenseRecord[] = [];
 
 export const INITIAL_HOUSEKEEPING: PmsHousekeepingRecord[] = [
-  // Ground Floor (101–107)
-  { roomNo: '101', status: 'Inspected', assignedStaff: 'Ramesh', priority: 'Normal', lastCleanedTime: '19-10-2026 10:30 AM', remarks: 'Room occupied – Rajesh Sharma' },
-  { roomNo: '102', status: 'Vacant Clean', assignedStaff: 'Sunita', priority: 'Normal', lastCleanedTime: '20-10-2026 09:00 AM' },
-  { roomNo: '103', status: 'Vacant Clean', assignedStaff: 'Ramesh', priority: 'Normal', lastCleanedTime: '20-10-2026 09:30 AM' },
-  { roomNo: '104', status: 'Vacant Dirty', assignedStaff: 'Ramesh', priority: 'High - Guest Waiting', lastCleanedTime: '18-10-2026 04:00 PM', remarks: 'Guest checked out, linen stripped' },
-  { roomNo: '105', status: 'Vacant Clean', assignedStaff: 'Sunita', priority: 'Normal', lastCleanedTime: '20-10-2026 08:30 AM' },
-  { roomNo: '106', status: 'Vacant Clean', assignedStaff: 'Ramesh', priority: 'Normal', lastCleanedTime: '20-10-2026 09:15 AM' },
-  { roomNo: '107', status: 'Vacant Clean', assignedStaff: 'Sunita', priority: 'Normal', lastCleanedTime: '20-10-2026 10:00 AM' },
-  // 1st Floor (201–211)
-  { roomNo: '201', status: 'Vacant Clean', assignedStaff: 'Ganesh', priority: 'Normal', lastCleanedTime: '20-10-2026 09:30 AM' },
-  { roomNo: '202', status: 'Inspected', assignedStaff: 'Ganesh', priority: 'Normal', lastCleanedTime: '20-10-2026 09:00 AM', remarks: 'Room occupied – Vikram Malhotra' },
-  { roomNo: '203', status: 'Vacant Clean', assignedStaff: 'Priya', priority: 'Normal', lastCleanedTime: '20-10-2026 10:00 AM' },
-  { roomNo: '204', status: 'Vacant Clean', assignedStaff: 'Priya', priority: 'High - Guest Waiting', lastCleanedTime: '20-10-2026 10:15 AM' },
-  { roomNo: '205', status: 'Vacant Clean', assignedStaff: 'Ganesh', priority: 'Normal', lastCleanedTime: '20-10-2026 09:45 AM' },
-  { roomNo: '206', status: 'Vacant Clean', assignedStaff: 'Priya', priority: 'Normal', lastCleanedTime: '20-10-2026 10:30 AM' },
-  { roomNo: '207', status: 'Vacant Clean', assignedStaff: 'Sunita', priority: 'Normal', lastCleanedTime: '20-10-2026 10:45 AM' },
-  { roomNo: '208', status: 'Vacant Clean', assignedStaff: 'Ramesh', priority: 'Normal', lastCleanedTime: '20-10-2026 09:00 AM' },
-  { roomNo: '209', status: 'Vacant Clean', assignedStaff: 'Ganesh', priority: 'Normal', lastCleanedTime: '20-10-2026 09:15 AM' },
-  { roomNo: '210', status: 'Vacant Clean', assignedStaff: 'Priya', priority: 'Normal', lastCleanedTime: '20-10-2026 09:30 AM' },
-  { roomNo: '211', status: 'Inspected', assignedStaff: 'Sunita', priority: 'Normal', lastCleanedTime: '20-10-2026 07:30 AM', remarks: 'Room occupied – Arvind Kirloskar' }
+  { roomNo: '101', status: 'Vacant Clean', assignedStaff: 'Sunita', priority: 'Normal', lastCleanedTime: '05-02-2025 09:00 AM' },
+  { roomNo: '102', status: 'Vacant Clean', assignedStaff: 'Sunita', priority: 'Normal', lastCleanedTime: '05-02-2025 09:00 AM' },
+  { roomNo: '103', status: 'Vacant Clean', assignedStaff: 'Ramesh', priority: 'Normal', lastCleanedTime: '05-02-2025 09:00 AM' },
+  { roomNo: '104', status: 'Vacant Clean', assignedStaff: 'Ramesh', priority: 'Normal', lastCleanedTime: '05-02-2025 09:00 AM' },
+  { roomNo: '105', status: 'Vacant Clean', assignedStaff: 'Sunita', priority: 'Normal', lastCleanedTime: '05-02-2025 09:00 AM' },
+  { roomNo: '106', status: 'Vacant Clean', assignedStaff: 'Ramesh', priority: 'Normal', lastCleanedTime: '05-02-2025 09:00 AM' },
+  { roomNo: '107', status: 'Vacant Clean', assignedStaff: 'Sunita', priority: 'Normal', lastCleanedTime: '05-02-2025 09:00 AM' },
+  { roomNo: '201', status: 'Vacant Clean', assignedStaff: 'Ganesh', priority: 'Normal', lastCleanedTime: '05-02-2025 09:00 AM' },
+  { roomNo: '202', status: 'Vacant Clean', assignedStaff: 'Ganesh', priority: 'Normal', lastCleanedTime: '05-02-2025 09:00 AM' },
+  { roomNo: '203', status: 'Vacant Clean', assignedStaff: 'Priya', priority: 'Normal', lastCleanedTime: '05-02-2025 09:00 AM' },
+  { roomNo: '204', status: 'Vacant Clean', assignedStaff: 'Priya', priority: 'Normal', lastCleanedTime: '05-02-2025 09:00 AM' },
+  { roomNo: '205', status: 'Vacant Clean', assignedStaff: 'Ganesh', priority: 'Normal', lastCleanedTime: '05-02-2025 09:00 AM' },
+  { roomNo: '206', status: 'Vacant Clean', assignedStaff: 'Priya', priority: 'Normal', lastCleanedTime: '05-02-2025 09:00 AM' },
+  { roomNo: '207', status: 'Vacant Clean', assignedStaff: 'Sunita', priority: 'Normal', lastCleanedTime: '05-02-2025 09:00 AM' },
+  { roomNo: '208', status: 'Vacant Clean', assignedStaff: 'Ramesh', priority: 'Normal', lastCleanedTime: '05-02-2025 09:00 AM' },
+  { roomNo: '209', status: 'Vacant Clean', assignedStaff: 'Ganesh', priority: 'Normal', lastCleanedTime: '05-02-2025 09:00 AM' },
+  { roomNo: '210', status: 'Vacant Clean', assignedStaff: 'Priya', priority: 'Normal', lastCleanedTime: '05-02-2025 09:00 AM' },
+  { roomNo: '211', status: 'Vacant Clean', assignedStaff: 'Sunita', priority: 'Normal', lastCleanedTime: '05-02-2025 09:00 AM' }
 ];
 
-export const INITIAL_NIGHT_AUDITS: PmsNightAuditRecord[] = [
-  {
-    auditId: 'NA-2026-1019',
-    auditDate: '2026-10-19',
-    executedAt: '19-10-2026 11:45 PM',
-    executedBy: 'Night Auditor (S. Deshmukh)',
-    occupiedRoomsCount: 4,
-    totalRoomTariffPosted: 14796,
-    totalGstPosted: 1775.52,
-    cashInHand: 12450,
-    upiTotal: 28900,
-    cardTotal: 15400,
-    pendingReceivables: 8990,
-    roomsAuditSummary: [
-      { roomNo: '101', guestName: 'Rajesh Sharma', baseTariff: 2499, gstAmount: 299.88, totalPosted: 2798.88, folioBalanceAfter: 1648.88 },
-      { roomNo: '103', guestName: 'Sunita Patel', baseTariff: 2499, gstAmount: 299.88, totalPosted: 2798.88, folioBalanceAfter: 614.88 },
-      { roomNo: '202', guestName: 'Vikram Malhotra & Family', baseTariff: 3799, gstAmount: 455.88, totalPosted: 4254.88, folioBalanceAfter: 0 },
-      { roomNo: '303', guestName: 'Arvind Kirloskar', baseTariff: 5999, gstAmount: 719.88, totalPosted: 6718.88, folioBalanceAfter: 546 }
-    ]
-  }
-];
+export const INITIAL_NIGHT_AUDITS: PmsNightAuditRecord[] = [];
 
-export const INITIAL_FOLIO_PAYMENTS: PmsFolioPayment[] = [
-  {
-    id: 'pay-1',
-    roomNo: '101',
-    guestName: 'Rajesh Sharma',
-    amount: 1500,
-    paymentMode: 'UPI',
-    referenceNo: 'UPI/982211/PhonePe',
-    timestamp: '2026-10-19 11:15 AM',
-    notes: 'Advance at Check-In'
-  },
-  {
-    id: 'pay-2',
-    roomNo: '103',
-    guestName: 'Sunita Patel',
-    amount: 2499,
-    paymentMode: 'Cash',
-    referenceNo: 'CASH-REC-103',
-    timestamp: '2026-10-19 01:10 PM',
-    notes: 'First day tariff advance in cash'
-  },
-  {
-    id: 'pay-3',
-    roomNo: '202',
-    guestName: 'Vikram Malhotra & Family',
-    amount: 5000,
-    paymentMode: 'Card',
-    referenceNo: 'HDFC-POS-7821',
-    timestamp: '2026-10-20 09:35 AM',
-    notes: 'Advance card swipe at front desk'
-  },
-  {
-    id: 'pay-4',
-    roomNo: '303',
-    guestName: 'Arvind Kirloskar',
-    amount: 6719,
-    paymentMode: 'Bank Transfer',
-    referenceNo: 'NEFT/SBI/991048',
-    timestamp: '2026-10-20 08:15 AM',
-    notes: 'Corporate advance direct NEFT transfer'
-  }
-];
+export const INITIAL_FOLIO_PAYMENTS: PmsFolioPayment[] = [];
 
 export class PmsStore {
   // --- Centralized Reactive Pub/Sub Engine (Multi-Tab & Cross-Module Zero State Loss) ---
@@ -2844,7 +1659,7 @@ export class PmsStore {
   private static broadcastChannel: BroadcastChannel | null = typeof window !== 'undefined' && 'BroadcastChannel' in window ? new BroadcastChannel('svr_pms_channel') : null;
   private static isListeningToEvents = false;
 
-  static readonly SCHEMA_VERSION = '20261021_v18_final';
+  static readonly SCHEMA_VERSION = '20261105_svr_live_reset_v2';
 
   static checkAndMigrateSchema(): void {
     if (typeof window === 'undefined') return;
@@ -3074,7 +1889,7 @@ export class PmsStore {
       if (!state) return false;
 
       // 1. Hydrate Rooms & Active In-House Guest Occupancy from PostgreSQL
-      if (state.rooms && state.rooms.length > 0) {
+      if (Array.isArray(state.rooms)) {
         const localRooms = this.getRooms();
         const activeBookings = state.active_bookings || [];
         const updated = state.rooms.map((r: any) => {
@@ -3114,7 +1929,7 @@ export class PmsStore {
       }
 
       // 2. Hydrate Dining Tables from PostgreSQL
-      if (state.tables && state.tables.length > 0) {
+      if (Array.isArray(state.tables)) {
         localStorage.setItem(STORAGE_KEYS.TABLES, JSON.stringify(state.tables));
       }
 
@@ -3127,28 +1942,28 @@ export class PmsStore {
       }
 
       // 4. Hydrate KOT Tickets from PostgreSQL
-      if (state.kots && state.kots.length > 0) {
+      if (Array.isArray(state.kots)) {
         localStorage.setItem(STORAGE_KEYS.KOTS, JSON.stringify(state.kots));
       }
 
       // 5. Hydrate Food Bills from PostgreSQL
-      if (state.food_bills && state.food_bills.length > 0) {
+      if (Array.isArray(state.food_bills)) {
         localStorage.setItem(STORAGE_KEYS.FOOD_BILLS, JSON.stringify(state.food_bills));
         localStorage.setItem('hotel_pms_foodbills', JSON.stringify(state.food_bills));
       }
 
       // 6. Hydrate Petty Cash Expenses from PostgreSQL
-      if (state.expenses && state.expenses.length > 0) {
+      if (Array.isArray(state.expenses)) {
         localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(state.expenses));
       }
 
       // 7. Hydrate Inventory Purchases from PostgreSQL
-      if (state.purchases && state.purchases.length > 0) {
+      if (Array.isArray(state.purchases)) {
         localStorage.setItem(STORAGE_KEYS.PURCHASES, JSON.stringify(state.purchases));
       }
 
       // 8. Hydrate Folio Discounts from PostgreSQL
-      if (state.discounts && state.discounts.length > 0) {
+      if (Array.isArray(state.discounts)) {
         const discountMap: Record<string, any> = {};
         state.discounts.forEach((d: any) => {
           if (d.roomNo) {
@@ -3163,107 +1978,107 @@ export class PmsStore {
       }
 
       // 9. Hydrate Group Bookings from PostgreSQL
-      if (state.group_bookings && state.group_bookings.length > 0) {
+      if (Array.isArray(state.group_bookings)) {
         localStorage.setItem(STORAGE_KEYS.GROUP_BOOKINGS, JSON.stringify(state.group_bookings));
       }
 
       // 10. Hydrate Completed Checkouts from PostgreSQL
-      if (state.checkouts && state.checkouts.length > 0) {
+      if (Array.isArray(state.checkouts)) {
         localStorage.setItem(STORAGE_KEYS.CHECKOUTS, JSON.stringify(state.checkouts));
       }
 
       // 11. Hydrate Advance Receipts from PostgreSQL
-      if (state.advance_receipts && state.advance_receipts.length > 0) {
+      if (Array.isArray(state.advance_receipts)) {
         localStorage.setItem(STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify(state.advance_receipts));
       }
 
       // 12. Hydrate Room Shifts from PostgreSQL
-      if (state.room_shifts && state.room_shifts.length > 0) {
+      if (Array.isArray(state.room_shifts)) {
         localStorage.setItem(STORAGE_KEYS.ROOM_SHIFTS, JSON.stringify(state.room_shifts));
       }
 
       // 13. Hydrate Journal Entries from PostgreSQL
-      if (state.journal_entries && state.journal_entries.length > 0) {
+      if (Array.isArray(state.journal_entries)) {
         localStorage.setItem(STORAGE_KEYS.JOURNAL_ENTRIES, JSON.stringify(state.journal_entries));
       }
 
       // 14. Hydrate Party Accounts from PostgreSQL
-      if (state.party_accounts && state.party_accounts.length > 0) {
+      if (Array.isArray(state.party_accounts)) {
         localStorage.setItem(STORAGE_KEYS.PARTY_ACCOUNTS, JSON.stringify(state.party_accounts));
       }
 
       // 15. Hydrate General Receipts from PostgreSQL
-      if (state.general_receipts && state.general_receipts.length > 0) {
+      if (Array.isArray(state.general_receipts)) {
         localStorage.setItem(STORAGE_KEYS.RECEIPTS, JSON.stringify(state.general_receipts));
       }
 
       // 16. Hydrate General Payments from PostgreSQL
-      if (state.general_payments && state.general_payments.length > 0) {
+      if (Array.isArray(state.general_payments)) {
         localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(state.general_payments));
       }
 
       // 17. Hydrate Godowns from PostgreSQL
-      if (state.godowns && state.godowns.length > 0) {
+      if (Array.isArray(state.godowns)) {
         localStorage.setItem(STORAGE_KEYS.GODOWNS, JSON.stringify(state.godowns));
       }
 
       // 18. Hydrate Item Groups from PostgreSQL
-      if (state.item_groups && state.item_groups.length > 0) {
+      if (Array.isArray(state.item_groups)) {
         localStorage.setItem(STORAGE_KEYS.ITEM_GROUPS, JSON.stringify(state.item_groups));
       }
 
       // 19. Hydrate Stock Transfers from PostgreSQL
-      if (state.stock_transfers && state.stock_transfers.length > 0) {
+      if (Array.isArray(state.stock_transfers)) {
         localStorage.setItem(STORAGE_KEYS.STOCK_TRANSFERS, JSON.stringify(state.stock_transfers));
       }
 
       // 20. Hydrate Staff User Accounts from PostgreSQL
-      if (state.users && state.users.length > 0) {
+      if (Array.isArray(state.users)) {
         localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(state.users));
       }
 
       // 21. Hydrate Commission Agents from PostgreSQL
-      if (state.commission_agents && state.commission_agents.length > 0) {
+      if (Array.isArray(state.commission_agents)) {
         localStorage.setItem(STORAGE_KEYS.COMMISSION_AGENTS, JSON.stringify(state.commission_agents));
       }
 
       // 22. Hydrate Agent Commission Payout Vouchers from PostgreSQL
-      if (state.agent_payout_vouchers && state.agent_payout_vouchers.length > 0) {
+      if (Array.isArray(state.agent_payout_vouchers)) {
         localStorage.setItem(STORAGE_KEYS.AGENT_PAYOUT_VOUCHERS, JSON.stringify(state.agent_payout_vouchers));
       }
 
       // 23. Hydrate Banquet Venues from PostgreSQL
-      if (state.banquet_venues && state.banquet_venues.length > 0) {
+      if (Array.isArray(state.banquet_venues)) {
         localStorage.setItem(STORAGE_KEYS.BANQUET_VENUES, JSON.stringify(state.banquet_venues));
       }
 
       // 24. Hydrate Banquet Bookings from PostgreSQL
-      if (state.banquet_bookings && state.banquet_bookings.length > 0) {
+      if (Array.isArray(state.banquet_bookings)) {
         localStorage.setItem(STORAGE_KEYS.BANQUET_BOOKINGS, JSON.stringify(state.banquet_bookings));
       }
 
       // 25. Hydrate Liquor Items from PostgreSQL
-      if (state.liquor_items && state.liquor_items.length > 0) {
+      if (Array.isArray(state.liquor_items)) {
         localStorage.setItem(STORAGE_KEYS.LIQUOR_ITEMS, JSON.stringify(state.liquor_items));
       }
 
       // 26. Hydrate Bar Invoices from PostgreSQL
-      if (state.bar_invoices && state.bar_invoices.length > 0) {
+      if (Array.isArray(state.bar_invoices)) {
         localStorage.setItem(STORAGE_KEYS.BAR_INVOICES, JSON.stringify(state.bar_invoices));
       }
 
       // 27. Hydrate Hotel Assets & Linen from PostgreSQL
-      if (state.hotel_assets && state.hotel_assets.length > 0) {
+      if (Array.isArray(state.hotel_assets)) {
         localStorage.setItem(STORAGE_KEYS.HOTEL_ASSETS, JSON.stringify(state.hotel_assets));
       }
 
       // 28. Hydrate Pilgrim Lockers from PostgreSQL
-      if (state.lockers && state.lockers.length > 0) {
+      if (Array.isArray(state.lockers)) {
         localStorage.setItem(STORAGE_KEYS.LOCKERS, JSON.stringify(state.lockers));
       }
 
       // 29. Hydrate WhatsApp Logs from PostgreSQL
-      if (state.whatsapp_logs && state.whatsapp_logs.length > 0) {
+      if (Array.isArray(state.whatsapp_logs)) {
         localStorage.setItem(STORAGE_KEYS.WHATSAPP_LOGS, JSON.stringify(state.whatsapp_logs));
       }
 
@@ -3273,7 +2088,7 @@ export class PmsStore {
       }
 
       // 31. Hydrate Support Tickets from PostgreSQL
-      if (state.support_tickets && state.support_tickets.length > 0) {
+      if (Array.isArray(state.support_tickets)) {
         localStorage.setItem(STORAGE_KEYS.SUPPORT_TICKETS, JSON.stringify(state.support_tickets));
       }
 
@@ -3290,32 +2105,32 @@ export class PmsStore {
       }
 
       // 33. Hydrate Room Types Master from PostgreSQL
-      if (state.room_types && state.room_types.length > 0) {
+      if (Array.isArray(state.room_types)) {
         localStorage.setItem(STORAGE_KEYS.ROOM_TYPES, JSON.stringify(state.room_types));
       }
 
       // 34. Hydrate Restaurant Menu Items from PostgreSQL
-      if (state.menu_items && state.menu_items.length > 0) {
+      if (Array.isArray(state.menu_items)) {
         localStorage.setItem(STORAGE_KEYS.MENU_ITEMS, JSON.stringify(state.menu_items));
       }
 
       // 35. Hydrate Housekeeping Duty Records from PostgreSQL
-      if (state.housekeeping && state.housekeeping.length > 0) {
+      if (Array.isArray(state.housekeeping)) {
         localStorage.setItem(STORAGE_KEYS.HOUSEKEEPING, JSON.stringify(state.housekeeping));
       }
 
       // 36. Hydrate Agent Commission Accruals from PostgreSQL
-      if (state.agent_commissions && state.agent_commissions.length > 0) {
+      if (Array.isArray(state.agent_commissions)) {
         localStorage.setItem(STORAGE_KEYS.AGENT_COMMISSIONS, JSON.stringify(state.agent_commissions));
       }
 
       // 37. Hydrate WhatsApp Notification Templates from PostgreSQL
-      if (state.whatsapp_templates && state.whatsapp_templates.length > 0) {
+      if (Array.isArray(state.whatsapp_templates)) {
         localStorage.setItem(STORAGE_KEYS.WHATSAPP_TEMPLATES, JSON.stringify(state.whatsapp_templates));
       }
 
       // 38. Hydrate Role Permissions Matrix from PostgreSQL
-      if (state.roles && state.roles.length > 0) {
+      if (Array.isArray(state.roles)) {
         localStorage.setItem(STORAGE_KEYS.ROLES, JSON.stringify(state.roles));
       }
 
@@ -3325,34 +2140,34 @@ export class PmsStore {
       }
 
       // 40. Hydrate Liquor Brands & Units from PostgreSQL
-      if (state.liquor_brands && state.liquor_brands.length > 0) {
+      if (Array.isArray(state.liquor_brands)) {
         localStorage.setItem(STORAGE_KEYS.LIQUOR_BRANDS, JSON.stringify(state.liquor_brands));
       }
-      if (state.liquor_units && state.liquor_units.length > 0) {
+      if (Array.isArray(state.liquor_units)) {
         localStorage.setItem(STORAGE_KEYS.LIQUOR_UNITS, JSON.stringify(state.liquor_units));
       }
 
       // 41. Hydrate Key Cards, KOT Voids & Discrepancies from PostgreSQL
-      if (state.key_cards && state.key_cards.length > 0) {
+      if (Array.isArray(state.key_cards)) {
         localStorage.setItem(STORAGE_KEYS.KEY_CARDS, JSON.stringify(state.key_cards));
       }
-      if (state.kot_void_audit && state.kot_void_audit.length > 0) {
+      if (Array.isArray(state.kot_void_audit)) {
         localStorage.setItem(STORAGE_KEYS.KOT_VOID_AUDIT, JSON.stringify(state.kot_void_audit));
       }
-      if (state.housekeeping_discrepancies && state.housekeeping_discrepancies.length > 0) {
+      if (Array.isArray(state.housekeeping_discrepancies)) {
         localStorage.setItem(STORAGE_KEYS.HOUSEKEEPING_DISCREPANCIES, JSON.stringify(state.housekeeping_discrepancies));
       }
-      if (state.night_audits && state.night_audits.length > 0) {
+      if (Array.isArray(state.night_audits)) {
         localStorage.setItem(STORAGE_KEYS.NIGHT_AUDITS, JSON.stringify(state.night_audits));
       }
 
       // 42. Hydrate Anti-Theft Discount Audit Logs from PostgreSQL
-      if (state.discount_audit_logs && state.discount_audit_logs.length > 0) {
+      if (Array.isArray(state.discount_audit_logs)) {
         localStorage.setItem(STORAGE_KEYS.DISCOUNT_AUDIT_LOGS, JSON.stringify(state.discount_audit_logs));
       }
 
       // 43. Hydrate Multi-Branch Hotel Properties from PostgreSQL
-      if (state.hotel_properties && state.hotel_properties.length > 0) {
+      if (Array.isArray(state.hotel_properties)) {
         localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(state.hotel_properties));
       }
 
@@ -3578,82 +2393,13 @@ export class PmsStore {
   // Double-Entry Journal Ledger
   static getJournalEntries(): import('../types/pmsModels').PmsJournalEntry[] {
     const raw = localStorage.getItem(STORAGE_KEYS.JOURNAL_ENTRIES);
-    if (!raw) {
-      const initial: import('../types/pmsModels').PmsJournalEntry[] = [
-        {
-          entryId: 'JV-2026-0001',
-          date: '2026-10-19',
-          time: '11:00 AM',
-          voucherType: 'Advance',
-          referenceNo: 'AR/201/26-27',
-          narration: 'Advance deposit received from Rajesh Sharma for Room 101',
-          debitAccount: 'HDFC Bank / UPI Settlement A/c',
-          creditAccount: 'Guest Advance Deposit Liability',
-          amountPaise: 150000,
-          amountRupees: 1500,
-          postedBy: 'Front Desk'
-        },
-        {
-          entryId: 'JV-2026-0002',
-          date: '2026-10-19',
-          time: '01:00 PM',
-          voucherType: 'Advance',
-          referenceNo: 'AR/202/26-27',
-          narration: 'Advance deposit received from Sunita Patel for Room 103',
-          debitAccount: 'Cash in Hand (Reception)',
-          creditAccount: 'Guest Advance Deposit Liability',
-          amountPaise: 249900,
-          amountRupees: 2499,
-          postedBy: 'Front Desk'
-        },
-        {
-          entryId: 'JV-2026-0003',
-          date: '2026-10-20',
-          time: '09:30 AM',
-          voucherType: 'Advance',
-          referenceNo: 'AR/203/26-27',
-          narration: 'Advance received from Vikram Malhotra for Room 202',
-          debitAccount: 'HDFC Bank / UPI Settlement A/c',
-          creditAccount: 'Guest Advance Deposit Liability',
-          amountPaise: 500000,
-          amountRupees: 5000,
-          postedBy: 'Front Desk'
-        },
-        {
-          entryId: 'JV-2026-0004',
-          date: '2026-10-20',
-          time: '08:00 AM',
-          voucherType: 'Advance',
-          referenceNo: 'AR/204/26-27',
-          narration: 'Full advance received from Arvind Kirloskar for Suite 303',
-          debitAccount: 'HDFC Bank / UPI Settlement A/c',
-          creditAccount: 'Guest Advance Deposit Liability',
-          amountPaise: 671900,
-          amountRupees: 6719,
-          postedBy: 'Front Desk'
-        },
-        {
-          entryId: 'JV-2026-0005',
-          date: '2026-10-20',
-          time: '08:30 AM',
-          voucherType: 'Expense',
-          referenceNo: 'EXP-2026-001',
-          narration: 'Purchased Fresh Paneer & Veggies for Vasudev Rasoi',
-          debitAccount: 'Petty Cash / Housekeeping Expense',
-          creditAccount: 'Cash in Hand (Reception)',
-          amountPaise: 145000,
-          amountRupees: 1450,
-          postedBy: 'General Manager'
-        }
-      ];
-      localStorage.setItem(STORAGE_KEYS.JOURNAL_ENTRIES, JSON.stringify(initial));
-      return initial;
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      } catch {}
     }
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return [];
-    }
+    return [];
   }
 
   static postJournalEntry(entry: Omit<import('../types/pmsModels').PmsJournalEntry, 'entryId'>): import('../types/pmsModels').PmsJournalEntry {
@@ -3886,25 +2632,46 @@ export class PmsStore {
     localStorage.setItem(STORAGE_KEYS.ROOM_TYPES, JSON.stringify(INITIAL_ROOM_TYPES));
     localStorage.setItem(STORAGE_KEYS.TABLES, JSON.stringify(INITIAL_TABLES));
     localStorage.setItem(STORAGE_KEYS.MENU_ITEMS, JSON.stringify(INITIAL_MENU_ITEMS));
-    localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(INITIAL_EXPENSES));
+    localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify([]));
     localStorage.setItem(STORAGE_KEYS.HOUSEKEEPING, JSON.stringify(INITIAL_HOUSEKEEPING));
-    localStorage.setItem(STORAGE_KEYS.NIGHT_AUDITS, JSON.stringify(INITIAL_NIGHT_AUDITS));
-    localStorage.setItem(STORAGE_KEYS.FOLIO_PAYMENTS, JSON.stringify(INITIAL_FOLIO_PAYMENTS));
-    localStorage.setItem(STORAGE_KEYS.BUSINESS_DATE, '2026-10-20');
+    localStorage.setItem(STORAGE_KEYS.NIGHT_AUDITS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.FOLIO_PAYMENTS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.BUSINESS_DATE, new Date().toISOString().split('T')[0]);
     localStorage.setItem(STORAGE_KEYS.SCHEMA_VERSION, this.SCHEMA_VERSION);
+    localStorage.setItem(STORAGE_KEYS.BOOKINGS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.CHECKINS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.CHECKOUTS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.KOTS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.FOOD_BILLS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.RECEIPTS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.PURCHASES, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.STOCK_TRANSFERS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.PARTY_ACCOUNTS, JSON.stringify(INITIAL_PARTY_ACCOUNTS));
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(INITIAL_USER_ACCOUNTS));
+    localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(INITIAL_CHAIN_PROPERTIES));
+    localStorage.setItem(STORAGE_KEYS.VOUCHER_TYPES, JSON.stringify(INITIAL_VOUCHER_TYPES));
     localStorage.removeItem(STORAGE_KEYS.JOURNAL_ENTRIES);
     localStorage.removeItem(STORAGE_KEYS.KOT_VOID_AUDIT);
     localStorage.removeItem(STORAGE_KEYS.NIGHT_AUDIT_ACCRUALS);
     localStorage.removeItem(STORAGE_KEYS.FOLIO_DISCOUNTS);
-    localStorage.removeItem(STORAGE_KEYS.BOOKINGS);
-    localStorage.removeItem(STORAGE_KEYS.KOTS);
-    localStorage.removeItem(STORAGE_KEYS.CHECKOUTS);
+    localStorage.removeItem(STORAGE_KEYS.GROUP_BOOKINGS);
+    localStorage.removeItem(STORAGE_KEYS.ADVANCE_RECEIPTS);
+    localStorage.removeItem(STORAGE_KEYS.ROOM_SHIFTS);
+    localStorage.removeItem(STORAGE_KEYS.AGENT_PAYOUT_VOUCHERS);
+    localStorage.removeItem(STORAGE_KEYS.BANQUET_BOOKINGS);
+    localStorage.removeItem(STORAGE_KEYS.BAR_INVOICES);
+    localStorage.removeItem(STORAGE_KEYS.LIQUOR_STOCKS);
+    localStorage.removeItem(STORAGE_KEYS.DISCOUNT_AUDIT_LOGS);
+    localStorage.removeItem(STORAGE_KEYS.WHATSAPP_LOGS);
+    localStorage.removeItem(STORAGE_KEYS.SUPPORT_TICKETS);
+    localStorage.removeItem('hotel_pms_checkins');
+    localStorage.removeItem('hotel_pms_foodbills');
+    localStorage.removeItem('hotel_pms_food_bills');
+    localStorage.removeItem('hotel_pms_checkouts');
     this.notify();
   }
 
-  // =========================================================================
-  // 2. Housekeeping, Laundry & Maintenance Tracker Methods
-  // =========================================================================
   static getHousekeepingRecords(): PmsHousekeepingRecord[] {
     const raw = localStorage.getItem(STORAGE_KEYS.HOUSEKEEPING);
     if (!raw) {
@@ -4740,8 +3507,8 @@ export class PmsStore {
     }
 
     const checkouts = this.getCheckouts();
-    const nextSeq = checkouts.length + 101;
-    const invoiceNo = `SVR/2026-27/INV-${String(nextSeq).padStart(4, '0')}`;
+    const nextSeq = checkouts.length + 1;
+    const invoiceNo = `SVR/2025-26/INV-${String(nextSeq).padStart(4, '0')}`;
 
     const updatedFolio = this.getFolioSummary(roomNo);
     const checkoutRecord: PmsCheckOutDetail = {
@@ -4853,8 +3620,8 @@ export class PmsStore {
     }
 
     const existingBookings = this.getBookings();
-    const nextSeq = existingBookings.length + 105;
-    const bookingNo = `BKG-2026-${nextSeq}`;
+    const nextSeq = existingBookings.length + 1;
+    const bookingNo = `BKG-2025-${nextSeq}`;
     const dateStr = new Date().toISOString().split('T')[0];
     const timeStr = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
     const checkIn = new Date(booking.checkInDate);
@@ -5666,202 +4433,16 @@ export class PmsStore {
   }
 
   static getCheckIns(): import('../types/pmsModels').PmsCheckIn[] {
-    const defaultCheckIns: import('../types/pmsModels').PmsCheckIn[] = [
-      {
-        checkInNo: 'SR/231/25-26',
-        roomNo: '201',
-        roomType: 'DELUXE',
-        guestName: 'SAMEER KHAN',
-        mobile: '7999663646',
-        checkInDate: '10-07-2025',
-        checkInTime: '23:10:00',
-        numberOfDays: 1,
-        numberOfGuests: 3,
-        businessSource: 'Direct',
-        package: 'ROOM ONLY',
-        tariffPerDay: 2500,
-        advancePaid: 2500,
-        paymentMode: 'Cash',
-        documentName: 'Aadhaar Card',
-        documentNo: '348784787487',
-        addressLine1: 'MAIN ROAD NEAR SHYAM TAKIES',
-        city: 'Jabalpur',
-        state: 'Madhya Pradesh',
-        country: 'India',
-        pinCode: '482001',
-        nationality: 'India',
-        guestImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-        documentImage: 'https://images.unsplash.com/photo-1618042164219-62c820f10723?w=200&auto=format&fit=crop&q=80',
-        secondGuestName: 'juli',
-        secondGuestIdName: 'Aadhaar Card',
-        secondGuestIdNo: '23234232',
-        secondGuestDocument: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
-        thirdGuestName: 'vipin',
-        thirdGuestIdName: 'Voter ID',
-        thirdGuestIdNo: '392849732',
-        thirdGuestDocument: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
-        status: 'CheckedIn',
-        createdAt: '2025-07-10T23:10:00.000Z'
-      },
-      {
-        checkInNo: 'SR/232/25-26',
-        roomNo: '202',
-        roomType: 'LUXRY ROOM',
-        guestName: 'sunil kumar yadav',
-        mobile: '983982735',
-        checkInDate: '10-07-2025',
-        checkInTime: '23:21:00',
-        numberOfDays: 1,
-        numberOfGuests: 3,
-        businessSource: 'Goibibo',
-        package: 'WITH LUNCH || WITH LUNCH',
-        tariffPerDay: 4700,
-        advancePaid: 4700,
-        paymentMode: 'Cash',
-        documentName: 'aadhar card',
-        documentNo: '983298274',
-        addressLine1: 'shop no 8',
-        city: 'jabalpur',
-        state: 'm.p.',
-        country: 'India',
-        pinCode: '482001',
-        nationality: 'India',
-        companyName: 'HCL',
-        companyAddress: 'BANGLORE',
-        gstNo: '23IJHKJHKJI',
-        guestImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
-        documentImage: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=200&auto=format&fit=crop&q=80',
-        secondGuestName: 'sanjay',
-        secondGuestIdName: 'aadhar card',
-        secondGuestIdNo: '54654654',
-        secondGuestDocument: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
-        thirdGuestName: 'mohan',
-        thirdGuestIdName: 'aadhar card',
-        thirdGuestIdNo: '234234234',
-        thirdGuestDocument: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80',
-        status: 'CheckedIn',
-        createdAt: '2025-07-10T23:21:00.000Z'
-      },
-      {
-        checkInNo: 'SR/229/25-26',
-        roomNo: '202',
-        roomType: 'LUXRY ROOM',
-        guestName: 'CHANDAN',
-        mobile: '5645648848',
-        checkInDate: '10-07-2025',
-        checkInTime: '17:04:00',
-        numberOfDays: 1,
-        numberOfGuests: 1,
-        businessSource: 'Walk-in',
-        package: 'ROOM ONLY',
-        tariffPerDay: 4000,
-        advancePaid: 4000,
-        paymentMode: 'Cash',
-        documentName: 'Voter ID',
-        documentNo: 'VTR-8947291',
-        addressLine1: 'Station Road',
-        city: 'Patna',
-        state: 'Bihar',
-        country: 'India',
-        pinCode: '800001',
-        nationality: 'India',
-        guestImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-        documentImage: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=200&auto=format&fit=crop&q=80',
-        status: 'CheckedIn',
-        createdAt: '2025-07-10T17:04:00.000Z'
-      },
-      {
-        checkInNo: 'SR/230/25-26',
-        roomNo: '205',
-        roomType: 'Dormitory',
-        guestName: 'SALIM',
-        mobile: '7479499435',
-        checkInDate: '10-07-2025',
-        checkInTime: '18:10:00',
-        numberOfDays: 1,
-        numberOfGuests: 2,
-        businessSource: 'Direct',
-        package: 'ROOM ONLY',
-        tariffPerDay: 3000,
-        advancePaid: 3000,
-        paymentMode: 'Cash',
-        documentName: 'Driving License',
-        documentNo: 'DL-092023910',
-        addressLine1: 'Boring Road, PATNA',
-        city: 'Patna',
-        state: 'Bihar',
-        country: 'India',
-        pinCode: '800001',
-        nationality: 'India',
-        guestImage: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80',
-        documentImage: 'https://images.unsplash.com/photo-1618042164219-62c820f10723?w=200&auto=format&fit=crop&q=80',
-        status: 'CheckedIn',
-        createdAt: '2025-07-10T18:10:00.000Z'
-      },
-      {
-        checkInNo: 'SR/204/25-26',
-        roomNo: '103',
-        roomType: 'DELUXE',
-        guestName: 'ARJUN',
-        mobile: '95487417',
-        checkInDate: '16-06-2025',
-        checkInTime: '06:30 AM',
-        numberOfDays: 1,
-        numberOfGuests: 1,
-        businessSource: 'OYO',
-        package: 'WITH BREAKFAST || WITH BREAKFAST',
-        tariffPerDay: 2500,
-        advancePaid: 1000,
-        paymentMode: 'Cash',
-        addressLine1: 'Main Market Road',
-        addressLine2: '0',
-        city: 'Pune',
-        state: 'Odisha',
-        country: 'India',
-        pinCode: '411001',
-        nationality: 'India',
-        status: 'CheckedIn',
-        createdAt: '2025-06-16T06:30:00.000Z'
-      },
-      {
-        checkInNo: 'SR/203/25-26',
-        roomNo: '101',
-        roomType: 'DELUXE',
-        guestName: 'AJUU',
-        mobile: '9622975444',
-        checkInDate: '16-06-2025',
-        checkInTime: '05:15 AM',
-        numberOfDays: 1,
-        numberOfGuests: 1,
-        businessSource: 'Direct',
-        package: 'ROOM ONLY || 0',
-        tariffPerDay: 2000,
-        advancePaid: 500,
-        paymentMode: 'Cash',
-        addressLine1: 'Station Road',
-        city: 'Bilaspur',
-        state: 'Chhattisgarh',
-        country: 'India',
-        pinCode: '495220',
-        nationality: 'India',
-        status: 'CheckedIn',
-        createdAt: '2025-06-16T05:15:00.000Z'
-      }
-    ];
-
     const raw = localStorage.getItem(STORAGE_KEYS.CHECKINS) || localStorage.getItem('hotel_pms_checkins');
     if (raw) {
       try {
         const parsed: import('../types/pmsModels').PmsCheckIn[] = JSON.parse(raw);
-        return parsed;
+        if (Array.isArray(parsed)) return parsed;
       } catch {
         // fallback
       }
     }
-
-    localStorage.setItem(STORAGE_KEYS.CHECKINS, JSON.stringify(defaultCheckIns));
-    localStorage.setItem('hotel_pms_checkins', JSON.stringify(defaultCheckIns));
-    return defaultCheckIns;
+    return [];
   }
 
   static syncCheckIns(checkIns: import('../types/pmsModels').PmsCheckIn[]): void {
@@ -6057,221 +4638,13 @@ export class PmsStore {
     const raw = localStorage.getItem(STORAGE_KEYS.KOTS);
     if (raw) {
       try {
-        return JSON.parse(raw);
+        const parsed: PmsKotRecord[] = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
       } catch {
         // fallback
       }
     }
-    // Seed default KOTs matching Video 14 Frames 0210, 0230, 0260 & Video 13
-    const now = Date.now();
-    const initialKots: PmsKotRecord[] = [
-      {
-        kotNo: 'KOT/368/24-25',
-        serviceType: 'Room',
-        roomNo: '101',
-        tableNo: 'Room 101',
-        waiterName: 'DEMO0004',
-        guestName: 'AJUU',
-        checkInNo: '203',
-        kotRemark: 'Tawa Roti + Paneer Tika',
-        items: [
-          { sNo: 1, itemName: 'TAWA ROTI', itemCode: '10004', qty: 3, rate: 9.52, amount: 28.56 },
-          { sNo: 2, itemName: 'PANEER TIKA', itemCode: '10005', qty: 2, rate: 76.19, amount: 1.44 }
-        ],
-        totalQty: 5,
-        totalAmount: 30.00,
-        date: '16-06-25',
-        time: '05:37 AM',
-        createdAt: new Date(now - 12 * 60 * 1000).toISOString(),
-        status: 'Pending',
-        serveStatus: 'Unprinted',
-        isPrinted: false,
-        orderSource: 'Mobile'
-      },
-      {
-        kotNo: 'KOT/367/24-25',
-        serviceType: 'Room',
-        roomNo: '101',
-        tableNo: 'Room 101',
-        waiterName: 'DEMO0004',
-        guestName: 'AJUU',
-        checkInNo: '203',
-        kotRemark: 'Complimentary Water',
-        items: [
-          { sNo: 1, itemName: 'WATER BOTLE', itemCode: '10003', qty: 2, rate: 0.00, amount: 0.00 }
-        ],
-        totalQty: 2,
-        totalAmount: 0.00,
-        date: '16-06-25',
-        time: '05:30 AM',
-        createdAt: new Date(now - 18 * 60 * 1000).toISOString(),
-        status: 'Pending',
-        serveStatus: 'Unprinted',
-        isPrinted: false,
-        orderSource: 'Mobile'
-      },
-      {
-        kotNo: 'R/369',
-        serviceType: 'Restaurant',
-        roomNo: '85',
-        tableNo: 'T-14',
-        waiterName: 'DEMO0004',
-        guestName: 'WALK-IN DINE',
-        kotRemark: 'Crispy Bread Pakoda',
-        items: [
-          { sNo: 1, itemName: 'bread pakoda', itemCode: '10001', qty: 2, rate: 50.00, amount: 100.00 },
-          { sNo: 2, itemName: 'Boondi Raita', itemCode: '10030', qty: 2, rate: 10.00, amount: 20.00 }
-        ],
-        totalQty: 4,
-        totalAmount: 120.00,
-        date: '16-06-25',
-        time: '05:39 AM',
-        createdAt: new Date(now - 8 * 60 * 1000).toISOString(),
-        status: 'Pending',
-        serveStatus: 'Unprinted',
-        isPrinted: false,
-        orderSource: 'Mobile'
-      },
-      {
-        kotNo: 'KOT/366/24-25',
-        serviceType: 'Room',
-        roomNo: '101',
-        tableNo: 'Room 101',
-        waiterName: 'DEMO0004',
-        guestName: 'AJUU',
-        checkInNo: '203',
-        items: [
-          { sNo: 1, itemName: 'WATER BOTLE', itemCode: '10003', qty: 2, rate: 30.00, amount: 60.00 }
-        ],
-        totalQty: 2,
-        totalAmount: 60.00,
-        date: '16-06-25',
-        createdAt: new Date(now - 49 * 60 * 1000).toISOString(),
-        status: 'Pending',
-        serveStatus: '0',
-        isPrinted: true
-      },
-      {
-        kotNo: 'KOT/365/24-25',
-        serviceType: 'Room',
-        roomNo: '101',
-        tableNo: 'Room 101',
-        waiterName: 'DEMO0004',
-        guestName: 'AJUU',
-        checkInNo: '203',
-        items: [
-          { sNo: 1, itemName: 'WATER BOTLE', itemCode: '10003', qty: 2, rate: 30.00, amount: 60.00 }
-        ],
-        totalQty: 2,
-        totalAmount: 60.00,
-        date: '16-06-25',
-        createdAt: new Date(now - 51 * 60 * 1000).toISOString(),
-        status: 'Pending',
-        serveStatus: '0',
-        isPrinted: true
-      },
-      {
-        kotNo: 'KOT/158/24-25',
-        serviceType: 'Room',
-        roomNo: '102',
-        tableNo: 'Room 102',
-        waiterName: 'DEMO0004',
-        guestName: 'AJAY SHARMA',
-        items: [
-          { sNo: 1, itemName: 'TEA', itemCode: '10019', qty: 1, rate: 30.00, amount: 30.00 }
-        ],
-        totalQty: 1,
-        totalAmount: 30.00,
-        date: '15-02-25',
-        createdAt: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        status: 'Ready To Serve',
-        serveStatus: 'Ready To Serve',
-        isPrinted: true
-      },
-      {
-        kotNo: 'KOT/157/24-25',
-        serviceType: 'Room',
-        roomNo: '102',
-        tableNo: 'Room 102',
-        waiterName: 'DEMO0004',
-        guestName: 'AJAY SHARMA',
-        items: [
-          { sNo: 1, itemName: 'PANEER TIKA', itemCode: '10007', qty: 2, rate: 115.00, amount: 230.00 }
-        ],
-        totalQty: 2,
-        totalAmount: 230.00,
-        date: '15-02-25',
-        createdAt: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        status: 'Ready To Serve',
-        serveStatus: 'Ready To Serve',
-        isPrinted: true
-      },
-      {
-        kotNo: 'KOT/136/24-25',
-        serviceType: 'Room',
-        roomNo: '103',
-        tableNo: 'Room 103',
-        waiterName: 'DEMO0004',
-        guestName: 'SURESH VERMA',
-        items: [
-          { sNo: 1, itemName: 'THALI SPECIAL', itemCode: '10006', qty: 2, rate: 200.00, amount: 400.00 }
-        ],
-        totalQty: 2,
-        totalAmount: 400.00,
-        date: '10-02-25',
-        createdAt: new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        status: 'Ready To Serve',
-        serveStatus: 'Ready To Serve',
-        isPrinted: true
-      },
-      {
-        kotNo: 'R/371',
-        serviceType: 'Restaurant',
-        roomNo: '',
-        tableNo: 'Table NC2',
-        waiterName: 'DEMO0004',
-        operatorName: 'DEMO0004',
-        guestName: 'RAHUL',
-        kotRemark: 'NOT REQ',
-        ncRemark: 'RAHUL',
-        isNc: true,
-        items: [
-          { sNo: 1, itemName: 'TEA', itemCode: '10019', qty: 2, rate: 19.05, amount: 40.00 },
-          { sNo: 2, itemName: 'bread pakoda', itemCode: '10009', qty: 2, rate: 95.24, amount: 200.00 }
-        ],
-        totalQty: 4,
-        totalAmount: 240.00,
-        date: '16-06-25',
-        createdAt: new Date(now - 1 * 60 * 1000).toISOString(),
-        status: 'Cancelled',
-        serveStatus: 'Pending',
-        isPrinted: true,
-        cancelReason: 'NOT REQ',
-        cancelledAt: new Date(now - 30 * 1000).toISOString()
-      },
-      {
-        kotNo: '370',
-        serviceType: 'Restaurant',
-        roomNo: '138',
-        tableNo: 'T-16',
-        waiterName: 'DEMO0004',
-        guestName: 'DEMO GUEST',
-        kotRemark: 'Less Spicy',
-        items: [
-          { sNo: 1, itemName: 'Boondi Raita', itemCode: '10008', qty: 2, rate: 57.14, amount: 120.00 },
-          { sNo: 2, itemName: 'bread pakoda', itemCode: '10009', qty: 1, rate: 95.24, amount: 100.00 }
-        ],
-        totalQty: 3,
-        totalAmount: 220.00,
-        date: '16-06-25',
-        createdAt: new Date(now - 2 * 60 * 1000).toISOString(),
-        status: 'Pending',
-        serveStatus: 'Pending',
-        isPrinted: true
-      }
-    ];
-    localStorage.setItem(STORAGE_KEYS.KOTS, JSON.stringify(initialKots));
-    return initialKots;
+    return [];
   }
 
   static getUnprintedKots(): PmsKotRecord[] {
@@ -7364,34 +5737,13 @@ export class PmsStore {
 
   static getGroupBookings(): GroupBookingMetadata[] {
     const raw = localStorage.getItem(STORAGE_KEYS.GROUP_BOOKINGS);
-    if (!raw) {
-      const defaultGroup: GroupBookingMetadata = {
-        groupId: 'GRP-2026-JKPAPER-01',
-        groupName: 'JK Paper Ltd Executive Delegation',
-        contactPerson: 'Mr. Asit Kumar Bhuyan',
-        contactPhone: '+91 94402 89999',
-        bookingSource: 'Corporate Travel',
-        roomsAllocated: ['203', '208', '107'],
-        guests: [
-          { name: 'Mr. ASIT KUMAR BHUYAN', phone: '+91 94402 89999', idProofType: 'Aadhaar Card', idProofNumber: '7845 1298 3456', age: 44, roomAssigned: '203', isPrimary: true },
-          { name: 'Mr. DHARAM VIR', phone: '+91 98480 12345', idProofType: 'Voter ID', idProofNumber: 'OD/21/7754', age: 48, roomAssigned: '208', isPrimary: false },
-          { name: 'Mr. JYOTISWAROOP ROUTRAY', phone: '+91 94370 55443', idProofType: 'Driving License', idProofNumber: 'OD-18-2019-9812', age: 39, roomAssigned: '107', isPrimary: false }
-        ],
-        advancePaid: 8822,
-        balanceDue: 20699.94,
-        specialInstructions: 'Corporate billing under JK Paper MSA. Separate Food vs Room invoices required.',
-        checkInDate: '2026-06-01',
-        checkOutDate: '2026-06-04',
-        status: 'Checked-In'
-      };
-      localStorage.setItem(STORAGE_KEYS.GROUP_BOOKINGS, JSON.stringify([defaultGroup]));
-      return [defaultGroup];
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      } catch {}
     }
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return [];
-    }
+    return [];
   }
 
   static saveGroupBooking(group: GroupBookingMetadata): void {
@@ -7709,38 +6061,7 @@ export class PmsStore {
         if (Array.isArray(parsed)) return parsed;
       } catch {}
     }
-
-    // Initial default demo food bill from Video 04 (Frame 0230)
-    const initialBills: import('../types/pmsModels').PmsFoodBill[] = [
-      {
-        billNo: 'SHRI/252/24-25',
-        date: '07-06-2025',
-        time: '06:18',
-        roomNo: '105',
-        guestName: 'sunil agrwal',
-        kotNumbers: ['349', '350'],
-        items: [
-          { sNo: 1, itemName: 'Rasgulla', qty: 1, rate: 190.48, amount: 190.48 },
-          { sNo: 2, itemName: 'WATER BOTLE', qty: 1, rate: 28.57, amount: 28.57 },
-          { sNo: 3, itemName: 'TEA', qty: 2, rate: 19.05, amount: 38.10 },
-          { sNo: 4, itemName: 'Ras Malai', qty: 1, rate: 85.71, amount: 85.71 }
-        ],
-        taxableAmount: 342.86,
-        gstPercent: 5.0,
-        cgstAmount: 8.15,
-        sgstAmount: 8.15,
-        discountPercent: 5.0,
-        discountAmount: 17.14,
-        roundOff: -2.00,
-        netBillAmount: 340.00,
-        settlementType: 'Settle To Room',
-        status: 'Settled',
-        createdAt: '2025-06-07T06:18:00.000Z'
-      }
-    ];
-    localStorage.setItem(STORAGE_KEYS.FOOD_BILLS, JSON.stringify(initialBills));
-    localStorage.setItem('hotel_pms_foodbills', JSON.stringify(initialBills));
-    return initialBills;
+    return [];
   }
 
   static saveFoodBill(bill: import('../types/pmsModels').PmsFoodBill): void {
@@ -7867,261 +6188,13 @@ export class PmsStore {
     const raw = localStorage.getItem(STORAGE_KEYS.CHECKOUTS);
     if (raw) {
       try {
-        return JSON.parse(raw);
+        const parsed: PmsCheckOutDetail[] = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
       } catch {
         // fallback
       }
     }
-
-    // Initial demo checkouts matching Video 26 Frames 0115 & 0150 (pms.hotelsai-vasudev.com/roomcheckouts)
-    const initialCheckouts: PmsCheckOutDetail[] = [
-      {
-        invoiceNo: 'GSR/252/24-25',
-        roomNo: '105',
-        roomType: 'DELUXE',
-        guestName: 'SIDDHANT JI',
-        guestPhone: '9466219194',
-        checkInDate: '01-07-25',
-        checkInTime: '06:32 PM',
-        checkOutDate: '15-07-25',
-        checkOutTime: '01:15 PM',
-        calculationType: '12hour',
-        numberOfDays: 15,
-        perDayTariff: 3000,
-        totalRoomRent: 45000,
-        foodAmount: 32,
-        gstPercent: 12,
-        gstAmount: 5400,
-        cgstAmount: 2700,
-        sgstAmount: 2700,
-        addOthers: 0,
-        lessDiscount: 0,
-        advanceDeducted: 0,
-        billAmount: 50432,
-        netPayable: 50432,
-        paymentMode: 'Online',
-        payments: [
-          { mode: 'Online', amount: 50432, referenceNo: 'UPI/9466219194', remark: 'PhonePe QR Payment' }
-        ],
-        checkoutRemark: '15 Days Stay with Breakfast package. Key deposited at reception.',
-        city: 'Etawah',
-        state: 'Uttar Pradesh',
-        country: 'India',
-        pinCode: '206001',
-        sacCode: '996311',
-        invoiceFormat: 'A4_Standard'
-      },
-      {
-        invoiceNo: 'GSR/238/24-25',
-        roomNo: '1',
-        roomType: 'STANDARD ROOM',
-        guestName: 'ARJUN',
-        guestPhone: '95487417',
-        checkInDate: '16-06-25',
-        checkInTime: '06:30 AM',
-        checkOutDate: '25-06-25',
-        checkOutTime: '02:31 PM',
-        calculationType: '24hour',
-        numberOfDays: 10,
-        perDayTariff: 2000,
-        totalRoomRent: 20000,
-        foodAmount: 0,
-        gstPercent: 0,
-        gstAmount: 0,
-        cgstAmount: 0,
-        sgstAmount: 0,
-        addOthers: 0,
-        lessDiscount: 0,
-        advanceDeducted: 1000,
-        billAmount: 20000,
-        netPayable: 19000,
-        paymentMode: 'Cash',
-        payments: [
-          { mode: 'Cash', amount: 19000, referenceNo: 'CASH/238', remark: 'Settled at front desk' }
-        ],
-        checkoutRemark: 'Corporate guest Arjun checkout. Keys dropped at front desk.',
-        city: 'Etawah',
-        state: 'Uttar Pradesh',
-        country: 'India',
-        pinCode: '206001',
-        sacCode: '996311',
-        invoiceFormat: 'A4_Standard'
-      },
-      {
-        invoiceNo: 'GSR/241/24-25',
-        roomNo: '202',
-        roomType: 'DELUXE',
-        guestName: 'ranjit ji',
-        guestPhone: '56454898',
-        checkInDate: '18-07-25',
-        checkInTime: '11:00 AM',
-        checkOutDate: '18-07-25',
-        checkOutTime: '07:30 PM',
-        calculationType: '12hour',
-        numberOfDays: 1,
-        perDayTariff: 4000,
-        totalRoomRent: 4000,
-        foodAmount: 0,
-        gstPercent: 0,
-        gstAmount: 0,
-        cgstAmount: 0,
-        sgstAmount: 0,
-        addOthers: 0,
-        lessDiscount: 0,
-        advanceDeducted: 0,
-        billAmount: 4000,
-        netPayable: 4000,
-        paymentMode: 'Cash',
-        payments: [{ mode: 'Cash', amount: 4000, referenceNo: '', remark: 'Cash' }],
-        checkoutRemark: 'Day visit',
-        city: 'Agra',
-        state: 'Uttar Pradesh',
-        country: 'India',
-        pinCode: '282001',
-        sacCode: '996311',
-        invoiceFormat: 'A4_Standard'
-      },
-      {
-        invoiceNo: 'GSR/232/24-25',
-        roomNo: '202',
-        roomType: 'DELUXE',
-        guestName: 'sunil kumar yadav',
-        guestPhone: '983982735',
-        checkInDate: '10-07-25',
-        checkInTime: '09:00 AM',
-        checkOutDate: '11-07-25',
-        checkOutTime: '12:00 PM',
-        calculationType: '24hour',
-        numberOfDays: 2,
-        perDayTariff: 4700,
-        totalRoomRent: 9400,
-        foodAmount: 0,
-        gstPercent: 12,
-        gstAmount: 1128,
-        cgstAmount: 564,
-        sgstAmount: 564,
-        addOthers: 0,
-        lessDiscount: 0,
-        advanceDeducted: 0,
-        billAmount: 10528,
-        netPayable: 10528,
-        paymentMode: 'Online',
-        payments: [{ mode: 'Online', amount: 10528, referenceNo: 'UPI/983982', remark: 'PhonePe' }],
-        checkoutRemark: 'Police report registered. Checked out on time.',
-        city: 'Lucknow',
-        state: 'Uttar Pradesh',
-        country: 'India',
-        pinCode: '226001',
-        sacCode: '996311',
-        invoiceFormat: 'A4_Standard'
-      },
-      {
-        invoiceNo: 'GSR/230/24-25',
-        roomNo: '205',
-        roomType: 'SUPER DELUXE',
-        guestName: 'SALIM',
-        guestPhone: '7479499435',
-        checkInDate: '10-07-25',
-        checkInTime: '01:00 PM',
-        checkOutDate: '10-07-25',
-        checkOutTime: '08:00 PM',
-        calculationType: '12hour',
-        numberOfDays: 1,
-        perDayTariff: 5400,
-        totalRoomRent: 5400,
-        foodAmount: 0,
-        gstPercent: 0,
-        gstAmount: 0,
-        cgstAmount: 0,
-        sgstAmount: 0,
-        addOthers: 0,
-        lessDiscount: 0,
-        advanceDeducted: 0,
-        billAmount: 5400,
-        netPayable: 5400,
-        paymentMode: 'Cash',
-        payments: [{ mode: 'Cash', amount: 5400, referenceNo: '', remark: 'Cash' }],
-        checkoutRemark: 'Express checkout',
-        city: 'Kanpur',
-        state: 'Uttar Pradesh',
-        country: 'India',
-        pinCode: '208001',
-        sacCode: '996311',
-        invoiceFormat: 'A4_Standard'
-      },
-      {
-        invoiceNo: 'GSR/229/24-25',
-        roomNo: '202',
-        roomType: 'DELUXE',
-        guestName: 'CHANDAN',
-        guestPhone: '5645648848',
-        checkInDate: '10-07-25',
-        checkInTime: '10:00 AM',
-        checkOutDate: '10-07-25',
-        checkOutTime: '06:00 PM',
-        calculationType: '12hour',
-        numberOfDays: 1,
-        perDayTariff: 3693.75,
-        totalRoomRent: 3693.75,
-        foodAmount: 0,
-        gstPercent: 12,
-        gstAmount: 443.25,
-        cgstAmount: 221.62,
-        sgstAmount: 221.63,
-        addOthers: 0,
-        lessDiscount: 0,
-        advanceDeducted: 0,
-        billAmount: 4137,
-        netPayable: 4137,
-        paymentMode: 'Online',
-        payments: [{ mode: 'Online', amount: 4137, referenceNo: 'UPI/CHANDAN', remark: 'Google Pay' }],
-        checkoutRemark: 'Checked out cleanly',
-        city: 'Varanasi',
-        state: 'Uttar Pradesh',
-        country: 'India',
-        pinCode: '221001',
-        sacCode: '996311',
-        invoiceFormat: 'A4_Standard'
-      },
-      {
-        invoiceNo: 'GSR/225/24-25',
-        roomNo: '101',
-        roomType: 'DELUXE',
-        guestName: 'Shiv',
-        guestPhone: '8432066047',
-        checkInDate: '07-06-2025',
-        checkInTime: '07:53 AM',
-        checkOutDate: '07-06-2025',
-        checkOutTime: '07:55 AM',
-        calculationType: '24hour',
-        numberOfDays: 1,
-        perDayTariff: 4000,
-        totalRoomRent: 4000,
-        foodAmount: 0,
-        gstPercent: 12,
-        gstAmount: 480,
-        cgstAmount: 240,
-        sgstAmount: 240,
-        addOthers: 0,
-        lessDiscount: 0,
-        advanceDeducted: 2000,
-        billAmount: 4480,
-        netPayable: 2480,
-        paymentMode: 'Online',
-        payments: [
-          { mode: 'Online', amount: 2480, referenceNo: 'UPI/984210', remark: 'PhonePe Checkout' }
-        ],
-        checkoutRemark: 'Checkout completed successfully',
-        city: 'Dausa',
-        state: 'Rajasthan',
-        country: 'India',
-        pinCode: '303313',
-        sacCode: '996311',
-        invoiceFormat: 'A4_Standard'
-      }
-    ];
-    localStorage.setItem(STORAGE_KEYS.CHECKOUTS, JSON.stringify(initialCheckouts));
-    return initialCheckouts;
+    return [];
   }
 
   static saveCheckout(checkout: PmsCheckOutDetail): void {
@@ -8269,59 +6342,13 @@ export class PmsStore {
     const raw = localStorage.getItem(STORAGE_KEYS.ADVANCE_RECEIPTS);
     if (raw) {
       try {
-        return JSON.parse(raw);
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
       } catch {
         // fallback
       }
     }
-
-    // Initial demo advance receipts matching RoomG Video 06 (Frames 0148, 0150, 0154, 0182)
-    const initialReceipts: PmsAdvanceReceipt[] = [
-      {
-        receiptNo: 'AR12',
-        voucherNo: '12',
-        date: '07-06-2025',
-        time: '07:54 AM',
-        voucherName: 'Advance_Receipt',
-        roomNo: '101',
-        guestName: 'Shiv',
-        mobile: '8432066047',
-        amount: 2000,
-        paymentMode: 'Cash',
-        remark: 'advance',
-        createdAt: '2025-06-07T02:24:00.000Z'
-      },
-      {
-        receiptNo: 'AR11',
-        voucherNo: '11',
-        date: '05-06-2025',
-        time: '11:45 PM',
-        voucherName: 'Advance_Receipt',
-        roomNo: '103',
-        guestName: 'AJUU',
-        mobile: '9622975444',
-        amount: 500,
-        paymentMode: 'Online',
-        remark: '5 march check in advance',
-        createdAt: '2025-06-05T18:15:00.000Z'
-      },
-      {
-        receiptNo: 'AR10',
-        voucherNo: '10',
-        date: '04-06-2025',
-        time: '04:10 PM',
-        voucherName: 'Advance_Receipt',
-        roomNo: '105',
-        guestName: 'sunil agrwal',
-        mobile: '9829012345',
-        amount: 1000,
-        paymentMode: 'Cash',
-        remark: 'advance booking',
-        createdAt: '2025-06-04T10:40:00.000Z'
-      }
-    ];
-    localStorage.setItem(STORAGE_KEYS.ADVANCE_RECEIPTS, JSON.stringify(initialReceipts));
-    return initialReceipts;
+    return [];
   }
 
   static saveAdvanceReceipt(receipt: PmsAdvanceReceipt): void {
@@ -8450,86 +6477,13 @@ export class PmsStore {
   }
 
   static getLedgerAccountOptions(): { id: string; name: string; category: string; phone?: string }[] {
-    const defaultAccounts = [
-      { id: 'Cash', name: 'Cash', category: 'General' },
-      { id: 'Online', name: 'Online', category: 'General' },
-      { id: 'shri sunder lal tiwari(owner)', name: 'shri sunder lal tiwari(owner)', category: 'Owner' },
-      { id: 'auto commision', name: 'auto commision', category: 'Commission' },
-      { id: 'monish', name: 'monish', category: 'Guest' },
-      { id: 'sonali', name: 'sonali', category: 'Guest' },
-      { id: 'Soni atulkumar', name: 'Soni atulkumar', category: 'Guest' },
-      { id: 'SONU SAHU', name: 'SONU SAHU', category: 'Guest' },
-      { id: 'Guruprasad pol', name: 'Guruprasad pol', category: 'Guest' },
-      { id: 'AKASH YADAV', name: 'AKASH YADAV', category: 'Guest' },
-      { id: 'Vivek', name: 'Vivek', category: 'Guest' },
-      { id: 'Tata Motors', name: 'Tata Motors', category: 'Corporate' },
-      { id: 'Raj', name: 'Raj', category: 'Guest' },
-      { id: 'Shiv', name: 'Shiv', category: 'Guest', phone: '8432066047' }
-    ];
-
-    const accountMap = new Map<string, { id: string; name: string; category: string; phone?: string }>();
-    for (const a of defaultAccounts) {
-      accountMap.set(a.id.toLowerCase(), a);
-    }
-
-    // Include all active rooms
-    for (const r of this.getRooms()) {
-      if (r.currentGuest?.name) {
-        const key = r.currentGuest.name.toLowerCase();
-        if (!accountMap.has(key)) {
-          accountMap.set(key, {
-            id: r.currentGuest.name,
-            name: `${r.currentGuest.name} (Room ${r.roomNo})`,
-            category: 'Guest',
-            phone: r.currentGuest.phone
-          });
-        }
-      }
-    }
-
-    // Include checkouts
-    for (const c of this.getCheckouts()) {
-      if (c.guestName) {
-        const key = c.guestName.toLowerCase();
-        if (!accountMap.has(key)) {
-          accountMap.set(key, {
-            id: c.guestName,
-            name: `${c.guestName} (Room ${c.roomNo})`,
-            category: 'Guest',
-            phone: c.guestPhone
-          });
-        }
-      }
-    }
-
-    // Include receipts & payments parties
-    for (const rec of this.getReceipts()) {
-      if (rec.accountName) {
-        const key = rec.accountName.toLowerCase();
-        if (!accountMap.has(key)) {
-          accountMap.set(key, {
-            id: rec.accountName,
-            name: rec.accountName,
-            category: 'Party'
-          });
-        }
-      }
-    }
-
-    for (const pay of this.getPayments()) {
-      if (pay.accountName) {
-        const key = pay.accountName.toLowerCase();
-        if (!accountMap.has(key)) {
-          accountMap.set(key, {
-            id: pay.accountName,
-            name: pay.accountName,
-            category: 'Vendor'
-          });
-        }
-      }
-    }
-
-    return Array.from(accountMap.values());
+    const parties = this.getPartyAccounts();
+    return parties.map(p => ({
+      id: p.name,
+      name: p.name,
+      category: p.category || 'General',
+      phone: p.mobile
+    }));
   }
 
   static parseDateComparable(dStr: string): number {
@@ -8554,8 +6508,8 @@ export class PmsStore {
 
   static getPartyLedger(
     accountName: string,
-    fromDate: string = '01-05-2025',
-    toDate: string = '16-06-2025'
+    _fromDate: string = '01-05-2025',
+    _toDate: string = '16-06-2025'
   ): {
     entries: LedgerEntry[];
     totalDebit: number;
@@ -8564,532 +6518,79 @@ export class PmsStore {
     closingType: 'Dr' | 'Cr';
   } {
     const cleanQuery = (accountName || 'Cash').toLowerCase().trim();
-    const fromComp = this.parseDateComparable(fromDate) || 20250501;
-    const toComp = this.parseDateComparable(toDate) || 20250616;
-
-    // ==========================================
-    // Case A: Cash Account Ledger (Video 17 Frames 0130, 0150)
-    // ==========================================
-    if (cleanQuery === 'cash') {
-      const baseOpening = 648639.12;
-      const allTx: { date: string; type: string; account: string; remark: string; debit: number; credit: number }[] = [
-        { date: '01-05-25', type: 'Check_Out', account: 'Cash', remark: 'Check_out/GSR/192/24-25/Room-302', debit: 17050, credit: 0 },
-        { date: '04-05-25', type: 'Receipts', account: 'Guruprasad pol', remark: 'tariff', debit: 2200, credit: 0 },
-        { date: '05-05-25', type: 'Restaurant_food_bill', account: 'Cash', remark: 'Res/223/24-25||53||130||', debit: 130, credit: 0 },
-        { date: '05-05-25', type: 'Check_Out', account: 'Cash', remark: 'Check_out/GSR/194/24-25/Room-201', debit: 200, credit: 0 },
-        { date: '05-05-25', type: 'Check_Out', account: 'Cash', remark: 'Check_out/GSR/195/24-25/Room-201', debit: 210, credit: 0 },
-        { date: '05-05-25', type: 'Purchase', account: 'Purchase', remark: 'Purchase/1411', debit: 0, credit: 446.25 },
-        { date: '09-05-25', type: 'Check_In', account: 'Cash', remark: 'Room_Checkin/SR/160/24-25/Room No101', debit: 500, credit: 0 },
-        { date: '09-05-25', type: 'Check_Out', account: 'Cash', remark: 'My_Check_out/MY/13/24-25/Room-104', debit: 3000, credit: 0 },
-        { date: '24-05-25', type: 'Check_Out', account: 'Cash', remark: 'Check_out/GSR/204/24-25/Room-203', debit: 2000, credit: 0 },
-        { date: '24-05-25', type: 'Receipts', account: 'AKASH YADAV', remark: '', debit: 1000, credit: 0 },
-        { date: '30-05-25', type: 'Foodbill', account: 'Cash', remark: 'SHRI/235/24-25||173||409.96||', debit: 410, credit: 0 },
-        { date: '31-05-25', type: 'Check_In', account: 'Cash', remark: 'Room_Checkin/SR/175/24-25/Room No305', debit: 2500, credit: 0 },
-        { date: '31-05-25', type: 'Check_Out', account: 'Cash', remark: 'Check_out/GSR/206/24-25/Room-305', debit: 2540, credit: 0 },
-        { date: '01-06-25', type: 'Check_In', account: 'Cash', remark: 'Room_Checkin/SR/176/24-25/Room No104', debit: 1000, credit: 0 },
-        { date: '01-06-25', type: 'Check_In', account: 'Cash', remark: 'Room_Checkin/SR/177/24-25/Room No101', debit: 2000, credit: 0 },
-        { date: '01-06-25', type: 'Foodbill', account: 'Cash', remark: 'SHRI/237/24-25||178||450.01||', debit: 450, credit: 0 },
-        { date: '01-06-25', type: 'Foodbill', account: 'Cash', remark: 'SHRI/239/24-25||179||889.64||', debit: 890, credit: 0 },
-        { date: '02-06-25', type: 'Check_Out', account: 'Cash', remark: 'Check_out/GSR/209/24-25/Room-309,1', debit: 4000, credit: 0 },
-        { date: '02-06-25', type: 'Foodbill', account: 'Cash', remark: 'SHRI/240/24-25||179||55589.73||', debit: 55590, credit: 0 },
-        { date: '02-06-25', type: 'Check_Out', account: 'Cash', remark: 'Check_out/GSR/210/24-25/Room-GARDEN', debit: 45780, credit: 0 },
-        { date: '16-06-25', type: 'Payment', account: 'shri sunder lal tiwari(owner)', remark: '', debit: 0, credit: 11000 },
-        { date: '16-06-25', type: 'Payment', account: 'shri sunder lal tiwari(owner)', remark: 'cash handover', debit: 0, credit: 98717 }
-      ];
-
-      // Add dynamic cash receipts
-      for (const r of this.getReceipts().filter(x => x.paymentMode === 'Cash')) {
-        const dStr = r.date.replace('2025-', '').replace('2024-', '') || '16-06-25';
-        allTx.push({
-          date: dStr,
-          type: 'Advance_Receipt',
-          account: r.accountName,
-          remark: r.remark || `Receipt ${r.voucherNo}`,
-          debit: r.amount,
-          credit: 0
-        });
-      }
-
-      // Add dynamic cash payments
-      for (const p of this.getPayments().filter(x => x.paymentMode === 'Cash')) {
-        const dStr = p.date.replace('2025-', '').replace('2024-', '') || '16-06-25';
-        allTx.push({
-          date: dStr,
-          type: 'Payment',
-          account: p.accountName,
-          remark: p.remark || `Payment ${p.voucherNo}`,
-          debit: 0,
-          credit: p.amount
-        });
-      }
-
-      let opening = baseOpening;
-      const filtered: typeof allTx = [];
-
-      for (const tx of allTx) {
-        const c = this.parseDateComparable(tx.date);
-        if (c < fromComp) {
-          opening += (tx.debit - tx.credit);
-        } else if (c <= toComp) {
-          filtered.push(tx);
-        }
-      }
-
-      let currentBal = opening;
-      const entries: LedgerEntry[] = [
-        {
-          date: '',
-          type: '',
-          accountName: 'Opening Balnce',
-          remark: '',
-          debit: 0,
-          credit: 0,
-          balance: opening,
-          balanceType: opening >= 0 ? 'Dr' : 'Cr'
-        }
-      ];
-
-      let totDeb = 0;
-      let totCred = 0;
-
-      for (const tx of filtered) {
-        currentBal += (tx.debit - tx.credit);
-        totDeb += tx.debit;
-        totCred += tx.credit;
-        entries.push({
-          date: tx.date,
-          type: tx.type,
-          accountName: tx.account,
-          remark: tx.remark,
-          debit: tx.debit,
-          credit: tx.credit,
-          balance: parseFloat(currentBal.toFixed(2)),
-          balanceType: currentBal >= 0 ? 'Dr' : 'Cr'
-        });
-      }
-
-      return {
-        entries,
-        totalDebit: parseFloat(totDeb.toFixed(2)),
-        totalCredit: parseFloat(totCred.toFixed(2)),
-        closingBalance: parseFloat(currentBal.toFixed(2)),
-        closingType: currentBal >= 0 ? 'Dr' : 'Cr'
-      };
-    }
-
-    // ==========================================
-    // Case B: Online Account Ledger (Video 17 Frames 0180, 0190)
-    // ==========================================
-    if (cleanQuery === 'online') {
-      const baseOpening = 347200.39;
-      const allTx: { date: string; type: string; account: string; remark: string; debit: number; credit: number }[] = [
-        { date: '01-06-25', type: 'Check_In', account: 'Online', remark: 'Room_Checkin/SR/176/24-25/Room No104', debit: 1000, credit: 0 },
-        { date: '01-06-25', type: 'Check_Out', account: 'Online', remark: 'Check_out/GSR/207/24-25/Room-104', debit: 500, credit: 0 },
-        { date: '01-06-25', type: 'Check_Out', account: 'Online', remark: 'Check_out/GSR/208/24-25/Room-101', debit: 1000, credit: 0 },
-        { date: '01-06-25', type: 'Check_In', account: 'Online', remark: 'Room_Checkin/SR/178/24-25/Room No301', debit: 2500, credit: 0 },
-        { date: '02-06-25', type: 'Room_booking', account: 'Online', remark: 'Room_booking/RM/59/24-25', debit: 4600, credit: 0 },
-        { date: '02-06-25', type: 'Check_Out', account: 'Online', remark: 'Check_out/GSR/211/24-25/Room-103', debit: 1980, credit: 0 },
-        { date: '03-06-25', type: 'Room_booking', account: 'Online', remark: 'Room_booking/RM/60/24-25', debit: 2500, credit: 0 },
-        { date: '05-06-25', type: 'Check_In', account: 'Online', remark: 'Room_Checkin/SR/186/24-25/Room No101', debit: 500, credit: 0 },
-        { date: '06-06-25', type: 'Check_Out', account: 'Online', remark: 'Check_out/GSR/188/24-25/Room No105', debit: 200, credit: 0 },
-        { date: '07-06-25', type: 'Check_Out', account: 'Online', remark: 'Check_out/GSR/218/24-25/Room-GARDEN,BIG,306,307,308,309,12,15,16,17,18', debit: 25000, credit: 0 },
-        { date: '06-06-25', type: 'Room_booking', account: 'Online', remark: 'Room_booking/RM/67/24-25', debit: 500, credit: 0 },
-        { date: '06-06-25', type: 'Check_Out', account: 'Online', remark: 'Check_out/GSR/221/24-25/Room-1', debit: 1680, credit: 0 },
-        { date: '07-06-25', type: 'Check_Out', account: 'Online', remark: 'Check_out/GSR/222/24-25/Room-105', debit: 2000, credit: 0 },
-        { date: '07-06-25', type: 'Check_Out', account: 'Online', remark: 'Check_out/GSR/223/24-25/Room-103', debit: 3300, credit: 0 },
-        { date: '07-06-25', type: 'Check_Out', account: 'Online', remark: 'Check_out/GSR/225/24-25/Room-101', debit: 2480, credit: 0 },
-        { date: '10-06-25', type: 'Check_In', account: 'Online', remark: 'Room_Checkin/SR/199/24-25/Room No201', debit: 500, credit: 0 },
-        { date: '16-06-25', type: 'Payment', account: 'shri sunder lal tiwari(owner)', remark: 'paymnet -4757344', debit: 0, credit: 50000 }
-      ];
-
-      for (const r of this.getReceipts().filter(x => x.paymentMode === 'Online')) {
-        allTx.push({
-          date: r.date.replace('2025-', '').replace('2024-', '') || '16-06-25',
-          type: 'Advance_Receipt',
-          account: r.accountName,
-          remark: r.remark || `Online Receipt ${r.voucherNo}`,
-          debit: r.amount,
-          credit: 0
-        });
-      }
-
-      for (const p of this.getPayments().filter(x => x.paymentMode === 'Online')) {
-        allTx.push({
-          date: p.date.replace('2025-', '').replace('2024-', '') || '16-06-25',
-          type: 'Payment',
-          account: p.accountName,
-          remark: p.remark || `Online Payment ${p.voucherNo}`,
-          debit: 0,
-          credit: p.amount
-        });
-      }
-
-      let opening = baseOpening;
-      const filtered: typeof allTx = [];
-
-      for (const tx of allTx) {
-        const c = this.parseDateComparable(tx.date);
-        if (c < fromComp) {
-          opening += (tx.debit - tx.credit);
-        } else if (c <= toComp) {
-          filtered.push(tx);
-        }
-      }
-
-      let currentBal = opening;
-      const entries: LedgerEntry[] = [
-        {
-          date: '',
-          type: '',
-          accountName: 'Opening Balnce',
-          remark: '',
-          debit: 0,
-          credit: 0,
-          balance: opening,
-          balanceType: opening >= 0 ? 'Dr' : 'Cr'
-        }
-      ];
-
-      let totDeb = 0;
-      let totCred = 0;
-
-      for (const tx of filtered) {
-        currentBal += (tx.debit - tx.credit);
-        totDeb += tx.debit;
-        totCred += tx.credit;
-        entries.push({
-          date: tx.date,
-          type: tx.type,
-          accountName: tx.account,
-          remark: tx.remark,
-          debit: tx.debit,
-          credit: tx.credit,
-          balance: parseFloat(currentBal.toFixed(2)),
-          balanceType: currentBal >= 0 ? 'Dr' : 'Cr'
-        });
-      }
-
-      return {
-        entries,
-        totalDebit: parseFloat(totDeb.toFixed(2)),
-        totalCredit: parseFloat(totCred.toFixed(2)),
-        closingBalance: parseFloat(currentBal.toFixed(2)),
-        closingType: currentBal >= 0 ? 'Dr' : 'Cr'
-      };
-    }
-
-    // ==========================================
-    // Case C: Owner Account Ledger (Video 17 Frame 0180)
-    // ==========================================
-    if (cleanQuery.includes('sunder') || cleanQuery.includes('tiwari') || cleanQuery.includes('owner')) {
-      const allTx = [
-        { date: '16-06-25', type: 'Payment', account: 'Cash', remark: '', debit: 11000, credit: 0 },
-        { date: '16-06-25', type: 'Payment', account: 'Cash', remark: 'cash handover', debit: 98717, credit: 0 },
-        { date: '16-06-25', type: 'Payment', account: 'Online', remark: 'paymnet -4757344', debit: 50000, credit: 0 }
-      ];
-
-      // Dynamic owner payments
-      const ownerPayments = this.getPayments().filter(p =>
-        p.accountName.toLowerCase().includes('sunder') ||
-        p.accountName.toLowerCase().includes('tiwari') ||
-        p.accountName.toLowerCase().includes('owner')
-      );
-
-      for (const p of ownerPayments) {
-        allTx.push({
-          date: p.date.replace('2025-', '') || '16-06-25',
-          type: 'Payment',
-          account: p.paymentMode,
-          remark: p.remark || '',
-          debit: p.amount,
-          credit: 0
-        });
-      }
-
-      let opening = 0;
-      const filtered: typeof allTx = [];
-
-      for (const tx of allTx) {
-        const c = this.parseDateComparable(tx.date);
-        if (c < fromComp) {
-          opening += (tx.debit - tx.credit);
-        } else if (c <= toComp) {
-          filtered.push(tx);
-        }
-      }
-
-      let currentBal = opening;
-      const entries: LedgerEntry[] = [
-        {
-          date: '',
-          type: '',
-          accountName: 'Opening Balnce',
-          remark: '',
-          debit: 0,
-          credit: 0,
-          balance: opening,
-          balanceType: 'Dr'
-        }
-      ];
-
-      let totDeb = 0;
-      let totCred = 0;
-
-      for (const tx of filtered) {
-        currentBal += (tx.debit - tx.credit);
-        totDeb += tx.debit;
-        totCred += tx.credit;
-        entries.push({
-          date: tx.date,
-          type: tx.type,
-          accountName: tx.account,
-          remark: tx.remark,
-          debit: tx.debit,
-          credit: tx.credit,
-          balance: parseFloat(currentBal.toFixed(2)),
-          balanceType: 'Dr'
-        });
-      }
-
-      return {
-        entries,
-        totalDebit: parseFloat(totDeb.toFixed(2)),
-        totalCredit: parseFloat(totCred.toFixed(2)),
-        closingBalance: parseFloat(currentBal.toFixed(2)),
-        closingType: 'Dr'
-      };
-    }
-
-    // ==========================================
-    // Case D: Auto Commission Account (Video 16 & 17 Frame 0180)
-    // ==========================================
-    if (cleanQuery.includes('commision') || cleanQuery.includes('commission')) {
-      const allTx = [
-        { date: '16-06-25', type: 'Payment', account: 'Cash', remark: 'Room 102 agent commission', debit: 1500, credit: 0 }
-      ];
-
-      for (const p of this.getPayments().filter(x => x.accountName.toLowerCase().includes('commision') || x.accountName.toLowerCase().includes('commission'))) {
-        allTx.push({
-          date: p.date.replace('2025-', '') || '16-06-25',
-          type: 'Payment',
-          account: p.paymentMode,
-          remark: p.remark || '',
-          debit: p.amount,
-          credit: 0
-        });
-      }
-
-      let currentBal = 0;
-      const entries: LedgerEntry[] = [
-        {
-          date: '',
-          type: '',
-          accountName: 'Opening Balnce',
-          remark: '',
-          debit: 0,
-          credit: 0,
-          balance: 0,
-          balanceType: 'Dr'
-        }
-      ];
-
-      let totDeb = 0;
-      let totCred = 0;
-
-      for (const tx of allTx) {
-        currentBal += tx.debit;
-        totDeb += tx.debit;
-        entries.push({
-          date: tx.date,
-          type: tx.type,
-          accountName: tx.account,
-          remark: tx.remark,
-          debit: tx.debit,
-          credit: 0,
-          balance: parseFloat(currentBal.toFixed(2)),
-          balanceType: 'Dr'
-        });
-      }
-
-      return {
-        entries,
-        totalDebit: totDeb,
-        totalCredit: totCred,
-        closingBalance: currentBal,
-        closingType: 'Dr'
-      };
-    }
-
-    // ==========================================
-    // Case E: General Guest / Party Account Ledger
-    // ==========================================
     const allTx: { date: string; type: string; account: string; remark: string; debit: number; credit: number }[] = [];
 
-    // Pre-seeded transactions for specific demo parties (Vivek, Tata Motors, Raj, Shiv, Guruprasad pol, AKASH YADAV)
-    if (cleanQuery.includes('guruprasad')) {
-      allTx.push(
-        { date: '04-05-25', type: 'Check_In', account: 'Cash', remark: 'Room_Checkin/SR/150/24-25/Room 202', debit: 2200, credit: 0 },
-        { date: '04-05-25', type: 'Receipts', account: 'Cash', remark: 'tariff advance', debit: 0, credit: 2200 }
-      );
-    } else if (cleanQuery.includes('akash')) {
-      allTx.push(
-        { date: '24-05-25', type: 'Check_In', account: 'Cash', remark: 'Room_Checkin/SR/170/24-25/Room 105', debit: 1000, credit: 0 },
-        { date: '24-05-25', type: 'Receipts', account: 'Cash', remark: 'tariff', debit: 0, credit: 1000 }
-      );
-    } else if (cleanQuery.includes('vivek')) {
-      allTx.push(
-        { date: '10-06-25', type: 'Check_Out', account: 'Cash', remark: 'Check_out/GSR/228/24-25/Room-204', debit: 1800, credit: 0 },
-        { date: '12-06-25', type: 'Receipts', account: 'Online', remark: 'REC/10/24-25 settle bill', debit: 0, credit: 1800 }
-      );
-    } else if (cleanQuery.includes('tata')) {
-      allTx.push(
-        { date: '05-06-25', type: 'Check_Out', account: 'Cash', remark: 'Check_out/GSR/214/24-25/Corporate Room-301,302', debit: 8500, credit: 0 },
-        { date: '15-06-25', type: 'Receipts', account: 'Online', remark: 'REC/12/24-25 company settlement', debit: 0, credit: 5000 }
-      );
-    } else if (cleanQuery.includes('raj')) {
-      allTx.push(
-        { date: '01-06-25', type: 'Check_Out', account: 'Cash', remark: 'Check_out/GSR/208/24-25/Room-101', debit: 1000, credit: 0 },
-        { date: '14-06-25', type: 'Receipts', account: 'Cash', remark: 'REC/11/24-25 cash clearing', debit: 0, credit: 1000 }
-      );
-    } else if (cleanQuery.includes('shiv')) {
-      allTx.push(
-        { date: '07-06-25', type: 'Check_Out', account: 'Online', remark: 'Check_out/GSR/225/24-25/Room-101', debit: 2480, credit: 0 },
-        { date: '07-06-25', type: 'Receipts', account: 'Online', remark: 'advance settlement', debit: 0, credit: 2480 }
-      );
-    }
-
-    // Dynamic receipts
-    const receipts = this.getAdvanceReceipts().filter(r =>
-      !cleanQuery ||
-      r.guestName.toLowerCase().includes(cleanQuery) ||
-      (r.roomNo && r.roomNo.toLowerCase().includes(cleanQuery)) ||
-      (r.mobile && r.mobile.includes(cleanQuery))
-    );
-    for (const r of receipts) {
-      allTx.push({
-        date: r.date,
-        type: 'Advance_Receipt',
-        account: r.paymentMode,
-        remark: r.remark || 'advance receipt',
-        debit: 0,
-        credit: r.amount
-      });
-    }
-
-    // Dynamic checkouts
-    const checkouts = this.getCheckouts().filter(c =>
-      !cleanQuery ||
-      c.guestName.toLowerCase().includes(cleanQuery) ||
-      (c.companyName && c.companyName.toLowerCase().includes(cleanQuery)) ||
-      c.roomNo.toLowerCase().includes(cleanQuery) ||
-      (c.guestPhone && c.guestPhone.includes(cleanQuery))
-    );
-    for (const c of checkouts) {
-      allTx.push({
-        date: c.checkOutDate,
-        type: 'Room_Checkout',
-        account: 'Room_Checkout',
-        remark: `Room_Checkout/${c.invoiceNo}/Room-${c.roomNo}`,
-        debit: c.billAmount,
-        credit: 0
-      });
-      const modeStr = (c.paymentMode || '').toLowerCase();
-      const isCredit = modeStr.includes('credit') || modeStr.includes('city ledger');
-      const settlementPaid = c.netPayable || (c.billAmount - (c.advanceDeducted || 0));
-      if (settlementPaid > 0 && !isCredit) {
-        allTx.push({
-          date: c.checkOutDate,
-          type: 'Check_Out',
-          account: c.paymentMode || 'Online',
-          remark: `Check_out/${c.invoiceNo}/Room-${c.roomNo}`,
-          debit: 0,
-          credit: settlementPaid
-        });
+    // Receipts
+    const receipts = this.getReceipts();
+    receipts.forEach(r => {
+      const mode = (r.paymentMode || '').toLowerCase();
+      const acc = (r.accountName || '').toLowerCase();
+      if (cleanQuery === 'cash' && mode === 'cash') {
+        allTx.push({ date: r.date, type: 'Receipts', account: r.accountName, remark: r.remark || '', debit: r.amount, credit: 0 });
+      } else if (cleanQuery === 'online' && (mode === 'online' || mode === 'upi')) {
+        allTx.push({ date: r.date, type: 'Receipts', account: r.accountName, remark: r.remark || '', debit: r.amount, credit: 0 });
+      } else if (cleanQuery === 'card' && mode === 'card') {
+        allTx.push({ date: r.date, type: 'Receipts', account: r.accountName, remark: r.remark || '', debit: r.amount, credit: 0 });
+      } else if (acc.includes(cleanQuery)) {
+        allTx.push({ date: r.date, type: 'Receipts', account: r.paymentMode, remark: r.remark || '', debit: 0, credit: r.amount });
       }
-    }
+    });
 
-    // Dynamic General Receipts (settling party account)
-    const generalReceipts = this.getReceipts().filter(r =>
-      r.voucherName !== 'Check_Out' && r.voucherName !== 'Advance_Receipt' &&
-      r.accountName.toLowerCase().includes(cleanQuery)
-    );
-    for (const r of generalReceipts) {
-      allTx.push({
-        date: r.date,
-        type: 'Receipts',
-        account: r.paymentMode,
-        remark: r.remark || `Receipt ${r.receiptNo}`,
-        debit: 0,
-        credit: r.amount
-      });
-    }
-
-    // Dynamic Food Bills (credit food bills)
-    const partyFoodBills = this.getFoodBills().filter(fb =>
-      fb.guestName.toLowerCase().includes(cleanQuery)
-    );
-    for (const fb of partyFoodBills) {
-      const fbMode = (fb.settlementType || '').toLowerCase();
-      if (fbMode.includes('credit') || fbMode.includes('city ledger')) {
-        allTx.push({
-          date: fb.date,
-          type: 'Foodbill',
-          account: 'Foodbill',
-          remark: `Food Bill ${fb.billNo} - ${fb.tableNo || fb.roomNo}`,
-          debit: fb.netBillAmount,
-          credit: 0
-        });
+    // Payments
+    const payments = this.getPayments();
+    payments.forEach(p => {
+      const mode = (p.paymentMode || '').toLowerCase();
+      const acc = (p.accountName || '').toLowerCase();
+      if (cleanQuery === 'cash' && mode === 'cash') {
+        allTx.push({ date: p.date, type: 'Payment', account: p.accountName, remark: p.remark || '', debit: 0, credit: p.amount });
+      } else if (cleanQuery === 'online' && (mode === 'online' || mode === 'upi')) {
+        allTx.push({ date: p.date, type: 'Payment', account: p.accountName, remark: p.remark || '', debit: 0, credit: p.amount });
+      } else if (cleanQuery === 'card' && mode === 'card') {
+        allTx.push({ date: p.date, type: 'Payment', account: p.accountName, remark: p.remark || '', debit: 0, credit: p.amount });
+      } else if (acc.includes(cleanQuery)) {
+        allTx.push({ date: p.date, type: 'Payment', account: p.paymentMode, remark: p.remark || '', debit: p.amount, credit: 0 });
       }
-    }
+    });
 
-    // Dynamic payments
-    const partyPayments = this.getPayments().filter(p =>
-      p.accountName.toLowerCase().includes(cleanQuery)
-    );
-    for (const p of partyPayments) {
-      allTx.push({
-        date: p.date,
-        type: 'Payment',
-        account: p.paymentMode,
-        remark: p.remark || 'payout',
-        debit: p.amount,
-        credit: 0
-      });
-    }
-
-    let opening = 0;
-    const filtered: typeof allTx = [];
-
-    for (const tx of allTx) {
-      const c = this.parseDateComparable(tx.date);
-      if (c && c < fromComp) {
-        opening += (tx.credit - tx.debit);
-      } else if (!c || c <= toComp) {
-        filtered.push(tx);
+    // Checkouts
+    const checkouts = this.getCheckouts();
+    checkouts.forEach(co => {
+      const mode = (co.paymentMode || '').toLowerCase();
+      const gName = (co.guestName || '').toLowerCase();
+      const cName = (co.companyName || '').toLowerCase();
+      if (cleanQuery === 'cash' && mode.includes('cash')) {
+        allTx.push({ date: co.checkOutDate, type: 'Check_Out', account: co.guestName, remark: `Checkout #${co.invoiceNo} Room ${co.roomNo}`, debit: co.netPayable, credit: 0 });
+      } else if (cleanQuery === 'online' && (mode.includes('online') || mode.includes('upi'))) {
+        allTx.push({ date: co.checkOutDate, type: 'Check_Out', account: co.guestName, remark: `Checkout #${co.invoiceNo} Room ${co.roomNo}`, debit: co.netPayable, credit: 0 });
+      } else if (cleanQuery === 'card' && mode.includes('card')) {
+        allTx.push({ date: co.checkOutDate, type: 'Check_Out', account: co.guestName, remark: `Checkout #${co.invoiceNo} Room ${co.roomNo}`, debit: co.netPayable, credit: 0 });
+      } else if (gName.includes(cleanQuery) || cName.includes(cleanQuery)) {
+        allTx.push({ date: co.checkOutDate, type: 'Check_Out', account: co.paymentMode, remark: `Invoice #${co.invoiceNo}`, debit: co.netPayable, credit: 0 });
       }
-    }
+    });
 
-    let runningBalance = opening;
+    const opening = 0.00;
+    let currentBal = opening;
     const entries: LedgerEntry[] = [
       {
         date: '',
         type: '',
-        accountName: 'Opening Balnce',
+        accountName: 'Opening Balance',
         remark: '',
         debit: 0,
         credit: 0,
-        balance: Math.abs(opening),
-        balanceType: opening >= 0 ? 'Cr' : 'Dr'
+        balance: opening,
+        balanceType: 'Dr'
       }
     ];
 
-    let totalDebit = 0;
-    let totalCredit = 0;
+    let totDeb = 0;
+    let totCred = 0;
 
-    for (const tx of filtered) {
-      totalDebit += tx.debit;
-      totalCredit += tx.credit;
-      runningBalance += (tx.credit - tx.debit);
+    for (const tx of allTx) {
+      currentBal += (tx.debit - tx.credit);
+      totDeb += tx.debit;
+      totCred += tx.credit;
       entries.push({
         date: tx.date,
         type: tx.type,
@@ -9097,24 +6598,20 @@ export class PmsStore {
         remark: tx.remark,
         debit: tx.debit,
         credit: tx.credit,
-        balance: Math.abs(parseFloat(runningBalance.toFixed(2))),
-        balanceType: runningBalance >= 0 ? 'Cr' : 'Dr'
+        balance: parseFloat(currentBal.toFixed(2)),
+        balanceType: currentBal >= 0 ? 'Dr' : 'Cr'
       });
     }
 
-    const closingBalance = Math.abs(parseFloat(runningBalance.toFixed(2)));
-    const closingType: 'Dr' | 'Cr' = runningBalance >= 0 ? 'Cr' : 'Dr';
-
     return {
       entries,
-      totalDebit: parseFloat(totalDebit.toFixed(2)),
-      totalCredit: parseFloat(totalCredit.toFixed(2)),
-      closingBalance,
-      closingType
+      totalDebit: parseFloat(totDeb.toFixed(2)),
+      totalCredit: parseFloat(totCred.toFixed(2)),
+      closingBalance: parseFloat(currentBal.toFixed(2)),
+      closingType: currentBal >= 0 ? 'Dr' : 'Cr'
     };
   }
 
-  // --- Video 10: Company Info & Local vs Interstate GST Methods ---
   static getCompanyInfo(): PmsCompanyInfo {
     const raw = localStorage.getItem('pms_company_info');
     if (!raw) {
@@ -10185,6 +7682,7 @@ export class PmsStore {
     const raw = localStorage.getItem(STORAGE_KEYS.PROPERTIES);
     if (!raw) {
       localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(INITIAL_CHAIN_PROPERTIES));
+    localStorage.setItem(STORAGE_KEYS.VOUCHER_TYPES, JSON.stringify(INITIAL_VOUCHER_TYPES));
       return INITIAL_CHAIN_PROPERTIES;
     }
     try {
@@ -10798,151 +8296,37 @@ export class PmsStore {
    * Route: /b2bsales_pageshow & /b2bsales
    * Matches GSTR-1 Table 4 (B2B Taxable outward supplies to registered persons)
    */
-  static getB2BReport(fromDate?: string, toDate?: string): PmsB2BInvoiceRecord[] {
+  static getB2BReport(_fromDate?: string, _toDate?: string): PmsB2BInvoiceRecord[] {
     const checkouts = this.getCheckouts();
     const list: PmsB2BInvoiceRecord[] = [];
 
-    // Pre-seeded canonical B2B transactions from Video 28 Frame 0130
-    const canonicalB2B: PmsB2BInvoiceRecord[] = [
-      {
-        sNo: 1,
-        gstin: '10krhpk1291mzpk',
-        receiverName: 'Apex Logistics Corp',
-        invoiceNumber: 'GSR/233/24-25',
-        invoiceDate: '17-06-2025',
-        invoiceValue: 4740.00,
-        placeOfSupply: '21-Odisha',
-        reverseCharge: 'N',
-        applicableTaxRate: 'N',
-        invoiceType: 'Regular B2B',
-        eCommerceGstin: '',
-        rate: 12,
-        taxableValue: 4232.14,
-        cessAmount: 0
-      },
-      {
-        sNo: 2,
-        gstin: '23BLSP4169C1Z',
-        receiverName: 'data house',
-        invoiceNumber: 'GSR/230/24-25',
-        invoiceDate: '11-06-2025',
-        invoiceValue: 3360.00,
-        placeOfSupply: '23-Madhya Pradesh',
-        reverseCharge: 'N',
-        applicableTaxRate: 'N',
-        invoiceType: 'Regular B2B',
-        eCommerceGstin: '',
-        rate: 12,
-        taxableValue: 3000.00,
-        cessAmount: 0
-      },
-      {
-        sNo: 3,
-        gstin: '23gdfgdgfdfgdfg',
-        receiverName: 'Kaveri Infra Projects',
-        invoiceNumber: 'GSR/231/24-25',
-        invoiceDate: '11-06-2025',
-        invoiceValue: 2240.00,
-        placeOfSupply: '23-Madhya Pradesh',
-        reverseCharge: 'N',
-        applicableTaxRate: 'N',
-        invoiceType: 'Regular B2B',
-        eCommerceGstin: '',
-        rate: 12,
-        taxableValue: 2000.00,
-        cessAmount: 0
-      },
-      {
-        sNo: 4,
-        gstin: '23JHGHGHDHG',
-        receiverName: 'Mahakaal Power & Steel',
-        invoiceNumber: 'GSR/239/24-25',
-        invoiceDate: '26-06-2025',
-        invoiceValue: 3721.00,
-        placeOfSupply: '23-Madhya Pradesh',
-        reverseCharge: 'N',
-        applicableTaxRate: 'N',
-        invoiceType: 'Regular B2B',
-        eCommerceGstin: '',
-        rate: 12,
-        taxableValue: 3322.32,
-        cessAmount: 0
-      },
-      {
-        sNo: 5,
-        gstin: '23SJDHGSJDHGHS',
-        receiverName: 'hindalko',
-        invoiceNumber: 'GSR/222/24-25',
-        invoiceDate: '07-06-2025',
-        invoiceValue: 3939.99,
-        placeOfSupply: '23-Madhya Pradesh',
-        reverseCharge: 'N',
-        applicableTaxRate: 'N',
-        invoiceType: 'Regular B2B',
-        eCommerceGstin: '',
-        rate: 12,
-        taxableValue: 3517.85,
-        cessAmount: 0
-      }
-    ];
-
-    list.push(...canonicalB2B);
-
-    // Dynamic B2B transactions from active checkouts
     checkouts.forEach((co: PmsCheckOutDetail) => {
-      const gstin = co.gstNumber?.trim();
-      if (gstin && gstin !== '-' && gstin.length >= 5) {
-        const taxable = co.totalRoomRent ? (co.totalRoomRent / 1.12) : (co.billAmount / 1.12);
+      const isB2B = co.gstNumber && co.gstNumber.trim().length >= 5;
+      if (isB2B) {
         list.push({
           sNo: list.length + 1,
-          gstin: gstin,
+          gstin: co.gstNumber || '',
           receiverName: co.companyName || co.guestName,
-          invoiceNumber: co.invoiceNo || 'GSR/240/24-25',
+          invoiceNumber: co.invoiceNo,
           invoiceDate: co.checkOutDate,
-          invoiceValue: co.netPayable || co.billAmount,
-          placeOfSupply: co.state ? `${co.state}` : '21-Odisha',
+          invoiceValue: co.netPayable,
+          placeOfSupply: '21-Odisha',
           reverseCharge: 'N',
           applicableTaxRate: 'N',
           invoiceType: 'Regular B2B',
           eCommerceGstin: '',
           rate: co.gstPercent || 12,
-          taxableValue: Math.round(taxable * 100) / 100,
+          taxableValue: co.totalRoomRent,
           cessAmount: 0
         });
       }
     });
 
-    // Date range filter
-    if (fromDate && toDate) {
-      const parseD = (s: string) => {
-        const parts = s.split('-');
-        if (parts.length === 3) {
-          return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`).getTime();
-        }
-        return 0;
-      };
-      const fTime = parseD(fromDate);
-      const tTime = parseD(toDate);
-      if (fTime && tTime) {
-        return list.filter(item => {
-          const itemTime = parseD(item.invoiceDate);
-          return itemTime >= fTime && itemTime <= tTime;
-        });
-      }
-    }
-
     return list;
   }
 
-  /**
-   * B2C Register (Only Without GST Customer Invoice)
-   * Route: /b2csales
-   * Matches GSTR-1 Table 7 (B2C Others - Taxable supplies made to unregistered persons)
-   */
   static getB2CReport(_fromDate?: string, _toDate?: string): PmsB2CInvoiceRecord[] {
     const checkouts = this.getCheckouts();
-    
-    // Accumulate any live B2C checkouts
     let liveFoodTaxable = 0;
     let liveRoomTaxable = 0;
 
@@ -10954,8 +8338,8 @@ export class PmsStore {
       }
     });
 
-    const baselineFood = 12314.78 + Math.round(liveFoodTaxable * 100) / 100;
-    const baselineRoom = 83925.00 + Math.round(liveRoomTaxable * 100) / 100;
+    const foodTaxable = Math.round(liveFoodTaxable * 100) / 100;
+    const roomTaxable = Math.round(liveRoomTaxable * 100) / 100;
 
     return [
       {
@@ -10964,7 +8348,7 @@ export class PmsStore {
         placeOfSupply: '21-Odisha',
         applicableTaxRate: 'N',
         rate: 5,
-        taxableValue: Math.round(baselineFood * 100) / 100,
+        taxableValue: foodTaxable,
         cessAmount: 0,
         eCommerceGstin: ''
       },
@@ -10974,547 +8358,83 @@ export class PmsStore {
         placeOfSupply: '21-Odisha',
         applicableTaxRate: 'N',
         rate: 12,
-        taxableValue: Math.round(baselineRoom * 100) / 100,
+        taxableValue: roomTaxable,
         cessAmount: 0,
         eCommerceGstin: ''
       }
     ];
   }
 
-  /**
-   * Consolidated Room & Food Bill GST Report
-   * Route: /room_food_gstreport_pageshow & /roomfood_gstreport
-   * Matches 23-column master tax audit sheet (Frames 0200, 0210, 0230, 0270)
-   */
-  static getConsolidatedGstReport(fromDate?: string, toDate?: string): PmsConsolidatedGstItem[] {
+  static getConsolidatedGstReport(_fromDate?: string, _toDate?: string): PmsConsolidatedGstItem[] {
     const list: PmsConsolidatedGstItem[] = [];
 
-    // Canonical baseline transactions extracted from Frame 0210, 0230, and 0270
-    const baselineRecords: PmsConsolidatedGstItem[] = [
-      {
-        sNo: 1,
-        voucherNo: 'Res/264/24-25',
-        roomNoOrTable: 'Table T1',
-        guestName: 'vinod sharma',
-        address: 'main road',
-        city: 'renukot',
-        state: 'm.p.',
-        mobile: '7657657655',
-        firmName: '',
-        gstin: '',
-        checkInDate: '26-06-2025',
-        invoiceDate: '26-06-2025',
-        totalDays: 0,
-        type: 'Food Bill',
-        gstRate: 5.00,
-        sgst: 3.25,
-        cgst: 3.25,
-        igst: 0.00,
-        taxable: 130.00,
-        totalGst: 6.50,
-        billAmount: 137.00,
-        advanceOrDiscount: 0.00,
-        netPayAmount: 137.00
-      },
-      {
-        sNo: 2,
-        voucherNo: 'GSR/239/24-25',
-        roomNoOrTable: '102',
-        guestName: 'vikash sharma',
-        address: 'Civil Lines',
-        city: 'Jabalpur',
-        state: 'm.p.',
-        mobile: '8872757274',
-        firmName: 'Mahakaal Power & Steel',
-        gstin: '23JHGHGHDHG',
-        checkInDate: '26-06-2025',
-        invoiceDate: '26-06-2025',
-        totalDays: 1,
-        type: 'Room Bill',
-        gstRate: 12.00,
-        sgst: 0.00,
-        cgst: 0.00,
-        igst: 384.00,
-        taxable: 3200.00,
-        totalGst: 384.00,
-        billAmount: 3584.00,
-        advanceOrDiscount: -2000.00,
-        netPayAmount: 1584.00
-      },
-      {
-        sNo: 3,
-        voucherNo: 'GSR/238/24-25',
-        roomNoOrTable: '201',
-        guestName: 'ARJUN',
-        address: 'Station Road',
-        city: 'Nagpur',
-        state: 'Odisha',
-        mobile: '95487417',
-        firmName: '',
-        gstin: '',
-        checkInDate: '20-06-2025',
-        invoiceDate: '25-06-2025',
-        totalDays: 5,
-        type: 'Room Bill',
-        gstRate: 12.00,
-        sgst: 900.00,
-        cgst: 900.00,
-        igst: 0.00,
-        taxable: 15000.00,
-        totalGst: 1800.00,
-        billAmount: 16800.00,
-        advanceOrDiscount: -1500.00,
-        netPayAmount: 15300.00
-      },
-      {
-        sNo: 4,
-        voucherNo: 'GSR/237/24-25',
-        roomNoOrTable: '305',
-        guestName: 'NAMERAJ JI',
-        address: 'Gandhi Chowk',
-        city: 'Indore',
-        state: 'm.p.',
-        mobile: '9899664226',
-        firmName: '',
-        gstin: '',
-        checkInDate: '16-06-2025',
-        invoiceDate: '25-06-2025',
-        totalDays: 10,
-        type: 'Room Bill',
-        gstRate: 0.00,
-        sgst: 0.00,
-        cgst: 0.00,
-        igst: 0.00,
-        taxable: 20000.00,
-        totalGst: 0.00,
-        billAmount: 20000.00,
-        advanceOrDiscount: -1000.00,
-        netPayAmount: 19000.00
-      },
-      {
-        sNo: 5,
-        voucherNo: 'SHRI/260/24-25',
-        roomNoOrTable: '104',
-        guestName: 'hariom gautam',
-        address: 'VIP Road',
-        city: 'Bhopal',
-        state: 'm.p.',
-        mobile: '8737482332',
-        firmName: 'data house',
-        gstin: '23BLSP4169C1Z',
-        checkInDate: '24-06-2025',
-        invoiceDate: '24-06-2025',
-        totalDays: 0,
-        type: 'Food Bill',
-        gstRate: 5.00,
-        sgst: 0.96,
-        cgst: 0.96,
-        igst: 0.00,
-        taxable: 68.10,
-        totalGst: 1.91,
-        billAmount: 70.00,
-        advanceOrDiscount: 0.00,
-        netPayAmount: 70.00
-      },
-      {
-        sNo: 6,
-        voucherNo: 'GSR/236/24-25',
-        roomNoOrTable: '202',
-        guestName: 'RAMESH',
-        address: 'Near Temple',
-        city: 'Rayagada',
-        state: 'Odisha',
-        mobile: '36698',
-        firmName: '',
-        gstin: '',
-        checkInDate: '24-06-2025',
-        invoiceDate: '24-06-2025',
-        totalDays: 1,
-        type: 'Room Bill',
-        gstRate: 12.00,
-        sgst: 187.50,
-        cgst: 187.50,
-        igst: 0.00,
-        taxable: 3125.00,
-        totalGst: 375.00,
-        billAmount: 3500.00,
-        advanceOrDiscount: 0.00,
-        netPayAmount: 3500.00
-      },
-      {
-        sNo: 7,
-        voucherNo: 'GSR/235/24-25',
-        roomNoOrTable: '303',
-        guestName: 'vivek',
-        address: 'Sector 5',
-        city: 'Pune',
-        state: 'Odisha',
-        mobile: '987965',
-        firmName: '',
-        gstin: '',
-        checkInDate: '24-06-2025',
-        invoiceDate: '24-06-2025',
-        totalDays: 1,
-        type: 'Room Bill',
-        gstRate: 12.00,
-        sgst: 240.00,
-        cgst: 240.00,
-        igst: 0.00,
-        taxable: 4000.00,
-        totalGst: 480.00,
-        billAmount: 4480.00,
-        advanceOrDiscount: 0.00,
-        netPayAmount: 4480.00
-      },
-      {
-        sNo: 8,
-        voucherNo: 'GSR/234/24-25',
-        roomNoOrTable: '202',
-        guestName: 'NEELESH JAIN',
-        address: 'Kalyan Nagar',
-        city: 'Mumbai',
-        state: 'Odisha',
-        mobile: '9425131930',
-        firmName: '',
-        gstin: '',
-        checkInDate: '24-06-2025',
-        invoiceDate: '24-06-2025',
-        totalDays: 1,
-        type: 'Room Bill',
-        gstRate: 12.00,
-        sgst: 180.00,
-        cgst: 180.00,
-        igst: 0.00,
-        taxable: 3000.00,
-        totalGst: 360.00,
-        billAmount: 3360.00,
-        advanceOrDiscount: 0.00,
-        netPayAmount: 3360.00
-      },
-      {
-        sNo: 9,
-        voucherNo: 'Res/263/24-25',
-        roomNoOrTable: 'Table T2',
-        guestName: 'ANMOL JI',
-        address: 'Bandra West',
-        city: 'Mumbai',
-        state: 'Odisha',
-        mobile: '9927383644',
-        firmName: '',
-        gstin: '',
-        checkInDate: '19-06-2025',
-        invoiceDate: '19-06-2025',
-        totalDays: 0,
-        type: 'Food Bill',
-        gstRate: 5.00,
-        sgst: 0.95,
-        cgst: 0.95,
-        igst: 0.00,
-        taxable: 38.09,
-        totalGst: 1.90,
-        billAmount: 39.99,
-        advanceOrDiscount: 0.00,
-        netPayAmount: 39.99
-      },
-      {
-        sNo: 10,
-        voucherNo: 'GSR/233/24-25',
-        roomNoOrTable: '203',
-        guestName: 'aditya gupta',
-        address: 'Park Street',
-        city: 'Kolkata',
-        state: 'West Bengal',
-        mobile: '9939886555',
-        firmName: 'Apex Logistics Corp',
-        gstin: '10krhpk1291mzpk',
-        checkInDate: '17-06-2025',
-        invoiceDate: '17-06-2025',
-        totalDays: 1,
-        type: 'Room Bill',
-        gstRate: 12.00,
-        sgst: 0.00,
-        cgst: 0.00,
-        igst: 480.00,
-        taxable: 4000.00,
-        totalGst: 480.00,
-        billAmount: 4480.00,
-        advanceOrDiscount: -1000.00,
-        netPayAmount: 3480.00
-      },
-      {
-        sNo: 11,
-        voucherNo: 'GSR/232/24-25',
-        roomNoOrTable: '201',
-        guestName: 'ANMOL JI',
-        address: 'Bandra West',
-        city: 'Mumbai',
-        state: 'Odisha',
-        mobile: '9927383644',
-        firmName: '',
-        gstin: '',
-        checkInDate: '16-06-2025',
-        invoiceDate: '16-06-2025',
-        totalDays: 1,
-        type: 'Room Bill',
-        gstRate: 12.00,
-        sgst: 240.00,
-        cgst: 240.00,
-        igst: 0.00,
-        taxable: 4000.00,
-        totalGst: 480.00,
-        billAmount: 4480.00,
-        advanceOrDiscount: -1000.00,
-        netPayAmount: 3480.00
-      },
-      {
-        sNo: 12,
-        voucherNo: 'GSR/231/24-25',
-        roomNoOrTable: '103',
-        guestName: 'raju raikwar',
-        address: 'Civil Lines',
-        city: 'Satna',
-        state: 'm.p.',
-        mobile: '654654654',
-        firmName: 'Kaveri Infra Projects',
-        gstin: '23gdfgdgfdfgdfg',
-        checkInDate: '11-06-2025',
-        invoiceDate: '11-06-2025',
-        totalDays: 1,
-        type: 'Room Bill',
-        gstRate: 12.00,
-        sgst: 0.00,
-        cgst: 0.00,
-        igst: 240.00,
-        taxable: 2000.00,
-        totalGst: 240.00,
-        billAmount: 2240.00,
-        advanceOrDiscount: 0.00,
-        netPayAmount: 2240.00
-      },
-      {
-        sNo: 13,
-        voucherNo: 'GSR/230/24-25',
-        roomNoOrTable: '104',
-        guestName: 'hariom gautam',
-        address: 'VIP Road',
-        city: 'Bhopal',
-        state: 'm.p.',
-        mobile: '8737482332',
-        firmName: 'data house',
-        gstin: '23BLSP4169C1Z',
-        checkInDate: '11-06-2025',
-        invoiceDate: '11-06-2025',
-        totalDays: 1,
-        type: 'Room Bill',
-        gstRate: 12.00,
-        sgst: 180.00,
-        cgst: 180.00,
-        igst: 0.00,
-        taxable: 3000.00,
-        totalGst: 360.00,
-        billAmount: 3360.00,
-        advanceOrDiscount: 0.00,
-        netPayAmount: 3360.00
-      },
-      {
-        sNo: 14,
-        voucherNo: 'GSR/222/24-25',
-        roomNoOrTable: '105',
-        guestName: 'sunil agrwal',
-        address: 'main road',
-        city: 'renukot',
-        state: 'm.p.',
-        mobile: '7676767674',
-        firmName: 'hindalko',
-        gstin: '23SJDHGSJDHGHS',
-        checkInDate: '06-06-2025',
-        invoiceDate: '07-06-2025',
-        totalDays: 1,
-        type: 'Room Bill',
-        gstRate: 12.00,
-        sgst: 180.00,
-        cgst: 180.00,
-        igst: 0.00,
-        taxable: 3000.00,
-        totalGst: 360.00,
-        billAmount: 3360.00,
-        advanceOrDiscount: -500.00,
-        netPayAmount: 2860.00
-      }
-    ];
-
-    list.push(...baselineRecords);
-
-    // Merge active checkouts
     const checkouts = this.getCheckouts();
     checkouts.forEach((co: PmsCheckOutDetail) => {
-      const isInterstate = co.state && !co.state.toLowerCase().includes('odisha') && !co.state.toLowerCase().includes('orissa') && !co.state.toLowerCase().includes('21');
-      const rate = co.gstPercent || 12.00;
-      const taxable = co.totalRoomRent ? (co.totalRoomRent / 1.12) : (co.billAmount / 1.12);
-      const totalTax = co.gstAmount || (co.billAmount - taxable);
-      const cgst = isInterstate ? 0 : (co.cgstAmount ?? (totalTax / 2));
-      const sgst = isInterstate ? 0 : (co.sgstAmount ?? (totalTax / 2));
-      const igst = isInterstate ? (co.igstAmount ?? totalTax) : 0;
+      const isInterState = co.state && !co.state.toLowerCase().includes('odisha') && !co.state.toLowerCase().includes('orissa');
+      const gstAmt = co.gstAmount || 0;
+      const cgst = isInterState ? 0 : gstAmt / 2;
+      const sgst = isInterState ? 0 : gstAmt / 2;
+      const igst = isInterState ? gstAmt : 0;
 
       list.push({
         sNo: list.length + 1,
-        voucherNo: co.invoiceNo || 'GSR/240/24-25',
-        roomNoOrTable: co.roomNo || '101',
+        voucherNo: co.invoiceNo,
+        roomNoOrTable: co.roomNo,
         guestName: co.guestName,
-        address: co.addressLine1 || 'Local',
+        address: co.addressLine1 || '',
         city: co.city || 'Rayagada',
         state: co.state || 'Odisha',
         mobile: co.guestPhone || '',
         firmName: co.companyName || '',
         gstin: co.gstNumber || '',
-        checkInDate: co.checkInDate || co.checkOutDate,
+        checkInDate: co.checkInDate,
         invoiceDate: co.checkOutDate,
         totalDays: co.numberOfDays || 1,
         type: 'Room Bill',
-        gstRate: rate,
+        gstRate: co.gstPercent || 12,
         sgst: Math.round(sgst * 100) / 100,
         cgst: Math.round(cgst * 100) / 100,
         igst: Math.round(igst * 100) / 100,
-        taxable: Math.round(taxable * 100) / 100,
-        totalGst: Math.round(totalTax * 100) / 100,
-        billAmount: co.billAmount || co.netPayable,
-        advanceOrDiscount: -(co.advanceDeducted || co.lessDiscount || 0),
+        taxable: Math.round(co.totalRoomRent * 100) / 100,
+        totalGst: Math.round(gstAmt * 100) / 100,
+        billAmount: Math.round((co.totalRoomRent + gstAmt) * 100) / 100,
+        advanceOrDiscount: -(co.advanceDeducted || 0) - (co.lessDiscount || 0),
         netPayAmount: co.netPayable
       });
     });
 
-    // Merge active food bills (Vasudev Rasoi F&B - 5% GST)
-    const existingVouchers = new Set(list.map(l => l.voucherNo.toLowerCase()));
     const foodBills = this.getFoodBills();
-    foodBills.forEach(fb => {
-      if (!existingVouchers.has(fb.billNo.toLowerCase())) {
-        list.push({
-          sNo: list.length + 1,
-          voucherNo: fb.billNo,
-          roomNoOrTable: fb.roomNo || fb.tableNo || 'Restaurant',
-          guestName: fb.guestName || 'Dining Guest',
-          address: 'Station Road',
-          city: 'Rayagada',
-          state: 'Odisha',
-          mobile: '',
-          firmName: '',
-          gstin: '',
-          checkInDate: fb.date,
-          invoiceDate: fb.date,
-          totalDays: 0,
-          type: 'Food Bill',
-          gstRate: fb.gstPercent || 5.00,
-          sgst: Math.round(fb.sgstAmount * 100) / 100,
-          cgst: Math.round(fb.cgstAmount * 100) / 100,
-          igst: 0.00,
-          taxable: Math.round(fb.taxableAmount * 100) / 100,
-          totalGst: Math.round((fb.cgstAmount + fb.sgstAmount) * 100) / 100,
-          billAmount: fb.netBillAmount,
-          advanceOrDiscount: -(fb.discountAmount || 0),
-          netPayAmount: fb.netBillAmount
-        });
-        existingVouchers.add(fb.billNo.toLowerCase());
-      }
+    foodBills.forEach((fb: any) => {
+      list.push({
+        sNo: list.length + 1,
+        voucherNo: fb.billNo,
+        roomNoOrTable: fb.roomNo || fb.tableNo || 'Table',
+        guestName: fb.guestName || 'Walk-in Guest',
+        address: '',
+        city: 'Rayagada',
+        state: 'Odisha',
+        mobile: fb.mobile || '',
+        firmName: '',
+        gstin: '',
+        checkInDate: fb.date,
+        invoiceDate: fb.date,
+        totalDays: 0,
+        type: 'Food Bill',
+        gstRate: 5.0,
+        sgst: Math.round(((fb.gstAmount || 0) / 2) * 100) / 100,
+        cgst: Math.round(((fb.gstAmount || 0) / 2) * 100) / 100,
+        igst: 0,
+        taxable: fb.taxableAmount || 0,
+        totalGst: fb.gstAmount || 0,
+        billAmount: fb.totalAmount || fb.netBillAmount || 0,
+        advanceOrDiscount: -(fb.discountAmount || 0),
+        netPayAmount: fb.netBillAmount || 0
+      });
     });
-
-    // Merge active Banquet bookings (18% GST SAC 997212 / 996331)
-    const banquets = this.getBanquetBookings().filter(b => b.status.includes('Settled') || b.invoiceNo);
-    banquets.forEach(bq => {
-      const invNo = bq.invoiceNo || bq.bookingNo;
-      if (!existingVouchers.has(invNo.toLowerCase())) {
-        const taxable = (bq.financialSummary?.venueRent || 0) + (bq.financialSummary?.foodAndServicesTaxable || 0);
-        const gstTot = (bq.financialSummary?.venueGstAmount || 0) + (bq.financialSummary?.foodAndServicesGstAmount || 0);
-        list.push({
-          sNo: list.length + 1,
-          voucherNo: invNo,
-          roomNoOrTable: bq.venueName || 'Banquet Hall',
-          guestName: bq.contactPerson || bq.hostName || 'Banquet Client',
-          address: bq.addressLine1 || 'Main Road',
-          city: bq.city || 'Rayagada',
-          state: bq.state || 'Odisha',
-          mobile: bq.contactMobile || '',
-          firmName: bq.hostName || '',
-          gstin: '',
-          checkInDate: bq.eventDate,
-          invoiceDate: bq.invoiceDate || bq.eventDate,
-          totalDays: 1,
-          type: 'Banquet Event',
-          gstRate: 18.00,
-          sgst: Math.round((gstTot / 2) * 100) / 100,
-          cgst: Math.round((gstTot / 2) * 100) / 100,
-          igst: 0.00,
-          taxable: Math.round(taxable * 100) / 100,
-          totalGst: Math.round(gstTot * 100) / 100,
-          billAmount: bq.financialSummary?.grossBillAmount || bq.financialSummary?.netPayable || 0,
-          advanceOrDiscount: -(bq.financialSummary?.advancePaid || 0),
-          netPayAmount: bq.financialSummary?.paidAtCheckout || bq.financialSummary?.netPayable || 0
-        });
-        existingVouchers.add(invNo.toLowerCase());
-      }
-    });
-
-    // Merge active Bar invoices (Vasudev Lounge Bar)
-    const barInvoices = this.getBarInvoices();
-    barInvoices.forEach(bar => {
-      if (!existingVouchers.has(bar.billNo.toLowerCase())) {
-        const barBasic = bar.basicAmount || 0;
-        const barSgst = bar.sgstAmount || 0;
-        const barCgst = bar.cgstAmount || 0;
-        const barTotal = bar.grandTotal || 0;
-        list.push({
-          sNo: list.length + 1,
-          voucherNo: bar.billNo,
-          roomNoOrTable: bar.tableNo || bar.roomNo || 'Bar Counter',
-          guestName: bar.guestName || 'Bar Customer',
-          address: bar.guestAddress || 'Lounge',
-          city: 'Rayagada',
-          state: 'Odisha',
-          mobile: bar.guestMobile || '',
-          firmName: '',
-          gstin: bar.gstin || '',
-          checkInDate: bar.date,
-          invoiceDate: bar.date,
-          totalDays: 0,
-          type: 'Bar & Lounge',
-          gstRate: 5.00,
-          sgst: Math.round(barSgst * 100) / 100,
-          cgst: Math.round(barCgst * 100) / 100,
-          igst: 0.00,
-          taxable: Math.round(barBasic * 100) / 100,
-          totalGst: Math.round((barCgst + barSgst) * 100) / 100,
-          billAmount: barTotal,
-          advanceOrDiscount: 0,
-          netPayAmount: barTotal
-        });
-        existingVouchers.add(bar.billNo.toLowerCase());
-      }
-    });
-
-    // Date range filtering
-    if (fromDate && toDate) {
-      const parseD = (s: string) => {
-        const parts = s.split('-');
-        if (parts.length === 3) {
-          return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`).getTime();
-        }
-        return 0;
-      };
-      const fTime = parseD(fromDate);
-      const tTime = parseD(toDate);
-      if (fTime && tTime) {
-        return list.filter(item => {
-          const itemTime = parseD(item.invoiceDate);
-          return itemTime >= fTime && itemTime <= tTime;
-        });
-      }
-    }
 
     return list;
   }
 
-  /**
-   * Export GST Data to CSV Format
-   */
   static exportGstCsv(tab: 'consolidated' | 'b2b' | 'b2c', fromDate?: string, toDate?: string): string {
     if (tab === 'b2b') {
       const data = this.getB2BReport(fromDate, toDate);
@@ -11630,94 +8550,43 @@ export class PmsStore {
    * Video 29 Frame 0160 & 0140: Outstanding Payables (Cr) & Receivables (Dr)
    */
   static getOutstandingAccounts(balanceFilter: 'Dr' | 'Cr' | 'all' = 'all'): PmsOutstandingAccount[] {
-    // Canonical payables (Cr) from Video 29 Frame 0160
-    const canonicalPayables: PmsOutstandingAccount[] = [
-      { sNo: 1, accountName: 'HARIOM', mobile: '655465', balance: 12400.00, balanceType: 'Cr', category: 'Vendor', lastTransactionDate: '19-07-2025' },
-      { sNo: 2, accountName: 'sanjeev kumar mishar', mobile: '801905', balance: 2000.00, balanceType: 'Cr', category: 'Supplier', lastTransactionDate: '18-07-2025' },
-      { sNo: 3, accountName: 'vinod klhanna', mobile: '87687687', balance: 2200.00, balanceType: 'Cr', category: 'Contractor', lastTransactionDate: '15-07-2025' },
-      { sNo: 4, accountName: 'aaaaaa', mobile: '9419879252', balance: 100.00, balanceType: 'Cr', category: 'Staff Advance', lastTransactionDate: '14-07-2025' },
-      { sNo: 5, accountName: 'raj', mobile: '6416', balance: 2000.00, balanceType: 'Cr', category: 'Laundry', lastTransactionDate: '14-07-2025' },
-      { sNo: 6, accountName: 'AYUSHI SHARMA', mobile: '7869682533', balance: 1000.00, balanceType: 'Cr', category: 'Guest Advance', lastTransactionDate: '12-07-2025' },
-      { sNo: 7, accountName: 'AKASH YADAV', mobile: '934021255', balance: 1000.00, balanceType: 'Cr', category: 'Vegetable Vendor', lastTransactionDate: '11-07-2025' },
-      { sNo: 8, accountName: 'shubham patel', mobile: '8305741149', balance: 19000.00, balanceType: 'Cr', category: 'Grocery Wholesaler', lastTransactionDate: '10-07-2025' },
-      { sNo: 9, accountName: 'ajay ji', mobile: '545887484', balance: 3000.00, balanceType: 'Cr', category: 'Dairy Vendor', lastTransactionDate: '09-07-2025' },
-      { sNo: 10, accountName: 'Guruprasad pol', mobile: '7888292929', balance: 2200.00, balanceType: 'Cr', category: 'Gas Agency', lastTransactionDate: '08-07-2025' },
-      { sNo: 11, accountName: 'hariom gautam ji', mobile: '76675763433', balance: 2000.00, balanceType: 'Cr', category: 'Vendor', lastTransactionDate: '07-07-2025' },
-      { sNo: 12, accountName: 'Vinod', mobile: '7569679215', balance: 9000.00, balanceType: 'Cr', category: 'Meat & Poultry', lastTransactionDate: '06-07-2025' },
-      { sNo: 13, accountName: 'GUPTA JII', mobile: '9826011223', balance: 25917.50, balanceType: 'Cr', category: 'Hotel Supplies', lastTransactionDate: '05-07-2025' },
-      { sNo: 14, accountName: 'anupam ji', mobile: '65448987', balance: 500.00, balanceType: 'Cr', category: 'Maintenance', lastTransactionDate: '04-07-2025' }
-    ];
+    const list: PmsOutstandingAccount[] = [];
+    const parties = this.getPartyAccounts();
 
-    // Canonical receivables (Dr) from Video 29 Frame 0140 & active party accounts
-    const canonicalReceivables: PmsOutstandingAccount[] = [
-      { sNo: 1, accountName: 'TATA MOTORS CORPORATE', mobile: '9822114455', balance: 3500.00, balanceType: 'Dr', category: 'Corporate Credit', lastTransactionDate: '19-07-2025' },
-      { sNo: 2, accountName: 'MAKEMYTRIP COMMISSIONS', mobile: '18001028747', balance: 14500.00, balanceType: 'Dr', category: 'OTA Channel', lastTransactionDate: '18-07-2025' },
-      { sNo: 3, accountName: 'OYO ROOMS CLEARING', mobile: '9313931393', balance: 8200.00, balanceType: 'Dr', category: 'OTA Channel', lastTransactionDate: '17-07-2025' },
-      { sNo: 4, accountName: 'SHREE SAI TOUR & TRAVELS', mobile: '9422055667', balance: 6400.00, balanceType: 'Dr', category: 'Travel Agent', lastTransactionDate: '16-07-2025' },
-      { sNo: 5, accountName: 'DR. RAJESH AGRAWAL', mobile: '9823019823', balance: 1850.00, balanceType: 'Dr', category: 'VIP Guest Credit', lastTransactionDate: '15-07-2025' }
-    ];
-
-    // Dynamically merge live party accounts
-    const liveParties = this.getPartyAccounts();
-    liveParties.forEach((p) => {
+    parties.forEach(p => {
       if (p.balance > 0) {
-        if (p.balanceType === 'Cr' && !canonicalPayables.some(c => c.accountName.toLowerCase() === p.name.toLowerCase())) {
-          canonicalPayables.push({
-            sNo: canonicalPayables.length + 1,
+        if (balanceFilter === 'all' || p.balanceType === balanceFilter) {
+          list.push({
+            sNo: list.length + 1,
             accountName: p.name,
             mobile: p.mobile || '—',
             balance: p.balance,
-            balanceType: 'Cr',
+            balanceType: p.balanceType,
             category: p.category || 'Vendor',
-            lastTransactionDate: new Date().toLocaleDateString('en-GB')
-          });
-        } else if (p.balanceType === 'Dr' && !canonicalReceivables.some(c => c.accountName.toLowerCase() === p.name.toLowerCase())) {
-          canonicalReceivables.push({
-            sNo: canonicalReceivables.length + 1,
-            accountName: p.name,
-            mobile: p.mobile || '—',
-            balance: p.balance,
-            balanceType: 'Dr',
-            category: p.category || 'Debtor',
-            lastTransactionDate: new Date().toLocaleDateString('en-GB')
+            lastTransactionDate: new Date().toLocaleDateString('en-GB').replace(/\//g, '-')
           });
         }
       }
     });
 
-    if (balanceFilter === 'Cr') return canonicalPayables;
-    if (balanceFilter === 'Dr') return canonicalReceivables;
-    return [...canonicalReceivables, ...canonicalPayables];
+    return list;
   }
 
-  /**
-   * Video 29 Frame 0220: Item Wise Sales Report
-   */
   static getItemWiseSalesReport(_fromDate?: string, _toDate?: string): PmsItemWiseSale[] {
-    // Canonical records shown in Video 29 Frame 0220
-    const canonicalSales: PmsItemWiseSale[] = [
-      { sNo: 1, itemName: 'TAWA ROTI', category: 'Breads', qty: 5.00, rate: 10.00, amount: 50.00 },
-      { sNo: 2, itemName: 'PANEER TIKA', category: 'Starters', qty: 5.00, rate: 80.00, amount: 400.00 },
-      { sNo: 3, itemName: 'bread pakoda', category: 'Snacks', qty: 1.00, rate: 100.00, amount: 100.00 },
-      { sNo: 4, itemName: 'Boondi Raita', category: 'Beverages / Raita', qty: 2.00, rate: 57.14, amount: 114.28 },
-      { sNo: 5, itemName: 'DAL MAKHANI', category: 'Main Course', qty: 3.00, rate: 160.00, amount: 480.00 },
-      { sNo: 6, itemName: 'BUTTER NAAN', category: 'Breads', qty: 8.00, rate: 35.00, amount: 280.00 },
-      { sNo: 7, itemName: 'JEERA RICE', category: 'Rice', qty: 2.00, rate: 90.00, amount: 180.00 },
-      { sNo: 8, itemName: 'MINERAL WATER 1LTR', category: 'Beverages', qty: 12.00, rate: 20.00, amount: 240.00 }
-    ];
-
-    // Dynamically merge live KOT items
+    const itemMap = new Map<string, PmsItemWiseSale>();
     const liveKots = this.getKots();
+
     liveKots.forEach((kot: PmsKotRecord) => {
       if (kot.status !== 'Cancelled' && Array.isArray(kot.items)) {
         kot.items.forEach((it: KotItem) => {
-          const existing = canonicalSales.find(s => s.itemName.toLowerCase() === it.itemName.toLowerCase());
-          if (existing) {
-            existing.qty += it.qty;
-            existing.amount += (it.rate || existing.rate) * it.qty;
+          const key = it.itemName.toLowerCase().trim();
+          if (itemMap.has(key)) {
+            const entry = itemMap.get(key)!;
+            entry.qty += it.qty;
+            entry.amount += (it.rate || entry.rate) * it.qty;
           } else {
-            canonicalSales.push({
-              sNo: canonicalSales.length + 1,
+            itemMap.set(key, {
+              sNo: itemMap.size + 1,
               itemName: it.itemName,
               category: 'Restaurant / Room Service',
               qty: it.qty,
@@ -11729,16 +8598,11 @@ export class PmsStore {
       }
     });
 
-    return canonicalSales;
+    return Array.from(itemMap.values());
   }
 
-  /**
-   * Video 29 Frame 0240: Day End Report (Night Audit Paper Ledger)
-   */
-  static getDayEndReport(reportDate: string = '19-07-2025'): PmsDayEndReport {
-    const company = this.getCompanyInfo();
-
-    // Helper for flexible date matching (supports DD-MM-YYYY, YYYY-MM-DD, DD/MM/YYYY)
+  static getDayEndReport(reportDate?: string): PmsDayEndReport {
+    const activeDate = reportDate || this.getBusinessDate();
     const matchDate = (d1?: string, d2?: string) => {
       if (!d1 || !d2) return false;
       const c1 = d1.trim().replace(/\//g, '-');
@@ -11747,174 +8611,106 @@ export class PmsStore {
       const p1 = c1.split('-');
       const p2 = c2.split('-');
       if (p1.length === 3 && p2.length === 3) {
-        if ((p1[0].length === 4 && p2[0].length === 2) || (p1[0].length === 2 && p2[0].length === 4)) {
-          return p1[0] === p2[2] && p1[1] === p2[1] && p1[2] === p2[0];
-        }
-        if (p1[2].length === 2 && p2[2].length === 4) {
-          return p1[0] === p2[0] && p1[1] === p2[1] && `20${p1[2]}` === p2[2];
-        }
-        if (p1[2].length === 4 && p2[2].length === 2) {
-          return p1[0] === p2[0] && p1[1] === p2[1] && p1[2] === `20${p2[2]}`;
+        if ((p1[2].length === 4 && p2[2].length === 2) || (p1[2].length === 2 && p2[2].length === 4)) {
+          return p1[0] === p2[0] && p1[1] === p2[1] && (p1[2].slice(-2) === p2[2].slice(-2));
         }
       }
       return false;
     };
 
-    // Canonical baseline entries for benchmark demo date '19-07-2025'
-    const isDemoDate = matchDate(reportDate, '19-07-2025');
+    const cashEntries: PmsDayEndLedgerEntry[] = [];
+    const onlineEntries: PmsDayEndLedgerEntry[] = [];
+    const cardEntries: PmsDayEndLedgerEntry[] = [];
 
-    // 1. CASH LEDGER ENTRIES
-    const cashEntries: PmsDayEndLedgerEntry[] = isDemoDate ? [
-      { date: reportDate, type: 'Check_Out', accountName: 'Cash', remark: 'Check_out/GSR/256/24-25/Room-102', debit: 2000.00, credit: 0, balance: 632512.77 },
-      { date: reportDate, type: 'Foodbill', accountName: 'Cash', remark: 'Restaurant Table T-3 / Bill-285', debit: 450.00, credit: 0, balance: 632962.77 },
-      { date: reportDate, type: 'Advance', accountName: 'Cash', remark: 'Advance Receipt AR16 / Room 201', debit: 1000.00, credit: 0, balance: 633962.77 },
-      { date: reportDate, type: 'Expense', accountName: 'Cash', remark: 'Kitchen Dairy & Bread Petty Cash', debit: 0, credit: 650.00, balance: 633312.77 }
-    ] : [];
-
-    // 2. ONLINE / UPI LEDGER ENTRIES
-    const onlineEntries: PmsDayEndLedgerEntry[] = isDemoDate ? [
-      { date: reportDate, type: 'Check_Out', accountName: 'Online', remark: 'Check_out/GSR/256/24-25/Room-102 UPI', debit: 40000.00, credit: 0, balance: 459170.39 },
-      { date: reportDate, type: 'Advance', accountName: 'Online', remark: 'Google Pay Advance Receipt AR17', debit: 10000.00, credit: 0, balance: 469170.39 },
-      { date: reportDate, type: 'Foodbill', accountName: 'Online', remark: 'Table T-5 UPI PhonePe Payment', debit: 820.00, credit: 0, balance: 469990.39 }
-    ] : [];
-
-    // 3. CARD LEDGER ENTRIES
-    const cardEntries: PmsDayEndLedgerEntry[] = isDemoDate ? [
-      { date: reportDate, type: 'Opening Balance', accountName: 'Card', remark: 'HDFC Swipe Machine Batch Opening', debit: 0, credit: 0, balance: 34582.00 },
-      { date: reportDate, type: 'Check_Out', accountName: 'Card', remark: 'Visa Card Swipe Room 301 Checkout', debit: 4200.00, credit: 0, balance: 38782.00 }
-    ] : [];
-
-    // Dynamic receipts for reportDate
-    const receipts = this.getReceipts().filter(r => matchDate(r.date, reportDate));
-    receipts.forEach(r => {
-      const alreadyIn = (arr: PmsDayEndLedgerEntry[]) => arr.some(e => e.remark.includes(r.receiptNo) || (e.debit === r.amount && e.remark.includes(r.accountName)));
-      const rem = r.remark || '';
-      if (r.paymentMode === 'Cash') {
-        if (!alreadyIn(cashEntries)) {
-          cashEntries.push({
-            date: reportDate,
-            type: rem.includes('Advance') ? 'Advance' : rem.includes('Food') ? 'Foodbill' : rem.includes('Banquet') ? 'Banquet' : rem.includes('Bar') ? 'Bar' : 'Receipt',
-            accountName: 'Cash',
-            remark: `${rem} (${r.receiptNo}) - ${r.accountName}`,
-            debit: r.amount,
-            credit: 0,
-            balance: 0
-          });
-        }
-      } else if (r.paymentMode === 'Online') {
-        if (!alreadyIn(onlineEntries)) {
-          onlineEntries.push({
-            date: reportDate,
-            type: rem.includes('Advance') ? 'Advance' : rem.includes('Food') ? 'Foodbill' : rem.includes('Banquet') ? 'Banquet' : rem.includes('Bar') ? 'Bar' : 'Online',
-            accountName: 'Online',
-            remark: `${rem} (${r.receiptNo}) - ${r.accountName}`,
-            debit: r.amount,
-            credit: 0,
-            balance: 0
-          });
-        }
-      } else if (r.paymentMode === 'Card') {
-        if (!alreadyIn(cardEntries)) {
-          cardEntries.push({
-            date: reportDate,
-            type: 'Card_Swipe',
-            accountName: 'Card',
-            remark: `${rem} (${r.receiptNo}) - ${r.accountName}`,
-            debit: r.amount,
-            credit: 0,
-            balance: 0
-          });
-        }
+    const checkouts = this.getCheckouts();
+    checkouts.forEach((co: PmsCheckOutDetail) => {
+      if (matchDate(co.checkOutDate, activeDate)) {
+        const mode = (co.paymentMode || 'Cash').toLowerCase();
+        const entry: PmsDayEndLedgerEntry = {
+          date: activeDate,
+          type: 'Check_Out',
+          accountName: co.paymentMode || 'Cash',
+          remark: `Check_out/${co.invoiceNo}/Room-${co.roomNo}`,
+          debit: co.netPayable,
+          credit: 0,
+          balance: 0
+        };
+        if (mode.includes('cash')) cashEntries.push(entry);
+        else if (mode.includes('online') || mode.includes('upi')) onlineEntries.push(entry);
+        else if (mode.includes('card')) cardEntries.push(entry);
       }
     });
 
-    // Dynamic payments / outflows for reportDate
-    const payments = this.getPayments().filter(p => matchDate(p.date, reportDate));
-    payments.forEach(p => {
-      const isCash = p.paymentMode === 'Cash';
-      const targetArr = isCash ? cashEntries : onlineEntries;
-      const alreadyIn = targetArr.some(e => e.credit === p.amount && e.remark.includes(p.accountName));
-      if (!alreadyIn) {
-        targetArr.push({
-          date: reportDate,
-          type: p.voucherName || 'Payment',
-          accountName: isCash ? 'Cash' : 'Online',
-          remark: `${p.accountName}: ${p.remark || ''} (${p.paymentNo || ''})`,
+    const receipts = this.getReceipts();
+    receipts.forEach((r: PmsReceiptRecord) => {
+      if (matchDate(r.date, activeDate)) {
+        const mode = (r.paymentMode || 'Cash').toLowerCase();
+        const entry: PmsDayEndLedgerEntry = {
+          date: activeDate,
+          type: 'Receipts',
+          accountName: r.accountName,
+          remark: r.remark || `Receipt #${r.receiptNo}`,
+          debit: r.amount,
+          credit: 0,
+          balance: 0
+        };
+        if (mode.includes('cash')) cashEntries.push(entry);
+        else if (mode.includes('online') || mode.includes('upi')) onlineEntries.push(entry);
+        else if (mode.includes('card')) cardEntries.push(entry);
+      }
+    });
+
+    const payments = this.getPayments();
+    payments.forEach((p: PmsPaymentRecord) => {
+      if (matchDate(p.date, activeDate)) {
+        const mode = (p.paymentMode || 'Cash').toLowerCase();
+        const entry: PmsDayEndLedgerEntry = {
+          date: activeDate,
+          type: 'Payment',
+          accountName: p.accountName,
+          remark: p.remark || `Payment #${p.voucherNo}`,
           debit: 0,
           credit: p.amount,
           balance: 0
-        });
+        };
+        if (mode.includes('cash')) cashEntries.push(entry);
+        else if (mode.includes('online') || mode.includes('upi')) onlineEntries.push(entry);
+        else if (mode.includes('card')) cardEntries.push(entry);
       }
     });
 
-    // Corporate Tata Motors / B2B Debtors Ledger
-    const debtorMap: Record<string, PmsDayEndLedgerEntry[]> = {};
-    if (isDemoDate) {
-      debtorMap['tata motors'] = [
-        { date: reportDate, type: 'Opening Balance', accountName: 'tata motors', remark: 'Corporate Credit Account Opening', debit: 0, credit: 0, balance: 3500.00 },
-        { date: reportDate, type: 'Check_Out', accountName: 'tata motors', remark: 'Bill GSR/258/24-25 Room 204 Billed to Company', debit: 5500.00, credit: 0, balance: 9000.00 }
-      ];
-    }
-
-    // Dynamic credit checkouts for reportDate
-    const checkouts = this.getCheckouts().filter(c => matchDate(c.checkOutDate, reportDate));
-    checkouts.forEach(co => {
-      if (co.paymentMode === 'Credit' && co.companyName) {
-        const cName = co.companyName.toLowerCase();
-        if (!debtorMap[cName]) debtorMap[cName] = [];
-        const alreadyIn = debtorMap[cName].some(e => e.remark.includes(co.invoiceNo));
-        if (!alreadyIn) {
-          debtorMap[cName].push({
-            date: reportDate,
-            type: 'Check_Out',
-            accountName: co.companyName,
-            remark: `Bill ${co.invoiceNo} Room ${co.roomNo} Billed to ${co.companyName}`,
-            debit: co.netPayable,
-            credit: 0,
-            balance: 0
-          });
-        }
+    const foodBills = this.getFoodBills();
+    foodBills.forEach((fb: any) => {
+      if (matchDate(fb.date, activeDate)) {
+        const mode = (fb.paymentMode || 'Cash').toLowerCase();
+        const entry: PmsDayEndLedgerEntry = {
+          date: activeDate,
+          type: 'Foodbill',
+          accountName: fb.paymentMode || 'Cash',
+          remark: `${fb.billNo || 'Food Bill'} - ${fb.roomNo || fb.tableNo || ''}`,
+          debit: fb.netBillAmount || fb.totalAmount || 0,
+          credit: 0,
+          balance: 0
+        };
+        if (mode.includes('cash')) cashEntries.push(entry);
+        else if (mode.includes('online') || mode.includes('upi')) onlineEntries.push(entry);
+        else if (mode.includes('card')) cardEntries.push(entry);
       }
     });
 
-    // Dynamic credit food bills for reportDate
-    const foodBills = this.getFoodBills().filter(b => matchDate(b.date, reportDate));
-    foodBills.forEach(fb => {
-      const isCredit = fb.settlementType === 'Due / Credit' || (fb.settlementType && fb.settlementType.toLowerCase().includes('credit'));
-      if (isCredit && fb.guestName) {
-        const cName = fb.guestName.toLowerCase();
-        if (!debtorMap[cName]) debtorMap[cName] = [];
-        const alreadyIn = debtorMap[cName].some(e => e.remark.includes(fb.billNo));
-        if (!alreadyIn) {
-          debtorMap[cName].push({
-            date: reportDate,
-            type: 'Foodbill',
-            accountName: fb.guestName,
-            remark: `Bill ${fb.billNo} ${fb.serviceType || 'Food'} Credit Settlement`,
-            debit: fb.netBillAmount,
-            credit: 0,
-            balance: 0
-          });
-        }
-      }
-    });
-
-    // Recalculate rolling balances for Cash
-    let cashRunning = isDemoDate ? 630512.77 : 15000.00;
+    let cashRunning = 0;
     cashEntries.forEach(e => {
       cashRunning += (e.debit - e.credit);
       e.balance = cashRunning;
     });
 
-    // Recalculate rolling balances for Online
-    let onlineRunning = isDemoDate ? 409170.39 : 25000.00;
+    let onlineRunning = 0;
     onlineEntries.forEach(e => {
       onlineRunning += (e.debit - e.credit);
       e.balance = onlineRunning;
     });
 
-    // Recalculate rolling balances for Card
-    let cardRunning = isDemoDate ? 34582.00 : 0.00;
+    let cardRunning = 0;
     cardEntries.forEach(e => {
       cardRunning += (e.debit - e.credit);
       e.balance = cardRunning;
@@ -11923,58 +8719,40 @@ export class PmsStore {
     const groups: PmsDayEndAccountGroup[] = [
       {
         accountName: 'Cash',
-        date: reportDate,
-        closingBalance: cashRunning,
+        date: activeDate,
         entries: cashEntries,
         totalDebit: cashEntries.reduce((s, e) => s + e.debit, 0),
-        totalCredit: cashEntries.reduce((s, e) => s + e.credit, 0)
+        totalCredit: cashEntries.reduce((s, e) => s + e.credit, 0),
+        closingBalance: cashRunning
       },
       {
         accountName: 'Online',
-        date: reportDate,
-        closingBalance: onlineRunning,
+        date: activeDate,
         entries: onlineEntries,
         totalDebit: onlineEntries.reduce((s, e) => s + e.debit, 0),
-        totalCredit: onlineEntries.reduce((s, e) => s + e.credit, 0)
+        totalCredit: onlineEntries.reduce((s, e) => s + e.credit, 0),
+        closingBalance: onlineRunning
       },
       {
         accountName: 'Card',
-        date: reportDate,
-        closingBalance: cardRunning,
+        date: activeDate,
         entries: cardEntries,
         totalDebit: cardEntries.reduce((s, e) => s + e.debit, 0),
-        totalCredit: cardEntries.reduce((s, e) => s + e.credit, 0)
+        totalCredit: cardEntries.reduce((s, e) => s + e.credit, 0),
+        closingBalance: cardRunning
       }
     ];
-
-    // Add Debtor groups
-    Object.keys(debtorMap).forEach(key => {
-      const dEntries = debtorMap[key];
-      let dRunning = 0;
-      dEntries.forEach(e => {
-        dRunning += (e.debit - e.credit);
-        e.balance = dRunning;
-      });
-      groups.push({
-        accountName: key,
-        date: reportDate,
-        closingBalance: dRunning,
-        entries: dEntries,
-        totalDebit: dEntries.reduce((s, e) => s + e.debit, 0),
-        totalCredit: dEntries.reduce((s, e) => s + e.credit, 0)
-      });
-    });
 
     const grandTotalDebit = groups.reduce((s, g) => s + g.totalDebit, 0);
     const grandTotalCredit = groups.reduce((s, g) => s + g.totalCredit, 0);
 
     return {
-      hotelName: company.firmName || 'SRI SAI VASUDEV RESIDENCY',
-      address: `${company.address1}, ${company.address2}, ${company.city} - ${company.pincode}`,
-      phone: company.phone || company.mobile,
-      email: company.email,
-      reportDate,
-      generatedAt: '11:59:59 PM (Night Audit)',
+      reportDate: activeDate,
+      hotelName: 'SRI SAI VASUDEV RESIDENCY',
+      address: 'Near Andhra Bank, New Colony, Rayagada, Odisha - 765001',
+      phone: '+91 94402 89999',
+      email: 'reservations@hotelsai-vasudev.com',
+      generatedAt: new Date().toLocaleTimeString('en-IN'),
       groups,
       grandTotalDebit,
       grandTotalCredit,
@@ -11982,66 +8760,58 @@ export class PmsStore {
     };
   }
 
-  /**
-   * Video 29 Frame 0350: VIP Guest Log & Frequency Analytics
-   */
   static getGuestLog(): PmsGuestLogEntry[] {
-    // Canonical data directly from Video 29 Frame 0350
-    const canonicalGuests: PmsGuestLogEntry[] = [
-      { sNo: 1, guestName: 'riya', phone: '9822334455', city: 'Mumbai', numberOfVisits: 7, totalAmount: 80252.97, lastVisitDate: '18-07-2025', vipTier: 'Platinum' },
-      { sNo: 2, guestName: 'Vivek', phone: '9422019283', city: 'Pune', numberOfVisits: 6, totalAmount: 27840.00, lastVisitDate: '15-07-2025', vipTier: 'Gold' },
-      { sNo: 3, guestName: 'DILESHWAR THAKUR', phone: '7999663696', city: 'Raipur', numberOfVisits: 6, totalAmount: 254320.00, lastVisitDate: '14-07-2025', vipTier: 'Platinum' },
-      { sNo: 4, guestName: 'rahul', phone: '8871702803', city: 'Indore', numberOfVisits: 5, totalAmount: 111924.00, lastVisitDate: '10-07-2025', vipTier: 'Gold' },
-      { sNo: 5, guestName: 'Kanni', phone: '9419879252', city: 'Nagpur', numberOfVisits: 4, totalAmount: 116306.00, lastVisitDate: '08-07-2025', vipTier: 'Gold' },
-      { sNo: 6, guestName: 'abc', phone: '9826000000', city: 'Bhopal', numberOfVisits: 4, totalAmount: 174869.92, lastVisitDate: '06-07-2025', vipTier: 'Gold' },
-      { sNo: 7, guestName: 'rajkumar', phone: '7869682533', city: 'Delhi', numberOfVisits: 3, totalAmount: 31446.00, lastVisitDate: '05-07-2025', vipTier: 'Silver' },
-      { sNo: 8, guestName: 'shivani', phone: '9340212550', city: 'Surat', numberOfVisits: 3, totalAmount: 13154.00, lastVisitDate: '03-07-2025', vipTier: 'Silver' },
-      { sNo: 9, guestName: 'ajay ji', phone: '5458874840', city: 'Ahmedabad', numberOfVisits: 3, totalAmount: 13172.00, lastVisitDate: '02-07-2025', vipTier: 'Silver' },
-      { sNo: 10, guestName: 'kishor 101', phone: '9822198221', city: 'Nashik', numberOfVisits: 3, totalAmount: 33600.00, lastVisitDate: '01-07-2025', vipTier: 'Silver' }
-    ];
+    const guestMap = new Map<string, PmsGuestLogEntry>();
 
-    // Merge active checkouts
     const checkouts = this.getCheckouts();
     checkouts.forEach((co: PmsCheckOutDetail) => {
-      const existing = canonicalGuests.find(g => g.guestName.toLowerCase() === co.guestName.toLowerCase());
-      if (existing) {
-        existing.numberOfVisits += 1;
-        existing.totalAmount += co.netPayable;
-        existing.lastVisitDate = co.checkOutDate;
+      if (!co.guestName) return;
+      const key = co.guestName.toLowerCase().trim();
+      if (guestMap.has(key)) {
+        const g = guestMap.get(key)!;
+        g.numberOfVisits += 1;
+        g.totalAmount += (Number(co.netPayable) || 0);
+        g.lastVisitDate = co.checkOutDate;
+        g.vipTier = g.totalAmount > 50000 ? 'Platinum' : g.totalAmount > 20000 ? 'Gold' : 'Silver';
       } else {
-        canonicalGuests.push({
-          sNo: canonicalGuests.length + 1,
+        guestMap.set(key, {
+          sNo: guestMap.size + 1,
           guestName: co.guestName,
-          phone: co.guestPhone,
-          city: co.addressLine1 || 'Rayagada',
+          phone: co.guestPhone || '',
+          city: co.city || co.addressLine1 || 'Rayagada',
           numberOfVisits: 1,
-          totalAmount: co.netPayable,
+          totalAmount: Number(co.netPayable) || 0,
           lastVisitDate: co.checkOutDate,
-          vipTier: co.netPayable > 50000 ? 'Platinum' : co.netPayable > 20000 ? 'Gold' : 'Bronze'
+          vipTier: (Number(co.netPayable) || 0) > 50000 ? 'Platinum' : (Number(co.netPayable) || 0) > 20000 ? 'Gold' : 'Bronze'
         });
       }
     });
 
-    return canonicalGuests.sort((a, b) => b.totalAmount - a.totalAmount);
+    const checkIns = this.getCheckIns();
+    checkIns.forEach(ci => {
+      if (!ci.guestName) return;
+      const key = ci.guestName.toLowerCase().trim();
+      if (!guestMap.has(key)) {
+        guestMap.set(key, {
+          sNo: guestMap.size + 1,
+          guestName: ci.guestName,
+          phone: ci.mobile || '',
+          city: ci.city || 'Rayagada',
+          numberOfVisits: 1,
+          totalAmount: Number(ci.advancePaid) || 0,
+          lastVisitDate: ci.checkInDate,
+          vipTier: 'Bronze'
+        });
+      }
+    });
+
+    return Array.from(guestMap.values()).sort((a, b) => b.totalAmount - a.totalAmount);
   }
 
-  /**
-   * Video 29 Frame 0410: Item Wise Stock Ledger (e.g. Boondi Raita, Paneer, etc.)
-   */
-  static getItemWiseStock(itemName: string = 'Boondi Raita', fromDate: string = '01-07-2025', toDate: string = '19-07-2025'): PmsItemStockReport {
-    const isBoondi = itemName.toLowerCase().includes('boondi') || itemName.toLowerCase().includes('raita');
+  static getItemWiseStock(itemName: string = 'Paneer', _fromDate?: string, _toDate?: string): PmsItemStockReport {
+    const dynamicEntries: PmsItemStockLedgerEntry[] = [];
+    const initialBalance = 0;
 
-    const canonicalEntries = isBoondi ? [
-      { date: '04-07-25', transactionType: 'Foodbill', remark: 'SHRI/276/24-25', stockIn: 0, stockOut: 1, balance: -8 },
-      { date: '05-07-25', transactionType: 'Foodbill', remark: 'SHRI/279/24-25', stockIn: 0, stockOut: 1, balance: -9 },
-      { date: '11-07-25', transactionType: 'Restaurant_food_bill', remark: 'Res/283/24-25', stockIn: 0, stockOut: 2, balance: -11 },
-      { date: '19-07-25', transactionType: 'Restaurant_food_bill', remark: 'Res/285/24-25', stockIn: 0, stockOut: 2, balance: -13 }
-    ] : [];
-
-    const dynamicEntries: PmsItemStockLedgerEntry[] = isBoondi ? [...canonicalEntries] : [];
-    const initialBalance = isBoondi ? -7 : 0;
-
-    // 1. Stock In from Purchases
     const purchases = this.getPurchases();
     purchases.forEach(p => {
       p.items.forEach(itm => {
@@ -12058,60 +8828,43 @@ export class PmsStore {
       });
     });
 
-    // 2. Stock In/Out from Stock Transfers
     const transfers = this.getStockTransfers();
-    transfers.forEach(t => {
-      t.items.forEach(itm => {
+    transfers.forEach(st => {
+      st.items?.forEach(itm => {
         if (itm.itemName.toLowerCase().includes(itemName.toLowerCase())) {
-          if (t.toGodown === 'Kitchen Store') {
-            dynamicEntries.push({
-              date: t.date,
-              transactionType: 'Stock In (Transfer)',
-              remark: `Transfer from ${t.fromGodown}`,
-              stockIn: itm.qty,
-              stockOut: 0,
-              balance: 0
-            });
-          } else if (t.fromGodown === 'Kitchen Store') {
-            dynamicEntries.push({
-              date: t.date,
-              transactionType: 'Stock Out (Transfer)',
-              remark: `Transfer to ${t.toGodown}`,
-              stockIn: 0,
-              stockOut: itm.qty,
-              balance: 0
-            });
-          }
+          dynamicEntries.push({
+            date: st.date,
+            transactionType: 'Stock Transfer',
+            remark: `${st.fromGodown} -> ${st.toGodown}`,
+            stockIn: 0,
+            stockOut: itm.qty,
+            balance: 0
+          });
         }
       });
     });
 
-    // 3. Stock Out from Kitchen KOTs
     const kots = this.getKots();
     kots.forEach(k => {
-      if (k.status !== 'Cancelled') {
-        k.items.forEach(itm => {
-          if (itm.itemName.toLowerCase().includes(itemName.toLowerCase())) {
-            const alreadyIn = dynamicEntries.some(e => e.remark.includes(k.kotNo));
-            if (!alreadyIn) {
-              dynamicEntries.push({
-                date: k.date || '',
-                transactionType: 'Kitchen KOT',
-                remark: `KOT #${k.kotNo} (${k.roomNo ? 'Room ' + k.roomNo : 'Table ' + k.tableNo})`,
-                stockIn: 0,
-                stockOut: itm.qty,
-                balance: 0
-              });
-            }
+      if (k.status !== 'Cancelled' && Array.isArray(k.items)) {
+        k.items.forEach(it => {
+          if (it.itemName && it.itemName.toLowerCase().includes(itemName.toLowerCase())) {
+            dynamicEntries.push({
+              date: k.date || new Date().toISOString().split('T')[0],
+              transactionType: 'Restaurant / Room Consumption',
+              remark: `${k.kotNo} (${k.roomNo || k.tableNo || ''})`,
+              stockIn: 0,
+              stockOut: it.qty,
+              balance: 0
+            });
           }
         });
       }
     });
 
-    // Recalculate rolling balances
     let running = initialBalance;
     dynamicEntries.forEach(e => {
-      running += (e.stockIn - e.stockOut);
+      running = running + e.stockIn - e.stockOut;
       e.balance = running;
     });
 
@@ -12120,10 +8873,10 @@ export class PmsStore {
 
     return {
       itemName,
-      itemCategory: isBoondi ? 'Kitchen / Restaurant Food' : 'Hotel Inventory / Food Item',
-      unit: isBoondi ? 'Portion' : 'Nos / Kg / Portion',
-      fromDate,
-      toDate,
+      itemCategory: 'F&B',
+      unit: 'Unit',
+      fromDate: _fromDate || '01-05-2025',
+      toDate: _toDate || '16-06-2025',
       openingBalance: initialBalance,
       entries: dynamicEntries,
       totalStockIn,
@@ -12132,114 +8885,41 @@ export class PmsStore {
     };
   }
 
-  /**
-   * Video 29 Frame 0500: My Check Out Register Only (Shift Cashier Filtered)
-   */
-  static getMyCheckOutRegister(_userEmail: string = 'demo4@gmail.com', _fromDate?: string, _toDate?: string): PmsCheckOutDetail[] {
+  static getMyCheckOutRegister(_userEmail?: string, _fromDate?: string, _toDate?: string): PmsCheckOutDetail[] {
     return this.getCheckouts();
   }
 
   /**
    * Video 29 Frame 0490: Shift Handover Reconciliation
    */
-  static getShiftHandoverData(shiftDate: string = '19-07-2025', shiftType: 'Morning' | 'Evening' | 'Night' = 'Morning'): PmsShiftHandoverRecord {
-    const isDemoDate = shiftDate === '19-07-2025';
-
-    // Flexible date comparison
-    const matchDate = (d1?: string, d2?: string) => {
-      if (!d1 || !d2) return false;
-      const c1 = d1.trim().replace(/\//g, '-');
-      const c2 = d2.trim().replace(/\//g, '-');
-      if (c1 === c2) return true;
-      const p1 = c1.split('-');
-      const p2 = c2.split('-');
-      if (p1.length === 3 && p2.length === 3) {
-        if ((p1[0].length === 4 && p2[0].length === 2) || (p1[0].length === 2 && p2[0].length === 4)) {
-          return p1[0] === p2[2] && p1[1] === p2[1] && p1[2] === p2[0];
-        }
-      }
-      return false;
-    };
-
-    if (isDemoDate) {
-      // Canonical demo handover for benchmark accuracy
-      return {
-        shiftId: `SHIFT/${shiftDate.replace(/-/g, '')}/01`,
-        shiftDate,
-        shiftTime: shiftType === 'Morning' ? '07:00 AM - 03:00 PM' : shiftType === 'Evening' ? '03:00 PM - 11:00 PM' : '11:00 PM - 07:00 AM',
-        userEmail: 'demo4@gmail.com',
-        userName: 'Front Desk Operator 1',
-        shiftType,
-        openingDrawerCash: 5000.00,
-        roomCashCollected: 14500.00,
-        foodCashCollected: 3250.00,
-        advanceCashCollected: 6000.00,
-        expensesPaidFromDrawer: 1250.00,
-        netPhysicalCashInDrawer: 27500.00, // 5000 + 14500 + 3250 + 6000 - 1250
-        onlineUpiVerified: 48500.00,
-        cardSwipeVerified: 12400.00,
-        creditAccountsAdded: 9000.00,
-        totalTransactionsHandled: 18,
-        handoverToUser: 'Front Desk Evening Incharge',
-        handoverNotes: 'All cash verified with physical currency denomination sheet. Room 204 key given to guest at 02:30 PM. Room 301 pending laundry bill added to folio.',
-        status: 'Verified & Closed'
-      };
-    }
-
-    // Dynamic shift calculation for any date
-    const openingDrawerCash = 5000.00;
-    const receipts = this.getReceipts().filter(r => matchDate(r.date, shiftDate));
-    const payments = this.getPayments().filter(p => matchDate(p.date, shiftDate));
-    const checkouts = this.getCheckouts().filter(c => matchDate(c.checkOutDate, shiftDate));
-
-    let roomCash = 0;
-    let foodCash = 0;
-    let advCash = 0;
-    let onlineVerified = 0;
-    let cardVerified = 0;
-
-    receipts.forEach(r => {
-      if (r.paymentMode === 'Cash') {
-        const rem = (r.remark || '').toLowerCase();
-        if (rem.includes('advance') || r.receiptNo.startsWith('AR')) {
-          advCash += r.amount;
-        } else if (rem.includes('food') || rem.includes('restaurant') || rem.includes('bar')) {
-          foodCash += r.amount;
-        } else {
-          roomCash += r.amount;
-        }
-      } else if (r.paymentMode === 'Online') {
-        onlineVerified += r.amount;
-      } else if (r.paymentMode === 'Card') {
-        cardVerified += r.amount;
-      }
-    });
-
-    const expensesPaid = payments.filter(p => p.paymentMode === 'Cash').reduce((s, p) => s + p.amount, 0);
-    const creditAccounts = checkouts.filter(c => c.paymentMode === 'Credit').reduce((s, c) => s + c.netPayable, 0);
-
-    const netPhysicalCash = openingDrawerCash + roomCash + foodCash + advCash - expensesPaid;
+  static getShiftHandoverData(shiftDate?: string, shiftType: 'Morning' | 'Evening' | 'Night' = 'Morning'): PmsShiftHandoverRecord {
+    const activeDate = shiftDate || this.getBusinessDate();
+    const dayEnd = this.getDayEndReport(activeDate);
+    const currentUser = this.getCurrentUser();
+    const cashGroup = dayEnd.groups.find(g => g.accountName === 'Cash');
+    const onlineGroup = dayEnd.groups.find(g => g.accountName === 'Online');
+    const cardGroup = dayEnd.groups.find(g => g.accountName === 'Card');
 
     return {
-      shiftId: `SHIFT/${shiftDate.replace(/-/g, '')}/01`,
-      shiftDate,
+      shiftId: `SHIFT/${activeDate.replace(/-/g, '')}/${shiftType.toUpperCase()}`,
+      shiftDate: activeDate,
       shiftTime: shiftType === 'Morning' ? '07:00 AM - 03:00 PM' : shiftType === 'Evening' ? '03:00 PM - 11:00 PM' : '11:00 PM - 07:00 AM',
-      userEmail: this.getCurrentUser().emailId || 'demo4@gmail.com',
-      userName: this.getCurrentUser().userName || 'Front Desk Staff',
+      userName: currentUser.userName || 'Front Desk',
+      userEmail: currentUser.emailId || 'admin@hotelsai-vasudev.com',
       shiftType,
-      openingDrawerCash,
-      roomCashCollected: roomCash,
-      foodCashCollected: foodCash,
-      advanceCashCollected: advCash,
-      expensesPaidFromDrawer: expensesPaid,
-      netPhysicalCashInDrawer: Math.max(0, netPhysicalCash),
-      onlineUpiVerified: onlineVerified,
-      cardSwipeVerified: cardVerified,
-      creditAccountsAdded: creditAccounts,
-      totalTransactionsHandled: receipts.length + payments.length,
+      openingDrawerCash: 0,
+      roomCashCollected: cashGroup?.entries.filter(e => e.type === 'Check_Out').reduce((s, e) => s + e.debit, 0) || 0,
+      foodCashCollected: cashGroup?.entries.filter(e => e.type === 'Foodbill').reduce((s, e) => s + e.debit, 0) || 0,
+      advanceCashCollected: cashGroup?.entries.filter(e => e.type === 'Receipts').reduce((s, e) => s + e.debit, 0) || 0,
+      expensesPaidFromDrawer: cashGroup?.entries.filter(e => e.type === 'Payment').reduce((s, e) => s + e.credit, 0) || 0,
+      netPhysicalCashInDrawer: dayEnd.cashInHand || 0,
+      onlineUpiVerified: onlineGroup?.closingBalance || 0,
+      cardSwipeVerified: cardGroup?.closingBalance || 0,
+      creditAccountsAdded: 0,
+      totalTransactionsHandled: dayEnd.groups.reduce((s, g) => s + g.entries.length, 0),
       handoverToUser: 'Next Shift Incharge',
-      handoverNotes: `Shift reconciliation completed for ${shiftDate}. Total collections logged.`,
-      status: 'Verified & Closed'
+      handoverNotes: 'Shift reconciled cleanly with PMS ledger.',
+      status: 'Pending Verification'
     };
   }
 
@@ -12399,8 +9079,8 @@ export class PmsStore {
       headquarters: 'Jabalpur, Madhya Pradesh, India',
       primaryPhone: '7999663696',
       alternatePhone: '8871702803',
-      supportEmail: 'datahouseerp@gmail.com',
-      officialWebsite: 'https://datahouseerp.com',
+      supportEmail: 'reservations@hotelsai-vasudev.com',
+      officialWebsite: 'https://sai-vasudev-residency.pages.dev',
       demoPortalUrl: 'https://hotel-sai-vasudev-residency.pages.dev',
       supportHours: '11:00 AM – 07:00 PM IST (Mon to Sat)',
       ultraViewerDownloadUrl: 'https://ultraviewer.net/en/download.html',
@@ -13046,19 +9726,7 @@ export class PmsStore {
       });
     });
 
-    // Canonical Video 34 baseline adjustments for pixel-perfect match to Frame 0210
-    // WATER BOTLE: 618 In, 460 Out, 158 Closing (Frame 0210)
-    const waterKey = 'water botle';
-    if (aggMap.has(waterKey)) {
-      const w = aggMap.get(waterKey)!;
-      if (w.totalStockIn === 0 && w.totalStockOut === 0) {
-        w.totalStockIn = 618;
-        w.totalStockOut = 460;
-        w.godownBreakdown['Main Store'] = { stockIn: 458, stockOut: 10, closingStock: 448 };
-        w.godownBreakdown['STORE1'] = { stockIn: 10, stockOut: 410, closingStock: -400 };
-        w.godownBreakdown['Consume'] = { stockIn: 50, stockOut: 0, closingStock: 50 };
-      }
-    }
+
 
     // TAWA ROTI: 0 In, 424 Out, -424 Closing (Frame 0210)
     const tawaKey = 'tawa roti';
@@ -13198,71 +9866,6 @@ export class PmsStore {
         }
       });
     });
-
-    // If no explicit movement found in live transactions, provide canonical Video 34 timeline
-    if (movements.length === 0) {
-      if (term.includes('water')) {
-        return [
-          {
-            id: 'mov-w-1',
-            date: '15-07-2025',
-            type: 'PURCHASE',
-            referenceNo: 'BILL/4300',
-            godown: 'Main Store',
-            qtyIn: 458,
-            qtyOut: 0,
-            balance: 458,
-            remark: 'Vendor Purchase: Gupta Jii (Bill #4300) to Main Store'
-          },
-          {
-            id: 'mov-w-2',
-            date: '18-07-2025',
-            type: 'TRANSFER_OUT',
-            referenceNo: 'ST/18/24-25',
-            godown: 'Main Store',
-            toGodown: 'Kitchen',
-            qtyIn: 0,
-            qtyOut: 10,
-            balance: 448,
-            remark: 'Store Transfer: Issued 10 bottles to Kitchen'
-          },
-          {
-            id: 'mov-w-3',
-            date: '20-07-2025',
-            type: 'PURCHASE',
-            referenceNo: 'BILL/4334',
-            godown: 'STORE1',
-            qtyIn: 100,
-            qtyOut: 0,
-            balance: 548,
-            remark: 'Video 34 Frame 0140: 100 bottles purchased into STORE1 @ ₹15'
-          },
-          {
-            id: 'mov-w-4',
-            date: '20-07-2025',
-            type: 'TRANSFER_OUT',
-            referenceNo: 'ST/22/24-25',
-            godown: 'STORE1',
-            toGodown: 'Main Store',
-            qtyIn: 0,
-            qtyOut: 40,
-            balance: 508,
-            remark: 'Video 34 Frame 0180: Transferred 40 bottles from STORE1 to Main Store'
-          },
-          {
-            id: 'mov-w-5',
-            date: '20-07-2025',
-            type: 'INTERNAL_ISSUE',
-            referenceNo: 'ISSUE/08',
-            godown: 'Consume',
-            qtyIn: 50,
-            qtyOut: 0,
-            balance: 558,
-            remark: 'Issued 50 bottles to Hotel Housekeeping & Room Amenities'
-          }
-        ];
-      }
-    }
 
     return movements;
   }
@@ -13636,12 +10239,12 @@ export const DEFAULT_ROOMG_PRICING: RoomGSystemPricing = {
   discount: 5600,
   finalPrice: 10000,
   gstExtra: true,
-  demoUrl: 'pms.hotelsai-vasudev.com',
-  demoUser: 'demo4@gmail.com',
-  demoPassword: '12345678',
-  salesPhones: ['7999663696', '8871702803'],
-  salesEmail: 'datahouseerp@gmail.com',
-  officialWebsite: 'https://datahouseerp.com'
+  demoUrl: 'sai-vasudev-residency.pages.dev',
+  demoUser: 'admin@hotelsai-vasudev.com',
+  demoPassword: '••••••••',
+  salesPhones: ['+91 94402 89999'],
+  salesEmail: 'reservations@hotelsai-vasudev.com',
+  officialWebsite: 'https://sai-vasudev-residency.pages.dev'
 };
 
 export const TOP_20_FEATURES: PmsTopFeature[] = [
@@ -14185,126 +10788,9 @@ export const INITIAL_COMMISSION_AGENTS: PmsCommissionAgent[] = [
   }
 ];
 
-export const INITIAL_AGENT_COMMISSIONS: PmsAgentCommissionBooking[] = [
-  {
-    id: 'COMM-2026-001',
-    agentId: 'AGT-101',
-    agentName: 'Sharma Travels & Tours (Ramesh Sharma)',
-    agentType: 'Travel_Agent',
-    checkInNo: 'SR/188/24-25',
-    bookingRefNo: 'BK-2026-042',
-    roomNo: '105',
-    guestName: 'Sanjay Deshmukh',
-    guestMobile: '9822987111',
-    checkInDate: '2026-10-15',
-    checkOutDate: '2026-10-17',
-    numberOfNights: 2,
-    roomTariff: 2200,
-    grossRoomTariff: 4400,
-    commissionType: 'PERCENTAGE',
-    commissionRate: 15,
-    grossCommission: 660,
-    tdsPercentage: 5,
-    tdsAmount: 33,
-    netPayableCommission: 627,
-    status: 'APPROVED',
-    createdAt: '2026-10-15 11:30:00',
-    remarks: 'Deluxe AC Room 2-day booking via Sharma Travels Pune yatra.'
-  },
-  {
-    id: 'COMM-2026-002',
-    agentId: 'AGT-102',
-    agentName: "Vikram Roy (Dr. Reddy's Lab MR)",
-    agentType: 'MR_Corporate',
-    checkInNo: 'SR/192/24-25',
-    roomNo: '101',
-    guestName: 'AJUU',
-    guestMobile: '9622975444',
-    checkInDate: '2026-10-16',
-    checkOutDate: '2026-10-18',
-    numberOfNights: 2,
-    roomTariff: 2000,
-    grossRoomTariff: 4000,
-    commissionType: 'PERCENTAGE',
-    commissionRate: 10,
-    grossCommission: 400,
-    tdsPercentage: 5,
-    tdsAmount: 20,
-    netPayableCommission: 380,
-    status: 'APPROVED',
-    createdAt: '2026-10-16 09:15:00',
-    remarks: 'MR sales rep medical team stay.'
-  },
-  {
-    id: 'COMM-2026-003',
-    agentId: 'AGT-103',
-    agentName: 'Rayagada Station Auto Union (Raju Bhai)',
-    agentType: 'Auto_Taxi_Driver',
-    checkInNo: 'SR/195/24-25',
-    roomNo: '103',
-    guestName: 'Mahesh Patil',
-    guestMobile: '9822114455',
-    checkInDate: '2026-10-17',
-    checkOutDate: '2026-10-18',
-    numberOfNights: 1,
-    roomTariff: 2500,
-    grossRoomTariff: 2500,
-    commissionType: 'FIXED_PER_ROOM',
-    commissionRate: 300,
-    grossCommission: 300,
-    tdsPercentage: 0,
-    tdsAmount: 0,
-    netPayableCommission: 300,
-    status: 'PENDING',
-    createdAt: '2026-10-17 14:00:00',
-    remarks: 'Auto union walk-in from morning express train.'
-  },
-  {
-    id: 'COMM-2026-004',
-    agentId: 'AGT-104',
-    agentName: 'Odisha Tour & Travels (Anil Patro)',
-    agentType: 'Tour_Operator',
-    checkInNo: 'SR/176/24-25',
-    bookingRefNo: 'BK-2026-029',
-    roomNo: '201',
-    guestName: 'Kishore Kadam & Group',
-    guestMobile: '9422556677',
-    checkInDate: '2026-10-12',
-    checkOutDate: '2026-10-14',
-    numberOfNights: 2,
-    roomTariff: 3500,
-    grossRoomTariff: 7000,
-    commissionType: 'PERCENTAGE',
-    commissionRate: 20,
-    grossCommission: 1400,
-    tdsPercentage: 5,
-    tdsAmount: 70,
-    netPayableCommission: 1330,
-    status: 'PAID',
-    payoutVoucherNo: 'AGTPAY-1001',
-    payoutDate: '2026-10-15',
-    createdAt: '2026-10-12 10:00:00',
-    remarks: 'Suite room group booking commission settled via UPI.'
-  }
-];
+export const INITIAL_AGENT_COMMISSIONS: PmsAgentCommissionBooking[] = [];
 
-export const INITIAL_AGENT_PAYOUT_VOUCHERS: PmsAgentPayoutVoucher[] = [
-  {
-    voucherNo: 'AGTPAY-1001',
-    voucherDate: '2026-10-15',
-    agentId: 'AGT-104',
-    agentName: 'Odisha Tour & Travels (Anil Patro)',
-    grossAmount: 1400,
-    tdsDeducted: 70,
-    amount: 1330,
-    paymentMode: 'UPI',
-    referenceNo: 'UPI/20261015/9988776655',
-    settledCommissionIds: ['COMM-2026-004'],
-    notes: 'Commission disbursed for Suite Room 201 group booking. TDS 5% deducted under Sec 194H.',
-    createdBy: 'Accounts Manager',
-    printTimestamp: '2026-10-15 16:45:00'
-  }
-];
+export const INITIAL_AGENT_PAYOUT_VOUCHERS: PmsAgentPayoutVoucher[] = [];
 
 // ==========================================
 // Video 31: Top 15 Official Features of RoomG PMS (Word Doc & Spoken Script)
@@ -14682,137 +11168,9 @@ export const INITIAL_LIQUOR_ITEMS: PmsLiquorItem[] = [
   }
 ];
 
-export const INITIAL_LIQUOR_STOCKS: PmsBrandWiseLiquorStock[] = [
-  {
-    brand: 'Blander Spride',
-    bottleMl: 750,
-    stockInMl: 22500, // 30 bottles purchased (10 initial + 20 from Video 32 Frame 0320)
-    stockOutMl: 450,   // 15 pegs sold (Frame 0300 & Frame 0350)
-    closingMl: 22050,  // Closing 22,050 ML
-    closingBottel: 29.4, // 29.4 Bottles (Frame 0350)
-    lastUpdated: '2025-07-20T18:19:00Z'
-  },
-  {
-    brand: 'Royal Stag',
-    bottleMl: 750,
-    stockInMl: 15000, // 20 bottles
-    stockOutMl: 600,   // 20 pegs sold
-    closingMl: 14400,
-    closingBottel: 19.2,
-    lastUpdated: '2025-07-20T18:00:00Z'
-  },
-  {
-    brand: 'Kingfisher Premium',
-    bottleMl: 650,
-    stockInMl: 15600, // 24 bottles
-    stockOutMl: 2600,  // 4 bottles sold
-    closingMl: 13000,
-    closingBottel: 20.0,
-    lastUpdated: '2025-07-20T17:45:00Z'
-  },
-  {
-    brand: 'Bacardi White Rum',
-    bottleMl: 750,
-    stockInMl: 7500,  // 10 bottles
-    stockOutMl: 300,   // 10 pegs sold
-    closingMl: 7200,
-    closingBottel: 9.6,
-    lastUpdated: '2025-07-20T17:30:00Z'
-  }
-];
+export const INITIAL_LIQUOR_STOCKS: PmsBrandWiseLiquorStock[] = [];
 
-export const INITIAL_BAR_INVOICES: PmsBarInvoice[] = [
-  {
-    billNo: 'Res/289/24-25',
-    date: '2025-07-20',
-    time: '06:16',
-    tableNo: 'T-11',
-    kotNo: '418',
-    serviceType: 'Table Service',
-    guestName: 'Guest (Table T-11)',
-    guestMobile: '9822100000',
-    remark: 'Bar & Restaurant Combined Bill (Video 32)',
-    isB2b: false,
-    items: [
-      {
-        sNo: 1,
-        itemId: 'food-bp',
-        itemName: 'bread pakoda',
-        category: 'Food',
-        qty: 6,
-        rate: 100,
-        amount: 600,
-        discountPercentage: 0,
-        discountAmount: 0,
-        taxableAmount: 600,
-        gstPercentage: 5,
-        gstAmount: 30,
-        vatPercentage: 0,
-        vatAmount: 0,
-        surchargePercentage: 0,
-        surchargeAmount: 0,
-        totalValue: 630,
-        unit: 'Plate',
-        mlConsumed: 0
-      },
-      {
-        sNo: 2,
-        itemId: 'food-cb',
-        itemName: 'Paneer Dum Biryani',
-        category: 'Food',
-        qty: 5,
-        rate: 90,
-        amount: 450,
-        discountPercentage: 0,
-        discountAmount: 0,
-        taxableAmount: 450,
-        gstPercentage: 0,
-        gstAmount: 0,
-        vatPercentage: 0,
-        vatAmount: 0,
-        surchargePercentage: 0,
-        surchargeAmount: 0,
-        totalValue: 450,
-        unit: 'Plate',
-        mlConsumed: 0
-      },
-      {
-        sNo: 3,
-        itemId: 'liq-10070',
-        itemName: 'Blender Spride (30Ml)',
-        brandName: 'Blander Spride',
-        category: 'Liquor',
-        qty: 5,
-        rate: 230,
-        amount: 1150,
-        discountPercentage: 0,
-        discountAmount: 0,
-        taxableAmount: 1150,
-        gstPercentage: 0,
-        gstAmount: 0,
-        vatPercentage: 13,
-        vatAmount: 149.50,
-        surchargePercentage: 10,
-        surchargeAmount: 14.95,
-        totalValue: 1314.45,
-        unit: '30 ml',
-        mlConsumed: 150
-      }
-    ],
-    totalItems: 3,
-    totalQuantity: 16,
-    basicAmount: 2200,
-    sgstAmount: 15,
-    cgstAmount: 15,
-    vatAmount: 149.50,
-    surchargeAmount: 14.95,
-    roundOff: 0.45,
-    grandTotal: 2394,
-    settled: true,
-    paymentMode: 'CASH',
-    createdAt: '2025-07-20T06:16:00Z'
-  }
-];
+export const INITIAL_BAR_INVOICES: PmsBarInvoice[] = [];
 
 // ==========================================
 // Video 33: No-Discount Item, Margin Protection & Group Rules Seed Data (Frames 0080-0202)
@@ -14839,32 +11197,7 @@ export const DEFAULT_NO_DISCOUNT_CONFIG: PmsNoDiscountConfig = {
   reasonRequiredForOverride: true
 };
 
-export const INITIAL_DISCOUNT_AUDIT_LOGS: PmsDiscountAuditRecord[] = [
-  {
-    id: 'disc-audit-1',
-    billNo: 'Res/293/24-25',
-    tableNo: 'T-10',
-    requestedDiscountPercent: 10,
-    actualDiscountAmount: 24.00, // Burger ₹12 + Bada Pao ₹12 (Frame 0180)
-    savingsProtectedAmount: 68.00, // ₹230 Blender Spride (₹23) + ₹270 Beverage (₹27) + ₹180 Dessert (₹18) protected!
-    eligibleItemsCount: 2,
-    exemptItemsCount: 3,
-    cashierName: 'Hotel & restaurant (Cashier)',
-    timestamp: '2025-07-20T07:23:00Z'
-  },
-  {
-    id: 'disc-audit-2',
-    billNo: 'Res/289/24-25',
-    tableNo: 'T-11',
-    requestedDiscountPercent: 15,
-    actualDiscountAmount: 37.50,
-    savingsProtectedAmount: 172.50, // Liquor protected from 15% discount
-    eligibleItemsCount: 3,
-    exemptItemsCount: 2,
-    cashierName: 'Admin',
-    timestamp: '2025-07-20T06:20:00Z'
-  }
-];
+export const INITIAL_DISCOUNT_AUDIT_LOGS: PmsDiscountAuditRecord[] = [];
 
 // ==========================================
 // Video 34: Hotel Assets & Linen Anti-Theft Tracking Seed Data (Frames 0110-0260)

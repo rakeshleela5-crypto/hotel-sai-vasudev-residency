@@ -189,26 +189,35 @@ export const ItemWiseStockModal: React.FC<ItemWiseStockModalProps> = ({
                   </tr>
 
                   {/* Transaction Rows */}
-                  {stockReport.entries.map((entry, idx) => (
-                    <tr key={idx} className="border-b border-gray-200 hover:bg-yellow-50/60 transition-colors">
-                      <td className="py-2 px-4 border-r border-gray-200 font-mono text-gray-600">{entry.date}</td>
-                      <td className="py-2 px-4 border-r border-gray-200 font-medium text-gray-800">
-                        {entry.transactionType}
-                      </td>
-                      <td className="py-2 px-4 border-r border-gray-200 font-mono text-blue-700">
-                        {entry.remark}
-                      </td>
-                      <td className="py-2 px-4 border-r border-gray-200 text-right font-mono font-semibold text-emerald-700">
-                        {entry.stockIn > 0 ? entry.stockIn : ''}
-                      </td>
-                      <td className="py-2 px-4 border-r border-gray-200 text-right font-mono font-semibold text-red-600">
-                        {entry.stockOut > 0 ? entry.stockOut : ''}
-                      </td>
-                      <td className="py-2 px-4 text-right font-mono font-bold text-gray-900">
-                        {entry.balance}
+                  {/* Transaction Rows */}
+                  {stockReport.entries.length === 0 ? (
+                    <tr className="border-b border-gray-200">
+                      <td colSpan={6} className="py-6 text-center text-gray-400 italic">
+                        No stock movements recorded for {selectedItem} in this period.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    stockReport.entries.map((entry, idx) => (
+                      <tr key={idx} className="border-b border-gray-200 hover:bg-yellow-50/60 transition-colors">
+                        <td className="py-2 px-4 border-r border-gray-200 font-mono text-gray-600">{entry.date}</td>
+                        <td className="py-2 px-4 border-r border-gray-200 font-medium text-gray-800">
+                          {entry.transactionType}
+                        </td>
+                        <td className="py-2 px-4 border-r border-gray-200 font-mono text-blue-700">
+                          {entry.remark}
+                        </td>
+                        <td className="py-2 px-4 border-r border-gray-200 text-right font-mono font-semibold text-emerald-700">
+                          {entry.stockIn > 0 ? entry.stockIn : ''}
+                        </td>
+                        <td className="py-2 px-4 border-r border-gray-200 text-right font-mono font-semibold text-red-600">
+                          {entry.stockOut > 0 ? entry.stockOut : ''}
+                        </td>
+                        <td className="py-2 px-4 text-right font-mono font-bold text-gray-900">
+                          {entry.balance}
+                        </td>
+                      </tr>
+                    ))
+                  )}
 
                   {/* TOTAL Row */}
                   <tr className="bg-slate-200 font-bold border-t-2 border-gray-300">

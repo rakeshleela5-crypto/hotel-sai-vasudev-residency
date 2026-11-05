@@ -10,65 +10,6 @@ interface NewRoomBookingModalProps {
   onBookingCreated: (booking: PmsBooking) => void;
 }
 
-// Mock returning customer database for auto-fill demonstrated in Video 02 (Frame 0050)
-const RETURNING_GUESTS: Record<string, {
-  name: string;
-  mobile: string;
-  address1: string;
-  address2: string;
-  city: string;
-  state: string;
-  pin: string;
-  nationality: string;
-  docName: 'Aadhaar Card' | 'Passport' | 'Driving License' | 'Voter ID';
-  docNo: string;
-  photoUrl: string;
-  idUrl: string;
-}> = {
-  '8305741149': {
-    name: 'suresh raina',
-    mobile: '8305741149',
-    address1: 'main road ac',
-    address2: 'Near Central Park',
-    city: 'jabalpur',
-    state: 'm.p.',
-    pin: '482001',
-    nationality: 'India',
-    docName: 'Aadhaar Card',
-    docNo: '756476765721',
-    photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=60',
-    idUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=150&auto=format&fit=crop&q=60'
-  },
-  '76675763433': {
-    name: 'hariom gautam ji',
-    mobile: '76675763433',
-    address1: 'Civil Lines Road',
-    address2: 'Lane 4',
-    city: 'jabalpur',
-    state: 'm.p.',
-    pin: '482002',
-    nationality: 'India',
-    docName: 'Aadhaar Card',
-    docNo: '544654651234',
-    photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=60',
-    idUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=150&auto=format&fit=crop&q=60'
-  },
-  '9622975444': {
-    name: 'AJUU',
-    mobile: '9622975444',
-    address1: 'Station Road',
-    address2: 'Ward 2',
-    city: 'Bilaspur',
-    state: 'Chhattisgarh',
-    pin: '495220',
-    nationality: 'India',
-    docName: 'Driving License',
-    docNo: 'CG-10-20210089',
-    photoUrl: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop&q=60',
-    idUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=150&auto=format&fit=crop&q=60'
-  }
-};
-
 export const NewRoomBookingModal: React.FC<NewRoomBookingModalProps> = ({
   isOpen,
   onClose,
@@ -128,15 +69,13 @@ export const NewRoomBookingModal: React.FC<NewRoomBookingModalProps> = ({
 
   // Selected Rooms
   const [selectedRoomNos, setSelectedRoomNos] = useState<string[]>(
-    preselectedRoom ? [preselectedRoom.roomNo] : ['102']
+    preselectedRoom ? [preselectedRoom.roomNo] : (allRooms.length > 0 ? [allRooms[0].roomNo] : [])
   );
 
   // Multi-Payment Splits (Video 02 Frame 0090)
-  const [paymentSplits, setPaymentSplits] = useState<PaymentSplit[]>([
-    { mode: 'Cash', amount: 1000, referenceNo: 'cash adv', remark: 'by raju' }
-  ]);
-  const [paymentReference, setPaymentReference] = useState('cash adv');
-  const [paymentRemark, setPaymentRemark] = useState('by raju');
+  const [paymentSplits, setPaymentSplits] = useState<PaymentSplit[]>([]);
+  const [paymentReference, setPaymentReference] = useState('');
+  const [paymentRemark, setPaymentRemark] = useState('');
 
   // Auto-calculate No of Days whenever dates change
   useEffect(() => {
@@ -158,21 +97,44 @@ export const NewRoomBookingModal: React.FC<NewRoomBookingModalProps> = ({
       return;
     }
 
-    const matched = RETURNING_GUESTS[query];
-    if (matched) {
-      setSearchFeedback('Record Found Successfully');
-      setGuestName(matched.name);
-      setMobile(matched.mobile);
-      setAddressLine1(matched.address1);
-      setAddressLine2(matched.address2);
-      setCity(matched.city);
-      setState(matched.state);
-      setPinCode(matched.pin);
-      setNationality(matched.nationality);
-      setDocumentName(matched.docName);
-      setDocumentNo(matched.docNo);
-      setGuestPhoto(matched.photoUrl);
-      setIdPhoto(matched.idUrl);
+    const checkouts = PmsStore.getCheckouts();
+    const checkIns = PmsStore.getCheckIns();
+    const bookings = PmsStore.getBookings();
+
+    const matchedCo = checkouts.find(c => c.guestPhone === query);
+    const matchedCi = checkIns.find(c => c.mobile === query);
+    const matchedBk = bookings.find(b => b.mobile === query);
+
+    if (matchedCo) {
+      setSearchFeedback('Record Found in Past Stays');
+      setGuestName(matchedCo.guestName);
+      setMobile(matchedCo.guestPhone);
+      setAddressLine1(matchedCo.addressLine1 || '');
+      setAddressLine2(matchedCo.addressLine2 || '');
+      setCity(matchedCo.city || 'Rayagada');
+      setState(matchedCo.state || 'Odisha');
+      setPinCode(matchedCo.pinCode || '765001');
+      setNationality(matchedCo.country || 'India');
+    } else if (matchedCi) {
+      setSearchFeedback('Record Found in Check-In Register');
+      setGuestName(matchedCi.guestName);
+      setMobile(matchedCi.mobile);
+      setAddressLine1(matchedCi.addressLine1 || '');
+      setCity(matchedCi.city || 'Rayagada');
+      setState(matchedCi.state || 'Odisha');
+      setPinCode(matchedCi.pinCode || '765001');
+      setNationality(matchedCi.nationality || 'India');
+      if (matchedCi.documentName) setDocumentName(matchedCi.documentName as any);
+      if (matchedCi.documentNo) setDocumentNo(matchedCi.documentNo);
+    } else if (matchedBk) {
+      setSearchFeedback('Record Found in Bookings');
+      setGuestName(matchedBk.guestName);
+      setMobile(matchedBk.mobile);
+      setAddressLine1(matchedBk.addressLine1 || '');
+      setCity(matchedBk.city || 'Rayagada');
+      setState(matchedBk.state || 'Odisha');
+      setPinCode(matchedBk.pinCode || '765001');
+      setNationality(matchedBk.nationality || 'India');
     } else {
       setSearchFeedback('No existing record found. New customer entry.');
       setMobile(query);
@@ -460,7 +422,7 @@ export const NewRoomBookingModal: React.FC<NewRoomBookingModalProps> = ({
               <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 10 }}>
                 <div className="form-group-pms">
                   <label className="form-label-pms"><span className="req">*</span> Guest Name</label>
-                  <input type="text" placeholder="e.g. suresh raina" value={guestName} onChange={e => setGuestName(e.target.value)} className="form-input-pms" required />
+                  <input type="text" placeholder="e.g. Guest Full Name" value={guestName} onChange={e => setGuestName(e.target.value)} className="form-input-pms" required />
                 </div>
                 <div className="form-group-pms">
                   <label className="form-label-pms"><span className="req">*</span> Mobile</label>

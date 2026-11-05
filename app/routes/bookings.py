@@ -421,10 +421,10 @@ def get_printable_slip(booking_ref: str, db: Session = Depends(get_db)):
 <body>
 <div class="ticket">
   <div class="header">
-    <h1 class="hotel-title">SRI SAI VASUDEV RESIDENCY</h1>
-    <p class="hotel-sub">Near Temple Main Road, Holy Town</p>
+    <h1 class="hotel-title">{settings.HOTEL_TRADE_NAME}</h1>
+    <p class="hotel-sub">{settings.HOTEL_ADDRESS}</p>
     <p class="hotel-sub">Tel: +91 94402 89999 / +91 98480 12345</p>
-    <div class="gstin">GSTIN: 37AAACH7409R1ZZ | SAC: 996311 (Accommodation)</div>
+    <div class="gstin">GSTIN: {settings.HOTEL_GSTIN} | SAC: 996311 (Accommodation)</div>
     <div class="badge">{safe_status} RESERVATION &bull; INCLUSIVE OF GST (12%)</div>
   </div>
 

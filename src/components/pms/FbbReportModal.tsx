@@ -124,32 +124,40 @@ export const FbbReportModal: React.FC<FbbReportModalProps> = ({ isOpen, onClose 
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(b => (
-                  <tr key={b.billNo}>
-                    <td style={{ fontWeight: 800, color: '#0369a1' }}>{b.billNo}</td>
-                    <td>{b.date} {b.time}</td>
-                    <td style={{ fontWeight: 700 }}>{b.roomNo}</td>
-                    <td style={{ fontWeight: 600 }}>{b.guestName}</td>
-                    <td>{b.kotNumbers.join(', ')}</td>
-                    <td style={{ textAlign: 'right' }}>₹{b.taxableAmount.toFixed(2)}</td>
-                    <td style={{ textAlign: 'right' }}>₹{b.cgstAmount.toFixed(2)}</td>
-                    <td style={{ textAlign: 'right' }}>₹{b.sgstAmount.toFixed(2)}</td>
-                    <td style={{ textAlign: 'right', color: '#b91c1c' }}>-₹{b.discountAmount.toFixed(2)}</td>
-                    <td style={{ textAlign: 'right', fontWeight: 800, color: '#16a34a' }}>₹{b.netBillAmount.toFixed(2)}</td>
-                    <td>
-                      <span style={{
-                        background: b.settlementType === 'Settle To Room' ? '#dcfce7' : '#e0f2fe',
-                        color: b.settlementType === 'Settle To Room' ? '#166534' : '#0369a1',
-                        padding: '2px 8px',
-                        borderRadius: 3,
-                        fontSize: 10,
-                        fontWeight: 700
-                      }}>
-                        {b.settlementType}
-                      </span>
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={10} style={{ textAlign: 'center', padding: '30px 10px', color: '#64748b' }}>
+                      No F&B bills found for this period.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filtered.map(b => (
+                    <tr key={b.billNo}>
+                      <td style={{ fontWeight: 800, color: '#0369a1' }}>{b.billNo}</td>
+                      <td>{b.date} {b.time}</td>
+                      <td style={{ fontWeight: 700 }}>{b.roomNo}</td>
+                      <td style={{ fontWeight: 600 }}>{b.guestName}</td>
+                      <td>{b.kotNumbers.join(', ')}</td>
+                      <td style={{ textAlign: 'right' }}>₹{b.taxableAmount.toFixed(2)}</td>
+                      <td style={{ textAlign: 'right' }}>₹{b.cgstAmount.toFixed(2)}</td>
+                      <td style={{ textAlign: 'right' }}>₹{b.sgstAmount.toFixed(2)}</td>
+                      <td style={{ textAlign: 'right', color: '#b91c1c' }}>-₹{b.discountAmount.toFixed(2)}</td>
+                      <td style={{ textAlign: 'right', fontWeight: 800, color: '#16a34a' }}>₹{b.netBillAmount.toFixed(2)}</td>
+                      <td>
+                        <span style={{
+                          background: b.settlementType === 'Settle To Room' ? '#dcfce7' : '#e0f2fe',
+                          color: b.settlementType === 'Settle To Room' ? '#166534' : '#0369a1',
+                          padding: '2px 8px',
+                          borderRadius: 3,
+                          fontSize: 10,
+                          fontWeight: 700
+                        }}>
+                          {b.settlementType}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
               <tfoot>
                 <tr style={{ background: '#f1f5f9', fontWeight: 800 }}>

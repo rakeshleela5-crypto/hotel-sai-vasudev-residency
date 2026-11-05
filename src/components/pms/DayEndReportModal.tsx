@@ -9,8 +9,15 @@ interface DayEndReportModalProps {
 }
 
 export const DayEndReportModal: React.FC<DayEndReportModalProps> = ({ isOpen, onClose }) => {
-  const [reportDate, setReportDate] = useState<string>('19-07-2025');
-  const [report, setReport] = useState<PmsDayEndReport>(() => PmsStore.getDayEndReport('19-07-2025'));
+  const todayStr = React.useMemo(() => {
+    const d = new Date();
+    const day = String(d.getDate()).padStart(2, '0');
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const y = d.getFullYear();
+    return `${day}-${m}-${y}`;
+  }, []);
+  const [reportDate, setReportDate] = useState<string>(todayStr);
+  const [report, setReport] = useState<PmsDayEndReport>(() => PmsStore.getDayEndReport(todayStr));
 
   if (!isOpen) return null;
 

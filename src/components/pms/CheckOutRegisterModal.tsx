@@ -324,7 +324,7 @@ export const CheckOutRegisterModal: React.FC<CheckOutRegisterModalProps> = ({
                     <td style={{ textAlign: 'center' }}>{c.checkOutDate}</td>
                     <td style={{ textAlign: 'center', fontWeight: 700 }}>{c.numberOfDays}</td>
                     <td style={{ textAlign: 'right', fontWeight: 800, color: '#16a34a' }}>
-                      {c.netPayable.toFixed(2)}
+                      {(Number(c.netPayable) || 0).toFixed(2)}
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       <div style={{ display: 'inline-flex', gap: 5, alignItems: 'center' }}>

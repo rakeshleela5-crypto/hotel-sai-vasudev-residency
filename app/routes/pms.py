@@ -1097,8 +1097,8 @@ def export_pms_database_backup(
 
     return {
         "export_timestamp": datetime.datetime.utcnow().isoformat(),
-        "hotel": "Sri Sai Vasudev Residency",
-        "gstin": "37AAACH7409R1ZZ",
+        "hotel": getattr(settings, "HOTEL_TRADE_NAME", "SRI SAI VASUDEV RESIDENCY"),
+        "gstin": getattr(settings, "HOTEL_GSTIN", "21AEKPP8689J1ZS"),
         "total_rooms": len(rooms),
         "total_bookings": len(bookings),
         "total_payments": len(payments),
@@ -5429,22 +5429,6 @@ def delete_liquor_item(item_code: str, db: Session = Depends(get_db)):
 def get_liquor_stocks(db: Session = Depends(get_db)):
     """Retrieve all physical liquor stocks from PostgreSQL."""
     stocks = db.query(models.LiquorStock).all()
-    if not stocks:
-        seed_brands = ["Royal Challenge Whisky", "Blenders Pride", "Antiquity Blue", "Signature Rare", "Smirnoff Vodka", "Kingfisher Premium Beer", "Bacardi Carta Blanca Rum"]
-        for b in seed_brands:
-            stk = models.LiquorStock(
-                brand=b,
-                bottle_size_ml=750,
-                opening_bottles=24.0,
-                received_bottles=12.0,
-                sold_pegs=45.0,
-                pegs_per_bottle=25,
-                closing_bottles=34.2
-            )
-            db.add(stk)
-        db.commit()
-        stocks = db.query(models.LiquorStock).all()
-
     return [{
         "id": s.id,
         "brand": s.brand,

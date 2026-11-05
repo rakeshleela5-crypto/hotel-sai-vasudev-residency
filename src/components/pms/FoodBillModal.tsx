@@ -147,74 +147,7 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
       });
       setBillItems(items);
     } else {
-      // Default sample matching Video 18 Frame 0330
-      const defaultSample: FoodBillItem[] = [
-        {
-          sNo: 1,
-          itemName: 'WATER BOTLE',
-          itemCode: '10003',
-          qty: 1.0,
-          rate: 28.57,
-          amount: 28.57,
-          discountPercent: 5,
-          discountAmount: 1.43,
-          taxable: 27.14,
-          gstPercent: 5.0,
-          gstAmount: 1.36,
-          vatPercent: 0,
-          surPercent: 0,
-          value: 28.50
-        },
-        {
-          sNo: 2,
-          itemName: 'bread pakoda',
-          itemCode: '10006',
-          qty: 1.0,
-          rate: 95.24,
-          amount: 95.24,
-          discountPercent: 5,
-          discountAmount: 4.76,
-          taxable: 90.48,
-          gstPercent: 5.0,
-          gstAmount: 4.52,
-          vatPercent: 0,
-          surPercent: 0,
-          value: 95.00
-        },
-        {
-          sNo: 3,
-          itemName: 'Paneer Dum Biryani',
-          itemCode: '10018',
-          qty: 1.0,
-          rate: 90.0,
-          amount: 90.0,
-          discountPercent: 5,
-          discountAmount: 4.50,
-          taxable: 85.50,
-          gstPercent: 5.0,
-          gstAmount: 4.28,
-          vatPercent: 0,
-          surPercent: 0,
-          value: 89.78
-        },
-        {
-          sNo: 4,
-          itemName: 'BADA PAO',
-          itemCode: '10022',
-          qty: 1.0,
-          rate: 60.0,
-          amount: 60.0,
-          discountPercent: 5,
-          discountAmount: 3.00,
-          taxable: 57.00,
-          gstPercent: 0.0,
-          gstAmount: 0.0,
-          vatPercent: 0,
-          surPercent: 0,
-          value: 57.00
-        }
-      ];
-      setBillItems(defaultSample);
+      setBillItems([]);
     }
   }, [selectedTable, selectedRoomNo, serviceType]);
 
@@ -284,9 +217,6 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
     setIsSavingBill(true);
     try {
     const kotNums = pendingKots.map(k => k.kotNo);
-    if (kotNums.length === 0) {
-      kotNums.push('KOT/372/24-25', 'KOT/374/24-25');
-    }
 
     const billRecord: PmsFoodBill = {
       billNo,
@@ -497,7 +427,7 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                           {r.currentGuest?.name || 'Guest'} || {r.roomNo}
                         </option>
                       ))}
-                      {occupiedRooms.length === 0 && <option value="103">ALOK JAIN || 103</option>}
+                      {occupiedRooms.length === 0 && <option value="" disabled>No occupied rooms</option>}
                     </select>
                   ) : (
                     <select
@@ -658,7 +588,14 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {billItems.map((item, idx) => (
+                    {billItems.length === 0 ? (
+                      <tr>
+                        <td colSpan={11} style={{ padding: '24px', textAlign: 'center', color: '#64748b', fontStyle: 'italic' }}>
+                          No KOT orders found for {serviceType === 'Dine-In' ? (selectedTable || 'selected table') : `Room ${selectedRoomNo}`}. Place orders from KOT Entry to populate bill items.
+                        </td>
+                      </tr>
+                    ) : (
+                      billItems.map((item, idx) => (
                       <tr
                         key={idx}
                         style={{
@@ -701,7 +638,7 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                           {item.value.toFixed(2)}
                         </td>
                       </tr>
-                    ))}
+                    )))}
                   </tbody>
                   <tfoot>
                     {/* TOTAL row matching Frame 0330 */}

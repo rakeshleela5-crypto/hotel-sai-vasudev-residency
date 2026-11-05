@@ -50,42 +50,37 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
 
   if (!isOpen) return null;
 
-  const currentCheckout: PmsCheckOutDetail =
+  const currentCheckout: PmsCheckOutDetail | undefined =
     checkouts.find(c => c.invoiceNo === selectedInvoiceNo) ||
-    checkouts[0] || {
-      invoiceNo: 'GSR/252/24-25',
-      roomNo: '105',
-      roomType: 'DELUXE',
-      guestName: 'SIDDHANT JI',
-      guestPhone: '9466219194',
-      checkInDate: '01-07-25',
-      checkInTime: '06:32 PM',
-      checkOutDate: '15-07-25',
-      checkOutTime: '01:15 PM',
-      calculationType: '12hour',
-      numberOfDays: 15,
-      perDayTariff: 3000,
-      totalRoomRent: 45000,
-      foodAmount: 32,
-      gstPercent: 12,
-      gstAmount: 5400,
-      cgstAmount: 2700,
-      sgstAmount: 2700,
-      addOthers: 0,
-      lessDiscount: 0,
-      advanceDeducted: 0,
-      billAmount: 50432,
-      netPayable: 50432,
-      paymentMode: 'Online',
-      payments: [{ mode: 'Online', amount: 50432, referenceNo: 'UPI/9466219194', remark: 'PhonePe QR Payment' }],
-      checkoutRemark: '15 Days Stay with Breakfast package. Key deposited at reception.',
-      city: 'Etawah',
-      state: 'Uttar Pradesh',
-      country: 'India',
-      pinCode: '206001',
-      sacCode: '996311',
-      invoiceFormat: 'A4_Standard'
-    };
+    checkouts[0] ||
+    initialCheckout;
+
+  if (!currentCheckout) {
+    return (
+      <div className="pms-reg-modal-backdrop" onClick={onClose}>
+        <div
+          className="pms-reg-modal-window"
+          style={{ maxWidth: '540px', padding: '32px', textAlign: 'center', background: '#ffffff', borderRadius: '8px', margin: 'auto' }}
+          onClick={e => e.stopPropagation()}
+        >
+          <div style={{ fontSize: '48px', marginBottom: '12px' }}>🧾</div>
+          <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', marginBottom: '8px' }}>
+            No Checkout Invoices Found
+          </h3>
+          <p style={{ fontSize: '13px', color: '#64748b', lineHeight: 1.6, marginBottom: '20px' }}>
+            There are currently no checkout invoices in the system. Once a guest completes checkout at the front desk, their official GST tax invoices and printable vouchers will appear here.
+          </p>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{ padding: '8px 24px', background: '#0f172a', color: '#ffffff', borderRadius: '6px', fontWeight: 700, fontSize: '13px', border: 'none', cursor: 'pointer' }}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Generate day-wise breakdown rows for Format 1 (Frame 0115)
   const generateStayDates = (startDateStr: string, totalDays: number): string[] => {
@@ -1463,13 +1458,13 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
               const roomTariff = currentCheckout.totalRoomRent || (currentCheckout.perDayTariff * currentCheckout.numberOfDays);
               const roomCgst = currentCheckout.cgstAmount ?? (currentCheckout.gstAmount ? currentCheckout.gstAmount / 2 : 0);
               const roomSgst = currentCheckout.sgstAmount ?? (currentCheckout.gstAmount ? currentCheckout.gstAmount / 2 : 0);
-              
+
               const foodTotal = currentCheckout.foodAmount || 0;
               const foodTaxable = foodTotal > 0 ? Number((foodTotal / 1.05).toFixed(2)) : 0;
               const foodTax = Number((foodTotal - foodTaxable).toFixed(2));
               const foodCgst = Number((foodTax / 2).toFixed(2));
               const foodSgst = Number((foodTax / 2).toFixed(2));
-              
+
               const advance = currentCheckout.advanceDeducted || 0;
               const totalDebits = roomTariff + roomCgst + roomSgst + foodTotal + (currentCheckout.addOthers || 0) - (currentCheckout.lessDiscount || 0);
               const totalCredits = advance;

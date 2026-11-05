@@ -23,7 +23,7 @@ export const MonthlyHotelSaleReportModal: React.FC<MonthlyHotelSaleReportModalPr
   };
 
   const filteredRows = rows.filter((r: any) =>
-    searchQuery === '' || 
+    searchQuery === '' ||
     r.date.toLowerCase().includes(searchQuery.toLowerCase()) ||
     r.roomNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
     r.guestName.toLowerCase().includes(searchQuery.toLowerCase())
@@ -200,34 +200,42 @@ export const MonthlyHotelSaleReportModal: React.FC<MonthlyHotelSaleReportModalPr
               </tr>
             </thead>
             <tbody>
-              {filteredRows.map((r: any, idx: number) => (
-                <tr key={idx} style={{ background: idx % 2 === 0 ? '#fff' : '#f8fafc' }}>
-                  <td style={{ textAlign: 'center', fontWeight: 700 }}>{r.sNo}</td>
-                  <td style={{ textAlign: 'center', fontWeight: 800, color: '#0369a1' }}>{r.date}</td>
-                  <td style={{ fontWeight: 700 }}>{r.billNo}</td>
-                  <td style={{ fontWeight: 800, color: '#0f172a' }}>{r.roomNo}</td>
-                  <td style={{ textAlign: 'right', fontWeight: 700 }}>{r.rent.toFixed(2)}</td>
-                  <td style={{ textAlign: 'right', color: '#0284c7' }}>{r.cgst.toFixed(2)}</td>
-                  <td style={{ textAlign: 'right', color: '#7c3aed' }}>{r.sgst.toFixed(2)}</td>
-                  <td style={{ textAlign: 'right' }}>{r.misc}</td>
-                  <td style={{ textAlign: 'right' }}>{r.laundry}</td>
-                  <td style={{ textAlign: 'right' }}>{r.minBar}</td>
-                  <td style={{ textAlign: 'right' }}>{r.roomService.toFixed(2)}</td>
-                  <td style={{ textAlign: 'right', fontWeight: 900, background: '#dcfce7', color: '#15803d' }}>
-                    {r.netAmount.toFixed(2)}
+              {filteredRows.length === 0 ? (
+                <tr>
+                  <td colSpan={22} style={{ textAlign: 'center', padding: '30px 10px', color: '#64748b' }}>
+                    No room sales records found for this period.
                   </td>
-                  <td style={{ textAlign: 'right' }}>{r.advance.toFixed(2)}</td>
-                  <td style={{ textAlign: 'right', color: '#dc2626' }}>{r.discount.toFixed(2)}</td>
-                  <td style={{ textAlign: 'right' }}>{r.complimentary}</td>
-                  <td style={{ textAlign: 'right', color: '#d97706', fontWeight: 700 }}>{r.cash > 0 ? r.cash.toFixed(2) : '-'}</td>
-                  <td style={{ textAlign: 'right', color: '#0284c7' }}>{r.creditCard > 0 ? r.creditCard.toFixed(2) : '-'}</td>
-                  <td style={{ textAlign: 'right', color: '#7c3aed', fontWeight: 700 }}>{r.online > 0 ? r.online.toFixed(2) : '-'}</td>
-                  <td style={{ fontSize: 10, color: '#64748b' }}>{r.remark}</td>
-                  <td style={{ fontWeight: 700 }}>{r.guestName}</td>
-                  <td style={{ fontSize: 10 }}>{r.company}</td>
-                  <td style={{ fontSize: 10, fontWeight: 700, color: '#0284c7' }}>{r.gstNo}</td>
                 </tr>
-              ))}
+              ) : (
+                filteredRows.map((r: any, idx: number) => (
+                  <tr key={idx} style={{ background: idx % 2 === 0 ? '#fff' : '#f8fafc' }}>
+                    <td style={{ textAlign: 'center', fontWeight: 700 }}>{r.sNo}</td>
+                    <td style={{ textAlign: 'center', fontWeight: 800, color: '#0369a1' }}>{r.date}</td>
+                    <td style={{ fontWeight: 700 }}>{r.billNo}</td>
+                    <td style={{ fontWeight: 800, color: '#0f172a' }}>{r.roomNo}</td>
+                    <td style={{ textAlign: 'right', fontWeight: 700 }}>{r.rent.toFixed(2)}</td>
+                    <td style={{ textAlign: 'right', color: '#0284c7' }}>{r.cgst.toFixed(2)}</td>
+                    <td style={{ textAlign: 'right', color: '#7c3aed' }}>{r.sgst.toFixed(2)}</td>
+                    <td style={{ textAlign: 'right' }}>{r.misc}</td>
+                    <td style={{ textAlign: 'right' }}>{r.laundry}</td>
+                    <td style={{ textAlign: 'right' }}>{r.minBar}</td>
+                    <td style={{ textAlign: 'right' }}>{r.roomService.toFixed(2)}</td>
+                    <td style={{ textAlign: 'right', fontWeight: 900, background: '#dcfce7', color: '#15803d' }}>
+                      {r.netAmount.toFixed(2)}
+                    </td>
+                    <td style={{ textAlign: 'right' }}>{r.advance.toFixed(2)}</td>
+                    <td style={{ textAlign: 'right', color: '#dc2626' }}>{r.discount.toFixed(2)}</td>
+                    <td style={{ textAlign: 'right' }}>{r.complimentary}</td>
+                    <td style={{ textAlign: 'right', color: '#d97706', fontWeight: 700 }}>{r.cash > 0 ? r.cash.toFixed(2) : '-'}</td>
+                    <td style={{ textAlign: 'right', color: '#0284c7' }}>{r.creditCard > 0 ? r.creditCard.toFixed(2) : '-'}</td>
+                    <td style={{ textAlign: 'right', color: '#7c3aed', fontWeight: 700 }}>{r.online > 0 ? r.online.toFixed(2) : '-'}</td>
+                    <td style={{ fontSize: 10, color: '#64748b' }}>{r.remark}</td>
+                    <td style={{ fontWeight: 700 }}>{r.guestName}</td>
+                    <td style={{ fontSize: 10 }}>{r.company}</td>
+                    <td style={{ fontSize: 10, fontWeight: 700, color: '#0284c7' }}>{r.gstNo}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
             <tfoot>
               <tr style={{ background: '#e2e8f0', fontWeight: 900, fontSize: 11 }}>

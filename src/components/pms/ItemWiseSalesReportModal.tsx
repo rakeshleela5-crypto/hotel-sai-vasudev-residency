@@ -55,7 +55,7 @@ export const ItemWiseSalesReportModal: React.FC<ItemWiseSalesReportModalProps> =
 
   return (
     <div className="pms-reg-modal-backdrop" onClick={onClose}>
-      <div 
+      <div
         className="pms-reg-modal-window"
         style={{ maxWidth: '960px' }}
         onClick={e => e.stopPropagation()}
@@ -193,28 +193,35 @@ export const ItemWiseSalesReportModal: React.FC<ItemWiseSalesReportModalProps> =
                 </tr>
               </thead>
               <tbody>
-                {filteredSales.map((item, idx) => (
-                  <tr key={idx} className="border-b border-gray-200 hover:bg-yellow-50/60 transition-colors">
-                    <td className="py-2 px-4 border-r border-gray-200 text-center font-mono text-gray-500">{item.sNo}</td>
-                    <td className="py-2 px-4 border-r border-gray-200 font-bold text-gray-800">
-                      {item.itemName}
-                    </td>
-                    <td className="py-2 px-4 border-r border-gray-200 text-gray-600">
-                      <span className="px-2 py-0.5 bg-slate-100 rounded text-[10px] font-medium text-slate-700">
-                        {item.category || 'Kitchen'}
-                      </span>
-                    </td>
-                    <td className="py-2 px-4 border-r border-gray-200 text-right font-mono font-semibold text-blue-700">
-                      {item.qty.toFixed(2)}
-                    </td>
-                    <td className="py-2 px-4 border-r border-gray-200 text-right font-mono text-gray-700">
-                      {item.rate.toFixed(2)}
-                    </td>
-                    <td className="py-2 px-4 text-right font-mono font-bold text-emerald-700">
-                      {item.amount.toFixed(2)}
+                {filteredSales.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: 'center', padding: '32px 16px', color: '#64748b', fontStyle: 'italic', fontSize: '13px' }}>
+                      No dishes or food items sold yet. Once restaurant or room service KOT orders are generated, itemized sales numbers will appear here.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filteredSales.map((item, idx) => (
+                    <tr key={idx} className="border-b border-gray-200 hover:bg-yellow-50/60 transition-colors">
+                      <td className="py-2 px-4 border-r border-gray-200 text-center font-mono text-gray-500">{item.sNo}</td>
+                      <td className="py-2 px-4 border-r border-gray-200 font-bold text-gray-800">
+                        {item.itemName}
+                      </td>
+                      <td className="py-2 px-4 border-r border-gray-200 text-gray-600">
+                        <span className="px-2 py-0.5 bg-slate-100 rounded text-[10px] font-medium text-slate-700">
+                          {item.category || 'Kitchen'}
+                        </span>
+                      </td>
+                      <td className="py-2 px-4 border-r border-gray-200 text-right font-mono font-semibold text-blue-700">
+                        {item.qty.toFixed(2)}
+                      </td>
+                      <td className="py-2 px-4 border-r border-gray-200 text-right font-mono text-gray-700">
+                        {item.rate.toFixed(2)}
+                      </td>
+                      <td className="py-2 px-4 text-right font-mono font-bold text-emerald-700">
+                        {item.amount.toFixed(2)}
+                      </td>
+                    </tr>
+                  )))}
               </tbody>
               <tfoot>
                 <tr className="bg-slate-200 font-bold text-xs border-t-2 border-gray-400">

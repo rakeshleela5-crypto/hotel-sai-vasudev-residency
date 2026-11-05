@@ -83,15 +83,24 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
   // Completed Booking Voucher
   const [savedBooking, setSavedBooking] = useState<PmsBooking | null>(null);
 
-  // Autocomplete suggestions matching Frame 0250
-  const GUEST_SUGGESTIONS = [
-    { name: 'vinod kumar jain', city: 'jabalpur', state: 'madhya pradesh', mobile: '78657656754' },
-    { name: 'hariom gautam ji', city: 'jabalpur', state: 'madhya pradesh', mobile: '76675763433' },
-    { name: 'vikash sharma', city: 'delhi', state: 'delhi', mobile: '8872757274' },
-    { name: 'anupam ji', city: 'Rayagada', state: 'Odisha', mobile: '65448987' },
-    { name: 'RAM KISHOR', city: 'indore', state: 'madhya pradesh', mobile: '9827011223' },
-    { name: 'ADITI MEHNDIRATTA', city: 'Bhubaneswar', state: 'Odisha', mobile: '9823456789' }
-  ];
+  // Dynamic guest suggestions from real stays
+  const guestSuggestions = React.useMemo(() => {
+    const list: Array<{ name: string; city: string; state: string; mobile: string }> = [];
+    const seen = new Set<string>();
+    PmsStore.getCheckouts().forEach(c => {
+      if (c.guestName && !seen.has(c.guestName.toLowerCase())) {
+        seen.add(c.guestName.toLowerCase());
+        list.push({ name: c.guestName, city: c.city || 'Rayagada', state: c.state || 'Odisha', mobile: c.guestPhone || '' });
+      }
+    });
+    PmsStore.getCheckIns().forEach(c => {
+      if (c.guestName && !seen.has(c.guestName.toLowerCase())) {
+        seen.add(c.guestName.toLowerCase());
+        list.push({ name: c.guestName, city: c.city || 'Rayagada', state: c.state || 'Odisha', mobile: c.mobile || '' });
+      }
+    });
+    return list.slice(0, 6);
+  }, [isOpen]);
 
   // Refresh available rooms whenever dates change (Video 20 core feature [06:25 - 07:35])
   const recalculateAvailability = () => {
@@ -145,7 +154,7 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
     setTimeout(() => setCopiedLink(false), 2500);
   };
 
-  const handleSelectSuggestion = (sug: typeof GUEST_SUGGESTIONS[0]) => {
+  const handleSelectSuggestion = (sug: { name: string; city: string; state: string; mobile: string }) => {
     setGuestName(sug.name);
     setCity(sug.city);
     setState(sug.state);
@@ -805,28 +814,30 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
                       Guest Information (Identification &amp; Contact)
                     </div>
 
-                    {/* Quick Suggestions Chips matching Frame 0250 */}
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
-                      <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>Quick Fill:</span>
-                      {GUEST_SUGGESTIONS.map((s, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => handleSelectSuggestion(s)}
-                          style={{
-                            background: '#f1f5f9',
-                            border: '1px solid #cbd5e1',
-                            borderRadius: 12,
-                            padding: '1px 8px',
-                            fontSize: 10,
-                            color: '#1e293b',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          {s.name}
-                        </button>
-                      ))}
-                    </div>
+                    {/* Quick Suggestions Chips from past stays */}
+                    {guestSuggestions.length > 0 && (
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+                        <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>Quick Fill:</span>
+                        {guestSuggestions.map((s, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => handleSelectSuggestion(s)}
+                            style={{
+                              background: '#f1f5f9',
+                              border: '1px solid #cbd5e1',
+                              borderRadius: 12,
+                              padding: '1px 8px',
+                              fontSize: 10,
+                              color: '#1e293b',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {s.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
 
                     {/* Guest Name & Mobile */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 10, marginBottom: 10 }}>
@@ -837,7 +848,7 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
                         <input 
                           type="text" 
                           required
-                          placeholder="e.g. Vinod Kumar Jain"
+                          placeholder="e.g. Guest Full Name"
                           value={guestName} 
                           onChange={e => setGuestName(e.target.value)}
                           style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12, fontWeight: 700 }} 

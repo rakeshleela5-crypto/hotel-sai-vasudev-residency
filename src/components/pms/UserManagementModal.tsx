@@ -826,7 +826,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
           color: '#64748b'
         }}>
           <div>
-            Showing <strong>{filteredUsers.length}</strong> user accounts across chain firm <strong>DEMO0004</strong> &bull; Multi-User Mobile/PC Active
+            Showing <strong>{filteredUsers.length}</strong> user accounts across <strong>SRI SAI VASUDEV RESIDENCY</strong> &bull; Multi-User Mobile/PC Active
           </div>
           <button
             type="button"

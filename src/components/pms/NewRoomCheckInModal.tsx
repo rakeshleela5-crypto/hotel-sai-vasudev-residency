@@ -13,73 +13,6 @@ interface NewRoomCheckInModalProps {
   onCheckInCompleted: (checkIn: PmsCheckIn) => void;
 }
 
-// Returning Guests Database (Video 03 Frame 0070)
-const EXISTING_GUESTS: Record<string, {
-  name: string;
-  mobile: string;
-  address1: string;
-  city: string;
-  state: string;
-  pin: string;
-  nationality: string;
-  docName: string;
-  docNo: string;
-  companyName: string;
-  companyAddress: string;
-  gstNo: string;
-  photoUrl: string;
-  idUrl: string;
-}> = {
-  '7676767674': {
-    name: 'sunil agrwal',
-    mobile: '7676767674',
-    address1: 'main road',
-    city: 'renukot',
-    state: 'm.p.',
-    pin: '76576',
-    nationality: 'India',
-    docName: 'AADHAR CARD',
-    docNo: '765765721234',
-    companyName: 'hindalko',
-    companyAddress: 'renukot',
-    gstNo: '23SJDHGSJD123',
-    photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=60',
-    idUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=150&auto=format&fit=crop&q=60'
-  },
-  '87576576': {
-    name: 'hariom gautam ji',
-    mobile: '87576576',
-    address1: 'Civil Lines Road',
-    city: 'jabalpur',
-    state: 'm.p.',
-    pin: '482001',
-    nationality: 'India',
-    docName: 'AADHAR CARD',
-    docNo: '544654651234',
-    companyName: '',
-    companyAddress: '',
-    gstNo: '',
-    photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=60',
-    idUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=150&auto=format&fit=crop&q=60'
-  },
-  '9622975444': {
-    name: 'AJUU',
-    mobile: '9622975444',
-    address1: 'Station Road',
-    city: 'Bilaspur',
-    state: 'Chhattisgarh',
-    pin: '495220',
-    nationality: 'India',
-    docName: 'Driving License',
-    docNo: 'CG-10-20210089',
-    companyName: '',
-    companyAddress: '',
-    gstNo: '',
-    photoUrl: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop&q=60',
-    idUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=150&auto=format&fit=crop&q=60'
-  }
-};
-
 export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
   isOpen,
   onClose,
@@ -373,24 +306,65 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
     }
   };
 
+  // Past Guests dynamic lookup
+  const pastGuests = React.useMemo(() => {
+    const map = new Map<string, { name: string; mobile: string }>();
+    PmsStore.getCheckouts().forEach(c => {
+      if (c.guestPhone && c.guestName) map.set(c.guestPhone, { name: c.guestName, mobile: c.guestPhone });
+    });
+    PmsStore.getCheckIns().forEach(ci => {
+      if (ci.mobile && ci.guestName) map.set(ci.mobile, { name: ci.guestName, mobile: ci.mobile });
+    });
+    PmsStore.getBookings().forEach(b => {
+      if (b.mobile && b.guestName) map.set(b.mobile, { name: b.guestName, mobile: b.mobile });
+    });
+    return Array.from(map.values());
+  }, [isOpen]);
+
   // Handle Select Guest Dropdown
   const handleSelectGuest = (mobileKey: string) => {
-    const g = EXISTING_GUESTS[mobileKey];
-    if (g) {
-      setGuestName(g.name);
-      setMobile(g.mobile);
-      setAddressLine1(g.address1);
-      setCity(g.city);
-      setState(g.state);
-      setPinCode(g.pin);
-      setNationality(g.nationality);
-      setDocumentName(g.docName);
-      setDocumentNo(g.docNo);
-      setCompanyName(g.companyName);
-      setCompanyAddress(g.companyAddress);
-      setGstNo(g.gstNo);
-      setGuestPhoto(g.photoUrl);
-      setIdPhotoFront(g.idUrl);
+    const checkouts = PmsStore.getCheckouts();
+    const checkIns = PmsStore.getCheckIns();
+    const bookings = PmsStore.getBookings();
+
+    const matchedCo = checkouts.find(c => c.guestPhone === mobileKey);
+    const matchedCi = checkIns.find(c => c.mobile === mobileKey);
+    const matchedBk = bookings.find(b => b.mobile === mobileKey);
+
+    if (matchedCo) {
+      setGuestName(matchedCo.guestName);
+      setMobile(matchedCo.guestPhone);
+      setAddressLine1(matchedCo.addressLine1 || '');
+      setCity(matchedCo.city || 'Rayagada');
+      setState(matchedCo.state || 'Odisha');
+      setPinCode(matchedCo.pinCode || '765001');
+      setNationality(matchedCo.country || 'India');
+      setCompanyName(matchedCo.companyName || '');
+      setCompanyAddress(matchedCo.companyAddress || '');
+      setGstNo(matchedCo.gstNumber || '');
+    } else if (matchedCi) {
+      setGuestName(matchedCi.guestName);
+      setMobile(matchedCi.mobile);
+      setAddressLine1(matchedCi.addressLine1 || '');
+      setCity(matchedCi.city || 'Rayagada');
+      setState(matchedCi.state || 'Odisha');
+      setPinCode(matchedCi.pinCode || '765001');
+      setNationality(matchedCi.nationality || 'India');
+      setDocumentName(matchedCi.documentName || 'Aadhaar Card');
+      setDocumentNo(matchedCi.documentNo || '');
+      setCompanyName(matchedCi.companyName || '');
+      setCompanyAddress(matchedCi.companyAddress || '');
+      setGstNo(matchedCi.gstNo || '');
+      if (matchedCi.guestImage) setGuestPhoto(matchedCi.guestImage);
+      if (matchedCi.documentImage) setIdPhotoFront(matchedCi.documentImage);
+    } else if (matchedBk) {
+      setGuestName(matchedBk.guestName);
+      setMobile(matchedBk.mobile);
+      setAddressLine1(matchedBk.addressLine1 || '');
+      setCity(matchedBk.city || 'Rayagada');
+      setState(matchedBk.state || 'Odisha');
+      setPinCode(matchedBk.pinCode || '765001');
+      setNationality(matchedBk.nationality || 'India');
     }
   };
 
@@ -853,9 +827,13 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                   defaultValue=""
                 >
                   <option value="" disabled>Select Guest</option>
-                  <option value="7676767674">sunil agrwal - 7676767674</option>
-                  <option value="87576576">hariom - 87576576</option>
-                  <option value="9622975444">AJUU - 9622975444</option>
+                  {pastGuests.length === 0 ? (
+                    <option value="" disabled>No past guests found</option>
+                  ) : (
+                    pastGuests.map(g => (
+                      <option key={g.mobile} value={g.mobile}>{g.name} - {g.mobile}</option>
+                    ))
+                  )}
                 </select>
               </div>
 

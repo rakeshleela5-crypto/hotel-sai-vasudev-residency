@@ -1432,7 +1432,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
               <tbody>
                 <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
                   <td style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 700, color: '#0284c7' }}>
-                    {occupiedCount > 0 ? occupiedCount : 1}
+                    {occupiedCount}
                   </td>
                   <td style={{ padding: '8px 14px', textAlign: 'center', fontWeight: 700, color: '#2563eb' }}>
                     {vacantCount}

@@ -50,14 +50,15 @@ export const AdvanceReceiptModal: React.FC<AdvanceReceiptModalProps> = ({
   const rooms = PmsStore.getRooms();
   const occupiedRooms = rooms.filter(r => r.status === 'occupied' && r.currentGuest);
 
+  const todayStr = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
   const [receiptNo, setReceiptNo] = useState(`AR${Math.floor(13 + Math.random() * 20)}`);
   const [voucherNo, setVoucherNo] = useState(`${Math.floor(13 + Math.random() * 20)}`);
-  const [receiptDate, setReceiptDate] = useState('07-06-2025');
+  const [receiptDate, setReceiptDate] = useState(todayStr);
   const [paymentMode, setPaymentMode] = useState<PmsAdvanceReceipt['paymentMode']>('Cash');
   const [selectedAccount, setSelectedAccount] = useState<string>(
     occupiedRooms.length > 0 
-      ? `${occupiedRooms[0].currentGuest?.name}||${occupiedRooms[0].currentGuest?.checkInDate || '2025-06-07'}|| ${occupiedRooms[0].roomNo}||${occupiedRooms[0].currentGuest?.phone || '8432066047'}`
-      : 'Shiv||2025-06-07|| 101||8432066047'
+      ? `${occupiedRooms[0].currentGuest?.name}||${occupiedRooms[0].currentGuest?.checkInDate || todayStr}|| ${occupiedRooms[0].roomNo}||${occupiedRooms[0].currentGuest?.phone || ''}`
+      : ''
   );
   const [amount, setAmount] = useState<number | ''>('');
   const [remark, setRemark] = useState('advance');
@@ -104,10 +105,10 @@ export const AdvanceReceiptModal: React.FC<AdvanceReceiptModalProps> = ({
     }
 
     // Parse the selected account string: GuestName||CheckInDate|| RoomNo||Mobile
-    const parts = selectedAccount.split('||').map(s => s.trim());
+    const parts = selectedAccount ? selectedAccount.split('||').map(s => s.trim()) : [];
     const guestName = parts[0] || 'Guest';
-    const roomNo = parts[2] || targetRoomNo || '101';
-    const mobile = parts[3] || '9876543210';
+    const roomNo = parts[2] || targetRoomNo || '';
+    const mobile = parts[3] || '';
 
     const newReceipt: PmsAdvanceReceipt = {
       receiptNo,
@@ -426,14 +427,14 @@ export const AdvanceReceiptModal: React.FC<AdvanceReceiptModalProps> = ({
                   {occupiedRooms.map(r => (
                     <option
                       key={r.roomNo}
-                      value={`${r.currentGuest?.name}||${r.currentGuest?.checkInDate || '2025-06-07'}|| ${r.roomNo}||${r.currentGuest?.phone || ''}`}
+                      value={`${r.currentGuest?.name}||${r.currentGuest?.checkInDate || todayStr}|| ${r.roomNo}||${r.currentGuest?.phone || ''}`}
                     >
-                      {`${r.currentGuest?.name}||${r.currentGuest?.checkInDate || '2025-06-07'}|| ${r.roomNo}||${r.currentGuest?.phone || ''}`}
+                      {`${r.currentGuest?.name}||${r.currentGuest?.checkInDate || todayStr}|| ${r.roomNo}||${r.currentGuest?.phone || ''}`}
                     </option>
                   ))}
-                  <option value="Shiv||2025-06-07|| 101||8432066047">
-                    Shiv||2025-06-07|| 101||8432066047
-                  </option>
+                  {occupiedRooms.length === 0 && (
+                    <option value="" disabled>No occupied rooms currently</option>
+                  )}
                 </select>
               </div>
 

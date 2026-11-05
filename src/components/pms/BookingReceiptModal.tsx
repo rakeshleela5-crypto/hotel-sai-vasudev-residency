@@ -43,7 +43,7 @@ export const BookingReceiptModal: React.FC<BookingReceiptModalProps> = ({
           }}>
             <span>GST NO: {company.gstNo || '21AEKPP8689J1ZS'}</span>
             <span style={{ fontSize: 16, textTransform: 'uppercase', letterSpacing: 1 }}>Room Booking Slip</span>
-            <span>CIN: U55101MH2024PTC123456</span>
+            <span>PAN: {company.pencardNo || 'AEKPP8689J'}</span>
           </div>
 
           {/* Hotel Information & Dual QR Codes matching Frame 0220 */}

@@ -214,25 +214,33 @@ export const MonthlyRestaurantSaleReportModal: React.FC<MonthlyRestaurantSaleRep
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredRows.map((r: any, idx: number) => (
-                    <tr key={idx} style={{ background: idx % 2 === 0 ? '#fff' : '#f8fafc' }}>
-                      <td style={{ textAlign: 'center', fontWeight: 700 }}>{r.slNo}</td>
-                      <td style={{ textAlign: 'center', fontWeight: 800, color: '#0369a1' }}>{r.date}</td>
-                      <td style={{ textAlign: 'right', fontWeight: 700 }}>{r.sale5Percent.toFixed(2)}</td>
-                      <td style={{ textAlign: 'right', color: '#0284c7' }}>{r.cgst.toFixed(2)}</td>
-                      <td style={{ textAlign: 'right', color: '#7c3aed' }}>{r.sgst.toFixed(2)}</td>
-                      <td style={{ textAlign: 'right', fontWeight: 900, background: '#ecfdf5', color: '#15803d' }}>
-                        {r.saleTotal.toFixed(2)}
-                      </td>
-                      <td style={{ textAlign: 'right' }}>{r.cash > 0 ? r.cash.toFixed(2) : '-'}</td>
-                      <td style={{ textAlign: 'right' }}>{r.upi > 0 ? r.upi.toFixed(2) : '-'}</td>
-                      <td style={{ textAlign: 'right' }}>{r.creditCard > 0 ? r.creditCard.toFixed(2) : '-'}</td>
-                      <td style={{ textAlign: 'right' }}>{r.roomCredit > 0 ? r.roomCredit.toFixed(2) : '-'}</td>
-                      <td style={{ textAlign: 'right', fontWeight: 800, background: '#f1f5f9' }}>
-                        {r.totalSettled.toFixed(2)}
+                  {filteredRows.length === 0 ? (
+                    <tr>
+                      <td colSpan={11} style={{ textAlign: 'center', padding: '30px 10px', color: '#64748b' }}>
+                        No restaurant sales records found for this period.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    filteredRows.map((r: any, idx: number) => (
+                      <tr key={idx} style={{ background: idx % 2 === 0 ? '#fff' : '#f8fafc' }}>
+                        <td style={{ textAlign: 'center', fontWeight: 700 }}>{r.slNo}</td>
+                        <td style={{ textAlign: 'center', fontWeight: 800, color: '#0369a1' }}>{r.date}</td>
+                        <td style={{ textAlign: 'right', fontWeight: 700 }}>{r.sale5Percent.toFixed(2)}</td>
+                        <td style={{ textAlign: 'right', color: '#0284c7' }}>{r.cgst.toFixed(2)}</td>
+                        <td style={{ textAlign: 'right', color: '#7c3aed' }}>{r.sgst.toFixed(2)}</td>
+                        <td style={{ textAlign: 'right', fontWeight: 900, background: '#ecfdf5', color: '#15803d' }}>
+                          {r.saleTotal.toFixed(2)}
+                        </td>
+                        <td style={{ textAlign: 'right' }}>{r.cash > 0 ? r.cash.toFixed(2) : '-'}</td>
+                        <td style={{ textAlign: 'right' }}>{r.upi > 0 ? r.upi.toFixed(2) : '-'}</td>
+                        <td style={{ textAlign: 'right' }}>{r.creditCard > 0 ? r.creditCard.toFixed(2) : '-'}</td>
+                        <td style={{ textAlign: 'right' }}>{r.roomCredit > 0 ? r.roomCredit.toFixed(2) : '-'}</td>
+                        <td style={{ textAlign: 'right', fontWeight: 800, background: '#f1f5f9' }}>
+                          {r.totalSettled.toFixed(2)}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
                 <tfoot>
                   <tr style={{ background: '#e2e8f0', fontWeight: 900, fontSize: 11 }}>
@@ -297,15 +305,23 @@ export const MonthlyRestaurantSaleReportModal: React.FC<MonthlyRestaurantSaleRep
                   </tr>
                 </thead>
                 <tbody>
-                  {reportData.complimentarySales.map((c: any, idx: number) => (
-                    <tr key={idx}>
-                      <td style={{ textAlign: 'center', fontWeight: 700 }}>{c.slNo}</td>
-                      <td style={{ textAlign: 'center', fontWeight: 800, color: '#0369a1' }}>{c.date}</td>
-                      <td style={{ fontWeight: 600 }}>{c.particulars}</td>
-                      <td style={{ textAlign: 'right', fontWeight: 800, color: '#16a34a' }}>₹{c.amount.toFixed(2)}</td>
-                      <td style={{ fontWeight: 700, color: '#64748b' }}>{c.authorizedBy}</td>
+                  {reportData.complimentarySales.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} style={{ textAlign: 'center', padding: '30px 10px', color: '#64748b' }}>
+                        No complimentary meals recorded.
+                      </td>
                     </tr>
-                  ))}
+                  ) : (
+                    reportData.complimentarySales.map((c: any, idx: number) => (
+                      <tr key={idx}>
+                        <td style={{ textAlign: 'center', fontWeight: 700 }}>{c.slNo}</td>
+                        <td style={{ textAlign: 'center', fontWeight: 800, color: '#0369a1' }}>{c.date}</td>
+                        <td style={{ fontWeight: 600 }}>{c.particulars}</td>
+                        <td style={{ textAlign: 'right', fontWeight: 800, color: '#16a34a' }}>₹{c.amount.toFixed(2)}</td>
+                        <td style={{ fontWeight: 700, color: '#64748b' }}>{c.authorizedBy}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

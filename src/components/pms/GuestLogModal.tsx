@@ -197,7 +197,14 @@ export const GuestLogModal: React.FC<GuestLogModalProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {filteredGuests.map((guest, idx) => (
+                {filteredGuests.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: 'center', padding: '32px 16px', color: '#64748b', fontStyle: 'italic', fontSize: '13px' }}>
+                      No guest stay records found. Once guests check in or check out at the front desk, their lifetime audit profiles and VIP tiers will appear here.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredGuests.map((guest, idx) => (
                   <tr key={idx} className="border-b border-gray-200 hover:bg-yellow-50/60 transition-colors">
                     <td className="py-2.5 px-4 border-r border-gray-200 text-center font-mono text-gray-500">{guest.sNo}</td>
                     <td className="py-2.5 px-4 border-r border-gray-200">
@@ -238,7 +245,7 @@ export const GuestLogModal: React.FC<GuestLogModalProps> = ({
                       </button>
                     </td>
                   </tr>
-                ))}
+                )))}
               </tbody>
               <tfoot>
                 <tr className="bg-slate-200 font-bold text-xs border-t-2 border-gray-400">
