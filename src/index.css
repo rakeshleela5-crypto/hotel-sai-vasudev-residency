@@ -336,3 +336,55 @@ img {
   overflow-y: auto !important;
   box-sizing: border-box !important;
 }
+
+/* =========================================================================
+   MOBILE & TABLET FRONT-DESK TOUCH TARGETS & ACCESSIBILITY (WCAG 2.5.5 / 2.5.8)
+   Ensures front-desk receptionists on budget Android tablets / phones
+   have comfortable min 40px-44px tap targets with touch-action: manipulation.
+   ========================================================================= */
+@media (max-width: 1024px) {
+  /* Prevent 300ms double-tap zoom delay on touch devices */
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  [role="button"],
+  .pms-reg-btn,
+  .pms-btn {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Interactive action buttons in PMS registers, modals, and tables */
+  .pms-reg-btn,
+  .pms-btn,
+  .pms-modal-window button,
+  .pms-submodal-window button,
+  .pms-table button,
+  .pms-table .action-btn {
+    min-height: 40px !important;
+    min-width: 40px !important;
+    padding: 8px 14px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 13px !important;
+  }
+
+  /* Form controls easy to select without zoom errors */
+  .pms-modal-window input,
+  .pms-modal-window select,
+  .pms-submodal-window input,
+  .pms-submodal-window select {
+    min-height: 42px !important;
+    font-size: 14px !important;
+  }
+
+  /* Ensure modal header close button is effortlessly touchable */
+  .pms-modal-header button,
+  .pms-reg-header button {
+    min-height: 42px !important;
+    min-width: 42px !important;
+  }
+}

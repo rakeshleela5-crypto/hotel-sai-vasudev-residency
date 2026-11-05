@@ -128,6 +128,44 @@ def _soft_delete_filter(execute_state):
         )
 
 
+
+# =========================================================================
+# 1C. DATABASE OBSERVABILITY & SLOW QUERY MONITORING (>500ms)
+# =========================================================================
+import time
+SLOW_QUERY_THRESHOLD_MS = int(os.getenv("SLOW_QUERY_THRESHOLD_MS", "500"))
+
+@event.listens_for(engine, "before_cursor_execute")
+def _before_cursor_execute_sync(conn, cursor, statement, parameters, context, executemany):
+    conn.info.setdefault("query_start_time", []).append(time.perf_counter())
+
+@event.listens_for(engine, "after_cursor_execute")
+def _after_cursor_execute_sync(conn, cursor, statement, parameters, context, executemany):
+    timers = conn.info.get("query_start_time")
+    if timers:
+        duration_ms = (time.perf_counter() - timers.pop()) * 1000
+        if duration_ms > SLOW_QUERY_THRESHOLD_MS:
+            clean_stmt = " ".join(statement.split())[:300]
+            logger.warning(
+                f"[SlowQuery] Query took {duration_ms:.2f}ms (threshold: {SLOW_QUERY_THRESHOLD_MS}ms): {clean_stmt}"
+            )
+
+if hasattr(async_engine, "sync_engine"):
+    @event.listens_for(async_engine.sync_engine, "before_cursor_execute")
+    def _before_cursor_execute_async(conn, cursor, statement, parameters, context, executemany):
+        conn.info.setdefault("query_start_time", []).append(time.perf_counter())
+
+    @event.listens_for(async_engine.sync_engine, "after_cursor_execute")
+    def _after_cursor_execute_async(conn, cursor, statement, parameters, context, executemany):
+        timers = conn.info.get("query_start_time")
+        if timers:
+            duration_ms = (time.perf_counter() - timers.pop()) * 1000
+            if duration_ms > SLOW_QUERY_THRESHOLD_MS:
+                clean_stmt = " ".join(statement.split())[:300]
+                logger.warning(
+                    f"[SlowQuery] Async query took {duration_ms:.2f}ms (threshold: {SLOW_QUERY_THRESHOLD_MS}ms): {clean_stmt}"
+                )
+
 # =========================================================================
 # 2. SESSION DEPENDENCY INJECTORS
 # =========================================================================
