@@ -23,8 +23,7 @@ class RoomResponse(RoomBase):
     id: int
     created_at: datetime.datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class HousekeepingStatusUpdate(BaseModel):
     room_id: int
@@ -75,8 +74,7 @@ class BookingPaymentResponse(BaseModel):
     collected_by: str
     created_at: datetime.datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Room Shift Schemas ---
 class RoomShiftCreate(BaseModel):
@@ -97,8 +95,7 @@ class RoomShiftResponse(BaseModel):
     shifted_by: str
     created_at: datetime.datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Room Folio (KOT & Sundry) Schemas ---
 class RoomFolioItemCreate(BaseModel):
@@ -127,8 +124,7 @@ class RoomFolioItemResponse(BaseModel):
     status: str
     created_at: datetime.datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Police Register & Form C Schemas ---
 class PoliceStationLogCreate(BaseModel):
@@ -172,8 +168,7 @@ class PoliceStationLogResponse(BaseModel):
     id_document_key: Optional[str] = None
     created_at: datetime.datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Booking Schemas ---
 class BookingCreate(BaseModel):
@@ -235,8 +230,7 @@ class BookingResponse(BaseModel):
     created_at: datetime.datetime
     room: Optional[RoomResponse] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Master Folio Invoice Schema ---
 class MasterFolioResponse(BaseModel):
@@ -347,8 +341,7 @@ class InquiryResponse(BaseModel):
     status: str
     created_at: datetime.datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Health Response ---
 class HealthResponse(BaseModel):
@@ -465,8 +458,7 @@ class KotResponse(BaseModel):
     is_printed: bool = True
     created_at: Optional[datetime.datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class KotVoidRequest(BaseModel):
     kot_no: str
@@ -602,8 +594,7 @@ class PaymentTransactionResponse(BaseModel):
     created_at: datetime.datetime
     updated_at: datetime.datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- New Enterprise Operations Schemas ---
 
@@ -668,8 +659,7 @@ class FoodBillResponse(BaseModel):
     status: str = "Settled"
     created_at: datetime.datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class PettyExpenseCreate(BaseModel):
     expense_no: Optional[str] = None
@@ -695,8 +685,7 @@ class PettyExpenseResponse(BaseModel):
     approved_by: str
     created_at: datetime.datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class FolioDiscountCreate(BaseModel):
     booking_ref: str
@@ -720,8 +709,7 @@ class FolioDiscountResponse(BaseModel):
     approved_by: str
     created_at: datetime.datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class InventoryPurchaseCreate(BaseModel):
     bill_no: str
@@ -753,8 +741,7 @@ class InventoryPurchaseResponse(BaseModel):
     terms: str
     created_at: datetime.datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class KotVoidRequest(BaseModel):
     table_session_id: Optional[str] = None
@@ -843,8 +830,7 @@ class GroupBookingResponse(BaseModel):
     status: str
     created_at: datetime.datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class CheckoutRecordCreate(BaseModel):
     invoice_no: Optional[str] = None
@@ -1320,8 +1306,7 @@ class BanquetBookingResponse(BaseModel):
     seating_layout: str = "Standard Banquet"
     created_at: Optional[datetime.datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class LiquorItemCreate(BaseModel):
     id: Optional[str] = None
@@ -1937,8 +1922,7 @@ class LiquorStockResponse(BaseModel):
     closing_bottles: float
     updated_at: Optional[datetime.datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 

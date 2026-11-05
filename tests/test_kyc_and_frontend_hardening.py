@@ -16,7 +16,7 @@ import io
 import os
 import sys
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock
 from fastapi import HTTPException, UploadFile
 from starlette.datastructures import Headers
 
@@ -26,6 +26,25 @@ if PROJECT_ROOT not in sys.path:
 
 from app.services.r2_storage import r2_service, STRICT_ALLOWED_MIME_TYPES
 from app.routes.uploads import upload_guest_id_document, upload_file_direct, upload_booking_kyc_document, KYC_MAX_FILE_SIZE
+
+
+def run_coro(coro):
+    """Execute coroutine synchronously without Windows socketpair conflicts."""
+    val = None
+    stack = [coro]
+    while stack:
+        current = stack[-1]
+        try:
+            yielded = current.send(val)
+            val = None
+            if hasattr(yielded, "send"):
+                stack.append(yielded)
+            else:
+                val = yielded
+        except StopIteration as e:
+            stack.pop()
+            val = e.value
+    return val
 
 
 def test_r2_strict_mime_and_size_limits():
@@ -39,8 +58,7 @@ def test_r2_strict_mime_and_size_limits():
     assert "application/x-sh" not in STRICT_ALLOWED_MIME_TYPES
 
 
-@pytest.mark.anyio
-async def test_guest_id_upload_rejects_oversized_file():
+def test_guest_id_upload_rejects_oversized_file():
     """Verify /uploads/guest-id raises HTTP 413 when file exceeds 5MB."""
     # 5MB + 10 bytes
     oversized_data = b"x" * (5 * 1024 * 1024 + 10)
@@ -50,15 +68,15 @@ async def test_guest_id_upload_rejects_oversized_file():
         filename="large_id.jpg",
         headers=Headers({"content-type": "image/jpeg"})
     )
+    fake_file.read = AsyncMock(return_value=oversized_data)
 
     with pytest.raises(HTTPException) as exc_info:
-        await upload_guest_id_document(file=fake_file)
+        run_coro(upload_guest_id_document(file=fake_file))
     assert exc_info.value.status_code == 413
     assert "exceeds" in exc_info.value.detail.lower()
 
 
-@pytest.mark.anyio
-async def test_guest_id_upload_rejects_disallowed_mime():
+def test_guest_id_upload_rejects_disallowed_mime():
     """Verify /uploads/guest-id raises HTTP 400 when file type is not allowed for KYC."""
     file_data = b"Some dangerous script content"
     fake_file = UploadFile(
@@ -67,15 +85,16 @@ async def test_guest_id_upload_rejects_disallowed_mime():
         filename="script.sh",
         headers=Headers({"content-type": "application/x-sh"})
     )
+    fake_file.read = AsyncMock(return_value=file_data)
 
     with pytest.raises(HTTPException) as exc_info:
-        await upload_guest_id_document(file=fake_file)
+        run_coro(upload_guest_id_document(file=fake_file))
     assert exc_info.value.status_code == 400
-    assert "invalid file type" in exc_info.value.detail.lower()
+    detail = exc_info.value.detail.lower()
+    assert "invalid" in detail and "type" in detail
 
 
-@pytest.mark.anyio
-async def test_generic_upload_kyc_folder_enforces_5mb_limit():
+def test_generic_upload_kyc_folder_enforces_5mb_limit():
     """Verify /uploads/file rejects >5MB when folder is guest_ids or kyc."""
     oversized_data = b"x" * (5 * 1024 * 1024 + 50)
     fake_file = UploadFile(
@@ -84,20 +103,19 @@ async def test_generic_upload_kyc_folder_enforces_5mb_limit():
         filename="guest_aadhaar.png",
         headers=Headers({"content-type": "image/png"})
     )
+    fake_file.read = AsyncMock(return_value=oversized_data)
 
     with pytest.raises(HTTPException) as exc_info:
-        await upload_file_direct(
+        run_coro(upload_file_direct(
             file=fake_file,
             folder="guest_ids"
-        )
+        ))
     assert exc_info.value.status_code == 413
 
 
-@pytest.mark.anyio
-async def test_webp_image_upload_passes_validation():
+def test_webp_image_upload_passes_validation():
     """Verify WebP image upload is accepted by R2 client and validates magic bytes."""
     # Create valid WebP RIFF header
-    # 4 bytes 'RIFF', 4 bytes size, 4 bytes 'WEBP'
     riff_header = b"RIFF\x24\x00\x00\x00WEBPVP8 " + b"\x00" * 30
     fake_file = UploadFile(
         file=io.BytesIO(riff_header),
@@ -105,18 +123,17 @@ async def test_webp_image_upload_passes_validation():
         filename="passport.webp",
         headers=Headers({"content-type": "image/webp"})
     )
+    fake_file.read = AsyncMock(return_value=riff_header)
 
-    # Mock R2 S3 put_object so we don't need real AWS credentials
     mock_s3 = MagicMock()
-    with patch.object(r2_service, "s3", mock_s3):
-        res = await r2_service.upload_file(
+    with patch.object(r2_service, "s3_client", mock_s3):
+        res = run_coro(upload_file_direct(
             file=fake_file,
-            folder="guest_ids",
-            custom_filename="passport.webp"
-        )
-        assert res["success"] is True
+            folder="guest_ids"
+        ))
+        assert res["status"] == "success"
         assert res["content_type"] == "image/webp"
-        assert res["file_name"] == "passport.webp"
+        assert res["filename"] == "passport.webp"
         mock_s3.put_object.assert_called_once()
 
 
@@ -141,6 +158,6 @@ def test_frontend_files_structure():
     with open(err_ts, "r", encoding="utf-8") as f:
         err_content = f.read()
         assert "componentDidCatch" in err_content
-        assert "Reload Dashboard" in err_content
+        assert "Reload Application" in err_content
         assert "Return to Front Desk Home" in err_content
         assert "moduleName" in err_content

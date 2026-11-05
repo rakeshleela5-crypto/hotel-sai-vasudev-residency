@@ -41,5 +41,19 @@ export default defineConfig({
   plugins: [react(), cloudflarePagesPlugin()],
   build: {
     emptyOutDir: true,
+    chunkSizeWarningLimit: 1200,
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          if (id.includes('node_modules')) {
+            if (id.includes('xlsx')) return 'vendor-excel'
+            if (id.includes('@sentry')) return 'vendor-sentry'
+            if (id.includes('dexie') || id.includes('@aws-sdk')) return 'vendor-storage'
+            if (id.includes('react')) return 'vendor-react'
+            return 'vendor'
+          }
+        },
+      },
+    },
   },
 })

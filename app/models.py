@@ -124,7 +124,7 @@ class BookingPayment(Base):
     transaction_ref = Column(String(100), nullable=True, index=True) # UPI UTR or Card Auth Code
     notes = Column(String(255), nullable=True)
     collected_by = Column(String(100), default="Front Desk Cashier")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
     booking = relationship("Booking", back_populates="payments")
 
@@ -140,7 +140,7 @@ class RoomShift(Base):
     old_rate = Column(Float, nullable=False)
     new_rate = Column(Float, nullable=False)
     shifted_by = Column(String(100), default="Duty Manager")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
     booking = relationship("Booking", back_populates="room_shifts")
 
@@ -196,7 +196,7 @@ class PoliceStationLog(Base):
     port_of_arrival = Column(String(100), nullable=True)
     date_of_entry_india = Column(String(50), nullable=True)
     id_document_key = Column(String(255), nullable=True) # Cloudflare R2 object key for scanned ID/Passport/Visa
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
     booking = relationship("Booking", back_populates="police_log")
 
@@ -236,7 +236,7 @@ class DailyNightAudit(Base):
     btc_credit_total = Column(Float, default=0.0)
     audited_by = Column(String(100), default="Night Auditor / Manager")
     audit_status = Column(String(50), default="Closed")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class Inquiry(Base):
     __tablename__ = "inquiries"
@@ -248,7 +248,7 @@ class Inquiry(Base):
     subject = Column(String(200), nullable=False)
     message = Column(Text, nullable=False)
     status = Column(String(50), default="New")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class DiningTable(Base):
     __tablename__ = "dining_tables"
@@ -261,7 +261,7 @@ class DiningTable(Base):
     status = Column(String(50), default="Vacant") # Vacant, Running, Billed
     active_session_id = Column(String(100), nullable=True, index=True) # Module 1: Single table session ID
     merged_with_tables = Column(String(255), nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class KotTicket(Base):
     __tablename__ = "kot_tickets"
@@ -321,7 +321,7 @@ class KotVoidAuditLog(Base):
     approving_manager_id = Column(String(100), default="Duty Manager")
     manager_pin_verified = Column(Boolean, default=True)
     void_reason = Column(String(255), nullable=False)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    timestamp = Column(DateTime, default=now_utc)
 
 class KeyCardAccess(Base):
     __tablename__ = "key_card_access"
@@ -330,15 +330,15 @@ class KeyCardAccess(Base):
     card_uid = Column(String(100), unique=True, index=True, nullable=False)
     room_no = Column(String(50), nullable=False, index=True)
     guest_name = Column(String(150), nullable=False)
-    check_in_time = Column(DateTime, default=datetime.datetime.utcnow)
+    check_in_time = Column(DateTime, default=now_utc)
     scheduled_checkout_time = Column(DateTime, nullable=False)
     card_deactivation_time = Column(DateTime, nullable=False) # T-1h cutoff
     status = Column(String(50), default="ACTIVE") # ACTIVE, WARNING_T_MINUS_1H, DEACTIVATED, EXTENDED
     extension_logged = Column(Boolean, default=False)
     extension_fee = Column(Float, default=0.0)
     encoded_by = Column(String(100), default="Front Desk")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
+    updated_at = Column(DateTime, default=now_utc, onupdate=now_utc)
 
 class HousekeepingDiscrepancy(Base):
     __tablename__ = "housekeeping_discrepancies"
@@ -349,7 +349,7 @@ class HousekeepingDiscrepancy(Base):
     front_desk_status = Column(String(50), nullable=False)
     housekeeping_status = Column(String(50), nullable=False)
     reported_by = Column(String(100), default="Housekeeping Attendant")
-    reported_at = Column(DateTime, default=datetime.datetime.utcnow)
+    reported_at = Column(DateTime, default=now_utc)
     resolved = Column(Boolean, default=False)
     resolved_by = Column(String(100), nullable=True)
     resolved_at = Column(DateTime, nullable=True)
@@ -364,8 +364,8 @@ class MasterItem(Base):
     code = Column(String(100), unique=True, index=True, nullable=False)
     name = Column(String(150), nullable=False)
     payload_json = Column(Text, nullable=False) # Structured data fields
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
+    updated_at = Column(DateTime, default=now_utc, onupdate=now_utc)
 
 class StaffUser(Base):
     __tablename__ = "staff_users"
@@ -380,7 +380,7 @@ class StaffUser(Base):
     is_active = Column(Boolean, default=True)
     permissions_json = Column(Text, default="[]")
     password_hash = Column(String(255), nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class InventoryPurchase(Base):
     __tablename__ = "inventory_purchases"
@@ -395,7 +395,7 @@ class InventoryPurchase(Base):
     tax_amount = Column(Float, default=0.0)
     net_amount = Column(Float, default=0.0)
     terms = Column(String(50), default="Credit")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class PaymentTransaction(Base):
     __tablename__ = "payment_transactions"
@@ -418,8 +418,8 @@ class PaymentTransaction(Base):
     upi_intent_link = Column(Text, nullable=True)
     expiry_time = Column(DateTime, nullable=True)
     metadata_json = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
+    updated_at = Column(DateTime, default=now_utc, onupdate=now_utc)
 
     booking = relationship("Booking", backref="payment_transactions")
 
@@ -438,8 +438,8 @@ class VirtualAccount(Base):
     upi_id = Column(String(150), nullable=True)
     decentro_urn = Column(String(150), nullable=True, index=True)
     status = Column(String(50), default="ACTIVE") # ACTIVE, DEACTIVATED, CLOSED
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
+    updated_at = Column(DateTime, default=now_utc, onupdate=now_utc)
 
     booking = relationship("Booking", backref="virtual_accounts")
 
@@ -470,7 +470,7 @@ class FoodBill(Base):
     status = Column(String(50), default="Settled")
     is_deleted = Column(Boolean, default=False, nullable=False, index=True)
     void_reason = Column(String(255), nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class PettyExpense(Base):
     __tablename__ = "petty_expenses"
@@ -487,7 +487,7 @@ class PettyExpense(Base):
     attachment_url = Column(String(500), nullable=True)
     bill_number = Column(String(100), nullable=True)
     approved_by = Column(String(100), default="General Manager")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class FolioDiscountRecord(Base):
     __tablename__ = "folio_discount_records"
@@ -500,7 +500,7 @@ class FolioDiscountRecord(Base):
     discount_amount = Column(Float, default=0.0)
     reason = Column(String(255), nullable=True)
     approved_by = Column(String(100), default="General Manager")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class GroupBooking(Base):
     __tablename__ = "group_bookings"
@@ -520,7 +520,7 @@ class GroupBooking(Base):
     guests_json = Column(Text, default="[]")
     special_instructions = Column(Text, nullable=True)
     status = Column(String(50), default="Confirmed", index=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class CheckoutRecord(Base):
     __tablename__ = "checkout_records"
@@ -565,7 +565,7 @@ class CheckoutRecord(Base):
     invoice_format = Column(String(50), default="A4_Standard")
     is_deleted = Column(Boolean, default=False, nullable=False, index=True)
     void_reason = Column(String(255), nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class AdvanceReceipt(Base):
     __tablename__ = "advance_receipts"
@@ -584,7 +584,7 @@ class AdvanceReceipt(Base):
     transaction_ref = Column(String(100), nullable=True)
     is_settled_in_checkout = Column(Boolean, default=False)
     remark = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class JournalEntry(Base):
     __tablename__ = "journal_entries"
@@ -601,7 +601,7 @@ class JournalEntry(Base):
     amount_paise = Column(Integer, default=0)
     amount_rupees = Column(Float, default=0.0)
     posted_by = Column(String(100), default="Front Desk Mgr")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class PartyAccount(Base):
     __tablename__ = "party_accounts"
@@ -614,7 +614,7 @@ class PartyAccount(Base):
     balance_type = Column(String(10), default="Dr") # Dr, Cr
     gstin = Column(String(50), nullable=True)
     address = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class GeneralReceipt(Base):
     __tablename__ = "general_receipts"
@@ -630,7 +630,7 @@ class GeneralReceipt(Base):
     account_mobile = Column(String(50), nullable=True, index=True)
     amount = Column(Float, nullable=False)
     remark = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class GeneralPayment(Base):
     __tablename__ = "general_payments"
@@ -646,7 +646,7 @@ class GeneralPayment(Base):
     account_mobile = Column(String(50), nullable=True, index=True)
     amount = Column(Float, nullable=False)
     remark = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class Godown(Base):
     __tablename__ = "godowns"
@@ -656,7 +656,7 @@ class Godown(Base):
     s_no = Column(Integer, default=1)
     name = Column(String(150), unique=True, index=True, nullable=False) # e.g. Main Store, Kitchen
     address = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class ItemGroup(Base):
     __tablename__ = "item_groups"
@@ -667,7 +667,7 @@ class ItemGroup(Base):
     name = Column(String(150), unique=True, index=True, nullable=False) # e.g. Raw Material, Spices
     head_group = Column(String(100), default="Raw_Material") # Restaurant_Item vs Raw_Material
     no_discount = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class StockTransfer(Base):
     __tablename__ = "stock_transfers"
@@ -687,7 +687,7 @@ class StockTransfer(Base):
     total_gst_amt = Column(Float, default=0.0)
     total_net_value = Column(Float, default=0.0)
     remark = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class UserAccount(Base):
     __tablename__ = "user_accounts"
@@ -706,7 +706,7 @@ class UserAccount(Base):
     mobile = Column(String(50), nullable=True)
     password_hash = Column(String(255), nullable=True)
     is_on_duty = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class CommissionAgent(Base):
     __tablename__ = "commission_agents"
@@ -729,7 +729,7 @@ class CommissionAgent(Base):
     total_commission_earned = Column(Float, default=0.0)
     total_commission_paid = Column(Float, default=0.0)
     balance_payable = Column(Float, default=0.0)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class AgentPayoutVoucher(Base):
     __tablename__ = "agent_payout_vouchers"
@@ -747,7 +747,7 @@ class AgentPayoutVoucher(Base):
     gross_amount = Column(Float, default=0.0)
     notes = Column(Text, nullable=True)
     created_by = Column(String(100), default="Accounts")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class ShiftHandover(Base):
     __tablename__ = "shift_handovers"
@@ -772,7 +772,7 @@ class ShiftHandover(Base):
     handover_to_user = Column(String(150), nullable=True)
     handover_notes = Column(Text, nullable=True)
     status = Column(String(50), default="Verified & Closed")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class BanquetVenue(Base):
     __tablename__ = "banquet_venues"
@@ -791,7 +791,7 @@ class BanquetVenue(Base):
     status = Column(String(50), default="vacant")
     cleaning_status = Column(String(100), default="Ready")
     sac_code = Column(String(50), default="996311")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class BanquetBooking(Base):
     __tablename__ = "banquet_bookings"
@@ -824,7 +824,7 @@ class BanquetBooking(Base):
     payments_json = Column(Text, default="[]")
     linked_rooms_json = Column(Text, default="[]")
     seating_layout = Column(String(100), default="Standard Banquet")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class LiquorItem(Base):
     __tablename__ = "liquor_items"
@@ -845,7 +845,7 @@ class LiquorItem(Base):
     vat_percentage = Column(Float, default=13.0)
     surcharge_percentage = Column(Float, default=10.0)
     active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class BarInvoice(Base):
     __tablename__ = "bar_invoices"
@@ -871,7 +871,7 @@ class BarInvoice(Base):
     room_no = Column(String(50), nullable=True)
     is_deleted = Column(Boolean, default=False, nullable=False, index=True)
     void_reason = Column(String(255), nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class HotelAsset(Base):
     __tablename__ = "hotel_assets"
@@ -889,7 +889,7 @@ class HotelAsset(Base):
     missing_discrepancy = Column(Float, default=0.0)
     unit_cost = Column(Float, default=0.0)
     last_audit_date = Column(String(50), nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class Locker(Base):
     __tablename__ = "lockers"
@@ -903,7 +903,7 @@ class Locker(Base):
     assigned_room_no = Column(String(50), nullable=True)
     key_number = Column(String(50), default="K-101")
     security_deposit = Column(Float, default=500.0)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class WhatsAppLog(Base):
     __tablename__ = "whatsapp_logs"
@@ -920,7 +920,7 @@ class WhatsAppLog(Base):
     message = Column(Text, nullable=False)
     status = Column(String(50), default="Sent")
     firm_id = Column(String(50), default="SVR0001")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class WhatsAppConfig(Base):
     __tablename__ = "whatsapp_configs"
@@ -936,7 +936,7 @@ class WhatsAppConfig(Base):
     auto_send_on_checkout = Column(Boolean, default=True)
     auto_send_on_booking = Column(Boolean, default=True)
     auto_send_on_food_bill = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class SupportTicket(Base):
     __tablename__ = "support_tickets"
@@ -955,7 +955,7 @@ class SupportTicket(Base):
     status = Column(String(50), default="Open")
     assigned_engineer = Column(String(150), nullable=True)
     resolution_notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class HotelSetting(Base):
     __tablename__ = "hotel_settings"
@@ -991,7 +991,7 @@ class HotelSetting(Base):
     logo_url = Column(Text, nullable=True)
     seal_url = Column(Text, nullable=True)
     signature_url = Column(Text, nullable=True)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=now_utc, onupdate=now_utc)
 
 class RoomType(Base):
     __tablename__ = "room_types"
@@ -1004,7 +1004,7 @@ class RoomType(Base):
     gst_percent = Column(Float, default=12.0)
     room_tariff = Column(Float, default=2500.0)
     discount_percent = Column(Float, default=0.0)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class MenuItem(Base):
     __tablename__ = "menu_items"
@@ -1023,7 +1023,7 @@ class MenuItem(Base):
     hsn_code = Column(String(50), nullable=True)
     sac_code = Column(String(50), default="996331")
     no_discount = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class HousekeepingRecord(Base):
     __tablename__ = "housekeeping_records"
@@ -1038,7 +1038,7 @@ class HousekeepingRecord(Base):
     maintenance_issue = Column(Text, nullable=True)
     maintenance_logged_at = Column(String(100), nullable=True)
     remarks = Column(Text, nullable=True)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=now_utc, onupdate=now_utc)
 
 class AgentCommissionAccrual(Base):
     __tablename__ = "agent_commissions"
@@ -1072,7 +1072,7 @@ class AgentCommissionAccrual(Base):
     utr_reference = Column(String(100), nullable=True)
     payout_date = Column(String(50), nullable=True)
     remarks = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class WhatsAppTemplate(Base):
     __tablename__ = "whatsapp_templates"
@@ -1086,7 +1086,7 @@ class WhatsAppTemplate(Base):
     message = Column(Text, nullable=False)
     active = Column(String(20), default="On")
     send_to = Column(String(50), default="Guest")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class RolePermission(Base):
     __tablename__ = "roles_permissions"
@@ -1097,7 +1097,7 @@ class RolePermission(Base):
     description = Column(Text, nullable=True)
     permissions_json = Column(Text, default="[]")
     is_system = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class NoDiscountRule(Base):
     __tablename__ = "no_discount_configs"
@@ -1110,7 +1110,7 @@ class NoDiscountRule(Base):
     allow_manual_override = Column(Boolean, default=True)
     override_role_required = Column(String(100), default="Admin")
     reason_required_for_override = Column(Boolean, default=True)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=now_utc, onupdate=now_utc)
 
 class LiquorBrand(Base):
     __tablename__ = "liquor_brands"
@@ -1121,7 +1121,7 @@ class LiquorBrand(Base):
     name = Column(String(150), nullable=False)
     discount_percentage = Column(Float, default=0.0)
     status = Column(String(50), default="ACTIVE")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class LiquorUnit(Base):
     __tablename__ = "liquor_units"
@@ -1132,7 +1132,7 @@ class LiquorUnit(Base):
     primary_unit_name = Column(String(100), nullable=False)
     conversion = Column(Float, default=1.0)
     alternate_unit_name = Column(String(100), default="ML")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class DiscountAuditLog(Base):
     __tablename__ = "discount_audit_logs"
@@ -1151,7 +1151,7 @@ class DiscountAuditLog(Base):
     manager_pin_verified = Column(Boolean, default=True)
     margin_saved = Column(Float, default=0.0)
     protected_items_prevented = Column(Integer, default=0)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class HotelProperty(Base):
     __tablename__ = "hotel_properties"
@@ -1169,7 +1169,7 @@ class HotelProperty(Base):
     gst_no = Column(String(50), nullable=True)
     is_current = Column(Boolean, default=False)
     total_rooms = Column(Integer, default=0)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class TableShift(Base):
     __tablename__ = "table_shifts"
@@ -1181,7 +1181,7 @@ class TableShift(Base):
     transferred_count = Column(Integer, default=0)
     reason = Column(String(255), nullable=True)
     shifted_by = Column(String(100), default="Cashier")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class TableSessionRecord(Base):
     __tablename__ = "table_sessions"
@@ -1194,7 +1194,7 @@ class TableSessionRecord(Base):
     kot_numbers_json = Column(Text, default="[]")
     cumulative_items_json = Column(Text, default="[]")
     cumulative_amount = Column(Float, default=0.0)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class RfidKeyCard(Base):
     __tablename__ = "rfid_keycards"
@@ -1208,7 +1208,7 @@ class RfidKeyCard(Base):
     valid_until = Column(String(50), nullable=False)
     status = Column(String(50), default="Active")
     issued_by = Column(String(100), default="Front Desk")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class HotelCompanyInfo(Base):
     __tablename__ = "hotel_company_info"
@@ -1235,7 +1235,7 @@ class HotelCompanyInfo(Base):
     upi_id = Column(String(50), nullable=True)
     phonepe_gpay = Column(String(50), nullable=True)
     jurisdiction = Column(String(100), default="Rayagada Jurisdiction")
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=now_utc)
 
 class LiquorStockAdjustment(Base):
     __tablename__ = "liquor_stock_adjustments"
@@ -1248,7 +1248,7 @@ class LiquorStockAdjustment(Base):
     qty_pegs = Column(Float, nullable=False)
     pegs_per_bottle = Column(Integer, default=25)
     reference_no = Column(String(100), nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=now_utc)
 
 class LiquorStock(Base):
     __tablename__ = "liquor_stocks"
@@ -1261,7 +1261,7 @@ class LiquorStock(Base):
     sold_pegs = Column(Float, default=0.0)
     pegs_per_bottle = Column(Integer, default=25)
     closing_bottles = Column(Float, default=0.0)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=now_utc, onupdate=now_utc)
 
 # =========================================================================
 # MODULE 1 & 2 ARCHITECTURAL ENTITIES (Financial Integrity & Concurrency)

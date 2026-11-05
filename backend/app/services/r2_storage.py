@@ -6,6 +6,7 @@ import datetime
 import mimetypes
 from typing import Optional, Tuple, List, Dict, Any
 from app.config import settings
+from app.utils.timezone import now_utc
 from app.utils.retry import retry_network_or_5xx
 
 # Local filesystem fallback directory if Cloudflare R2 credentials are not configured
@@ -120,12 +121,16 @@ class R2StorageService:
     @retry_network_or_5xx
     def _s3_put_object_with_retry(self, **kwargs):
         """Executes S3 put_object with Tenacity exponential backoff (#68, #69)."""
-        return self._s3_put_object_with_retry(**kwargs)
+        if not self.s3_client:
+            raise RuntimeError('S3 client is not configured')
+        return self.s3_client.put_object(**kwargs)
 
     @retry_network_or_5xx
     def _s3_upload_fileobj_with_retry(self, **kwargs):
         """Executes S3 upload_fileobj with Tenacity exponential backoff (#68, #69)."""
-        return self._s3_upload_fileobj_with_retry(**kwargs)
+        if not self.s3_client:
+            raise RuntimeError('S3 client is not configured')
+        return self.s3_client.upload_fileobj(**kwargs)
 
     def is_configured(self) -> bool:
         """Returns True if Cloudflare R2 credentials and S3 client are active"""
@@ -188,7 +193,7 @@ class R2StorageService:
         ext = os.path.splitext(original_filename)[1].lower() or ".bin"
         clean_name = sanitize_filename(original_filename)
         unique_token = uuid.uuid4().hex[:10]
-        date_prefix = datetime.datetime.utcnow().strftime("%Y/%m")
+        date_prefix = now_utc().strftime("%Y/%m")
         return f"{safe_folder}/{date_prefix}/{unique_token}_{clean_name}"
 
     def generate_presigned_upload_url(
@@ -468,7 +473,7 @@ class R2StorageService:
                     key = item.get("Key", "")
                     size = item.get("Size", 0)
                     last_mod = item.get("LastModified")
-                    last_mod_str = last_mod.isoformat() if last_mod else datetime.datetime.utcnow().isoformat()
+                    last_mod_str = last_mod.isoformat() if last_mod else now_utc().isoformat()
                     
                     if self.public_domain:
                         url = f"{self.public_domain.rstrip('/')}/{key}"
