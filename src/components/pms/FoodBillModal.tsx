@@ -25,6 +25,10 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
 
   const isTableMode = Boolean(defaultTableNo) || (!defaultRoomNo && tables.length > 0);
 
+  const now = new Date();
+  const defaultTodayDate = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`;
+  const defaultTodayTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
   const [serviceType, setServiceType] = useState<string>(
     defaultTableNo ? 'Table Service' : defaultRoomNo ? 'Room Service' : 'Table Service'
   );
@@ -32,23 +36,24 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
     defaultTableNo || (tables.find(t => t.status === 'Running')?.tableName || 'Table T-1')
   );
   const [selectedRoomNo, setSelectedRoomNo] = useState<string>(
-    defaultRoomNo || occupiedRooms[0]?.roomNo || '103'
+    defaultRoomNo || occupiedRooms[0]?.roomNo || ''
   );
 
-  const [customerName, setCustomerName] = useState<string>('vinod sharma');
+  const [customerName, setCustomerName] = useState<string>('');
   const [customerAddress, setCustomerAddress] = useState<string>('');
-  const [customerMobile, setCustomerMobile] = useState<string>('7657657655');
+  const [customerMobile, setCustomerMobile] = useState<string>('');
   const [customerRemark, setCustomerRemark] = useState<string>('');
   const [paymentRemark, setPaymentRemark] = useState<string>('');
 
-  const [billNo, setBillNo] = useState<string>(
-    isTableMode ? `Res/${Math.floor(260 + Math.random() * 20)}/24-25` : `SHRI/${Math.floor(235 + Math.random() * 20)}/24-25`
-  );
-  const [billDate, setBillDate] = useState<string>('16-06-2025');
-  const billTime = '08:18';
+  const [billNo, setBillNo] = useState<string>(() => {
+    const nextNum = PmsStore.getFoodBills().length + 1;
+    return isTableMode ? `Res/${nextNum}/25-26` : `SHRI/${nextNum}/25-26`;
+  });
+  const [billDate, setBillDate] = useState<string>(defaultTodayDate);
+  const billTime = defaultTodayTime;
   const [printApproval, setPrintApproval] = useState<boolean>(true);
-  const [discountPercent, setDiscountPercent] = useState<number>(5);
-  const [discountAmount, setDiscountAmount] = useState<number>(13.69);
+  const [discountPercent, setDiscountPercent] = useState<number>(0);
+  const [discountAmount, setDiscountAmount] = useState<number>(0);
   const [settlementType, setSettlementType] = useState<string>(
     isTableMode ? 'Settle To Cash' : 'Settle To Room'
   );
@@ -109,8 +114,8 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
       } else if (kots.length > 0 && kots[0].guestName && kots[0].guestName !== 'Walk-In Guest') {
         setCustomerName(kots[0].guestName);
       } else {
-        setCustomerName('vinod sharma');
-        setCustomerMobile('7657657655');
+        setCustomerName('');
+        setCustomerMobile('');
       }
     }
 
@@ -235,7 +240,7 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
       taxableAmount: totalTaxable,
       steward,
       covers,
-      outlet: serviceType === 'Room Service' ? 'ROOM SERVICE' : 'PEARL RESTAURANT',
+      outlet: serviceType === 'Room Service' ? 'ROOM SERVICE' : 'VASUDEV RASOI',
       gstPercent: 5.0,
       cgstAmount: Number((totalGst / 2).toFixed(2)),
       sgstAmount: Number((totalGst / 2).toFixed(2)),
@@ -967,8 +972,8 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                   {/* Hotel Header & Outlet */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px dashed #000', paddingBottom: 8, marginBottom: 8 }}>
                     <div style={{ textAlign: 'left' }}>
-                      <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: 0.5 }}>PEARL RESTAURANT</div>
-                      <div style={{ fontSize: 10, color: '#475569' }}>FINE DINE &bull; MULTI-CUISINE</div>
+                      <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: 0.5 }}>VASUDEV RASOI</div>
+                      <div style={{ fontSize: 10, color: '#475569' }}>FINE DINE &bull; PURE VEGETARIAN &amp; MULTI-CUISINE</div>
                       <div style={{ fontSize: 9, color: '#64748b', marginTop: 2 }}>
                         FSSAI LIC NO: 12017026000083
                       </div>
@@ -1032,7 +1037,7 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                       <div style={{ margin: '8px 0 4px', borderBottom: '1px solid #000', paddingBottom: 2 }}>
                         <strong>GUEST SIGNATURE:</strong>
                         <div style={{ fontStyle: 'italic', fontFamily: 'cursive', color: '#1e40af', fontSize: 11, marginTop: 4 }}>
-                          {customerName || 'A. V. Kartik'}
+                          {customerName || 'Guest'}
                         </div>
                       </div>
 
@@ -1210,7 +1215,7 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                       <div style={{ margin: '8px 0 4px', borderBottom: '1px solid #000', paddingBottom: 2 }}>
                         <strong>GUEST SIGNATURE:</strong>
                         <div style={{ fontStyle: 'italic', fontFamily: 'cursive', color: '#1e40af', fontSize: 11, marginTop: 4 }}>
-                          {customerName || 'A. V. Kartik'}
+                          {customerName || 'Guest'}
                         </div>
                       </div>
 
@@ -1425,7 +1430,7 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
                   </div>
 
                   <div style={{ textAlign: 'center', marginTop: 6, borderTop: '1px dashed #000', paddingTop: 6, fontSize: 9 }}>
-                    <div style={{ fontWeight: 800, textTransform: 'uppercase' }}>{customerName || 'AMMU VENKATA KARTIK'}</div>
+                    <div style={{ fontWeight: 800, textTransform: 'uppercase' }}>{customerName ? customerName.toUpperCase() : 'VALUED GUEST'}</div>
                     <div style={{ fontStyle: 'italic', fontSize: 8.5, color: '#334155' }}>
                       I AGREE TO PAY AS PER THE CARD ISSUER AGREEMENT
                     </div>

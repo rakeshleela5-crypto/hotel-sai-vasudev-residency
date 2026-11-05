@@ -125,15 +125,15 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
   const [fullBillFormat, setFullBillFormat] = useState<BillFormatType>('Format_3_A4_Standard');
 
   // Guest KYC & Police C-Form data
-  const [guestName, setGuestName] = useState(guest?.name || 'Alok Jain');
-  const [guestPhone, setGuestPhone] = useState(guest?.phone || '9822100042');
+  const [guestName, setGuestName] = useState(guest?.name || '');
+  const [guestPhone, setGuestPhone] = useState(guest?.phone || '');
   const [guestIdType] = useState((guest as any)?.idType || 'Aadhaar Card');
-  const [guestIdNumber] = useState((guest as any)?.idNumber || 'XXXX-XXXX-4589');
-  const [comingFrom] = useState((guest as any)?.comingFrom || 'Mumbai');
-  const [proceedingTo] = useState((guest as any)?.proceedingTo || 'Pune');
-  const [purpose] = useState((guest as any)?.purpose || 'Temple Darshan');
+  const [guestIdNumber] = useState((guest as any)?.idNumber || '');
+  const [comingFrom] = useState((guest as any)?.comingFrom || '');
+  const [proceedingTo] = useState((guest as any)?.proceedingTo || '');
+  const [purpose] = useState((guest as any)?.purpose || 'General / Tourism');
   const [companyName, setCompanyName] = useState((guest as any)?.companyName || '');
-  const [companyAddress, setCompanyAddress] = useState('SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY, Rayagada, Odisha - 765001');
+  const [companyAddress, setCompanyAddress] = useState((guest as any)?.companyAddress || '');
   const [gstNumber, setGstNumber] = useState((guest as any)?.gstNumber || (guest as any)?.gstin || '');
   const [checkoutRemark, setCheckoutRemark] = useState('Checked out peacefully. Key returned.');
   
@@ -222,11 +222,11 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
   const handleClearKotsToFoodBill = () => {
     if (!targetRoom || pendingKots.length === 0) return;
     const billRecord: PmsFoodBill = {
-      billNo: `VR/FB-${Math.floor(250 + Math.random() * 50)}/26-27`,
+      billNo: `VR/FB-${PmsStore.getFoodBills().length + 1}/25-26`,
       date: checkOutDate,
       time: checkOutTime,
       roomNo: targetRoom.roomNo,
-      guestName: guestName || 'ALOK JAIN',
+      guestName: guestName || 'Guest',
       kotNumbers: pendingKots.map(k => k.kotNo),
       items: pendingKots.flatMap(k => k.items),
       taxableAmount: Number((pendingKotAmount / 1.05).toFixed(2)),
@@ -1797,7 +1797,11 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    const guestPhoneNum = guestPhone || '9822100042';
+                    const guestPhoneNum = guestPhone.trim();
+                    if (!guestPhoneNum) {
+                      alert('Please enter a valid guest phone number before sending WhatsApp invoice.');
+                      return;
+                    }
                     PmsStore.sendWhatsAppNotification({
                       voucherType: 'Check_out_store',
                       recipientMobile: guestPhoneNum,
@@ -1907,8 +1911,8 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                     runningBal += foodTaxableAmt;
                     ledgerRows.push({
                       date: checkInDate,
-                      voucher: foodBillNo || '1032',
-                      description: 'Vasudev Rasoi / PEARL (Restaurant Dine-In)',
+                      voucher: foodBillNo || 'VR/1032',
+                      description: 'Vasudev Rasoi (Restaurant Dine-In)',
                       sac: '996331',
                       debit: foodTaxableAmt,
                       credit: 0,
@@ -2234,7 +2238,7 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                       [■] HDFC BANK
                     </div>
                     <div style={{ fontSize: 12, fontWeight: 800, marginTop: 2 }}>
-                      EMPIRES / SRI SAI VASUDEV RESIDENCY
+                      SRI SAI VASUDEV RESIDENCY
                     </div>
                     <div style={{ fontSize: 9.5 }}>
                       SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY

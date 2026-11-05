@@ -303,7 +303,7 @@ export const CheckOutRegisterModal: React.FC<CheckOutRegisterModalProps> = ({
                 <th style={{ textAlign: 'center' }}>Check Out Date</th>
                 <th style={{ textAlign: 'center', width: 75 }}>Total Days</th>
                 <th style={{ textAlign: 'right' }}>Bill Amount (₹)</th>
-                <th style={{ textAlign: 'center', width: 140 }}>Actions</th>
+                <th style={{ textAlign: 'center', width: 195 }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -380,6 +380,42 @@ export const CheckOutRegisterModal: React.FC<CheckOutRegisterModalProps> = ({
                           title="Print A5 Compact Half-Page Invoice (Format 4)"
                         >
                           📄
+                        </button>
+
+                        {/* Format 5 Enterprise Folio (Document 3 Master Tax Invoice) */}
+                        <button
+                          type="button"
+                          onClick={() => onOpenBillFormat(c, 'Format_5_Enterprise_Folio')}
+                          style={{
+                            background: '#4338ca',
+                            color: '#fff',
+                            border: 'none',
+                            padding: '3px 7px',
+                            borderRadius: 3,
+                            cursor: 'pointer',
+                            fontSize: 11
+                          }}
+                          title="Print Master Guest Folio & Ledger with Dual GST (Document 3)"
+                        >
+                          📜
+                        </button>
+
+                        {/* Format 8 Card EDC Machine Slip (Document 4) */}
+                        <button
+                          type="button"
+                          onClick={() => onOpenBillFormat(c, 'Format_8_Card_EDC_Slip')}
+                          style={{
+                            background: '#0284c7',
+                            color: '#fff',
+                            border: 'none',
+                            padding: '3px 7px',
+                            borderRadius: 3,
+                            cursor: 'pointer',
+                            fontSize: 11
+                          }}
+                          title="Print EDC Card Settlement Thermal Receipt (Document 4)"
+                        >
+                          💳
                         </button>
 
                         {/* Green WhatsApp Dispatch */}

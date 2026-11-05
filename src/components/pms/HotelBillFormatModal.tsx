@@ -23,6 +23,7 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
   const [activeFormat, setActiveFormat] = useState<BillFormatType>('Format_3_A4_Standard');
   const [companyInfo, setCompanyInfo] = useState<PmsCompanyInfo>(PmsStore.getCompanyInfo());
   const [showPrintDialogOverlay, setShowPrintDialogOverlay] = useState(false);
+  const [showSampleDemo, setShowSampleDemo] = useState(false);
   const [paperSize, setPaperSize] = useState<'A4' | 'A5' | 'Letter'>('A4');
   const [printDestination, setPrintDestination] = useState('Canon LBP2900');
   const [margins, setMargins] = useState<'Default' | 'None' | 'Minimum'>('None');
@@ -50,10 +51,45 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
 
   if (!isOpen) return null;
 
+  const DEMO_CHECKOUT: PmsCheckOutDetail = {
+    invoiceNo: 'SVR/2025-26/INV-0001',
+    roomNo: '101',
+    roomType: 'Classic Deluxe AC',
+    guestName: 'P. Venkata Rao',
+    guestPhone: '9440289999',
+    checkInDate: '08-05-2026',
+    checkInTime: '10:25',
+    checkOutDate: '09-05-2026',
+    checkOutTime: '09:58',
+    calculationType: '24hour',
+    numberOfDays: 1,
+    perDayTariff: 7000,
+    totalRoomRent: 7000,
+    foodAmount: 638,
+    gstPercent: 5.0,
+    gstAmount: 350,
+    cgstAmount: 175,
+    sgstAmount: 175,
+    addOthers: 0,
+    lessDiscount: 0,
+    advanceDeducted: 0,
+    billAmount: 8103,
+    netPayable: 8103,
+    paymentMode: 'Card',
+    checkoutRemark: 'Checked out peacefully. All keys returned.',
+    city: 'Rayagada',
+    state: 'Odisha',
+    country: 'India',
+    pinCode: '765001',
+    sacCode: '996311',
+    invoiceFormat: 'A4_Standard'
+  };
+
   const currentCheckout: PmsCheckOutDetail | undefined =
     checkouts.find(c => c.invoiceNo === selectedInvoiceNo) ||
     checkouts[0] ||
-    initialCheckout;
+    initialCheckout ||
+    (showSampleDemo ? DEMO_CHECKOUT : undefined);
 
   if (!currentCheckout) {
     return (
@@ -68,15 +104,24 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
             No Checkout Invoices Found
           </h3>
           <p style={{ fontSize: '13px', color: '#64748b', lineHeight: 1.6, marginBottom: '20px' }}>
-            There are currently no checkout invoices in the system. Once a guest completes checkout at the front desk, their official GST tax invoices and printable vouchers will appear here.
+            There are currently no real checkout invoices in the system. Once a guest completes checkout at the front desk, their official GST tax invoices and printable vouchers will appear here.
           </p>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{ padding: '8px 24px', background: '#0f172a', color: '#ffffff', borderRadius: '6px', fontWeight: 700, fontSize: '13px', border: 'none', cursor: 'pointer' }}
-          >
-            Close
-          </button>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
+            <button
+              type="button"
+              onClick={() => setShowSampleDemo(true)}
+              style={{ padding: '8px 20px', background: '#4338ca', color: '#ffffff', borderRadius: '6px', fontWeight: 700, fontSize: '13px', border: 'none', cursor: 'pointer' }}
+            >
+              👁️ Preview Demo Templates (8 Formats)
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{ padding: '8px 20px', background: '#0f172a', color: '#ffffff', borderRadius: '6px', fontWeight: 700, fontSize: '13px', border: 'none', cursor: 'pointer' }}
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -1524,8 +1569,8 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
                 runningBal += foodTaxable;
                 ledgerRows.push({
                   date: currentCheckout.checkInDate,
-                  voucher: '1032',
-                  description: 'Vasudev Rasoi / PEARL (Restaurant Dine-In)',
+                  voucher: 'VR/1032',
+                  description: 'Vasudev Rasoi (Restaurant Dine-In)',
                   sac: '996331',
                   debit: foodTaxable,
                   credit: 0,
@@ -1868,8 +1913,8 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
                 {/* Header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px dashed #000', paddingBottom: 8, marginBottom: 8 }}>
                   <div style={{ textAlign: 'left' }}>
-                    <div style={{ fontSize: 14, fontWeight: 900, letterSpacing: 0.5 }}>PEARL RESTAURANT</div>
-                    <div style={{ fontSize: 10, color: '#475569' }}>FINE DINE &bull; MULTI-CUISINE OUTLET</div>
+                    <div style={{ fontSize: 14, fontWeight: 900, letterSpacing: 0.5 }}>VASUDEV RASOI</div>
+                    <div style={{ fontSize: 10, color: '#475569' }}>FINE DINE &bull; PURE VEGETARIAN &amp; MULTI-CUISINE</div>
                     <div style={{ fontSize: 9.5, color: '#64748b', marginTop: 2 }}>
                       FSSAI LIC NO: 12017026000083
                     </div>
@@ -2237,7 +2282,7 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
                     [■] HDFC BANK
                   </div>
                   <div style={{ fontSize: 12, fontWeight: 800, marginTop: 2 }}>
-                    EMPIRES / {companyInfo.firmName || 'SRI SAI VASUDEV RESIDENCY'}
+                    {companyInfo.firmName || 'SRI SAI VASUDEV RESIDENCY'}
                   </div>
                   <div style={{ fontSize: 9.5 }}>
                     {companyInfo.address1 || 'SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY'}
