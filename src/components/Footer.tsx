@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { hotelApi } from '../services/api';
 
 export const Footer: React.FC = () => {
@@ -90,11 +91,11 @@ export const Footer: React.FC = () => {
         <div className="footer-bottom-bar">
           <p>&copy; {new Date().getFullYear()} Hotel Sai Vasudev Residency. All Rights Reserved.</p>
           <div className="footer-bottom-links">
-            <a href="#overview" title="Verified Hotel Guest Privacy Guarantee">Privacy Guarantee</a>
+            <Link to="/privacy-policy" title="Verified Hotel Guest Privacy & Statutory KYC Policy">Privacy Policy</Link>
             <span>•</span>
-            <a href="#overview" title="Check-In at 12 PM, Check-Out at 11 AM">Terms of Stay</a>
+            <Link to="/terms-and-conditions" title="Check-In, Check-Out, Tariff & Reservation Terms">Terms &amp; Conditions</Link>
             <span>•</span>
-            <a href="#overview" title="Free cancellation up to 24 hours prior to arrival">24h Cancellation Policy</a>
+            <Link to="/terms-and-conditions#cancellation" title="Free cancellation up to 48 hours prior to arrival">Cancellation Policy</Link>
           </div>
         </div>
       </div>

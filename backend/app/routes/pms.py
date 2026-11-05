@@ -15,7 +15,7 @@ from app import models, schemas
 from app.utils.locking import acquire_canonical_locks
 from app.utils.timezone import now_utc, now_ist, to_ist, today_ist_str
 from app.utils.idempotency import require_idempotency_key
-from app.utils.auth import require_role, HospitalityRole, revoke_user_refresh_tokens
+from app.utils.auth import require_role, HospitalityRole, revoke_user_refresh_tokens, get_password_hash
 from app.utils.audit import record_audit_log, audit_tariff_change, audit_discount, audit_kot_void, audit_payout
 from app.utils.encryption import encrypt_pii, decrypt_pii, mask_pii
 from app.utils.caching import get_cached_menu, set_cached_menu, invalidate_menu_cache, invalidate_rooms_cache
@@ -247,6 +247,17 @@ def record_booking_payment(payload: schemas.BookingPaymentCreate, db: Session = 
     # Acquire canonical locks: Booking -> Folio -> Room
     acquire_canonical_locks(db, booking_id=booking.id, room_id=booking.room_id)
 
+    # Idempotency Guard: prevent duplicate payment recording (#5)
+    if payload.transaction_ref:
+        clean_ref = str(payload.transaction_ref).strip()
+        existing_pmt = db.query(models.BookingPayment).filter(
+            models.BookingPayment.booking_id == booking.id,
+            models.BookingPayment.transaction_ref == clean_ref
+        ).first()
+        if existing_pmt:
+            logger.info(f"[Payment Idempotency] Payment ref '{clean_ref}' already recorded on booking '{booking.booking_ref}'. Returning existing payment.")
+            return existing_pmt
+
     payment = models.BookingPayment(
         booking_id=booking.id,
         payment_type=payload.payment_type,
@@ -293,6 +304,17 @@ def add_item_to_room_folio(payload: schemas.RoomFolioItemCreate, db: Session = D
 
     # Acquire canonical locks: Booking -> Folio -> Room
     acquire_canonical_locks(db, booking_id=booking.id, room_id=booking.room_id)
+
+    # Idempotency Guard: prevent duplicate folio charge if KOT/item was already billed (#5)
+    if payload.kot_number:
+        clean_kot = str(payload.kot_number).strip()
+        existing_item = db.query(models.RoomFolioItem).filter(
+            models.RoomFolioItem.booking_id == booking.id,
+            models.RoomFolioItem.kot_number == clean_kot
+        ).first()
+        if existing_item:
+            logger.info(f"[Folio Idempotency] Folio item for KOT '{clean_kot}' already posted to booking '{booking.booking_ref}'. Returning existing item.")
+            return existing_item
 
     qty = max(1, payload.quantity)
     taxable = round(payload.unit_price * qty, 2)
@@ -1156,7 +1178,23 @@ def create_kot_ticket(payload: dict, db: Session = Depends(get_db)):
     Save new KOT ticket to PostgreSQL.
     If room_no is provided, automatically posts charge to guest's room folio!
     """
-    kot_no = payload.get("kotNo") or f"KOT/{datetime.datetime.now().strftime('%y%m%d%H%M%S')}"
+    # Idempotency Guard: check if KOT ticket was already punched (#5)
+    kot_no_param = str(payload.get("kotNo") or payload.get("kot_no") or "").strip()
+    if kot_no_param:
+        existing_kot = db.query(models.KotTicket).filter(models.KotTicket.kot_no == kot_no_param).first()
+        if existing_kot:
+            logger.info(f"[POS Idempotency] Duplicate KOT submission for ticket '{kot_no_param}'. Returning existing ticket.")
+            return {
+                "success": True,
+                "id": existing_kot.id,
+                "kotNo": existing_kot.kot_no,
+                "kot_no": existing_kot.kot_no,
+                "status": existing_kot.status,
+                "already_exists": True,
+                "message": f"KOT {kot_no_param} was already punched and processed (Idempotent OK)"
+            }
+
+    kot_no = kot_no_param or f"KOT/{datetime.datetime.now().strftime('%y%m%d%H%M%S')}"
     items = payload.get("items", [])
     total_amount = float(payload.get("totalAmount") or sum(float(i.get("amount", 0)) for i in items))
     
@@ -1207,24 +1245,30 @@ def create_kot_ticket(payload: dict, db: Session = Depends(get_db)):
             models.Booking.status == "Checked-In"
         ).first() if r_obj else None
         if booking:
-            folio = models.RoomFolioItem(
-                booking_id=booking.id,
-                item_type="Food_KOT",
-                description=f"KOT {kot_no}: " + ", ".join([f"{i.get('itemName', 'Item')} x{i.get('qty', 1)}" for i in items]),
-                sac_code="996331",
-                kot_number=kot_no,
-                quantity=1,
-                unit_price=total_amount,
-                taxable_amount=round(total_amount / 1.05, 2),
-                gst_rate=5.0,
-                cgst_amount=round((total_amount / 1.05) * 0.025, 2),
-                sgst_amount=round((total_amount / 1.05) * 0.025, 2),
-                total_amount=total_amount,
-                status="Billed"
-            )
-            db.add(folio)
-            booking.total_price = round(booking.total_price + total_amount, 2)
-            booking.balance_due = max(0.0, round(booking.total_price - (booking.total_paid or 0.0), 2))
+            # Idempotency Guard: ensure KOT charge hasn't already been posted to folio
+            existing_folio = db.query(models.RoomFolioItem).filter(
+                models.RoomFolioItem.booking_id == booking.id,
+                models.RoomFolioItem.kot_number == kot_no
+            ).first()
+            if not existing_folio:
+                folio = models.RoomFolioItem(
+                    booking_id=booking.id,
+                    item_type="Food_KOT",
+                    description=f"KOT {kot_no}: " + ", ".join([f"{i.get('itemName', 'Item')} x{i.get('qty', 1)}" for i in items]),
+                    sac_code="996331",
+                    kot_number=kot_no,
+                    quantity=1,
+                    unit_price=total_amount,
+                    taxable_amount=round(total_amount / 1.05, 2),
+                    gst_rate=5.0,
+                    cgst_amount=round((total_amount / 1.05) * 0.025, 2),
+                    sgst_amount=round((total_amount / 1.05) * 0.025, 2),
+                    total_amount=total_amount,
+                    status="Billed"
+                )
+                db.add(folio)
+                booking.total_price = round(booking.total_price + total_amount, 2)
+                booking.balance_due = max(0.0, round(booking.total_price - (booking.total_paid or 0.0), 2))
 
     db.commit()
     db.refresh(kot)
@@ -4402,6 +4446,62 @@ def toggle_user_status(user_id: str, db: Session = Depends(get_db)):
     db.refresh(u)
     return {"success": True, "userId": u.user_id, "status": u.status}
 
+
+@router.post("/users/{user_id}/reset-password")
+@router.put("/users/{user_id}/reset-password")
+def reset_staff_password(
+    user_id: str,
+    payload: schemas.StaffPasswordResetRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Directly reset a staff user's password from Admin/Manager dashboard.
+    Updates password_hash in user_accounts (and staff_users if present).
+    """
+    new_pwd = payload.new_password.strip() if payload.new_password else ""
+    if len(new_pwd) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters long.")
+
+    u = db.query(models.UserAccount).filter(
+        (models.UserAccount.user_name == user_id) | 
+        (models.UserAccount.email_id == user_id) | 
+        (models.UserAccount.user_id == (int(user_id) if user_id.isdigit() else -1)) |
+        (models.UserAccount.id == (int(user_id) if user_id.isdigit() else -1))
+    ).first()
+
+    staff = db.query(models.StaffUser).filter(
+        (models.StaffUser.username == user_id) |
+        (models.StaffUser.email == user_id) |
+        (models.StaffUser.id == (int(user_id) if user_id.isdigit() else -1))
+    ).first()
+
+    if not u and not staff:
+        raise HTTPException(status_code=404, detail=f"Staff user account '{user_id}' not found.")
+
+    pwd_hash = get_password_hash(new_pwd)
+
+    user_name = "Staff"
+    user_num_id = 0
+    if u:
+        u.password_hash = pwd_hash
+        user_name = u.user_name
+        user_num_id = u.user_id
+    if staff:
+        staff.password_hash = pwd_hash
+        if not u:
+            user_name = staff.display_name or staff.username
+            user_num_id = staff.id
+
+    db.commit()
+    logger.info(f"[Auth] Admin reset password for staff member {user_name} (ID: {user_num_id})")
+
+    return {
+        "success": True,
+        "message": f"Password for {user_name} has been reset successfully.",
+        "userId": user_num_id,
+        "userName": user_name
+    }
+
 @router.delete("/users/{user_id}")
 def delete_user_account(user_id: str, db: Session = Depends(get_db)):
     """Delete a staff user account from PostgreSQL."""
@@ -7124,6 +7224,62 @@ def delete_role(role_id: str, db: Session = Depends(get_db)):
     ).delete(synchronize_session=False)
     db.commit()
     return {"success": True, "deletedCount": deleted}
+
+
+@router.post("/users/{user_id}/reset-password")
+@router.put("/users/{user_id}/reset-password")
+def reset_staff_password(
+    user_id: str,
+    payload: schemas.StaffPasswordResetRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Directly reset a staff user's password from Admin/Manager dashboard.
+    Updates password_hash in user_accounts (and staff_users if present).
+    """
+    new_pwd = payload.new_password.strip() if payload.new_password else ""
+    if len(new_pwd) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters long.")
+
+    u = db.query(models.UserAccount).filter(
+        (models.UserAccount.user_name == user_id) | 
+        (models.UserAccount.email_id == user_id) | 
+        (models.UserAccount.user_id == (int(user_id) if user_id.isdigit() else -1)) |
+        (models.UserAccount.id == (int(user_id) if user_id.isdigit() else -1))
+    ).first()
+
+    staff = db.query(models.StaffUser).filter(
+        (models.StaffUser.username == user_id) |
+        (models.StaffUser.email == user_id) |
+        (models.StaffUser.id == (int(user_id) if user_id.isdigit() else -1))
+    ).first()
+
+    if not u and not staff:
+        raise HTTPException(status_code=404, detail=f"Staff user account '{user_id}' not found.")
+
+    pwd_hash = get_password_hash(new_pwd)
+
+    user_name = "Staff"
+    user_num_id = 0
+    if u:
+        u.password_hash = pwd_hash
+        user_name = u.user_name
+        user_num_id = u.user_id
+    if staff:
+        staff.password_hash = pwd_hash
+        if not u:
+            user_name = staff.display_name or staff.username
+            user_num_id = staff.id
+
+    db.commit()
+    logger.info(f"[Auth] Admin reset password for staff member {user_name} (ID: {user_num_id})")
+
+    return {
+        "success": True,
+        "message": f"Password for {user_name} has been reset successfully.",
+        "userId": user_num_id,
+        "userName": user_name
+    }
 
 @router.delete("/users/{user_id}")
 def delete_user(user_id: str, db: Session = Depends(get_db)):

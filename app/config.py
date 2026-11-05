@@ -63,10 +63,14 @@ class Settings(BaseSettings):
 
     # SlowAPI Rate Limiting Configuration (#2, #18, #56)
     RATE_LIMIT_LOGIN: str = "5/minute"
-    RATE_LIMIT_BOOKING: str = "20/minute"
-    RATE_LIMIT_QR: str = "15/minute"
-    RATE_LIMIT_WEBHOOK: str = "120/minute"
+    RATE_LIMIT_BOOKING: str = "60/minute"
+    RATE_LIMIT_QR: str = "60/minute"
+    RATE_LIMIT_WEBHOOK: str = "60/minute"
     RATE_LIMIT_DEFAULT: str = "60/minute"
+
+    # Backend Error Tracking & Observability (Sentry)
+    SENTRY_DSN: str = os.getenv("SENTRY_DSN", "")
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "production")
 
     # In-Memory TTLCache Configuration (#6, #7)
     CACHE_TTL_ROOMS: int = int(os.getenv("CACHE_TTL_ROOMS", "300"))  # 5 minutes TTL

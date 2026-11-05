@@ -55,6 +55,26 @@ def trigger_manual_backup(
     result = run_database_backup(db=db)
     return result
 
+@router.post("/backups/trigger", summary="Trigger Automated Database Backup to Cloudflare R2 (#3)")
+def trigger_backup_endpoint(
+    current_user: dict = Depends(require_role(["OWNER", "MANAGER", "ADMIN"])),
+    db: Session = Depends(get_db)
+) -> Dict[str, Any]:
+    """
+    Triggers an on-demand database backup using backend/scripts/backup_db_to_r2.py,
+    compresses the output to a timestamped .sql.gz file, uploads to R2 under db-backups/,
+    and prunes backups older than 30 days. Restricted to Admin roles.
+    """
+    admin_id = current_user.get("email") or current_user.get("sub") or "Admin"
+    logger.info(f"[Admin] On-demand R2 database backup triggered by {admin_id}")
+    try:
+        from backend.scripts.backup_db_to_r2 import run_backup
+        result = run_backup(retention_days=getattr(settings, "BACKUP_RETENTION_DAYS", 30))
+        return result
+    except Exception as exc:
+        logger.warning(f"[Admin] backup_db_to_r2 run_backup error ({exc}), using create_and_upload_db_backup fallback.")
+        return create_and_upload_db_backup(db=db)
+
 @router.get("/backups")
 def list_database_backups(
     current_user: dict = Depends(require_role(["OWNER", "MANAGER"]))
@@ -96,4 +116,65 @@ def list_database_backups(
         "status": "success",
         "count": len(backups),
         "backups": sorted(backups, key=lambda x: str(x.get("key")), reverse=True)
+    }
+
+
+@router.put("/users/{user_id}/reset-password", summary="Admin Direct Reset Staff Password (#4)")
+@router.post("/users/{user_id}/reset-password", summary="Admin Direct Reset Staff Password (#4)")
+def admin_reset_staff_password(
+    user_id: str,
+    payload: Dict[str, Any],
+    current_user: dict = Depends(require_role(["OWNER", "MANAGER", "ADMIN"])),
+    db: Session = Depends(get_db)
+) -> Dict[str, Any]:
+    """
+    Directly reset a staff user's password from Admin/Manager dashboard.
+    Restricted to OWNER, MANAGER, and ADMIN roles.
+    """
+    from app.utils.auth import get_password_hash
+    from app import models
+
+    new_pwd = str(payload.get("new_password") or payload.get("newPassword") or "").strip()
+    if len(new_pwd) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters long.")
+
+    u = db.query(models.UserAccount).filter(
+        (models.UserAccount.user_name == user_id) | 
+        (models.UserAccount.email_id == user_id) | 
+        (models.UserAccount.user_id == (int(user_id) if user_id.isdigit() else -1)) |
+        (models.UserAccount.id == (int(user_id) if user_id.isdigit() else -1))
+    ).first()
+
+    staff = db.query(models.StaffUser).filter(
+        (models.StaffUser.username == user_id) |
+        (models.StaffUser.email == user_id) |
+        (models.StaffUser.id == (int(user_id) if user_id.isdigit() else -1))
+    ).first()
+
+    if not u and not staff:
+        raise HTTPException(status_code=404, detail=f"Staff user account '{user_id}' not found.")
+
+    pwd_hash = get_password_hash(new_pwd)
+
+    user_name = "Staff"
+    user_num_id = 0
+    if u:
+        u.password_hash = pwd_hash
+        user_name = u.user_name
+        user_num_id = u.user_id
+    if staff:
+        staff.password_hash = pwd_hash
+        if not u:
+            user_name = staff.display_name or staff.username
+            user_num_id = staff.id
+
+    db.commit()
+    admin_id = current_user.get("email") or current_user.get("sub") or "Admin"
+    logger.info(f"[Admin] {admin_id} reset password for staff member {user_name} (ID: {user_num_id})")
+
+    return {
+        "success": True,
+        "message": f"Password for {user_name} has been reset successfully by {admin_id}.",
+        "userId": user_num_id,
+        "userName": user_name
     }

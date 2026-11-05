@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { RoomsSection } from './components/RoomsSection';
@@ -16,17 +17,24 @@ import { PettyExpenseModal } from './components/pms/PettyExpenseModal';
 import { KotEntryModal } from './components/pms/KotEntryModal';
 import { FoodBillModal } from './components/pms/FoodBillModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { NotFound } from './components/NotFound';
+import { PrivacyPolicy } from './components/legal/PrivacyPolicy';
+import { TermsAndConditions } from './components/legal/TermsAndConditions';
 import { PmsStore } from './services/pmsStore';
 import type { Room } from './types';
 import './App.css';
 
-export function App() {
-  const [portalMode, setPortalMode] = useState<'public' | 'erp'>('public');
+interface HotelMainLandingProps {
+  defaultErpOpen?: boolean;
+}
+
+function HotelMainLanding({ defaultErpOpen = false }: HotelMainLandingProps) {
+  const [portalMode, setPortalMode] = useState<'public' | 'erp'>(defaultErpOpen ? 'erp' : 'public');
   const [staffRole, setStaffRole] = useState<'admin' | 'reception' | 'steward' | 'housekeeping'>('admin');
 
   // Modal display states
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isPmsOpen, setIsPmsOpen] = useState(false);
+  const [isPmsOpen, setIsPmsOpen] = useState(defaultErpOpen);
   const [isGuestEngineOpen, setIsGuestEngineOpen] = useState(false);
   const [isHousekeepingOpen, setIsHousekeepingOpen] = useState(false);
   const [isPettyCashOpen, setIsPettyCashOpen] = useState(false);
@@ -235,7 +243,14 @@ export function App() {
         <ErrorBoundary moduleName="Front Desk & Reception PMS" onReset={() => setIsPmsOpen(false)}>
           <HotelPmsModal
             isOpen={isPmsOpen}
-            onClose={() => setIsPmsOpen(false)}
+            onClose={() => {
+              setIsPmsOpen(false);
+              if (window.location.pathname.startsWith('/erp') || window.location.pathname.startsWith('/pms')) {
+                try {
+                  window.history.pushState(null, '', '/');
+                } catch {}
+              }
+            }}
           />
         </ErrorBoundary>
       )}
@@ -280,6 +295,21 @@ export function App() {
         </ErrorBoundary>
       )}
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HotelMainLanding />} />
+        <Route path="/erp" element={<HotelMainLanding defaultErpOpen={true} />} />
+        <Route path="/pms" element={<HotelMainLanding defaultErpOpen={true} />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

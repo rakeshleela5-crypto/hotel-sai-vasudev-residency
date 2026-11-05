@@ -13,9 +13,11 @@
   "dependencies": {
     "@aws-sdk/client-s3": "3.1156.0",
     "@aws-sdk/s3-request-presigner": "3.1156.0",
+    "@sentry/react": "^11.10.0",
     "dexie": "4.4.7",
     "react": "19.3.1",
     "react-dom": "19.3.1",
+    "react-router-dom": "^7.18.5",
     "xlsx": "0.18.5"
   },
   "devDependencies": {

@@ -1289,6 +1289,19 @@ export const hotelApi = {
     }
   },
 
+  async resetStaffPassword(userId: number | string, newPassword: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/users/${encodeURIComponent(String(userId))}/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ new_password: newPassword })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to reset staff password on server');
+    }
+    return await res.json();
+  },
+
   async deleteUserAccount(userId: number | string): Promise<any> {
     const res = await fetch(`${API_BASE_URL}/pms/users/${encodeURIComponent(String(userId))}`, {
       method: 'DELETE'

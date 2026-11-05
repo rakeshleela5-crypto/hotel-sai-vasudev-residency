@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import * as Sentry from '@sentry/react';
 
 interface Props {
   children: ReactNode;
@@ -35,6 +36,19 @@ export class ErrorBoundary extends Component<Props, State> {
         timestamp: new Date().toISOString()
       };
     } catch {}
+
+    // Dispatch to Sentry when VITE_SENTRY_DSN is configured
+    try {
+      const dsn = (import.meta as any).env?.VITE_SENTRY_DSN;
+      if (dsn) {
+        Sentry.captureException(error, {
+          extra: {
+            module: this.props.moduleName || 'Root Application',
+            componentStack: errorInfo.componentStack
+          }
+        });
+      }
+    } catch {}
   }
 
   private handleClearStorage = (): void => {
@@ -50,7 +64,7 @@ export class ErrorBoundary extends Component<Props, State> {
     window.location.href = '/erp';
   };
 
-  private handleReloadDashboard = (): void => {
+  private handleReloadApplication = (): void => {
     window.location.reload();
   };
 
@@ -175,7 +189,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 <button
                   type="button"
                   id="error-boundary-reload-btn"
-                  onClick={this.handleReloadDashboard}
+                  onClick={this.handleReloadApplication}
                   style={{
                     flex: 1,
                     minWidth: '160px',
@@ -190,7 +204,7 @@ export class ErrorBoundary extends Component<Props, State> {
                     boxShadow: '0 4px 12px rgba(2, 132, 199, 0.3)'
                   }}
                 >
-                  🔄 Reload Dashboard
+                  🔄 Reload Application
                 </button>
 
                 <button

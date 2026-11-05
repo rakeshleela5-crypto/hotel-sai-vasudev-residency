@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PmsStore } from '../../services/pmsStore';
 import { hotelApi } from '../../services/api';
 import type { PmsUserAccount, PmsRole, PmsChainProperty } from '../../types/pmsModels';
+import { StaffPasswordResetModal } from './StaffPasswordResetModal';
 import './pmsStyles.css';
 
 interface UserManagementModalProps {
@@ -38,6 +39,15 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
   const [formDepartment, setFormDepartment] = useState<PmsUserAccount['department']>('Front Office');
   const [formShift, setFormShift] = useState<PmsUserAccount['shift']>('Morning (07:00 - 15:00)');
   const [formIsOnDuty, setFormIsOnDuty] = useState(true);
+
+  // Admin Password Reset Modal State
+  const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
+  const [resetTargetUser, setResetTargetUser] = useState<PmsUserAccount | null>(null);
+
+  const handleOpenResetPassword = (user: PmsUserAccount) => {
+    setResetTargetUser(user);
+    setIsResetPasswordOpen(true);
+  };
 
   const refreshData = () => {
     setUsers(PmsStore.getUsers());
@@ -178,19 +188,6 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
     const newStatus = user.status === 'Verified' ? 'Pending' : 'Verified';
     setSuccessBanner(`Status of ${user.userName} changed to ${newStatus}.`);
     refreshData();
-  };
-
-  // Video 23 Anti-Theft Protection: delete user permission check
-  const handleDeleteUser = (user: PmsUserAccount) => {
-    if (!PmsStore.hasPermission('delete user')) {
-      alert('Permission Denied: Standard staff are restricted from deleting user accounts ("delete user" permission required). Contact Hotel Super-Admin.');
-      return;
-    }
-    if (window.confirm(`Are you sure you want to delete staff account "${user.userName}" (${user.emailId})?`)) {
-      PmsStore.deleteUser(user.id);
-      setSuccessBanner(`User account ${user.userName} deleted successfully.`);
-      refreshData();
-    }
   };
 
   const handleExport = (type: string) => {
@@ -641,20 +638,23 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
                             </button>
                             <button
                               type="button"
-                              onClick={() => handleDeleteUser(u)}
-                              title="Delete Staff Account (Protected by delete user permission)"
+                              onClick={() => handleOpenResetPassword(u)}
+                              title={`Reset password for ${u.userName}`}
                               style={{
-                                background: '#dc2626',
+                                background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
                                 color: '#ffffff',
                                 border: 'none',
                                 padding: '4px 8px',
                                 borderRadius: 3,
                                 fontSize: 11,
                                 fontWeight: 700,
-                                cursor: 'pointer'
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '3px'
                               }}
                             >
-                              Delete
+                              🔑 Reset Password
                             </button>
                           </div>
                         </td>
@@ -1071,6 +1071,24 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
             </form>
           </div>
         </div>
+      )}
+
+      {/* Admin/Manager Staff Password Reset Modal */}
+      {isResetPasswordOpen && (
+        <StaffPasswordResetModal
+          isOpen={isResetPasswordOpen}
+          targetUser={resetTargetUser}
+          onClose={() => {
+            setIsResetPasswordOpen(false);
+            setResetTargetUser(null);
+          }}
+          onSuccess={(msg) => {
+            setSuccessBanner(msg);
+            setIsResetPasswordOpen(false);
+            setResetTargetUser(null);
+            refreshData();
+          }}
+        />
       )}
     </div>
   );

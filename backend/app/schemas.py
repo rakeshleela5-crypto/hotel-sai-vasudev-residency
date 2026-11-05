@@ -1084,6 +1084,10 @@ class UserAccountCreate(BaseModel):
     is_on_duty: Optional[bool] = True
     isOnDuty: Optional[bool] = None
 
+class StaffPasswordResetRequest(BaseModel):
+    new_password: str
+    confirm_password: Optional[str] = None
+
 class CommissionAgentCreate(BaseModel):
     id: Optional[str] = None
     agent_id: Optional[str] = None

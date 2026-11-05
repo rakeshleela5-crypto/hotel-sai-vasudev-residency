@@ -1,3 +1,4 @@
+import os
 import datetime
 from fastapi import FastAPI, Depends, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -219,10 +220,25 @@ from slowapi import _rate_limit_exceeded_handler
 from starlette.requests import Request
 
 from app.utils.idempotency import IdempotencyMiddleware, IdempotentResponseException, idempotent_exception_handler
-from app.utils.rate_limit import limiter
+from app.utils.rate_limit import limiter, rate_limit_exceeded_handler
 from app.utils.logging_middleware import StructuredLoggingMiddleware, global_500_exception_handler
 from app.services.scheduler import start_scheduler, stop_scheduler
 from app.routes import auth, health, ws, admin
+
+# Backend Error Tracking: Initialize Sentry only when SENTRY_DSN is set in environment variables (#2)
+sentry_dsn = os.getenv("SENTRY_DSN") or getattr(settings, "SENTRY_DSN", "")
+if sentry_dsn and sentry_dsn.strip():
+    try:
+        import sentry_sdk
+        sentry_sdk.init(
+            dsn=sentry_dsn.strip(),
+            traces_sample_rate=1.0,
+            profiles_sample_rate=1.0,
+            environment=getattr(settings, "ENVIRONMENT", "production")
+        )
+    except Exception as exc:
+        import logging
+        logging.getLogger("pms_main").warning(f"Could not initialize Sentry: {exc}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -249,7 +265,7 @@ app.add_middleware(StructuredLoggingMiddleware)
 
 # SlowAPI Rate Limiting (#2, #18)
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
 
 # Idempotency Exception Handler & Middleware (#1)
