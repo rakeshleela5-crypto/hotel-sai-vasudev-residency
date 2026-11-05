@@ -453,7 +453,7 @@ export interface PmsCheckOutDetail {
   pinCode?: string;
   email?: string;
   sacCode?: string;           // 996311 (Hotel Accommodation)
-  invoiceFormat?: 'A4_Standard' | 'A5_HalfPage' | 'Detailed';
+  invoiceFormat?: 'A4_Standard' | 'A5_HalfPage' | 'Detailed' | 'Enterprise_Folio';
   isTaxInclusive?: boolean;
   isComplimentary?: boolean;
   billingOfficer?: string;    // e.g. DEMO0004
@@ -1093,7 +1093,8 @@ export type BillFormatType =
   | 'Format_1_DayWise'       // /room_checkout_view2/:id - Itemized daily stay breakdown with yellow header & SAC 996311
   | 'Format_2_Summary'       // /room_checkout_view/:id - General Tax Invoice with guest & room details
   | 'Format_3_A4_Standard'   // /room_checkout_view3/:id - A4 Standard Format with key drop notice, GST table & signatures (RECOMMENDED)
-  | 'Format_4_A5_Compact';   // /room_checkout_view4/:id - A5 Half-Page condensed format for thermal/A5 stationery
+  | 'Format_4_A5_Compact'    // /room_checkout_view4/:id - A5 Half-Page condensed format for thermal/A5 stationery
+  | 'Format_5_Enterprise_Folio'; // /enterprise_folio/:id - Classic Dot-Matrix Master Folio (Document 3) with SAC ledger & dual tax breakdown
 
 export interface BillFormatOption {
   id: BillFormatType;

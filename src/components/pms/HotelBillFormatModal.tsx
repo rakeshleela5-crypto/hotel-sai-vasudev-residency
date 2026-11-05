@@ -111,6 +111,58 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
   const sgstAmount = currentCheckout.sgstAmount ?? (currentCheckout.gstAmount ? currentCheckout.gstAmount / 2 : 0);
   const cgstAmount = currentCheckout.cgstAmount ?? (currentCheckout.gstAmount ? currentCheckout.gstAmount / 2 : 0);
 
+  const formatRupeesToWords = (num: number): string => {
+    const rounded = Math.round(num);
+    if (rounded === 0) return 'Rupees Zero Only';
+
+    const units = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
+      'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+    const convertBelowThousand = (n: number): string => {
+      let str = '';
+      if (n >= 100) {
+        str += units[Math.floor(n / 100)] + ' Hundred ';
+        n %= 100;
+      }
+      if (n > 0) {
+        if (n < 20) {
+          str += units[n] + ' ';
+        } else {
+          str += tens[Math.floor(n / 10)] + ' ' + (units[n % 10] ? units[n % 10] + ' ' : '');
+        }
+      }
+      return str.trim();
+    };
+
+    let remainder = rounded;
+    let words = '';
+
+    if (remainder >= 10000000) {
+      const crores = Math.floor(remainder / 10000000);
+      words += convertBelowThousand(crores) + ' Crore ';
+      remainder %= 10000000;
+    }
+
+    if (remainder >= 100000) {
+      const lakhs = Math.floor(remainder / 100000);
+      words += convertBelowThousand(lakhs) + ' Lakh ';
+      remainder %= 100000;
+    }
+
+    if (remainder >= 1000) {
+      const thousands = Math.floor(remainder / 1000);
+      words += convertBelowThousand(thousands) + ' Thousand ';
+      remainder %= 1000;
+    }
+
+    if (remainder > 0) {
+      words += convertBelowThousand(remainder);
+    }
+
+    return `Rupees ${words.trim()} Only`;
+  };
+
   const getRouteLabel = () => {
     switch (activeFormat) {
       case 'Format_1_DayWise':
@@ -121,6 +173,8 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
         return `pms.hotelsai-vasudev.com/room_checkout_view3/${currentCheckout.invoiceNo.replace(/[^0-9]/g, '').slice(-3) || '238'}`;
       case 'Format_4_A5_Compact':
         return `pms.hotelsai-vasudev.com/room_checkout_view4/${currentCheckout.invoiceNo.replace(/[^0-9]/g, '').slice(-3) || '238'}`;
+      case 'Format_5_Enterprise_Folio':
+        return `pms.hotelsai-vasudev.com/enterprise_folio/${currentCheckout.invoiceNo.replace(/[^0-9]/g, '').slice(-3) || '903'}`;
     }
   };
 
@@ -351,6 +405,22 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
               }}
             >
               Format 4 (A5 Compact)
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveFormat('Format_5_Enterprise_Folio')}
+              style={{
+                background: activeFormat === 'Format_5_Enterprise_Folio' ? '#4338ca' : '#1e293b',
+                color: '#fff',
+                border: activeFormat === 'Format_5_Enterprise_Folio' ? '1px solid #818cf8' : '1px solid #475569',
+                padding: '4px 10px',
+                borderRadius: 4,
+                fontSize: 11,
+                fontWeight: 800,
+                cursor: 'pointer'
+              }}
+            >
+              Format 5 (Enterprise Folio ★)
             </button>
           </div>
         </div>
@@ -1330,6 +1400,408 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
                 </div>
               </div>
             )}
+
+            {/* ========================================================================= */}
+            {/* FORMAT 5: ENTERPRISE MASTER TAX INVOICE & FOLIO (MATCHING DOCUMENT 3)      */}
+            {/* Continuous-Feed Dot-Matrix Ledger with Voucher Postings & Dual Tax Box     */}
+            {/* ========================================================================= */}
+            {activeFormat === 'Format_5_Enterprise_Folio' && (() => {
+              const roomTariff = currentCheckout.totalRoomRent || (currentCheckout.perDayTariff * currentCheckout.numberOfDays);
+              const roomCgst = currentCheckout.cgstAmount ?? (currentCheckout.gstAmount ? currentCheckout.gstAmount / 2 : 0);
+              const roomSgst = currentCheckout.sgstAmount ?? (currentCheckout.gstAmount ? currentCheckout.gstAmount / 2 : 0);
+              
+              const foodTotal = currentCheckout.foodAmount || 0;
+              const foodTaxable = foodTotal > 0 ? Number((foodTotal / 1.05).toFixed(2)) : 0;
+              const foodTax = Number((foodTotal - foodTaxable).toFixed(2));
+              const foodCgst = Number((foodTax / 2).toFixed(2));
+              const foodSgst = Number((foodTax / 2).toFixed(2));
+              
+              const advance = currentCheckout.advanceDeducted || 0;
+              const totalDebits = roomTariff + roomCgst + roomSgst + foodTotal + (currentCheckout.addOthers || 0) - (currentCheckout.lessDiscount || 0);
+              const totalCredits = advance;
+              const netPayableAmt = currentCheckout.netPayable;
+              const totalTaxCollected = roomCgst + roomSgst + (foodTotal > 0 ? foodTax : 0);
+
+              // Construct chronological ledger entries matching Document 3 (Image 3)
+              let runningBal = 0;
+              const ledgerRows: Array<{
+                date: string;
+                voucher: string;
+                description: string;
+                sac: string;
+                debit: number;
+                credit: number;
+                balance: number;
+              }> = [];
+
+              // 1. Room Tariff
+              runningBal += roomTariff;
+              ledgerRows.push({
+                date: currentCheckout.checkInDate,
+                voucher: '',
+                description: `Tariff: ${currentCheckout.roomNo}`,
+                sac: '996311',
+                debit: roomTariff,
+                credit: 0,
+                balance: runningBal
+              });
+
+              // 2. Room CGST
+              runningBal += roomCgst;
+              ledgerRows.push({
+                date: currentCheckout.checkInDate,
+                voucher: '',
+                description: 'Central GST @ 6.00%',
+                sac: '996311',
+                debit: roomCgst,
+                credit: 0,
+                balance: runningBal
+              });
+
+              // 3. Room SGST
+              runningBal += roomSgst;
+              ledgerRows.push({
+                date: currentCheckout.checkInDate,
+                voucher: '',
+                description: 'State GST @ 6.00%',
+                sac: '996311',
+                debit: roomSgst,
+                credit: 0,
+                balance: runningBal
+              });
+
+              // 4. Restaurant F&B Cross-Posting (Document 1 Voucher 1032 / PEARL)
+              if (foodTotal > 0) {
+                runningBal += foodTaxable;
+                ledgerRows.push({
+                  date: currentCheckout.checkInDate,
+                  voucher: '1032',
+                  description: 'Vasudev Rasoi / PEARL (Restaurant Dine-In)',
+                  sac: '996331',
+                  debit: foodTaxable,
+                  credit: 0,
+                  balance: runningBal
+                });
+
+                runningBal += foodCgst;
+                ledgerRows.push({
+                  date: currentCheckout.checkInDate,
+                  voucher: '1032',
+                  description: 'Central GST @ 2.50%',
+                  sac: '',
+                  debit: foodCgst,
+                  credit: 0,
+                  balance: runningBal
+                });
+
+                runningBal += foodSgst;
+                ledgerRows.push({
+                  date: currentCheckout.checkInDate,
+                  voucher: '1032',
+                  description: 'State GST @ 2.50%',
+                  sac: '',
+                  debit: foodSgst,
+                  credit: 0,
+                  balance: runningBal
+                });
+              }
+
+              // 5. Miscellaneous / Laundry if any
+              if ((currentCheckout.addOthers || 0) > 0) {
+                runningBal += currentCheckout.addOthers;
+                ledgerRows.push({
+                  date: currentCheckout.checkInDate,
+                  voucher: 'MISC',
+                  description: 'Laundry & Room Amenities',
+                  sac: '9997',
+                  debit: currentCheckout.addOthers,
+                  credit: 0,
+                  balance: runningBal
+                });
+              }
+
+              // 6. Promotional Discount if any
+              if ((currentCheckout.lessDiscount || 0) > 0) {
+                runningBal -= currentCheckout.lessDiscount;
+                ledgerRows.push({
+                  date: currentCheckout.checkInDate,
+                  voucher: 'DISC',
+                  description: 'Less: Courtesy Pilgrim Discount',
+                  sac: '',
+                  debit: 0,
+                  credit: currentCheckout.lessDiscount,
+                  balance: runningBal
+                });
+              }
+
+              // 7. Advance Settlement (Credit line)
+              if (advance > 0) {
+                runningBal -= advance;
+                ledgerRows.push({
+                  date: currentCheckout.checkInDate,
+                  voucher: 'AR/101',
+                  description: 'Advance Deposit Received & Settled',
+                  sac: '',
+                  debit: 0,
+                  credit: advance,
+                  balance: runningBal
+                });
+              }
+
+              return (
+                <div style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: 11, color: '#000000', lineHeight: 1.35 }}>
+                  {/* Top Tax Invoice Title */}
+                  <div style={{ textAlign: 'center', marginBottom: 6 }}>
+                    <span style={{ fontSize: 16, fontWeight: 900, letterSpacing: 2, textDecoration: 'underline' }}>
+                      TAX INVOICE
+                    </span>
+                  </div>
+
+                  {/* Header: Logo, Trade Name, Legal Entity, Contacts & GSTIN */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #000', paddingBottom: 8, marginBottom: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{
+                        width: 58,
+                        height: 58,
+                        background: '#0f172a',
+                        color: '#facc15',
+                        border: '2px solid #000',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 900,
+                        fontSize: 12
+                      }}>
+                        <span style={{ fontSize: 18 }}>⚜️</span>
+                        <span style={{ fontSize: 9, letterSpacing: 1 }}>SVR</span>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 17, fontWeight: 900, letterSpacing: 0.5 }}>
+                          {companyInfo.firmName || 'SRI SAI VASUDEV RESIDENCY'}
+                        </div>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: '#1e293b' }}>
+                          PROPRIETOR: {companyInfo.legalName || 'PAIDISETTY MANMADHA RAO'}
+                        </div>
+                        <div style={{ fontSize: 10, color: '#334155' }}>
+                          {companyInfo.address1 || 'SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY'}
+                        </div>
+                        <div style={{ fontSize: 10, color: '#334155' }}>
+                          {companyInfo.city || 'Rayagada'}, {companyInfo.state || 'Odisha'} - {companyInfo.pincode || '765001'}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ textAlign: 'right', fontSize: 10 }}>
+                      <div><strong>Tel:</strong> {companyInfo.mobile || '+91 94402 89999'}</div>
+                      <div><strong>Email:</strong> {companyInfo.email || 'stay@saivasudevresidency.com'}</div>
+                      <div><strong>Web:</strong> www.saivasudevresidency.com</div>
+                      <div style={{ marginTop: 3, fontSize: 11, fontWeight: 900 }}>
+                        PROPERTY GSTIN: <span style={{ letterSpacing: 0.5 }}>{companyInfo.gstNo || '21AEKPP8689J1ZS'}</span>
+                      </div>
+                      <div style={{ fontSize: 9, color: '#334155' }}>State Code: 21 (Odisha)</div>
+                    </div>
+                  </div>
+
+                  {/* 2-Column Guest & Stay Particulars Grid matching Document 3 */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.15fr 1fr', gap: 14, borderBottom: '2px solid #000', paddingBottom: 8, marginBottom: 8 }}>
+                    {/* Left Column: Guest Particulars */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '135px 1fr' }}>
+                        <strong>GUEST NAME:</strong> <span style={{ fontWeight: 800 }}>{currentCheckout.guestName.toUpperCase()}</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '135px 1fr' }}>
+                        <strong>GUEST ADDRESS:</strong> <span>{currentCheckout.city?.toUpperCase() || 'RAYAGADA'}, {currentCheckout.state?.toUpperCase() || 'ODISHA'} - {currentCheckout.pinCode || '765001'}</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '135px 1fr' }}>
+                        <strong>NATIONALITY:</strong> <span>India</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '135px 1fr' }}>
+                        <strong>COMPANY NAME:</strong> <span>{(currentCheckout as any).companyName || '-'}</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '135px 1fr' }}>
+                        <strong>COMPANY ADDRESS:</strong> <span>{(currentCheckout as any).companyAddress || '-'}</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '135px 1fr' }}>
+                        <strong>COMPANY GSTIN:</strong> <span style={{ fontWeight: 700 }}>{(currentCheckout as any).gstNumber || '-'}</span>
+                      </div>
+                    </div>
+
+                    {/* Right Column: Room & Invoice Details */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '135px 1fr' }}>
+                        <strong>BILL NUMBER:</strong> <span style={{ fontWeight: 900 }}>{currentCheckout.invoiceNo}</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '135px 1fr' }}>
+                        <strong>REG. NO.:</strong> <span>{currentCheckout.invoiceNo.replace(/[^0-9]/g, '').slice(-4) || '3334'}</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '135px 1fr' }}>
+                        <strong>ROOM NO.:</strong> <span><strong>{currentCheckout.roomNo}</strong> &nbsp;&nbsp;&nbsp;&nbsp; <strong>PAX:</strong> 2</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '135px 1fr' }}>
+                        <strong>ROOM CATEGORY:</strong> <span>{currentCheckout.roomType.toUpperCase()}</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '135px 1fr' }}>
+                        <strong>ROOM TARIFF:</strong> <span>₹{currentCheckout.perDayTariff.toFixed(2)} +Taxes</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '135px 1fr' }}>
+                        <strong>ARRIVAL DATE:</strong> <span>{currentCheckout.checkInDate} {currentCheckout.checkInTime}</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '135px 1fr' }}>
+                        <strong>DEPARTURE DATE:</strong> <span>{currentCheckout.checkOutDate} {currentCheckout.checkOutTime}</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '135px 1fr' }}>
+                        <strong>PLAN:</strong> <span>C P (Room with Breakfast)</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '135px 1fr' }}>
+                        <strong>BILLING INST.:</strong> <span>Direct Guest Settlement</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Multi-Column Ledger Grid matching Document 3 */}
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, marginBottom: 6 }}>
+                    <thead>
+                      <tr style={{ borderBottom: '2px solid #000' }}>
+                        <th style={{ textAlign: 'left', padding: '3px 4px', width: 75 }}>DATE</th>
+                        <th style={{ textAlign: 'left', padding: '3px 4px', width: 70 }}>VOUCHER</th>
+                        <th style={{ textAlign: 'left', padding: '3px 4px' }}>DESCRIPTION</th>
+                        <th style={{ textAlign: 'center', padding: '3px 4px', width: 65 }}>SAC</th>
+                        <th style={{ textAlign: 'right', padding: '3px 4px', width: 85 }}>DEBITS</th>
+                        <th style={{ textAlign: 'right', padding: '3px 4px', width: 85 }}>CREDITS</th>
+                        <th style={{ textAlign: 'right', padding: '3px 4px', width: 95 }}>BALANCE</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ledgerRows.map((row, idx) => (
+                        <tr key={idx} style={{ borderBottom: '1px dashed #cbd5e1' }}>
+                          <td style={{ padding: '3px 4px' }}>{row.date}</td>
+                          <td style={{ padding: '3px 4px', fontWeight: 700 }}>{row.voucher || ''}</td>
+                          <td style={{ padding: '3px 4px' }}>{row.description}</td>
+                          <td style={{ padding: '3px 4px', textAlign: 'center' }}>{row.sac || ''}</td>
+                          <td style={{ padding: '3px 4px', textAlign: 'right' }}>
+                            {row.debit > 0 ? row.debit.toFixed(2) : '0.00'}
+                          </td>
+                          <td style={{ padding: '3px 4px', textAlign: 'right' }}>
+                            {row.credit > 0 ? row.credit.toFixed(2) : '0.00'}
+                          </td>
+                          <td style={{ padding: '3px 4px', textAlign: 'right', fontWeight: 600 }}>
+                            {row.balance.toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      {/* Day Total */}
+                      <tr style={{ borderTop: '2px solid #000', fontWeight: 700 }}>
+                        <td colSpan={4} style={{ textAlign: 'right', padding: '4px' }}>Day Total:</td>
+                        <td style={{ textAlign: 'right', padding: '4px' }}>{totalDebits.toFixed(2)}</td>
+                        <td style={{ textAlign: 'right', padding: '4px' }}>{totalCredits.toFixed(2)}</td>
+                        <td style={{ textAlign: 'right', padding: '4px' }}>{netPayableAmt.toFixed(2)}</td>
+                      </tr>
+                      {/* Grand Total */}
+                      <tr style={{ borderTop: '1px solid #000', borderBottom: '2px solid #000', fontWeight: 900 }}>
+                        <td colSpan={4} style={{ textAlign: 'right', padding: '4px' }}>Grand Total:</td>
+                        <td style={{ textAlign: 'right', padding: '4px' }}>{totalDebits.toFixed(2)}</td>
+                        <td style={{ textAlign: 'right', padding: '4px' }}>{totalCredits.toFixed(2)}</td>
+                        <td style={{ textAlign: 'right', padding: '4px', fontSize: 12 }}>{netPayableAmt.toFixed(2)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+
+                  {/* Round Off, Net Amount & In Words line */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #000', marginBottom: 6 }}>
+                    <div>
+                      <strong>In Words:</strong> {formatRupeesToWords(netPayableAmt)}
+                    </div>
+                    <div style={{ display: 'flex', gap: 16, fontWeight: 900 }}>
+                      <span>Round Off: 0.00</span>
+                      <span style={{ fontSize: 12 }}>Net Amount: ₹{netPayableAmt.toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  {/* Dual-Slab GST Tax Summary Box matching Document 3 */}
+                  <div style={{ border: '1px solid #000', padding: 6, marginBottom: 8, background: '#fafafa' }}>
+                    <div style={{ fontWeight: 900, borderBottom: '1px solid #000', paddingBottom: 3, marginBottom: 4, letterSpacing: 0.5 }}>
+                      TAX SUMMARY &amp; STATUTORY GST RECONCILIATION
+                    </div>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10 }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid #000', fontWeight: 800 }}>
+                          <th style={{ textAlign: 'left', padding: '2px 4px' }}>Tax Details</th>
+                          <th style={{ textAlign: 'right', padding: '2px 4px', width: 140 }}>Taxable Amount (₹)</th>
+                          <th style={{ textAlign: 'right', padding: '2px 4px', width: 140 }}>Tax Amount (₹)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td style={{ padding: '2px 4px' }}>Central GST @ 6.00% (Room Tariff - SAC 996311)</td>
+                          <td style={{ textAlign: 'right', padding: '2px 4px' }}>{roomTariff.toFixed(2)}</td>
+                          <td style={{ textAlign: 'right', padding: '2px 4px' }}>{roomCgst.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                          <td style={{ padding: '2px 4px' }}>State GST @ 6.00% (Room Tariff - SAC 996311)</td>
+                          <td style={{ textAlign: 'right', padding: '2px 4px' }}>{roomTariff.toFixed(2)}</td>
+                          <td style={{ textAlign: 'right', padding: '2px 4px' }}>{roomSgst.toFixed(2)}</td>
+                        </tr>
+                        {foodTotal > 0 && (
+                          <>
+                            <tr>
+                              <td style={{ padding: '2px 4px' }}>Central GST @ 2.50% (Vasudev Rasoi Food - SAC 996331)</td>
+                              <td style={{ textAlign: 'right', padding: '2px 4px' }}>{foodTaxable.toFixed(2)}</td>
+                              <td style={{ textAlign: 'right', padding: '2px 4px' }}>{foodCgst.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                              <td style={{ padding: '2px 4px' }}>State GST @ 2.50% (Vasudev Rasoi Food - SAC 996331)</td>
+                              <td style={{ textAlign: 'right', padding: '2px 4px' }}>{foodTaxable.toFixed(2)}</td>
+                              <td style={{ textAlign: 'right', padding: '2px 4px' }}>{foodSgst.toFixed(2)}</td>
+                            </tr>
+                          </>
+                        )}
+                        <tr style={{ borderTop: '1px solid #000', fontWeight: 900 }}>
+                          <td style={{ padding: '3px 4px' }}>Total Tax Collected:</td>
+                          <td style={{ textAlign: 'right', padding: '3px 4px' }}>
+                            {(roomTariff + foodTaxable).toFixed(2)}
+                          </td>
+                          <td style={{ textAlign: 'right', padding: '3px 4px' }}>
+                            {totalTaxCollected.toFixed(2)}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Statutory Footer, Check-In/Out Rules & Signatures matching Document 3 */}
+                  <div style={{ marginTop: 6, fontSize: 10, lineHeight: 1.4 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800 }}>
+                      <span>CHECK-IN 12:00 NOON / CHECK-OUT TIME 10:00 AM</span>
+                      <span>ORIGINAL FOR RECIPIENT</span>
+                    </div>
+
+                    <div style={{ textAlign: 'center', fontWeight: 800, marginTop: 4, textTransform: 'uppercase', color: '#0f172a' }}>
+                      The registration certificate is required to be prominently displayed at all places of business in the State
+                    </div>
+
+                    <div style={{ textAlign: 'center', fontSize: 9, color: '#334155', marginTop: 2 }}>
+                      SRI SAI VASUDEV RESIDENCY &bull; PROPRIETOR: PAIDISETTY MANMADHA RAO &bull; GSTIN: 21AEKPP8689J1ZS
+                      <br />
+                      SR RESIDENCY, NEAR ANDHRA BANK, NEW COLONY, Rayagada, Odisha - 765001
+                    </div>
+
+                    {/* Dual Signature Blocks */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 24, paddingTop: 6 }}>
+                      <div style={{ textAlign: 'center', width: 200, borderTop: '1px dashed #000', paddingTop: 4 }}>
+                        <strong>GUEST SIGNATURE</strong>
+                      </div>
+                      <div style={{ textAlign: 'center', width: 250, borderTop: '1px dashed #000', paddingTop: 4 }}>
+                        <strong>CASHIER / AUTHORIZED SIGNATORY</strong>
+                        <div style={{ fontSize: 9, color: '#64748b' }}>For SRI SAI VASUDEV RESIDENCY</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
 

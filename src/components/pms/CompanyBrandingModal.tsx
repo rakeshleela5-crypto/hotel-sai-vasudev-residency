@@ -644,6 +644,7 @@ export const CompanyBrandingModal: React.FC<CompanyBrandingModalProps> = ({
                   <option value="Format_1_DayWise">Format 1 (Day-wise Breakdown / View 2)</option>
                   <option value="Format_2_Summary">Format 2 (Summary Invoice / View 1)</option>
                   <option value="Format_4_A5_Compact">Format 4(A5) (Half-Page Condensed)</option>
+                  <option value="Format_5_Enterprise_Folio">Format 5 (Enterprise Dot-Matrix Folio - Document 3)</option>
                 </select>
 
                 <div
@@ -664,6 +665,7 @@ export const CompanyBrandingModal: React.FC<CompanyBrandingModalProps> = ({
                     {defaultFormat === 'Format_1_DayWise' && 'Itemized stay statement with yellow brand header banner, day-by-day date rows, SAC 996311 code, and dual bank/QR code box.'}
                     {defaultFormat === 'Format_2_Summary' && 'General clean 2-column invoice layout with guest address box, days count, and advance deduction.'}
                     {defaultFormat === 'Format_4_A5_Compact' && 'Half-sheet format designed specifically for A5 stationery and thermal printers, eliminating margin overspills.'}
+                    {defaultFormat === 'Format_5_Enterprise_Folio' && 'Enterprise continuous-feed master guest folio matching premier Indian hotels (Empires/IDS Next style) with multi-column debit/credit ledger, voucher cross-postings, and dual tax summary grid.'}
                   </div>
                 </div>
 

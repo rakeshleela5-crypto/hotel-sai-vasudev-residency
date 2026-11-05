@@ -10608,13 +10608,22 @@ export class PmsStore {
         paperSize: 'A5',
         buttonColor: '#ca8a04',
         description: 'Condensed half-page format tailored for A5 paper printers, zero margins, and economized billing stationery.'
+      },
+      {
+        id: 'Format_5_Enterprise_Folio',
+        name: 'Format 5 / Enterprise Dot-Matrix Folio (/enterprise_folio) [DOCUMENT 3]',
+        label: 'Format 5 (Enterprise Folio ★)',
+        route: '/enterprise_folio',
+        paperSize: 'A4',
+        buttonColor: '#4338ca',
+        description: 'Authentic enterprise continuous-feed master guest folio matching premier Indian hotel systems (Empires/IDS Next) with multi-column debit/credit ledger, voucher cross-postings, and dual tax summary grid.'
       }
     ];
   }
 
   static getDefaultBillFormat(): BillFormatType {
     const saved = localStorage.getItem('pms_default_bill_format');
-    if (saved && ['Format_1_DayWise', 'Format_2_Summary', 'Format_3_A4_Standard', 'Format_4_A5_Compact'].includes(saved)) {
+    if (saved && ['Format_1_DayWise', 'Format_2_Summary', 'Format_3_A4_Standard', 'Format_4_A5_Compact', 'Format_5_Enterprise_Folio'].includes(saved)) {
       return saved as BillFormatType;
     }
     return 'Format_3_A4_Standard';
