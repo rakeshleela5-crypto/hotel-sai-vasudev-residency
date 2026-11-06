@@ -7,6 +7,7 @@ import type {
 } from '../../types/pmsModels';
 import { PmsStore, usePmsSync } from '../../services/pmsStore';
 import { hotelApi } from '../../services/api';
+import { useSafeAsyncRequest } from '../../hooks/useSafeAsyncRequest';
 import './pmsStyles.css';
 
 interface EodExpenditureAnalyticsModalProps {
@@ -70,89 +71,90 @@ export const EodExpenditureAnalyticsModal: React.FC<EodExpenditureAnalyticsModal
   });
 
   const companyInfo = PmsStore.getCompanyInfo();
+  const { runSafeAsync } = useSafeAsyncRequest();
 
-  // Load Categories & Analytics Data
-  const loadData = async () => {
+  // Load Categories & Analytics Data with AbortController and RequestId race guard
+  const loadData = () => {
     setIsLoading(true);
-    try {
-      // 1. Categories
-      try {
-        const catRes = await hotelApi.getEodCategories();
-        if (catRes?.categories) {
-          setCategoriesMap(catRes.categories);
+    runSafeAsync(
+      async ({ signal }) => {
+        // 1. Categories
+        let cats = categoriesMap;
+        try {
+          const catRes = await hotelApi.getEodCategories();
+          if (catRes?.categories) cats = catRes.categories;
+        } catch {
+          // keep existing or defaults
         }
-      } catch {
-        // Fallback default
-        setCategoriesMap({
-          'Housekeeping': ['Housekeeping Supplies', 'Linen Washing / Laundry', 'Room Amenities & Toiletries', 'Disinfectants & Cleaning Chemicals'],
-          'Kitchen & Vasudev Rasoi': ['Vegetables & Groceries', 'Dairy & Bakery Items', 'Spices & Dry Provisions', 'Cooking Gas Cylinders (LPG)', 'Food Packaging & Disposables'],
-          'Maintenance & Engineering': ['Plumbing & Sanitary Repairs', 'Electrical & Lighting', 'AC Servicing & Gas Refill', 'DG Generator Diesel', 'Carpentry & Touch-up Paint'],
-          'Utilities': ['Electricity Bill', 'Water Supply / Tankers', 'High-Speed Internet / Wi-Fi', 'Telephone & Cable TV DTH'],
-          'Staff Allowance & Welfare': ['Staff Tea & Refreshments', 'Overtime & Night Meal Allowance', 'Uniform Maintenance & Stitching', 'Emergency First Aid & Welfare'],
-          'Administrative & Front Office': ['Printing & Guest Registration Slips', 'Key Cards & RFID Envelopes', 'Software & Cloud Subscriptions', 'Courier & Speed Post'],
-          'Miscellaneous': ['Local Travel & Auto Hire', 'Pest Control Treatment', 'Municipal Waste Disposal Fee', 'General Petty Cash Sundries']
-        });
-      }
 
-      // 2. Expenses List
-      try {
-        const expRes = await hotelApi.getEodExpenses({
-          date: viewMode === 'daily' ? selectedDate : undefined,
-          period: viewMode === 'monthly' ? selectedPeriod : undefined
-        });
-        if (expRes?.expenses) {
-          setExpensesList(expRes.expenses);
-        } else {
-          setExpensesList(PmsStore.getEodExpenses(viewMode === 'daily' ? selectedDate : undefined, viewMode === 'monthly' ? selectedPeriod : undefined));
+        // 2. Expenses List
+        let expList: EodExpenseRecord[] = [];
+        try {
+          const expRes = await hotelApi.getEodExpenses({
+            date: viewMode === 'daily' ? selectedDate : undefined,
+            period: viewMode === 'monthly' ? selectedPeriod : undefined
+          }, { signal });
+          if (expRes?.expenses) expList = expRes.expenses;
+          else expList = PmsStore.getEodExpenses(viewMode === 'daily' ? selectedDate : undefined, viewMode === 'monthly' ? selectedPeriod : undefined);
+        } catch (e: any) {
+          if (e?.name === 'AbortError' || signal.aborted) throw e;
+          expList = PmsStore.getEodExpenses(viewMode === 'daily' ? selectedDate : undefined, viewMode === 'monthly' ? selectedPeriod : undefined);
         }
-      } catch {
-        setExpensesList(PmsStore.getEodExpenses(viewMode === 'daily' ? selectedDate : undefined, viewMode === 'monthly' ? selectedPeriod : undefined));
-      }
 
-      // 3. Room Category Revenue Analytics
-      try {
-        const rRes = await hotelApi.getRoomCategoryRevenue({
-          date: viewMode === 'daily' ? selectedDate : undefined,
-          period: viewMode === 'monthly' ? selectedPeriod : undefined
-        });
-        if (rRes?.categories) {
-          setRoomCatReport(rRes);
-        } else {
-          setRoomCatReport(PmsStore.getRoomCategoryRevenueAnalytics(viewMode === 'daily' ? selectedDate : undefined, viewMode === 'monthly' ? selectedPeriod : undefined));
+        // 3. Room Category Revenue Analytics
+        let rReport: RoomCategoryRevenueReport | null = null;
+        try {
+          const rRes = await hotelApi.getRoomCategoryRevenue({
+            date: viewMode === 'daily' ? selectedDate : undefined,
+            period: viewMode === 'monthly' ? selectedPeriod : undefined
+          }, { signal });
+          if (rRes?.categories) rReport = rRes;
+          else rReport = PmsStore.getRoomCategoryRevenueAnalytics(viewMode === 'daily' ? selectedDate : undefined, viewMode === 'monthly' ? selectedPeriod : undefined);
+        } catch (e: any) {
+          if (e?.name === 'AbortError' || signal.aborted) throw e;
+          rReport = PmsStore.getRoomCategoryRevenueAnalytics(viewMode === 'daily' ? selectedDate : undefined, viewMode === 'monthly' ? selectedPeriod : undefined);
         }
-      } catch {
-        setRoomCatReport(PmsStore.getRoomCategoryRevenueAnalytics(viewMode === 'daily' ? selectedDate : undefined, viewMode === 'monthly' ? selectedPeriod : undefined));
-      }
 
-      // 4. Payment Mode Revenue Analytics
-      try {
-        const pRes = await hotelApi.getPaymentModeRevenue({
-          date: viewMode === 'daily' ? selectedDate : undefined,
-          period: viewMode === 'monthly' ? selectedPeriod : undefined
-        });
-        if (pRes?.modes) {
-          setPaymentModeReport(pRes);
-        } else {
-          setPaymentModeReport(PmsStore.getPaymentModeRevenueAnalytics(viewMode === 'daily' ? selectedDate : undefined, viewMode === 'monthly' ? selectedPeriod : undefined));
+        // 4. Payment Mode Revenue Analytics
+        let pReport: PaymentModeRevenueReport | null = null;
+        try {
+          const pRes = await hotelApi.getPaymentModeRevenue({
+            date: viewMode === 'daily' ? selectedDate : undefined,
+            period: viewMode === 'monthly' ? selectedPeriod : undefined
+          }, { signal });
+          if (pRes?.modes) pReport = pRes;
+          else pReport = PmsStore.getPaymentModeRevenueAnalytics(viewMode === 'daily' ? selectedDate : undefined, viewMode === 'monthly' ? selectedPeriod : undefined);
+        } catch (e: any) {
+          if (e?.name === 'AbortError' || signal.aborted) throw e;
+          pReport = PmsStore.getPaymentModeRevenueAnalytics(viewMode === 'daily' ? selectedDate : undefined, viewMode === 'monthly' ? selectedPeriod : undefined);
         }
-      } catch {
-        setPaymentModeReport(PmsStore.getPaymentModeRevenueAnalytics(viewMode === 'daily' ? selectedDate : undefined, viewMode === 'monthly' ? selectedPeriod : undefined));
-      }
 
-      // 5. EOD Summary
-      try {
-        const sRes = await hotelApi.getEodExecutiveSummary(selectedDate);
-        if (sRes?.revenue) {
-          setEodSummary(sRes);
-        } else {
-          setEodSummary(PmsStore.getEodExecutiveSummary(selectedDate));
+        // 5. EOD Summary
+        let eSummary: EodExecutiveSummary | null = null;
+        try {
+          const sRes = await hotelApi.getEodExecutiveSummary(selectedDate, { signal });
+          if (sRes?.revenue) eSummary = sRes;
+          else eSummary = PmsStore.getEodExecutiveSummary(selectedDate);
+        } catch (e: any) {
+          if (e?.name === 'AbortError' || signal.aborted) throw e;
+          eSummary = PmsStore.getEodExecutiveSummary(selectedDate);
         }
-      } catch {
-        setEodSummary(PmsStore.getEodExecutiveSummary(selectedDate));
+
+        return { cats, expList, rReport, pReport, eSummary };
+      },
+      (data) => {
+        if (data.cats && Object.keys(data.cats).length > 0) setCategoriesMap(data.cats);
+        setExpensesList(data.expList);
+        setRoomCatReport(data.rReport);
+        setPaymentModeReport(data.pReport);
+        setEodSummary(data.eSummary);
+        setIsLoading(false);
+      },
+      (err) => {
+        console.warn('[EodExpenditureAnalyticsModal] loadData failed:', err);
+        setIsLoading(false);
       }
-    } finally {
-      setIsLoading(false);
-    }
+    );
   };
 
   useEffect(() => {

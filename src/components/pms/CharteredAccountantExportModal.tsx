@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import type { CaExportData } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import { hotelApi } from '../../services/api';
+import { useSafeAsyncRequest } from '../../hooks/useSafeAsyncRequest';
 import './pmsStyles.css';
 
 interface CharteredAccountantExportModalProps {
@@ -59,31 +60,38 @@ export const CharteredAccountantExportModal: React.FC<CharteredAccountantExportM
     }
   }, [selectedYear, selectedMonth]);
 
-  // Load CA Export Data from API with local fallback
-  const loadData = async () => {
+  const { runSafeAsync } = useSafeAsyncRequest();
+
+  // Load CA Export Data from API with local fallback and AbortController race guard
+  const loadData = () => {
     setIsLoading(true);
-    try {
-      let data: CaExportData;
-      try {
-        data = await hotelApi.getCharteredAccountantExport(currentPeriodStr, selectedYear, selectedMonth);
-      } catch {
-        data = PmsStore.generateCharteredAccountantExport(currentPeriodStr);
+    runSafeAsync(
+      async ({ signal }) => {
+        try {
+          return await hotelApi.getCharteredAccountantExport(currentPeriodStr, selectedYear, selectedMonth, { signal });
+        } catch (apiErr: any) {
+          if (apiErr?.name === 'AbortError' || signal.aborted) throw apiErr;
+          return PmsStore.generateCharteredAccountantExport(currentPeriodStr);
+        }
+      },
+      (data) => {
+        setExportData(data);
+        setIsLoading(false);
+      },
+      (err) => {
+        console.warn('[CA Export Modal] Error compiling CA JSON export:', err);
+        const fallback = PmsStore.generateCharteredAccountantExport(currentPeriodStr);
+        setExportData(fallback);
+        setIsLoading(false);
       }
-      setExportData(data);
-    } catch (err) {
-      console.warn('[CA Export Modal] Error compiling CA JSON export:', err);
-      const fallback = PmsStore.generateCharteredAccountantExport(currentPeriodStr);
-      setExportData(fallback);
-    } finally {
-      setIsLoading(false);
-    }
+    );
   };
 
   useEffect(() => {
     if (isOpen) {
       loadData();
     }
-  }, [isOpen, selectedYear, selectedMonth]);
+  }, [isOpen, selectedYear, selectedMonth, currentPeriodStr]);
 
   if (!isOpen) return null;
 

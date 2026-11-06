@@ -163,13 +163,10 @@ def process_decentro_webhook_background(event_id: str, payload: dict):
                     acquire_canonical_locks(db, booking_id=booking_id)
                     booking = db.query(Booking).filter(Booking.id == booking_id).first()
                     if booking:
-                        booking.total_paid = round((booking.total_paid or 0.0) + settle_amount, 2)
-                        booking.balance_due = max(0.0, round(booking.total_price - booking.total_paid, 2))
-                        if booking.balance_due <= 0.0:
-                            booking.payment_status = "Paid"
-                        else:
-                            booking.payment_status = "Partial"
-                        booking.payment_method = payment_mode_str
+                        from app.utils.locking import atomic_record_folio_payment
+                        booking, folio = atomic_record_folio_payment(
+                            db, booking.id, settle_amount, payment_mode_str
+                        )
                         if not room_no and booking.room:
                             room_no = booking.room.name
 
@@ -181,8 +178,8 @@ def process_decentro_webhook_background(event_id: str, payload: dict):
 
                         # Record in booking_payments
                         notes_str = f"Auto-Reconciled via Decentro Webhook (Ref: {txn.reference_id})"
-                        if booking.total_paid > booking.total_price:
-                            excess = round(booking.total_paid - booking.total_price, 2)
+                        if (booking.total_paid or 0.0) > booking.total_price:
+                            excess = round((booking.total_paid or 0.0) - booking.total_price, 2)
                             notes_str += f" [Overpayment Excess: ₹{excess}]"
 
                         bp = BookingPayment(
@@ -194,15 +191,6 @@ def process_decentro_webhook_background(event_id: str, payload: dict):
                             notes=notes_str
                         )
                         db.add(bp)
-
-                        # Update or create Master Folio record
-                        folio = db.query(Folio).filter(Folio.booking_id == booking.id).first()
-                        if folio:
-                            folio.total_payments = round((folio.total_payments or 0.0) + settle_amount, 2)
-                            folio.balance_due = max(0.0, round((folio.total_charges or booking.total_price) - folio.total_payments, 2))
-                            if folio.balance_due <= 0.0:
-                                folio.status = "SETTLED"
-                            folio.updated_at = now_utc()
 
                 # 3. Post Double-Entry Accounting Journal Entry to Bank Ledger
                 entry_ref = bank_ref or txn.reference_id
@@ -487,41 +475,28 @@ def settle_room_folio(payload: Dict[str, Any], db: Session = Depends(get_db)):
             logger.info(f"[Folio Settle Idempotency] Transaction ref {txn_ref} already settled. Skipping duplicate payment.")
             settlement_amt = 0.0
 
-    if settlement_amt > 0:
-        bp = models.BookingPayment(
-            booking_id=booking.id,
-            payment_type="Settlement",
-            payment_mode=payment_mode,
-            amount=settlement_amt,
-            transaction_ref=payload.get("transaction_ref") or f"SETTLE-{uuid.uuid4().hex[:6].upper()}",
-            notes="Final Folio Settlement"
-        )
-        db.add(bp)
-        booking.total_paid = round((booking.total_paid or 0.0) + settlement_amt, 2)
-        booking.balance_due = max(0.0, round(booking.total_price - booking.total_paid, 2))
+    with db.begin_nested():
+        if settlement_amt > 0:
+            bp = models.BookingPayment(
+                booking_id=booking.id,
+                payment_type="Settlement",
+                payment_mode=payment_mode,
+                amount=settlement_amt,
+                transaction_ref=payload.get("transaction_ref") or f"SETTLE-{uuid.uuid4().hex[:6].upper()}",
+                notes="Final Folio Settlement"
+            )
+            db.add(bp)
+            from app.utils.locking import atomic_record_folio_payment
+            booking, folio = atomic_record_folio_payment(db, booking.id, settlement_amt, payment_mode)
+        else:
+            from app.utils.locking import ensure_folio_exists
+            folio = ensure_folio_exists(db, booking.id)
 
-    if booking.balance_due <= 0:
-        booking.payment_status = "Paid"
-        booking.status = "Checked-Out"
-    else:
-        booking.payment_status = "Partial"
-
-    folio = db.query(models.Folio).filter(models.Folio.booking_id == booking.id).first()
-    if not folio:
-        folio = models.Folio(
-            booking_id=booking.id,
-            folio_number=f"FOLIO-{booking.booking_ref}",
-            status="SETTLED" if booking.balance_due <= 0 else "OPEN",
-            total_charges=booking.total_price,
-            total_payments=booking.total_paid,
-            balance_due=booking.balance_due
-        )
-        db.add(folio)
-    else:
-        folio.total_payments = booking.total_paid
-        folio.balance_due = booking.balance_due
-        if folio.balance_due <= 0:
-            folio.status = "SETTLED"
+        if (booking.balance_due or 0.0) <= 0:
+            booking.payment_status = "Paid"
+            booking.status = "Checked-Out"
+        else:
+            booking.payment_status = "Partial"
 
     db.commit()
 

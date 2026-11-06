@@ -55,12 +55,16 @@ def record_audit_log(
 
     db.add(audit_entry)
     try:
-        db.commit()
-        db.refresh(audit_entry)
+        if db.in_nested_transaction():
+            db.flush()
+        else:
+            db.commit()
+            db.refresh(audit_entry)
         logger.info(f"[Audit] Recorded '{action}' on {entity_type}:{entity_id} by {clean_staff} ({clean_role}).")
         return audit_entry
     except Exception as exc:
-        db.rollback()
+        if not db.in_nested_transaction():
+            db.rollback()
         logger.error(f"[Audit] Failed to commit audit log entry: {exc}")
         return audit_entry
 

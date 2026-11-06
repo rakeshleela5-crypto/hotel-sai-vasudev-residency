@@ -3,6 +3,7 @@ import type { Room, BookingResponse, AvailabilityCheckResponse } from '../types'
 import { hotelApi } from '../services/api';
 import { PmsStore } from '../services/pmsStore';
 import { getTodayIST, addDays, calculateNights, validateIndianPhone, validateEmail } from '../utils/validation';
+import { useSafeAsyncRequest } from '../hooks/useSafeAsyncRequest';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -101,31 +102,31 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     }
   };
 
-  // Check real-time server inventory
+  const { runSafeAsync } = useSafeAsyncRequest();
+
+  // Check real-time server inventory with AbortController and incrementing requestId guard
   useEffect(() => {
     if (!selectedRoom || !checkIn || !checkOut) return;
-    let isCurrent = true;
     setCheckingAvail(true);
     setErrorMsg(null);
 
-    hotelApi.checkRoomAvailability(selectedRoom.id, checkIn, checkOut, adults)
-      .then((res) => {
-        if (isCurrent) {
-          setAvailData(res);
-          if (!res.available) {
-            setErrorMsg(res.message);
-          }
+    runSafeAsync(
+      async ({ signal }) => {
+        return await hotelApi.checkRoomAvailability(selectedRoom.id, checkIn, checkOut, adults, { signal });
+      },
+      (res) => {
+        setAvailData(res);
+        if (!res.available) {
+          setErrorMsg(res.message);
         }
-      })
-      .catch((err) => {
-        if (isCurrent) console.warn('Could not verify availability live:', err);
-      })
-      .finally(() => {
-        if (isCurrent) setCheckingAvail(false);
-      });
-
-    return () => { isCurrent = false; };
-  }, [selectedRoom, checkIn, checkOut, adults]);
+        setCheckingAvail(false);
+      },
+      (err) => {
+        console.warn('Could not verify availability live:', err);
+        setCheckingAvail(false);
+      }
+    );
+  }, [selectedRoom, checkIn, checkOut, adults, runSafeAsync]);
 
   // PRD Business Rule: All listed room tariffs (₹1,500 to ₹3,000) are Inclusive of GST (12% slab for SAC 996311)
   // Pre-GST taxable base is extracted via gross / 1.12 for GSTR-1 reporting rather than adding tax on top.

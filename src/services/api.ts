@@ -111,7 +111,10 @@ export const hotelApi = {
     }
   },
 
-  async getRooms(roomType?: string, maxPrice?: number): Promise<Room[]> {
+  async getRooms(roomType?: string, maxPrice?: number, options?: { signal?: AbortSignal }): Promise<Room[]> {
+    if (options?.signal?.aborted) {
+      throw new DOMException('Aborted', 'AbortError');
+    }
     try {
       const localRooms = typeof window !== 'undefined' ? PmsStore.getRooms() : [];
       const deluxeAvail    = localRooms.filter(r => r.roomType === 'Deluxe'       && r.status === 'vacant').length;
@@ -162,8 +165,12 @@ export const hotelApi = {
     roomId: number, 
     checkIn: string, 
     checkOut: string, 
-    adults: number = 2
+    adults: number = 2,
+    options?: { signal?: AbortSignal }
   ): Promise<AvailabilityCheckResponse> {
+    if (options?.signal?.aborted) {
+      throw new DOMException('Aborted', 'AbortError');
+    }
     const room = FALLBACK_ROOMS.find(r => r.id === roomId) || FALLBACK_ROOMS[2]; // default Executive
     const localRooms = typeof window !== 'undefined' ? PmsStore.getRooms() : [];
     
@@ -2523,7 +2530,7 @@ export const hotelApi = {
     return await res.json();
   },
 
-  async getEodExpenses(params?: { date?: string; period?: string; category?: string; subcategory?: string; payment_mode?: string }): Promise<any> {
+  async getEodExpenses(params?: { date?: string; period?: string; category?: string; subcategory?: string; payment_mode?: string }, options?: { signal?: AbortSignal }): Promise<any> {
     const query = new URLSearchParams();
     if (params?.date) query.append('date', params.date);
     if (params?.period) query.append('period', params.period);
@@ -2532,7 +2539,7 @@ export const hotelApi = {
     if (params?.payment_mode && params.payment_mode !== 'All') query.append('payment_mode', params.payment_mode);
     const qs = query.toString() ? `?${query.toString()}` : '';
 
-    const res = await fetch(`${API_BASE_URL}/eod-analytics/expenses${qs}`);
+    const res = await fetch(`${API_BASE_URL}/eod-analytics/expenses${qs}`, { signal: options?.signal });
     if (!res.ok) throw new Error('Failed to fetch EOD expenses');
     return await res.json();
   },
@@ -2558,31 +2565,31 @@ export const hotelApi = {
     return await res.json();
   },
 
-  async getRoomCategoryRevenue(params?: { date?: string; period?: string }): Promise<any> {
+  async getRoomCategoryRevenue(params?: { date?: string; period?: string }, options?: { signal?: AbortSignal }): Promise<any> {
     const query = new URLSearchParams();
     if (params?.date) query.append('date', params.date);
     if (params?.period) query.append('period', params.period);
     const qs = query.toString() ? `?${query.toString()}` : '';
 
-    const res = await fetch(`${API_BASE_URL}/eod-analytics/revenue-by-room-category${qs}`);
+    const res = await fetch(`${API_BASE_URL}/eod-analytics/revenue-by-room-category${qs}`, { signal: options?.signal });
     if (!res.ok) throw new Error('Failed to fetch Room Category revenue');
     return await res.json();
   },
 
-  async getPaymentModeRevenue(params?: { date?: string; period?: string }): Promise<any> {
+  async getPaymentModeRevenue(params?: { date?: string; period?: string }, options?: { signal?: AbortSignal }): Promise<any> {
     const query = new URLSearchParams();
     if (params?.date) query.append('date', params.date);
     if (params?.period) query.append('period', params.period);
     const qs = query.toString() ? `?${query.toString()}` : '';
 
-    const res = await fetch(`${API_BASE_URL}/eod-analytics/revenue-by-payment-mode${qs}`);
+    const res = await fetch(`${API_BASE_URL}/eod-analytics/revenue-by-payment-mode${qs}`, { signal: options?.signal });
     if (!res.ok) throw new Error('Failed to fetch Payment Mode revenue');
     return await res.json();
   },
 
-  async getEodExecutiveSummary(date?: string): Promise<any> {
+  async getEodExecutiveSummary(date?: string, options?: { signal?: AbortSignal }): Promise<any> {
     const qs = date ? `?date=${date}` : '';
-    const res = await fetch(`${API_BASE_URL}/eod-analytics/eod-summary${qs}`);
+    const res = await fetch(`${API_BASE_URL}/eod-analytics/eod-summary${qs}`, { signal: options?.signal });
     if (!res.ok) throw new Error('Failed to fetch EOD summary');
     return await res.json();
   },
@@ -2752,14 +2759,14 @@ export const hotelApi = {
   // =========================================================================
   // MODULE 6: CHARTERED ACCOUNTANT (CA) JSON EXPORT ENGINE
   // =========================================================================
-  async getCharteredAccountantExport(period?: string, year?: string | number, month?: string | number): Promise<any> {
+  async getCharteredAccountantExport(period?: string, year?: string | number, month?: string | number, options?: { signal?: AbortSignal }): Promise<any> {
     const query = new URLSearchParams();
     if (period) query.append('period', period);
     if (year) query.append('year', String(year));
     if (month) query.append('month', String(month));
     const qs = query.toString() ? `?${query.toString()}` : '';
 
-    const res = await fetch(`${API_BASE_URL}/accounting/ca-export${qs}`);
+    const res = await fetch(`${API_BASE_URL}/accounting/ca-export${qs}`, { signal: options?.signal });
     if (!res.ok) throw new Error('Failed to compile Chartered Accountant export JSON');
     return await res.json();
   },

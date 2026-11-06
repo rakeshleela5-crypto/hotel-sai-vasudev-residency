@@ -65,15 +65,16 @@ def compute_tax_and_pricing(room: models.Room, nights: int, adults: int):
 
 def get_overlapping_bookings_count(db: Session, room_id: int, check_in_str: str, check_out_str: str, for_update: bool = True) -> int:
     """Calculates active bookings overlapping with [check_in, check_out) with row-level locking (#38)."""
-    q = db.query(models.Booking).filter(
+    q = db.query(models.Booking.id).filter(
         models.Booking.room_id == room_id,
         models.Booking.status.notin_(["Cancelled", "Checked-Out"]),
+        models.Booking.is_deleted == False,
         models.Booking.check_in_date < check_out_str,
         models.Booking.check_out_date > check_in_str
     )
     if for_update:
         try:
-            return q.with_for_update().count()
+            return len(q.with_for_update().all())
         except Exception:
             return q.count()
     return q.count()
@@ -92,85 +93,93 @@ async def create_booking(request: Request, payload: schemas.BookingCreate, db: S
     """
     # 1. Acquire canonical row lock on Room (.with_for_update()) (#14, #26)
     with _booking_concurrency_lock:
-        # Row-level pessimistic locking (.with_for_update()) on target Room (#14, #26, #38)
-        _, _, room = acquire_canonical_locks(db, room_id=payload.room_id)
-        if not room:
-            raise HTTPException(status_code=404, detail="Selected room does not exist")
+        try:
+            with db.begin_nested():
+                # Row-level pessimistic locking (.with_for_update()) on target Room (#14, #26, #38)
+                _, _, room = acquire_canonical_locks(db, room_id=payload.room_id)
+                if not room:
+                    raise HTTPException(status_code=404, detail="Selected room does not exist")
 
-        _, _, nights = parse_dates_and_nights(payload.check_in_date, payload.check_out_date)
+                _, _, nights = parse_dates_and_nights(payload.check_in_date, payload.check_out_date)
 
-        # Verify inventory availability under row lock:
-        if getattr(room, "room_number", None):
-            inventory_limit = 1
-        else:
-            inventory_limit = getattr(room, "total_inventory", 1) or 1
+                # Verify inventory availability under row lock:
+                if getattr(room, "room_number", None):
+                    inventory_limit = 1
+                else:
+                    inventory_limit = getattr(room, "total_inventory", 1) or 1
 
-        booked_count = get_overlapping_bookings_count(
-            db, payload.room_id, payload.check_in_date, payload.check_out_date, for_update=True
-        )
-        
-        if booked_count >= inventory_limit:
-            room_label = getattr(room, "room_number", None) or getattr(room, "name", "Selected Room")
-            raise HTTPException(
-                status_code=409,
-                detail=(
-                    f"Booking Conflict: Room '{room_label}' "
-                    f"is already reserved between {payload.check_in_date} and {payload.check_out_date}. "
-                    f"Please choose alternative dates or another room category."
+                booked_count = get_overlapping_bookings_count(
+                    db, payload.room_id, payload.check_in_date, payload.check_out_date, for_update=True
                 )
-            )
+                
+                if booked_count >= inventory_limit:
+                    room_label = getattr(room, "room_number", None) or getattr(room, "name", "Selected Room")
+                    raise HTTPException(
+                        status_code=409,
+                        detail=(
+                            f"Booking Conflict: Room '{room_label}' "
+                            f"is already reserved between {payload.check_in_date} and {payload.check_out_date}. "
+                            f"Please choose alternative dates or another room category."
+                        )
+                    )
 
-        # Calculate authoritative server-side pricing & GST
-        pricing = compute_tax_and_pricing(room, nights, payload.adults)
+                # Calculate authoritative server-side pricing & GST
+                pricing = compute_tax_and_pricing(room, nights, payload.adults)
 
-        new_booking = models.Booking(
-            room_id=payload.room_id,
-            guest_name=payload.guest_name.strip(),
-            guest_email=payload.guest_email.strip().lower(),
-            guest_phone=payload.guest_phone.strip(),
-            id_proof_type=payload.id_proof_type or "Aadhaar Card",
-            id_proof_number=encrypt_pii(payload.id_proof_number),
-            check_in_date=payload.check_in_date,
-            check_out_date=payload.check_out_date,
-            adults=payload.adults,
-            children=payload.children,
-            total_nights=nights,
-            base_rate=pricing["base_tariff"],
-            base_amount=pricing["base_amount"],
-            extra_guest_charge=pricing["extra_guest_charge"],
-            gst_rate=pricing["gst_rate"],
-            cgst_amount=pricing["cgst_amount"],
-            sgst_amount=pricing["sgst_amount"],
-            total_tax=pricing["total_tax"],
-            total_price=pricing["grand_total"],
-            payment_status="Pending" if payload.payment_method == "Pay at Hotel" else "Paid",
-            payment_method=payload.payment_method or "Pay at Hotel",
-            status="Confirmed",
-            special_requests=payload.special_requests,
-            created_at=now_utc(),
-            updated_at=now_utc()
-        )
+                new_booking = models.Booking(
+                    room_id=payload.room_id,
+                    guest_name=payload.guest_name.strip(),
+                    guest_email=payload.guest_email.strip().lower(),
+                    guest_phone=payload.guest_phone.strip(),
+                    id_proof_type=payload.id_proof_type or "Aadhaar Card",
+                    id_proof_number=encrypt_pii(payload.id_proof_number),
+                    check_in_date=payload.check_in_date,
+                    check_out_date=payload.check_out_date,
+                    adults=payload.adults,
+                    children=payload.children,
+                    total_nights=nights,
+                    base_rate=pricing["base_tariff"],
+                    base_amount=pricing["base_amount"],
+                    extra_guest_charge=pricing["extra_guest_charge"],
+                    gst_rate=pricing["gst_rate"],
+                    cgst_amount=pricing["cgst_amount"],
+                    sgst_amount=pricing["sgst_amount"],
+                    total_tax=pricing["total_tax"],
+                    total_price=pricing["grand_total"],
+                    payment_status="Pending" if payload.payment_method == "Pay at Hotel" else "Paid",
+                    payment_method=payload.payment_method or "Pay at Hotel",
+                    status="Confirmed",
+                    special_requests=payload.special_requests,
+                    created_at=now_utc(),
+                    updated_at=now_utc()
+                )
 
-        db.add(new_booking)
-        db.flush()
+                db.add(new_booking)
+                db.flush()
 
-        # Automatically initialize primary Master Folio (#20, #26)
-        initial_folio = models.Folio(
-            booking_id=new_booking.id,
-            folio_number=f"FOL-{new_booking.booking_ref}",
-            status="OPEN",
-            total_charges=new_booking.total_price,
-            total_payments=new_booking.total_paid or 0.0,
-            balance_due=new_booking.balance_due or new_booking.total_price,
-            version_id=1,
-            created_at=now_utc(),
-            updated_at=now_utc()
-        )
-        db.add(initial_folio)
+                # Automatically initialize primary Master Folio (#20, #26)
+                initial_folio = models.Folio(
+                    booking_id=new_booking.id,
+                    folio_number=f"FOL-{new_booking.booking_ref}",
+                    status="OPEN",
+                    total_charges=new_booking.total_price,
+                    total_payments=new_booking.total_paid or 0.0,
+                    balance_due=new_booking.balance_due or new_booking.total_price,
+                    version_id=1,
+                    created_at=now_utc(),
+                    updated_at=now_utc()
+                )
+                db.add(initial_folio)
 
-        db.commit()
-        db.refresh(new_booking)
-        await invalidate_cache_prefix("rooms")
+            db.commit()
+            db.refresh(new_booking)
+            await invalidate_cache_prefix("rooms")
+        except HTTPException:
+            db.rollback()
+            raise
+        except Exception as e:
+            db.rollback()
+            raise
 
     ws_manager.emit_booking_event_sync(
         event_type="BOOKING_CREATED",
@@ -205,39 +214,47 @@ def update_booking_status(
 ):
     """Update booking lifecycle with canonical row lock (Booking -> Folio -> Room) (#15, #26)"""
     from app.routes.pms import find_booking_by_ref_or_room
-    booking = find_booking_by_ref_or_room(db, booking_ref, for_update=True)
-    if not booking:
-        raise HTTPException(status_code=404, detail="Booking reservation not found")
+    try:
+        with db.begin_nested():
+            booking = find_booking_by_ref_or_room(db, booking_ref, for_update=True)
+            if not booking:
+                raise HTTPException(status_code=404, detail="Booking reservation not found")
 
-    acquire_canonical_locks(db, booking_id=booking.id, room_id=booking.room_id)
+            acquire_canonical_locks(db, booking_id=booking.id, room_id=booking.room_id)
 
-    # Race Condition & Double-Booking Guard (#14, #38)
-    if update.status == "Checked-In":
-        room = db.query(models.Room).filter(models.Room.id == booking.room_id).with_for_update().first()
-        if room:
-            if room.housekeeping_status == "Occupied":
-                other_b = db.query(models.Booking).filter(
-                    models.Booking.room_id == room.id,
-                    models.Booking.id != booking.id,
-                    models.Booking.status == "Checked-In",
-                    models.Booking.is_deleted == False
-                ).first()
-                if other_b:
-                    raise HTTPException(
-                        status_code=409,
-                        detail=f"Room '{room.name}' is already occupied by active reservation '{other_b.booking_ref}'"
-                    )
-            room.housekeeping_status = "Occupied"
+            # Race Condition & Double-Booking Guard (#14, #38)
+            if update.status == "Checked-In":
+                room = db.query(models.Room).filter(models.Room.id == booking.room_id).with_for_update().first()
+                if room:
+                    if room.housekeeping_status == "Occupied":
+                        other_b = db.query(models.Booking).filter(
+                            models.Booking.room_id == room.id,
+                            models.Booking.id != booking.id,
+                            models.Booking.status == "Checked-In",
+                            models.Booking.is_deleted == False
+                        ).first()
+                        if other_b:
+                            raise HTTPException(
+                                status_code=409,
+                                detail=f"Room '{room.name}' is already occupied by active reservation '{other_b.booking_ref}'"
+                            )
+                    room.housekeeping_status = "Occupied"
 
-    booking.status = update.status
-    if update.payment_status:
-        booking.payment_status = update.payment_status
-    if update.cancellation_reason:
-        booking.cancellation_reason = update.cancellation_reason
-    booking.updated_at = now_utc()
+            booking.status = update.status
+            if update.payment_status:
+                booking.payment_status = update.payment_status
+            if update.cancellation_reason:
+                booking.cancellation_reason = update.cancellation_reason
+            booking.updated_at = now_utc()
 
-    db.commit()
-    db.refresh(booking)
+        db.commit()
+        db.refresh(booking)
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as exc:
+        db.rollback()
+        raise
     from app.utils.caching import invalidate_rooms_cache
     invalidate_rooms_cache()
     ws_manager.emit_booking_event_sync(

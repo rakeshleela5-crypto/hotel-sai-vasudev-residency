@@ -1,6 +1,6 @@
 import datetime
 import uuid
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, Index, event, DDL
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, Index, event, DDL, text
 from sqlalchemy.orm import relationship
 from app.database import Base
 from app.utils.timezone import now_utc, TimezoneAwareDateTime
@@ -103,6 +103,14 @@ class Booking(Base):
 
     __table_args__ = (
         Index("ix_bookings_checkin_checkout_status", "check_in_date", "check_out_date", "status"),
+        Index("ix_bookings_room_dates_active", "room_id", "check_in_date", "check_out_date", "status"),
+        Index(
+            "uq_active_room_checked_in",
+            "room_id",
+            unique=True,
+            sqlite_where=text("status = 'Checked-In' AND is_deleted = 0"),
+            postgresql_where=text("status = 'Checked-In' AND is_deleted = false")
+        ),
     )
 
     room = relationship("Room", back_populates="bookings")

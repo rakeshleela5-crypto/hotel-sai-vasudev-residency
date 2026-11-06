@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { Room } from '../types';
 import { hotelApi } from '../services/api';
 import { usePmsSync } from '../services/pmsStore';
+import { useSafeAsyncRequest } from '../hooks/useSafeAsyncRequest';
 
 interface RoomsSectionProps {
   onSelectRoom: (room: Room) => void;
@@ -21,27 +22,28 @@ export const RoomsSection: React.FC<RoomsSectionProps> = ({ onSelectRoom, select
     }
   }, [selectedCategory]);
 
+  const { runSafeAsync } = useSafeAsyncRequest();
+
   useEffect(() => {
-    let isMounted = true;
-    const fetchRooms = async () => {
-      // Only show spinner on initial blank load
-      if (rooms.length === 0) {
-        setLoading(true);
-      }
-      try {
-        const data = await hotelApi.getRooms(activeFilter === 'All' ? undefined : activeFilter);
-        if (isMounted) setRooms(data);
-      } catch (err) {
+    // Only show spinner on initial blank load
+    if (rooms.length === 0) {
+      setLoading(true);
+    }
+
+    runSafeAsync(
+      async ({ signal }) => {
+        return await hotelApi.getRooms(activeFilter === 'All' ? undefined : activeFilter, undefined, { signal });
+      },
+      (data) => {
+        setRooms(data);
+        setLoading(false);
+      },
+      (err) => {
         console.error('Error fetching rooms:', err);
-      } finally {
-        if (isMounted) setLoading(false);
+        setLoading(false);
       }
-    };
-    fetchRooms();
-    return () => {
-      isMounted = false;
-    };
-  }, [activeFilter, syncTick]);
+    );
+  }, [activeFilter, syncTick, runSafeAsync]);
 
   const categories = ['All', 'Deluxe', 'Classic Studio', 'Executive', 'Premium'];
 

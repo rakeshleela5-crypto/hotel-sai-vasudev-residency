@@ -528,3 +528,166 @@ def test_alembic_current_head_matches_revision_002():
         assert rev_003.down_revision == "002"
     rev_002 = script.get_revision("002")
     assert rev_002.down_revision == "001"
+
+
+# =========================================================================
+# 5. ATOMIC SAFEGUARDS & CONCURRENCY HARDENING TESTS
+# =========================================================================
+
+def test_room_shift_into_occupied_room_raises_409(db):
+    """
+    Verifies that execute_room_shift isolates transactions and raises HTTP 409
+    if attempting to transfer a guest into a room already occupied by another guest.
+    """
+    from app.routes.pms import execute_room_shift
+    r1 = create_test_room(db, "SHIFT_SRC")
+    r2 = create_test_room(db, "SHIFT_DEST")
+    r1.housekeeping_status = "Occupied"
+    r2.housekeeping_status = "Occupied"
+
+    # Guest 1 in room 1
+    b1 = models.Booking(
+        booking_ref=f"BK-SRC-{uuid.uuid4().hex[:6].upper()}",
+        room_id=r1.id,
+        guest_name="Guest One",
+        guest_email="g1@example.com",
+        guest_phone="9876543201",
+        check_in_date=datetime.date.today().isoformat(),
+        check_out_date=(datetime.date.today() + datetime.timedelta(days=1)).isoformat(),
+        base_rate=2000.0,
+        base_amount=2000.0,
+        total_price=2240.0,
+        status="Checked-In"
+    )
+    # Guest 2 in room 2
+    b2 = models.Booking(
+        booking_ref=f"BK-DEST-{uuid.uuid4().hex[:6].upper()}",
+        room_id=r2.id,
+        guest_name="Guest Two",
+        guest_email="g2@example.com",
+        guest_phone="9876543202",
+        check_in_date=datetime.date.today().isoformat(),
+        check_out_date=(datetime.date.today() + datetime.timedelta(days=1)).isoformat(),
+        base_rate=2000.0,
+        base_amount=2000.0,
+        total_price=2240.0,
+        status="Checked-In"
+    )
+    db.add_all([b1, b2])
+    db.commit()
+
+    shift_req = schemas.RoomShiftCreate(
+        booking_ref=b1.booking_ref,
+        from_room_id=r1.id,
+        to_room_id=r2.id,
+        reason="AC noise in source room",
+        shifted_by="Duty Manager"
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        execute_room_shift(shift_req, db=db)
+
+    assert exc_info.value.status_code == 409
+    assert "already occupied" in exc_info.value.detail.lower() or "occupied by active" in exc_info.value.detail.lower()
+
+
+def test_atomic_folio_charge_and_payment_increment(db):
+    """
+    Verifies atomic_add_folio_charge and atomic_record_folio_payment perform
+    database-level atomic increments without read-modify-write lost updates.
+    """
+    from app.utils.locking import atomic_add_folio_charge, atomic_record_folio_payment
+
+    room = create_test_room(db, "FOLIO_ATOMIC")
+    b = models.Booking(
+        booking_ref=f"BK-ATOMIC-{uuid.uuid4().hex[:6].upper()}",
+        room_id=room.id,
+        guest_name="Atomic Folio Guest",
+        guest_email="atomic@example.com",
+        guest_phone="9876543299",
+        check_in_date=datetime.date.today().isoformat(),
+        check_out_date=(datetime.date.today() + datetime.timedelta(days=1)).isoformat(),
+        base_rate=2000.0,
+        base_amount=2000.0,
+        total_price=2240.0,
+        total_paid=500.0,
+        balance_due=1740.0,
+        status="Checked-In",
+        version_id=1
+    )
+    db.add(b)
+    db.commit()
+
+    # 1. Atomic charge addition
+    b_updated, f_updated = atomic_add_folio_charge(db, b.id, 260.0)
+    db.commit()
+    db.refresh(b)
+    assert b.total_price == 2500.0
+    assert b.balance_due == 2000.0
+    assert b.version_id == 2
+    assert f_updated.total_charges == 2500.0
+    assert f_updated.balance_due == 2000.0
+    assert f_updated.version_id == 2
+
+    # 2. Atomic settlement payment
+    b_paid, f_paid = atomic_record_folio_payment(db, b.id, 2000.0, "UPI")
+    db.commit()
+    db.refresh(b)
+    assert b.total_paid == 2500.0
+    assert b.balance_due == 0.0
+    assert b.payment_status == "Paid"
+    assert b.version_id == 3
+    assert f_paid.total_payments == 2500.0
+    assert f_paid.balance_due == 0.0
+    assert f_paid.status == "SETTLED"
+    assert f_paid.version_id == 3
+
+
+def test_database_partial_unique_index_prevents_duplicate_active_checkin(db):
+    """
+    Verifies that the partial unique index on bookings(room_id WHERE status='Checked-In')
+    strictly blocks concurrent active check-in inserts into the same room.
+    """
+    from sqlalchemy import text
+    from sqlalchemy.exc import IntegrityError
+
+    # Ensure index exists on SQLite test DB
+    try:
+        db.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_active_room_checked_in ON bookings(room_id) WHERE status = 'Checked-In' AND is_deleted = 0"))
+        db.commit()
+    except Exception:
+        db.rollback()
+
+    room = create_test_room(db, "UQ_IDX_TEST")
+    b1 = models.Booking(
+        booking_ref=f"BK-UQ1-{uuid.uuid4().hex[:6].upper()}",
+        room_id=room.id,
+        guest_name="Guest 1 Active",
+        guest_email="uq1@example.com",
+        guest_phone="9876543111",
+        check_in_date="2026-11-06",
+        check_out_date="2026-11-07",
+        total_price=2000.0,
+        status="Checked-In",
+        is_deleted=False
+    )
+    db.add(b1)
+    db.commit()
+
+    # Attempting to insert a second Checked-In booking for the same room MUST violate unique index
+    b2 = models.Booking(
+        booking_ref=f"BK-UQ2-{uuid.uuid4().hex[:6].upper()}",
+        room_id=room.id,
+        guest_name="Guest 2 Duplicate",
+        guest_email="uq2@example.com",
+        guest_phone="9876543222",
+        check_in_date="2026-11-06",
+        check_out_date="2026-11-07",
+        total_price=2000.0,
+        status="Checked-In",
+        is_deleted=False
+    )
+    db.add(b2)
+    with pytest.raises(IntegrityError):
+        db.commit()
+    db.rollback()

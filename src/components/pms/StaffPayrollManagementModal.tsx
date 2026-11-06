@@ -12,6 +12,7 @@ import type {
 import { PmsStore, usePmsSync } from '../../services/pmsStore';
 import { hotelApi } from '../../services/api';
 import { useDebounce } from '../../hooks/useDebounce';
+import { useSafeAsyncRequest } from '../../hooks/useSafeAsyncRequest';
 import './pmsStyles.css';
 
 interface StaffPayrollManagementModalProps {
@@ -183,33 +184,79 @@ export const StaffPayrollManagementModal: React.FC<StaffPayrollManagementModalPr
     }
   };
 
-  // Load Data
-  const loadData = async () => {
+  const { runSafeAsync } = useSafeAsyncRequest();
+
+  // Load Data with AbortController and RequestId race guard
+  const loadData = () => {
     setIsLoading(true);
-    try {
-      // 1. Fetch Staff Profiles from API with store fallback
-      let staff: StaffProfile[] = [];
-      try {
-        staff = await hotelApi.getStaffProfiles();
-      } catch {
-        staff = PmsStore.getStaffProfiles();
-      }
-      setStaffList(staff);
+    runSafeAsync(
+      async ({ isStale }) => {
+        // 1. Fetch Staff Profiles from API with store fallback
+        let staff: StaffProfile[] = [];
+        try {
+          staff = await hotelApi.getStaffProfiles();
+        } catch {
+          staff = PmsStore.getStaffProfiles();
+        }
+        if (isStale()) return null;
 
-      // 2. Fetch Advances
-      let advances: StaffSalaryAdvance[] = [];
-      try {
-        advances = await hotelApi.getStaffAdvances({ month_period: selectedPeriod });
-      } catch {
-        advances = PmsStore.getStaffAdvances(selectedPeriod);
-      }
-      setAdvancesList(advances);
+        // 2. Fetch Advances
+        let advances: StaffSalaryAdvance[] = [];
+        try {
+          advances = await hotelApi.getStaffAdvances({ month_period: selectedPeriod });
+        } catch {
+          advances = PmsStore.getStaffAdvances(selectedPeriod);
+        }
+        if (isStale()) return null;
 
-      // 3. Fetch Biometric Attendance
-      await loadAttendanceData();
-    } finally {
-      setIsLoading(false);
-    }
+        // 3. Daily Attendance Summary
+        let dAtt = null;
+        try {
+          dAtt = await hotelApi.getDailyAttendanceSummary({
+            target_date: attendanceDate,
+            department: selectedDepartment !== 'All' ? selectedDepartment : undefined
+          });
+        } catch {
+          dAtt = PmsStore.getDailyAttendanceSummary(attendanceDate, selectedDepartment);
+        }
+        if (isStale()) return null;
+
+        // 4. Monthly Attendance Summary
+        let mAtt = null;
+        try {
+          mAtt = await hotelApi.getMonthlyAttendanceSummary({
+            month_period: selectedPeriod,
+            department: selectedDepartment !== 'All' ? selectedDepartment : undefined
+          });
+        } catch {
+          mAtt = PmsStore.getMonthlyAttendanceSummary(selectedPeriod, selectedDepartment);
+        }
+        if (isStale()) return null;
+
+        // 5. Hardware Diagnostics
+        let hw = null;
+        try {
+          hw = await hotelApi.getHardwareStatus();
+        } catch {
+          hw = PmsStore.getHardwareStatusInfo();
+        }
+
+        return { staff, advances, dAtt, mAtt, hw };
+      },
+      (res) => {
+        if (!res) return;
+        setStaffList(res.staff);
+        setAdvancesList(res.advances);
+        if (res.dAtt) setDailyAttendance(res.dAtt);
+        if (res.mAtt) setMonthlyAttendance(res.mAtt);
+        if (res.hw) setHardwareStatus(res.hw);
+        setIsLoading(false);
+      },
+      (err) => {
+        console.warn('[StaffPayrollManagementModal] loadData failed:', err);
+        setIsLoading(false);
+      }
+    );
   };
 
   useEffect(() => {

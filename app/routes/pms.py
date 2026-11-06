@@ -46,13 +46,16 @@ def find_room_by_no_or_name(db: Session, room_identifier: Any) -> Optional[model
         return None
     clean = str(room_identifier).replace("SVR-ROOM-", "").replace("ROOM-", "").replace("SR/", "").strip()
     if clean.isdigit():
-        room = db.query(models.Room).filter(
-            (models.Room.id == int(clean)) |
-            (models.Room.name.ilike(f"%{clean}%")) |
-            (models.Room.slug.ilike(f"%{clean}%"))
-        ).first()
-        if room:
-            return room
+        room_by_id = db.query(models.Room).filter(models.Room.id == int(clean)).first()
+        if room_by_id:
+            return room_by_id
+    exact_match = db.query(models.Room).filter(
+        (models.Room.name == clean) |
+        (models.Room.name == f"Room {clean}") |
+        (models.Room.slug == clean)
+    ).first()
+    if exact_match:
+        return exact_match
     return db.query(models.Room).filter(
         (models.Room.name.ilike(f"%{clean}%")) |
         (models.Room.slug.ilike(f"%{clean}%"))
@@ -118,7 +121,7 @@ def find_booking_by_ref_or_room(
 
 # --- 1. Atomic Room Shifting ---
 @router.post("/room-shift", response_model=schemas.RoomShiftResponse)
-async def execute_room_shift(payload: schemas.RoomShiftCreate, db: Session = Depends(get_db)):
+def execute_room_shift(payload: schemas.RoomShiftCreate, db: Session = Depends(get_db)):
     """
     Execute an atomic Room Shift mid-stay:
     1. Mark previous room as 'Dirty' for housekeeping
@@ -126,81 +129,116 @@ async def execute_room_shift(payload: schemas.RoomShiftCreate, db: Session = Dep
     3. Record shift rate history
     4. Update booking assignment and write audit log
     """
-    booking = find_booking_by_ref_or_room(db, payload.booking_ref)
-    if not booking:
-        clean_ref = payload.booking_ref.replace("SVR-ROOM-", "").replace("SR/", "").strip()
-        room_candidate = find_room_by_no_or_name(db, clean_ref)
-        if room_candidate:
-            booking = db.query(models.Booking).filter(
-                models.Booking.room_id == room_candidate.id,
-                models.Booking.status.in_(["Checked-In", "Confirmed"])
-            ).order_by(models.Booking.id.desc()).first()
+    try:
+        with db.begin_nested():
+            booking = find_booking_by_ref_or_room(db, payload.booking_ref, for_update=True)
             if not booking:
-                # Create active in-house booking record on the fly
-                booking = models.Booking(
-                    booking_ref=f"SVR-SHIFT-{clean_ref}-{int(datetime.datetime.utcnow().timestamp()*1000)}-{uuid.uuid4().hex[:4].upper()}",
-                    invoice_number=f"INV-SVR-{int(datetime.datetime.utcnow().timestamp()*1000)}-{uuid.uuid4().hex[:6].upper()}",
-                    room_id=room_candidate.id,
-                    guest_name="In-House Guest",
-                    guest_email=f"guest{clean_ref}@sai-vasudev.com",
-                    guest_phone="9440289999",
-                    check_in_date=datetime.date.today().isoformat(),
-                    check_out_date=(datetime.date.today() + datetime.timedelta(days=1)).isoformat(),
-                    base_rate=room_candidate.price_per_night,
-                    base_amount=room_candidate.price_per_night,
-                    total_price=room_candidate.price_per_night,
-                    status="Checked-In"
+                clean_ref = payload.booking_ref.replace("SVR-ROOM-", "").replace("SR/", "").strip()
+                room_candidate = find_room_by_no_or_name(db, clean_ref)
+                if room_candidate:
+                    booking = db.query(models.Booking).filter(
+                        models.Booking.room_id == room_candidate.id,
+                        models.Booking.status.in_(["Checked-In", "Confirmed"])
+                    ).order_by(models.Booking.id.desc()).with_for_update().first()
+                    if not booking:
+                        # Create active in-house booking record on the fly
+                        booking = models.Booking(
+                            booking_ref=f"SVR-SHIFT-{clean_ref}-{int(datetime.datetime.utcnow().timestamp()*1000)}-{uuid.uuid4().hex[:4].upper()}",
+                            invoice_number=f"INV-SVR-{int(datetime.datetime.utcnow().timestamp()*1000)}-{uuid.uuid4().hex[:6].upper()}",
+                            room_id=room_candidate.id,
+                            guest_name="In-House Guest",
+                            guest_email=f"guest{clean_ref}@sai-vasudev.com",
+                            guest_phone="9440289999",
+                            check_in_date=datetime.date.today().isoformat(),
+                            check_out_date=(datetime.date.today() + datetime.timedelta(days=1)).isoformat(),
+                            base_rate=room_candidate.price_per_night,
+                            base_amount=room_candidate.price_per_night,
+                            total_price=room_candidate.price_per_night,
+                            status="Checked-In"
+                        )
+                        db.add(booking)
+                        db.flush()
+
+            if not booking:
+                raise HTTPException(status_code=404, detail="Booking not found for room shift")
+
+            clean_to = str(payload.to_room_id).replace("SVR-ROOM-", "").strip()
+            new_room = find_room_by_no_or_name(db, clean_to)
+
+            if not new_room:
+                raise HTTPException(status_code=404, detail="Destination room does not exist")
+
+            old_room = db.query(models.Room).filter(models.Room.id == booking.room_id).first()
+            if old_room and old_room.id == new_room.id:
+                raise HTTPException(status_code=400, detail="Cannot shift to the exact same room")
+
+            # Canonical lock ordering on Room IDs to prevent deadlocks:
+            if old_room:
+                first_id, second_id = (old_room.id, new_room.id) if old_room.id < new_room.id else (new_room.id, old_room.id)
+                db.query(models.Room).filter(models.Room.id == first_id).with_for_update().first()
+                db.query(models.Room).filter(models.Room.id == second_id).with_for_update().first()
+            else:
+                db.query(models.Room).filter(models.Room.id == new_room.id).with_for_update().first()
+
+            # Prevent shifting into an already occupied room
+            if new_room.housekeeping_status == "Occupied":
+                raise HTTPException(status_code=409, detail=f"Destination Room '{new_room.name}' is already occupied!")
+
+            active_in_dest = db.query(models.Booking).filter(
+                models.Booking.room_id == new_room.id,
+                models.Booking.status.in_(["Checked-In", "Confirmed"]),
+                models.Booking.id != booking.id,
+                models.Booking.is_deleted == False
+            ).first()
+            if active_in_dest:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"Destination Room '{new_room.name}' is occupied by active reservation '{active_in_dest.booking_ref}'!"
                 )
-                db.add(booking)
-                db.commit()
-                db.refresh(booking)
+
+            today_str = datetime.date.today().isoformat()
+            old_rate = float(old_room.price_per_night) if old_room else 2000.0
+            new_rate = float(new_room.price_per_night)
+
+            # Transition previous room to 'Dirty' and new room to 'Occupied'
+            if old_room:
+                old_room.housekeeping_status = "Dirty"
+            new_room.housekeeping_status = "Occupied"
+
+            # Create Room Shift history
+            shift_record = models.RoomShift(
+                booking_id=booking.id,
+                from_room_id=old_room.id if old_room else new_room.id,
+                to_room_id=new_room.id,
+                shift_date=today_str,
+                reason=payload.reason,
+                old_rate=old_rate,
+                new_rate=new_rate,
+                shifted_by=payload.shifted_by or "Duty Manager"
+            )
+            db.add(shift_record)
+
+            # Update booking active room
+            booking.room_id = new_room.id
+            booking.updated_at = now_utc()
+
+            log_audit(db, "ROOM_SHIFT", booking.booking_ref, payload.shifted_by or "Duty Manager", {
+                "from_room": old_room.name if old_room else str(payload.from_room_id),
+                "to_room": new_room.name,
+                "reason": payload.reason,
+                "old_rate": old_rate,
+                "new_rate": new_rate
+            })
+
+        db.commit()
+        db.refresh(shift_record)
         invalidate_rooms_cache()
-
-    if not booking:
-        raise HTTPException(status_code=404, detail="Booking not found for room shift")
-
-    old_room = db.query(models.Room).filter(models.Room.id == booking.room_id).first()
-    clean_to = str(payload.to_room_id).replace("SVR-ROOM-", "").strip()
-    new_room = find_room_by_no_or_name(db, clean_to)
-
-    if not new_room:
-        raise HTTPException(status_code=404, detail="Destination room does not exist")
-    if old_room and old_room.id == new_room.id:
-        raise HTTPException(status_code=400, detail="Cannot shift to the exact same room")
-
-    today_str = datetime.date.today().isoformat()
-    old_rate = float(old_room.price_per_night) if old_room else 2000.0
-    new_rate = float(new_room.price_per_night)
-
-    # Transition previous room to 'Dirty' for sanitization
-    old_room.housekeeping_status = "Dirty"
-
-    # Create Room Shift history
-    shift_record = models.RoomShift(
-        booking_id=booking.id,
-        from_room_id=old_room.id,
-        to_room_id=new_room.id,
-        shift_date=today_str,
-        reason=payload.reason,
-        old_rate=old_rate,
-        new_rate=new_rate,
-        shifted_by=payload.shifted_by or "Duty Manager"
-    )
-    db.add(shift_record)
-
-    # Update booking active room
-    booking.room_id = new_room.id
-
-    log_audit(db, "ROOM_SHIFT", booking.booking_ref, payload.shifted_by or "Duty Manager", {
-        "from_room": old_room.name,
-        "to_room": new_room.name,
-        "reason": payload.reason,
-        "old_rate": old_rate,
-        "new_rate": new_rate
-    })
-
-    db.commit()
-    db.refresh(shift_record)
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as exc:
+        db.rollback()
+        raise
     ws_manager.emit_booking_event_sync(
         event_type="ROOM_SHIFT",
         booking_ref=booking.booking_ref,
@@ -272,22 +310,20 @@ def record_booking_payment(payload: schemas.BookingPaymentCreate, db: Session = 
     )
     db.add(payment)
 
-    # Recalculate totals
-    booking.total_paid = round((booking.total_paid or 0.0) + payload.amount, 2)
-    booking.balance_due = max(0.0, round(booking.total_price - booking.total_paid, 2))
+    with db.begin_nested():
+        # Atomically update payment totals and decrement balance (eliminating lost updates)
+        from app.utils.locking import atomic_record_folio_payment
+        booking, folio = atomic_record_folio_payment(
+            db, booking.id, payload.amount, payload.payment_mode
+        )
 
-    if booking.balance_due <= 0.0:
-        booking.payment_status = "Paid"
-    elif booking.total_paid > 0.0:
-        booking.payment_status = "Partial"
-
-    log_audit(db, "PAYMENT_COLLECTED", booking.booking_ref, payload.collected_by, {
-        "payment_type": payload.payment_type,
-        "payment_mode": payload.payment_mode,
-        "amount": payload.amount,
-        "transaction_ref": payload.transaction_ref,
-        "remaining_balance": booking.balance_due
-    })
+        log_audit(db, "PAYMENT_COLLECTED", booking.booking_ref, payload.collected_by, {
+            "payment_type": payload.payment_type,
+            "payment_mode": payload.payment_mode,
+            "amount": payload.amount,
+            "transaction_ref": payload.transaction_ref,
+            "remaining_balance": booking.balance_due
+        })
 
     db.commit()
     db.refresh(payment)
@@ -348,15 +384,16 @@ def add_item_to_room_folio(payload: schemas.RoomFolioItemCreate, db: Session = D
     )
     db.add(folio_item)
 
-    # Attach to booking total bill & recalculate balance
-    booking.total_price = round(booking.total_price + total_amount, 2)
-    booking.balance_due = max(0.0, round(booking.total_price - (booking.total_paid or 0.0), 2))
+    with db.begin_nested():
+        # Atomically increment charges & balance on Booking and Folio (eliminating lost updates)
+        from app.utils.locking import atomic_add_folio_charge
+        booking, folio = atomic_add_folio_charge(db, booking.id, total_amount)
 
-    log_audit(db, "FOLIO_ITEM_ADDED", booking.booking_ref, "Room Service / Cashier", {
-        "item": payload.description,
-        "kot": folio_item.kot_number,
-        "total": total_amount
-    })
+        log_audit(db, "FOLIO_ITEM_ADDED", booking.booking_ref, "Room Service / Cashier", {
+            "item": payload.description,
+            "kot": folio_item.kot_number,
+            "total": total_amount
+        })
 
     db.commit()
     db.refresh(folio_item)
@@ -543,59 +580,66 @@ def execute_night_audit(payload: schemas.NightAuditRunRequest, db: Session = Dep
             created_at=existing.created_at
         )
 
-    # Calculate active occupied rooms
-    active_in_house = db.query(models.Booking).filter(
-        models.Booking.status.in_(["Checked-In", "Confirmed"])
-    ).all()
-    rooms_occupied = len(active_in_house)
+    try:
+        with db.begin_nested():
+            # Calculate active occupied rooms
+            active_in_house = db.query(models.Booking).filter(
+                models.Booking.status.in_(["Checked-In", "Confirmed"])
+            ).all()
+            rooms_occupied = len(active_in_house)
 
-    # Handle unarrived no-shows (Confirmed bookings whose check-in was today or earlier but never checked in)
-    no_shows = db.query(models.Booking).filter(
-        models.Booking.status == "Confirmed",
-        models.Booking.check_in_date < audit_date
-    ).all()
-    no_shows_count = len(no_shows)
-    for ns in no_shows:
-        ns.status = "No-Show"
+            # Handle unarrived no-shows (Confirmed bookings whose check-in was today or earlier but never checked in)
+            no_shows = db.query(models.Booking).filter(
+                models.Booking.status == "Confirmed",
+                models.Booking.check_in_date < audit_date
+            ).all()
+            no_shows_count = len(no_shows)
+            for ns in no_shows:
+                ns.status = "No-Show"
+                ns.updated_at = now_utc()
 
-    # Sum payments collected today by tender type
-    payments_today = db.query(models.BookingPayment).all()
-    cash_total = sum(p.amount for p in payments_today if p.payment_mode == "Cash")
-    card_total = sum(p.amount for p in payments_today if p.payment_mode == "Card")
-    upi_total = sum(p.amount for p in payments_today if p.payment_mode == "UPI")
-    btc_total = sum(p.amount for p in payments_today if p.payment_mode == "Direct_BTC")
+            # Sum payments collected today by tender type
+            payments_today = db.query(models.BookingPayment).all()
+            cash_total = sum(p.amount for p in payments_today if p.payment_mode == "Cash")
+            card_total = sum(p.amount for p in payments_today if p.payment_mode == "Card")
+            upi_total = sum(p.amount for p in payments_today if p.payment_mode == "UPI")
+            btc_total = sum(p.amount for p in payments_today if p.payment_mode == "Direct_BTC")
 
-    room_rev = sum(b.base_amount for b in active_in_house)
-    total_gst = sum(b.total_tax for b in active_in_house)
-    food_items = db.query(models.RoomFolioItem).all()
-    food_rev = sum(f.taxable_amount for f in food_items)
+            room_rev = sum(b.base_amount for b in active_in_house)
+            total_gst = sum(b.total_tax for b in active_in_house)
+            food_items = db.query(models.RoomFolioItem).all()
+            food_rev = sum(f.taxable_amount for f in food_items)
 
-    audit_entry = models.DailyNightAudit(
-        audit_date=audit_date,
-        total_rooms_occupied=rooms_occupied,
-        total_room_revenue=round(room_rev, 2),
-        total_food_revenue=round(food_rev, 2),
-        total_gst_collected=round(total_gst, 2),
-        no_shows_processed=no_shows_count,
-        cash_in_drawer=round(cash_total, 2),
-        card_total=round(card_total, 2),
-        upi_total=round(upi_total, 2),
-        btc_credit_total=round(btc_total, 2),
-        audited_by=payload.audited_by or "Night Auditor / Manager",
-        audit_status="Closed"
-    )
-    db.add(audit_entry)
+            audit_entry = models.DailyNightAudit(
+                audit_date=audit_date,
+                total_rooms_occupied=rooms_occupied,
+                total_room_revenue=round(room_rev, 2),
+                total_food_revenue=round(food_rev, 2),
+                total_gst_collected=round(total_gst, 2),
+                no_shows_processed=no_shows_count,
+                cash_in_drawer=round(cash_total, 2),
+                card_total=round(card_total, 2),
+                upi_total=round(upi_total, 2),
+                btc_credit_total=round(btc_total, 2),
+                audited_by=payload.audited_by or "Night Auditor / Manager",
+                audit_status="Closed"
+            )
+            db.add(audit_entry)
 
-    log_audit(db, "NIGHT_AUDIT_COMPLETED", None, audit_entry.audited_by, {
-        "date": audit_date,
-        "rooms_occupied": rooms_occupied,
-        "no_shows": no_shows_count,
-        "cash_reconciled": cash_total,
-        "upi_reconciled": upi_total
-    })
+            log_audit(db, "NIGHT_AUDIT_COMPLETED", None, audit_entry.audited_by, {
+                "date": audit_date,
+                "rooms_occupied": rooms_occupied,
+                "no_shows": no_shows_count,
+                "cash_reconciled": cash_total,
+                "upi_reconciled": upi_total
+            })
 
-    db.commit()
-    db.refresh(audit_entry)
+        db.commit()
+        db.refresh(audit_entry)
+    except Exception as exc:
+        db.rollback()
+        logger.error(f"[execute_night_audit] Night audit failed, rolled back: {exc}")
+        raise HTTPException(status_code=500, detail=f"Night audit failed: {exc}")
 
     return schemas.NightAuditResponse(
         audit_date=audit_entry.audit_date,
@@ -628,147 +672,148 @@ def execute_walk_in_check_in(payload: schemas.WalkInCheckInRequest, db: Session 
     6. Ensures atomic database rollback protection
     """
     try:
-        # Acquire canonical lock on target Room (#14, #26)
-        _, _, room = acquire_canonical_locks(db, room_id=payload.room_id)
-        if not room:
-            raise HTTPException(status_code=404, detail="Selected room not found")
-        if room.housekeeping_status == "Occupied":
-            raise HTTPException(status_code=409, detail=f"Room '{room.name}' is already occupied!")
-        if room.housekeeping_status == "Dirty":
-            raise HTTPException(status_code=400, detail=f"Room '{room.name}' is marked Dirty! Housekeeping must clean and inspect before check-in.")
+        with db.begin_nested():
+            # Acquire canonical lock on target Room (.with_for_update()) (#14, #26)
+            _, _, room = acquire_canonical_locks(db, room_id=payload.room_id)
+            if not room:
+                raise HTTPException(status_code=404, detail="Selected room not found")
+            if room.housekeeping_status == "Occupied":
+                raise HTTPException(status_code=409, detail=f"Room '{room.name}' is already occupied!")
+            if room.housekeeping_status == "Dirty":
+                raise HTTPException(status_code=400, detail=f"Room '{room.name}' is marked Dirty! Housekeeping must clean and inspect before check-in.")
 
-        # Concurrency race-condition check: prevent double-booking if another active reservation holds this room (#14, #38)
-        active_booking = db.query(models.Booking).filter(
-            models.Booking.room_id == room.id,
-            models.Booking.status.in_(["Checked-In", "Confirmed"]),
-            models.Booking.is_deleted == False
-        ).first()
-        if active_booking:
-            raise HTTPException(
-                status_code=409,
-                detail=f"Room '{room.name}' is already occupied or locked by active reservation '{active_booking.booking_ref}'!"
-            )
+            # Concurrency race-condition check: prevent double-booking if another active reservation holds this room (#14, #38)
+            active_booking = db.query(models.Booking).filter(
+                models.Booking.room_id == room.id,
+                models.Booking.status.in_(["Checked-In", "Confirmed"]),
+                models.Booking.is_deleted == False
+            ).with_for_update().first()
+            if active_booking:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"Room '{room.name}' is already occupied or locked by active reservation '{active_booking.booking_ref}'!"
+                )
 
-        today_str = payload.check_in_date or datetime.date.today().isoformat()
-        start_date = datetime.date.fromisoformat(today_str)
-        end_date = datetime.date.fromisoformat(payload.check_out_date)
-        nights = max(1, (end_date - start_date).days)
+            # Atomically lock and transition room to Occupied
+            room.housekeeping_status = "Occupied"
 
-        # Server pricing
-        base_tariff = float(room.price_per_night)
-        base_amount = round(base_tariff * nights, 2)
-        extra_adults = max(0, payload.adults - room.capacity)
-        extra_charge = round(extra_adults * 500.0 * nights, 2)
-        taxable = round(base_amount + extra_charge, 2)
-        gst_rate = 12.0 if (taxable / nights) <= 7500.0 else 18.0
-        cgst = round(taxable * (gst_rate / 200.0), 2)
-        sgst = cgst
-        total_tax = round(cgst + sgst, 2)
-        total_price = round(taxable + total_tax, 2)
+            today_str = payload.check_in_date or datetime.date.today().isoformat()
+            start_date = datetime.date.fromisoformat(today_str)
+            end_date = datetime.date.fromisoformat(payload.check_out_date)
+            nights = max(1, (end_date - start_date).days)
 
-        advance = float(payload.advance_amount or 0.0)
-        balance = max(0.0, round(total_price - advance, 2))
-        payment_status = "Paid" if balance <= 0 else ("Partial" if advance > 0 else "Pending")
+            # Server pricing
+            base_tariff = float(room.price_per_night)
+            base_amount = round(base_tariff * nights, 2)
+            extra_adults = max(0, payload.adults - room.capacity)
+            extra_charge = round(extra_adults * 500.0 * nights, 2)
+            taxable = round(base_amount + extra_charge, 2)
+            gst_rate = 12.0 if (taxable / nights) <= 7500.0 else 18.0
+            cgst = round(taxable * (gst_rate / 200.0), 2)
+            sgst = cgst
+            total_tax = round(cgst + sgst, 2)
+            total_price = round(taxable + total_tax, 2)
 
-        booking = models.Booking(
-            room_id=room.id,
-            guest_name=payload.guest_name.strip(),
-            guest_email=(payload.guest_email or "walkin@hotelsai-vasudev.com").strip().lower(),
-            guest_phone=payload.guest_phone.strip(),
-            id_proof_type=payload.id_proof_type,
-            id_proof_number=payload.id_proof_number,
-            coming_from=payload.coming_from or payload.comingFrom,
-            proceeding_to=payload.proceeding_to or payload.proceedingTo,
-            vehicle_no=payload.vehicle_no or payload.vehicleNo,
-            darshan_slot=payload.darshan_slot or payload.darshanSlot,
-            guest_gender=payload.guest_gender or payload.guestGender,
-            guest_age=payload.guest_age or payload.guestAge,
-            check_in_date=today_str,
-            check_out_date=payload.check_out_date,
-            actual_check_in=now_utc(),
-            adults=payload.adults,
-            children=payload.children,
-            total_nights=nights,
-            base_rate=base_tariff,
-            base_amount=base_amount,
-            extra_guest_charge=extra_charge,
-            gst_rate=gst_rate,
-            cgst_amount=cgst,
-            sgst_amount=sgst,
-            total_tax=total_tax,
-            total_price=total_price,
-            total_paid=advance,
-            balance_due=balance,
-            payment_status=payment_status,
-            payment_method=payload.advance_payment_mode or "Cash",
-            status="Checked-In",
-            special_requests=payload.special_requests
-        )
-        db.add(booking)
-        db.flush()
+            advance = float(payload.advance_amount or 0.0)
+            balance = max(0.0, round(total_price - advance, 2))
+            payment_status = "Paid" if balance <= 0 else ("Partial" if advance > 0 else "Pending")
 
-        # Automatically initialize primary Master Folio (#20, #26)
-        initial_folio = models.Folio(
-            booking_id=booking.id,
-            folio_number=f"FOL-{booking.booking_ref}",
-            status="OPEN",
-            total_charges=total_price,
-            total_payments=advance,
-            balance_due=balance,
-            version_id=1,
-            created_at=now_utc(),
-            updated_at=now_utc()
-        )
-        db.add(initial_folio)
-
-        # If advance paid, record payment receipt and AdvanceReceipt voucher
-        if advance > 0:
-            p = models.BookingPayment(
-                booking_id=booking.id,
-                payment_type="Advance",
-                payment_mode=payload.advance_payment_mode or "Cash",
-                amount=advance,
-                transaction_ref=payload.advance_ref or f"WALKIN-ADV-{booking.booking_ref}",
-                notes="Walk-in advance token",
-                collected_by=payload.registered_by or "Front Desk Officer"
-            )
-            db.add(p)
-
-            adv_receipt = models.AdvanceReceipt(
-                receipt_no=f"ADV-{booking.booking_ref}",
-                voucher_no=f"V-{booking.booking_ref[-4:]}",
-                date=today_str,
-                room_no=room.name,
+            booking = models.Booking(
+                room_id=room.id,
                 guest_name=payload.guest_name.strip(),
-                mobile=payload.guest_phone.strip() if payload.guest_phone else None,
-                amount=advance,
-                payment_mode=payload.advance_payment_mode or "Cash",
-                remark=payload.advance_ref or f"Walk-in advance deposit for Room {room.name}"
+                guest_email=(payload.guest_email or "walkin@hotelsai-vasudev.com").strip().lower(),
+                guest_phone=payload.guest_phone.strip(),
+                id_proof_type=payload.id_proof_type,
+                id_proof_number=payload.id_proof_number,
+                coming_from=payload.coming_from or payload.comingFrom,
+                proceeding_to=payload.proceeding_to or payload.proceedingTo,
+                vehicle_no=payload.vehicle_no or payload.vehicleNo,
+                darshan_slot=payload.darshan_slot or payload.darshanSlot,
+                guest_gender=payload.guest_gender or payload.guestGender,
+                guest_age=payload.guest_age or payload.guestAge,
+                check_in_date=today_str,
+                check_out_date=payload.check_out_date,
+                actual_check_in=now_utc(),
+                adults=payload.adults,
+                children=payload.children,
+                total_nights=nights,
+                base_rate=base_tariff,
+                base_amount=base_amount,
+                extra_guest_charge=extra_charge,
+                gst_rate=gst_rate,
+                cgst_amount=cgst,
+                sgst_amount=sgst,
+                total_tax=total_tax,
+                total_price=total_price,
+                total_paid=advance,
+                balance_due=balance,
+                payment_status=payment_status,
+                payment_method=payload.advance_payment_mode or "Cash",
+                status="Checked-In",
+                special_requests=payload.special_requests
             )
-            db.add(adv_receipt)
+            db.add(booking)
+            db.flush()
 
-        # Set room to Occupied
-        room.housekeeping_status = "Occupied"
+            # Automatically initialize primary Master Folio (#20, #26)
+            initial_folio = models.Folio(
+                booking_id=booking.id,
+                folio_number=f"FOL-{booking.booking_ref}",
+                status="OPEN",
+                total_charges=total_price,
+                total_payments=advance,
+                balance_due=balance,
+                version_id=1,
+                created_at=now_utc(),
+                updated_at=now_utc()
+            )
+            db.add(initial_folio)
 
-        # Auto-log domestic police register
-        police_log = models.PoliceStationLog(
-            booking_id=booking.id,
-            guest_name=payload.guest_name.strip(),
-            id_proof_type=payload.id_proof_type,
-            id_proof_number=payload.id_proof_number or "VERIFIED_AT_DESK",
-            permanent_address="Guest Walk-in Record",
-            origin_city="Walk-in",
-            next_destination="Return Journey",
-            purpose_of_visit="Temple Darshan"
-        )
-        db.add(police_log)
+            # If advance paid, record payment receipt and AdvanceReceipt voucher
+            if advance > 0:
+                p = models.BookingPayment(
+                    booking_id=booking.id,
+                    payment_type="Advance",
+                    payment_mode=payload.advance_payment_mode or "Cash",
+                    amount=advance,
+                    transaction_ref=payload.advance_ref or f"WALKIN-ADV-{booking.booking_ref}",
+                    notes="Walk-in advance token",
+                    collected_by=payload.registered_by or "Front Desk Officer"
+                )
+                db.add(p)
 
-        log_audit(db, "CHECK_IN", booking.booking_ref, payload.registered_by or "Front Desk Officer", {
-            "room_name": room.name,
-            "guest_name": payload.guest_name,
-            "advance_collected": advance,
-            "nights": nights
-        })
+                adv_receipt = models.AdvanceReceipt(
+                    receipt_no=f"ADV-{booking.booking_ref}",
+                    voucher_no=f"V-{booking.booking_ref[-4:]}",
+                    date=today_str,
+                    room_no=room.name,
+                    guest_name=payload.guest_name.strip(),
+                    mobile=payload.guest_phone.strip() if payload.guest_phone else None,
+                    amount=advance,
+                    payment_mode=payload.advance_payment_mode or "Cash",
+                    remark=payload.advance_ref or f"Walk-in advance deposit for Room {room.name}"
+                )
+                db.add(adv_receipt)
+
+            # Auto-log domestic police register
+            police_log = models.PoliceStationLog(
+                booking_id=booking.id,
+                guest_name=payload.guest_name.strip(),
+                id_proof_type=payload.id_proof_type,
+                id_proof_number=payload.id_proof_number or "VERIFIED_AT_DESK",
+                permanent_address="Guest Walk-in Record",
+                origin_city="Walk-in",
+                next_destination="Return Journey",
+                purpose_of_visit="Temple Darshan"
+            )
+            db.add(police_log)
+
+            log_audit(db, "CHECK_IN", booking.booking_ref, payload.registered_by or "Front Desk Officer", {
+                "room_name": room.name,
+                "guest_name": payload.guest_name,
+                "advance_collected": advance,
+                "nights": nights
+            })
 
         db.commit()
         db.refresh(booking)
@@ -864,108 +909,110 @@ def execute_check_out(payload: schemas.CheckOutRequest, db: Session = Depends(ge
     5. Generates and returns final Master Folio Invoice
     """
     try:
-        booking = find_booking_by_ref_or_room(db, payload.booking_ref, for_update=True)
-        if not booking:
-            raise HTTPException(status_code=404, detail="Booking reservation not found")
+        with db.begin_nested():
+            booking = find_booking_by_ref_or_room(db, payload.booking_ref, for_update=True)
+            if not booking:
+                raise HTTPException(status_code=404, detail="Booking reservation not found")
 
-        # Acquire canonical locks: Booking -> Folio -> Room (#15, #26)
-        acquire_canonical_locks(db, booking_id=booking.id, room_id=booking.room_id)
-        folio = db.query(models.Folio).filter(models.Folio.booking_id == booking.id).with_for_update().first()
-        room = db.query(models.Room).filter(models.Room.id == booking.room_id).with_for_update().first()
+            # Acquire canonical locks: Booking -> Folio -> Room (#15, #26)
+            acquire_canonical_locks(db, booking_id=booking.id, room_id=booking.room_id)
+            folio = db.query(models.Folio).filter(models.Folio.booking_id == booking.id).with_for_update().first()
+            room = db.query(models.Room).filter(models.Room.id == booking.room_id).with_for_update().first()
 
-        # Concurrency & Double-Settlement Guard: Prevent two browser tabs from double-settling the same bill (#38)
-        if booking.status == "Checked-Out" or (folio and folio.status in ["SETTLED", "CLOSED"] and booking.balance_due <= 0.0):
-            if payload.settlement_amount_paid and float(payload.settlement_amount_paid) > 0:
-                raise HTTPException(
-                    status_code=409,
-                    detail=f"Booking '{booking.booking_ref}' or folio is already checked out and settled! Cannot settle bill twice."
+            # Concurrency & Double-Settlement Guard: Prevent two browser tabs from double-settling the same bill (#38)
+            if booking.status == "Checked-Out" or (folio and folio.status in ["SETTLED", "CLOSED"] and booking.balance_due <= 0.0):
+                if payload.settlement_amount_paid and float(payload.settlement_amount_paid) > 0:
+                    raise HTTPException(
+                        status_code=409,
+                        detail=f"Booking '{booking.booking_ref}' or folio is already checked out and settled! Cannot settle bill twice."
+                    )
+
+            # Record final settlement payment if provided
+            settlement_amt = float(payload.settlement_amount_paid or 0.0)
+            # Idempotency check on settlement transaction reference (#37)
+            if payload.transaction_ref and settlement_amt > 0:
+                existing_p = db.query(models.BookingPayment).filter(
+                    models.BookingPayment.booking_id == booking.id,
+                    models.BookingPayment.transaction_ref == payload.transaction_ref
+                ).first()
+                if existing_p:
+                    logger.info(f"[CheckOut Idempotency] Payment {payload.transaction_ref} already recorded. Skipping duplicate.")
+                    settlement_amt = 0.0
+
+            if settlement_amt > 0:
+                p = models.BookingPayment(
+                    booking_id=booking.id,
+                    payment_type="Settlement",
+                    payment_mode=payload.settlement_payment_mode or "Cash",
+                    amount=settlement_amt,
+                    transaction_ref=payload.transaction_ref,
+                    notes="Check-out bill settlement",
+                    collected_by=payload.processed_by or "Front Desk Officer"
+                )
+                db.add(p)
+                # Atomically record payment on Booking and Folio (eliminating lost updates)
+                from app.utils.locking import atomic_record_folio_payment
+                booking, folio = atomic_record_folio_payment(
+                    db, booking.id, settlement_amt, payload.settlement_payment_mode or "Cash"
                 )
 
-        # Record final settlement payment if provided
-        settlement_amt = float(payload.settlement_amount_paid or 0.0)
-        # Idempotency check on settlement transaction reference (#37)
-        if payload.transaction_ref and settlement_amt > 0:
-            existing_p = db.query(models.BookingPayment).filter(
-                models.BookingPayment.booking_id == booking.id,
-                models.BookingPayment.transaction_ref == payload.transaction_ref
-            ).first()
-            if existing_p:
-                logger.info(f"[CheckOut Idempotency] Payment {payload.transaction_ref} already recorded. Skipping duplicate.")
-                settlement_amt = 0.0
+            if (booking.balance_due or 0.0) <= 0:
+                booking.payment_status = "Paid"
+            elif payload.settlement_payment_mode == "Direct_BTC":
+                booking.payment_status = "BTC"
 
-        if settlement_amt > 0:
-            p = models.BookingPayment(
-                booking_id=booking.id,
-                payment_type="Settlement",
-                payment_mode=payload.settlement_payment_mode or "Cash",
-                amount=settlement_amt,
-                transaction_ref=payload.transaction_ref,
-                notes="Check-out bill settlement",
-                collected_by=payload.processed_by or "Front Desk Officer"
-            )
-            db.add(p)
-            booking.total_paid = round((booking.total_paid or 0.0) + settlement_amt, 2)
-            booking.balance_due = max(0.0, round(booking.total_price - booking.total_paid, 2))
+            booking.status = "Checked-Out"
+            booking.actual_check_out = now_utc()
 
-        if booking.balance_due <= 0:
-            booking.payment_status = "Paid"
-        elif payload.settlement_payment_mode == "Direct_BTC":
-            booking.payment_status = "BTC"
+            # Room must immediately transition to 'Dirty'
+            if room:
+                room.housekeeping_status = "Dirty"
 
-        booking.status = "Checked-Out"
-        booking.actual_check_out = datetime.datetime.utcnow()
+            # Update Master Folio to SETTLED
+            folio = db.query(models.Folio).filter(models.Folio.booking_id == booking.id).first()
+            if folio:
+                if (folio.balance_due or 0.0) <= 0.0:
+                    folio.status = "SETTLED"
+                folio.updated_at = now_utc()
 
-        # Room must immediately transition to 'Dirty'
-        if room:
-            room.housekeeping_status = "Dirty"
+            # Ensure CheckoutRecord is present
+            inv_no = booking.invoice_number or f"GSR/{uuid.uuid4().hex[:4].upper()}/26-27"
+            existing_chk = db.query(models.CheckoutRecord).filter(models.CheckoutRecord.invoice_no == inv_no).first()
+            if not existing_chk:
+                chk_rec = models.CheckoutRecord(
+                    invoice_no=inv_no,
+                    room_no=room.name if room else "101",
+                    room_type=room.room_type if room else "DELUXE",
+                    guest_name=booking.guest_name,
+                    guest_phone=booking.guest_phone,
+                    check_in_date=booking.check_in_date,
+                    check_in_time="12:00 PM",
+                    check_out_date=datetime.date.today().isoformat(),
+                    check_out_time=datetime.datetime.now().strftime("%I:%M %p"),
+                    calculation_type="12hour",
+                    number_of_days=booking.total_nights,
+                    per_day_tariff=booking.base_rate,
+                    total_room_rent=booking.base_amount,
+                    food_amount=0.0,
+                    gst_percent=booking.gst_rate,
+                    gst_amount=booking.total_tax,
+                    cgst_amount=booking.cgst_amount,
+                    sgst_amount=booking.sgst_amount,
+                    add_others=0.0,
+                    less_discount=booking.discount_amount or 0.0,
+                    advance_deducted=(booking.total_paid or 0.0) - settlement_amt if booking.total_paid else 0.0,
+                    bill_amount=booking.total_price,
+                    net_payable=booking.balance_due,
+                    payment_mode=payload.settlement_payment_mode or "Cash",
+                    checkout_remark="Departure processed via execute_check_out"
+                )
+                db.add(chk_rec)
 
-        # Update Master Folio to SETTLED
-        folio = db.query(models.Folio).filter(models.Folio.booking_id == booking.id).first()
-        if folio:
-            folio.total_payments = round((folio.total_payments or 0.0) + settlement_amt, 2)
-            folio.balance_due = max(0.0, round((folio.total_charges or booking.total_price) - folio.total_payments, 2))
-            if folio.balance_due <= 0.0:
-                folio.status = "SETTLED"
-            folio.updated_at = now_utc()
-
-        # Ensure CheckoutRecord is present
-        inv_no = booking.invoice_number or f"GSR/{uuid.uuid4().hex[:4].upper()}/26-27"
-        existing_chk = db.query(models.CheckoutRecord).filter(models.CheckoutRecord.invoice_no == inv_no).first()
-        if not existing_chk:
-            chk_rec = models.CheckoutRecord(
-                invoice_no=inv_no,
-                room_no=room.name if room else "101",
-                room_type=room.room_type if room else "DELUXE",
-                guest_name=booking.guest_name,
-                guest_phone=booking.guest_phone,
-                check_in_date=booking.check_in_date,
-                check_in_time="12:00 PM",
-                check_out_date=datetime.date.today().isoformat(),
-                check_out_time=datetime.datetime.now().strftime("%I:%M %p"),
-                calculation_type="12hour",
-                number_of_days=booking.total_nights,
-                per_day_tariff=booking.base_rate,
-                total_room_rent=booking.base_amount,
-                food_amount=0.0,
-                gst_percent=booking.gst_rate,
-                gst_amount=booking.total_tax,
-                cgst_amount=booking.cgst_amount,
-                sgst_amount=booking.sgst_amount,
-                add_others=0.0,
-                less_discount=booking.discount_amount or 0.0,
-                advance_deducted=booking.total_paid - settlement_amt if booking.total_paid else 0.0,
-                bill_amount=booking.total_price,
-                net_payable=booking.balance_due,
-                payment_mode=payload.settlement_payment_mode or "Cash",
-                checkout_remark="Departure processed via execute_check_out"
-            )
-            db.add(chk_rec)
-
-        log_audit(db, "CHECK_OUT", booking.booking_ref, payload.processed_by or "Front Desk Officer", {
-            "room_name": room.name if room else "Unknown",
-            "settlement_paid": settlement_amt,
-            "final_payment_status": booking.payment_status
-        })
+            log_audit(db, "CHECK_OUT", booking.booking_ref, payload.processed_by or "Front Desk Officer", {
+                "room_name": room.name if room else "Unknown",
+                "settlement_paid": settlement_amt,
+                "final_payment_status": booking.payment_status
+            })
 
         db.commit()
         db.refresh(booking)
@@ -1301,8 +1348,8 @@ def create_kot_ticket(payload: dict, db: Session = Depends(get_db)):
                     status="Billed"
                 )
                 db.add(folio)
-                booking.total_price = round(booking.total_price + total_amount, 2)
-                booking.balance_due = max(0.0, round(booking.total_price - (booking.total_paid or 0.0), 2))
+                from app.utils.locking import atomic_add_folio_charge
+                atomic_add_folio_charge(db, booking.id, total_amount)
 
     db.commit()
     db.refresh(kot)
@@ -1333,8 +1380,8 @@ def delete_kot_ticket(kot_no: str, db: Session = Depends(get_db)):
         if folio_item:
             booking = db.query(models.Booking).filter(models.Booking.id == folio_item.booking_id).first()
             if booking:
-                booking.total_price = max(0.0, round(booking.total_price - folio_item.total_amount, 2))
-                booking.balance_due = max(0.0, round(booking.total_price - (booking.total_paid or 0.0), 2))
+                from app.utils.locking import atomic_reverse_folio_charge
+                atomic_reverse_folio_charge(db, booking.id, folio_item.total_amount)
             folio_item.is_deleted = True
             folio_item.status = "Void"
             folio_item.void_reason = f"KOT {kot_no} voided"
@@ -2398,15 +2445,8 @@ def save_food_bill(payload: schemas.FoodBillCreate, db: Session = Depends(get_db
                     status="Billed"
                 )
                 db.add(folio_item)
-                booking.total_price = round(booking.total_price + net_amt, 2)
-                booking.balance_due = max(0.0, round(booking.total_price - (booking.total_paid or 0.0), 2))
-
-                # Synchronize primary Master Folio (#20, #26)
-                folio = db.query(models.Folio).filter(models.Folio.booking_id == booking.id).first()
-                if folio:
-                    folio.total_charges = round((folio.total_charges or booking.total_price) + net_amt, 2)
-                    folio.balance_due = max(0.0, round(folio.total_charges - (folio.total_payments or 0.0), 2))
-                    folio.updated_at = now_utc()
+                from app.utils.locking import atomic_add_folio_charge
+                atomic_add_folio_charge(db, booking.id, net_amt)
                 
         # If table bill, vacate dining table
         if t_no:
