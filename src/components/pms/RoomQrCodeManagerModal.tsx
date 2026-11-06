@@ -786,3 +786,4 @@ export const RoomQrCodeManagerModal: React.FC<RoomQrCodeManagerModalProps> = ({
     </div>
   );
 };
+

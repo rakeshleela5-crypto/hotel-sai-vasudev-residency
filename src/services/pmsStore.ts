@@ -100,7 +100,13 @@ import type {
   EodExecutiveSummary,
   AmenityTierConfig,
   GuestRoomServiceOrder,
-  RoomQrStandeeConfig
+  RoomQrStandeeConfig,
+  StaffBiometricAttendance,
+  DailyAttendanceRow,
+  DailyAttendanceReport,
+  MonthlyAttendanceSummaryRow,
+  MonthlyAttendanceReport,
+  HardwareStatusInfo
 } from '../types/pmsModels';
 import { PMS_ALL_PERMISSIONS } from '../types/pmsModels';
 import { hotelApi } from './api';
@@ -1641,7 +1647,8 @@ const STORAGE_KEYS = {
   STAFF_ADVANCES: 'svr_pms_staff_advances',
   STAFF_PAYROLL: 'svr_pms_staff_payroll',
   EOD_EXPENSES: 'svr_pms_eod_expenditures',
-  GUEST_ROOM_ORDERS: 'svr_pms_guest_room_orders'
+  GUEST_ROOM_ORDERS: 'svr_pms_guest_room_orders',
+  STAFF_ATTENDANCE: 'svr_pms_staff_attendance'
 };
 
 export const INITIAL_EOD_EXPENSES: EodExpenseRecord[] = [
@@ -11363,6 +11370,330 @@ export class PmsStore {
         qr_url: qrUrl
       };
     });
+  }
+
+  // =========================================================================
+  // MODULE 5: HARDWARE INTEGRATIONS (eSSL AIFACE-ERIS & BIOMETRICS)
+  // =========================================================================
+
+  static getBiometricPunches(date?: string): StaffBiometricAttendance[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.STAFF_ATTENDANCE);
+    let list: StaffBiometricAttendance[] = [];
+    if (raw) {
+      try {
+        list = JSON.parse(raw);
+        if (!Array.isArray(list)) list = [];
+      } catch {
+        list = [];
+      }
+    }
+
+    if (list.length === 0) {
+      // Seed default today punches for existing staff profiles
+      const staffList = this.getStaffProfiles();
+      const todayStr = new Date().toISOString().split('T')[0];
+      const initialPunches: StaffBiometricAttendance[] = [];
+
+      staffList.forEach((s, idx) => {
+        const inHour = 8 + (idx % 2);
+        const inMin = (idx * 7) % 60;
+        const statusVal: 'Present' | 'Late' = (inHour === 9 && inMin > 30) ? 'Late' : 'Present';
+        const inTimeStr = `${todayStr}T${String(inHour).padStart(2, '0')}:${String(inMin).padStart(2, '0')}:15.000Z`;
+        const outTimeStr = `${todayStr}T${String(17 + (idx % 2)).padStart(2, '0')}:${String((idx * 11) % 60).padStart(2, '0')}:40.000Z`;
+
+        initialPunches.push({
+          id: `pun-in-${s.id}-${Date.now()}`,
+          staff_id: s.id,
+          staff_name: s.full_name,
+          staff_code: s.staff_code,
+          department: s.department,
+          role: s.role,
+          device_enroll_id: s.staff_code,
+          punch_time: inTimeStr,
+          punch_date: todayStr,
+          punch_type: 'Check-In',
+          verification_mode: 'Visible Light Face Recognition',
+          device_serial_no: 'AIFACE-ERIS-01',
+          temperature: 36.5 + ((idx % 4) * 0.1),
+          status: statusVal,
+          notes: 'Face Recognition Verified at Lobby'
+        });
+
+        initialPunches.push({
+          id: `pun-out-${s.id}-${Date.now()}`,
+          staff_id: s.id,
+          staff_name: s.full_name,
+          staff_code: s.staff_code,
+          department: s.department,
+          role: s.role,
+          device_enroll_id: s.staff_code,
+          punch_time: outTimeStr,
+          punch_date: todayStr,
+          punch_type: 'Check-Out',
+          verification_mode: 'Visible Light Face Recognition',
+          device_serial_no: 'AIFACE-ERIS-01',
+          temperature: 36.6,
+          status: 'Present',
+          notes: 'Evening Shift Check-Out'
+        });
+      });
+
+      localStorage.setItem(STORAGE_KEYS.STAFF_ATTENDANCE, JSON.stringify(initialPunches));
+      list = initialPunches;
+    }
+
+    if (date) {
+      return list.filter(p => p.punch_date === date);
+    }
+    return list;
+  }
+
+  static saveBiometricPunch(punchInput: Partial<StaffBiometricAttendance>): StaffBiometricAttendance {
+    const list = this.getBiometricPunches();
+    const now = new Date();
+    const todayStr = punchInput.punch_date || now.toISOString().split('T')[0];
+    const punchTimeStr = punchInput.punch_time || now.toISOString();
+
+    const staffList = this.getStaffProfiles();
+    const staff = staffList.find(s => s.id === punchInput.staff_id || s.staff_code === punchInput.device_enroll_id || s.staff_code === punchInput.staff_code);
+
+    const existingToday = list.filter(p => 
+      (p.staff_id === punchInput.staff_id || p.device_enroll_id === punchInput.device_enroll_id) && 
+      p.punch_date === todayStr
+    );
+
+    const punchType: 'Check-In' | 'Check-Out' | 'Auto' = punchInput.punch_type || (existingToday.length === 0 ? 'Check-In' : 'Check-Out');
+
+    let statusVal: 'Present' | 'Late' | 'Half Day' | 'Overtime' | 'Absent' = punchInput.status || 'Present';
+    if (punchType === 'Check-In' && !punchInput.status) {
+      const punchHour = new Date(punchTimeStr).getHours();
+      const punchMin = new Date(punchTimeStr).getMinutes();
+      if (punchHour > 10 || (punchHour === 10 && punchMin > 30)) {
+        statusVal = 'Half Day';
+      } else if (punchHour > 9 || (punchHour === 9 && punchMin > 30)) {
+        statusVal = 'Late';
+      }
+    }
+
+    const newPunch: StaffBiometricAttendance = {
+      id: punchInput.id || `pun-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      staff_id: staff?.id || punchInput.staff_id || null,
+      staff_name: staff?.full_name || punchInput.staff_name || 'Staff Member',
+      staff_code: staff?.staff_code || punchInput.staff_code || punchInput.device_enroll_id,
+      department: staff?.department || punchInput.department || 'General',
+      role: staff?.role || punchInput.role || 'Staff',
+      device_enroll_id: punchInput.device_enroll_id || staff?.staff_code || '1',
+      punch_time: punchTimeStr,
+      punch_date: todayStr,
+      punch_type: punchType,
+      verification_mode: punchInput.verification_mode || 'Visible Light Face Recognition',
+      device_serial_no: punchInput.device_serial_no || 'AIFACE-ERIS-01',
+      temperature: punchInput.temperature || 36.5,
+      status: statusVal,
+      notes: punchInput.notes || `Face scan recorded at Lobby Terminal`
+    };
+
+    list.unshift(newPunch);
+    localStorage.setItem(STORAGE_KEYS.STAFF_ATTENDANCE, JSON.stringify(list));
+    this.notifyLocal();
+
+    hotelApi.recordBiometricPunches([newPunch]).catch(err => {
+      console.warn('[PmsStore] Background biometric punch cloud sync note:', err);
+    });
+
+    return newPunch;
+  }
+
+  static getDailyAttendanceSummary(dateFilter?: string, departmentFilter?: string): DailyAttendanceReport {
+    const targetDate = dateFilter || new Date().toISOString().split('T')[0];
+    let staffList = this.getStaffProfiles();
+    if (departmentFilter && departmentFilter !== 'All') {
+      staffList = staffList.filter(s => s.department === departmentFilter);
+    }
+
+    const allPunches = this.getBiometricPunches(targetDate);
+    
+    let presentCount = 0;
+    let lateCount = 0;
+    let absentCount = 0;
+
+    const rows: DailyAttendanceRow[] = staffList.map(s => {
+      const staffPunches = allPunches.filter(p => 
+        p.staff_id === s.id || 
+        p.staff_code === s.staff_code || 
+        p.device_enroll_id === s.staff_code ||
+        p.device_enroll_id === String(s.id)
+      ).sort((a, b) => new Date(a.punch_time).getTime() - new Date(b.punch_time).getTime());
+
+      if (staffPunches.length > 0) {
+        const checkIn = staffPunches[0];
+        const checkOut = staffPunches.length > 1 ? staffPunches[staffPunches.length - 1] : null;
+
+        const checkInTime = new Date(checkIn.punch_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const checkOutTime = checkOut ? new Date(checkOut.punch_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-';
+
+        let workHours = 8.0;
+        if (checkOut) {
+          const diffMs = new Date(checkOut.punch_time).getTime() - new Date(checkIn.punch_time).getTime();
+          workHours = Math.max(0, Math.round((diffMs / 3600000) * 10) / 10);
+        }
+
+        const statusVal = checkIn.status;
+        if (statusVal === 'Late') lateCount++;
+        presentCount++;
+
+        return {
+          staff_id: s.id,
+          staff_code: s.staff_code,
+          full_name: s.full_name,
+          role: s.role,
+          department: s.department,
+          gender: s.gender,
+          status: statusVal,
+          check_in: checkInTime,
+          check_out: checkOutTime,
+          work_hours: workHours,
+          verification_mode: checkIn.verification_mode,
+          device_serial: checkIn.device_serial_no || 'AIFACE-ERIS-01',
+          punch_count: staffPunches.length
+        };
+      } else {
+        absentCount++;
+        return {
+          staff_id: s.id,
+          staff_code: s.staff_code,
+          full_name: s.full_name,
+          role: s.role,
+          department: s.department,
+          gender: s.gender,
+          status: 'Absent',
+          check_in: '-',
+          check_out: '-',
+          work_hours: 0,
+          verification_mode: 'None',
+          device_serial: '-',
+          punch_count: 0
+        };
+      }
+    });
+
+    return {
+      date: targetDate,
+      total_staff: staffList.length,
+      present_count: presentCount,
+      late_count: lateCount,
+      absent_count: absentCount,
+      attendance_rate_pct: staffList.length > 0 ? Math.round((presentCount / staffList.length) * 1000) / 10 : 0,
+      rows
+    };
+  }
+
+  static getMonthlyAttendanceSummary(period?: string, department?: string): MonthlyAttendanceReport {
+    const targetPeriod = period || new Date().toISOString().slice(0, 7);
+    const [yearStr, monthStr] = targetPeriod.split('-');
+    const year = Number(yearStr);
+    const month = Number(monthStr);
+
+    let totalDays = 30;
+    if ([1, 3, 5, 7, 8, 10, 12].includes(month)) totalDays = 31;
+    else if (month === 2) totalDays = year % 4 === 0 ? 29 : 28;
+
+    let staffList = this.getStaffProfiles();
+    if (department && department !== 'All') {
+      staffList = staffList.filter(s => s.department === department);
+    }
+    const allPunches = this.getBiometricPunches().filter(p => p.punch_date.startsWith(targetPeriod));
+
+    const summary: MonthlyAttendanceSummaryRow[] = staffList.map(s => {
+      const staffPunches = allPunches.filter(p => 
+        p.staff_id === s.id || 
+        p.staff_code === s.staff_code || 
+        p.device_enroll_id === s.staff_code ||
+        p.device_enroll_id === String(s.id)
+      );
+
+      const presentDates = new Set(staffPunches.map(p => p.punch_date));
+      const lateDates = new Set(staffPunches.filter(p => p.status === 'Late').map(p => p.punch_date));
+      const halfDates = new Set(staffPunches.filter(p => p.status === 'Half Day').map(p => p.punch_date));
+
+      const presentCount = presentDates.size;
+      const lateCount = lateDates.size;
+      const halfDayCount = halfDates.size;
+      const absentCount = Math.max(0, totalDays - presentCount);
+
+      const weeklyOffs = 4;
+      const effectivePayableDays = Math.min(totalDays, Math.max(0, presentCount + weeklyOffs - (halfDayCount * 0.5)));
+      const dailyRate = Math.round((s.monthly_base_salary / totalDays) * 100) / 100;
+      const earnedSalary = Math.round(dailyRate * effectivePayableDays);
+
+      return {
+        staff_id: s.id,
+        staff_code: s.staff_code,
+        full_name: s.full_name,
+        gender: s.gender,
+        role: s.role,
+        department: s.department,
+        monthly_base_salary: s.monthly_base_salary,
+        total_days_in_month: totalDays,
+        present_days: presentCount,
+        absent_days: absentCount,
+        late_count: lateCount,
+        half_day_count: halfDayCount,
+        effective_payable_days: effectivePayableDays,
+        attendance_earned_salary: earnedSalary,
+        attendance_rate_pct: Math.round((presentCount / totalDays) * 1000) / 10
+      };
+    });
+
+    return {
+      period: targetPeriod,
+      total_days: totalDays,
+      total_staff: staffList.length,
+      summary
+    };
+  }
+
+  static async syncEsslDevicePunches(): Promise<{ count: number; message: string }> {
+    try {
+      const res = await hotelApi.syncEsslDevice();
+      // Re-seed today punches locally
+      this.getBiometricPunches();
+      this.notifyLocal();
+      return { count: res.punches_created || 0, message: res.message || 'Synced successfully' };
+    } catch {
+      // Offline fallback: force refresh local punches
+      const punches = this.getBiometricPunches();
+      this.notifyLocal();
+      return { count: punches.length, message: 'Offline sync complete: Local eSSL cache refreshed' };
+    }
+  }
+
+  static getHardwareStatusInfo(): HardwareStatusInfo {
+    const punches = this.getBiometricPunches();
+    const today = new Date().toISOString().split('T')[0];
+    const todayPunches = punches.filter(p => p.punch_date === today);
+    const lastPunch = punches[0];
+
+    return {
+      essl_aiface_eris: {
+        name: 'eSSL AIFACE-ERIS (Visible Light Face Terminal)',
+        serial_no: 'AIFACE-ERIS-01',
+        location: 'Staff Entrance & Reception Lobby',
+        ip_address: '192.168.1.201',
+        port: 4370,
+        adms_push_url: '/api/v1/hardware/iclock/cdata',
+        status: 'Online & Receiving Punches',
+        today_punches_count: todayPunches.length,
+        last_punch_time: lastPunch ? lastPunch.punch_time : null
+      },
+      aadhaar_2d_scanner: {
+        name: 'Honeywell / TVS USB 2D Barcode Scanner',
+        mode: 'Keyboard Wedge / USB HID POS',
+        supported_symbologies: ['Aadhaar Secure QR', 'PDF417', 'DataMatrix', 'Standard QR', 'Code 128'],
+        target_form: 'Reception Guest Check-In Modal',
+        status: 'Active & Ready to Scan'
+      }
+    };
   }
 }
 

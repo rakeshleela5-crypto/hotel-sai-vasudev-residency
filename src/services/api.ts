@@ -2628,6 +2628,106 @@ export const hotelApi = {
     const res = await fetch(`${API_BASE_URL}/guest-portal/receptionist-alert-summary`);
     if (!res.ok) throw new Error('Failed to fetch receptionist alert summary');
     return await res.json();
+  },
+
+  // =========================================================================
+  // MODULE 5: HARDWARE INTEGRATIONS (eSSL AIFACE-ERIS & AADHAAR 2D SCANNER)
+  // =========================================================================
+  async getHardwareStatus(): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/hardware/status`);
+    if (!res.ok) throw new Error('Failed to fetch hardware status');
+    return await res.json();
+  },
+
+  async getBiometricPunches(params?: { date?: string; staff_id?: number }): Promise<any> {
+    const query = new URLSearchParams();
+    if (params?.date) query.append('date', params.date);
+    if (params?.staff_id) query.append('staff_id', String(params.staff_id));
+    const qs = query.toString() ? `?${query.toString()}` : '';
+
+    const res = await fetch(`${API_BASE_URL}/hardware/essl/punches${qs}`);
+    if (!res.ok) throw new Error('Failed to fetch biometric punch logs');
+    return await res.json();
+  },
+
+  async recordBiometricPunches(punches: any[]): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/hardware/essl/punches`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ punches })
+    });
+    if (!res.ok) throw new Error('Failed to record biometric punches');
+    return await res.json();
+  },
+
+  async getDailyAttendanceSummary(dateOrOptions?: string | { target_date?: string; department?: string }, department?: string): Promise<any> {
+    let dateStr: string | undefined;
+    let deptStr: string | undefined = department;
+    if (typeof dateOrOptions === 'object' && dateOrOptions !== null) {
+      dateStr = dateOrOptions.target_date;
+      deptStr = dateOrOptions.department;
+    } else {
+      dateStr = dateOrOptions;
+    }
+    const query = new URLSearchParams();
+    if (dateStr) query.append('date', dateStr);
+    if (deptStr && deptStr !== 'All') query.append('department', deptStr);
+    const qs = query.toString() ? `?${query.toString()}` : '';
+
+    const res = await fetch(`${API_BASE_URL}/hardware/essl/daily-summary${qs}`);
+    if (!res.ok) throw new Error('Failed to fetch daily attendance summary');
+    return await res.json();
+  },
+
+  async getMonthlyAttendanceSummary(periodOrOptions?: string | { month_period?: string; department?: string }, department?: string): Promise<any> {
+    let periodStr: string | undefined;
+    let deptStr: string | undefined = department;
+    if (typeof periodOrOptions === 'object' && periodOrOptions !== null) {
+      periodStr = periodOrOptions.month_period;
+      deptStr = periodOrOptions.department;
+    } else {
+      periodStr = periodOrOptions;
+    }
+    const query = new URLSearchParams();
+    if (periodStr) query.append('period', periodStr);
+    if (deptStr && deptStr !== 'All') query.append('department', deptStr);
+    const qs = query.toString() ? `?${query.toString()}` : '';
+
+    const res = await fetch(`${API_BASE_URL}/hardware/essl/monthly-summary${qs}`);
+    if (!res.ok) throw new Error('Failed to fetch monthly attendance summary');
+    return await res.json();
+  },
+
+  async createManualPunch(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/hardware/essl/manual-punch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to record manual punch');
+    return await res.json();
+  },
+
+  async recordManualPunch(payload: any): Promise<any> {
+    return this.createManualPunch(payload);
+  },
+
+  async syncEsslDevice(): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/hardware/essl/sync-device`, {
+      method: 'POST'
+    });
+    if (!res.ok) throw new Error('Failed to sync eSSL device');
+    return await res.json();
+  },
+
+  async parseAadhaarQrServer(rawData: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/hardware/aadhaar/parse`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ raw_data: rawData })
+    });
+    if (!res.ok) throw new Error('Failed to parse Aadhaar QR string');
+    return await res.json();
   }
 };
 

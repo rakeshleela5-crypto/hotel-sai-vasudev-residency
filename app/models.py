@@ -1555,6 +1555,30 @@ class GuestRoomServiceOrder(Base):
     created_at = Column(TimezoneAwareDateTime, default=now_utc)
     updated_at = Column(TimezoneAwareDateTime, default=now_utc, onupdate=now_utc)
 
+class StaffBiometricAttendance(Base):
+    """
+    Module 5: eSSL AIFACE-ERIS Face Recognition & Biometric Attendance Log.
+    Receives push/ADMS webhooks or device sync logs from eSSL AIFACE-ERIS.
+    Directly maps device Enroll ID to StaffProfile across all departments.
+    """
+    __tablename__ = "staff_biometric_attendance"
+
+    id = Column(Integer, primary_key=True, index=True)
+    staff_id = Column(Integer, ForeignKey("staff_profiles.id"), nullable=True, index=True)
+    staff_code = Column(String(50), nullable=True, index=True)
+    device_enroll_id = Column(String(50), nullable=False, index=True) # Device User ID (e.g. "101", "1", "SVR-001")
+    punch_time = Column(TimezoneAwareDateTime, nullable=False, index=True)
+    punch_date = Column(String(20), nullable=False, index=True) # "YYYY-MM-DD"
+    punch_type = Column(String(30), default="Check-In") # "Check-In" | "Check-Out" | "Auto"
+    verification_mode = Column(String(50), default="Face Recognition") # "Face Recognition" | "Fingerprint" | "RFID Card" | "PIN" | "Manual"
+    device_serial_no = Column(String(100), default="AIFACE-ERIS-01", index=True)
+    device_name = Column(String(100), default="eSSL AIFACE-ERIS (Staff Lobby)")
+    temperature = Column(Float, nullable=True)
+    mask_detected = Column(Boolean, default=True)
+    status = Column(String(30), default="Present") # "Present" | "Late" | "Half Day" | "Overtime"
+    notes = Column(Text, nullable=True)
+    created_at = Column(TimezoneAwareDateTime, default=now_utc)
+
 # =========================================================================
 # POSTGRESQL BTREE_GIST EXCLUSION CONSTRAINT (#14)
 # =========================================================================

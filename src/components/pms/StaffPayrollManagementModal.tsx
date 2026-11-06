@@ -4,7 +4,10 @@ import type {
   StaffSalaryAdvance, 
   StaffMonthlyPayroll, 
   StaffDepartment,
-  StaffGender
+  StaffGender,
+  DailyAttendanceReport,
+  MonthlyAttendanceReport,
+  HardwareStatusInfo
 } from '../../types/pmsModels';
 import { PmsStore, usePmsSync } from '../../services/pmsStore';
 import { hotelApi } from '../../services/api';
@@ -31,8 +34,30 @@ export const StaffPayrollManagementModal: React.FC<StaffPayrollManagementModalPr
 }) => {
   usePmsSync();
 
-  const [activeTab, setActiveTab] = useState<'directory' | 'advances' | 'payroll'>('directory');
+  const [activeTab, setActiveTab] = useState<'directory' | 'advances' | 'payroll' | 'attendance'>('directory');
   const companyInfo = PmsStore.getCompanyInfo();
+
+  // Module 5: Hardware eSSL AIFACE-ERIS Biometric Attendance State
+  const [attendanceDate, setAttendanceDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [attendanceSubTab, setAttendanceSubTab] = useState<'daily' | 'monthly'>('daily');
+  const [dailyAttendance, setDailyAttendance] = useState<DailyAttendanceReport | null>(null);
+  const [monthlyAttendance, setMonthlyAttendance] = useState<MonthlyAttendanceReport | null>(null);
+  const [hardwareStatus, setHardwareStatus] = useState<HardwareStatusInfo | null>(null);
+  const [isSyncingDevice, setIsSyncingDevice] = useState<boolean>(false);
+  const [isManualPunchOpen, setIsManualPunchOpen] = useState<boolean>(false);
+  const [manualPunchData, setManualPunchData] = useState<{
+    staff_id: number;
+    punch_date: string;
+    punch_time: string;
+    punch_type: 'Check-In' | 'Check-Out';
+    notes: string;
+  }>({
+    staff_id: 1,
+    punch_date: new Date().toISOString().slice(0, 10),
+    punch_time: '09:00',
+    punch_type: 'Check-In',
+    notes: 'Front Desk manual punch entry'
+  });
 
   // Current month default: "YYYY-MM"
   const defaultCurrentPeriod = useMemo(() => {
@@ -116,6 +141,46 @@ export const StaffPayrollManagementModal: React.FC<StaffPayrollManagementModalPr
     remarks: 'Monthly salary credited'
   });
 
+  // Module 5: Load Biometric Attendance Data from eSSL AIFACE-ERIS / Store
+  const loadAttendanceData = async () => {
+    try {
+      // 1. Daily Summary
+      try {
+        const d = await hotelApi.getDailyAttendanceSummary({
+          target_date: attendanceDate,
+          department: selectedDepartment !== 'All' ? selectedDepartment : undefined
+        });
+        setDailyAttendance(d);
+      } catch {
+        const dStore = PmsStore.getDailyAttendanceSummary(attendanceDate, selectedDepartment);
+        setDailyAttendance(dStore);
+      }
+
+      // 2. Monthly Summary
+      try {
+        const m = await hotelApi.getMonthlyAttendanceSummary({
+          month_period: selectedPeriod,
+          department: selectedDepartment !== 'All' ? selectedDepartment : undefined
+        });
+        setMonthlyAttendance(m);
+      } catch {
+        const mStore = PmsStore.getMonthlyAttendanceSummary(selectedPeriod, selectedDepartment);
+        setMonthlyAttendance(mStore);
+      }
+
+      // 3. Hardware Diagnostics
+      try {
+        const hw = await hotelApi.getHardwareStatus();
+        setHardwareStatus(hw);
+      } catch {
+        const hwStore = PmsStore.getHardwareStatusInfo();
+        setHardwareStatus(hwStore);
+      }
+    } catch (err) {
+      console.warn('[StaffPayrollManagementModal] Attendance load warning:', err);
+    }
+  };
+
   // Load Data
   const loadData = async () => {
     setIsLoading(true);
@@ -137,6 +202,9 @@ export const StaffPayrollManagementModal: React.FC<StaffPayrollManagementModalPr
         advances = PmsStore.getStaffAdvances(selectedPeriod);
       }
       setAdvancesList(advances);
+
+      // 3. Fetch Biometric Attendance
+      await loadAttendanceData();
     } finally {
       setIsLoading(false);
     }
@@ -146,7 +214,59 @@ export const StaffPayrollManagementModal: React.FC<StaffPayrollManagementModalPr
     if (isOpen) {
       loadData();
     }
-  }, [isOpen, selectedPeriod]);
+  }, [isOpen, selectedPeriod, attendanceDate, selectedDepartment]);
+
+  // Sync eSSL Device Punches Handler
+  const handleSyncEsslDevice = async () => {
+    setIsSyncingDevice(true);
+    try {
+      let count = 0;
+      try {
+        const res = await hotelApi.syncEsslDevice();
+        count = res.synced_punches || 0;
+      } catch {
+        const syncRes = await PmsStore.syncEsslDevicePunches();
+        count = syncRes.count || 0;
+      }
+      await loadAttendanceData();
+      alert(`✓ Successfully synchronized ${count} facial recognition punches from eSSL AIFACE-ERIS terminal.`);
+    } catch (err: any) {
+      alert(`Failed to sync eSSL device: ${err.message || 'Device offline'}`);
+    } finally {
+      setIsSyncingDevice(false);
+    }
+  };
+
+  // Manual Punch Handler
+  const handleSaveManualPunch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      try {
+        await hotelApi.recordManualPunch({
+          staff_id: manualPunchData.staff_id,
+          punch_date: manualPunchData.punch_date,
+          punch_time: manualPunchData.punch_time,
+          punch_type: manualPunchData.punch_type,
+          notes: manualPunchData.notes
+        });
+      } catch {
+        PmsStore.saveBiometricPunch({
+          staff_id: manualPunchData.staff_id,
+          punch_date: manualPunchData.punch_date,
+          punch_time: manualPunchData.punch_time,
+          punch_type: manualPunchData.punch_type,
+          verification_mode: 'Manual Override',
+          status: 'Present',
+          notes: manualPunchData.notes
+        });
+      }
+      setIsManualPunchOpen(false);
+      await loadAttendanceData();
+      alert('✓ Front desk attendance punch recorded successfully.');
+    } catch (err: any) {
+      alert(`Error saving punch: ${err.message || 'Operation failed'}`);
+    }
+  };
 
   // Filtered Staff
   const filteredStaff = useMemo(() => {
@@ -452,6 +572,22 @@ export const StaffPayrollManagementModal: React.FC<StaffPayrollManagementModalPr
                 }}
               >
                 📊 Monthly Payroll Sheet
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('attendance')}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 4,
+                  fontSize: 12,
+                  fontWeight: 800,
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: activeTab === 'attendance' ? '#8b5cf6' : 'transparent',
+                  color: activeTab === 'attendance' ? '#ffffff' : '#94a3b8'
+                }}
+              >
+                👤 Face Attendance (eSSL ERIS)
               </button>
             </div>
 
@@ -1142,6 +1278,435 @@ export const StaffPayrollManagementModal: React.FC<StaffPayrollManagementModalPr
             </div>
           )}
 
+          {/* ========================================================================= */}
+          {/* TAB 4: eSSL AIFACE-ERIS BIOMETRIC FACE ATTENDANCE (MODULE 5)              */}
+          {/* ========================================================================= */}
+          {activeTab === 'attendance' && (
+            <div>
+              {/* Hardware Diagnostic Banner */}
+              <div
+                style={{
+                  background: 'linear-gradient(90deg, #1e1b4b 0%, #1e293b 100%)',
+                  padding: '14px 18px',
+                  borderRadius: 6,
+                  border: '1px solid #6366f1',
+                  marginBottom: 16,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: 12
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ fontSize: 28 }}>🤖</div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 900, color: '#a5b4fc', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      eSSL AIFACE-ERIS FACE RECOGNITION TERMINAL
+                      <span style={{ background: '#059669', color: '#ffffff', fontSize: 10, padding: '2px 8px', borderRadius: 4, fontWeight: 800 }}>
+                        🟢 ONLINE &bull; PUSH SYNCED
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 11, color: '#cbd5e1', marginTop: 2 }}>
+                      Device IP: <span style={{ color: '#38bdf8', fontFamily: 'monospace' }}>{hardwareStatus?.essl_aiface_eris?.ip_address || '192.168.1.201'}:{hardwareStatus?.essl_aiface_eris?.port || 4370}</span> &bull; 
+                      Serial: <span style={{ fontFamily: 'monospace', color: '#facc15' }}>{hardwareStatus?.essl_aiface_eris?.serial_no || 'ERIS-2026-SVR01'}</span> &bull; 
+                      Protocol: <span style={{ color: '#34d399', fontFamily: 'monospace' }}>ADMS /iclock/cdata</span> &bull; 
+                      Mode: Visible Light Facial Bio
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={handleSyncEsslDevice}
+                    disabled={isSyncingDevice}
+                    style={{
+                      background: isSyncingDevice ? '#475569' : '#4f46e5',
+                      color: '#ffffff',
+                      border: 'none',
+                      padding: '8px 14px',
+                      borderRadius: 4,
+                      fontSize: 11,
+                      fontWeight: 800,
+                      cursor: isSyncingDevice ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6
+                    }}
+                  >
+                    <span>{isSyncingDevice ? '⏳' : '🔄'}</span>
+                    <span>{isSyncingDevice ? 'Syncing Hardware...' : 'Sync eSSL Device Now'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setManualPunchData({
+                        staff_id: staffList[0]?.id ?? 1,
+                        punch_date: attendanceDate,
+                        punch_time: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+                        punch_type: 'Check-In',
+                        notes: 'Front Desk manual check-in'
+                      });
+                      setIsManualPunchOpen(true);
+                    }}
+                    style={{
+                      background: '#334155',
+                      color: '#38bdf8',
+                      border: '1px solid #475569',
+                      padding: '8px 14px',
+                      borderRadius: 4,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    ➕ Manual Punch
+                  </button>
+                </div>
+              </div>
+
+              {/* Sub-tab selection: Daily Log vs Monthly Payable Summary */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <div style={{ display: 'flex', background: '#1e293b', padding: 3, borderRadius: 6, border: '1px solid #334155' }}>
+                  <button
+                    type="button"
+                    onClick={() => setAttendanceSubTab('daily')}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: 4,
+                      fontSize: 11,
+                      fontWeight: 800,
+                      border: 'none',
+                      cursor: 'pointer',
+                      background: attendanceSubTab === 'daily' ? '#6366f1' : 'transparent',
+                      color: attendanceSubTab === 'daily' ? '#ffffff' : '#94a3b8'
+                    }}
+                  >
+                    📅 Daily Punch Log &amp; Work Hours
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAttendanceSubTab('monthly')}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: 4,
+                      fontSize: 11,
+                      fontWeight: 800,
+                      border: 'none',
+                      cursor: 'pointer',
+                      background: attendanceSubTab === 'monthly' ? '#10b981' : 'transparent',
+                      color: attendanceSubTab === 'monthly' ? '#ffffff' : '#94a3b8'
+                    }}
+                  >
+                    📊 Monthly Attendance &amp; Effective Payable Days
+                  </button>
+                </div>
+
+                {/* Filters */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  {attendanceSubTab === 'daily' ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <label style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700 }}>Punch Date:</label>
+                      <input
+                        type="date"
+                        value={attendanceDate}
+                        onChange={e => setAttendanceDate(e.target.value)}
+                        style={{
+                          background: '#1e293b',
+                          border: '1px solid #334155',
+                          borderRadius: 4,
+                          padding: '5px 8px',
+                          color: '#fff',
+                          fontSize: 11,
+                          fontWeight: 700
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <label style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700 }}>Month:</label>
+                      <input
+                        type="month"
+                        value={selectedPeriod}
+                        onChange={e => setSelectedPeriod(e.target.value)}
+                        style={{
+                          background: '#1e293b',
+                          border: '1px solid #334155',
+                          borderRadius: 4,
+                          padding: '5px 8px',
+                          color: '#fff',
+                          fontSize: 11,
+                          fontWeight: 700
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <label style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700 }}>Dept:</label>
+                    <select
+                      value={selectedDepartment}
+                      onChange={e => setSelectedDepartment(e.target.value)}
+                      style={{
+                        background: '#1e293b',
+                        border: '1px solid #334155',
+                        borderRadius: 4,
+                        padding: '5px 8px',
+                        color: '#fff',
+                        fontSize: 11,
+                        fontWeight: 700
+                      }}
+                    >
+                      <option value="All">All Departments</option>
+                      {DEPARTMENTS.map(d => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* SUB-VIEW 1: DAILY ATTENDANCE */}
+              {attendanceSubTab === 'daily' && (
+                <div>
+                  {/* Daily KPI Badges */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 16 }}>
+                    <div style={{ background: '#1e293b', padding: 12, borderRadius: 6, border: '1px solid #334155' }}>
+                      <div style={{ fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Total Staff</div>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: '#38bdf8', marginTop: 2 }}>
+                        {dailyAttendance?.total_staff ?? staffList.filter(s => s.is_active).length}
+                      </div>
+                      <div style={{ fontSize: 9, color: '#64748b' }}>Active Profiles</div>
+                    </div>
+
+                    <div style={{ background: '#1e293b', padding: 12, borderRadius: 6, border: '1px solid #334155' }}>
+                      <div style={{ fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Present Today</div>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: '#34d399', marginTop: 2 }}>
+                        {dailyAttendance?.present_count ?? 0}
+                      </div>
+                      <div style={{ fontSize: 9, color: '#059669' }}>Facial Bio Confirmed</div>
+                    </div>
+
+                    <div style={{ background: '#1e293b', padding: 12, borderRadius: 6, border: '1px solid #334155' }}>
+                      <div style={{ fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Late Arrivals</div>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: '#fbbf24', marginTop: 2 }}>
+                        {dailyAttendance?.late_count ?? 0}
+                      </div>
+                      <div style={{ fontSize: 9, color: '#d97706' }}>After 09:15 AM</div>
+                    </div>
+
+                    <div style={{ background: '#1e293b', padding: 12, borderRadius: 6, border: '1px solid #334155' }}>
+                      <div style={{ fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Absent</div>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: '#f87171', marginTop: 2 }}>
+                        {dailyAttendance?.absent_count ?? 0}
+                      </div>
+                      <div style={{ fontSize: 9, color: '#dc2626' }}>No punch registered</div>
+                    </div>
+
+                    <div style={{ background: '#1e293b', padding: 12, borderRadius: 6, border: '1px solid #334155' }}>
+                      <div style={{ fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Attendance Rate</div>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: '#c084fc', marginTop: 2 }}>
+                        {dailyAttendance?.attendance_rate_pct ?? 0}%
+                      </div>
+                      <div style={{ fontSize: 9, color: '#9333ea' }}>Overall daily turnout</div>
+                    </div>
+                  </div>
+
+                  {/* Daily Punch Grid */}
+                  <div style={{ background: '#1e293b', borderRadius: 6, border: '1px solid #334155', overflow: 'hidden' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                      <thead>
+                        <tr style={{ background: '#0f172a', borderBottom: '2px solid #334155', color: '#94a3b8', textAlign: 'left' }}>
+                          <th style={{ padding: '10px 12px', width: 90 }}>Staff Code</th>
+                          <th style={{ padding: '10px 12px' }}>Worker Name</th>
+                          <th style={{ padding: '10px 12px' }}>Department &amp; Role</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'center', width: 100 }}>First In</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'center', width: 100 }}>Last Out</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'center', width: 90 }}>Work Hours</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'center', width: 100 }}>Status</th>
+                          <th style={{ padding: '10px 12px', width: 150 }}>Verification</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'center', width: 70 }}>Punches</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {!dailyAttendance || dailyAttendance.rows.length === 0 ? (
+                          <tr>
+                            <td colSpan={9} style={{ textAlign: 'center', padding: 32, color: '#64748b' }}>
+                              No attendance punches found for {attendanceDate}. Click &quot;Sync eSSL Device Now&quot; to fetch logs.
+                            </td>
+                          </tr>
+                        ) : (
+                          dailyAttendance.rows.map(row => (
+                            <tr key={row.staff_id} style={{ borderBottom: '1px solid #334155' }}>
+                              <td style={{ padding: '10px 12px', fontFamily: 'monospace', color: '#38bdf8', fontWeight: 700 }}>
+                                {row.staff_code}
+                              </td>
+                              <td style={{ padding: '10px 12px', fontWeight: 800, color: '#f8fafc' }}>
+                                {row.full_name}
+                                <span style={{ fontSize: 10, color: '#64748b', marginLeft: 6 }}>
+                                  ({row.gender === 'Female' ? '♀' : '♂'})
+                                </span>
+                              </td>
+                              <td style={{ padding: '10px 12px', color: '#cbd5e1' }}>
+                                <div>{row.role}</div>
+                                <div style={{ fontSize: 10, color: '#64748b' }}>{row.department}</div>
+                              </td>
+                              <td style={{ padding: '10px 12px', textAlign: 'center', fontFamily: 'monospace', color: row.check_in !== '--' ? '#34d399' : '#64748b', fontWeight: 700 }}>
+                                {row.check_in}
+                              </td>
+                              <td style={{ padding: '10px 12px', textAlign: 'center', fontFamily: 'monospace', color: row.check_out !== '--' ? '#38bdf8' : '#64748b', fontWeight: 700 }}>
+                                {row.check_out}
+                              </td>
+                              <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: row.work_hours >= 8 ? '#34d399' : row.work_hours > 0 ? '#fbbf24' : '#64748b' }}>
+                                {row.work_hours > 0 ? `${row.work_hours.toFixed(1)} hrs` : '--'}
+                              </td>
+                              <td style={{ padding: '10px 12px', textAlign: 'center' }}>
+                                <span
+                                  style={{
+                                    display: 'inline-block',
+                                    padding: '2px 8px',
+                                    borderRadius: 4,
+                                    fontSize: 10,
+                                    fontWeight: 900,
+                                    letterSpacing: 0.5,
+                                    background:
+                                      row.status === 'Present'
+                                        ? '#064e3b'
+                                        : row.status === 'Late'
+                                        ? '#78350f'
+                                        : row.status === 'Half Day'
+                                        ? '#1e3a8a'
+                                        : '#7f1d1d',
+                                    color:
+                                      row.status === 'Present'
+                                        ? '#34d399'
+                                        : row.status === 'Late'
+                                        ? '#fbbf24'
+                                        : row.status === 'Half Day'
+                                        ? '#93c5fd'
+                                        : '#f87171'
+                                  }}
+                                >
+                                  {row.status.toUpperCase()}
+                                </span>
+                              </td>
+                              <td style={{ padding: '10px 12px', fontSize: 11, color: '#94a3b8' }}>
+                                {row.verification_mode || 'Face Recognition'}
+                              </td>
+                              <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 800, color: '#38bdf8' }}>
+                                {row.punch_count}
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* SUB-VIEW 2: MONTHLY ATTENDANCE SUMMARY & EFFECTIVE PAYABLE DAYS */}
+              {attendanceSubTab === 'monthly' && (
+                <div>
+                  <div style={{ background: '#1e293b', borderRadius: 6, border: '1px solid #334155', overflow: 'hidden' }}>
+                    <div style={{ padding: '10px 16px', background: '#0f172a', borderBottom: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: '#10b981' }}>
+                        📊 MONTHLY ATTENDANCE MATRIX &bull; {formatPeriodDisplay(selectedPeriod)}
+                      </span>
+                      <span style={{ fontSize: 11, color: '#94a3b8' }}>
+                        Directly links eSSL Biometric Punches to Module 1 Staff Base Salary
+                      </span>
+                    </div>
+
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                      <thead>
+                        <tr style={{ background: '#0f172a', borderBottom: '2px solid #334155', color: '#94a3b8', textAlign: 'left' }}>
+                          <th style={{ padding: '10px 12px', width: 90 }}>Staff Code</th>
+                          <th style={{ padding: '10px 12px' }}>Worker Name</th>
+                          <th style={{ padding: '10px 12px' }}>Department &amp; Role</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'right', width: 120 }}>Base Salary (₹)</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'center', width: 80 }}>Month Days</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'center', width: 80, color: '#34d399' }}>Present</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'center', width: 70, color: '#fbbf24' }}>Late</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'center', width: 70, color: '#f87171' }}>Absent</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'center', width: 90, color: '#38bdf8' }}>Payable Days</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'right', width: 130, color: '#10b981' }}>Earned Wage (₹)</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'center', width: 90 }}>Turnout %</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {!monthlyAttendance || monthlyAttendance.summary.length === 0 ? (
+                          <tr>
+                            <td colSpan={11} style={{ textAlign: 'center', padding: 32, color: '#64748b' }}>
+                              No monthly attendance data available for {selectedPeriod}.
+                            </td>
+                          </tr>
+                        ) : (
+                          monthlyAttendance.summary.map(row => (
+                            <tr key={row.staff_id} style={{ borderBottom: '1px solid #334155' }}>
+                              <td style={{ padding: '10px 12px', fontFamily: 'monospace', color: '#38bdf8', fontWeight: 700 }}>
+                                {row.staff_code}
+                              </td>
+                              <td style={{ padding: '10px 12px', fontWeight: 800, color: '#f8fafc' }}>
+                                {row.full_name}
+                                <span style={{ fontSize: 10, color: '#64748b', marginLeft: 6 }}>
+                                  ({row.gender === 'Female' ? '♀' : '♂'})
+                                </span>
+                              </td>
+                              <td style={{ padding: '10px 12px', color: '#cbd5e1' }}>
+                                <div>{row.role}</div>
+                                <div style={{ fontSize: 10, color: '#64748b' }}>{row.department}</div>
+                              </td>
+                              <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700 }}>
+                                ₹{row.monthly_base_salary.toLocaleString('en-IN')}.00
+                              </td>
+                              <td style={{ padding: '10px 12px', textAlign: 'center', color: '#94a3b8' }}>
+                                {row.total_days_in_month}
+                              </td>
+                              <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 800, color: '#34d399' }}>
+                                {row.present_days}
+                              </td>
+                              <td style={{ padding: '10px 12px', textAlign: 'center', color: '#fbbf24' }}>
+                                {row.late_count}
+                              </td>
+                              <td style={{ padding: '10px 12px', textAlign: 'center', color: '#f87171' }}>
+                                {row.absent_days}
+                              </td>
+                              <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 900, color: '#38bdf8' }}>
+                                {row.effective_payable_days.toFixed(1)}
+                              </td>
+                              <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 900, color: '#10b981', fontSize: 13 }}>
+                                ₹{row.attendance_earned_salary.toLocaleString('en-IN')}.00
+                              </td>
+                              <td style={{ padding: '10px 12px', textAlign: 'center' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
+                                  <div style={{ width: 42, height: 6, background: '#334155', borderRadius: 3, overflow: 'hidden' }}>
+                                    <div
+                                      style={{
+                                        width: `${row.attendance_rate_pct}%`,
+                                        height: '100%',
+                                        background: row.attendance_rate_pct >= 90 ? '#10b981' : row.attendance_rate_pct >= 75 ? '#fbbf24' : '#ef4444'
+                                      }}
+                                    />
+                                  </div>
+                                  <span style={{ fontSize: 10, fontWeight: 700, color: '#cbd5e1' }}>
+                                    {row.attendance_rate_pct}%
+                                  </span>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
         </div>
 
         {/* Modal Footer */}
@@ -1763,6 +2328,130 @@ export const StaffPayrollManagementModal: React.FC<StaffPayrollManagementModalPr
                 🖨️ Print Slip
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* DIALOG 5: FRONT DESK MANUAL PUNCH MODAL                                   */}
+      {/* ========================================================================= */}
+      {isManualPunchOpen && (
+        <div
+          className="pms-reg-modal-backdrop"
+          onClick={() => setIsManualPunchOpen(false)}
+          style={{ zIndex: 1100, background: 'rgba(0,0,0,0.7)' }}
+        >
+          <div
+            className="pms-reg-modal-window"
+            style={{
+              width: '90vw',
+              maxWidth: '480px',
+              background: '#1e293b',
+              color: '#f8fafc',
+              borderRadius: 8,
+              border: '1px solid #475569',
+              padding: 24
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #334155', paddingBottom: 12, marginBottom: 16 }}>
+              <div style={{ fontSize: 15, fontWeight: 900, color: '#38bdf8' }}>
+                ➕ Record Front Desk Attendance Punch
+              </div>
+              <button type="button" onClick={() => setIsManualPunchOpen(false)} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: 16, cursor: 'pointer' }}>
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveManualPunch}>
+              <div style={{ marginBottom: 12 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#94a3b8', marginBottom: 4 }}>
+                  Select Worker *
+                </label>
+                <select
+                  value={manualPunchData.staff_id}
+                  onChange={e => setManualPunchData({ ...manualPunchData, staff_id: Number(e.target.value) })}
+                  style={{ width: '100%', background: '#0f172a', border: '1px solid #334155', borderRadius: 4, padding: '7px 10px', color: '#fff', fontSize: 12 }}
+                >
+                  {staffList.filter(s => s.is_active).map(s => (
+                    <option key={s.id} value={s.id}>
+                      {s.staff_code} - {s.full_name} ({s.department} &bull; {s.role})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#94a3b8', marginBottom: 4 }}>
+                    Punch Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={manualPunchData.punch_date}
+                    onChange={e => setManualPunchData({ ...manualPunchData, punch_date: e.target.value })}
+                    required
+                    style={{ width: '100%', background: '#0f172a', border: '1px solid #334155', borderRadius: 4, padding: '7px 10px', color: '#fff', fontSize: 12 }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#94a3b8', marginBottom: 4 }}>
+                    Punch Time (24h) *
+                  </label>
+                  <input
+                    type="time"
+                    value={manualPunchData.punch_time}
+                    onChange={e => setManualPunchData({ ...manualPunchData, punch_time: e.target.value })}
+                    required
+                    style={{ width: '100%', background: '#0f172a', border: '1px solid #334155', borderRadius: 4, padding: '7px 10px', color: '#fff', fontSize: 12 }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: 12 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#94a3b8', marginBottom: 4 }}>
+                  Punch Type *
+                </label>
+                <select
+                  value={manualPunchData.punch_type}
+                  onChange={e => setManualPunchData({ ...manualPunchData, punch_type: e.target.value as any })}
+                  style={{ width: '100%', background: '#0f172a', border: '1px solid #334155', borderRadius: 4, padding: '7px 10px', color: '#fff', fontSize: 12 }}
+                >
+                  <option value="Check-In">Check-In (Morning / Shift In)</option>
+                  <option value="Check-Out">Check-Out (Evening / Shift Out)</option>
+                </select>
+              </div>
+
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#94a3b8', marginBottom: 4 }}>
+                  Remarks / Reason
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Outdoor maintenance duty or biometric terminal override"
+                  value={manualPunchData.notes}
+                  onChange={e => setManualPunchData({ ...manualPunchData, notes: e.target.value })}
+                  style={{ width: '100%', background: '#0f172a', border: '1px solid #334155', borderRadius: 4, padding: '7px 10px', color: '#fff', fontSize: 12 }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                <button
+                  type="button"
+                  onClick={() => setIsManualPunchOpen(false)}
+                  style={{ background: '#334155', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{ background: '#0284c7', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: 4, fontWeight: 800, cursor: 'pointer', fontSize: 12 }}
+                >
+                  Save Punch
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

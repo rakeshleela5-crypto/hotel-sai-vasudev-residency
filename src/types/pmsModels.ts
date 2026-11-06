@@ -2262,6 +2262,101 @@ export interface RoomQrStandeeConfig {
   svg_data?: string;
 }
 
+// =========================================================================
+// MODULE 5: HARDWARE INTEGRATIONS (eSSL AIFACE-ERIS & AADHAAR 2D SCANNER)
+// =========================================================================
+
+export interface StaffBiometricAttendance {
+  id: number | string;
+  staff_id?: number | null;
+  staff_name?: string;
+  staff_code?: string;
+  department?: string;
+  role?: string;
+  device_enroll_id: string;
+  punch_time: string;
+  punch_date: string;
+  punch_type: 'Check-In' | 'Check-Out' | 'Auto';
+  verification_mode: string; // 'Face Recognition' | 'Fingerprint' | 'RFID Card' | 'PIN' | 'Manual'
+  device_serial_no?: string;
+  temperature?: number | null;
+  status: 'Present' | 'Late' | 'Half Day' | 'Overtime' | 'Absent';
+  notes?: string | null;
+}
+
+export interface DailyAttendanceRow {
+  staff_id: number;
+  staff_code: string;
+  full_name: string;
+  role: string;
+  department: string;
+  gender: string;
+  status: 'Present' | 'Late' | 'Half Day' | 'Overtime' | 'Absent';
+  check_in: string;
+  check_out: string;
+  work_hours: number;
+  verification_mode: string;
+  device_serial: string;
+  punch_count: number;
+}
+
+export interface DailyAttendanceReport {
+  date: string;
+  total_staff: number;
+  present_count: number;
+  late_count: number;
+  absent_count: number;
+  attendance_rate_pct: number;
+  rows: DailyAttendanceRow[];
+}
+
+export interface MonthlyAttendanceSummaryRow {
+  staff_id: number;
+  staff_code: string;
+  full_name: string;
+  gender: string;
+  role: string;
+  department: string;
+  monthly_base_salary: number;
+  total_days_in_month: number;
+  present_days: number;
+  absent_days: number;
+  late_count: number;
+  half_day_count: number;
+  effective_payable_days: number;
+  attendance_earned_salary: number;
+  attendance_rate_pct: number;
+}
+
+export interface MonthlyAttendanceReport {
+  period: string;
+  total_days: number;
+  total_staff: number;
+  summary: MonthlyAttendanceSummaryRow[];
+}
+
+export interface HardwareStatusInfo {
+  essl_aiface_eris: {
+    name: string;
+    serial_no: string;
+    location: string;
+    ip_address: string;
+    port: number;
+    adms_push_url: string;
+    status: string;
+    today_punches_count: number;
+    last_punch_time?: string | null;
+  };
+  aadhaar_2d_scanner: {
+    name: string;
+    mode: string;
+    supported_symbologies: string[];
+    target_form: string;
+    status: string;
+  };
+}
+
+
 
 
 

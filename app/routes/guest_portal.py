@@ -701,3 +701,4 @@ def get_receptionist_alert_summary(db: Session = Depends(get_db)):
         "active_total_count": len(new_orders) + in_prep_count,
         "latest_new_orders": items_summary
     }
+

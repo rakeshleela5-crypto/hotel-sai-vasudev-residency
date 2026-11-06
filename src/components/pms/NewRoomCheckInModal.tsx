@@ -5,6 +5,7 @@ import { hotelApi } from '../../services/api';
 import { CheckInSlipModal } from './CheckInSlipModal';
 import { decentroApi } from '../../services/decentroApi';
 import { DecentroUpiQrModal } from './DecentroUpiQrModal';
+import { parseAadhaarQrCode, type AadhaarParsedData } from '../../utils/aadhaarQrParser';
 
 interface NewRoomCheckInModalProps {
   isOpen: boolean;
@@ -185,7 +186,17 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
 
   // Guest Details & Mandatory Indian KYC
   const [guestName, setGuestName] = useState('');
+  const [guestGender, setGuestGender] = useState<'Male' | 'Female' | 'Other'>('Male');
+  const [guestAge, setGuestAge] = useState<number>(35);
   const [mobile, setMobile] = useState('');
+
+  // Module 5: Hardware Aadhaar 2D Barcode & QR Scanner
+  const [isAadhaarScannerOpen, setIsAadhaarScannerOpen] = useState<boolean>(false);
+  const [scannerTarget, setScannerTarget] = useState<'primary' | 'second' | 'third'>('primary');
+  const [rawScannerInput, setRawScannerInput] = useState<string>('');
+  const [aadhaarScanSuccess, setAadhaarScanSuccess] = useState<string | null>(null);
+  const [aadhaarScanError, setAadhaarScanError] = useState<string | null>(null);
+  const scannerInputRef = useRef<HTMLInputElement>(null);
   const [addressLine1, setAddressLine1] = useState('');
   const [addressLine2, setAddressLine2] = useState('');
   const [city, setCity] = useState('');
@@ -235,6 +246,60 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
     } finally {
       setIsVerifyingGstin(false);
     }
+  };
+
+  // Module 5: Hardware Aadhaar Scanner Handler
+  const handleAadhaarScanSubmit = (rawText: string) => {
+    const trimmed = rawText.trim();
+    if (!trimmed) return;
+    try {
+      const parsed: AadhaarParsedData = parseAadhaarQrCode(trimmed);
+      if (!parsed.name && !parsed.uid && !parsed.maskedUid) {
+        setAadhaarScanError('Could not decode Aadhaar data. Ensure the 2D barcode scanner is aimed at the QR code.');
+        return;
+      }
+
+      setAadhaarScanError(null);
+      const maskedUid = parsed.maskedUid || (parsed.uid ? `XXXXXXXX${parsed.uid.slice(-4)}` : 'XXXXXXXX1234');
+
+      if (scannerTarget === 'primary') {
+        if (parsed.name) setGuestName(parsed.name);
+        if (parsed.gender) {
+          const g = parsed.gender.toLowerCase();
+          setGuestGender(g.startsWith('f') ? 'Female' : 'Male');
+        }
+        if (parsed.age && parsed.age > 0) setGuestAge(parsed.age);
+        setDocumentName('Aadhaar Card');
+        setDocumentNo(maskedUid);
+        if (parsed.addressLine1) setAddressLine1(parsed.addressLine1);
+        if (parsed.addressLine2) setAddressLine2(parsed.addressLine2);
+        if (parsed.city) setCity(parsed.city);
+        if (parsed.state) setState(parsed.state);
+        if (parsed.pincode) setPinCode(parsed.pincode);
+        if (parsed.dob) setRemark2(`Aadhaar Verified: DOB ${parsed.dob}`);
+
+        setAadhaarScanSuccess(`Primary Guest Auto-Filled: ${parsed.name} (${parsed.gender || 'M'}, Age: ${parsed.age || '35'}, ${parsed.city || ''} ${parsed.state || ''}) • UID: ${maskedUid}`);
+      } else if (scannerTarget === 'second') {
+        if (parsed.name) setSecondGuestName(parsed.name);
+        setSecondGuestIdName('Aadhaar Card');
+        setSecondGuestIdNo(maskedUid);
+        setAadhaarScanSuccess(`2nd Guest Auto-Filled: ${parsed.name} • UID: ${maskedUid}`);
+      } else {
+        if (parsed.name) setThirdGuestName(parsed.name);
+        setThirdGuestIdName('Aadhaar Card');
+        setThirdGuestIdNo(maskedUid);
+        setAadhaarScanSuccess(`3rd Guest Auto-Filled: ${parsed.name} • UID: ${maskedUid}`);
+      }
+
+      setRawScannerInput('');
+    } catch (err: any) {
+      setAadhaarScanError(`Aadhaar Scan Parse Error: ${err.message || 'Invalid barcode payload'}`);
+    }
+  };
+
+  const handleSimulateAadhaarScan = () => {
+    const sampleXml = `<?xml version="1.0" encoding="UTF-8"?><PrintLetterBarcodeData uid="987654321098" name="Rakesh Kumar Patra" gender="M" yob="1988" co="S/O Jagannath Patra" house="Plot 18" street="Station Road" lm="Near Jagannath Temple" vtc="Rayagada" po="Rayagada" dist="Rayagada" subdist="Rayagada" state="Odisha" pc="765001" dob="1988-04-14"/>`;
+    handleAadhaarScanSubmit(sampleXml);
   };
 
   // Photos (Cloudflare R2 Encrypted)
@@ -520,8 +585,8 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
     hotelApi.submitPoliceStationLog({
       booking_ref: selectedBookingRef || `SVR-ROOM-${selectedRoomNo}`,
       guest_name: cleanName,
-      age: 35,
-      gender: 'Male',
+      age: guestAge || 35,
+      gender: guestGender || 'Male',
       nationality: nationality || 'Indian',
       id_proof_type: documentName || 'Aadhaar Card',
       id_proof_number: documentNo.trim() || 'VERIFIED_AT_DESK',
@@ -1189,8 +1254,179 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                   </div>
                 </div>
 
+                {/* Module 5: Hardware Aadhaar 2D Barcode & QR Scanner Integration */}
+                <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '6px', border: '1.5px solid #0284c7', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 14 }}>📷</span>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: '#0369a1', textTransform: 'uppercase' }}>
+                        HARDWARE 2D SCANNER &bull; AADHAAR CARD AUTO-FILL (KYC)
+                      </span>
+                      <span style={{ background: '#dcfce7', color: '#15803d', fontSize: 10, padding: '1px 6px', borderRadius: 4, fontWeight: 800 }}>
+                        🟢 USB/Bluetooth Wedge Ready
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <button
+                        type="button"
+                        onClick={handleSimulateAadhaarScan}
+                        style={{
+                          background: '#0284c7',
+                          color: '#fff',
+                          border: 'none',
+                          padding: '3px 8px',
+                          borderRadius: 4,
+                          fontSize: 10,
+                          fontWeight: 800,
+                          cursor: 'pointer'
+                        }}
+                        title="Simulate 2D QR Scanner reading an Aadhaar card for Rayagada guest"
+                      >
+                        ⚡ Test Demo Aadhaar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAadhaarScannerOpen(!isAadhaarScannerOpen);
+                          setTimeout(() => scannerInputRef.current?.focus(), 100);
+                        }}
+                        style={{
+                          background: isAadhaarScannerOpen ? '#e2e8f0' : '#0369a1',
+                          color: isAadhaarScannerOpen ? '#0f172a' : '#ffffff',
+                          border: 'none',
+                          padding: '3px 8px',
+                          borderRadius: 4,
+                          fontSize: 10,
+                          fontWeight: 800,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {isAadhaarScannerOpen ? '▲ Hide Scanner' : '▼ Open Scanner Input'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Scan target switch */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: 11 }}>
+                    <span style={{ color: '#475569', fontWeight: 700 }}>Scan Target:</span>
+                    <button
+                      type="button"
+                      onClick={() => setScannerTarget('primary')}
+                      style={{
+                        background: scannerTarget === 'primary' ? '#0284c7' : '#e2e8f0',
+                        color: scannerTarget === 'primary' ? '#ffffff' : '#334155',
+                        border: 'none',
+                        padding: '2px 8px',
+                        borderRadius: 3,
+                        fontSize: 10,
+                        fontWeight: 800,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      👤 Primary Guest
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setScannerTarget('second')}
+                      style={{
+                        background: scannerTarget === 'second' ? '#0284c7' : '#e2e8f0',
+                        color: scannerTarget === 'second' ? '#ffffff' : '#334155',
+                        border: 'none',
+                        padding: '2px 8px',
+                        borderRadius: 3,
+                        fontSize: 10,
+                        fontWeight: 800,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      👥 2nd Guest (Co-Traveler)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setScannerTarget('third')}
+                      style={{
+                        background: scannerTarget === 'third' ? '#0284c7' : '#e2e8f0',
+                        color: scannerTarget === 'third' ? '#ffffff' : '#334155',
+                        border: 'none',
+                        padding: '2px 8px',
+                        borderRadius: 3,
+                        fontSize: 10,
+                        fontWeight: 800,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      👥 3rd Guest (Co-Traveler)
+                    </button>
+                  </div>
+
+                  {/* Scanner Wedge Input Box */}
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <input
+                      ref={scannerInputRef}
+                      type="text"
+                      placeholder="Point 2D barcode scanner at guest Aadhaar QR, or paste QR string here..."
+                      value={rawScannerInput}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setRawScannerInput(val);
+                        if (val.includes('<PrintLetterBarcodeData') || val.length > 50) {
+                          handleAadhaarScanSubmit(val);
+                        }
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAadhaarScanSubmit(rawScannerInput);
+                        }
+                      }}
+                      className="form-input-pms"
+                      style={{
+                        flex: 1,
+                        background: '#ffffff',
+                        border: '2px dashed #0284c7',
+                        fontWeight: 700,
+                        fontSize: 11,
+                        color: '#0f172a'
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleAadhaarScanSubmit(rawScannerInput)}
+                      style={{
+                        background: '#059669',
+                        color: '#ffffff',
+                        border: 'none',
+                        padding: '0 12px',
+                        borderRadius: 4,
+                        fontSize: 11,
+                        fontWeight: 800,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Parse &amp; Fill
+                    </button>
+                  </div>
+
+                  {/* Success notification */}
+                  {aadhaarScanSuccess && (
+                    <div style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '6px 10px', borderRadius: 4, fontSize: 11, marginTop: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>✓ {aadhaarScanSuccess}</span>
+                      <button type="button" onClick={() => setAadhaarScanSuccess(null)} style={{ background: 'none', border: 'none', color: '#047857', cursor: 'pointer', fontWeight: 'bold' }}>✕</button>
+                    </div>
+                  )}
+
+                  {/* Error notification */}
+                  {aadhaarScanError && (
+                    <div style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', padding: '6px 10px', borderRadius: 4, fontSize: 11, marginTop: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>⚠️ {aadhaarScanError}</span>
+                      <button type="button" onClick={() => setAadhaarScanError(null)} style={{ background: 'none', border: 'none', color: '#b91c1c', cursor: 'pointer', fontWeight: 'bold' }}>✕</button>
+                    </div>
+                  )}
+                </div>
+
                 {/* Primary Guest Details & Mandatory Indian KYC */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 10 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 0.8fr 0.6fr 1fr', gap: 10 }}>
                   <div className="form-group-pms">
                     <label className="form-label-pms"><span className="req">*</span> Guest Full Name</label>
                     <input 
@@ -1203,6 +1439,18 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                       style={{ fontWeight: 700 }}
                       required 
                     />
+                  </div>
+                  <div className="form-group-pms">
+                    <label className="form-label-pms">Gender</label>
+                    <select value={guestGender} onChange={e => setGuestGender(e.target.value as any)} className="form-select-pms" style={{ fontWeight: 600 }}>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div className="form-group-pms">
+                    <label className="form-label-pms">Age</label>
+                    <input type="number" min="1" max="120" value={guestAge} onChange={e => setGuestAge(Number(e.target.value))} className="form-input-pms" style={{ fontWeight: 700 }} />
                   </div>
                   <div className="form-group-pms">
                     <label className="form-label-pms">
