@@ -63,6 +63,7 @@ import { HousekeepingDiscrepancyModal } from './HousekeepingDiscrepancyModal';
 import { RfidKeyCardModal } from './RfidKeyCardModal';
 import { MonthlyHotelSaleReportModal } from './MonthlyHotelSaleReportModal';
 import { MonthlyRestaurantSaleReportModal } from './MonthlyRestaurantSaleReportModal';
+import { StaffPayrollManagementModal } from './StaffPayrollManagementModal';
 import type { PmsUserAccount, PmsChainProperty, BillFormatType, PmsCheckOutDetail, PmsGstReportTab, PmsRoom } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import './pmsStyles.css';
@@ -224,6 +225,9 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
 
   // Cloudflare R2 Object Storage Explorer & Asset Manager
   const [isR2StorageOpen, setIsR2StorageOpen] = useState(false);
+
+  // Module 1: Staff Profiles, Monthly Salaries & Advance Salary Tracking
+  const [isStaffPayrollOpen, setIsStaffPayrollOpen] = useState(false);
 
   const handleLaunchReportAction = (actionKey: string) => {
     switch (actionKey) {
@@ -557,6 +561,8 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       setIsBanquetOpen(true);
     } else if (query.includes('bar') || query.includes('liquor')) {
       setIsLiquorBarOpen(true);
+    } else if (query.includes('payroll') || query.includes('salary') || query.includes('advance') || query.includes('worker')) {
+      setIsStaffPayrollOpen(true);
     } else if (query.includes('user') || query.includes('staff') || query.includes('role')) {
       setIsUserManagementOpen(true);
     } else if (query.includes('whatsapp') || query.includes('sms')) {
@@ -783,6 +789,22 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                 <span>GST Reports</span>
               </button>
 
+              {/* Module 1: Staff Profiles, Monthly Salaries & Advance Salary Tracking */}
+              <button
+                type="button"
+                onClick={() => setIsStaffPayrollOpen(true)}
+                title="Manage Staff Profiles, Departments, Monthly Salaries & Advance Deductions"
+                className="pms-header-btn"
+                style={{
+                  background: 'linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)',
+                  color: '#ffffff',
+                  border: '1px solid #818cf8'
+                }}
+              >
+                <span>👷</span>
+                <span>Staff &amp; Payroll</span>
+              </button>
+
               {/* Video 30: Training & Support Suite Button */}
               <button
                 type="button"
@@ -982,6 +1004,14 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                     >
                       👥 User Accounts &amp; Staff Shift Roster (/users)
+                    </div>
+                    <div
+                      onClick={() => { setUserDropdownOpen(false); setIsStaffPayrollOpen(true); }}
+                      style={{ padding: '8px 12px', color: '#a5b4fc', cursor: 'pointer', borderBottom: '1px solid #334155', fontWeight: 700 }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#334155')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      👷 Staff Profiles, Advances &amp; Monthly Payroll
                     </div>
                     <div
                       onClick={() => { setUserDropdownOpen(false); setIsRolesPermissionsOpen(true); }}
@@ -1480,6 +1510,10 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     {/* Video 21 & 23: Staff User Accounts & Roles */}
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('view user', 'User Setting', () => setIsUserManagementOpen(true))}>
                       <span style={{ color: '#06b6d4', fontWeight: 700 }}>👥 User Setting &amp; Staff Shift Roster (/users)</span>
+                    </div>
+                    {/* Module 1: Staff Profiles, Monthly Salaries & Advance Salary Tracking */}
+                    <div className="pms-nav-item" onClick={() => setIsStaffPayrollOpen(true)}>
+                      <span style={{ color: '#a5b4fc', fontWeight: 800 }}>👷 Staff Profiles, Advances &amp; Monthly Payroll</span>
                     </div>
                     <div className="pms-nav-item" onClick={() => checkModuleAccess('view role', 'Roles & Permissions', () => setIsRolesPermissionsOpen(true))}>
                       <span style={{ color: '#fbbf24', fontWeight: 700 }}>🛡️ Roles &amp; Permissions (/roles)</span>
@@ -2125,6 +2159,12 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       <CloudflareR2StorageModal
         isOpen={isR2StorageOpen}
         onClose={() => setIsR2StorageOpen(false)}
+      />
+
+      {/* Module 1: Staff Profiles, Monthly Salaries & Advance Salary Tracking */}
+      <StaffPayrollManagementModal
+        isOpen={isStaffPayrollOpen}
+        onClose={() => setIsStaffPayrollOpen(false)}
       />
     </>
   );

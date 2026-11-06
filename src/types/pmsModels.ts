@@ -1994,3 +1994,86 @@ export interface PmsFolioSummary {
   isFullySettled?: boolean;
 }
 
+// ==========================================
+// Module 1: Staff Profiles, Monthly Payroll & Advance Salary Tracking
+// ==========================================
+export type StaffGender = 'Male' | 'Female' | 'Other';
+
+export type StaffDepartment =
+  | 'Front Office'
+  | 'Housekeeping'
+  | 'Vasudev Rasoi F&B'
+  | 'Kitchen'
+  | 'Maintenance & Engineering'
+  | 'Security'
+  | 'Accounts & Administration';
+
+export interface StaffProfile {
+  id: number;
+  staff_code: string;
+  full_name: string;
+  gender: StaffGender;
+  role: string;
+  department: StaffDepartment | string;
+  phone: string;
+  monthly_base_salary: number;
+  emergency_contact?: string;
+  date_of_joining?: string;
+  bank_name?: string;
+  bank_account_no?: string;
+  bank_ifsc?: string;
+  aadhaar_number?: string;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface StaffSalaryAdvance {
+  id: number;
+  advance_voucher_no: string;
+  staff_id: number;
+  staff_code?: string;
+  staff_name?: string;
+  department?: string;
+  role?: string;
+  advance_date: string;
+  month_period: string; // e.g. "2026-11"
+  amount: number;
+  payment_mode: 'Cash' | 'UPI' | 'Bank Transfer' | string;
+  remarks?: string;
+  is_deducted?: boolean;
+  created_at?: string;
+}
+
+export interface StaffMonthlyPayroll {
+  payroll_id?: number | null;
+  payroll_period: string; // "YYYY-MM"
+  staff_id: number;
+  staff_code: string;
+  staff_name: string;
+  gender: StaffGender;
+  department: string;
+  role: string;
+  phone: string;
+  monthly_base_salary: number;
+  total_advance_deducted: number;
+  bonus_or_allowance?: number;
+  other_deductions?: number;
+  net_payable_salary: number;
+  payout_status: 'Pending' | 'Paid';
+  payment_date?: string | null;
+  payment_mode?: string | null;
+  payment_reference?: string | null;
+  remarks?: string;
+}
+
+export interface MonthlyPayrollSummary {
+  total_staff_count: number;
+  total_base_salaries: number;
+  total_advances_deducted: number;
+  total_net_payable: number;
+  total_paid_count: number;
+  total_pending_count: number;
+}
+
+

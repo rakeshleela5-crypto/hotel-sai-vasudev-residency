@@ -1424,6 +1424,83 @@ class KOTOrder(Base):
     )
 
 # =========================================================================
+# MODULE 1: STAFF PROFILES, SALARY ADVANCES & MONTHLY PAYROLL
+# =========================================================================
+class StaffProfile(Base):
+    """
+    Staff Profile model for Hotel Sai Vasudev Residency.
+    Covers workers across Front Office, Housekeeping, Vasudev Rasoi F&B, Maintenance, Security, etc.
+    """
+    __tablename__ = "staff_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    staff_code = Column(String(50), unique=True, index=True, nullable=False)
+    full_name = Column(String(150), nullable=False, index=True)
+    gender = Column(String(20), nullable=False)  # Male, Female, Other
+    role = Column(String(100), nullable=False)   # Profession / Role
+    department = Column(String(100), nullable=False, index=True) # Department
+    phone = Column(String(30), nullable=False)
+    monthly_base_salary = Column(Float, nullable=False, default=0.0)
+    emergency_contact = Column(String(30), nullable=True)
+    date_of_joining = Column(String(30), nullable=True)
+    bank_name = Column(String(100), nullable=True)
+    bank_account_no = Column(String(50), nullable=True)
+    bank_ifsc = Column(String(30), nullable=True)
+    aadhaar_number = Column(String(20), nullable=True)
+    is_active = Column(Boolean, default=True, index=True)
+    created_at = Column(TimezoneAwareDateTime, default=now_utc)
+    updated_at = Column(TimezoneAwareDateTime, default=now_utc, onupdate=now_utc)
+
+class StaffSalaryAdvance(Base):
+    """
+    Mid-month salary advance records deducted automatically in end-of-month payroll.
+    """
+    __tablename__ = "staff_salary_advances"
+
+    id = Column(Integer, primary_key=True, index=True)
+    advance_voucher_no = Column(String(50), unique=True, index=True, nullable=False)
+    staff_id = Column(Integer, ForeignKey("staff_profiles.id"), nullable=False, index=True)
+    advance_date = Column(String(30), nullable=False, index=True)
+    month_period = Column(String(20), nullable=False, index=True)  # e.g. "2026-11"
+    amount = Column(Float, nullable=False)
+    payment_mode = Column(String(50), default="Cash")  # Cash, UPI, Bank Transfer
+    remarks = Column(Text, nullable=True)
+    is_deducted = Column(Boolean, default=False, index=True)
+    deducted_in_payroll_id = Column(Integer, nullable=True)
+    created_at = Column(TimezoneAwareDateTime, default=now_utc)
+    updated_at = Column(TimezoneAwareDateTime, default=now_utc, onupdate=now_utc)
+
+class StaffMonthlyPayroll(Base):
+    """
+    End-of-month consolidated payroll record for each worker.
+    Net Payable = Monthly Base Salary - Total Advances Taken in Month + Bonuses - Deductions.
+    """
+    __tablename__ = "staff_monthly_payroll"
+
+    id = Column(Integer, primary_key=True, index=True)
+    payroll_period = Column(String(20), nullable=False, index=True)  # e.g. "2026-11"
+    staff_id = Column(Integer, ForeignKey("staff_profiles.id"), nullable=False, index=True)
+    staff_name = Column(String(150), nullable=False)
+    department = Column(String(100), nullable=False)
+    role = Column(String(100), nullable=False)
+    monthly_base_salary = Column(Float, nullable=False)
+    total_advance_deducted = Column(Float, default=0.0)
+    bonus_or_allowance = Column(Float, default=0.0)
+    other_deductions = Column(Float, default=0.0)
+    net_payable_salary = Column(Float, nullable=False)
+    payout_status = Column(String(30), default="Pending", index=True)  # Pending, Paid
+    payment_date = Column(String(30), nullable=True)
+    payment_mode = Column(String(50), nullable=True)  # Bank Transfer, Cash, UPI
+    payment_reference = Column(String(100), nullable=True)
+    remarks = Column(Text, nullable=True)
+    created_at = Column(TimezoneAwareDateTime, default=now_utc)
+    updated_at = Column(TimezoneAwareDateTime, default=now_utc, onupdate=now_utc)
+
+    __table_args__ = (
+        Index("ix_staff_payroll_period_staff", "payroll_period", "staff_id", unique=True),
+    )
+
+# =========================================================================
 # POSTGRESQL BTREE_GIST EXCLUSION CONSTRAINT (#14)
 # =========================================================================
 # Prevents two active reservations (CONFIRMED or CHECKED_IN) from overlapping in date range for the same room_id

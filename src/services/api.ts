@@ -2371,6 +2371,128 @@ export const hotelApi = {
     });
     if (!res.ok) throw new Error('Failed to delete table in database');
     return await res.json();
+  },
+
+  // ==========================================
+  // MODULE 1: STAFF PROFILES, SALARIES & PAYROLL
+  // ==========================================
+  async getDepartments(): Promise<Array<{ department: string; roles: string[] }>> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/staff-payroll/departments`);
+      if (res.ok) return await res.json();
+    } catch {
+      // Fallback
+    }
+    return [
+      { department: 'Front Office', roles: ['Front Desk Executive', 'Night Auditor', 'Bellboy / Porter', 'Front Office Manager'] },
+      { department: 'Housekeeping', roles: ['Room Attendant', 'Housekeeping Supervisor', 'Laundry Staff', 'Floor Cleaner'] },
+      { department: 'Vasudev Rasoi F&B', roles: ['Restaurant Steward', 'Head Waiter', 'Captain', 'Room Service Attendant'] },
+      { department: 'Kitchen', roles: ['Head Chef', 'Commis Chef', 'Tandoor Cook', 'Kitchen Helper / Dishwasher'] },
+      { department: 'Maintenance & Engineering', roles: ['Electrician', 'Plumber', 'AC Technician', 'General Maintenance'] },
+      { department: 'Security', roles: ['Security Guard', 'Head Security'] },
+      { department: 'Accounts & Administration', roles: ['Hotel Accountant', 'Cashier', 'Storekeeper', 'General Manager'] }
+    ];
+  },
+
+  async getStaffProfiles(params?: { department?: string; is_active?: boolean; search?: string }): Promise<any[]> {
+    const query = new URLSearchParams();
+    if (params?.department) query.append('department', params.department);
+    if (params?.is_active !== undefined) query.append('is_active', String(params.is_active));
+    if (params?.search) query.append('search', params.search);
+    const qs = query.toString() ? `?${query.toString()}` : '';
+
+    const res = await fetch(`${API_BASE_URL}/staff-payroll/staff${qs}`);
+    if (!res.ok) throw new Error('Failed to fetch staff profiles');
+    return await res.json();
+  },
+
+  async createStaffProfile(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/staff-payroll/staff`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to create staff profile');
+    }
+    return await res.json();
+  },
+
+  async updateStaffProfile(staffId: number, payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/staff-payroll/staff/${staffId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to update staff profile');
+    return await res.json();
+  },
+
+  async deleteStaffProfile(staffId: number, hardDelete: boolean = false): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/staff-payroll/staff/${staffId}?hard_delete=${hardDelete}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete staff profile');
+    return await res.json();
+  },
+
+  async getStaffAdvances(params?: { month_period?: string; staff_id?: number }): Promise<any[]> {
+    const query = new URLSearchParams();
+    if (params?.month_period) query.append('month_period', params.month_period);
+    if (params?.staff_id) query.append('staff_id', String(params.staff_id));
+    const qs = query.toString() ? `?${query.toString()}` : '';
+
+    const res = await fetch(`${API_BASE_URL}/staff-payroll/advances${qs}`);
+    if (!res.ok) throw new Error('Failed to fetch salary advances');
+    return await res.json();
+  },
+
+  async recordStaffAdvance(payload: { staff_id: number; advance_date: string; amount: number; payment_mode?: string; remarks?: string; month_period?: string }): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/staff-payroll/advances`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to record salary advance');
+    }
+    return await res.json();
+  },
+
+  async deleteStaffAdvance(advanceId: number): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/staff-payroll/advances/${advanceId}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete salary advance');
+    return await res.json();
+  },
+
+  async getMonthlyPayroll(period: string): Promise<{ period: string; summary: any; rows: any[] }> {
+    const res = await fetch(`${API_BASE_URL}/staff-payroll/payroll?period=${period}`);
+    if (!res.ok) throw new Error('Failed to fetch monthly payroll');
+    return await res.json();
+  },
+
+  async calculateMonthlyPayroll(period: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/staff-payroll/payroll/calculate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ payroll_period: period })
+    });
+    if (!res.ok) throw new Error('Failed to compute monthly payroll');
+    return await res.json();
+  },
+
+  async updatePayrollPayoutStatus(staffId: number, period: string, payload: { payout_status: 'Pending' | 'Paid'; payment_date?: string; payment_mode?: string; payment_reference?: string; remarks?: string }): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/staff-payroll/payroll/${staffId}/status?period=${period}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to update payout status');
+    return await res.json();
   }
 };
 

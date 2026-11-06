@@ -87,7 +87,11 @@ import type {
   TableSession,
   RfidKeyCard,
   HousekeepingDiscrepancy,
-  GroupBookingMetadata
+  GroupBookingMetadata,
+  StaffProfile,
+  StaffSalaryAdvance,
+  StaffMonthlyPayroll,
+  MonthlyPayrollSummary
 } from '../types/pmsModels';
 import { PMS_ALL_PERMISSIONS } from '../types/pmsModels';
 import { hotelApi } from './api';
@@ -1623,8 +1627,174 @@ const STORAGE_KEYS = {
   KEY_CARDS: 'svr_pms_rfid_keycards',
   HOUSEKEEPING_DISCREPANCIES: 'svr_pms_hk_discrepancies',
   GROUP_BOOKINGS: 'svr_pms_group_bookings',
-  SHIFT_HANDOVERS: 'svr_pms_shift_handovers'
+  SHIFT_HANDOVERS: 'svr_pms_shift_handovers',
+  STAFF_PROFILES: 'svr_pms_staff_profiles',
+  STAFF_ADVANCES: 'svr_pms_staff_advances',
+  STAFF_PAYROLL: 'svr_pms_staff_payroll'
 };
+
+export const INITIAL_STAFF_PROFILES: StaffProfile[] = [
+  {
+    id: 1,
+    staff_code: 'SVR-STF-001',
+    full_name: 'Kishore Choudhury',
+    gender: 'Male',
+    role: 'Front Desk Executive',
+    department: 'Front Office',
+    phone: '9437123450',
+    monthly_base_salary: 18000,
+    emergency_contact: '9437123451',
+    date_of_joining: '2025-01-10',
+    bank_name: 'State Bank of India',
+    bank_account_no: '39485729103',
+    bank_ifsc: 'SBIN000390',
+    is_active: true
+  },
+  {
+    id: 2,
+    staff_code: 'SVR-STF-002',
+    full_name: 'Ananya Rao',
+    gender: 'Female',
+    role: 'Front Desk Executive',
+    department: 'Front Office',
+    phone: '9861234567',
+    monthly_base_salary: 18000,
+    emergency_contact: '9861234568',
+    date_of_joining: '2025-02-01',
+    bank_name: 'HDFC Bank',
+    bank_account_no: '5010029384756',
+    bank_ifsc: 'HDFC0001234',
+    is_active: true
+  },
+  {
+    id: 3,
+    staff_code: 'SVR-STF-003',
+    full_name: 'Ramesh Nayak',
+    gender: 'Male',
+    role: 'Room Attendant',
+    department: 'Housekeeping',
+    phone: '8917234589',
+    monthly_base_salary: 15000,
+    emergency_contact: '8917234590',
+    date_of_joining: '2025-01-15',
+    bank_name: 'State Bank of India',
+    bank_account_no: '38495029184',
+    bank_ifsc: 'SBIN000390',
+    is_active: true
+  },
+  {
+    id: 4,
+    staff_code: 'SVR-STF-004',
+    full_name: 'Sunita Patnaik',
+    gender: 'Female',
+    role: 'Room Attendant',
+    department: 'Housekeeping',
+    phone: '7008123456',
+    monthly_base_salary: 15000,
+    emergency_contact: '7008123457',
+    date_of_joining: '2025-01-20',
+    bank_name: 'Union Bank of India',
+    bank_account_no: '284759201948',
+    bank_ifsc: 'UBIN054291',
+    is_active: true
+  },
+  {
+    id: 5,
+    staff_code: 'SVR-STF-005',
+    full_name: 'Dilip Kumar Sahu',
+    gender: 'Male',
+    role: 'Restaurant Steward',
+    department: 'Vasudev Rasoi F&B',
+    phone: '9337482910',
+    monthly_base_salary: 16000,
+    emergency_contact: '9337482911',
+    date_of_joining: '2025-01-05',
+    bank_name: 'State Bank of India',
+    bank_account_no: '37284910294',
+    bank_ifsc: 'SBIN000390',
+    is_active: true
+  },
+  {
+    id: 6,
+    staff_code: 'SVR-STF-006',
+    full_name: 'Ranjan Bishoyi',
+    gender: 'Male',
+    role: 'Room Service Attendant',
+    department: 'Vasudev Rasoi F&B',
+    phone: '9778291048',
+    monthly_base_salary: 16000,
+    emergency_contact: '9778291049',
+    date_of_joining: '2025-01-05',
+    bank_name: 'State Bank of India',
+    bank_account_no: '38192847592',
+    bank_ifsc: 'SBIN000390',
+    is_active: true
+  },
+  {
+    id: 7,
+    staff_code: 'SVR-STF-007',
+    full_name: 'Ganesh Majhi',
+    gender: 'Male',
+    role: 'Head Chef',
+    department: 'Kitchen',
+    phone: '9438291047',
+    monthly_base_salary: 25000,
+    emergency_contact: '9438291048',
+    date_of_joining: '2025-01-01',
+    bank_name: 'State Bank of India',
+    bank_account_no: '39201948572',
+    bank_ifsc: 'SBIN000390',
+    is_active: true
+  },
+  {
+    id: 8,
+    staff_code: 'SVR-STF-008',
+    full_name: 'Bikash Jena',
+    gender: 'Male',
+    role: 'Electrician & AC Maintenance',
+    department: 'Maintenance & Engineering',
+    phone: '8249102948',
+    monthly_base_salary: 17000,
+    emergency_contact: '8249102949',
+    date_of_joining: '2025-02-10',
+    bank_name: 'Axis Bank',
+    bank_account_no: '9210200384756',
+    bank_ifsc: 'UTIB000294',
+    is_active: true
+  },
+  {
+    id: 9,
+    staff_code: 'SVR-STF-009',
+    full_name: 'Manoj Pradhan',
+    gender: 'Male',
+    role: 'Security Guard',
+    department: 'Security',
+    phone: '7978201948',
+    monthly_base_salary: 14000,
+    emergency_contact: '7978201949',
+    date_of_joining: '2025-01-01',
+    bank_name: 'State Bank of India',
+    bank_account_no: '36482910485',
+    bank_ifsc: 'SBIN000390',
+    is_active: true
+  },
+  {
+    id: 10,
+    staff_code: 'SVR-STF-010',
+    full_name: 'Prabhat Mishra',
+    gender: 'Male',
+    role: 'Hotel Accountant',
+    department: 'Accounts & Administration',
+    phone: '9439201948',
+    monthly_base_salary: 22000,
+    emergency_contact: '9439201949',
+    date_of_joining: '2025-01-01',
+    bank_name: 'HDFC Bank',
+    bank_account_no: '5010028475920',
+    bank_ifsc: 'HDFC0001234',
+    is_active: true
+  }
+];
 
 export const INITIAL_EXPENSES: PmsExpenseRecord[] = [];
 
@@ -10228,6 +10398,212 @@ export class PmsStore {
       rooms[rIdx].status = 'vacant';
       localStorage.setItem(STORAGE_KEYS.ROOMS, JSON.stringify(rooms));
     }
+  }
+
+  // ==========================================
+  // MODULE 1: STAFF PROFILES, SALARY ADVANCES & PAYROLL
+  // ==========================================
+  static getStaffProfiles(): StaffProfile[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.STAFF_PROFILES);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.STAFF_PROFILES, JSON.stringify(INITIAL_STAFF_PROFILES));
+      return INITIAL_STAFF_PROFILES;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_STAFF_PROFILES;
+    }
+  }
+
+  static saveStaffProfile(profile: Partial<StaffProfile>): StaffProfile {
+    const staffList = this.getStaffProfiles();
+    if (profile.id) {
+      const idx = staffList.findIndex(s => s.id === profile.id);
+      if (idx >= 0) {
+        staffList[idx] = { ...staffList[idx], ...profile, updated_at: new Date().toISOString() };
+        localStorage.setItem(STORAGE_KEYS.STAFF_PROFILES, JSON.stringify(staffList));
+        this.notifyLocal();
+        return staffList[idx];
+      }
+    }
+    const newId = staffList.length > 0 ? Math.max(...staffList.map(s => s.id)) + 1 : 1;
+    const newStaff: StaffProfile = {
+      id: newId,
+      staff_code: profile.staff_code || `SVR-STF-${String(newId).padStart(3, '0')}`,
+      full_name: profile.full_name || '',
+      gender: profile.gender || 'Male',
+      role: profile.role || 'Staff',
+      department: profile.department || 'Front Office',
+      phone: profile.phone || '',
+      monthly_base_salary: Number(profile.monthly_base_salary) || 0,
+      emergency_contact: profile.emergency_contact || '',
+      date_of_joining: profile.date_of_joining || new Date().toISOString().slice(0, 10),
+      bank_name: profile.bank_name || '',
+      bank_account_no: profile.bank_account_no || '',
+      bank_ifsc: profile.bank_ifsc || '',
+      aadhaar_number: profile.aadhaar_number || '',
+      is_active: profile.is_active ?? true,
+      created_at: new Date().toISOString()
+    };
+    staffList.push(newStaff);
+    localStorage.setItem(STORAGE_KEYS.STAFF_PROFILES, JSON.stringify(staffList));
+    this.notifyLocal();
+    return newStaff;
+  }
+
+  static deleteStaffProfile(id: number): boolean {
+    const staffList = this.getStaffProfiles();
+    const idx = staffList.findIndex(s => s.id === id);
+    if (idx >= 0) {
+      staffList[idx].is_active = false;
+      localStorage.setItem(STORAGE_KEYS.STAFF_PROFILES, JSON.stringify(staffList));
+      this.notifyLocal();
+      return true;
+    }
+    return false;
+  }
+
+  static getStaffAdvances(monthPeriod?: string): StaffSalaryAdvance[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.STAFF_ADVANCES);
+    const advances: StaffSalaryAdvance[] = raw ? JSON.parse(raw) : [];
+    if (!monthPeriod) return advances;
+    return advances.filter(a => a.month_period === monthPeriod);
+  }
+
+  static recordStaffAdvance(advance: Partial<StaffSalaryAdvance>): StaffSalaryAdvance {
+    const advances = this.getStaffAdvances();
+    const staffList = this.getStaffProfiles();
+    const staff = staffList.find(s => s.id === advance.staff_id);
+
+    const newId = advances.length > 0 ? Math.max(...advances.map(a => a.id)) + 1 : 1;
+    const voucherNo = `ADV/25-26/${String(newId).padStart(4, '0')}`;
+    const newAdvance: StaffSalaryAdvance = {
+      id: newId,
+      advance_voucher_no: voucherNo,
+      staff_id: advance.staff_id!,
+      staff_code: staff?.staff_code || '',
+      staff_name: staff?.full_name || '',
+      department: staff?.department || '',
+      role: staff?.role || '',
+      advance_date: advance.advance_date || new Date().toISOString().slice(0, 10),
+      month_period: advance.month_period || new Date().toISOString().slice(0, 7),
+      amount: Number(advance.amount) || 0,
+      payment_mode: advance.payment_mode || 'Cash',
+      remarks: advance.remarks || '',
+      is_deducted: false,
+      created_at: new Date().toISOString()
+    };
+    advances.push(newAdvance);
+    localStorage.setItem(STORAGE_KEYS.STAFF_ADVANCES, JSON.stringify(advances));
+    this.notifyLocal();
+    return newAdvance;
+  }
+
+  static deleteStaffAdvance(id: number): boolean {
+    const advances = this.getStaffAdvances();
+    const filtered = advances.filter(a => a.id !== id);
+    localStorage.setItem(STORAGE_KEYS.STAFF_ADVANCES, JSON.stringify(filtered));
+    this.notifyLocal();
+    return true;
+  }
+
+  static getMonthlyPayroll(period: string): { period: string; summary: MonthlyPayrollSummary; rows: StaffMonthlyPayroll[] } {
+    const staffList = this.getStaffProfiles().filter(s => s.is_active);
+    const advances = this.getStaffAdvances(period);
+    const rawPayroll = localStorage.getItem(STORAGE_KEYS.STAFF_PAYROLL);
+    const storedPayroll: StaffMonthlyPayroll[] = rawPayroll ? JSON.parse(rawPayroll) : [];
+    const periodStored = storedPayroll.filter(p => p.payroll_period === period);
+
+    let totalBase = 0;
+    let totalAdv = 0;
+    let totalNet = 0;
+    let paidCount = 0;
+    let pendingCount = 0;
+
+    const rows: StaffMonthlyPayroll[] = staffList.map(stf => {
+      const existing = periodStored.find(p => p.staff_id === stf.id);
+      const staffAdvances = advances.filter(a => a.staff_id === stf.id);
+      const advanceTotal = staffAdvances.reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+      const base = Number(stf.monthly_base_salary) || 0;
+      const net = Math.max(0, base - advanceTotal);
+      const status: 'Pending' | 'Paid' = existing?.payout_status || 'Pending';
+
+      totalBase += base;
+      totalAdv += advanceTotal;
+      totalNet += net;
+      if (status === 'Paid') paidCount++;
+      else pendingCount++;
+
+      return {
+        payroll_id: existing?.payroll_id || null,
+        payroll_period: period,
+        staff_id: stf.id,
+        staff_code: stf.staff_code,
+        staff_name: stf.full_name,
+        gender: stf.gender,
+        department: stf.department,
+        role: stf.role,
+        phone: stf.phone,
+        monthly_base_salary: base,
+        total_advance_deducted: advanceTotal,
+        bonus_or_allowance: existing?.bonus_or_allowance || 0,
+        other_deductions: existing?.other_deductions || 0,
+        net_payable_salary: net,
+        payout_status: status,
+        payment_date: existing?.payment_date || null,
+        payment_mode: existing?.payment_mode || null,
+        payment_reference: existing?.payment_reference || null,
+        remarks: existing?.remarks || ''
+      };
+    });
+
+    return {
+      period,
+      summary: {
+        total_staff_count: rows.length,
+        total_base_salaries: totalBase,
+        total_advances_deducted: totalAdv,
+        total_net_payable: totalNet,
+        total_paid_count: paidCount,
+        total_pending_count: pendingCount
+      },
+      rows
+    };
+  }
+
+  static updatePayrollStatus(
+    staffId: number,
+    period: string,
+    payoutStatus: 'Pending' | 'Paid',
+    paymentData?: { payment_date?: string; payment_mode?: string; payment_reference?: string; remarks?: string }
+  ): void {
+    const rawPayroll = localStorage.getItem(STORAGE_KEYS.STAFF_PAYROLL);
+    let storedPayroll: StaffMonthlyPayroll[] = rawPayroll ? JSON.parse(rawPayroll) : [];
+    const idx = storedPayroll.findIndex(p => p.staff_id === staffId && p.payroll_period === period);
+
+    if (idx >= 0) {
+      storedPayroll[idx].payout_status = payoutStatus;
+      if (paymentData?.payment_date) storedPayroll[idx].payment_date = paymentData.payment_date;
+      if (paymentData?.payment_mode) storedPayroll[idx].payment_mode = paymentData.payment_mode;
+      if (paymentData?.payment_reference) storedPayroll[idx].payment_reference = paymentData.payment_reference;
+      if (paymentData?.remarks) storedPayroll[idx].remarks = paymentData.remarks;
+    } else {
+      const computed = this.getMonthlyPayroll(period);
+      const row = computed.rows.find(r => r.staff_id === staffId);
+      if (row) {
+        storedPayroll.push({
+          ...row,
+          payout_status: payoutStatus,
+          payment_date: paymentData?.payment_date || new Date().toISOString().slice(0, 10),
+          payment_mode: paymentData?.payment_mode || 'Bank Transfer',
+          payment_reference: paymentData?.payment_reference || '',
+          remarks: paymentData?.remarks || ''
+        });
+      }
+    }
+    localStorage.setItem(STORAGE_KEYS.STAFF_PAYROLL, JSON.stringify(storedPayroll));
+    this.notifyLocal();
   }
 }
 

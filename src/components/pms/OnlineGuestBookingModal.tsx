@@ -264,10 +264,10 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
 
   return (
     <div className="pms-submodal-overlay" onClick={onClose} style={{ zIndex: 9999 }}>
-      <div 
-        className="pms-form-box" 
-        onClick={e => e.stopPropagation()} 
-        style={{ 
+      <div
+        className="pms-form-box"
+        onClick={e => e.stopPropagation()}
+        style={{
           maxWidth: viewMode === 'portal' ? 1180 : (viewMode === 'form' ? 1140 : 880),
           width: '95vw',
           maxHeight: '94vh',
@@ -294,13 +294,13 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
             <span style={{ fontWeight: 800, fontSize: 13, letterSpacing: 0.5 }}>
               HOTEL SRI SAI VASUDEV RESIDENCY &bull; ONLINE GUEST BOOKING ENGINE
             </span>
-            <span style={{ 
-              background: '#0284c7', 
-              color: '#fff', 
-              padding: '2px 8px', 
-              borderRadius: 12, 
-              fontSize: 10, 
-              fontWeight: 700 
+            <span style={{
+              background: '#0284c7',
+              color: '#fff',
+              padding: '2px 8px',
+              borderRadius: 12,
+              fontSize: 10,
+              fontWeight: 700
             }}>
               {viewMode === 'portal' ? '/hotel_room' : (viewMode === 'form' ? '/booking_by_guest_create' : '/store_by_guest_booking')}
             </span>
@@ -392,7 +392,7 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
 
         {/* Scrollable Container */}
         <div style={{ overflowY: 'auto', flex: 1, padding: '16px 20px', background: '#f8fafc' }}>
-          
+
           {/* ========================================================================= */}
           {/* VIEW 1: Public Web Portal Showcase (/hotel_room/DEMO0004) - Frame 0165 & 0190 */}
           {/* ========================================================================= */}
@@ -528,21 +528,21 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
                     >
                       {/* 3-Photo Collage matching Frame 0180 & Frame 0190 */}
                       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', height: 180, gap: 2, background: '#000' }}>
-                        <img 
-                          src={img1} 
+                        <img
+                          src={img1}
                           alt={`Room ${rm.roomNo} view 1`}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
                         <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: 2 }}>
-                          <img 
-                            src={img2} 
-                            alt={`Room ${rm.roomNo} view 2`} 
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                          <img
+                            src={img2}
+                            alt={`Room ${rm.roomNo} view 2`}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           />
-                          <img 
-                            src={img3} 
-                            alt={`Room ${rm.roomNo} view 3`} 
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                          <img
+                            src={img3}
+                            alt={`Room ${rm.roomNo} view 3`}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           />
                         </div>
                       </div>
@@ -624,43 +624,43 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
 
               {/* Main 2-Column Split matching Frame 0210 & Frame 0280 */}
               <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 18 }}>
-                
+
                 {/* Left Column: Dates, Source, Package, Guest Details */}
                 <div style={{ background: '#ffffff', padding: 16, borderRadius: 6, border: '1px solid #e2e8f0' }}>
-                  
+
                   {/* Row 1: Booking No, Booking Date, Booking Time */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 12 }}>
                     <div>
                       <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#1e3a8a', marginBottom: 4 }}>
                         <span style={{ color: '#dc2626' }}>*</span> Room Booking No
                       </label>
-                      <input 
-                        type="text" 
-                        readOnly 
-                        value={bookingNo} 
-                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, background: '#f8fafc', fontWeight: 700, fontSize: 12 }} 
+                      <input
+                        type="text"
+                        readOnly
+                        value={bookingNo}
+                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, background: '#f8fafc', fontWeight: 700, fontSize: 12 }}
                       />
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#1e3a8a', marginBottom: 4 }}>
                         <span style={{ color: '#dc2626' }}>*</span> Booking Date
                       </label>
-                      <input 
-                        type="text" 
-                        readOnly 
-                        value={bookingDate} 
-                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, background: '#f8fafc', fontSize: 12 }} 
+                      <input
+                        type="text"
+                        readOnly
+                        value={bookingDate}
+                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, background: '#f8fafc', fontSize: 12 }}
                       />
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#1e3a8a', marginBottom: 4 }}>
                         <span style={{ color: '#dc2626' }}>*</span> Booking Time
                       </label>
-                      <input 
-                        type="text" 
-                        readOnly 
-                        value={bookingTime} 
-                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, background: '#f8fafc', fontSize: 12 }} 
+                      <input
+                        type="text"
+                        readOnly
+                        value={bookingTime}
+                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, background: '#f8fafc', fontSize: 12 }}
                       />
                     </div>
                   </div>
@@ -671,55 +671,55 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
                       <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#1e3a8a', marginBottom: 4 }}>
                         <span style={{ color: '#dc2626' }}>*</span> Check In Date
                       </label>
-                      <input 
-                        type="date" 
-                        value={checkInDate} 
+                      <input
+                        type="date"
+                        value={checkInDate}
                         onChange={e => setCheckInDate(e.target.value)}
-                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #3b82f6', borderRadius: 4, fontWeight: 700, fontSize: 12, background: '#eff6ff' }} 
+                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #3b82f6', borderRadius: 4, fontWeight: 700, fontSize: 12, background: '#eff6ff' }}
                       />
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#1e3a8a', marginBottom: 4 }}>
                         <span style={{ color: '#dc2626' }}>*</span> Check In Time
                       </label>
-                      <input 
-                        type="text" 
-                        value={checkInTime} 
+                      <input
+                        type="text"
+                        value={checkInTime}
                         onChange={e => setCheckInTime(e.target.value)}
-                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }} 
+                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }}
                       />
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#1e3a8a', marginBottom: 4 }}>
                         <span style={{ color: '#dc2626' }}>*</span> Check Out Date
                       </label>
-                      <input 
-                        type="date" 
-                        value={checkOutDate} 
+                      <input
+                        type="date"
+                        value={checkOutDate}
                         onChange={e => setCheckOutDate(e.target.value)}
-                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #3b82f6', borderRadius: 4, fontWeight: 700, fontSize: 12, background: '#eff6ff' }} 
+                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #3b82f6', borderRadius: 4, fontWeight: 700, fontSize: 12, background: '#eff6ff' }}
                       />
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#1e3a8a', marginBottom: 4 }}>
                         <span style={{ color: '#dc2626' }}>*</span> Check Out Time
                       </label>
-                      <input 
-                        type="text" 
-                        value={checkOutTime} 
+                      <input
+                        type="text"
+                        value={checkOutTime}
                         onChange={e => setCheckOutTime(e.target.value)}
-                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }} 
+                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }}
                       />
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#1e3a8a', marginBottom: 4 }}>
                         <span style={{ color: '#dc2626' }}>*</span> No Of Days
                       </label>
-                      <input 
-                        type="number" 
-                        readOnly 
-                        value={noOfDays} 
-                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, background: '#f1f5f9', fontWeight: 800, fontSize: 12, textAlign: 'center' }} 
+                      <input
+                        type="number"
+                        readOnly
+                        value={noOfDays}
+                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, background: '#f1f5f9', fontWeight: 800, fontSize: 12, textAlign: 'center' }}
                       />
                     </div>
                   </div>
@@ -730,21 +730,21 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
                       <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#1e3a8a', marginBottom: 4 }}>
                         <span style={{ color: '#dc2626' }}>*</span> No Of Guest
                       </label>
-                      <input 
-                        type="number" 
-                        min={1} 
-                        max={10} 
-                        value={noOfGuests} 
+                      <input
+                        type="number"
+                        min={1}
+                        max={10}
+                        value={noOfGuests}
                         onChange={e => setNoOfGuests(Number(e.target.value))}
-                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }} 
+                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }}
                       />
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#1e3a8a', marginBottom: 4 }}>
                         <span style={{ color: '#dc2626' }}>*</span> Business Source
                       </label>
-                      <select 
-                        value={businessSource} 
+                      <select
+                        value={businessSource}
                         onChange={e => setBusinessSource(e.target.value)}
                         style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }}
                       >
@@ -759,8 +759,8 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
                       <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#1e3a8a', marginBottom: 4 }}>
                         <span style={{ color: '#dc2626' }}>*</span> Package
                       </label>
-                      <select 
-                        value={packageType} 
+                      <select
+                        value={packageType}
                         onChange={e => setPackageType(e.target.value)}
                         style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12, fontWeight: 700 }}
                       >
@@ -778,32 +778,32 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.6fr', gap: 10, marginBottom: 14 }}>
                     <div>
                       <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 4 }}>Vehicle No</label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         placeholder="MH 17 AB 1234"
-                        value={vehicleNo} 
+                        value={vehicleNo}
                         onChange={e => setVehicleNo(e.target.value)}
-                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }} 
+                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }}
                       />
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 4 }}>Parking No</label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         placeholder="P-12"
-                        value={parkingNo} 
+                        value={parkingNo}
                         onChange={e => setParkingNo(e.target.value)}
-                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }} 
+                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }}
                       />
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 4 }}>Booking Remark</label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         placeholder="Ground floor preferred / early arrival"
-                        value={bookingRemark} 
+                        value={bookingRemark}
                         onChange={e => setBookingRemark(e.target.value)}
-                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }} 
+                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }}
                       />
                     </div>
                   </div>
@@ -845,26 +845,26 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
                         <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#1e3a8a', marginBottom: 4 }}>
                           <span style={{ color: '#dc2626' }}>*</span> Guest Name
                         </label>
-                        <input 
-                          type="text" 
+                        <input
+                          type="text"
                           required
                           placeholder="e.g. Guest Full Name"
-                          value={guestName} 
+                          value={guestName}
                           onChange={e => setGuestName(e.target.value)}
-                          style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12, fontWeight: 700 }} 
+                          style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12, fontWeight: 700 }}
                         />
                       </div>
                       <div>
                         <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#1e3a8a', marginBottom: 4 }}>
                           <span style={{ color: '#dc2626' }}>*</span> Mobile
                         </label>
-                        <input 
-                          type="tel" 
+                        <input
+                          type="tel"
                           required
                           placeholder="10-digit mobile number"
-                          value={mobile} 
+                          value={mobile}
                           onChange={e => setMobile(e.target.value)}
-                          style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12, fontWeight: 700 }} 
+                          style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12, fontWeight: 700 }}
                         />
                       </div>
                     </div>
@@ -873,22 +873,22 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
                       <div>
                         <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 4 }}>Address Line 1</label>
-                        <input 
-                          type="text" 
+                        <input
+                          type="text"
                           placeholder="House / Street / Area"
-                          value={addressLine1} 
+                          value={addressLine1}
                           onChange={e => setAddressLine1(e.target.value)}
-                          style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }} 
+                          style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }}
                         />
                       </div>
                       <div>
                         <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 4 }}>Address Line 2</label>
-                        <input 
-                          type="text" 
+                        <input
+                          type="text"
                           placeholder="Landmark"
-                          value={addressLine2} 
+                          value={addressLine2}
                           onChange={e => setAddressLine2(e.target.value)}
-                          style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }} 
+                          style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }}
                         />
                       </div>
                     </div>
@@ -897,38 +897,38 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 0.8fr', gap: 8, marginBottom: 10 }}>
                       <div>
                         <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 4 }}>City</label>
-                        <input 
-                          type="text" 
-                          value={city} 
+                        <input
+                          type="text"
+                          value={city}
                           onChange={e => setCity(e.target.value)}
-                          style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }} 
+                          style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }}
                         />
                       </div>
                       <div>
                         <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 4 }}>State</label>
-                        <input 
-                          type="text" 
-                          value={state} 
+                        <input
+                          type="text"
+                          value={state}
                           onChange={e => setState(e.target.value)}
-                          style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }} 
+                          style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }}
                         />
                       </div>
                       <div>
                         <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 4 }}>Country</label>
-                        <input 
-                          type="text" 
-                          value={country} 
+                        <input
+                          type="text"
+                          value={country}
                           onChange={e => setCountry(e.target.value)}
-                          style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }} 
+                          style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }}
                         />
                       </div>
                       <div>
                         <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 4 }}>Pin Code</label>
-                        <input 
-                          type="text" 
-                          value={pinCode} 
+                        <input
+                          type="text"
+                          value={pinCode}
                           onChange={e => setPinCode(e.target.value)}
-                          style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }} 
+                          style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }}
                         />
                       </div>
                     </div>
@@ -950,22 +950,22 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
                       </div>
                       <div>
                         <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 4 }}>Document No</label>
-                        <input 
-                          type="text" 
+                        <input
+                          type="text"
                           placeholder="XXXX-XXXX-XXXX"
-                          value={documentNo} 
+                          value={documentNo}
                           onChange={e => setDocumentNo(e.target.value)}
-                          style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }} 
+                          style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }}
                         />
                       </div>
                       <div>
                         <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 4 }}>Email</label>
-                        <input 
-                          type="email" 
+                        <input
+                          type="email"
                           placeholder="guest@mail.com"
-                          value={email} 
+                          value={email}
                           onChange={e => setEmail(e.target.value)}
-                          style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }} 
+                          style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }}
                         />
                       </div>
                     </div>
@@ -975,7 +975,7 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
 
                 {/* Right Column: Real-Time Dynamic Room Availability Matrix & Payment Detail (Frame 0210) */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  
+
                   {/* Top Right: Real-time Available Rooms Table (Blue Border) */}
                   <div style={{
                     background: '#ffffff',
@@ -1014,7 +1014,7 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
                           {availableRooms.map(rm => {
                             const isSelected = selectedRoom?.roomNo === rm.roomNo;
                             return (
-                              <tr 
+                              <tr
                                 key={rm.id}
                                 onClick={() => setSelectedRoom(rm)}
                                 style={{
@@ -1024,8 +1024,8 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
                                 }}
                               >
                                 <td style={{ padding: '6px 8px', textAlign: 'center' }}>
-                                  <input 
-                                    type="checkbox" 
+                                  <input
+                                    type="checkbox"
                                     checked={isSelected}
                                     onChange={() => setSelectedRoom(rm)}
                                   />
@@ -1077,11 +1077,11 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
                         <span style={{ fontSize: 12, fontWeight: 700, color: '#475569' }}>
                           Per Day Room Tariff:
                         </span>
-                        <input 
-                          type="text" 
-                          readOnly 
+                        <input
+                          type="text"
+                          readOnly
                           value={`₹${currentTariff}.00`}
-                          style={{ padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, background: '#f8fafc', fontWeight: 900, textAlign: 'right', fontSize: 13, color: '#0f172a' }} 
+                          style={{ padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, background: '#f8fafc', fontWeight: 900, textAlign: 'right', fontSize: 13, color: '#0f172a' }}
                         />
                       </div>
 
@@ -1089,11 +1089,11 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
                         <span style={{ fontSize: 12, fontWeight: 700, color: '#475569' }}>
                           Total Stay Rent ({noOfDays} Days):
                         </span>
-                        <input 
-                          type="text" 
-                          readOnly 
+                        <input
+                          type="text"
+                          readOnly
                           value={`₹${totalAmount}.00`}
-                          style={{ padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, background: '#f8fafc', fontWeight: 900, textAlign: 'right', fontSize: 13, color: '#16a34a' }} 
+                          style={{ padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, background: '#f8fafc', fontWeight: 900, textAlign: 'right', fontSize: 13, color: '#16a34a' }}
                         />
                       </div>
 
@@ -1101,8 +1101,8 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
                         <span style={{ fontSize: 12, fontWeight: 700, color: '#475569' }}>
                           Payment Mode:
                         </span>
-                        <select 
-                          value={paymentMode} 
+                        <select
+                          value={paymentMode}
                           onChange={e => setPaymentMode(e.target.value as any)}
                           style={{ padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12, fontWeight: 700 }}
                         >
@@ -1117,11 +1117,11 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
                         <span style={{ fontSize: 12, fontWeight: 700, color: '#475569' }}>
                           Advance Amount:
                         </span>
-                        <input 
-                          type="number" 
-                          value={advanceAmount} 
+                        <input
+                          type="number"
+                          value={advanceAmount}
                           onChange={e => setAdvanceAmount(Number(e.target.value))}
-                          style={{ padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontWeight: 800, textAlign: 'right', fontSize: 13, color: '#0f172a' }} 
+                          style={{ padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontWeight: 800, textAlign: 'right', fontSize: 13, color: '#0f172a' }}
                         />
                       </div>
 
@@ -1129,12 +1129,12 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
                         <span style={{ fontSize: 12, fontWeight: 700, color: '#475569' }}>
                           Payment Reference:
                         </span>
-                        <input 
-                          type="text" 
+                        <input
+                          type="text"
                           placeholder="Txn ID / UTR No"
-                          value={paymentReference} 
+                          value={paymentReference}
                           onChange={e => setPaymentReference(e.target.value)}
-                          style={{ padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }} 
+                          style={{ padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }}
                         />
                       </div>
 
@@ -1229,7 +1229,7 @@ export const OnlineGuestBookingModal: React.FC<OnlineGuestBookingModalProps> = (
             <div id="printable-guest-slip">
               {/* Dual Header Panels matching Frame 0290 */}
               <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 0, border: '1px solid #cbd5e1' }}>
-                
+
                 {/* Left Panel: Mint Green (#a7f3d0) Guest Detail */}
                 <div style={{
                   background: '#a7f3d0',

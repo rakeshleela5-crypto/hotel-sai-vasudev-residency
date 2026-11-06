@@ -46,6 +46,7 @@ import { AgentCommissionModal } from './AgentCommissionModal';
 import { LiquorBarManagementModal } from './LiquorBarManagementModal';
 import { NoDiscountMasterModal } from './NoDiscountMasterModal';
 import { BanquetHallBillingModal } from './BanquetHallBillingModal';
+import { StaffPayrollManagementModal } from './StaffPayrollManagementModal';
 import type { PmsBooking, BillFormatType, PmsCheckOutDetail, PmsGstReportTab } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
@@ -148,6 +149,9 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   // Video 35: Banquet Hall Billing & Event/Party Hall Invoice Demo
   const [isBanquetOpen, setIsBanquetOpen] = useState(false);
 
+  // Module 1: Staff Profiles, Monthly Salaries, and Advance Salary Tracking
+  const [isStaffPayrollOpen, setIsStaffPayrollOpen] = useState(false);
+
   const handleLaunchReportAction = (actionKey: string) => {
     switch (actionKey) {
       case 'no_discount':
@@ -160,6 +164,11 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
       case 'marriage_garden':
       case 'party_lawn':
         setIsBanquetOpen(true);
+        break;
+      case 'staff_payroll':
+      case 'payroll':
+      case 'salary_advance':
+        setIsStaffPayrollOpen(true);
         break;
       case 'liquor_bar':
       case 'bar_pos':
@@ -456,6 +465,11 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
       case 'marriage_garden':
       case 'party_lawn':
         setIsBanquetOpen(true);
+        break;
+      case 'staff_payroll':
+      case 'payroll':
+      case 'salary_advance':
+        setIsStaffPayrollOpen(true);
         break;
       case 'gst_report':
         setGstReportTab('consolidated');
@@ -905,6 +919,24 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           <div className="tile-bottom-col">
             <span className="tile-title">User Accounts</span>
             <span className="tile-subtitle">Duty Roster &amp; Shifts</span>
+          </div>
+        </button>
+
+        {/* Module 1: Staff Profiles, Monthly Salaries, and Advance Salary Tracking */}
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => setIsStaffPayrollOpen(true)}
+          style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)', color: '#fff', fontWeight: 800 }}
+          title="Staff Profiles, Monthly Salaries, Mid-Month Advance Tracking & Net Payouts"
+        >
+          <div className="tile-top-row">
+            <span className="tile-icon">👷</span>
+            <span className="tile-badge">HR &amp; Payroll</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">Staff &amp; Payroll</span>
+            <span className="tile-subtitle">Salaries, Advances &amp; Slips</span>
           </div>
         </button>
 
@@ -1977,6 +2009,12 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
       <BanquetHallBillingModal
         isOpen={isBanquetOpen}
         onClose={() => setIsBanquetOpen(false)}
+      />
+
+      {/* Module 1: Staff Profiles, Monthly Salaries, and Advance Salary Tracking */}
+      <StaffPayrollManagementModal
+        isOpen={isStaffPayrollOpen}
+        onClose={() => setIsStaffPayrollOpen(false)}
       />
     </div>
   );
