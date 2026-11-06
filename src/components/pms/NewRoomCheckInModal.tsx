@@ -524,193 +524,193 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
 
     try {
       const checkInRecord: PmsCheckIn = {
-      checkInNo,
-      roomNo: selectedRoomNo,
-      roomType: currentRoomType,
-      guestName: cleanName,
-      mobile: cleanMobile,
-      addressLine1,
-      addressLine2,
-      city: city.trim() || 'Renukot',
-      state: state.trim() || 'Odisha',
-      country,
-      pinCode,
-      nationality,
-      phone,
-      email,
-      checkInDate,
-      checkInTime,
-      checkOutDate,
-      numberOfDays: noOfDays,
-      numberOfGuests: noOfGuests,
-      adults,
-      children,
-      extraGuests: extraGuestsCount,
-      extraGuestCharge: totalExtraGuestCharge,
-      extraGuestRate: capacityRule.extraRate,
-      totalStayTariff: grandAccommodationTotal,
-      businessSource,
-      package: selectedPackage,
-      tariffPerDay: customTariff,
-      advancePaid: totalAdvancePaid,
-      paymentMode: paymentSplits[0]?.mode || 'Cash',
-      paymentReferenceNo: paymentReference || paymentSplits[0]?.referenceNo || '',
-      paymentRemark,
-      payments: paymentSplits,
-      documentName,
-      documentNo: documentNo.trim(),
-      documentImage: idPhotoFront || undefined,
-      documentKey: idProofKey || undefined,
-      idProofDocumentKey: idProofKey || undefined,
-      guestImage: guestPhoto || undefined,
-      guestPhotoUrl: guestPhoto || undefined,
-      idProofBackImage: idPhotoBack || undefined,
-      secondGuestName,
-      secondGuestIdName,
-      secondGuestIdNo,
-      thirdGuestName,
-      thirdGuestIdName,
-      thirdGuestIdNo,
-      purposeOfVisit,
-      comingFrom: comingFrom.trim(),
-      goingTo: goingTo.trim(),
-      companyName: companyName.trim(),
-      companyAddress: companyAddress.trim(),
-      gstNo: gstNo.trim().toUpperCase(),
-      remark1,
-      remark2,
-      bookingRefNo: selectedBookingRef || undefined,
-      status: 'CheckedIn',
-      createdAt: new Date().toISOString()
-    };
+        checkInNo,
+        roomNo: selectedRoomNo,
+        roomType: currentRoomType,
+        guestName: cleanName,
+        mobile: cleanMobile,
+        addressLine1,
+        addressLine2,
+        city: city.trim() || 'Renukot',
+        state: state.trim() || 'Odisha',
+        country,
+        pinCode,
+        nationality,
+        phone,
+        email,
+        checkInDate,
+        checkInTime,
+        checkOutDate,
+        numberOfDays: noOfDays,
+        numberOfGuests: noOfGuests,
+        adults,
+        children,
+        extraGuests: extraGuestsCount,
+        extraGuestCharge: totalExtraGuestCharge,
+        extraGuestRate: capacityRule.extraRate,
+        totalStayTariff: grandAccommodationTotal,
+        businessSource,
+        package: selectedPackage,
+        tariffPerDay: customTariff,
+        advancePaid: totalAdvancePaid,
+        paymentMode: paymentSplits[0]?.mode || 'Cash',
+        paymentReferenceNo: paymentReference || paymentSplits[0]?.referenceNo || '',
+        paymentRemark,
+        payments: paymentSplits,
+        documentName,
+        documentNo: documentNo.trim(),
+        documentImage: idPhotoFront || undefined,
+        documentKey: idProofKey || undefined,
+        idProofDocumentKey: idProofKey || undefined,
+        guestImage: guestPhoto || undefined,
+        guestPhotoUrl: guestPhoto || undefined,
+        idProofBackImage: idPhotoBack || undefined,
+        secondGuestName,
+        secondGuestIdName,
+        secondGuestIdNo,
+        thirdGuestName,
+        thirdGuestIdName,
+        thirdGuestIdNo,
+        purposeOfVisit,
+        comingFrom: comingFrom.trim(),
+        goingTo: goingTo.trim(),
+        companyName: companyName.trim(),
+        companyAddress: companyAddress.trim(),
+        gstNo: gstNo.trim().toUpperCase(),
+        remark1,
+        remark2,
+        bookingRefNo: selectedBookingRef || undefined,
+        status: 'CheckedIn',
+        createdAt: new Date().toISOString()
+      };
 
-    // Save to PmsStore & update room status to occupied
-    PmsStore.saveCheckIn(checkInRecord);
+      // Save to PmsStore & update room status to occupied
+      PmsStore.saveCheckIn(checkInRecord);
 
-    // Submit official Police Station / Form C Registration Log to Railway PostgreSQL
-    hotelApi.submitPoliceStationLog({
-      booking_ref: selectedBookingRef || `SVR-ROOM-${selectedRoomNo}`,
-      guest_name: cleanName,
-      age: guestAge || 35,
-      gender: guestGender || 'Male',
-      nationality: nationality || 'Indian',
-      id_proof_type: documentName || 'Aadhaar Card',
-      id_proof_number: documentNo.trim() || 'VERIFIED_AT_DESK',
-      permanent_address: `${addressLine1} ${city} ${state} ${pinCode}`.trim() || 'Not Provided',
-      origin_city: comingFrom.trim() || 'Rayagada',
-      next_destination: goingTo.trim() || 'Home',
-      purpose_of_visit: purposeOfVisit || 'Temple Darshan',
-      vehicle_number: undefined,
-      is_foreign_national: nationality?.toLowerCase() !== 'india' && nationality?.toLowerCase() !== 'indian',
-      id_document_key: idProofKey || undefined
-    }).catch(err => {
-      console.warn('[NewRoomCheckInModal] Police registration log note:', err);
-    });
-
-    // Post Early Check-In Charge to Room Account if applicable
-    if (earlyCheckInCharge > 0) {
-      PmsStore.postChargeToRoom(selectedRoomNo, {
-        chargeName: `Early Check-In Surcharge (${earlyCheckInPolicy.toUpperCase()})`,
-        sacCode: '996311',
-        amount: earlyCheckInCharge,
-        gstPercent: customTariff > 7500 ? 18 : 12
-      });
-    }
-
-    // Post Double-Entry Journal entries for Advance Payment
-    if (totalAdvancePaid > 0) {
-      const mode = paymentSplits[0]?.mode || 'Cash';
-      const debitAccount = mode === 'Cash'
-        ? 'Cash in Hand (Reception)'
-        : mode === 'Card'
-        ? 'Card EDC Receivable'
-        : 'HDFC Bank / UPI Settlement A/c';
-
-      // 1. Advance Receipt Voucher Entry: Dr Cash/Bank, Cr Guest Advance Deposit Liability
-      PmsStore.postJournalEntry({
-        date: checkInDate,
-        time: checkInTime,
-        referenceNo: `ARV-2026-${checkInNo.replace(/[^\d]/g, '').slice(-4) || '1001'}`,
-        voucherType: 'Advance',
-        debitAccount,
-        creditAccount: 'Guest Advance Deposit Liability',
-        amountPaise: Math.round(totalAdvancePaid * 100),
-        amountRupees: totalAdvancePaid,
-        narration: `Advance received for Check-in ${checkInNo} (Room ${selectedRoomNo}, ${cleanName}) via ${mode}`,
-        postedBy: 'Front Desk'
+      // Submit official Police Station / Form C Registration Log to Railway PostgreSQL
+      hotelApi.submitPoliceStationLog({
+        booking_ref: selectedBookingRef || `SVR-ROOM-${selectedRoomNo}`,
+        guest_name: cleanName,
+        age: guestAge || 35,
+        gender: guestGender || 'Male',
+        nationality: nationality || 'Indian',
+        id_proof_type: documentName || 'Aadhaar Card',
+        id_proof_number: documentNo.trim() || 'VERIFIED_AT_DESK',
+        permanent_address: `${addressLine1} ${city} ${state} ${pinCode}`.trim() || 'Not Provided',
+        origin_city: comingFrom.trim() || 'Rayagada',
+        next_destination: goingTo.trim() || 'Home',
+        purpose_of_visit: purposeOfVisit || 'Temple Darshan',
+        vehicle_number: undefined,
+        is_foreign_national: nationality?.toLowerCase() !== 'india' && nationality?.toLowerCase() !== 'indian',
+        id_document_key: idProofKey || undefined
+      }).catch(err => {
+        console.warn('[NewRoomCheckInModal] Police registration log note:', err);
       });
 
-      // 2. Transfer from Guest Advance Deposit Liability into In-House Guest Folio Receivable
-      PmsStore.postJournalEntry({
-        date: checkInDate,
-        time: checkInTime,
-        referenceNo: `ADV-FOLIO-${selectedRoomNo}`,
-        voucherType: 'Advance',
-        debitAccount: 'Guest Advance Deposit Liability',
-        creditAccount: 'In-House Guest Folio Receivable',
-        amountPaise: Math.round(totalAdvancePaid * 100),
-        amountRupees: totalAdvancePaid,
-        narration: `Advance credit transferred into In-House Folio for Room ${selectedRoomNo}`,
-        postedBy: 'Front Desk'
-      });
-    }
-
-    // Salesman / Travel Agent Commission Tracking
-    if (agent && agent.trim()) {
-      try {
-        const allAgents = PmsStore.getCommissionAgents();
-        const matchedAgent = allAgents.find(
-          a => a.name.toLowerCase() === agent.trim().toLowerCase() || a.id === agent.trim()
-        );
-        const agentId = matchedAgent ? matchedAgent.id : `AGT-${Date.now().toString().slice(-4)}`;
-        const agentName = matchedAgent ? matchedAgent.name : agent.trim();
-        const agentType = matchedAgent ? matchedAgent.agentType : 'Travel_Agent';
-        const commType = matchedAgent ? matchedAgent.commissionType : 'PERCENTAGE';
-        const commRate = matchedAgent ? matchedAgent.defaultRate : 10;
-        
-        const grossRoomTariff = grandAccommodationTotal;
-        let grossComm = 0;
-        if (commType === 'PERCENTAGE') {
-          grossComm = Math.round((grossRoomTariff * commRate) / 100);
-        } else if (commType === 'FIXED_PER_NIGHT') {
-          grossComm = Math.round(commRate * noOfDays);
-        } else {
-          grossComm = Math.round(commRate);
-        }
-        const tds = matchedAgent?.panNumber ? Math.round((grossComm * 5) / 100) : 0;
-        const netPayable = grossComm - tds;
-
-        PmsStore.addAgentCommissionBooking({
-          agentId,
-          agentName,
-          agentType,
-          checkInNo,
-          bookingRefNo: selectedBookingRef || undefined,
-          roomNo: selectedRoomNo,
-          guestName: cleanName,
-          guestMobile: cleanMobile,
-          checkInDate,
-          checkOutDate,
-          numberOfNights: noOfDays,
-          roomTariff: customTariff,
-          grossRoomTariff,
-          commissionType: commType,
-          commissionRate: commRate,
-          grossCommission: grossComm,
-          tdsPercentage: matchedAgent?.panNumber ? 5 : 0,
-          tdsAmount: tds,
-          netPayableCommission: netPayable,
-          status: 'PENDING',
-          remarks: `Attributed to ${agentName} on Check-in ${checkInNo} (Room ${selectedRoomNo})`
+      // Post Early Check-In Charge to Room Account if applicable
+      if (earlyCheckInCharge > 0) {
+        PmsStore.postChargeToRoom(selectedRoomNo, {
+          chargeName: `Early Check-In Surcharge (${earlyCheckInPolicy.toUpperCase()})`,
+          sacCode: '996311',
+          amount: earlyCheckInCharge,
+          gstPercent: customTariff > 7500 ? 18 : 12
         });
-      } catch (err) {
-        console.error('Error logging agent commission:', err);
       }
-    }
 
-    setCompletedCheckIn(checkInRecord);
-    setIsSlipOpen(true);
-    onCheckInCompleted(checkInRecord);
+      // Post Double-Entry Journal entries for Advance Payment
+      if (totalAdvancePaid > 0) {
+        const mode = paymentSplits[0]?.mode || 'Cash';
+        const debitAccount = mode === 'Cash'
+          ? 'Cash in Hand (Reception)'
+          : mode === 'Card'
+            ? 'Card EDC Receivable'
+            : 'HDFC Bank / UPI Settlement A/c';
+
+        // 1. Advance Receipt Voucher Entry: Dr Cash/Bank, Cr Guest Advance Deposit Liability
+        PmsStore.postJournalEntry({
+          date: checkInDate,
+          time: checkInTime,
+          referenceNo: `ARV-2026-${checkInNo.replace(/[^\d]/g, '').slice(-4) || '1001'}`,
+          voucherType: 'Advance',
+          debitAccount,
+          creditAccount: 'Guest Advance Deposit Liability',
+          amountPaise: Math.round(totalAdvancePaid * 100),
+          amountRupees: totalAdvancePaid,
+          narration: `Advance received for Check-in ${checkInNo} (Room ${selectedRoomNo}, ${cleanName}) via ${mode}`,
+          postedBy: 'Front Desk'
+        });
+
+        // 2. Transfer from Guest Advance Deposit Liability into In-House Guest Folio Receivable
+        PmsStore.postJournalEntry({
+          date: checkInDate,
+          time: checkInTime,
+          referenceNo: `ADV-FOLIO-${selectedRoomNo}`,
+          voucherType: 'Advance',
+          debitAccount: 'Guest Advance Deposit Liability',
+          creditAccount: 'In-House Guest Folio Receivable',
+          amountPaise: Math.round(totalAdvancePaid * 100),
+          amountRupees: totalAdvancePaid,
+          narration: `Advance credit transferred into In-House Folio for Room ${selectedRoomNo}`,
+          postedBy: 'Front Desk'
+        });
+      }
+
+      // Salesman / Travel Agent Commission Tracking
+      if (agent && agent.trim()) {
+        try {
+          const allAgents = PmsStore.getCommissionAgents();
+          const matchedAgent = allAgents.find(
+            a => a.name.toLowerCase() === agent.trim().toLowerCase() || a.id === agent.trim()
+          );
+          const agentId = matchedAgent ? matchedAgent.id : `AGT-${Date.now().toString().slice(-4)}`;
+          const agentName = matchedAgent ? matchedAgent.name : agent.trim();
+          const agentType = matchedAgent ? matchedAgent.agentType : 'Travel_Agent';
+          const commType = matchedAgent ? matchedAgent.commissionType : 'PERCENTAGE';
+          const commRate = matchedAgent ? matchedAgent.defaultRate : 10;
+
+          const grossRoomTariff = grandAccommodationTotal;
+          let grossComm = 0;
+          if (commType === 'PERCENTAGE') {
+            grossComm = Math.round((grossRoomTariff * commRate) / 100);
+          } else if (commType === 'FIXED_PER_NIGHT') {
+            grossComm = Math.round(commRate * noOfDays);
+          } else {
+            grossComm = Math.round(commRate);
+          }
+          const tds = matchedAgent?.panNumber ? Math.round((grossComm * 5) / 100) : 0;
+          const netPayable = grossComm - tds;
+
+          PmsStore.addAgentCommissionBooking({
+            agentId,
+            agentName,
+            agentType,
+            checkInNo,
+            bookingRefNo: selectedBookingRef || undefined,
+            roomNo: selectedRoomNo,
+            guestName: cleanName,
+            guestMobile: cleanMobile,
+            checkInDate,
+            checkOutDate,
+            numberOfNights: noOfDays,
+            roomTariff: customTariff,
+            grossRoomTariff,
+            commissionType: commType,
+            commissionRate: commRate,
+            grossCommission: grossComm,
+            tdsPercentage: matchedAgent?.panNumber ? 5 : 0,
+            tdsAmount: tds,
+            netPayableCommission: netPayable,
+            status: 'PENDING',
+            remarks: `Attributed to ${agentName} on Check-in ${checkInNo} (Room ${selectedRoomNo})`
+          });
+        } catch (err) {
+          console.error('Error logging agent commission:', err);
+        }
+      }
+
+      setCompletedCheckIn(checkInRecord);
+      setIsSlipOpen(true);
+      onCheckInCompleted(checkInRecord);
     } finally {
       isSubmittingCheckInRef.current = false;
       setIsProcessing(false);
@@ -750,7 +750,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                   </span>
                 </div>
                 <div style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>
-                  {isRoomDirty 
+                  {isRoomDirty
                     ? `Room ${selectedRoomNo} is currently dirty from previous guest departure. Check-in is restricted to prevent guest dissatisfaction.`
                     : `Room ${selectedRoomNo} is currently in ${roomNormStatus} state. Check-in is blocked. Please select another clean room.`}
                 </div>
@@ -838,10 +838,10 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
               </div>
 
               {/* Guest Live Image Box (Cloudflare R2 Direct Upload) */}
-              <label 
-                className="pms-photo-box" 
-                style={{ 
-                  overflow: 'hidden', 
+              <label
+                className="pms-photo-box"
+                style={{
+                  overflow: 'hidden',
                   cursor: uploadingDocSlot === 'guest' ? 'not-allowed' : 'pointer',
                   position: 'relative',
                   border: guestPhoto ? '2px solid #22c55e' : '1px dashed #3b82f6',
@@ -910,15 +910,15 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
 
               {/* Stacked ID Proof Front & Back Photos (Cloudflare R2 Direct Upload) */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <label 
-                  className="pms-photo-box" 
-                  style={{ 
-                    width: 96, 
-                    height: 42, 
-                    overflow: 'hidden', 
-                    cursor: uploadingDocSlot === 'idFront' ? 'not-allowed' : 'pointer', 
-                    display: 'flex', 
-                    alignItems: 'center', 
+                <label
+                  className="pms-photo-box"
+                  style={{
+                    width: 96,
+                    height: 42,
+                    overflow: 'hidden',
+                    cursor: uploadingDocSlot === 'idFront' ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
                     justifyContent: 'center',
                     border: idPhotoFront ? '1.5px solid #22c55e' : '1px dashed #94a3b8',
                     position: 'relative'
@@ -958,15 +958,15 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                     }}
                   />
                 </label>
-                <label 
-                  className="pms-photo-box" 
-                  style={{ 
-                    width: 96, 
-                    height: 42, 
-                    overflow: 'hidden', 
-                    cursor: uploadingDocSlot === 'idBack' ? 'not-allowed' : 'pointer', 
-                    display: 'flex', 
-                    alignItems: 'center', 
+                <label
+                  className="pms-photo-box"
+                  style={{
+                    width: 96,
+                    height: 42,
+                    overflow: 'hidden',
+                    cursor: uploadingDocSlot === 'idBack' ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
                     justifyContent: 'center',
                     border: idPhotoBack ? '1.5px solid #22c55e' : '1px dashed #94a3b8',
                     position: 'relative'
@@ -1039,9 +1039,9 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                       <label className="form-label-pms">
                         <span className="req">*</span> Check In Date {!canChangeDateTime && <span title="Date Locked: Anti-Backdating Guard" style={{ color: '#e11d48' }}>🔒</span>}
                       </label>
-                      <input 
-                        type="date" 
-                        value={checkInDate} 
+                      <input
+                        type="date"
+                        value={checkInDate}
                         readOnly={!canChangeDateTime}
                         onChange={e => {
                           if (!canChangeDateTime) {
@@ -1049,8 +1049,8 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                             return;
                           }
                           handleCheckInDateChange(e.target.value);
-                        }} 
-                        className="form-input-pms" 
+                        }}
+                        className="form-input-pms"
                         style={{ background: !canChangeDateTime ? '#f1f5f9' : '#ffffff', cursor: !canChangeDateTime ? 'not-allowed' : 'auto', fontWeight: 700 }}
                       />
                     </div>
@@ -1059,15 +1059,15 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                       <label className="form-label-pms">
                         Check In Time {!canChangeDateTime && <span title="Time Locked" style={{ color: '#e11d48' }}>🔒</span>}
                       </label>
-                      <input 
-                        type="text" 
-                        value={checkInTime} 
+                      <input
+                        type="text"
+                        value={checkInTime}
                         readOnly={!canChangeDateTime}
                         onChange={e => {
                           if (!canChangeDateTime) return;
                           setCheckInTime(e.target.value);
-                        }} 
-                        className="form-input-pms" 
+                        }}
+                        className="form-input-pms"
                         style={{ background: !canChangeDateTime ? '#f1f5f9' : '#ffffff', cursor: !canChangeDateTime ? 'not-allowed' : 'auto', fontWeight: 600 }}
                       />
                     </div>
@@ -1076,25 +1076,25 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                       <label className="form-label-pms">
                         <span className="req">*</span> Check Out Date
                       </label>
-                      <input 
-                        type="date" 
+                      <input
+                        type="date"
                         min={checkInDate}
-                        value={checkOutDate} 
-                        onChange={e => handleCheckOutDateChange(e.target.value)} 
-                        className="form-input-pms" 
+                        value={checkOutDate}
+                        onChange={e => handleCheckOutDateChange(e.target.value)}
+                        className="form-input-pms"
                         style={{ fontWeight: 700, borderColor: '#059669' }}
                       />
                     </div>
 
                     <div className="form-group-pms" style={{ margin: 0 }}>
                       <label className="form-label-pms"><span className="req">*</span> Nights</label>
-                      <input 
-                        type="number" 
-                        min="1" 
-                        value={noOfDays} 
-                        onChange={e => handleDaysChange(Number(e.target.value))} 
-                        className="form-input-pms" 
-                        style={{ fontWeight: 800, textAlign: 'center', background: '#ecfdf5', color: '#047857' }} 
+                      <input
+                        type="number"
+                        min="1"
+                        value={noOfDays}
+                        onChange={e => handleDaysChange(Number(e.target.value))}
+                        className="form-input-pms"
+                        style={{ fontWeight: 800, textAlign: 'center', background: '#ecfdf5', color: '#047857' }}
                       />
                     </div>
                   </div>
@@ -1203,26 +1203,26 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.3fr 1.5fr', gap: 10 }}>
                     <div className="form-group-pms" style={{ margin: 0 }}>
                       <label className="form-label-pms"><span className="req">*</span> Adults (12+ Yrs)</label>
-                      <input 
-                        type="number" 
-                        min="1" 
-                        max="8" 
-                        value={adults} 
-                        onChange={e => setAdults(Math.max(1, Number(e.target.value)))} 
-                        className="form-input-pms" 
-                        style={{ fontWeight: 800 }} 
+                      <input
+                        type="number"
+                        min="1"
+                        max="8"
+                        value={adults}
+                        onChange={e => setAdults(Math.max(1, Number(e.target.value)))}
+                        className="form-input-pms"
+                        style={{ fontWeight: 800 }}
                       />
                     </div>
 
                     <div className="form-group-pms" style={{ margin: 0 }}>
                       <label className="form-label-pms">Children</label>
-                      <input 
-                        type="number" 
-                        min="0" 
-                        max="6" 
-                        value={children} 
-                        onChange={e => setChildren(Math.max(0, Number(e.target.value)))} 
-                        className="form-input-pms" 
+                      <input
+                        type="number"
+                        min="0"
+                        max="6"
+                        value={children}
+                        onChange={e => setChildren(Math.max(0, Number(e.target.value)))}
+                        className="form-input-pms"
                       />
                     </div>
 
@@ -1435,15 +1435,15 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                 <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 0.8fr 0.6fr 1fr', gap: 10 }}>
                   <div className="form-group-pms">
                     <label className="form-label-pms"><span className="req">*</span> Guest Full Name</label>
-                    <input 
+                    <input
                       id="checkin-guest-name"
-                      type="text" 
-                      placeholder="e.g. Ramesh Chandra Sharma" 
-                      value={guestName} 
-                      onChange={e => setGuestName(e.target.value)} 
-                      className="form-input-pms" 
+                      type="text"
+                      placeholder="e.g. Ramesh Chandra Sharma"
+                      value={guestName}
+                      onChange={e => setGuestName(e.target.value)}
+                      className="form-input-pms"
                       style={{ fontWeight: 700 }}
-                      required 
+                      required
                     />
                   </div>
                   <div className="form-group-pms">
@@ -1462,16 +1462,16 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                     <label className="form-label-pms">
                       <span className="req">*</span> 10-Digit Mobile <span style={{ fontSize: 10, color: '#64748b' }}>(^[6-9]\d&#123;9&#125;$)</span>
                     </label>
-                    <input 
+                    <input
                       id="checkin-guest-mobile"
-                      type="tel" 
-                      maxLength={10} 
-                      placeholder="9822000000" 
-                      value={mobile} 
-                      onChange={e => setMobile(e.target.value.replace(/\D/g, ''))} 
-                      className="form-input-pms" 
+                      type="tel"
+                      maxLength={10}
+                      placeholder="9822000000"
+                      value={mobile}
+                      onChange={e => setMobile(e.target.value.replace(/\D/g, ''))}
+                      className="form-input-pms"
                       style={{ fontWeight: 800, letterSpacing: '0.5px' }}
-                      required 
+                      required
                     />
                   </div>
                 </div>
@@ -1530,44 +1530,44 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
                       <div>
                         <label className="form-label-pms"><span className="req">*</span> Passport Number</label>
-                        <input 
-                          type="text" 
-                          placeholder="e.g. A12345678" 
-                          value={passportNo} 
-                          onChange={e => setPassportNo(e.target.value.toUpperCase())} 
-                          className="form-input-pms" 
-                          style={{ fontWeight: 800 }} 
-                          required 
+                        <input
+                          type="text"
+                          placeholder="e.g. A12345678"
+                          value={passportNo}
+                          onChange={e => setPassportNo(e.target.value.toUpperCase())}
+                          className="form-input-pms"
+                          style={{ fontWeight: 800 }}
+                          required
                         />
                       </div>
                       <div>
                         <label className="form-label-pms"><span className="req">*</span> Indian Visa Number</label>
-                        <input 
-                          type="text" 
-                          placeholder="e.g. V987654321" 
-                          value={visaNo} 
-                          onChange={e => setVisaNo(e.target.value.toUpperCase())} 
-                          className="form-input-pms" 
-                          style={{ fontWeight: 800 }} 
-                          required 
+                        <input
+                          type="text"
+                          placeholder="e.g. V987654321"
+                          value={visaNo}
+                          onChange={e => setVisaNo(e.target.value.toUpperCase())}
+                          className="form-input-pms"
+                          style={{ fontWeight: 800 }}
+                          required
                         />
                       </div>
                       <div>
                         <label className="form-label-pms">Visa Expiry Date</label>
-                        <input 
-                          type="date" 
-                          value={visaExpiry} 
-                          onChange={e => setVisaExpiry(e.target.value)} 
-                          className="form-input-pms" 
+                        <input
+                          type="date"
+                          value={visaExpiry}
+                          onChange={e => setVisaExpiry(e.target.value)}
+                          className="form-input-pms"
                         />
                       </div>
                     </div>
                     <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, fontWeight: 700, color: '#9f1239', cursor: 'pointer' }}>
-                      <input 
-                        type="checkbox" 
-                        checked={cFormAcknowledged} 
-                        onChange={e => setCFormAcknowledged(e.target.checked)} 
-                        style={{ width: 16, height: 16 }} 
+                      <input
+                        type="checkbox"
+                        checked={cFormAcknowledged}
+                        onChange={e => setCFormAcknowledged(e.target.checked)}
+                        style={{ width: 16, height: 16 }}
                       />
                       <span>I certify that Foreign Guest Passport and Indian Visa have been verified for Bureau of Immigration C-Form filing.</span>
                     </label>
@@ -1578,9 +1578,9 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                 <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.4fr 1fr', gap: 10 }}>
                   <div className="form-group-pms">
                     <label className="form-label-pms"><span className="req">*</span> ID Proof Type</label>
-                    <select 
-                      value={documentName} 
-                      onChange={e => setDocumentName(e.target.value)} 
+                    <select
+                      value={documentName}
+                      onChange={e => setDocumentName(e.target.value)}
                       className="form-select-pms"
                       style={{ fontWeight: 700 }}
                     >
@@ -1592,25 +1592,25 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                   </div>
                   <div className="form-group-pms">
                     <label className="form-label-pms"><span className="req">*</span> {documentName} Number</label>
-                    <input 
-                      type="text" 
-                      placeholder={documentName === 'Aadhaar Card' ? 'XXXX XXXX XXXX' : 'ID Number'} 
-                      value={documentNo} 
-                      onChange={e => setDocumentNo(e.target.value)} 
-                      className="form-input-pms" 
+                    <input
+                      type="text"
+                      placeholder={documentName === 'Aadhaar Card' ? 'XXXX XXXX XXXX' : 'ID Number'}
+                      value={documentNo}
+                      onChange={e => setDocumentNo(e.target.value)}
+                      className="form-input-pms"
                       style={{ fontWeight: 800 }}
-                      required 
+                      required
                     />
                   </div>
                   <div className="form-group-pms">
                     <label className="form-label-pms">Agent / Referral</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       list="pms-agent-datalist"
-                      placeholder="Select Agent / MR" 
-                      value={agent} 
-                      onChange={e => setAgent(e.target.value)} 
-                      className="form-input-pms" 
+                      placeholder="Select Agent / MR"
+                      value={agent}
+                      onChange={e => setAgent(e.target.value)}
+                      className="form-input-pms"
                     />
                     <datalist id="pms-agent-datalist">
                       {PmsStore.getCommissionAgents().map(ag => (
@@ -1652,16 +1652,16 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                         {isVerifyingGstin ? 'Verifying...' : '🔍 Verify (Decentro)'}
                       </button>
                     </div>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       maxLength={15}
-                      placeholder="21AEKPP8689J1ZS" 
-                      value={gstNo} 
+                      placeholder="21AEKPP8689J1ZS"
+                      value={gstNo}
                       onChange={e => {
                         setGstNo(e.target.value.toUpperCase());
                         setGstinVerifiedBadge(null);
-                      }} 
-                      className="form-input-pms" 
+                      }}
+                      className="form-input-pms"
                       style={{ fontWeight: 700, textTransform: 'uppercase' }}
                     />
                     {gstinVerifiedBadge && (
@@ -1689,24 +1689,24 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                     </div>
                     <div className="form-group-pms" style={{ margin: 0 }}>
                       <label className="form-label-pms"><span className="req">*</span> Coming From (City)</label>
-                      <input 
-                        type="text" 
-                        placeholder="e.g. Hyderabad / Mumbai" 
-                        value={comingFrom} 
-                        onChange={e => setComingFrom(e.target.value)} 
-                        className="form-input-pms" 
-                        required 
+                      <input
+                        type="text"
+                        placeholder="e.g. Hyderabad / Mumbai"
+                        value={comingFrom}
+                        onChange={e => setComingFrom(e.target.value)}
+                        className="form-input-pms"
+                        required
                       />
                     </div>
                     <div className="form-group-pms" style={{ margin: 0 }}>
                       <label className="form-label-pms"><span className="req">*</span> Proceeding To</label>
-                      <input 
-                        type="text" 
-                        placeholder="e.g. Shani Shingnapur" 
-                        value={goingTo} 
-                        onChange={e => setGoingTo(e.target.value)} 
-                        className="form-input-pms" 
-                        required 
+                      <input
+                        type="text"
+                        placeholder="e.g. Shani Shingnapur"
+                        value={goingTo}
+                        onChange={e => setGoingTo(e.target.value)}
+                        className="form-input-pms"
+                        required
                       />
                     </div>
                   </div>
