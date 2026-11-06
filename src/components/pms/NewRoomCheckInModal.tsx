@@ -5,7 +5,7 @@ import { hotelApi } from '../../services/api';
 import { CheckInSlipModal } from './CheckInSlipModal';
 import { decentroApi } from '../../services/decentroApi';
 import { DecentroUpiQrModal } from './DecentroUpiQrModal';
-import { parseAadhaarQrCode, type AadhaarParsedData } from '../../utils/aadhaarQrParser';
+import { parseAadhaarQrCodeAsync, type AadhaarParsedData } from '../../utils/aadhaarQrParser';
 
 interface NewRoomCheckInModalProps {
   isOpen: boolean;
@@ -249,11 +249,11 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
   };
 
   // Module 5: Hardware Aadhaar Scanner Handler
-  const handleAadhaarScanSubmit = (rawText: string) => {
+  const handleAadhaarScanSubmit = async (rawText: string) => {
     const trimmed = rawText.trim();
     if (!trimmed) return;
     try {
-      const parsed: AadhaarParsedData = parseAadhaarQrCode(trimmed);
+      const parsed: AadhaarParsedData = await parseAadhaarQrCodeAsync(trimmed);
       if (!parsed.name && !parsed.uid && !parsed.maskedUid) {
         setAadhaarScanError('Could not decode Aadhaar data. Ensure the 2D barcode scanner is aimed at the QR code.');
         return;
@@ -1772,7 +1772,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                                         alert('Permission Denied: Only Super-Admin or General Manager can modify room tariff.');
                                         return;
                                       }
-                                      setCustomTariff(Number(e.target.value));
+                                      setCustomTariff(Math.max(0, Number(e.target.value)));
                                     }}
                                     className="form-input-pms"
                                     style={{

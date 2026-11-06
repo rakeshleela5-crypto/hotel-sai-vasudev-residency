@@ -1191,24 +1191,45 @@ def create_kot_ticket(payload: dict, db: Session = Depends(get_db)):
     Save new KOT ticket to PostgreSQL.
     If room_no is provided, automatically posts charge to guest's room folio!
     """
-    # Idempotency Guard: check if KOT ticket was already punched (#5)
+    # Idempotency & Running Order Guard (#5)
+    import hashlib
     kot_no_param = str(payload.get("kotNo") or payload.get("kot_no") or "").strip()
+    items = payload.get("items", [])
+    kot_no = kot_no_param
+
     if kot_no_param:
         existing_kot = db.query(models.KotTicket).filter(models.KotTicket.kot_no == kot_no_param).first()
         if existing_kot:
-            logger.info(f"[POS Idempotency] Duplicate KOT submission for ticket '{kot_no_param}'. Returning existing ticket.")
-            return {
-                "success": True,
-                "id": existing_kot.id,
-                "kotNo": existing_kot.kot_no,
-                "kot_no": existing_kot.kot_no,
-                "status": existing_kot.status,
-                "already_exists": True,
-                "message": f"KOT {kot_no_param} was already punched and processed (Idempotent OK)"
-            }
+            existing_items_json = existing_kot.items_json or "[]"
+            new_items_json = json.dumps(items)
+            existing_hash = hashlib.md5(existing_items_json.encode('utf-8')).hexdigest()
+            new_hash = hashlib.md5(new_items_json.encode('utf-8')).hexdigest()
 
-    kot_no = kot_no_param or f"KOT/{datetime.datetime.now().strftime('%y%m%d%H%M%S')}"
-    items = payload.get("items", [])
+            if existing_hash == new_hash:
+                logger.info(f"[POS Idempotency] Duplicate KOT submission for ticket '{kot_no_param}'. Returning existing ticket.")
+                return {
+                    "success": True,
+                    "id": existing_kot.id,
+                    "kotNo": existing_kot.kot_no,
+                    "kot_no": existing_kot.kot_no,
+                    "status": existing_kot.status,
+                    "already_exists": True,
+                    "message": f"KOT {kot_no_param} was already punched and processed (Idempotent OK)"
+                }
+            else:
+                # Running order with new/additional items: assign sub-ticket sequence
+                suffix_ord = ord("A")
+                candidate = f"{kot_no_param}-{chr(suffix_ord)}"
+                while db.query(models.KotTicket).filter(models.KotTicket.kot_no == candidate).first():
+                    suffix_ord += 1
+                    candidate = f"{kot_no_param}-{chr(suffix_ord)}"
+                kot_no = candidate
+                logger.info(f"[POS Idempotency] Additional items for KOT '{kot_no_param}'. Assigned sub-ticket sequence '{kot_no}'.")
+        else:
+            kot_no = kot_no_param
+    else:
+        kot_no = f"KOT/{datetime.datetime.now().strftime('%y%m%d%H%M%S')}"
+
     total_amount = float(payload.get("totalAmount") or sum(float(i.get("amount", 0)) for i in items))
     
     kot = models.KotTicket(

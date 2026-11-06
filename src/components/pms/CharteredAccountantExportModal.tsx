@@ -9,6 +9,23 @@ interface CharteredAccountantExportModalProps {
   onClose: () => void;
 }
 
+const MONTH_OPTIONS = [
+  { value: '01', label: 'January' },
+  { value: '02', label: 'February' },
+  { value: '03', label: 'March' },
+  { value: '04', label: 'April' },
+  { value: '05', label: 'May' },
+  { value: '06', label: 'June' },
+  { value: '07', label: 'July' },
+  { value: '08', label: 'August' },
+  { value: '09', label: 'September' },
+  { value: '10', label: 'October' },
+  { value: '11', label: 'November' },
+  { value: '12', label: 'December' }
+];
+
+const YEAR_OPTIONS = [2025, 2026, 2027, 2028];
+
 export const CharteredAccountantExportModal: React.FC<CharteredAccountantExportModalProps> = ({
   isOpen,
   onClose
@@ -28,25 +45,8 @@ export const CharteredAccountantExportModal: React.FC<CharteredAccountantExportM
 
   const currentPeriodStr = `${selectedYear}-${selectedMonth}`;
 
-  const monthOptions = [
-    { value: '01', label: 'January' },
-    { value: '02', label: 'February' },
-    { value: '03', label: 'March' },
-    { value: '04', label: 'April' },
-    { value: '05', label: 'May' },
-    { value: '06', label: 'June' },
-    { value: '07', label: 'July' },
-    { value: '08', label: 'August' },
-    { value: '09', label: 'September' },
-    { value: '10', label: 'October' },
-    { value: '11', label: 'November' },
-    { value: '12', label: 'December' }
-  ];
-
-  const yearOptions = [2025, 2026, 2027, 2028];
-
   const monthName = useMemo(() => {
-    const m = monthOptions.find(o => o.value === selectedMonth);
+    const m = MONTH_OPTIONS.find(o => o.value === selectedMonth);
     return m ? m.label : selectedMonth;
   }, [selectedMonth]);
 
@@ -302,7 +302,7 @@ export const CharteredAccountantExportModal: React.FC<CharteredAccountantExportM
                   fontWeight: 700
                 }}
               >
-                {monthOptions.map(o => (
+                {MONTH_OPTIONS.map(o => (
                   <option key={o.value} value={o.value}>{o.label} ({o.value})</option>
                 ))}
               </select>
@@ -323,7 +323,7 @@ export const CharteredAccountantExportModal: React.FC<CharteredAccountantExportM
                   fontWeight: 700
                 }}
               >
-                {yearOptions.map(y => (
+                {YEAR_OPTIONS.map(y => (
                   <option key={y} value={y}>{y}</option>
                 ))}
               </select>

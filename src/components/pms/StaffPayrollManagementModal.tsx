@@ -11,6 +11,7 @@ import type {
 } from '../../types/pmsModels';
 import { PmsStore, usePmsSync } from '../../services/pmsStore';
 import { hotelApi } from '../../services/api';
+import { useDebounce } from '../../hooks/useDebounce';
 import './pmsStyles.css';
 
 interface StaffPayrollManagementModalProps {
@@ -69,6 +70,7 @@ export const StaffPayrollManagementModal: React.FC<StaffPayrollManagementModalPr
   const [staffList, setStaffList] = useState<StaffProfile[]>([]);
   const [advancesList, setAdvancesList] = useState<StaffSalaryAdvance[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 200);
   const [selectedDepartment, setSelectedDepartment] = useState<string>('All');
   const [selectedGender, setSelectedGender] = useState<string>('All');
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -274,8 +276,8 @@ export const StaffPayrollManagementModal: React.FC<StaffPayrollManagementModalPr
       if (!s.is_active) return false;
       if (selectedDepartment !== 'All' && s.department !== selectedDepartment) return false;
       if (selectedGender !== 'All' && s.gender !== selectedGender) return false;
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
+      if (debouncedSearchQuery.trim()) {
+        const q = debouncedSearchQuery.toLowerCase();
         const matchName = s.full_name.toLowerCase().includes(q);
         const matchRole = s.role.toLowerCase().includes(q);
         const matchCode = s.staff_code.toLowerCase().includes(q);
@@ -284,7 +286,7 @@ export const StaffPayrollManagementModal: React.FC<StaffPayrollManagementModalPr
       }
       return true;
     });
-  }, [staffList, selectedDepartment, selectedGender, searchQuery]);
+  }, [staffList, selectedDepartment, selectedGender, debouncedSearchQuery]);
 
   // Payroll Calculation
   const payrollData = useMemo(() => {

@@ -20,10 +20,15 @@
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  z-index: 12500 !important;
+  z-index: var(--z-pms-modal, 12000) !important;
   padding: 16px !important;
   box-sizing: border-box !important;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+}
+
+.pms-reg-submodal-backdrop,
+.pms-reg-modal-backdrop .pms-reg-modal-backdrop {
+  z-index: var(--z-pms-submodal, 13000) !important;
 }
 
 .pms-reg-modal-window {

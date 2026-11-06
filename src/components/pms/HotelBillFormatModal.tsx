@@ -22,11 +22,7 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
   const [selectedInvoiceNo, setSelectedInvoiceNo] = useState<string>('');
   const [activeFormat, setActiveFormat] = useState<BillFormatType>('Format_3_A4_Standard');
   const [companyInfo, setCompanyInfo] = useState<PmsCompanyInfo>(PmsStore.getCompanyInfo());
-  const [showPrintDialogOverlay, setShowPrintDialogOverlay] = useState(false);
   const [showSampleDemo, setShowSampleDemo] = useState(false);
-  const [paperSize, setPaperSize] = useState<'A4' | 'A5' | 'Letter'>('A4');
-  const [printDestination, setPrintDestination] = useState('Canon LBP2900');
-  const [margins, setMargins] = useState<'Default' | 'None' | 'Minimum'>('None');
 
   useEffect(() => {
     if (isOpen) {
@@ -243,11 +239,6 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
   };
 
   const handlePrint = () => {
-    setShowPrintDialogOverlay(true);
-  };
-
-  const handleExecutePrint = () => {
-    setShowPrintDialogOverlay(false);
     window.print();
   };
 
@@ -2601,112 +2592,6 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
             <span>WhatsApp Bill</span>
           </button>
         </footer>
-
-        {/* Native Chrome Print Dialog Simulation Modal (Video 26 Frames 0135, 0170, 0195, 0215) */}
-        {showPrintDialogOverlay && (
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(15, 23, 42, 0.7)',
-              zIndex: 9999,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-            onClick={() => setShowPrintDialogOverlay(false)}
-          >
-            <div
-              style={{
-                background: '#ffffff',
-                borderRadius: 8,
-                width: 480,
-                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)',
-                padding: 24,
-                color: '#1e293b'
-              }}
-              onClick={e => e.stopPropagation()}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>Print Settings ({activeFormat})</h3>
-                <span style={{ fontSize: 12, color: '#64748b' }}>2 sheets of paper</span>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14, fontSize: 13 }}>
-                <div>
-                  <label style={{ display: 'block', fontWeight: 700, marginBottom: 4, color: '#475569' }}>
-                    Destination
-                  </label>
-                  <select
-                    value={printDestination}
-                    onChange={e => setPrintDestination(e.target.value)}
-                    style={{ width: '100%', padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: 4 }}
-                  >
-                    <option value="Canon LBP2900">Canon LBP2900 (Front Desk Laser)</option>
-                    <option value="HP LaserJet Pro">HP LaserJet Pro M404n</option>
-                    <option value="Save as PDF">Save as PDF</option>
-                  </select>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <div>
-                    <label style={{ display: 'block', fontWeight: 700, marginBottom: 4, color: '#475569' }}>
-                      Paper Size
-                    </label>
-                    <select
-                      value={paperSize}
-                      onChange={e => setPaperSize(e.target.value as any)}
-                      style={{ width: '100%', padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: 4 }}
-                    >
-                      <option value="A4">A4 (Standard 210 x 297 mm)</option>
-                      <option value="A5">A5 (Half Sheet 148 x 210 mm)</option>
-                      <option value="Letter">Letter</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', fontWeight: 700, marginBottom: 4, color: '#475569' }}>
-                      Margins
-                    </label>
-                    <select
-                      value={margins}
-                      onChange={e => setMargins(e.target.value as any)}
-                      style={{ width: '100%', padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: 4 }}
-                    >
-                      <option value="None">None (Standard Header)</option>
-                      <option value="Default">Default</option>
-                      <option value="Minimum">Minimum</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div style={{ background: '#f8fafc', padding: 10, borderRadius: 4, border: '1px solid #e2e8f0', fontSize: 11, color: '#475569' }}>
-                  💡 <strong>Printing Pro-Tip:</strong> Set <em>Margins: None</em> and <em>Paper Size: {activeFormat === 'Format_4_A5_Compact' ? 'A5' : 'A4'}</em> in print dialog to perfectly fit the bill without page overflow.
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
-                <button
-                  type="button"
-                  onClick={() => setShowPrintDialogOverlay(false)}
-                  style={{ background: '#e2e8f0', border: 'none', padding: '6px 16px', borderRadius: 4, fontWeight: 700, cursor: 'pointer' }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleExecutePrint}
-                  style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '6px 20px', borderRadius: 4, fontWeight: 800, cursor: 'pointer' }}
-                >
-                  Print Now
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

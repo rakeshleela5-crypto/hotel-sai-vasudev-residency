@@ -59,6 +59,68 @@ export interface QueuedKotOrder {
   lastError?: string;
 }
 
+export interface CachedBookingRecord {
+  id: string;
+  bookingNo: string;
+  roomNo: string;
+  guestName: string;
+  phone?: string;
+  status: string;
+  checkInDate: string;
+  checkOutDate: string;
+  raw?: any;
+}
+
+export interface CachedCheckoutRecord {
+  invoiceNo: string;
+  roomNo: string;
+  guestName: string;
+  checkOutDate: string;
+  netPayable: number;
+  raw?: any;
+}
+
+export interface CachedKycDocument {
+  id: string;
+  guestId?: string;
+  roomNo?: string;
+  docType: string;
+  docData: string;
+  createdAt: string;
+}
+
+export interface CachedExpenseRecord {
+  id: string;
+  date: string;
+  category: string;
+  amount: number;
+  description?: string;
+  raw?: any;
+}
+
+export interface CachedStaffRecord {
+  id: string;
+  staffId: string;
+  userName: string;
+  role: string;
+  department?: string;
+  raw?: any;
+}
+
+export interface CachedAdvanceRecord {
+  id: string;
+  staffId: string;
+  date: string;
+  amount: number;
+  raw?: any;
+}
+
+export interface CachedEodReportRecord {
+  reportDate: string;
+  summaryData: any;
+  createdAt: string;
+}
+
 // =========================================================================
 // SRI SAI VASUDEV RESIDENCY IndexedDB Database Class
 // =========================================================================
@@ -67,6 +129,13 @@ export class HotelSaiVasudevDB extends Dexie {
   rooms!: Table<CachedRoomRecord, string | number>;
   menuItems!: Table<CachedMenuItemRecord, string | number>;
   kotQueue!: Table<QueuedKotOrder, number>;
+  bookings!: Table<CachedBookingRecord, string>;
+  checkouts!: Table<CachedCheckoutRecord, string>;
+  kycDocuments!: Table<CachedKycDocument, string>;
+  expenses!: Table<CachedExpenseRecord, string>;
+  staff!: Table<CachedStaffRecord, string>;
+  advances!: Table<CachedAdvanceRecord, string>;
+  eodReports!: Table<CachedEodReportRecord, string>;
 
   constructor() {
     super('HotelSaiVasudev_ERP_Offline_DB');
@@ -74,6 +143,18 @@ export class HotelSaiVasudevDB extends Dexie {
       rooms: 'id, roomNo, status, roomType, floor',
       menuItems: 'id, itemCode, category, isAvailable',
       kotQueue: '++id, clientRef, syncStatus, serviceType, createdAt'
+    });
+    this.version(2).stores({
+      rooms: 'id, roomNo, status, roomType, floor',
+      menuItems: 'id, itemCode, category, isAvailable',
+      kotQueue: '++id, clientRef, syncStatus, serviceType, createdAt',
+      bookings: 'id, bookingNo, roomNo, status, checkInDate, checkOutDate',
+      checkouts: 'invoiceNo, roomNo, checkOutDate',
+      kycDocuments: 'id, guestId, roomNo, docType, createdAt',
+      expenses: 'id, date, category',
+      staff: 'id, staffId, userName, role',
+      advances: 'id, staffId, date',
+      eodReports: 'reportDate, createdAt'
     });
   }
 }
@@ -204,10 +285,13 @@ export async function queueOfflineKot(kotData: any): Promise<QueuedKotOrder> {
     retryCount: 0
   };
 
-  const id = await offlineDb.kotQueue.add(queuedOrder);
-  queuedOrder.id = id;
-
-  console.info(`[Offline KOT] Queued order ${queuedOrder.kotNo} in IndexedDB (ID: ${id})`);
+  try {
+    const id = await offlineDb.kotQueue.add(queuedOrder);
+    queuedOrder.id = id;
+    console.info(`[Offline KOT] Queued order ${queuedOrder.kotNo} in IndexedDB (ID: ${id})`);
+  } catch (dbErr) {
+    console.warn(`[Offline KOT] Failed to persist order ${queuedOrder.kotNo} to IndexedDB, using client memory fallback:`, dbErr);
+  }
 
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('svr:kot_offline_queued', { detail: queuedOrder }));
@@ -357,4 +441,72 @@ if (typeof window !== 'undefined') {
       });
     }
   }, 25000);
+}
+
+// =========================================================================
+// Heavy KYC Documents & PMS Store Asynchronous IndexedDB Helpers
+// =========================================================================
+
+export async function saveKycDocToIndexedDb(doc: CachedKycDocument): Promise<void> {
+  try {
+    await offlineDb.kycDocuments.put(doc);
+  } catch (e) {
+    console.warn('[IndexedDB] Failed to save KYC doc to IndexedDB:', e);
+  }
+}
+
+export async function getKycDocFromIndexedDb(id: string): Promise<CachedKycDocument | undefined> {
+  try {
+    return await offlineDb.kycDocuments.get(id);
+  } catch (e) {
+    console.warn('[IndexedDB] Failed to retrieve KYC doc:', e);
+    return undefined;
+  }
+}
+
+export async function backupPmsStoreToIndexedDb(data: {
+  bookings?: any[];
+  checkouts?: any[];
+  expenses?: any[];
+}): Promise<void> {
+  try {
+    if (data.bookings?.length) {
+      const records: CachedBookingRecord[] = data.bookings.map(b => ({
+        id: String(b.bookingId || b.id || b.bookingNo),
+        bookingNo: b.bookingNo || '',
+        roomNo: b.roomNo || '',
+        guestName: b.guestName || b.name || '',
+        phone: b.guestPhone || b.phone || '',
+        status: b.status || 'booked',
+        checkInDate: b.checkInDate || '',
+        checkOutDate: b.checkOutDate || '',
+        raw: b
+      }));
+      await offlineDb.bookings.bulkPut(records);
+    }
+    if (data.checkouts?.length) {
+      const records: CachedCheckoutRecord[] = data.checkouts.map(c => ({
+        invoiceNo: c.invoiceNo,
+        roomNo: c.roomNo,
+        guestName: c.guestName,
+        checkOutDate: c.checkOutDate,
+        netPayable: c.netPayable,
+        raw: c
+      }));
+      await offlineDb.checkouts.bulkPut(records);
+    }
+    if (data.expenses?.length) {
+      const records: CachedExpenseRecord[] = data.expenses.map(e => ({
+        id: String(e.id || Math.random()),
+        date: e.date || '',
+        category: e.category || 'General',
+        amount: Number(e.amount || 0),
+        description: e.description,
+        raw: e
+      }));
+      await offlineDb.expenses.bulkPut(records);
+    }
+  } catch (err) {
+    console.warn('[IndexedDB Backup] Failed to persist data to IndexedDB:', err);
+  }
 }

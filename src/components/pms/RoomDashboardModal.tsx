@@ -1,17 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import type { PmsRoom, PmsBooking, PmsFolioSummary } from '../../types/pmsModels';
+import type { PmsFolioSummary } from '../../types/pmsModels';
 import { PmsStore, usePmsSync } from '../../services/pmsStore';
 import { useERPWebSocket } from '../../hooks/useERPWebSocket';
-import { NewRoomBookingModal } from './NewRoomBookingModal';
-import { NewRoomCheckInModal } from './NewRoomCheckInModal';
-import { BookingReceiptModal } from './BookingReceiptModal';
-import { KotEntryModal } from './KotEntryModal';
-import { FoodBillModal } from './FoodBillModal';
-import { RoomCheckOutModal } from './RoomCheckOutModal';
+import { openPmsModal } from '../../services/pmsModalEvents';
+import { useDebounce } from '../../hooks/useDebounce';
 import { MarkDirtyModal } from './MarkDirtyModal';
-import { RoomShiftModal } from './RoomShiftModal';
-import { HousekeepingTrackerModal } from './HousekeepingTrackerModal';
-import { PettyExpenseModal } from './PettyExpenseModal';
 
 interface RoomDashboardModalProps {
   onSwitchToHomeHub?: () => void;
@@ -42,6 +35,7 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
   const [floorFilter, setFloorFilter] = useState<'all' | '0' | '1'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'vacant' | 'occupied' | 'booked' | 'dirty' | 'blocked'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 200);
 
   // Slide-Over Action Drawer State
   const [selectedDrawerRoomNo, setSelectedDrawerRoomNo] = useState<string | null>(null);
@@ -78,31 +72,8 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
   const [splitFolioA, setSplitFolioA] = useState<string[]>(['Room Accommodation (SAC 996311)']);
   const [splitFolioB, setSplitFolioB] = useState<string[]>(['Vasudev Rasoi Dining (SAC 996331)', 'Laundry & Extras (SAC 9997)']);
 
-  // Submodals state
-  const [isBookingOpen, setIsBookingOpen] = useState(false);
-  const [selectedRoomForBooking, setSelectedRoomForBooking] = useState<PmsRoom | null>(null);
-
-  const [isCheckInOpen, setIsCheckInOpen] = useState(false);
-  const [selectedRoomForCheckIn, setSelectedRoomForCheckIn] = useState<PmsRoom | null>(null);
-
-  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
-  const [latestBooking, setLatestBooking] = useState<PmsBooking | null>(null);
-
-  const [isKotOpen, setIsKotOpen] = useState(false);
-  const [selectedRoomForKot, setSelectedRoomForKot] = useState<PmsRoom | null>(null);
-
-  const [isFoodBillOpen, setIsFoodBillOpen] = useState(false);
-  const [selectedRoomForFoodBill, setSelectedRoomForFoodBill] = useState<PmsRoom | null>(null);
-
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [selectedRoomForCheckout, setSelectedRoomForCheckout] = useState<PmsRoom | null>(null);
-
+  // Status Modal
   const [isDirtyModalOpen, setIsDirtyModalOpen] = useState(false);
-  const [isRoomShiftOpen, setIsRoomShiftOpen] = useState(false);
-  const [selectedRoomForShift, setSelectedRoomForShift] = useState<string | undefined>(undefined);
-
-  const [isHousekeepingOpen, setIsHousekeepingOpen] = useState(false);
-  const [isPettyExpenseOpen, setIsPettyExpenseOpen] = useState(false);
 
   // Counts & KPI Metrics across all 16 rooms (Module 1 Requirement)
   const totalRoomsCount = rooms.length;
@@ -134,8 +105,8 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
       // Status filter
       if (statusFilter !== 'all' && r.status !== statusFilter) return false;
       // Search query (room #, guest name, phone, room type)
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
+      if (debouncedSearchQuery.trim()) {
+        const q = debouncedSearchQuery.toLowerCase().trim();
         const matchRoomNo = r.roomNo.toLowerCase().includes(q);
         const matchGuest = r.currentGuest?.name.toLowerCase().includes(q) || false;
         const matchPhone = r.currentGuest?.phone.toLowerCase().includes(q) || false;
@@ -144,7 +115,7 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
       }
       return true;
     });
-  }, [rooms, floorFilter, statusFilter, searchQuery]);
+  }, [rooms, floorFilter, statusFilter, debouncedSearchQuery]);
 
   // Selected Drawer Room and Folio Summary
   const drawerRoom = useMemo(() => {
@@ -496,7 +467,7 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <button
             type="button"
-            onClick={() => setIsHousekeepingOpen(true)}
+            onClick={() => openPmsModal('housekeeping')}
             style={{
               background: '#065f46',
               color: '#ffffff',
@@ -538,7 +509,7 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
 
           <button
             type="button"
-            onClick={() => setIsPettyExpenseOpen(true)}
+            onClick={() => openPmsModal('petty_expense')}
             style={{
               background: '#1e293b',
               color: '#ffffff',
@@ -871,8 +842,7 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSelectedRoomForCheckIn(room);
-                            setIsCheckInOpen(true);
+                            openPmsModal('new_checkin', { preselectedRoom: room });
                           }}
                           style={{
                             flex: 2,
@@ -929,8 +899,7 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSelectedRoomForKot(room);
-                            setIsKotOpen(true);
+                            openPmsModal('kot_entry', { defaultTableNo: room.roomNo });
                           }}
                           style={{
                             flex: 1,
@@ -956,8 +925,7 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSelectedRoomForCheckout(room);
-                            setIsCheckoutOpen(true);
+                            openPmsModal('direct_checkout', { targetRoom: room });
                           }}
                           style={{
                             flex: 1,
@@ -1074,8 +1042,7 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setSelectedRoomForCheckIn(room);
-                          setIsCheckInOpen(true);
+                          openPmsModal('new_checkin', { preselectedRoom: room });
                         }}
                         style={{
                           width: '100%',
@@ -1410,8 +1377,7 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      setSelectedRoomForKot(drawerRoom);
-                      setIsKotOpen(true);
+                      openPmsModal('kot_entry', { defaultTableNo: drawerRoom.roomNo });
                     }}
                     style={{ padding: '9px 10px', background: '#d97706', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
                   >
@@ -1453,8 +1419,7 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      setSelectedRoomForShift(drawerRoom.roomNo);
-                      setIsRoomShiftOpen(true);
+                      openPmsModal('room_shift', { roomNo: drawerRoom.roomNo });
                     }}
                     style={{ padding: '9px 10px', background: '#7c3aed', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
                   >
@@ -1464,8 +1429,7 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      setSelectedRoomForFoodBill(drawerRoom);
-                      setIsFoodBillOpen(true);
+                      openPmsModal('food_bill', { defaultTableNo: drawerRoom.roomNo });
                     }}
                     style={{ padding: '9px 10px', background: '#ea580c', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
                   >
@@ -1491,8 +1455,7 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      setSelectedRoomForCheckout(drawerRoom);
-                      setIsCheckoutOpen(true);
+                      openPmsModal('direct_checkout', { targetRoom: drawerRoom });
                     }}
                     style={{ padding: '9px 10px', background: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 800, cursor: 'pointer', gridColumn: 'span 2' }}
                   >
@@ -1515,8 +1478,7 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    setSelectedRoomForCheckIn(drawerRoom);
-                    setIsCheckInOpen(true);
+                    openPmsModal('new_checkin', { preselectedRoom: drawerRoom });
                   }}
                   style={{ padding: '12px', background: '#059669', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 800, cursor: 'pointer' }}
                 >
@@ -1526,8 +1488,7 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    setSelectedRoomForBooking(drawerRoom);
-                    setIsBookingOpen(true);
+                    openPmsModal('new_booking', { preselectedRoom: drawerRoom });
                   }}
                   style={{ padding: '12px', background: '#2563eb', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 800, cursor: 'pointer' }}
                 >
@@ -1765,65 +1726,7 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
         </div>
       )}
 
-      {/* Submodals Mounted */}
-      <NewRoomBookingModal
-        isOpen={isBookingOpen}
-        onClose={() => setIsBookingOpen(false)}
-        preselectedRoom={selectedRoomForBooking}
-        onBookingCreated={(b) => {
-          setIsBookingOpen(false);
-          setLatestBooking(b);
-          setIsReceiptOpen(true);
-        }}
-      />
-
-      <NewRoomCheckInModal
-        isOpen={isCheckInOpen}
-        onClose={() => setIsCheckInOpen(false)}
-        preselectedRoom={selectedRoomForCheckIn}
-        onCheckInCompleted={() => {
-          setIsCheckInOpen(false);
-        }}
-      />
-
-      <BookingReceiptModal
-        isOpen={isReceiptOpen}
-        onClose={() => setIsReceiptOpen(false)}
-        booking={latestBooking}
-      />
-
-      <KotEntryModal
-        isOpen={isKotOpen}
-        onClose={() => setIsKotOpen(false)}
-        defaultRoomNo={selectedRoomForKot?.roomNo}
-        onKotSaved={() => {
-          setIsKotOpen(false);
-          setSelectedDrawerRoomNo(null);
-        }}
-      />
-
-      <FoodBillModal
-        isOpen={isFoodBillOpen}
-        onClose={() => setIsFoodBillOpen(false)}
-        defaultRoomNo={selectedRoomForFoodBill?.roomNo}
-        onBillSaved={() => {
-          setIsFoodBillOpen(false);
-          setSelectedDrawerRoomNo(null);
-        }}
-      />
-
-      <RoomCheckOutModal
-        isOpen={isCheckoutOpen}
-        onClose={() => {
-          setIsCheckoutOpen(false);
-          setSelectedDrawerRoomNo(null);
-        }}
-        targetRoom={selectedRoomForCheckout}
-        onCheckoutComplete={() => {
-          // Keep open for Tax Invoice review until onClose
-        }}
-      />
-
+      {/* Mark Dirty / Clean Status Modal */}
       <MarkDirtyModal
         isOpen={isDirtyModalOpen}
         onClose={() => setIsDirtyModalOpen(false)}
@@ -1831,22 +1734,6 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
           setIsDirtyModalOpen(false);
           setSelectedDrawerRoomNo(null);
         }}
-      />
-
-      <RoomShiftModal
-        isOpen={isRoomShiftOpen}
-        onClose={() => setIsRoomShiftOpen(false)}
-        initialFromRoomNo={selectedRoomForShift}
-        onShiftCompleted={() => {
-          setIsRoomShiftOpen(false);
-          setSelectedDrawerRoomNo(null);
-        }}
-      />
-
-      {/* Housekeeping Modal */}
-      <HousekeepingTrackerModal
-        isOpen={isHousekeepingOpen}
-        onClose={() => setIsHousekeepingOpen(false)}
       />
 
       {/* Split Folio (B2B Company Invoice vs Personal Invoice) Modal */}
@@ -1953,18 +1840,6 @@ export const RoomDashboardModal: React.FC<RoomDashboardModalProps> = ({
           </div>
         </div>
       )}
-
-      {/* Housekeeping Kanban Tracker Modal */}
-      <HousekeepingTrackerModal
-        isOpen={isHousekeepingOpen}
-        onClose={() => setIsHousekeepingOpen(false)}
-      />
-
-      {/* Petty Cash & Daily Night Audit Modal */}
-      <PettyExpenseModal
-        isOpen={isPettyExpenseOpen}
-        onClose={() => setIsPettyExpenseOpen(false)}
-      />
     </div>
   );
 };

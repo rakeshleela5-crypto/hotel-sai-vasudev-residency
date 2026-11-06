@@ -475,12 +475,31 @@ export const hotelApi = {
     try {
       const res = await fetch('http://127.0.0.1:8080/encode-keycard', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Hardware-Token': (typeof window !== 'undefined' && (window as any).__HARDWARE_BRIDGE_TOKEN__) || 'svr-hardware-token-2026-safe-desk'
+        },
         body: JSON.stringify(keyData)
       });
       return await res.json();
     } catch {
       return { status: 'BRIDGE_OFFLINE', message: 'Local Hardware Bridge not running on port 8080. Start backend/hardware_bridge.py on desk PC.' };
+    }
+  },
+
+  async openCashDrawer(token?: string): Promise<{ status: string; message: string }> {
+    try {
+      const res = await fetch('http://127.0.0.1:8080/open-cash-drawer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Hardware-Token': token || (typeof window !== 'undefined' && (window as any).__HARDWARE_BRIDGE_TOKEN__) || 'svr-hardware-token-2026-safe-desk'
+        },
+        body: JSON.stringify({ action: 'kick_drawer', timestamp: new Date().toISOString() })
+      });
+      return await res.json();
+    } catch {
+      return { status: 'BRIDGE_OFFLINE', message: 'Local Hardware Bridge not reachable on port 8080.' };
     }
   },
 

@@ -343,7 +343,7 @@ export const RoomQrCodeManagerModal: React.FC<RoomQrCodeManagerModalProps> = ({
       position: 'fixed',
       inset: 0,
       backgroundColor: 'rgba(0,0,0,0.85)',
-      zIndex: 9000,
+      zIndex: 12000,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',

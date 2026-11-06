@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
 from app.database import get_db
-from app.models import GuestRoomServiceOrder, Booking, RoomFolioItem
+from app.models import GuestRoomServiceOrder, Booking, RoomFolioItem, Room
 
 router = APIRouter()
 
@@ -513,8 +513,10 @@ def create_guest_order(payload: CreateGuestOrderPayload, db: Session = Depends(g
 
     # If settled to room folio, bind charges to active guest booking (Bug-04)
     if payload.payment_method == "Transfer to Room Folio" and payload.total_amount > 0:
-        active_booking = db.query(Booking).filter(
-            Booking.room_number == payload.room_no,
+        active_booking = db.query(Booking).join(
+            Room, Booking.room_id == Room.id
+        ).filter(
+            (Room.name.ilike(f"%{payload.room_no}%")) | (Room.slug.ilike(f"%{payload.room_no}%")),
             Booking.status.in_(["Checked-In", "Confirmed"]),
             Booking.is_deleted == False
         ).order_by(Booking.id.desc()).first()

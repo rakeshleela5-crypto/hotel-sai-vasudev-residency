@@ -69,7 +69,9 @@ import { RoomQrCodeManagerModal } from './RoomQrCodeManagerModal';
 import { ReceptionistNotificationBanner } from './ReceptionistNotificationBanner';
 import { GuestRoomServicePortalPage } from '../guest/GuestRoomServicePortalPage';
 import { CharteredAccountantExportModal } from './CharteredAccountantExportModal';
-import type { PmsUserAccount, PmsChainProperty, BillFormatType, PmsCheckOutDetail, PmsGstReportTab, PmsRoom } from '../../types/pmsModels';
+import { BookingReceiptModal } from './BookingReceiptModal';
+import type { PmsUserAccount, PmsChainProperty, BillFormatType, PmsCheckOutDetail, PmsGstReportTab, PmsRoom, PmsBooking } from '../../types/pmsModels';
+import type { PmsModalOpenDetail } from '../../services/pmsModalEvents';
 import { PmsStore } from '../../services/pmsStore';
 import './pmsStyles.css';
 
@@ -94,6 +96,8 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   // Direct Booking & Check Out Modals
   const [isNewBookingModalOpen, setIsNewBookingModalOpen] = useState(false);
   const [selectedRoomForNewBooking, setSelectedRoomForNewBooking] = useState<PmsRoom | null>(null);
+  const [latestBooking, setLatestBooking] = useState<PmsBooking | null>(null);
+  const [isBookingReceiptOpen, setIsBookingReceiptOpen] = useState(false);
   const [isDirectCheckoutOpen, setIsDirectCheckoutOpen] = useState(false);
   const [selectedRoomForDirectCheckout, setSelectedRoomForDirectCheckout] = useState<PmsRoom | null>(null);
 
@@ -492,6 +496,236 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
     return () => window.removeEventListener('pms_user_changed', handleUserChanged);
   }, []);
 
+  // Central Modal Opener Listener for PmsHomeDashboard, RoomDashboard & child drawers
+  React.useEffect(() => {
+    const handleOpenModal = (e: Event) => {
+      const detail = (e as CustomEvent<PmsModalOpenDetail>).detail;
+      if (!detail || !detail.modal) return;
+      switch (detail.modal) {
+        case 'new_booking':
+          if (detail.props?.preselectedRoom) setSelectedRoomForNewBooking(detail.props.preselectedRoom);
+          setIsNewBookingModalOpen(true);
+          break;
+        case 'new_checkin':
+          setIsNewCheckInOpen(true);
+          break;
+        case 'booking_receipt':
+          if (detail.props?.booking) setLatestBooking(detail.props.booking);
+          setIsBookingReceiptOpen(true);
+          break;
+        case 'direct_checkout':
+          if (detail.props?.targetRoom) setSelectedRoomForDirectCheckout(detail.props.targetRoom);
+          setIsDirectCheckoutOpen(true);
+          break;
+        case 'calendar':
+          setIsCalendarOpen(true);
+          break;
+        case 'unconfirmed':
+          setIsUnconfirmedOpen(true);
+          break;
+        case 'housekeeping':
+          setIsHousekeepingOpen(true);
+          break;
+        case 'petty_expense':
+          setIsPettyExpenseOpen(true);
+          break;
+        case 'fbb_report':
+          setIsFbbReportOpen(true);
+          break;
+        case 'kot_entry':
+          if (detail.props?.defaultTableNo) setSelectedKotTable(detail.props.defaultTableNo);
+          setIsKotModalOpen(true);
+          break;
+        case 'food_bill':
+          if (detail.props?.defaultTableNo) setSelectedBillTable(detail.props.defaultTableNo);
+          setIsFoodBillModalOpen(true);
+          break;
+        case 'advance_receipt':
+          setIsAdvanceReceiptOpen(true);
+          break;
+        case 'party_ledger':
+          setIsPartyLedgerOpen(true);
+          break;
+        case 'room_master':
+          setIsRoomMasterOpen(true);
+          break;
+        case 'table_master':
+          setIsTableMasterOpen(true);
+          break;
+        case 'item_master':
+          setIsItemMasterOpen(true);
+          break;
+        case 'other_master':
+          if (detail.props?.tab) setOtherMasterTab(detail.props.tab);
+          setIsOtherMasterOpen(true);
+          break;
+        case 'business_setting':
+          setIsBusinessSettingOpen(true);
+          break;
+        case 'company_info':
+          setIsCompanyInfoOpen(true);
+          break;
+        case 'room_shift':
+          if (detail.props?.roomNo) setSelectedRoomForShift(detail.props.roomNo);
+          setIsRoomShiftOpen(true);
+          break;
+        case 'checkin_register':
+          setIsCheckInRegisterOpen(true);
+          break;
+        case 'kitchen_dashboard':
+          setIsKitchenDashboardOpen(true);
+          break;
+        case 'restaurant_kot':
+          setIsRestaurantKotOpen(true);
+          break;
+        case 'table_dashboard':
+          setIsTableDashboardOpen(true);
+          break;
+        case 'shift_table':
+          setIsShiftTableOpen(true);
+          break;
+        case 'nc_kot_register':
+          setIsNcKotRegisterOpen(true);
+          break;
+        case 'room_kot_register':
+          setIsRoomKotRegisterOpen(true);
+          break;
+        case 'receipt_register':
+          setIsReceiptRegisterOpen(true);
+          break;
+        case 'outstanding_receivables':
+          setIsOutstandingReceivablesOpen(true);
+          break;
+        case 'payment_register':
+          setIsPaymentRegisterOpen(true);
+          break;
+        case 'purchase':
+          setIsPurchaseOpen(true);
+          break;
+        case 'stock_transfer':
+          if (detail.props?.mode) setStockTransferMode(detail.props.mode);
+          setIsStockTransferOpen(true);
+          break;
+        case 'stock_report':
+        case 'store_wise_stock':
+          setIsStoreWiseStockOpen(true);
+          break;
+        case 'online_guest_booking':
+          setIsOnlineGuestBookingOpen(true);
+          break;
+        case 'user_management':
+          setIsUserManagementOpen(true);
+          break;
+        case 'roles_permissions':
+          setIsRolesPermissionsOpen(true);
+          break;
+        case 'chain_property':
+          setIsChainPropertyOpen(true);
+          break;
+        case 'device_preview':
+          setIsDevicePreviewOpen(true);
+          break;
+        case 'whatsapp_setting':
+          setIsWhatsAppSettingOpen(true);
+          break;
+        case 'whatsapp_logs':
+          setIsWhatsAppLogsOpen(true);
+          break;
+        case 'police_station_report':
+          setIsPoliceReportOpen(true);
+          break;
+        case 'online_vs_offline':
+          setIsOnlineVsOfflineOpen(true);
+          break;
+        case 'hotel_bill_format':
+          if (detail.props?.initialCheckout) setSelectedBillCheckout(detail.props.initialCheckout);
+          if (detail.props?.initialFormat) setActiveBillFormat(detail.props.initialFormat);
+          setIsBillFormatOpen(true);
+          break;
+        case 'company_branding':
+          if (detail.props?.tab) setCompanyBrandingTab(detail.props.tab);
+          setIsCompanyBrandingOpen(true);
+          break;
+        case 'checkout_register':
+          setIsCheckOutRegisterOpen(true);
+          break;
+        case 'top20_features':
+          setIsTop20FeaturesOpen(true);
+          break;
+        case 'gst_reports':
+          if (detail.props?.tab) setGstReportTab(detail.props.tab);
+          setIsGstReportsOpen(true);
+          break;
+        case 'day_end_report':
+          setIsDayEndModalOpen(true);
+          break;
+        case 'item_sales_report':
+          setIsItemWiseSaleModalOpen(true);
+          break;
+        case 'item_stock':
+          setIsItemWiseStockModalOpen(true);
+          break;
+        case 'guest_log':
+          setIsGuestLogModalOpen(true);
+          break;
+        case 'shift_handover':
+          setIsShiftHandoverModalOpen(true);
+          break;
+        case 'help_support':
+          if (detail.props?.tab) setHelpInitialTab(detail.props.tab);
+          setIsHelpAndSupportOpen(true);
+          break;
+        case 'agent_commission':
+          setIsAgentCommissionOpen(true);
+          break;
+        case 'liquor_bar':
+          setIsLiquorBarOpen(true);
+          break;
+        case 'no_discount_master':
+          setIsNoDiscountOpen(true);
+          break;
+        case 'banquet_billing':
+          setIsBanquetOpen(true);
+          break;
+        case 'gstr1_export':
+          setIsGstr1ExportOpen(true);
+          break;
+        case 'r2_storage':
+          setIsR2StorageOpen(true);
+          break;
+        case 'housekeeping_discrepancy':
+          setIsHousekeepingDiscrepancyOpen(true);
+          break;
+        case 'rfid_keycard':
+          setIsRfidKeyCardOpen(true);
+          break;
+        case 'monthly_hotel_sale':
+          setIsMonthlyHotelSaleOpen(true);
+          break;
+        case 'monthly_restaurant_sale':
+          setIsMonthlyRestaurantSaleOpen(true);
+          break;
+        case 'staff_payroll':
+          setIsStaffPayrollOpen(true);
+          break;
+        case 'eod_analytics':
+          setIsEodAnalyticsOpen(true);
+          break;
+        case 'room_qr_manager':
+          setIsRoomQrManagerOpen(true);
+          break;
+        case 'ca_export':
+          setIsCaExportOpen(true);
+          break;
+        case 'guest_portal':
+          if (detail.props?.roomNo) setActiveGuestPortalRoom(detail.props.roomNo);
+          break;
+      }
+    };
+    window.addEventListener('pms:open_modal', handleOpenModal);
+    return () => window.removeEventListener('pms:open_modal', handleOpenModal);
+  }, []);
+
   // Real-Time Cloud Synchronization Bridge (PostgreSQL on Railway)
   const [syncStatus, setSyncStatus] = useState<{ isSyncing: boolean; text: string; status: 'online' | 'offline' }>({
     isSyncing: false,
@@ -612,11 +846,28 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
     }
   };
 
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
     <>
-      <div className="pms-overlay" onClick={onClose}>
+      <div 
+        className="pms-overlay" 
+        onClick={onClose}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Hotel Management System PMS"
+      >
         <div className={`pms-window ${isMobileMode ? 'is-mobile-viewport' : ''}`} onClick={e => e.stopPropagation()}>
           {/* Master Header matching Video 01 & 02 */}
           {/* Master Header matching Video 01 & 02 */}
@@ -2158,15 +2409,30 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       />
 
       {/* Video 02 & Video 04: New Room Booking Modal */}
-      <NewRoomBookingModal
-        isOpen={isNewBookingModalOpen}
-        onClose={() => setIsNewBookingModalOpen(false)}
-        preselectedRoom={selectedRoomForNewBooking}
-        onBookingCreated={() => {
-          setIsNewBookingModalOpen(false);
-          setRoomRefreshTrigger(prev => prev + 1);
-        }}
-      />
+      {isNewBookingModalOpen && (
+        <NewRoomBookingModal
+          isOpen={isNewBookingModalOpen}
+          onClose={() => setIsNewBookingModalOpen(false)}
+          preselectedRoom={selectedRoomForNewBooking}
+          onBookingCreated={(b) => {
+            setIsNewBookingModalOpen(false);
+            setRoomRefreshTrigger(prev => prev + 1);
+            if (b) {
+              setLatestBooking(b);
+              setIsBookingReceiptOpen(true);
+            }
+          }}
+        />
+      )}
+
+      {/* Booking Receipt Voucher Modal */}
+      {isBookingReceiptOpen && (
+        <BookingReceiptModal
+          isOpen={isBookingReceiptOpen}
+          onClose={() => setIsBookingReceiptOpen(false)}
+          booking={latestBooking}
+        />
+      )}
 
       {/* Video 26: Direct Room Check Out Modal */}
       {selectedRoomForDirectCheckout && (

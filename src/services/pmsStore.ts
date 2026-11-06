@@ -3549,10 +3549,12 @@ export class PmsStore {
 
     let discountAmount = 0;
     if (roomDiscount) {
+      const sanitizedVal = Math.max(0, Number(roomDiscount.value || 0));
       if (roomDiscount.type === 'percent') {
-        discountAmount = Math.round(baseRoomRent * (roomDiscount.value / 100));
+        const clampedPct = Math.min(100, sanitizedVal);
+        discountAmount = Math.round(baseRoomRent * (clampedPct / 100));
       } else {
-        discountAmount = Math.min(baseRoomRent, roomDiscount.value);
+        discountAmount = Math.min(baseRoomRent, sanitizedVal);
       }
     }
 
@@ -11683,60 +11685,6 @@ export class PmsStore {
       } catch {
         list = [];
       }
-    }
-
-    if (list.length === 0) {
-      // Seed default today punches for existing staff profiles
-      const staffList = this.getStaffProfiles();
-      const todayStr = new Date().toISOString().split('T')[0];
-      const initialPunches: StaffBiometricAttendance[] = [];
-
-      staffList.forEach((s, idx) => {
-        const inHour = 8 + (idx % 2);
-        const inMin = (idx * 7) % 60;
-        const statusVal: 'Present' | 'Late' = (inHour === 9 && inMin > 30) ? 'Late' : 'Present';
-        const inTimeStr = `${todayStr}T${String(inHour).padStart(2, '0')}:${String(inMin).padStart(2, '0')}:15.000Z`;
-        const outTimeStr = `${todayStr}T${String(17 + (idx % 2)).padStart(2, '0')}:${String((idx * 11) % 60).padStart(2, '0')}:40.000Z`;
-
-        initialPunches.push({
-          id: `pun-in-${s.id}-${Date.now()}`,
-          staff_id: s.id,
-          staff_name: s.full_name,
-          staff_code: s.staff_code,
-          department: s.department,
-          role: s.role,
-          device_enroll_id: s.staff_code,
-          punch_time: inTimeStr,
-          punch_date: todayStr,
-          punch_type: 'Check-In',
-          verification_mode: 'Visible Light Face Recognition',
-          device_serial_no: 'AIFACE-ERIS-01',
-          temperature: 36.5 + ((idx % 4) * 0.1),
-          status: statusVal,
-          notes: 'Face Recognition Verified at Lobby'
-        });
-
-        initialPunches.push({
-          id: `pun-out-${s.id}-${Date.now()}`,
-          staff_id: s.id,
-          staff_name: s.full_name,
-          staff_code: s.staff_code,
-          department: s.department,
-          role: s.role,
-          device_enroll_id: s.staff_code,
-          punch_time: outTimeStr,
-          punch_date: todayStr,
-          punch_type: 'Check-Out',
-          verification_mode: 'Visible Light Face Recognition',
-          device_serial_no: 'AIFACE-ERIS-01',
-          temperature: 36.6,
-          status: 'Present',
-          notes: 'Evening Shift Check-Out'
-        });
-      });
-
-      localStorage.setItem(STORAGE_KEYS.STAFF_ATTENDANCE, JSON.stringify(initialPunches));
-      list = initialPunches;
     }
 
     if (date) {

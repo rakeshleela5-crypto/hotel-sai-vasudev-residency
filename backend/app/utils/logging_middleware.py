@@ -66,6 +66,9 @@ class StructuredLoggingMiddleware(BaseHTTPMiddleware):
         if "decentro" in path and "webhook" in path:
             try:
                 body_bytes = await request.body()
+                async def receive():
+                    return {"type": "http.request", "body": body_bytes}
+                request = Request(request.scope, receive=receive)
                 masked_payload = {}
                 if body_bytes:
                     try:
