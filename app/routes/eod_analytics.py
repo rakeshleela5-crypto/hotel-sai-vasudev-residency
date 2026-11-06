@@ -543,10 +543,15 @@ def get_eod_summary(
         amt = float(e.amount or 0.0)
         by_subcategory[e.subcategory] = round(by_subcategory.get(e.subcategory, 0.0) + amt, 2)
 
-    # 2. Checkouts on target date
+    # 2. Checkouts & Food Bills on target date
     checkouts = db.query(CheckoutRecord).filter(
         CheckoutRecord.is_deleted == False,
         CheckoutRecord.check_out_date == target_date
+    ).all()
+
+    food_bills = db.query(FoodBill).filter(
+        FoodBill.is_deleted == False,
+        FoodBill.date == target_date
     ).all()
 
     room_rev = sum(float(c.total_room_rent or 0.0) for c in checkouts)
@@ -554,8 +559,14 @@ def get_eod_summary(
     gst_rev = sum(float(c.gst_amount or 0.0) for c in checkouts)
     total_bill = sum(float(c.net_payable or 0.0) for c in checkouts)
 
-    cash_collections = sum(float(c.net_payable or 0.0) for c in checkouts if (c.payment_mode or "").lower() == "cash")
-    digital_collections = sum(float(c.net_payable or 0.0) for c in checkouts if (c.payment_mode or "").lower() != "cash")
+    # Inflow reconciliation: include room checkouts and direct restaurant food bills (excluding room settlements to prevent double-counting)
+    room_cash = sum(float(c.net_payable or 0.0) for c in checkouts if (c.payment_mode or "").lower() == "cash")
+    food_cash = sum(float(fb.net_bill_amount or 0.0) for fb in food_bills if (fb.settlement_type or "").lower() == "cash")
+    cash_collections = round(room_cash + food_cash, 2)
+
+    room_digital = sum(float(c.net_payable or 0.0) for c in checkouts if (c.payment_mode or "").lower() != "cash")
+    food_digital = sum(float(fb.net_bill_amount or 0.0) for fb in food_bills if (fb.settlement_type or "").lower() != "cash" and not (fb.settlement_type or "").lower().startswith("room"))
+    digital_collections = round(room_digital + food_digital, 2)
 
     # 3. Cash Drawer Balance
     opening_cash_float = 15000.0  # Standard Sri Sai Vasudev Residency front desk float

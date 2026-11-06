@@ -12,11 +12,16 @@ Features:
 """
 
 import sys
+import os
+import re
 import json
+import hmac
 import datetime
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 PORT = 8080
+ALLOWED_ORIGIN_REGEX = re.compile(r"^https://([a-zA-Z0-9-]+\.)?hotel-sai-vasudev-residency(-[a-z0-9]+)?\.pages\.dev$")
+HARDWARE_BRIDGE_TOKEN = os.getenv("HARDWARE_BRIDGE_TOKEN", "svr-hardware-token-2026-safe-desk")
 
 class HardwareBridgeHandler(BaseHTTPRequestHandler):
     ALLOWED_ORIGINS = {
@@ -29,14 +34,21 @@ class HardwareBridgeHandler(BaseHTTPRequestHandler):
 
     def _send_cors_headers(self):
         origin = self.headers.get("Origin", "")
-        # Allow exact match or official preview domains
-        if origin in self.ALLOWED_ORIGINS or (origin.startswith("https://hotel-sai-vasudev-residency") and origin.endswith(".pages.dev")):
+        # Allow exact match or official preview domains via regex
+        if origin in self.ALLOWED_ORIGINS or ALLOWED_ORIGIN_REGEX.match(origin):
             self.send_header("Access-Control-Allow-Origin", origin)
             self.send_header("Vary", "Origin")
         else:
             self.send_header("Access-Control-Allow-Origin", "https://hotel-sai-vasudev-residency.pages.dev")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, X-Hardware-Token")
+
+    def _verify_hardware_auth(self) -> bool:
+        """Verify pre-shared hardware authorization token for physical device commands."""
+        token = self.headers.get("X-Hardware-Token") or self.headers.get("Authorization", "").replace("Bearer ", "").strip()
+        if not token:
+            return False
+        return hmac.compare_digest(token, HARDWARE_BRIDGE_TOKEN)
 
     def do_OPTIONS(self):
         self.send_response(200)
@@ -64,23 +76,24 @@ class HardwareBridgeHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         content_length = int(self.headers.get("Content-Length", 0))
-        body = self.rfile.read(content_length).decode("utf-8")
-        data = json.loads(body) if body else {}
+        body = self.rfile.read(content_length).decode("utf-8") if content_length > 0 else ""
+        try:
+            data = json.loads(body) if body else {}
+        except Exception:
+            self.send_response(400)
+            self._send_cors_headers()
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(b'{"status": "ERROR", "message": "Malformed JSON payload"}')
+            return
 
         if self.path == "/print-receipt":
-            # Direct Thermal Receipt Printing
             booking_ref = data.get("booking_ref", "SVR-DEMO")
             guest_name = data.get("guest_name", "Valued Pilgrim")
             room_name = data.get("room_name", "Deluxe Stay")
             total = data.get("total_amount", 0.0)
 
-            # ESC/POS command sequences:
-            # ESC @ (Initialize) = \x1b\x40
-            # ESC a 1 (Center) = \x1b\x61\x01
-            # ESC E 1 (Bold On) = \x1b\x45\x01
-            # GS V 66 0 (Cut Paper) = \x1d\x56\x42\x00
             print(f"[Hardware Bridge] Printing 80mm Slip for Ref: {booking_ref}, Guest: {guest_name}, Total: Rs.{total}")
-
             self.send_response(200)
             self._send_cors_headers()
             self.send_header("Content-Type", "application/json")
@@ -94,13 +107,11 @@ class HardwareBridgeHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(res).encode("utf-8"))
 
         elif self.path == "/encode-keycard":
-            # RFID Key Card Encoding
             room_no = data.get("room_no", "204")
             guest_name = data.get("guest_name", "Guest")
             check_out = data.get("check_out_date", "2026-11-01")
 
             print(f"[Hardware Bridge] Encoding RFID Keycard for Room: {room_no}, Guest: {guest_name}, Expiry: {check_out} 11:00 AM")
-
             self.send_response(200)
             self._send_cors_headers()
             self.send_header("Content-Type", "application/json")
@@ -116,6 +127,15 @@ class HardwareBridgeHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(res).encode("utf-8"))
 
         elif self.path == "/open-cash-drawer":
+            # Security verification for physical drawer solenoid
+            if not self._verify_hardware_auth():
+                self.send_response(401)
+                self._send_cors_headers()
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(b'{"status": "ERROR", "message": "Unauthorized hardware trigger: Missing or invalid X-Hardware-Token"}')
+                return
+
             # Kick Cash Drawer Pulse (ESC p 0 25 250)
             print("[Hardware Bridge] Firing 24V Solenoid pulse to cash drawer RJ11 port.")
             self.send_response(200)

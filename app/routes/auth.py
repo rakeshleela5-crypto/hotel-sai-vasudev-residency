@@ -71,31 +71,32 @@ def login(
     else:
         staff_rec = None
 
-    # Determine role
-    if payload.role:
-        role = normalize_role(payload.role)
-    elif user_rec:
+    # Determine role strictly from database record
+    stored_hash = None
+    if user_rec:
         role = normalize_role(user_rec.role_name)
+        stored_hash = user_rec.password_hash
     elif staff_rec:
         role = normalize_role(staff_rec.role_name)
-    elif clean_user.lower() in ("owner", "admin", "superadmin", "super-admin"):
-        role = HospitalityRole.OWNER.value
-    elif clean_user.lower() in ("manager", "dutymanager"):
-        role = HospitalityRole.MANAGER.value
-    elif clean_user.lower() in ("steward", "waiter"):
-        role = HospitalityRole.STEWARD.value
-    elif clean_user.lower() in ("housekeeping", "cleaner"):
-        role = HospitalityRole.HOUSEKEEPING.value
-    else:
-        role = HospitalityRole.RECEPTIONIST.value
-
-    # Validate password if configured
-    stored_hash = None
-    if user_rec and user_rec.password_hash:
-        stored_hash = user_rec.password_hash
-    elif staff_rec and staff_rec.password_hash:
         stored_hash = staff_rec.password_hash
+    elif getattr(settings, "ENVIRONMENT", "").lower() in ("development", "test", "local"):
+        # Development fallback only for standard personas with default credentials
+        if clean_user.lower() in ("owner", "admin", "superadmin", "super-admin"):
+            role = HospitalityRole.OWNER.value
+        elif clean_user.lower() in ("manager", "dutymanager"):
+            role = HospitalityRole.MANAGER.value
+        elif clean_user.lower() in ("steward", "waiter"):
+            role = HospitalityRole.STEWARD.value
+        elif clean_user.lower() in ("housekeeping", "cleaner"):
+            role = HospitalityRole.HOUSEKEEPING.value
+        else:
+            role = HospitalityRole.RECEPTIONIST.value
+        if clean_pass != "admin123":
+            raise HTTPException(status_code=401, detail="Invalid username or password.")
+    else:
+        raise HTTPException(status_code=401, detail="Invalid username or password.")
 
+    # Validate password if hash exists
     if stored_hash:
         if not verify_password(clean_pass, stored_hash):
             raise HTTPException(status_code=401, detail="Invalid username or password.")

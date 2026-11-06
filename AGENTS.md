@@ -81,3 +81,4 @@ The following 8 specialized agents from the Kilocode / Antigravity marketplace e
 1. **Additive & Non-Destructive**: All agent actions must respect existing hotel database tables, operational routes, and live production states.
 2. **Deterministic Outputs**: When agents are tasked with work, they provide concrete code diffs, executable tests, or verified documentation rather than speculative advice.
 3. **Cross-Agent Collaboration**: Complex features can be routed through an **Architect** -> **Frontend/Data Specialist** -> **Code Reviewer/Skeptic** -> **Test Engineer** pipeline.
+

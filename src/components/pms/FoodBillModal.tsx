@@ -204,14 +204,46 @@ export const FoodBillModal: React.FC<FoodBillModalProps> = ({
   const roundOff = Number((netBillAmount - totalValue).toFixed(2));
 
   const convertNumberToWords = (num: number): string => {
+    const rounded = Math.round(num);
+    if (rounded === 0) return 'Zero Rupees Only';
+    if (rounded < 0) return `Minus ${convertNumberToWords(-rounded)}`;
+
     const units = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 
       'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
     const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-    if (num === 0) return 'Zero Rupees Only';
-    if (num < 20) return `${units[num]} Rupees Only`;
-    if (num < 100) return `${tens[Math.floor(num / 10)]} ${units[num % 10]} Rupees Only`.trim();
-    if (num < 1000) return `${units[Math.floor(num / 100)]} Hundred ${tens[Math.floor((num % 100) / 10)]} ${units[num % 10]} Rupees Only`.trim();
-    return `${num} Rupees Only`;
+
+    const formatBelowThousand = (n: number): string => {
+      let str = '';
+      if (n >= 100) {
+        str += units[Math.floor(n / 100)] + ' Hundred ';
+        n %= 100;
+      }
+      if (n >= 20) {
+        str += tens[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + units[n % 10] : '');
+      } else if (n > 0) {
+        str += units[n];
+      }
+      return str.trim();
+    };
+
+    let remaining = rounded;
+    let words = '';
+
+    const crore = Math.floor(remaining / 10000000);
+    remaining %= 10000000;
+    if (crore > 0) words += `${formatBelowThousand(crore)} Crore `;
+
+    const lakh = Math.floor(remaining / 100000);
+    remaining %= 100000;
+    if (lakh > 0) words += `${formatBelowThousand(lakh)} Lakh `;
+
+    const thousand = Math.floor(remaining / 1000);
+    remaining %= 1000;
+    if (thousand > 0) words += `${formatBelowThousand(thousand)} Thousand `;
+
+    if (remaining > 0) words += formatBelowThousand(remaining);
+
+    return `${words.trim()} Rupees Only`;
   };
 
   const amountInWords = convertNumberToWords(netBillAmount);

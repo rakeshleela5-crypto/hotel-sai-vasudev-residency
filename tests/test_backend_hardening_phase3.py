@@ -212,6 +212,8 @@ def test_pos_kot_idempotency_prevents_duplicate_punch_and_folio_charge(db):
             room_id=room.id,
             check_in_date="2026-11-04",
             check_out_date="2026-11-06",
+            base_rate=2500.0,
+            base_amount=2500.0,
             status="Checked-In",
             total_price=2500.0,
             balance_due=2500.0,

@@ -51,7 +51,7 @@ class Booking(Base):
     guest_email = Column(String(150), nullable=False)
     guest_phone = Column(String(50), nullable=False, index=True)
     id_proof_type = Column(String(50), default="Aadhaar Card")
-    id_proof_number = Column(String(50), nullable=True)
+    id_proof_number = Column(String(255), nullable=True) # Widened to 255 for Base64 Fernet AES ciphertext
     id_proof_document_key = Column(String(255), nullable=True) # Cloudflare R2 object key (e.g. kyc/2026/10/guest_442.pdf)
     guest_photo_url = Column(String(255), nullable=True) # Public guest photo URL
     invoice_pdf_key = Column(String(255), nullable=True) # Cloudflare R2 object key (e.g. invoices/2026/10/inv_101.pdf)
@@ -74,8 +74,8 @@ class Booking(Base):
     total_nights = Column(Integer, default=1)
 
     # Financial & Indian GST Tax Engine
-    base_rate = Column(Float, nullable=False) # Tariff per night
-    base_amount = Column(Float, nullable=False) # base_rate * total_nights
+    base_rate = Column(Float, nullable=False, default=2000.0) # Tariff per night
+    base_amount = Column(Float, nullable=False, default=2000.0) # base_rate * total_nights
     extra_guest_charge = Column(Float, default=0.0) # Extra adult charge
     discount_amount = Column(Float, default=0.0)
     gst_rate = Column(Float, default=12.0) # 12% if <= 7500, 18% if > 7500
@@ -181,7 +181,7 @@ class PoliceStationLog(Base):
     gender = Column(String(20), default="Male")
     nationality = Column(String(50), default="Indian")
     id_proof_type = Column(String(50), default="Aadhaar Card")
-    id_proof_number = Column(String(100), nullable=False)
+    id_proof_number = Column(String(255), nullable=False) # Widened to 255 for Base64 Fernet AES ciphertext
     permanent_address = Column(Text, nullable=False)
     origin_city = Column(String(100), nullable=False)
     next_destination = Column(String(100), nullable=False)
@@ -1362,7 +1362,7 @@ class Guest(Base):
     email = Column(String(150), nullable=True)
     gstin = Column(String(20), index=True, nullable=True)
     id_proof_type = Column(String(50), default="Aadhaar Card")
-    id_proof_number = Column(String(100), nullable=True)
+    id_proof_number = Column(String(255), nullable=True) # Widened to 255 for Base64 Fernet AES ciphertext
     address = Column(Text, nullable=True)
     city = Column(String(100), nullable=True)
     state = Column(String(100), nullable=True)
@@ -1422,6 +1422,162 @@ class KOTOrder(Base):
     __table_args__ = (
         Index("ix_kot_orders_room_id_status", "room_id", "status"),
     )
+
+# =========================================================================
+# MODULE 1: STAFF PROFILES, SALARY ADVANCES & MONTHLY PAYROLL
+# =========================================================================
+class StaffProfile(Base):
+    """
+    Staff Profile model for Hotel Sai Vasudev Residency.
+    Covers workers across Front Office, Housekeeping, Vasudev Rasoi F&B, Maintenance, Security, etc.
+    """
+    __tablename__ = "staff_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    staff_code = Column(String(50), unique=True, index=True, nullable=False)
+    full_name = Column(String(150), nullable=False, index=True)
+    gender = Column(String(20), nullable=False)  # Male, Female, Other
+    role = Column(String(100), nullable=False)   # Profession / Role
+    department = Column(String(100), nullable=False, index=True) # Department
+    phone = Column(String(30), nullable=False)
+    monthly_base_salary = Column(Float, nullable=False, default=0.0)
+    emergency_contact = Column(String(30), nullable=True)
+    date_of_joining = Column(String(30), nullable=True)
+    bank_name = Column(String(100), nullable=True)
+    bank_account_no = Column(String(50), nullable=True)
+    bank_ifsc = Column(String(30), nullable=True)
+    aadhaar_number = Column(String(20), nullable=True)
+    is_active = Column(Boolean, default=True, index=True)
+    created_at = Column(TimezoneAwareDateTime, default=now_utc)
+    updated_at = Column(TimezoneAwareDateTime, default=now_utc, onupdate=now_utc)
+
+class StaffSalaryAdvance(Base):
+    """
+    Mid-month salary advance records deducted automatically in end-of-month payroll.
+    """
+    __tablename__ = "staff_salary_advances"
+
+    id = Column(Integer, primary_key=True, index=True)
+    advance_voucher_no = Column(String(50), unique=True, index=True, nullable=False)
+    staff_id = Column(Integer, ForeignKey("staff_profiles.id"), nullable=False, index=True)
+    advance_date = Column(String(30), nullable=False, index=True)
+    month_period = Column(String(20), nullable=False, index=True)  # e.g. "2026-11"
+    amount = Column(Float, nullable=False)
+    payment_mode = Column(String(50), default="Cash")  # Cash, UPI, Bank Transfer
+    remarks = Column(Text, nullable=True)
+    is_deducted = Column(Boolean, default=False, index=True)
+    deducted_in_payroll_id = Column(Integer, nullable=True)
+    created_at = Column(TimezoneAwareDateTime, default=now_utc)
+    updated_at = Column(TimezoneAwareDateTime, default=now_utc, onupdate=now_utc)
+
+class StaffMonthlyPayroll(Base):
+    """
+    End-of-month consolidated payroll record for each worker.
+    Net Payable = Monthly Base Salary - Total Advances Taken in Month + Bonuses - Deductions.
+    """
+    __tablename__ = "staff_monthly_payroll"
+
+    id = Column(Integer, primary_key=True, index=True)
+    payroll_period = Column(String(20), nullable=False, index=True)  # e.g. "2026-11"
+    staff_id = Column(Integer, ForeignKey("staff_profiles.id"), nullable=False, index=True)
+    staff_name = Column(String(150), nullable=False)
+    department = Column(String(100), nullable=False)
+    role = Column(String(100), nullable=False)
+    monthly_base_salary = Column(Float, nullable=False)
+    total_advance_deducted = Column(Float, default=0.0)
+    bonus_or_allowance = Column(Float, default=0.0)
+    other_deductions = Column(Float, default=0.0)
+    net_payable_salary = Column(Float, nullable=False)
+    payout_status = Column(String(30), default="Pending", index=True)  # Pending, Paid
+    payment_date = Column(String(30), nullable=True)
+    payment_mode = Column(String(50), nullable=True)  # Bank Transfer, Cash, UPI
+    payment_reference = Column(String(100), nullable=True)
+    remarks = Column(Text, nullable=True)
+    created_at = Column(TimezoneAwareDateTime, default=now_utc)
+    updated_at = Column(TimezoneAwareDateTime, default=now_utc, onupdate=now_utc)
+
+    __table_args__ = (
+        Index("ix_staff_payroll_period_staff", "payroll_period", "staff_id", unique=True),
+    )
+
+class EodExpenditure(Base):
+    """
+    Module 2: End-of-Day (EOD) Daily Expenditure Tracker.
+    Captures daily expenditures segmented by Category and granular Subcategory,
+    payment mode (Cash, UPI, Card, specific Bank account), and vendor/recipient.
+    """
+    __tablename__ = "eod_expenditures"
+
+    id = Column(Integer, primary_key=True, index=True)
+    expense_date = Column(String(30), nullable=False, index=True)  # YYYY-MM-DD
+    expense_time = Column(String(20), nullable=True)  # HH:MM
+    voucher_no = Column(String(50), unique=True, index=True, nullable=False)  # EXP-EOD-YYYYMM-XXXX
+    category = Column(String(100), nullable=False, index=True)  # Housekeeping, Kitchen, Utilities, Maintenance, Staff, Admin, Misc
+    subcategory = Column(String(150), nullable=False, index=True)  # Housekeeping Supplies, Linen Washing, DG Diesel, etc.
+    amount = Column(Float, nullable=False)
+    payment_mode = Column(String(50), nullable=False, index=True)  # Cash, UPI, Debit Card, Credit Card, Bank Transfer
+    account_name = Column(String(100), default="Petty Cash Drawer")  # Petty Cash Drawer, SBI Current A/c, HDFC Bank A/c
+    paid_to = Column(String(150), nullable=False)
+    receipt_ref = Column(String(100), nullable=True)  # Bill / UTR / Voucher ref
+    approved_by = Column(String(100), default="General Manager")
+    notes = Column(Text, nullable=True)
+    created_at = Column(TimezoneAwareDateTime, default=now_utc)
+    updated_at = Column(TimezoneAwareDateTime, default=now_utc, onupdate=now_utc)
+
+class GuestRoomServiceOrder(Base):
+    """
+    Modules 3 & 4: 18-Room QR Code Self-Service Orders & Tiered Amenities Requests.
+    Supports complimentary tiered amenities booking and Vasudev Rasoi food orders
+    with 'Transfer to Room Folio' or 'Immediate UPI/Card' checkout.
+    """
+    __tablename__ = "guest_room_service_orders"
+
+    id = Column(Integer, primary_key=True, index=True)
+    order_number = Column(String(50), unique=True, index=True, nullable=False) # RSO-YYYYMM-XXXX
+    room_no = Column(String(20), nullable=False, index=True) # e.g. "101", "102"
+    room_category = Column(String(50), nullable=False, index=True) # Deluxe, Classic Studio, Premium, Executive, Suite
+    order_type = Column(String(50), nullable=False, index=True) # "Amenity Request" | "Food Order" | "Combined"
+    amenities_json = Column(Text, default="[]") # JSON list of requested amenities
+    items_json = Column(Text, default="[]") # JSON list of food items
+    subtotal_amount = Column(Float, default=0.0)
+    tax_amount = Column(Float, default=0.0)
+    total_amount = Column(Float, default=0.0)
+    payment_method = Column(String(50), default="Transfer to Room Folio") # "Transfer to Room Folio" | "Immediate UPI" | "Immediate Card" | "Complimentary"
+    payment_status = Column(String(30), default="Pending", index=True) # "Pending" | "Folio Accrued" | "Paid"
+    payment_reference = Column(String(100), nullable=True)
+    status = Column(String(50), default="New Order", index=True) # "New Order" | "Acknowledged" | "In Preparation" | "Delivered" | "Cancelled"
+    guest_name = Column(String(150), nullable=True)
+    guest_phone = Column(String(50), nullable=True)
+    special_instructions = Column(Text, nullable=True)
+    delivery_staff = Column(String(100), nullable=True)
+    acknowledged_at = Column(TimezoneAwareDateTime, nullable=True)
+    delivered_at = Column(TimezoneAwareDateTime, nullable=True)
+    created_at = Column(TimezoneAwareDateTime, default=now_utc)
+    updated_at = Column(TimezoneAwareDateTime, default=now_utc, onupdate=now_utc)
+
+class StaffBiometricAttendance(Base):
+    """
+    Module 5: eSSL AIFACE-ERIS Face Recognition & Biometric Attendance Log.
+    Receives push/ADMS webhooks or device sync logs from eSSL AIFACE-ERIS.
+    Directly maps device Enroll ID to StaffProfile across all departments.
+    """
+    __tablename__ = "staff_biometric_attendance"
+
+    id = Column(Integer, primary_key=True, index=True)
+    staff_id = Column(Integer, ForeignKey("staff_profiles.id"), nullable=True, index=True)
+    staff_code = Column(String(50), nullable=True, index=True)
+    device_enroll_id = Column(String(50), nullable=False, index=True) # Device User ID (e.g. "101", "1", "SVR-001")
+    punch_time = Column(TimezoneAwareDateTime, nullable=False, index=True)
+    punch_date = Column(String(20), nullable=False, index=True) # "YYYY-MM-DD"
+    punch_type = Column(String(30), default="Check-In") # "Check-In" | "Check-Out" | "Auto"
+    verification_mode = Column(String(50), default="Face Recognition") # "Face Recognition" | "Fingerprint" | "RFID Card" | "PIN" | "Manual"
+    device_serial_no = Column(String(100), default="AIFACE-ERIS-01", index=True)
+    device_name = Column(String(100), default="eSSL AIFACE-ERIS (Staff Lobby)")
+    temperature = Column(Float, nullable=True)
+    mask_detected = Column(Boolean, default=True)
+    status = Column(String(30), default="Present") # "Present" | "Late" | "Half Day" | "Overtime"
+    notes = Column(Text, nullable=True)
+    created_at = Column(TimezoneAwareDateTime, default=now_utc)
 
 # =========================================================================
 # POSTGRESQL BTREE_GIST EXCLUSION CONSTRAINT (#14)

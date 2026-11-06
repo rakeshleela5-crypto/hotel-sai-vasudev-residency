@@ -2578,7 +2578,9 @@ def void_kot_item(payload: schemas.KotVoidRequest, db: Session = Depends(get_db)
     Requires valid Manager Authorization PIN and mandatory void reason.
     Logs immutable audit record in kot_void_audit_logs.
     """
-    pin = (payload.manager_pin or "9999").strip()
+    if not payload.manager_pin or not payload.manager_pin.strip():
+        raise HTTPException(status_code=403, detail="Manager Authorization PIN is required. Void Rejected.")
+    pin = payload.manager_pin.strip()
     if pin not in VALID_MANAGER_PINS:
         raise HTTPException(status_code=403, detail="Invalid Manager Authorization PIN. Void Rejected.")
 

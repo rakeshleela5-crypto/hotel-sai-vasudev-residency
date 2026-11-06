@@ -4801,7 +4801,27 @@ export class PmsStore {
       guestGender: (checkIn as any).guestGender,
       guest_age: (checkIn as any).guestAge,
       guestAge: (checkIn as any).guestAge
-    }).catch(e => console.warn('[PmsStore] Background cloud check-in sync note:', e));
+    }).catch(e => {
+      console.warn('[PmsStore] Background cloud check-in sync note:', e);
+      // Concurrency protection: If server rejected check-in due to room collision (409 Conflict), roll back local state
+      if (e?.status === 409 || (e?.message && (e.message.includes('already Occupied') || e.message.includes('409') || e.message.includes('Conflict')))) {
+        console.error('[PmsStore] Cloud check-in collision detected. Rolling back local check-in to prevent double-booking:', checkIn.checkInNo);
+        this.deleteCheckIn(checkIn.checkInNo);
+        const liveRooms = this.getRooms();
+        const r = liveRooms.find(rm => rm.roomNo === checkIn.roomNo);
+        if (r && r.status === 'occupied' && r.currentGuest?.name === checkIn.guestName) {
+          this.updateRoomStatus(checkIn.roomNo, 'dirty');
+        }
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('hotel-pms-sync-conflict', {
+            detail: {
+              roomNo: checkIn.roomNo,
+              message: `Room ${checkIn.roomNo} was checked in concurrently on another terminal. Local reservation rolled back to protect ledger.`
+            }
+          }));
+        }
+      }
+    });
   }
 
   // Video 22 & 23 Anti-Theft Guard: Delete Check-In Record
@@ -5943,13 +5963,19 @@ export class PmsStore {
     const totalExpenseVal = eodExpenses.reduce((s: number, e: import('../types/pmsModels').EodExpenseRecord) => s + Number(e.amount || 0), 0);
     const totalPayrollVal = payroll.summary?.total_net_payable || 0;
 
+    // Deduplicate in-room dining food already captured inside room checkout folios
+    const roomSettledFoodGross = paymentModesTally['Room Settlement'] || 0;
+    const directFoodGross = Math.max(0, totalFoodGross - roomSettledFoodGross);
+
     const grandTaxable = totalRoomTaxable + totalFoodTaxable;
     const grandCgst = totalRoomCgst + totalFoodCgst;
     const grandSgst = totalRoomSgst + totalFoodSgst;
     const grandIgst = totalRoomIgst;
     const grandTotalTax = grandCgst + grandSgst + grandIgst;
-    const grandInvoiceVal = totalRoomGross + totalFoodGross;
-    const netProfit = grandInvoiceVal - (totalExpenseVal + totalPayrollVal);
+    // grandInvoiceVal represents unique external billed turnover (avoiding double-counting room-settled food)
+    const grandInvoiceVal = Number((totalRoomGross + directFoodGross).toFixed(2));
+    // Net operating profit based on taxable operating revenue minus operating expenses and payroll
+    const netProfit = Number(((totalRoomTaxable + totalFoodTaxable) - (totalExpenseVal + totalPayrollVal)).toFixed(2));
 
     return {
       status: 'success',
@@ -6411,9 +6437,9 @@ export class PmsStore {
     const summaryBlock = [
       [],
       [],
-      [null, null, null, null, 'ROOM RENT', 'DISCOUNT', 'NET AMOUNT', 'CGST', 'SGST', 'TOTAL AMOUNT'],
-      [null, null, null, null, totalRent, totalDiscount, totalRent - totalDiscount, (totalRent - totalDiscount) * 0.025, (totalRent - totalDiscount) * 0.025, (totalRent - totalDiscount) * 1.05],
-      [null, null, null, null, 'LOUNDRY', 'CGST', 'SGST', 'TOTAL AMOUNT'],
+      [null, null, null, null, 'ROOM RENT', 'DISCOUNT', 'NET AMOUNT', 'CGST (6%)', 'SGST (6%)', 'TOTAL AMOUNT (12%)'],
+      [null, null, null, null, totalRent, totalDiscount, totalRent - totalDiscount, (totalRent - totalDiscount) * 0.06, (totalRent - totalDiscount) * 0.06, (totalRent - totalDiscount) * 1.12],
+      [null, null, null, null, 'LOUNDRY', 'CGST (9%)', 'SGST (9%)', 'TOTAL AMOUNT (18%)'],
       [null, null, null, null, totalLaundry, totalLaundry * 0.09, totalLaundry * 0.09, totalLaundry * 1.18]
     ];
 

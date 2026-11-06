@@ -321,17 +321,19 @@ function HotelMainLanding({ defaultErpOpen = false }: HotelMainLandingProps) {
           backgroundColor: '#0a0f1d',
           overflowY: 'auto'
         }}>
-          <GuestRoomServicePortalPage
-            initialRoomNo={portalRoomNo}
-            onClose={() => {
-              setIsRoomServicePortalOpen(false);
-              if (window.location.search.includes('room') || window.location.search.includes('view=room-service')) {
-                try {
-                  window.history.pushState(null, '', '/');
-                } catch {}
-              }
-            }}
-          />
+          <ErrorBoundary>
+            <GuestRoomServicePortalPage
+              initialRoomNo={portalRoomNo}
+              onClose={() => {
+                setIsRoomServicePortalOpen(false);
+                if (window.location.search.includes('room') || window.location.search.includes('view=room-service')) {
+                  try {
+                    window.history.pushState(null, '', '/');
+                  } catch {}
+                }
+              }}
+            />
+          </ErrorBoundary>
         </div>
       )}
     </div>
@@ -350,8 +352,8 @@ export function App() {
         <Route path="/" element={<HotelMainLanding />} />
         <Route path="/erp" element={<HotelMainLanding defaultErpOpen={true} />} />
         <Route path="/pms" element={<HotelMainLanding defaultErpOpen={true} />} />
-        <Route path="/room-service" element={<GuestRoomServicePortalPage isStandalone={true} />} />
-        <Route path="/room-service/:roomNo" element={<GuestRoomServicePortalWrapper />} />
+        <Route path="/room-service" element={<ErrorBoundary><GuestRoomServicePortalPage isStandalone={true} /></ErrorBoundary>} />
+        <Route path="/room-service/:roomNo" element={<ErrorBoundary><GuestRoomServicePortalWrapper /></ErrorBoundary>} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
         <Route path="*" element={<NotFound />} />

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.config import settings
 from app.database import engine, Base, get_db
-from app.routes import rooms, bookings, inquiries, pms, uploads, payments, kyc
+from app.routes import rooms, bookings, inquiries, pms, uploads, payments, kyc, staff_payroll, eod_analytics, guest_portal, hardware_integrations, ca_export
 
 # Initialize DB tables safely
 try:
@@ -328,6 +328,17 @@ app.include_router(payments.router, prefix="/api")
 app.include_router(payments.router)
 app.include_router(kyc.router, prefix=settings.API_V1_STR)
 app.include_router(kyc.router, prefix="/api")
+app.include_router(staff_payroll.router, prefix=f"{settings.API_V1_STR}/staff-payroll", tags=["Staff & Payroll"])
+app.include_router(staff_payroll.router, prefix="/api/staff-payroll", tags=["Staff & Payroll"])
+app.include_router(eod_analytics.router, prefix=f"{settings.API_V1_STR}/eod-analytics", tags=["EOD Analytics & Expenditures"])
+app.include_router(eod_analytics.router, prefix="/api/eod-analytics", tags=["EOD Analytics & Expenditures"])
+app.include_router(guest_portal.router, prefix=f"{settings.API_V1_STR}/guest-portal", tags=["Guest Portal & Room Service"])
+app.include_router(guest_portal.router, prefix="/api/guest-portal", tags=["Guest Portal & Room Service"])
+app.include_router(hardware_integrations.router, prefix=f"{settings.API_V1_STR}/hardware", tags=["Hardware: eSSL & Aadhaar"])
+app.include_router(hardware_integrations.router, prefix="/api/hardware", tags=["Hardware: eSSL & Aadhaar"])
+app.include_router(hardware_integrations.router, tags=["eSSL ADMS Protocol"])
+app.include_router(ca_export.router, prefix=f"{settings.API_V1_STR}/accounting", tags=["Chartered Accountant JSON Export"])
+app.include_router(ca_export.router, prefix="/api/accounting", tags=["Chartered Accountant JSON Export"])
 
 @app.get("/health", tags=["Observability & Health Probes"])
 @app.get("/api/health", tags=["Observability & Health Probes"])

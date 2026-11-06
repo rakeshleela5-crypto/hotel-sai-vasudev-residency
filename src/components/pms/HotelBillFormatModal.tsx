@@ -127,17 +127,35 @@ export const HotelBillFormatModal: React.FC<HotelBillFormatModalProps> = ({
     );
   }
 
-  // Generate day-wise breakdown rows for Format 1 (Frame 0115)
+  // Generate day-wise breakdown rows with true calendar rollover arithmetic
   const generateStayDates = (startDateStr: string, totalDays: number): string[] => {
     const dates: string[] = [];
-    const parts = startDateStr.split('-');
-    let startDay = parseInt(parts[0], 10) || 1;
-    const month = parts[1] || '07';
-    const year = parts[2] || '25';
+    if (!startDateStr) return dates;
 
-    for (let i = 0; i < totalDays; i++) {
-      const d = startDay + i;
-      dates.push(`${d < 10 ? '0' + d : d}-${month}-${year}`);
+    let baseDate: Date;
+    if (startDateStr.includes('-')) {
+      const parts = startDateStr.split('-');
+      if (parts[0].length === 4) {
+        // YYYY-MM-DD
+        baseDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      } else {
+        // DD-MM-YYYY
+        const y = parts[2].length === 2 ? 2000 + parseInt(parts[2], 10) : parseInt(parts[2], 10);
+        baseDate = new Date(y, parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+      }
+    } else {
+      baseDate = new Date();
+    }
+
+    if (isNaN(baseDate.getTime())) baseDate = new Date();
+
+    for (let i = 0; i < Math.max(1, totalDays); i++) {
+      const d = new Date(baseDate);
+      d.setDate(baseDate.getDate() + i);
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      dates.push(`${day}-${month}-${year}`);
     }
     return dates;
   };

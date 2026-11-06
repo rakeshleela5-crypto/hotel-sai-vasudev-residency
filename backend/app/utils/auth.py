@@ -294,13 +294,11 @@ def revoke_user_refresh_tokens(
 # =========================================================================
 def get_current_user(
     request: Request,
-    auth_header: Optional[HTTPAuthorizationCredentials] = Depends(security_bearer),
-    x_staff_role: Optional[str] = Header(None, alias="X-Staff-Role"),
-    x_staff_id: Optional[str] = Header(None, alias="X-Staff-Id")
+    auth_header: Optional[HTTPAuthorizationCredentials] = Depends(security_bearer)
 ) -> Dict[str, Any]:
     """
-    Authenticates inbound request from Bearer JWT token, with graceful
-    fallback to internal staff headers in test / development mode.
+    Authenticates inbound request strictly from Bearer JWT token (#47, #48).
+    Unverified client-supplied role headers are rejected to prevent privilege escalation.
     """
     token = None
     if auth_header and auth_header.credentials:
@@ -317,16 +315,6 @@ def get_current_user(
             "user_id": payload.get("sub") or payload.get("user_id") or "staff",
             "role": normalize_role(payload.get("role")),
             "username": payload.get("username") or payload.get("sub") or "staff"
-        }
-        request.state.current_user = user_info
-        return user_info
-
-    # Development & automated test fallback if staff header is explicitly passed
-    if x_staff_role or x_staff_id:
-        user_info = {
-            "user_id": x_staff_id or "staff_persona",
-            "role": normalize_role(x_staff_role),
-            "username": x_staff_id or "staff_persona"
         }
         request.state.current_user = user_info
         return user_info

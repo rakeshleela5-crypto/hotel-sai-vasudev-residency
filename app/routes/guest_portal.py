@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
 from app.database import get_db
-from app.models import GuestRoomServiceOrder
+from app.models import GuestRoomServiceOrder, Booking, RoomFolioItem
 
 router = APIRouter()
 
@@ -449,6 +449,24 @@ def create_guest_order(payload: CreateGuestOrderPayload, db: Session = Depends(g
             detail=f"Room {payload.room_no} is not a valid room number (Valid: 101-107, 201-211)."
         )
 
+    # Validate amenity tier eligibility and quantity limits (Bug-02 & Bug-03)
+    room_category = payload.room_category or room_found["room_type"]
+    tier_config = TIERED_AMENITIES_CONFIG.get(room_category) or TIERED_AMENITIES_CONFIG.get("Deluxe")
+    valid_amenities_map = {a["id"]: a for a in tier_config["amenities"]} if tier_config else {}
+
+    for amenity in payload.amenities:
+        if valid_amenities_map and amenity.amenity_id not in valid_amenities_map:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Amenity '{amenity.amenity_name}' is not complimentary for room category '{room_category}'."
+            )
+        max_allowed = valid_amenities_map[amenity.amenity_id]["max_qty"] if amenity.amenity_id in valid_amenities_map else 5
+        if amenity.qty > max_allowed:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Requested quantity {amenity.qty} exceeds maximum allowed ({max_allowed}) for '{amenity.amenity_name}'."
+            )
+
     # Generate sequential unique Order ID: RSO-YYYYMM-XXXX
     timestamp_prefix = datetime.now().strftime("%Y%m")
     count_this_month = db.query(GuestRoomServiceOrder).filter(
@@ -492,6 +510,34 @@ def create_guest_order(payload: CreateGuestOrderPayload, db: Session = Depends(g
     )
 
     db.add(new_order)
+
+    # If settled to room folio, bind charges to active guest booking (Bug-04)
+    if payload.payment_method == "Transfer to Room Folio" and payload.total_amount > 0:
+        active_booking = db.query(Booking).filter(
+            Booking.room_number == payload.room_no,
+            Booking.status.in_(["Checked-In", "Confirmed"]),
+            Booking.is_deleted == False
+        ).order_by(Booking.id.desc()).first()
+
+        if active_booking:
+            items_desc = ", ".join(f"{it.item_name} x{it.qty}" for it in payload.items) if payload.items else "In-Room Dining Order"
+            folio_item = RoomFolioItem(
+                booking_id=active_booking.id,
+                item_type="Food_KOT",
+                description=f"In-Room QR Order #{order_number}: {items_desc[:200]}",
+                sac_code="996331",
+                kot_number=order_number,
+                quantity=1,
+                unit_price=payload.subtotal_amount,
+                taxable_amount=payload.subtotal_amount,
+                gst_rate=5.0,
+                cgst_amount=round(payload.tax_amount / 2, 2),
+                sgst_amount=round(payload.tax_amount / 2, 2),
+                total_amount=payload.total_amount,
+                created_at=now_utc()
+            )
+            db.add(folio_item)
+
     db.commit()
     db.refresh(new_order)
 

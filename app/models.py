@@ -51,7 +51,7 @@ class Booking(Base):
     guest_email = Column(String(150), nullable=False)
     guest_phone = Column(String(50), nullable=False, index=True)
     id_proof_type = Column(String(50), default="Aadhaar Card")
-    id_proof_number = Column(String(50), nullable=True)
+    id_proof_number = Column(String(255), nullable=True) # Widened to 255 for Base64 Fernet AES ciphertext
     id_proof_document_key = Column(String(255), nullable=True) # Cloudflare R2 object key (e.g. kyc/2026/10/guest_442.pdf)
     guest_photo_url = Column(String(255), nullable=True) # Public guest photo URL
     invoice_pdf_key = Column(String(255), nullable=True) # Cloudflare R2 object key (e.g. invoices/2026/10/inv_101.pdf)
@@ -74,8 +74,8 @@ class Booking(Base):
     total_nights = Column(Integer, default=1)
 
     # Financial & Indian GST Tax Engine
-    base_rate = Column(Float, nullable=False) # Tariff per night
-    base_amount = Column(Float, nullable=False) # base_rate * total_nights
+    base_rate = Column(Float, nullable=False, default=2000.0) # Tariff per night
+    base_amount = Column(Float, nullable=False, default=2000.0) # base_rate * total_nights
     extra_guest_charge = Column(Float, default=0.0) # Extra adult charge
     discount_amount = Column(Float, default=0.0)
     gst_rate = Column(Float, default=12.0) # 12% if <= 7500, 18% if > 7500
@@ -181,7 +181,7 @@ class PoliceStationLog(Base):
     gender = Column(String(20), default="Male")
     nationality = Column(String(50), default="Indian")
     id_proof_type = Column(String(50), default="Aadhaar Card")
-    id_proof_number = Column(String(100), nullable=False)
+    id_proof_number = Column(String(255), nullable=False) # Widened to 255 for Base64 Fernet AES ciphertext
     permanent_address = Column(Text, nullable=False)
     origin_city = Column(String(100), nullable=False)
     next_destination = Column(String(100), nullable=False)
@@ -1362,7 +1362,7 @@ class Guest(Base):
     email = Column(String(150), nullable=True)
     gstin = Column(String(20), index=True, nullable=True)
     id_proof_type = Column(String(50), default="Aadhaar Card")
-    id_proof_number = Column(String(100), nullable=True)
+    id_proof_number = Column(String(255), nullable=True) # Widened to 255 for Base64 Fernet AES ciphertext
     address = Column(Text, nullable=True)
     city = Column(String(100), nullable=True)
     state = Column(String(100), nullable=True)

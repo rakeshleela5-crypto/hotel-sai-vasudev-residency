@@ -310,10 +310,14 @@ def get_ca_monthly_export(
     grand_sgst = total_room_sgst + total_food_sgst
     grand_igst = total_room_igst
     grand_total_tax = grand_cgst + grand_sgst + grand_igst
-    grand_invoice_val = total_room_gross + total_food_gross
 
-    # Net Operating P&L (Total Revenue minus Total Operating Expenses and Staff Payroll)
-    net_operating_profit = grand_invoice_val - (total_expenditure_val + total_payroll_net_payout)
+    # Deduplicate in-room dining food already captured inside room checkout folios
+    room_settled_food = payment_modes_tally.get("Room Settlement", 0.0)
+    direct_food_gross = max(0.0, total_food_gross - room_settled_food)
+    grand_invoice_val = round(total_room_gross + direct_food_gross, 2)
+
+    # Net Operating P&L (Taxable Operating Revenue minus Total Operating Expenses and Staff Payroll)
+    net_operating_profit = round(grand_taxable - (total_expenditure_val + total_payroll_net_payout), 2)
 
     # Tax Slabs Summary (HSN/SAC Breakdown)
     tax_slabs_summary = [

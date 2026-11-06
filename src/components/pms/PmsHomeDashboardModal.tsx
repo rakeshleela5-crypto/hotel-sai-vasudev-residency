@@ -58,10 +58,23 @@ interface PmsHomeDashboardModalProps {
   onOpenRoomMatrix: () => void;
 }
 
+const PmsHeaderClock: React.FC = () => {
+  const [time, setTime] = useState<string>('');
+  useEffect(() => {
+    const update = () => {
+      const now = new Date();
+      setTime(`${now.toLocaleDateString('en-GB')} Time ${now.toLocaleTimeString()}`);
+    };
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, []);
+  return <span>Hotel Dashboard Date: {time}</span>;
+};
+
 export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   onOpenRoomMatrix
 }) => {
-  const [currentTime, setCurrentTime] = useState<string>('');
   const [whatsAppMobile, setWhatsAppMobile] = useState('');
 
   // Modals state
@@ -367,18 +380,6 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
     }
   };
 
-  useEffect(() => {
-    const updateClock = () => {
-      const now = new Date();
-      const dateStr = now.toLocaleDateString('en-GB');
-      const timeStr = now.toLocaleTimeString();
-      setCurrentTime(`${dateStr} Time ${timeStr}`);
-    };
-    updateClock();
-    const interval = setInterval(updateClock, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
   const handleSendWhatsApp = () => {
     if (!whatsAppMobile.trim() || whatsAppMobile.length < 10) {
       alert('Please enter a valid 10-digit mobile number.');
@@ -523,7 +524,7 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           HOTEL SRI SAI VASUDEV RESIDENCY
         </h1>
         <div className="hotel-hub-meta">
-          <span>Hotel Dashboard Date: {currentTime}</span>
+          <PmsHeaderClock />
           <span>&bull;</span>
           <span>Activation Date: 17-12-24 & Renew Date: 17-12-25 & Day Remaining: 194</span>
           <span
@@ -1744,65 +1745,77 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
       </div>
 
       {/* Submodals */}
-      <NewRoomBookingModal
-        isOpen={isBookingOpen}
-        onClose={() => setIsBookingOpen(false)}
-        onBookingCreated={(b) => {
-          setIsBookingOpen(false);
-          setLatestBooking(b);
-          setIsReceiptOpen(true);
-        }}
-      />
+      {isBookingOpen && (
+        <NewRoomBookingModal
+          isOpen={isBookingOpen}
+          onClose={() => setIsBookingOpen(false)}
+          onBookingCreated={(b) => {
+            setIsBookingOpen(false);
+            setLatestBooking(b);
+            setIsReceiptOpen(true);
+          }}
+        />
+      )}
 
-      <NewRoomCheckInModal
-        isOpen={isCheckInOpen}
-        onClose={() => setIsCheckInOpen(false)}
-        onCheckInCompleted={() => {
-          setIsCheckInOpen(false);
-        }}
-      />
+      {isCheckInOpen && (
+        <NewRoomCheckInModal
+          isOpen={isCheckInOpen}
+          onClose={() => setIsCheckInOpen(false)}
+          onCheckInCompleted={() => {
+            setIsCheckInOpen(false);
+          }}
+        />
+      )}
 
-      <BookingReceiptModal
-        isOpen={isReceiptOpen}
-        onClose={() => setIsReceiptOpen(false)}
-        booking={latestBooking}
-      />
+      {isReceiptOpen && (
+        <BookingReceiptModal
+          isOpen={isReceiptOpen}
+          onClose={() => setIsReceiptOpen(false)}
+          booking={latestBooking}
+        />
+      )}
 
-      <KotEntryModal
-        isOpen={isKotOpen}
-        onClose={() => {
-          setIsKotOpen(false);
-          setSelectedKotTable(undefined);
-        }}
-        defaultTableNo={selectedKotTable}
-        defaultServiceType={selectedKotTable ? 'Restaurant' : undefined}
-        onKotSaved={() => {
-          setIsKotOpen(false);
-          setSelectedKotTable(undefined);
-        }}
-      />
+      {isKotOpen && (
+        <KotEntryModal
+          isOpen={isKotOpen}
+          onClose={() => {
+            setIsKotOpen(false);
+            setSelectedKotTable(undefined);
+          }}
+          defaultTableNo={selectedKotTable}
+          defaultServiceType={selectedKotTable ? 'Restaurant' : undefined}
+          onKotSaved={() => {
+            setIsKotOpen(false);
+            setSelectedKotTable(undefined);
+          }}
+        />
+      )}
 
-      <FoodBillModal
-        isOpen={isFoodBillOpen}
-        onClose={() => {
-          setIsFoodBillOpen(false);
-          setSelectedBillTable(undefined);
-        }}
-        defaultTableNo={selectedBillTable}
-        onBillSaved={() => {
-          setIsFoodBillOpen(false);
-          setSelectedBillTable(undefined);
-        }}
-      />
+      {isFoodBillOpen && (
+        <FoodBillModal
+          isOpen={isFoodBillOpen}
+          onClose={() => {
+            setIsFoodBillOpen(false);
+            setSelectedBillTable(undefined);
+          }}
+          defaultTableNo={selectedBillTable}
+          onBillSaved={() => {
+            setIsFoodBillOpen(false);
+            setSelectedBillTable(undefined);
+          }}
+        />
+      )}
 
-      <RoomCheckOutModal
-        isOpen={isCheckoutOpen}
-        onClose={() => setIsCheckoutOpen(false)}
-        targetRoom={rooms.find(r => r.status === 'occupied') || rooms[0]}
-        onCheckoutComplete={() => {
-          setIsCheckoutOpen(false);
-        }}
-      />
+      {isCheckoutOpen && (
+        <RoomCheckOutModal
+          isOpen={isCheckoutOpen}
+          onClose={() => setIsCheckoutOpen(false)}
+          targetRoom={rooms.find(r => r.status === 'occupied') || rooms[0]}
+          onCheckoutComplete={() => {
+            setIsCheckoutOpen(false);
+          }}
+        />
+      )}
 
       <AdvanceReceiptModal
         isOpen={isAdvanceReceiptOpen}
@@ -2115,29 +2128,37 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
       />
 
       {/* Module 1: Staff Profiles, Monthly Salaries, and Advance Salary Tracking */}
-      <StaffPayrollManagementModal
-        isOpen={isStaffPayrollOpen}
-        onClose={() => setIsStaffPayrollOpen(false)}
-      />
+      {isStaffPayrollOpen && (
+        <StaffPayrollManagementModal
+          isOpen={isStaffPayrollOpen}
+          onClose={() => setIsStaffPayrollOpen(false)}
+        />
+      )}
 
       {/* Module 2: End-of-Day (EOD) Expenditures & Detailed Revenue Analytics */}
-      <EodExpenditureAnalyticsModal
-        isOpen={isEodAnalyticsOpen}
-        onClose={() => setIsEodAnalyticsOpen(false)}
-      />
+      {isEodAnalyticsOpen && (
+        <EodExpenditureAnalyticsModal
+          isOpen={isEodAnalyticsOpen}
+          onClose={() => setIsEodAnalyticsOpen(false)}
+        />
+      )}
 
       {/* Modules 3 & 4: 18-Room QR Standee Generator & Tiered Amenities Modal */}
-      <RoomQrCodeManagerModal
-        isOpen={isRoomQrManagerOpen}
-        onClose={() => setIsRoomQrManagerOpen(false)}
-        onOpenGuestPortal={(roomNo) => setActiveGuestPortalRoom(roomNo)}
-      />
+      {isRoomQrManagerOpen && (
+        <RoomQrCodeManagerModal
+          isOpen={isRoomQrManagerOpen}
+          onClose={() => setIsRoomQrManagerOpen(false)}
+          onOpenGuestPortal={(roomNo) => setActiveGuestPortalRoom(roomNo)}
+        />
+      )}
 
       {/* Module 6: Chartered Accountant (CA) JSON Export Modal */}
-      <CharteredAccountantExportModal
-        isOpen={isCaExportOpen}
-        onClose={() => setIsCaExportOpen(false)}
-      />
+      {isCaExportOpen && (
+        <CharteredAccountantExportModal
+          isOpen={isCaExportOpen}
+          onClose={() => setIsCaExportOpen(false)}
+        />
+      )}
 
       {/* Modules 3 & 4: In-PMS Guest Room Service Portal Preview */}
       {activeGuestPortalRoom && (
