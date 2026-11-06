@@ -91,7 +91,13 @@ import type {
   StaffProfile,
   StaffSalaryAdvance,
   StaffMonthlyPayroll,
-  MonthlyPayrollSummary
+  MonthlyPayrollSummary,
+  EodExpenseRecord,
+  RoomCategoryRevenueItem,
+  RoomCategoryRevenueReport,
+  PaymentModeRevenueItem,
+  PaymentModeRevenueReport,
+  EodExecutiveSummary
 } from '../types/pmsModels';
 import { PMS_ALL_PERMISSIONS } from '../types/pmsModels';
 import { hotelApi } from './api';
@@ -1630,8 +1636,76 @@ const STORAGE_KEYS = {
   SHIFT_HANDOVERS: 'svr_pms_shift_handovers',
   STAFF_PROFILES: 'svr_pms_staff_profiles',
   STAFF_ADVANCES: 'svr_pms_staff_advances',
-  STAFF_PAYROLL: 'svr_pms_staff_payroll'
+  STAFF_PAYROLL: 'svr_pms_staff_payroll',
+  EOD_EXPENSES: 'svr_pms_eod_expenditures'
 };
+
+export const INITIAL_EOD_EXPENSES: EodExpenseRecord[] = [
+  {
+    id: 1,
+    voucher_no: 'EXP-EOD-202611-0001',
+    expense_date: '2026-11-05',
+    expense_time: '10:30',
+    category: 'Housekeeping',
+    subcategory: 'Housekeeping Supplies',
+    amount: 1450,
+    payment_mode: 'Cash',
+    account_name: 'Petty Cash Drawer',
+    paid_to: 'Sai Chemicals & Disinfectants, Rayagada',
+    receipt_ref: 'BILL-4412',
+    approved_by: 'General Manager',
+    notes: 'Floor cleaners, air fresheners, toilet disinfectant refills for 18 rooms',
+    created_at: '2026-11-05T05:00:00.000Z'
+  },
+  {
+    id: 2,
+    voucher_no: 'EXP-EOD-202611-0002',
+    expense_date: '2026-11-05',
+    expense_time: '11:15',
+    category: 'Kitchen & Vasudev Rasoi',
+    subcategory: 'Vegetables & Groceries',
+    amount: 2850,
+    payment_mode: 'UPI',
+    account_name: 'Vasudev UPI QR (SBI Merchant)',
+    paid_to: 'Rayagada Daily Mandi Traders',
+    receipt_ref: 'UPI-98217361',
+    approved_by: 'Executive Chef',
+    notes: 'Fresh vegetables, paneer, milk, and cooking spices for restaurant dine-in and room service',
+    created_at: '2026-11-05T05:45:00.000Z'
+  },
+  {
+    id: 3,
+    voucher_no: 'EXP-EOD-202611-0005',
+    expense_date: '2026-11-06',
+    expense_time: '09:00',
+    category: 'Maintenance & Engineering',
+    subcategory: 'DG Generator Diesel',
+    amount: 2200,
+    payment_mode: 'Cash',
+    account_name: 'Petty Cash Drawer',
+    paid_to: 'IOCL Fuel Station Rayagada Bypass',
+    receipt_ref: 'FUEL-7789',
+    approved_by: 'Maintenance Lead',
+    notes: '25 liters diesel for standby generator backup during power cut',
+    created_at: '2026-11-06T03:30:00.000Z'
+  },
+  {
+    id: 4,
+    voucher_no: 'EXP-EOD-202611-0006',
+    expense_date: '2026-11-06',
+    expense_time: '10:00',
+    category: 'Staff Allowance & Welfare',
+    subcategory: 'Staff Tea & Refreshments',
+    amount: 380,
+    payment_mode: 'Cash',
+    account_name: 'Petty Cash Drawer',
+    paid_to: 'Maa Majhigouri Tea & Tiffin Stall',
+    receipt_ref: 'TEA-412',
+    approved_by: 'Shift Lead',
+    notes: 'Morning shift worker tea, biscuits and tiffin refreshments',
+    created_at: '2026-11-06T04:30:00.000Z'
+  }
+];
 
 export const INITIAL_STAFF_PROFILES: StaffProfile[] = [
   {
@@ -10604,6 +10678,373 @@ export class PmsStore {
     }
     localStorage.setItem(STORAGE_KEYS.STAFF_PAYROLL, JSON.stringify(storedPayroll));
     this.notifyLocal();
+  }
+
+  // =========================================================================
+  // Module 2: End-of-Day (EOD) Expenditures & Detailed Revenue Analytics
+  // =========================================================================
+  static getEodExpenses(date?: string, period?: string): EodExpenseRecord[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.EOD_EXPENSES);
+    let list: EodExpenseRecord[] = [];
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.EOD_EXPENSES, JSON.stringify(INITIAL_EOD_EXPENSES));
+      list = INITIAL_EOD_EXPENSES;
+    } else {
+      try {
+        list = JSON.parse(raw);
+      } catch {
+        list = INITIAL_EOD_EXPENSES;
+      }
+    }
+
+    if (date) {
+      return list.filter(e => e.expense_date === date);
+    }
+    if (period) {
+      return list.filter(e => e.expense_date.startsWith(period));
+    }
+    return list;
+  }
+
+  static saveEodExpense(exp: Partial<EodExpenseRecord>): EodExpenseRecord {
+    const list = this.getEodExpenses();
+    const dateStr = exp.expense_date || new Date().toISOString().slice(0, 10);
+    const periodPrefix = dateStr.slice(0, 7).replace('-', '');
+    const newId = list.length > 0 ? Math.max(...list.map(e => Number(e.id) || 0)) + 1 : 1;
+    const voucherNo = exp.voucher_no || `EXP-EOD-${periodPrefix}-${String(newId).padStart(4, '0')}`;
+
+    const newRecord: EodExpenseRecord = {
+      id: newId,
+      voucher_no: voucherNo,
+      expense_date: dateStr,
+      expense_time: exp.expense_time || new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+      category: exp.category || 'Housekeeping',
+      subcategory: exp.subcategory || 'Housekeeping Supplies',
+      amount: Number(exp.amount) || 0,
+      payment_mode: exp.payment_mode || 'Cash',
+      account_name: exp.account_name || 'Petty Cash Drawer',
+      paid_to: exp.paid_to || '',
+      receipt_ref: exp.receipt_ref || '',
+      approved_by: exp.approved_by || 'General Manager',
+      notes: exp.notes || '',
+      created_at: exp.created_at || new Date().toISOString()
+    };
+
+    list.unshift(newRecord);
+    localStorage.setItem(STORAGE_KEYS.EOD_EXPENSES, JSON.stringify(list));
+    this.notifyLocal();
+
+    hotelApi.createEodExpense(newRecord).catch(err => {
+      console.warn('[PmsStore] Background EOD expense cloud sync note:', err);
+    });
+
+    return newRecord;
+  }
+
+  static deleteEodExpense(id: number | string): boolean {
+    const list = this.getEodExpenses();
+    const remaining = list.filter(e => String(e.id) !== String(id));
+    if (remaining.length !== list.length) {
+      localStorage.setItem(STORAGE_KEYS.EOD_EXPENSES, JSON.stringify(remaining));
+      this.notifyLocal();
+      hotelApi.deleteEodExpense(id).catch(err => {
+        console.warn('[PmsStore] Background EOD expense delete sync note:', err);
+      });
+      return true;
+    }
+    return false;
+  }
+
+  static getRoomCategoryRevenueAnalytics(date?: string, period?: string): RoomCategoryRevenueReport {
+    const effectivePeriod = period || (date ? date.slice(0, 7) : new Date().toISOString().slice(0, 7));
+    const allCategories = ['Suite', 'Deluxe', 'Classic Studio', 'Premium', 'Executive'];
+    const standardTariffs: Record<string, number> = {
+      'Deluxe': 1500,
+      'Classic Studio': 2000,
+      'Executive': 2500,
+      'Premium': 3000,
+      'Suite': 3500
+    };
+
+    const rooms = this.getRooms();
+    const inventoryCount: Record<string, number> = {
+      'Deluxe': 0,
+      'Classic Studio': 0,
+      'Executive': 0,
+      'Premium': 0,
+      'Suite': 2
+    };
+
+    rooms.forEach(r => {
+      const rt = r.roomType || '';
+      if (rt.includes('Deluxe')) inventoryCount['Deluxe']++;
+      else if (rt.includes('Classic') || rt.includes('Studio')) inventoryCount['Classic Studio']++;
+      else if (rt.includes('Executive')) inventoryCount['Executive']++;
+      else if (rt.includes('Premium')) inventoryCount['Premium']++;
+      else if (rt.includes('Suite')) inventoryCount['Suite']++;
+    });
+
+    const checkouts = this.getCheckouts();
+    const filteredCheckouts = checkouts.filter(c => {
+      if (c.isCancelled) return false;
+      const cDate = c.checkOutDate;
+      if (!cDate) return false;
+      if (date) return cDate === date;
+      if (period) return cDate.startsWith(period);
+      return cDate.startsWith(effectivePeriod);
+    });
+
+    const categoryMap: Record<string, RoomCategoryRevenueItem> = {};
+    allCategories.forEach(cat => {
+      categoryMap[cat] = {
+        room_category: cat,
+        inventory_rooms: inventoryCount[cat] || 0,
+        rooms_sold: 0,
+        total_room_rent: 0,
+        food_revenue: 0,
+        gst_collected: 0,
+        net_revenue: 0,
+        standard_tariff: standardTariffs[cat] || 2000,
+        adr: 0,
+        occupancy_pct: 0,
+        revenue_share_pct: 0
+      };
+    });
+
+    let grandGrossRent = 0;
+    let grandRoomsSold = 0;
+
+    filteredCheckouts.forEach(c => {
+      const rawType = c.roomType || '';
+      let matched = 'Classic Studio';
+      for (const cat of allCategories) {
+        if (rawType.toLowerCase().includes(cat.toLowerCase())) {
+          matched = cat;
+          break;
+        }
+      }
+
+      const rent = Number(c.totalRoomRent) || 0;
+      const food = Number(c.foodAmount) || 0;
+      const gst = Number(c.gstAmount) || 0;
+      const net = Number(c.netPayable) || (rent + food + gst);
+
+      categoryMap[matched].rooms_sold += 1;
+      categoryMap[matched].total_room_rent += rent;
+      categoryMap[matched].food_revenue += food;
+      categoryMap[matched].gst_collected += gst;
+      categoryMap[matched].net_revenue += net;
+
+      grandGrossRent += rent;
+      grandRoomsSold += 1;
+    });
+
+    const grandNet = Object.values(categoryMap).reduce((s, m) => s + m.net_revenue, 0);
+    const totalInventory = Object.values(inventoryCount).reduce((s, v) => s + v, 0);
+
+    Object.values(categoryMap).forEach(m => {
+      m.adr = m.rooms_sold > 0 ? Math.round(m.total_room_rent / m.rooms_sold) : m.standard_tariff;
+      m.occupancy_pct = m.inventory_rooms > 0 ? Math.round((m.rooms_sold / m.inventory_rooms) * 1000) / 10 : 0;
+      m.revenue_share_pct = grandNet > 0 ? Math.round((m.net_revenue / grandNet) * 1000) / 10 : 0;
+    });
+
+    return {
+      period: effectivePeriod,
+      date: date || null,
+      categories: Object.values(categoryMap),
+      summary: {
+        total_rooms_sold: grandRoomsSold,
+        total_room_rent: grandGrossRent,
+        total_net_revenue: grandNet,
+        total_inventory: totalInventory,
+        overall_occupancy_pct: totalInventory > 0 ? Math.round((grandRoomsSold / totalInventory) * 1000) / 10 : 0
+      }
+    };
+  }
+
+  static getPaymentModeRevenueAnalytics(date?: string, period?: string): PaymentModeRevenueReport {
+    const effectivePeriod = period || (date ? date.slice(0, 7) : new Date().toISOString().slice(0, 7));
+    const modeBuckets: Record<string, PaymentModeRevenueItem> = {
+      'Cash': {
+        payment_mode: 'Cash',
+        account_name: 'Petty Cash Drawer',
+        transaction_count: 0,
+        room_collections: 0,
+        food_collections: 0,
+        other_collections: 0,
+        total_collected: 0,
+        share_pct: 0
+      },
+      'UPI': {
+        payment_mode: 'UPI',
+        account_name: 'Vasudev UPI QR (SBI Merchant)',
+        transaction_count: 0,
+        room_collections: 0,
+        food_collections: 0,
+        other_collections: 0,
+        total_collected: 0,
+        share_pct: 0
+      },
+      'Credit Card': {
+        payment_mode: 'Credit Card',
+        account_name: 'HDFC POS Terminal #1',
+        transaction_count: 0,
+        room_collections: 0,
+        food_collections: 0,
+        other_collections: 0,
+        total_collected: 0,
+        share_pct: 0
+      },
+      'Debit Card': {
+        payment_mode: 'Debit Card',
+        account_name: 'HDFC POS Terminal #2',
+        transaction_count: 0,
+        room_collections: 0,
+        food_collections: 0,
+        other_collections: 0,
+        total_collected: 0,
+        share_pct: 0
+      },
+      'Bank Transfer - SBI': {
+        payment_mode: 'Bank Transfer - SBI',
+        account_name: 'State Bank of India (Current A/c 30987654321)',
+        transaction_count: 0,
+        room_collections: 0,
+        food_collections: 0,
+        other_collections: 0,
+        total_collected: 0,
+        share_pct: 0
+      },
+      'Bank Transfer - HDFC': {
+        payment_mode: 'Bank Transfer - HDFC',
+        account_name: 'HDFC Bank (Current A/c 50200012345678)',
+        transaction_count: 0,
+        room_collections: 0,
+        food_collections: 0,
+        other_collections: 0,
+        total_collected: 0,
+        share_pct: 0
+      }
+    };
+
+    const checkouts = this.getCheckouts().filter(c => {
+      if (c.isCancelled) return false;
+      const cDate = c.checkOutDate;
+      if (!cDate) return false;
+      if (date) return cDate === date;
+      if (period) return cDate.startsWith(period);
+      return cDate.startsWith(effectivePeriod);
+    });
+
+    checkouts.forEach(c => {
+      const pm = (c.paymentMode || 'Cash').toLowerCase();
+      let matched = 'Cash';
+      if (pm.includes('upi') || pm.includes('qr') || pm.includes('gpay')) matched = 'UPI';
+      else if (pm.includes('credit')) matched = 'Credit Card';
+      else if (pm.includes('debit') || pm.includes('card')) matched = 'Debit Card';
+      else if (pm.includes('sbi') || pm.includes('neft') || pm.includes('rtgs')) matched = 'Bank Transfer - SBI';
+      else if (pm.includes('hdfc')) matched = 'Bank Transfer - HDFC';
+
+      const rent = Number(c.totalRoomRent) || 0;
+      const food = Number(c.foodAmount) || 0;
+      const net = Number(c.netPayable) || (rent + food);
+      const other = Math.max(0, net - rent - food);
+
+      modeBuckets[matched].transaction_count++;
+      modeBuckets[matched].room_collections += rent;
+      modeBuckets[matched].food_collections += food;
+      modeBuckets[matched].other_collections += other;
+      modeBuckets[matched].total_collected += net;
+    });
+
+    const foodBills = this.getFoodBills().filter(fb => {
+      if (fb.status !== 'Settled') return false;
+      const fDate = fb.date;
+      if (!fDate) return false;
+      if (date) return fDate === date;
+      if (period) return fDate.startsWith(period);
+      return fDate.startsWith(effectivePeriod);
+    });
+
+    foodBills.forEach(fb => {
+      const st = (fb.settlementType || 'Cash').toLowerCase();
+      let matched = 'Cash';
+      if (st.includes('upi') || st.includes('online')) matched = 'UPI';
+      else if (st.includes('credit')) matched = 'Credit Card';
+      else if (st.includes('card')) matched = 'Debit Card';
+
+      const net = Number(fb.netBillAmount) || 0;
+      modeBuckets[matched].transaction_count++;
+      modeBuckets[matched].food_collections += net;
+      modeBuckets[matched].total_collected += net;
+    });
+
+    const grandTotal = Object.values(modeBuckets).reduce((s, b) => s + b.total_collected, 0);
+    Object.values(modeBuckets).forEach(b => {
+      b.share_pct = grandTotal > 0 ? Math.round((b.total_collected / grandTotal) * 1000) / 10 : 0;
+    });
+
+    return {
+      period: effectivePeriod,
+      date: date || null,
+      modes: Object.values(modeBuckets),
+      grand_total: grandTotal
+    };
+  }
+
+  static getEodExecutiveSummary(date?: string): EodExecutiveSummary {
+    const targetDate = date || new Date().toISOString().slice(0, 10);
+    const dayExpenses = this.getEodExpenses(targetDate);
+    const cashExpenses = dayExpenses.filter(e => e.payment_mode === 'Cash').reduce((s, e) => s + e.amount, 0);
+    const digitalExpenses = dayExpenses.filter(e => e.payment_mode !== 'Cash').reduce((s, e) => s + e.amount, 0);
+    const totalExpenses = cashExpenses + digitalExpenses;
+
+    const subcatMap: Record<string, number> = {};
+    dayExpenses.forEach(e => {
+      subcatMap[e.subcategory] = (subcatMap[e.subcategory] || 0) + e.amount;
+    });
+
+    const checkouts = this.getCheckouts().filter(c => !c.isCancelled && c.checkOutDate === targetDate);
+    const roomRev = checkouts.reduce((s, c) => s + (Number(c.totalRoomRent) || 0), 0);
+    const foodRev = checkouts.reduce((s, c) => s + (Number(c.foodAmount) || 0), 0);
+    const gstRev = checkouts.reduce((s, c) => s + (Number(c.gstAmount) || 0), 0);
+    const totalBilled = checkouts.reduce((s, c) => s + (Number(c.netPayable) || 0), 0);
+
+    const cashInflow = checkouts
+      .filter(c => (c.paymentMode || '').toLowerCase() === 'cash')
+      .reduce((s, c) => s + (Number(c.netPayable) || 0), 0);
+    const digitalInflow = totalBilled - cashInflow;
+
+    const openingFloat = 15000;
+    const closingCash = openingFloat + cashInflow - cashExpenses;
+
+    return {
+      business_date: targetDate,
+      revenue: {
+        room_revenue: roomRev,
+        food_revenue: foodRev,
+        gst_collected: gstRev,
+        net_total_billed: totalBilled
+      },
+      expenditures: {
+        total_expenses: totalExpenses,
+        cash_expenses: cashExpenses,
+        digital_expenses: digitalExpenses,
+        by_subcategory: subcatMap,
+        count: dayExpenses.length
+      },
+      cash_drawer_reconciliation: {
+        opening_float: openingFloat,
+        cash_inflow: cashInflow,
+        cash_outflow: cashExpenses,
+        closing_cash_in_drawer: closingCash
+      },
+      digital_reconciliation: {
+        digital_inflow: digitalInflow,
+        digital_outflow: digitalExpenses,
+        net_digital_balance: digitalInflow - digitalExpenses
+      }
+    };
   }
 }
 

@@ -2493,6 +2493,79 @@ export const hotelApi = {
     });
     if (!res.ok) throw new Error('Failed to update payout status');
     return await res.json();
+  },
+
+  // =========================================================================
+  // Module 2: EOD Expenditures & Detailed Revenue Analytics
+  // =========================================================================
+  async getEodCategories(): Promise<{ categories: Record<string, string[]>; payment_modes: any[]; room_categories: string[] }> {
+    const res = await fetch(`${API_BASE_URL}/eod-analytics/categories`);
+    if (!res.ok) throw new Error('Failed to fetch EOD categories');
+    return await res.json();
+  },
+
+  async getEodExpenses(params?: { date?: string; period?: string; category?: string; subcategory?: string; payment_mode?: string }): Promise<any> {
+    const query = new URLSearchParams();
+    if (params?.date) query.append('date', params.date);
+    if (params?.period) query.append('period', params.period);
+    if (params?.category && params.category !== 'All') query.append('category', params.category);
+    if (params?.subcategory && params.subcategory !== 'All') query.append('subcategory', params.subcategory);
+    if (params?.payment_mode && params.payment_mode !== 'All') query.append('payment_mode', params.payment_mode);
+    const qs = query.toString() ? `?${query.toString()}` : '';
+
+    const res = await fetch(`${API_BASE_URL}/eod-analytics/expenses${qs}`);
+    if (!res.ok) throw new Error('Failed to fetch EOD expenses');
+    return await res.json();
+  },
+
+  async createEodExpense(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/eod-analytics/expenses`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to create EOD expense');
+    }
+    return await res.json();
+  },
+
+  async deleteEodExpense(id: number | string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/eod-analytics/expenses/${id}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete EOD expense');
+    return await res.json();
+  },
+
+  async getRoomCategoryRevenue(params?: { date?: string; period?: string }): Promise<any> {
+    const query = new URLSearchParams();
+    if (params?.date) query.append('date', params.date);
+    if (params?.period) query.append('period', params.period);
+    const qs = query.toString() ? `?${query.toString()}` : '';
+
+    const res = await fetch(`${API_BASE_URL}/eod-analytics/revenue-by-room-category${qs}`);
+    if (!res.ok) throw new Error('Failed to fetch Room Category revenue');
+    return await res.json();
+  },
+
+  async getPaymentModeRevenue(params?: { date?: string; period?: string }): Promise<any> {
+    const query = new URLSearchParams();
+    if (params?.date) query.append('date', params.date);
+    if (params?.period) query.append('period', params.period);
+    const qs = query.toString() ? `?${query.toString()}` : '';
+
+    const res = await fetch(`${API_BASE_URL}/eod-analytics/revenue-by-payment-mode${qs}`);
+    if (!res.ok) throw new Error('Failed to fetch Payment Mode revenue');
+    return await res.json();
+  },
+
+  async getEodExecutiveSummary(date?: string): Promise<any> {
+    const qs = date ? `?date=${date}` : '';
+    const res = await fetch(`${API_BASE_URL}/eod-analytics/eod-summary${qs}`);
+    if (!res.ok) throw new Error('Failed to fetch EOD summary');
+    return await res.json();
   }
 };
 

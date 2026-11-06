@@ -64,6 +64,7 @@ import { RfidKeyCardModal } from './RfidKeyCardModal';
 import { MonthlyHotelSaleReportModal } from './MonthlyHotelSaleReportModal';
 import { MonthlyRestaurantSaleReportModal } from './MonthlyRestaurantSaleReportModal';
 import { StaffPayrollManagementModal } from './StaffPayrollManagementModal';
+import { EodExpenditureAnalyticsModal } from './EodExpenditureAnalyticsModal';
 import type { PmsUserAccount, PmsChainProperty, BillFormatType, PmsCheckOutDetail, PmsGstReportTab, PmsRoom } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import './pmsStyles.css';
@@ -228,6 +229,9 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
 
   // Module 1: Staff Profiles, Monthly Salaries & Advance Salary Tracking
   const [isStaffPayrollOpen, setIsStaffPayrollOpen] = useState(false);
+
+  // Module 2: End-of-Day (EOD) Expenditures & Detailed Revenue Analytics
+  const [isEodAnalyticsOpen, setIsEodAnalyticsOpen] = useState(false);
 
   const handleLaunchReportAction = (actionKey: string) => {
     switch (actionKey) {
@@ -561,6 +565,8 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       setIsBanquetOpen(true);
     } else if (query.includes('bar') || query.includes('liquor')) {
       setIsLiquorBarOpen(true);
+    } else if (query.includes('eod') || query.includes('expenditure') || query.includes('revenue analytics') || query.includes('payment mode')) {
+      setIsEodAnalyticsOpen(true);
     } else if (query.includes('payroll') || query.includes('salary') || query.includes('advance') || query.includes('worker')) {
       setIsStaffPayrollOpen(true);
     } else if (query.includes('user') || query.includes('staff') || query.includes('role')) {
@@ -803,6 +809,22 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
               >
                 <span>👷</span>
                 <span>Staff &amp; Payroll</span>
+              </button>
+
+              {/* Module 2: EOD Expenditures & Detailed Revenue Analytics */}
+              <button
+                type="button"
+                onClick={() => setIsEodAnalyticsOpen(true)}
+                title="End-of-Day (EOD) Expenditures, Subcategories & Room Category Revenue Breakdown"
+                className="pms-header-btn"
+                style={{
+                  background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                  color: '#ffffff',
+                  border: '1px solid #38bdf8'
+                }}
+              >
+                <span>📊</span>
+                <span>EOD &amp; Revenue</span>
               </button>
 
               {/* Video 30: Training & Support Suite Button */}
@@ -1383,6 +1405,11 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     {/* Module 10: Monthly Restaurant Sale Report */}
                     <div className="pms-nav-item" onClick={() => setIsMonthlyRestaurantSaleOpen(true)}>
                       <span style={{ color: '#fb923c', fontWeight: 900 }}>🍽️ Monthly Restaurant POS Sale (5% GST)</span>
+                    </div>
+
+                    {/* Module 2: EOD Expenditures & Category Revenue Analytics */}
+                    <div className="pms-nav-item" onClick={() => setIsEodAnalyticsOpen(true)}>
+                      <span style={{ color: '#38bdf8', fontWeight: 900 }}>📊 EOD Expenses &amp; Room-Category Revenue Analytics</span>
                     </div>
                   </div>
                 )}
@@ -2165,6 +2192,12 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       <StaffPayrollManagementModal
         isOpen={isStaffPayrollOpen}
         onClose={() => setIsStaffPayrollOpen(false)}
+      />
+
+      {/* Module 2: End-of-Day (EOD) Expenditures & Detailed Revenue Analytics */}
+      <EodExpenditureAnalyticsModal
+        isOpen={isEodAnalyticsOpen}
+        onClose={() => setIsEodAnalyticsOpen(false)}
       />
     </>
   );

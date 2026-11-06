@@ -47,6 +47,7 @@ import { LiquorBarManagementModal } from './LiquorBarManagementModal';
 import { NoDiscountMasterModal } from './NoDiscountMasterModal';
 import { BanquetHallBillingModal } from './BanquetHallBillingModal';
 import { StaffPayrollManagementModal } from './StaffPayrollManagementModal';
+import { EodExpenditureAnalyticsModal } from './EodExpenditureAnalyticsModal';
 import type { PmsBooking, BillFormatType, PmsCheckOutDetail, PmsGstReportTab } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
@@ -152,6 +153,9 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   // Module 1: Staff Profiles, Monthly Salaries, and Advance Salary Tracking
   const [isStaffPayrollOpen, setIsStaffPayrollOpen] = useState(false);
 
+  // Module 2: End-of-Day (EOD) Expenditures & Detailed Revenue Analytics
+  const [isEodAnalyticsOpen, setIsEodAnalyticsOpen] = useState(false);
+
   const handleLaunchReportAction = (actionKey: string) => {
     switch (actionKey) {
       case 'no_discount':
@@ -169,6 +173,11 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
       case 'payroll':
       case 'salary_advance':
         setIsStaffPayrollOpen(true);
+        break;
+      case 'eod_analytics':
+      case 'eod_expenditures':
+      case 'revenue_analytics':
+        setIsEodAnalyticsOpen(true);
         break;
       case 'liquor_bar':
       case 'bar_pos':
@@ -470,6 +479,11 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
       case 'payroll':
       case 'salary_advance':
         setIsStaffPayrollOpen(true);
+        break;
+      case 'eod_analytics':
+      case 'eod_expenditures':
+      case 'revenue_analytics':
+        setIsEodAnalyticsOpen(true);
         break;
       case 'gst_report':
         setGstReportTab('consolidated');
@@ -937,6 +951,24 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           <div className="tile-bottom-col">
             <span className="tile-title">Staff &amp; Payroll</span>
             <span className="tile-subtitle">Salaries, Advances &amp; Slips</span>
+          </div>
+        </button>
+
+        {/* Module 2: EOD Expenditures & Detailed Revenue Analytics */}
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => setIsEodAnalyticsOpen(true)}
+          style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff', fontWeight: 800 }}
+          title="Daily EOD Expenditures, Granular Subcategories & Room Category Revenue Matrix"
+        >
+          <div className="tile-top-row">
+            <span className="tile-icon">📊</span>
+            <span className="tile-badge">EOD Analytics</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">EOD &amp; Revenue</span>
+            <span className="tile-subtitle">Expenses &amp; Categories</span>
           </div>
         </button>
 
@@ -2015,6 +2047,12 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
       <StaffPayrollManagementModal
         isOpen={isStaffPayrollOpen}
         onClose={() => setIsStaffPayrollOpen(false)}
+      />
+
+      {/* Module 2: End-of-Day (EOD) Expenditures & Detailed Revenue Analytics */}
+      <EodExpenditureAnalyticsModal
+        isOpen={isEodAnalyticsOpen}
+        onClose={() => setIsEodAnalyticsOpen(false)}
       />
     </div>
   );

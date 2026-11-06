@@ -1500,6 +1500,30 @@ class StaffMonthlyPayroll(Base):
         Index("ix_staff_payroll_period_staff", "payroll_period", "staff_id", unique=True),
     )
 
+class EodExpenditure(Base):
+    """
+    Module 2: End-of-Day (EOD) Daily Expenditure Tracker.
+    Captures daily expenditures segmented by Category and granular Subcategory,
+    payment mode (Cash, UPI, Card, specific Bank account), and vendor/recipient.
+    """
+    __tablename__ = "eod_expenditures"
+
+    id = Column(Integer, primary_key=True, index=True)
+    expense_date = Column(String(30), nullable=False, index=True)  # YYYY-MM-DD
+    expense_time = Column(String(20), nullable=True)  # HH:MM
+    voucher_no = Column(String(50), unique=True, index=True, nullable=False)  # EXP-EOD-YYYYMM-XXXX
+    category = Column(String(100), nullable=False, index=True)  # Housekeeping, Kitchen, Utilities, Maintenance, Staff, Admin, Misc
+    subcategory = Column(String(150), nullable=False, index=True)  # Housekeeping Supplies, Linen Washing, DG Diesel, etc.
+    amount = Column(Float, nullable=False)
+    payment_mode = Column(String(50), nullable=False, index=True)  # Cash, UPI, Debit Card, Credit Card, Bank Transfer
+    account_name = Column(String(100), default="Petty Cash Drawer")  # Petty Cash Drawer, SBI Current A/c, HDFC Bank A/c
+    paid_to = Column(String(150), nullable=False)
+    receipt_ref = Column(String(100), nullable=True)  # Bill / UTR / Voucher ref
+    approved_by = Column(String(100), default="General Manager")
+    notes = Column(Text, nullable=True)
+    created_at = Column(TimezoneAwareDateTime, default=now_utc)
+    updated_at = Column(TimezoneAwareDateTime, default=now_utc, onupdate=now_utc)
+
 # =========================================================================
 # POSTGRESQL BTREE_GIST EXCLUSION CONSTRAINT (#14)
 # =========================================================================

@@ -459,6 +459,8 @@ export interface PmsCheckOutDetail {
   invoiceFormat?: 'A4_Standard' | 'A5_HalfPage' | 'Detailed' | 'Enterprise_Folio' | 'Card_EDC_Slip' | 'Restaurant_DineIn' | 'RoomService';
   isTaxInclusive?: boolean;
   isComplimentary?: boolean;
+  isCancelled?: boolean;
+  is_deleted?: boolean;
   billingOfficer?: string;    // e.g. DEMO0004
   dayWiseRent?: DayWiseRentItem[];
   idType?: string;
@@ -2075,5 +2077,109 @@ export interface MonthlyPayrollSummary {
   total_paid_count: number;
   total_pending_count: number;
 }
+
+// =========================================================================
+// Module 2: End-of-Day (EOD) Expenditures & Detailed Revenue Analytics
+// =========================================================================
+
+export interface EodExpenseRecord {
+  id: number | string;
+  voucher_no: string;
+  expense_date: string; // YYYY-MM-DD
+  expense_time?: string; // HH:MM
+  category: string;
+  subcategory: string;
+  amount: number;
+  payment_mode: 'Cash' | 'UPI' | 'Debit Card' | 'Credit Card' | 'Bank Transfer - SBI' | 'Bank Transfer - HDFC' | string;
+  account_name: string;
+  paid_to: string;
+  receipt_ref?: string;
+  approved_by: string;
+  notes?: string;
+  created_at?: string;
+}
+
+export interface EodExpenseListResponse {
+  expenses: EodExpenseRecord[];
+  total_amount: number;
+  total_count: number;
+  by_subcategory: Record<string, number>;
+  by_category: Record<string, number>;
+  by_payment_mode: Record<string, number>;
+}
+
+export interface RoomCategoryRevenueItem {
+  room_category: 'Suite' | 'Deluxe' | 'Classic Studio' | 'Premium' | 'Executive' | string;
+  inventory_rooms: number;
+  rooms_sold: number;
+  total_room_rent: number;
+  food_revenue: number;
+  gst_collected: number;
+  net_revenue: number;
+  standard_tariff: number;
+  adr: number;
+  occupancy_pct: number;
+  revenue_share_pct: number;
+}
+
+export interface RoomCategoryRevenueReport {
+  period: string; // YYYY-MM
+  date?: string | null; // YYYY-MM-DD
+  categories: RoomCategoryRevenueItem[];
+  summary: {
+    total_rooms_sold: number;
+    total_room_rent: number;
+    total_net_revenue: number;
+    total_inventory: number;
+    overall_occupancy_pct: number;
+  };
+}
+
+export interface PaymentModeRevenueItem {
+  payment_mode: string;
+  account_name: string;
+  transaction_count: number;
+  room_collections: number;
+  food_collections: number;
+  other_collections: number;
+  total_collected: number;
+  share_pct: number;
+}
+
+export interface PaymentModeRevenueReport {
+  period: string;
+  date?: string | null;
+  modes: PaymentModeRevenueItem[];
+  grand_total: number;
+}
+
+export interface EodExecutiveSummary {
+  business_date: string;
+  revenue: {
+    room_revenue: number;
+    food_revenue: number;
+    gst_collected: number;
+    net_total_billed: number;
+  };
+  expenditures: {
+    total_expenses: number;
+    cash_expenses: number;
+    digital_expenses: number;
+    by_subcategory: Record<string, number>;
+    count: number;
+  };
+  cash_drawer_reconciliation: {
+    opening_float: number;
+    cash_inflow: number;
+    cash_outflow: number;
+    closing_cash_in_drawer: number;
+  };
+  digital_reconciliation: {
+    digital_inflow: number;
+    digital_outflow: number;
+    net_digital_balance: number;
+  };
+}
+
 
 
