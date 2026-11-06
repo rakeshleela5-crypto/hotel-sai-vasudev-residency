@@ -51,6 +51,7 @@ import { EodExpenditureAnalyticsModal } from './EodExpenditureAnalyticsModal';
 import { RoomQrCodeManagerModal } from './RoomQrCodeManagerModal';
 import { ReceptionistNotificationBanner } from './ReceptionistNotificationBanner';
 import { GuestRoomServicePortalPage } from '../guest/GuestRoomServicePortalPage';
+import { CharteredAccountantExportModal } from './CharteredAccountantExportModal';
 import type { PmsBooking, BillFormatType, PmsCheckOutDetail, PmsGstReportTab } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
@@ -163,8 +164,17 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
   const [isRoomQrManagerOpen, setIsRoomQrManagerOpen] = useState(false);
   const [activeGuestPortalRoom, setActiveGuestPortalRoom] = useState<string | null>(null);
 
+  // Module 6: Chartered Accountant (CA) JSON Export
+  const [isCaExportOpen, setIsCaExportOpen] = useState(false);
+
   const handleLaunchReportAction = (actionKey: string) => {
     switch (actionKey) {
+      case 'ca_export':
+      case 'chartered_accountant':
+      case 'gstr_export':
+      case 'json_export':
+        setIsCaExportOpen(true);
+        break;
       case 'no_discount':
       case 'margin_protection':
       case 'discount_rules':
@@ -1007,6 +1017,29 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           <div className="tile-bottom-col">
             <span className="tile-title" style={{ color: '#0d1b2a' }}>18-Room QR Portal</span>
             <span className="tile-subtitle" style={{ color: '#1e293b' }}>Standees &amp; Amenities</span>
+          </div>
+        </button>
+
+        {/* Module 6: Chartered Accountant (CA) JSON Export Tile */}
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => setIsCaExportOpen(true)}
+          style={{
+            background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+            color: '#fff',
+            fontWeight: 800,
+            border: '1.5px solid #34d399'
+          }}
+          title="End-of-Month Chartered Accountant (CA) JSON Export, GSTR-1, Invoices, Food Bills & Tax Slabs"
+        >
+          <div className="tile-top-row">
+            <span className="tile-icon">⚖️</span>
+            <span className="tile-badge" style={{ background: '#064e3b', color: '#6ee7b7' }}>CA Export</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title">CA JSON Export</span>
+            <span className="tile-subtitle">Monthly Invoices &amp; Tax Pack</span>
           </div>
         </button>
 
@@ -2098,6 +2131,12 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         isOpen={isRoomQrManagerOpen}
         onClose={() => setIsRoomQrManagerOpen(false)}
         onOpenGuestPortal={(roomNo) => setActiveGuestPortalRoom(roomNo)}
+      />
+
+      {/* Module 6: Chartered Accountant (CA) JSON Export Modal */}
+      <CharteredAccountantExportModal
+        isOpen={isCaExportOpen}
+        onClose={() => setIsCaExportOpen(false)}
       />
 
       {/* Modules 3 & 4: In-PMS Guest Room Service Portal Preview */}

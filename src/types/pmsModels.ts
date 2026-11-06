@@ -2356,6 +2356,132 @@ export interface HardwareStatusInfo {
   };
 }
 
+// =========================================================================
+// MODULE 6: CHARTERED ACCOUNTANT (CA) MONTHLY JSON EXPORT MODELS
+// =========================================================================
+
+export interface CaExportHotelMeta {
+  hotel_name: string;
+  trade_name: string;
+  legal_name: string;
+  gstin: string;
+  pan: string;
+  address: string;
+  city?: string;
+  state: string;
+  state_code: string;
+  pin_code: string;
+  phone: string;
+  email: string;
+  bank_name: string;
+  bank_account_no: string;
+  bank_ifsc: string;
+  jurisdiction: string;
+}
+
+export interface CaExportPreviewSummary {
+  total_invoices_count: number;
+  room_invoices_count: number;
+  restaurant_bills_count: number;
+  b2b_invoices_count: number;
+  b2c_invoices_count: number;
+  total_taxable_value: number;
+  total_cgst: number;
+  total_sgst: number;
+  total_igst: number;
+  total_tax: number;
+  total_invoice_value: number;
+  total_operating_expenditures: number;
+  total_staff_payroll: number;
+  net_monthly_operating_profit: number;
+}
+
+export interface CaExportTaxSlab {
+  sac_code: string;
+  description: string;
+  gst_rate_pct: number;
+  cgst_rate_pct: number;
+  sgst_rate_pct: number;
+  taxable_value: number;
+  cgst_amount: number;
+  sgst_amount: number;
+  igst_amount: number;
+  total_tax_amount: number;
+  gross_amount: number;
+  invoices_count: number;
+}
+
+export interface CaExportInvoiceItem {
+  invoice_no: string;
+  invoice_date: string;
+  check_in_date?: string;
+  room_no?: string;
+  room_category?: string;
+  nights?: number;
+  daily_tariff?: number;
+  guest_name: string;
+  guest_phone?: string;
+  city?: string;
+  state?: string;
+  pos_state_code?: string;
+  customer_gstin?: string;
+  customer_firm_name?: string;
+  sac_code: string;
+  sac_description: string;
+  taxable_value: number;
+  gst_rate_pct: number;
+  cgst_rate_pct: number;
+  cgst_amount: number;
+  sgst_rate_pct: number;
+  sgst_amount: number;
+  igst_rate_pct: number;
+  igst_amount: number;
+  total_invoice_value: number;
+  payment_mode: string;
+  invoice_category: 'B2B' | 'B2C';
+}
+
+export interface CaExportFoodBillItem {
+  bill_no: string;
+  bill_date: string;
+  bill_time: string;
+  room_or_table_no: string;
+  guest_name: string;
+  outlet: string;
+  sac_code: string;
+  sac_description: string;
+  taxable_value: number;
+  gst_rate_pct: number;
+  cgst_rate_pct: number;
+  cgst_amount: number;
+  sgst_rate_pct: number;
+  sgst_amount: number;
+  discount_amount: number;
+  net_bill_amount: number;
+  settlement_type: string;
+  billed_by?: string;
+}
+
+export interface CaExportData {
+  status: string;
+  export_metadata: {
+    format: string;
+    standard: string;
+    period: string;
+    financial_year: string;
+    export_timestamp: string;
+    hotel: CaExportHotelMeta;
+  };
+  preview_summary: CaExportPreviewSummary;
+  payment_modes_summary: { [mode: string]: number };
+  tax_slabs_summary: CaExportTaxSlab[];
+  b2b_invoices: CaExportInvoiceItem[];
+  b2c_invoices: CaExportInvoiceItem[];
+  restaurant_food_bills: CaExportFoodBillItem[];
+  daily_expenditures: any[];
+  staff_payroll: any[];
+}
+
 
 
 

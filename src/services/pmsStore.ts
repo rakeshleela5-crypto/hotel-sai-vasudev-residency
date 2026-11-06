@@ -5769,6 +5769,277 @@ export class PmsStore {
   }
 
   // =========================================================================
+  // MODULE 6: CHARTERED ACCOUNTANT (CA) COMPREHENSIVE JSON EXPORT ENGINE
+  // =========================================================================
+  static generateCharteredAccountantExport(periodStr: string): import('../types/pmsModels').CaExportData {
+    const comp = this.getCompanyInfo();
+    const gstin = comp.gstin || comp.gstNo || '21AEKPP8689J1ZS';
+    const stateCode = gstin.slice(0, 2) || '21';
+
+    // Normalize period string into "YYYY-MM"
+    let normPeriod = periodStr;
+    if (periodStr && periodStr.length === 6 && !periodStr.includes('-')) {
+      normPeriod = `${periodStr.slice(2)}-${periodStr.slice(0, 2)}`;
+    } else if (!periodStr) {
+      normPeriod = new Date().toISOString().slice(0, 7);
+    }
+
+    // Financial Year
+    const [yStr, mStr] = normPeriod.split('-');
+    const yNum = Number(yStr) || new Date().getFullYear();
+    const mNum = Number(mStr) || (new Date().getMonth() + 1);
+    const fyStr = mNum >= 4 ? `${yNum}-${String(yNum + 1).slice(-2)}` : `${yNum - 1}-${String(yNum).slice(-2)}`;
+
+    // 1. Filter checkout invoices by period
+    const allCheckouts = this.getCheckouts();
+    const checkouts = allCheckouts.filter(c => {
+      const d = c.checkOutDate || c.checkInDate || '';
+      return d.startsWith(normPeriod);
+    });
+
+    // 2. Filter food bills by period
+    const allFoodBills = this.getFoodBills();
+    const foodBills = allFoodBills.filter(f => {
+      const d = f.date || '';
+      return d.startsWith(normPeriod);
+    });
+
+    // 3. Filter daily expenditures by period
+    const allExpenses = this.getEodExpenses(undefined, normPeriod);
+    const eodExpenses = allExpenses.filter((e: import('../types/pmsModels').EodExpenseRecord) => {
+      const d = e.expense_date || '';
+      return d.startsWith(normPeriod);
+    });
+
+    // 4. Monthly Payroll
+    const payroll = this.getMonthlyPayroll(normPeriod);
+
+    // B2B & B2C Invoices
+    const b2bInvoices: import('../types/pmsModels').CaExportInvoiceItem[] = [];
+    const b2cInvoices: import('../types/pmsModels').CaExportInvoiceItem[] = [];
+    const restaurantBills: import('../types/pmsModels').CaExportFoodBillItem[] = [];
+
+    let totalRoomTaxable = 0;
+    let totalRoomCgst = 0;
+    let totalRoomSgst = 0;
+    let totalRoomIgst = 0;
+    let totalRoomGross = 0;
+
+    const paymentModesTally: { [mode: string]: number } = {
+      'Cash': 0,
+      'UPI': 0,
+      'Card': 0,
+      'Bank Transfer': 0,
+      'Room Settlement': 0
+    };
+
+    checkouts.forEach(co => {
+      const rent = Number(co.totalRoomRent || co.roomRentTotal || co.perDayTariff || 0);
+      const gstPct = Number(co.gstPercent || (rent > 7500 ? 18 : 12));
+      const cgstAmt = Number(co.cgstAmount ?? (rent * (gstPct / 200)));
+      const sgstAmt = Number(co.sgstAmount ?? (rent * (gstPct / 200)));
+      const igstAmt = Number(co.igstAmount ?? 0);
+      const gross = Number(co.billAmount || co.netPayable || (rent + cgstAmt + sgstAmt + igstAmt));
+
+      totalRoomTaxable += rent;
+      totalRoomCgst += cgstAmt;
+      totalRoomSgst += sgstAmt;
+      totalRoomIgst += igstAmt;
+      totalRoomGross += gross;
+
+      const rawMode = (co.paymentMode || 'Cash').toLowerCase();
+      const modeKey = rawMode.includes('cash') ? 'Cash' : rawMode.includes('upi') ? 'UPI' : (rawMode.includes('card') || rawMode.includes('edc')) ? 'Card' : 'Bank Transfer';
+      paymentModesTally[modeKey] = (paymentModesTally[modeKey] || 0) + gross;
+
+      const custGstin = co.gstNumber || '';
+      const isB2B = Boolean(custGstin && custGstin.trim().length >= 15);
+
+      const invRecord: import('../types/pmsModels').CaExportInvoiceItem = {
+        invoice_no: co.invoiceNo,
+        invoice_date: co.checkOutDate || normPeriod + '-01',
+        check_in_date: co.checkInDate,
+        room_no: co.roomNo,
+        room_category: co.roomType || 'Deluxe',
+        nights: co.numberOfDays || 1,
+        daily_tariff: co.perDayTariff || 0,
+        guest_name: co.guestName,
+        guest_phone: co.guestPhone,
+        city: 'Rayagada',
+        state: 'Odisha',
+        pos_state_code: stateCode,
+        customer_gstin: isB2B ? custGstin.trim().toUpperCase() : undefined,
+        customer_firm_name: isB2B ? (co.companyName || co.guestName) : undefined,
+        sac_code: '996311',
+        sac_description: 'Room Accommodation Services',
+        taxable_value: Number(rent.toFixed(2)),
+        gst_rate_pct: gstPct,
+        cgst_rate_pct: gstPct / 2,
+        cgst_amount: Number(cgstAmt.toFixed(2)),
+        sgst_rate_pct: gstPct / 2,
+        sgst_amount: Number(sgstAmt.toFixed(2)),
+        igst_rate_pct: 0,
+        igst_amount: Number(igstAmt.toFixed(2)),
+        total_invoice_value: Number(gross.toFixed(2)),
+        payment_mode: co.paymentMode || 'Cash',
+        invoice_category: isB2B ? 'B2B' : 'B2C'
+      };
+
+      if (isB2B) {
+        b2bInvoices.push(invRecord);
+      } else {
+        b2cInvoices.push(invRecord);
+      }
+    });
+
+    let totalFoodTaxable = 0;
+    let totalFoodCgst = 0;
+    let totalFoodSgst = 0;
+    let totalFoodGross = 0;
+
+    foodBills.forEach(fb => {
+      const taxable = Number(fb.taxableAmount || (fb.netBillAmount ? fb.netBillAmount / 1.05 : 0));
+      const cgstAmt = Number(fb.cgstAmount ?? (taxable * 0.025));
+      const sgstAmt = Number(fb.sgstAmount ?? (taxable * 0.025));
+      const gross = Number(fb.netBillAmount || (taxable + cgstAmt + sgstAmt));
+
+      totalFoodTaxable += taxable;
+      totalFoodCgst += cgstAmt;
+      totalFoodSgst += sgstAmt;
+      totalFoodGross += gross;
+
+      const st = (fb.settlementType || 'Cash').toLowerCase();
+      if (st.includes('room')) {
+        paymentModesTally['Room Settlement'] = (paymentModesTally['Room Settlement'] || 0) + gross;
+      } else if (st.includes('upi')) {
+        paymentModesTally['UPI'] = (paymentModesTally['UPI'] || 0) + gross;
+      } else if (st.includes('card')) {
+        paymentModesTally['Card'] = (paymentModesTally['Card'] || 0) + gross;
+      } else {
+        paymentModesTally['Cash'] = (paymentModesTally['Cash'] || 0) + gross;
+      }
+
+      restaurantBills.push({
+        bill_no: fb.billNo,
+        bill_date: fb.date || normPeriod + '-01',
+        bill_time: fb.time || '13:00',
+        room_or_table_no: fb.roomNo || fb.tableNo || 'Takeaway',
+        guest_name: fb.guestName || 'Walk-in Guest',
+        outlet: fb.outlet || 'Vasudev Rasoi F&B',
+        sac_code: '996331',
+        sac_description: 'Restaurant & Room Service Food Bills',
+        taxable_value: Number(taxable.toFixed(2)),
+        gst_rate_pct: 5.0,
+        cgst_rate_pct: 2.5,
+        cgst_amount: Number(cgstAmt.toFixed(2)),
+        sgst_rate_pct: 2.5,
+        sgst_amount: Number(sgstAmt.toFixed(2)),
+        discount_amount: Number((fb.discountAmount || 0).toFixed(2)),
+        net_bill_amount: Number(gross.toFixed(2)),
+        settlement_type: fb.settlementType || 'Cash',
+        billed_by: fb.steward || 'Cashier'
+      });
+    });
+
+    const totalExpenseVal = eodExpenses.reduce((s: number, e: import('../types/pmsModels').EodExpenseRecord) => s + Number(e.amount || 0), 0);
+    const totalPayrollVal = payroll.summary?.total_net_payable || 0;
+
+    const grandTaxable = totalRoomTaxable + totalFoodTaxable;
+    const grandCgst = totalRoomCgst + totalFoodCgst;
+    const grandSgst = totalRoomSgst + totalFoodSgst;
+    const grandIgst = totalRoomIgst;
+    const grandTotalTax = grandCgst + grandSgst + grandIgst;
+    const grandInvoiceVal = totalRoomGross + totalFoodGross;
+    const netProfit = grandInvoiceVal - (totalExpenseVal + totalPayrollVal);
+
+    return {
+      status: 'success',
+      export_metadata: {
+        format: 'CA_GST_ACCOUNTING_JSON_V1',
+        standard: 'Indian GSTR-1 / Tally ERP 9 / TallyPrime XML Compatible',
+        period: normPeriod,
+        financial_year: fyStr,
+        export_timestamp: new Date().toISOString(),
+        hotel: {
+          hotel_name: comp.firmName || 'SRI SAI VASUDEV RESIDENCY',
+          trade_name: comp.tradeName || 'Hotel Sai Vasudev Residency',
+          legal_name: comp.legalName || 'PAIDISETTY MANMADHA RAO',
+          gstin: gstin,
+          pan: comp.panNo || comp.pan || 'AEKPP8689J',
+          address: comp.address1 || 'Near Overbridge, Main Road, Rayagada, Odisha 765001',
+          city: comp.city || 'Rayagada',
+          state: comp.state || 'Odisha',
+          state_code: stateCode,
+          pin_code: comp.pincode || '765001',
+          phone: comp.phone || comp.mobile || '+91 9440289999',
+          email: comp.email || 'saivasudevresidency@gmail.com',
+          bank_name: comp.bankName || 'State Bank of India',
+          bank_account_no: comp.bankAccountNo || '38920192831',
+          bank_ifsc: comp.bankIfsc || 'SBIN0000390',
+          jurisdiction: comp.jurisdiction || 'Rayagada Circle, Odisha'
+        }
+      },
+      preview_summary: {
+        total_invoices_count: checkouts.length + foodBills.length,
+        room_invoices_count: checkouts.length,
+        restaurant_bills_count: foodBills.length,
+        b2b_invoices_count: b2bInvoices.length,
+        b2c_invoices_count: b2cInvoices.length,
+        total_taxable_value: Number(grandTaxable.toFixed(2)),
+        total_cgst: Number(grandCgst.toFixed(2)),
+        total_sgst: Number(grandSgst.toFixed(2)),
+        total_igst: Number(grandIgst.toFixed(2)),
+        total_tax: Number(grandTotalTax.toFixed(2)),
+        total_invoice_value: Number(grandInvoiceVal.toFixed(2)),
+        total_operating_expenditures: Number(totalExpenseVal.toFixed(2)),
+        total_staff_payroll: Number(totalPayrollVal.toFixed(2)),
+        net_monthly_operating_profit: Number(netProfit.toFixed(2))
+      },
+      payment_modes_summary: {
+        Cash: Number((paymentModesTally['Cash'] || 0).toFixed(2)),
+        UPI: Number((paymentModesTally['UPI'] || 0).toFixed(2)),
+        Card: Number((paymentModesTally['Card'] || 0).toFixed(2)),
+        'Bank Transfer': Number((paymentModesTally['Bank Transfer'] || 0).toFixed(2)),
+        'Room Settlement': Number((paymentModesTally['Room Settlement'] || 0).toFixed(2))
+      },
+      tax_slabs_summary: [
+        {
+          sac_code: '996311',
+          description: 'Room Accommodation Services (Tariff <= ₹7,500)',
+          gst_rate_pct: 12.0,
+          cgst_rate_pct: 6.0,
+          sgst_rate_pct: 6.0,
+          taxable_value: Number(totalRoomTaxable.toFixed(2)),
+          cgst_amount: Number(totalRoomCgst.toFixed(2)),
+          sgst_amount: Number(totalRoomSgst.toFixed(2)),
+          igst_amount: Number(totalRoomIgst.toFixed(2)),
+          total_tax_amount: Number((totalRoomCgst + totalRoomSgst + totalRoomIgst).toFixed(2)),
+          gross_amount: Number(totalRoomGross.toFixed(2)),
+          invoices_count: checkouts.length
+        },
+        {
+          sac_code: '996331',
+          description: 'Restaurant & Room Service Food Bills (Vasudev Rasoi)',
+          gst_rate_pct: 5.0,
+          cgst_rate_pct: 2.5,
+          sgst_rate_pct: 2.5,
+          taxable_value: Number(totalFoodTaxable.toFixed(2)),
+          cgst_amount: Number(totalFoodCgst.toFixed(2)),
+          sgst_amount: Number(totalFoodSgst.toFixed(2)),
+          igst_amount: 0.0,
+          total_tax_amount: Number((totalFoodCgst + totalFoodSgst).toFixed(2)),
+          gross_amount: Number(totalFoodGross.toFixed(2)),
+          invoices_count: foodBills.length
+        }
+      ],
+      b2b_invoices: b2bInvoices,
+      b2c_invoices: b2cInvoices,
+      restaurant_food_bills: restaurantBills,
+      daily_expenditures: eodExpenses,
+      staff_payroll: payroll.rows || []
+    };
+  }
+
+  // =========================================================================
   // MODULE 5: Anti-Fraud Short-Stay Theft Prevention & Discrepancies
   // =========================================================================
 

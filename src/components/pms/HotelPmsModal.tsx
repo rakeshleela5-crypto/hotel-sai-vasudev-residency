@@ -68,6 +68,7 @@ import { EodExpenditureAnalyticsModal } from './EodExpenditureAnalyticsModal';
 import { RoomQrCodeManagerModal } from './RoomQrCodeManagerModal';
 import { ReceptionistNotificationBanner } from './ReceptionistNotificationBanner';
 import { GuestRoomServicePortalPage } from '../guest/GuestRoomServicePortalPage';
+import { CharteredAccountantExportModal } from './CharteredAccountantExportModal';
 import type { PmsUserAccount, PmsChainProperty, BillFormatType, PmsCheckOutDetail, PmsGstReportTab, PmsRoom } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import './pmsStyles.css';
@@ -240,6 +241,9 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   const [isRoomQrManagerOpen, setIsRoomQrManagerOpen] = useState(false);
   const [activeGuestPortalRoom, setActiveGuestPortalRoom] = useState<string | null>(null);
 
+  // Module 6: End-of-Month Chartered Accountant (CA) JSON Export
+  const [isCaExportOpen, setIsCaExportOpen] = useState(false);
+
   const handleLaunchReportAction = (actionKey: string) => {
     switch (actionKey) {
       case 'no_discount':
@@ -380,6 +384,12 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         setGstReportTab('b2c');
         setIsGstReportsOpen(true);
         break;
+      case 'ca_export':
+      case 'chartered_accountant':
+      case 'monthly_ca_pack':
+      case 'ca_json_export':
+        setIsCaExportOpen(true);
+        break;
       default:
         break;
     }
@@ -459,6 +469,11 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       case 'no_discount':
       case 'margin_protection':
         setIsNoDiscountOpen(true);
+        break;
+      case 'ca_export':
+      case 'chartered_accountant':
+      case 'ca_json_export':
+        setIsCaExportOpen(true);
         break;
       default:
         setActiveTab('hub');
@@ -1441,6 +1456,11 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     <div className="pms-nav-item" onClick={() => setIsEodAnalyticsOpen(true)}>
                       <span style={{ color: '#38bdf8', fontWeight: 900 }}>📊 EOD Expenses &amp; Room-Category Revenue Analytics</span>
                     </div>
+
+                    {/* Module 6: End-of-Month Chartered Accountant (CA) JSON Export */}
+                    <div className="pms-nav-item" onClick={() => setIsCaExportOpen(true)}>
+                      <span style={{ color: '#10b981', fontWeight: 900 }}>⚖️ CA Monthly JSON Export (Module 6)</span>
+                    </div>
                   </div>
                 )}
 
@@ -2186,6 +2206,10 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       <Gstr1ExportModal
         isOpen={isGstr1ExportOpen}
         onClose={() => setIsGstr1ExportOpen(false)}
+        onOpenCaPack={() => {
+          setIsGstr1ExportOpen(false);
+          setIsCaExportOpen(true);
+        }}
       />
 
       {/* Module 5: Anti-Fraud Housekeeping & Short Stay Discrepancy Portal */}
@@ -2252,6 +2276,11 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
           />
         </div>
       )}
+      {/* Module 6: End-of-Month Chartered Accountant (CA) JSON Export */}
+      <CharteredAccountantExportModal
+        isOpen={isCaExportOpen}
+        onClose={() => setIsCaExportOpen(false)}
+      />
     </>
   );
 };

@@ -2728,6 +2728,32 @@ export const hotelApi = {
     });
     if (!res.ok) throw new Error('Failed to parse Aadhaar QR string');
     return await res.json();
+  },
+
+  // =========================================================================
+  // MODULE 6: CHARTERED ACCOUNTANT (CA) JSON EXPORT ENGINE
+  // =========================================================================
+  async getCharteredAccountantExport(period?: string, year?: string | number, month?: string | number): Promise<any> {
+    const query = new URLSearchParams();
+    if (period) query.append('period', period);
+    if (year) query.append('year', String(year));
+    if (month) query.append('month', String(month));
+    const qs = query.toString() ? `?${query.toString()}` : '';
+
+    const res = await fetch(`${API_BASE_URL}/accounting/ca-export${qs}`);
+    if (!res.ok) throw new Error('Failed to compile Chartered Accountant export JSON');
+    return await res.json();
+  },
+
+  async getCaExportAvailablePeriods(): Promise<{ status: string; current_period: string; periods: string[] }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/accounting/ca-export/available-periods`);
+      if (!res.ok) throw new Error('Failed to fetch available accounting periods');
+      return await res.json();
+    } catch {
+      const nowP = new Date().toISOString().slice(0, 7);
+      return { status: 'success', current_period: nowP, periods: [nowP] };
+    }
   }
 };
 

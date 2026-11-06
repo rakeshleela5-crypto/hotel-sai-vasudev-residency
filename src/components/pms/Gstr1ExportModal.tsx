@@ -4,9 +4,10 @@ import { PmsStore } from '../../services/pmsStore';
 interface Gstr1ExportModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenCaPack?: () => void;
 }
 
-export const Gstr1ExportModal: React.FC<Gstr1ExportModalProps> = ({ isOpen, onClose }) => {
+export const Gstr1ExportModal: React.FC<Gstr1ExportModalProps> = ({ isOpen, onClose, onOpenCaPack }) => {
   const [selectedMonth, setSelectedMonth] = useState<string>('062026'); // June 2026
   const [selectedTab, setSelectedTab] = useState<'hsn' | 'b2b' | 'b2cs' | 'b2cl' | 'json'>('hsn');
   const [copied, setCopied] = useState<boolean>(false);
@@ -141,6 +142,29 @@ export const Gstr1ExportModal: React.FC<Gstr1ExportModalProps> = ({ isOpen, onCl
               <span>📥</span>
               <span>Download GSTR-1 JSON (Offline Tool)</span>
             </button>
+            {onOpenCaPack && (
+              <button
+                type="button"
+                onClick={onOpenCaPack}
+                style={{
+                  background: 'linear-gradient(135deg, #059669, #0d9488)',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '6px 16px',
+                  borderRadius: 4,
+                  fontWeight: 900,
+                  fontSize: 12,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 4px rgba(13,148,136,0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6
+                }}
+              >
+                <span>⚖️</span>
+                <span>Module 6 CA JSON Export</span>
+              </button>
+            )}
           </div>
         </div>
 
