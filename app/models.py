@@ -1524,6 +1524,37 @@ class EodExpenditure(Base):
     created_at = Column(TimezoneAwareDateTime, default=now_utc)
     updated_at = Column(TimezoneAwareDateTime, default=now_utc, onupdate=now_utc)
 
+class GuestRoomServiceOrder(Base):
+    """
+    Modules 3 & 4: 18-Room QR Code Self-Service Orders & Tiered Amenities Requests.
+    Supports complimentary tiered amenities booking and Vasudev Rasoi food orders
+    with 'Transfer to Room Folio' or 'Immediate UPI/Card' checkout.
+    """
+    __tablename__ = "guest_room_service_orders"
+
+    id = Column(Integer, primary_key=True, index=True)
+    order_number = Column(String(50), unique=True, index=True, nullable=False) # RSO-YYYYMM-XXXX
+    room_no = Column(String(20), nullable=False, index=True) # e.g. "101", "102"
+    room_category = Column(String(50), nullable=False, index=True) # Deluxe, Classic Studio, Premium, Executive, Suite
+    order_type = Column(String(50), nullable=False, index=True) # "Amenity Request" | "Food Order" | "Combined"
+    amenities_json = Column(Text, default="[]") # JSON list of requested amenities
+    items_json = Column(Text, default="[]") # JSON list of food items
+    subtotal_amount = Column(Float, default=0.0)
+    tax_amount = Column(Float, default=0.0)
+    total_amount = Column(Float, default=0.0)
+    payment_method = Column(String(50), default="Transfer to Room Folio") # "Transfer to Room Folio" | "Immediate UPI" | "Immediate Card" | "Complimentary"
+    payment_status = Column(String(30), default="Pending", index=True) # "Pending" | "Folio Accrued" | "Paid"
+    payment_reference = Column(String(100), nullable=True)
+    status = Column(String(50), default="New Order", index=True) # "New Order" | "Acknowledged" | "In Preparation" | "Delivered" | "Cancelled"
+    guest_name = Column(String(150), nullable=True)
+    guest_phone = Column(String(50), nullable=True)
+    special_instructions = Column(Text, nullable=True)
+    delivery_staff = Column(String(100), nullable=True)
+    acknowledged_at = Column(TimezoneAwareDateTime, nullable=True)
+    delivered_at = Column(TimezoneAwareDateTime, nullable=True)
+    created_at = Column(TimezoneAwareDateTime, default=now_utc)
+    updated_at = Column(TimezoneAwareDateTime, default=now_utc, onupdate=now_utc)
+
 # =========================================================================
 # POSTGRESQL BTREE_GIST EXCLUSION CONSTRAINT (#14)
 # =========================================================================

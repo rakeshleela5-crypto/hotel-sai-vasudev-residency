@@ -13,6 +13,7 @@ export interface NavbarProps {
   onOpenHousekeeping?: () => void;
   onOpenPettyCash?: () => void;
   onOpenPos?: () => void;
+  onOpenRoomService?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -26,7 +27,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenGuestEngine,
   onOpenHousekeeping,
   onOpenPettyCash,
-  onOpenPos
+  onOpenPos,
+  onOpenRoomService
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -357,6 +359,30 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }}
                 >
                   🌐 Online Booking Engine
+                </button>
+
+                <span style={{ color: '#475569' }}>•</span>
+
+                <button 
+                  type="button" 
+                  id="nav-room-service-portal-btn"
+                  onClick={onOpenRoomService}
+                  title="Guest Room Service & Vasudev Rasoi Self-Service Portal"
+                  style={{
+                    background: '#d4af37',
+                    color: '#0d1b2a',
+                    border: 'none',
+                    padding: '4px 10px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  📱 Room Service
                 </button>
 
                 <span style={{ color: '#475569' }}>•</span>

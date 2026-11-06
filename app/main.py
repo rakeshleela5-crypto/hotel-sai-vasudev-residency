@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.config import settings
 from app.database import engine, Base, get_db
-from app.routes import rooms, bookings, inquiries, pms, uploads, payments, kyc, staff_payroll, eod_analytics
+from app.routes import rooms, bookings, inquiries, pms, uploads, payments, kyc, staff_payroll, eod_analytics, guest_portal
 
 # Initialize DB tables safely
 try:
@@ -332,6 +332,8 @@ app.include_router(staff_payroll.router, prefix=f"{settings.API_V1_STR}/staff-pa
 app.include_router(staff_payroll.router, prefix="/api/staff-payroll", tags=["Staff & Payroll"])
 app.include_router(eod_analytics.router, prefix=f"{settings.API_V1_STR}/eod-analytics", tags=["EOD Analytics & Expenditures"])
 app.include_router(eod_analytics.router, prefix="/api/eod-analytics", tags=["EOD Analytics & Expenditures"])
+app.include_router(guest_portal.router, prefix=f"{settings.API_V1_STR}/guest-portal", tags=["Guest Portal & Room Service"])
+app.include_router(guest_portal.router, prefix="/api/guest-portal", tags=["Guest Portal & Room Service"])
 
 @app.get("/health", tags=["Observability & Health Probes"])
 @app.get("/api/health", tags=["Observability & Health Probes"])

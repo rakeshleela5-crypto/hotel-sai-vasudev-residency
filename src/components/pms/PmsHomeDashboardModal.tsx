@@ -48,6 +48,9 @@ import { NoDiscountMasterModal } from './NoDiscountMasterModal';
 import { BanquetHallBillingModal } from './BanquetHallBillingModal';
 import { StaffPayrollManagementModal } from './StaffPayrollManagementModal';
 import { EodExpenditureAnalyticsModal } from './EodExpenditureAnalyticsModal';
+import { RoomQrCodeManagerModal } from './RoomQrCodeManagerModal';
+import { ReceptionistNotificationBanner } from './ReceptionistNotificationBanner';
+import { GuestRoomServicePortalPage } from '../guest/GuestRoomServicePortalPage';
 import type { PmsBooking, BillFormatType, PmsCheckOutDetail, PmsGstReportTab } from '../../types/pmsModels';
 
 interface PmsHomeDashboardModalProps {
@@ -155,6 +158,10 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
 
   // Module 2: End-of-Day (EOD) Expenditures & Detailed Revenue Analytics
   const [isEodAnalyticsOpen, setIsEodAnalyticsOpen] = useState(false);
+
+  // Modules 3 & 4: Tiered Amenities & 18-Room QR Standee Self-Service Portal
+  const [isRoomQrManagerOpen, setIsRoomQrManagerOpen] = useState(false);
+  const [activeGuestPortalRoom, setActiveGuestPortalRoom] = useState<string | null>(null);
 
   const handleLaunchReportAction = (actionKey: string) => {
     switch (actionKey) {
@@ -485,6 +492,10 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
       case 'revenue_analytics':
         setIsEodAnalyticsOpen(true);
         break;
+      case 'room_qr_standees':
+      case 'room_service_portal':
+        setIsRoomQrManagerOpen(true);
+        break;
       case 'gst_report':
         setGstReportTab('consolidated');
         setIsGstReportsOpen(true);
@@ -513,6 +524,10 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           >
             WhatsApp Validity: 29-06-2026
           </span>
+          <ReceptionistNotificationBanner
+            onOpenQrManager={() => setIsRoomQrManagerOpen(true)}
+            onOpenOrderDetails={(o) => setActiveGuestPortalRoom(o.room_no)}
+          />
         </div>
       </div>
 
@@ -969,6 +984,29 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
           <div className="tile-bottom-col">
             <span className="tile-title">EOD &amp; Revenue</span>
             <span className="tile-subtitle">Expenses &amp; Categories</span>
+          </div>
+        </button>
+
+        {/* Modules 3 & 4: 18-Room QR Standees & Room Service Portal */}
+        <button
+          type="button"
+          className="hub-tile-btn"
+          onClick={() => setIsRoomQrManagerOpen(true)}
+          style={{
+            background: 'linear-gradient(135deg, #d4af37 0%, #b89628 100%)',
+            color: '#0d1b2a',
+            fontWeight: 800,
+            border: '1.5px solid #fef08a'
+          }}
+          title="Generate 18-Room Standees, Download/Print QR Codes & Configure Tiered Amenities"
+        >
+          <div className="tile-top-row">
+            <span className="tile-icon">📱</span>
+            <span className="tile-badge" style={{ background: '#0d1b2a', color: '#d4af37' }}>QR Standees</span>
+          </div>
+          <div className="tile-bottom-col">
+            <span className="tile-title" style={{ color: '#0d1b2a' }}>18-Room QR Portal</span>
+            <span className="tile-subtitle" style={{ color: '#1e293b' }}>Standees &amp; Amenities</span>
           </div>
         </button>
 
@@ -2054,6 +2092,29 @@ export const PmsHomeDashboardModal: React.FC<PmsHomeDashboardModalProps> = ({
         isOpen={isEodAnalyticsOpen}
         onClose={() => setIsEodAnalyticsOpen(false)}
       />
+
+      {/* Modules 3 & 4: 18-Room QR Standee Generator & Tiered Amenities Modal */}
+      <RoomQrCodeManagerModal
+        isOpen={isRoomQrManagerOpen}
+        onClose={() => setIsRoomQrManagerOpen(false)}
+        onOpenGuestPortal={(roomNo) => setActiveGuestPortalRoom(roomNo)}
+      />
+
+      {/* Modules 3 & 4: In-PMS Guest Room Service Portal Preview */}
+      {activeGuestPortalRoom && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 99999,
+          backgroundColor: '#0a0f1d',
+          overflowY: 'auto'
+        }}>
+          <GuestRoomServicePortalPage
+            initialRoomNo={activeGuestPortalRoom}
+            onClose={() => setActiveGuestPortalRoom(null)}
+          />
+        </div>
+      )}
     </div>
   );
 };

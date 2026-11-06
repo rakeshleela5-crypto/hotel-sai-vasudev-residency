@@ -97,7 +97,10 @@ import type {
   RoomCategoryRevenueReport,
   PaymentModeRevenueItem,
   PaymentModeRevenueReport,
-  EodExecutiveSummary
+  EodExecutiveSummary,
+  AmenityTierConfig,
+  GuestRoomServiceOrder,
+  RoomQrStandeeConfig
 } from '../types/pmsModels';
 import { PMS_ALL_PERMISSIONS } from '../types/pmsModels';
 import { hotelApi } from './api';
@@ -1637,7 +1640,8 @@ const STORAGE_KEYS = {
   STAFF_PROFILES: 'svr_pms_staff_profiles',
   STAFF_ADVANCES: 'svr_pms_staff_advances',
   STAFF_PAYROLL: 'svr_pms_staff_payroll',
-  EOD_EXPENSES: 'svr_pms_eod_expenditures'
+  EOD_EXPENSES: 'svr_pms_eod_expenditures',
+  GUEST_ROOM_ORDERS: 'svr_pms_guest_room_orders'
 };
 
 export const INITIAL_EOD_EXPENSES: EodExpenseRecord[] = [
@@ -11045,6 +11049,320 @@ export class PmsStore {
         net_digital_balance: digitalInflow - digitalExpenses
       }
     };
+  }
+
+  // =========================================================================
+  // MODULES 3 & 4: TIERED ROOM AMENITIES & 18-ROOM QR SELF-SERVICE ORDERS
+  // =========================================================================
+
+  /**
+   * Returns tiered amenity configuration strictly mapped by room category:
+   * - Deluxe Room & Classic Studio: Towels, Comforter, Duvet, Soaps, Shampoos.
+   * - Premium Room & Executive Room: Moisturizer, Shampoo, Toothbrush, Kettle, Hair Dryer.
+   */
+  static getTieredAmenities(roomType: string): AmenityTierConfig {
+    const cleanType = (roomType || '').trim().toLowerCase();
+    
+    // Deluxe & Classic Studio Tier
+    if (cleanType.includes('deluxe') || cleanType.includes('classic') || cleanType.includes('studio')) {
+      return {
+        tier_name: 'Standard Comfort Tier',
+        badge: 'Deluxe / Classic Studio Tier',
+        description: 'Essential fresh linens and cleansing amenities for Deluxe and Classic Studio rooms.',
+        amenities: [
+          {
+            id: 'amenity-wt',
+            name: 'General White Towels',
+            description: 'Freshly laundered, high-absorbency 100% cotton white bath & hand towels',
+            icon: '🛁',
+            is_complimentary: true,
+            max_qty: 4
+          },
+          {
+            id: 'amenity-cf',
+            name: 'Comforter',
+            description: 'Plush all-season micro-fiber warm comforter with sanitised cover',
+            icon: '🛏️',
+            is_complimentary: true,
+            max_qty: 2
+          },
+          {
+            id: 'amenity-dv',
+            name: 'Duvet',
+            description: 'Premium soft down-alternative duvet for air-conditioned room comfort',
+            icon: '🛋️',
+            is_complimentary: true,
+            max_qty: 2
+          },
+          {
+            id: 'amenity-sp',
+            name: 'Soaps',
+            description: 'Herbal Ayurvedic sanitising bath & hand soap bars (Medimix / Mysore Sandal)',
+            icon: '🧼',
+            is_complimentary: true,
+            max_qty: 4
+          },
+          {
+            id: 'amenity-sh',
+            name: 'Shampoos',
+            description: 'Gentle daily hair cleanser shampoo sachets with conditioner',
+            icon: '🧴',
+            is_complimentary: true,
+            max_qty: 4
+          }
+        ]
+      };
+    }
+
+    // Premium, Executive & Suite Tier
+    return {
+      tier_name: 'Executive & Luxury Tier',
+      badge: 'Premium / Executive Luxury Tier',
+      description: 'Upgraded luxury personal care items and electric appliances for Premium & Executive rooms.',
+      amenities: [
+        {
+          id: 'amenity-mz',
+          name: 'Moisturizer',
+          description: 'Hydrating botanical body lotion / skin moisturizer bottle (Forest Essentials / Biotique)',
+          icon: '✨',
+          is_complimentary: true,
+          max_qty: 2
+        },
+        {
+          id: 'amenity-sh-prem',
+          name: 'Shampoo',
+          description: 'Enriched nourishing herbal shampoo & scalp repair bottle',
+          icon: '🧴',
+          is_complimentary: true,
+          max_qty: 2
+        },
+        {
+          id: 'amenity-tb',
+          name: 'Toothbrush (Dental Kit)',
+          description: 'Eco-friendly bamboo soft-bristle toothbrush with Colgate/Meswak herbal paste',
+          icon: '🪥',
+          is_complimentary: true,
+          max_qty: 4
+        },
+        {
+          id: 'amenity-ek',
+          name: 'Electric Kettle',
+          description: 'In-room rapid boiling 1.5L electric kettle with tea/coffee/sugar/creamer sachets',
+          icon: '🫖',
+          is_complimentary: true,
+          max_qty: 1
+        },
+        {
+          id: 'amenity-hd',
+          name: 'Hair Dryer',
+          description: '1200W ionic dual-heat hair dryer with diffuser nozzle for rapid styling',
+          icon: '💨',
+          is_complimentary: true,
+          max_qty: 1
+        }
+      ]
+    };
+  }
+
+  static getGuestOrders(roomNo?: string, statusFilter?: string): GuestRoomServiceOrder[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.GUEST_ROOM_ORDERS);
+    let list: GuestRoomServiceOrder[] = [];
+    if (raw) {
+      try {
+        list = JSON.parse(raw);
+        if (!Array.isArray(list)) list = [];
+      } catch {
+        list = [];
+      }
+    }
+
+    if (roomNo) {
+      list = list.filter(o => o.room_no === roomNo);
+    }
+    if (statusFilter && statusFilter !== 'All') {
+      list = list.filter(o => o.status === statusFilter);
+    }
+    return list;
+  }
+
+  static saveGuestOrder(orderInput: Partial<GuestRoomServiceOrder>): GuestRoomServiceOrder {
+    const list = this.getGuestOrders();
+    const now = new Date();
+    const periodPrefix = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const seq = list.length + 1;
+    const orderNumber = orderInput.order_number || `RSO-${periodPrefix}-${String(seq).padStart(4, '0')}`;
+
+    const newOrder: GuestRoomServiceOrder = {
+      id: orderInput.id || `ord-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      order_number: orderNumber,
+      room_no: orderInput.room_no || '101',
+      room_category: orderInput.room_category || 'Deluxe',
+      order_type: orderInput.order_type || (orderInput.items && orderInput.items.length > 0 ? 'Food Order' : 'Amenity Request'),
+      amenities: orderInput.amenities || [],
+      items: orderInput.items || [],
+      subtotal_amount: orderInput.subtotal_amount || 0,
+      tax_amount: orderInput.tax_amount || 0,
+      total_amount: orderInput.total_amount || 0,
+      payment_method: orderInput.payment_method || 'Transfer to Room Folio',
+      payment_status: orderInput.payment_status || (orderInput.payment_method === 'Transfer to Room Folio' ? 'Folio Accrued' : (orderInput.total_amount === 0 ? 'Complimentary' : 'Pending')),
+      payment_reference: orderInput.payment_reference || null,
+      status: orderInput.status || 'New Order',
+      guest_name: orderInput.guest_name || `Guest (Room ${orderInput.room_no || '101'})`,
+      guest_phone: orderInput.guest_phone || null,
+      special_instructions: orderInput.special_instructions || null,
+      delivery_staff: orderInput.delivery_staff || null,
+      created_at: orderInput.created_at || now.toISOString(),
+      updated_at: now.toISOString()
+    };
+
+    list.unshift(newOrder);
+    localStorage.setItem(STORAGE_KEYS.GUEST_ROOM_ORDERS, JSON.stringify(list));
+    this.notifyLocal();
+
+    // 1. If Transfer to Room Folio and there are food charges, sync directly with room folio & POS KOT
+    if (newOrder.payment_method === 'Transfer to Room Folio' && newOrder.total_amount > 0) {
+      this.updateRoomFoodAmount(newOrder.room_no, newOrder.total_amount);
+
+      // Auto-generate KOT ticket for kitchen display
+      if (newOrder.items && newOrder.items.length > 0) {
+        const kotItems: KotItem[] = newOrder.items.map((it, idx) => ({
+          sNo: idx + 1,
+          itemCode: it.item_id || 'RS-FOOD',
+          itemName: it.item_name,
+          qty: it.qty,
+          rate: it.rate,
+          amount: it.amount
+        }));
+
+        const kotTicket: PmsKotRecord = {
+          kotNo: `KOT-${newOrder.order_number}`,
+          roomNo: newOrder.room_no,
+          guestName: newOrder.guest_name || `Guest Room ${newOrder.room_no}`,
+          items: kotItems,
+          totalAmount: newOrder.total_amount,
+          date: now.toISOString().split('T')[0],
+          time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          createdAt: now.toISOString(),
+          serviceType: 'Room',
+          waiterName: 'Self-Service QR Portal',
+          status: 'Cooking',
+          isPrinted: false,
+          kotRemark: `QR Order ${newOrder.order_number}${newOrder.special_instructions ? ' | Note: ' + newOrder.special_instructions : ''}`
+        };
+        this.saveKot(kotTicket);
+      }
+    }
+
+    // 2. Cloud backend sync
+    hotelApi.createGuestRoomOrder(newOrder).catch(err => {
+      console.warn('[PmsStore] Background guest order cloud sync note:', err);
+    });
+
+    // 3. Trigger Receptionist Real-Time Event & Chime Sound
+    try {
+      window.dispatchEvent(new CustomEvent('pms_guest_room_order', { detail: newOrder }));
+      this.playReceptionistChime();
+    } catch {}
+
+    return newOrder;
+  }
+
+  static updateGuestOrderStatus(orderId: number | string, status: string, deliveryStaff?: string): boolean {
+    const list = this.getGuestOrders();
+    const idx = list.findIndex(o => String(o.id) === String(orderId) || o.order_number === String(orderId));
+    if (idx >= 0) {
+      list[idx].status = status as any;
+      if (deliveryStaff) list[idx].delivery_staff = deliveryStaff;
+      if (status === 'Acknowledged' && !list[idx].acknowledged_at) {
+        list[idx].acknowledged_at = new Date().toISOString();
+      }
+      if (status === 'Delivered' && !list[idx].delivered_at) {
+        list[idx].delivered_at = new Date().toISOString();
+      }
+      list[idx].updated_at = new Date().toISOString();
+
+      localStorage.setItem(STORAGE_KEYS.GUEST_ROOM_ORDERS, JSON.stringify(list));
+      this.notifyLocal();
+
+      hotelApi.updateGuestRoomOrderStatus(orderId, {
+        status,
+        delivery_staff: deliveryStaff
+      }).catch(err => {
+        console.warn('[PmsStore] Background order status update note:', err);
+      });
+
+      try {
+        window.dispatchEvent(new CustomEvent('pms_guest_room_order_updated', { detail: list[idx] }));
+      } catch {}
+
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Synthesizes a soft, pleasant dual-tone front-desk service chime (800Hz / 1060Hz)
+   * via Web Audio API without requiring any external mp3/wav files.
+   */
+  static playReceptionistChime(): void {
+    if (typeof window === 'undefined') return;
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
+
+      // Tone 1: 800 Hz
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(800, now);
+      gain1.gain.setValueAtTime(0.25, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.55);
+
+      // Tone 2: 1060 Hz
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(1060, now + 0.16);
+      gain2.gain.setValueAtTime(0.22, now + 0.16);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(now + 0.16);
+      osc2.stop(now + 0.85);
+    } catch (e) {
+      console.warn('[PmsStore] Service chime note:', e);
+    }
+  }
+
+  /**
+   * Returns configurations for all 18 physical hotel room standees (Rooms 101–107 and 201–211).
+   */
+  static get18RoomStandees(): RoomQrStandeeConfig[] {
+    const rooms = this.getRooms();
+    const baseOrigin = typeof window !== 'undefined' && window.location.origin 
+      ? window.location.origin 
+      : 'https://hotel-sai-vasudev-residency.pages.dev';
+
+    return rooms.map(r => {
+      const tier = this.getTieredAmenities(r.roomType);
+      const qrUrl = `${baseOrigin}/?room=${encodeURIComponent(r.roomNo)}&view=room-service`;
+      return {
+        room_no: r.roomNo,
+        room_type: r.roomType,
+        floor: r.floor,
+        tariff: r.tariff,
+        bed_type: r.bedType || 'Queen / King Bed',
+        tier_badge: tier.badge,
+        tier_name: tier.tier_name,
+        qr_url: qrUrl
+      };
+    });
   }
 }
 

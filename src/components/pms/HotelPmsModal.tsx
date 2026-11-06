@@ -65,6 +65,9 @@ import { MonthlyHotelSaleReportModal } from './MonthlyHotelSaleReportModal';
 import { MonthlyRestaurantSaleReportModal } from './MonthlyRestaurantSaleReportModal';
 import { StaffPayrollManagementModal } from './StaffPayrollManagementModal';
 import { EodExpenditureAnalyticsModal } from './EodExpenditureAnalyticsModal';
+import { RoomQrCodeManagerModal } from './RoomQrCodeManagerModal';
+import { ReceptionistNotificationBanner } from './ReceptionistNotificationBanner';
+import { GuestRoomServicePortalPage } from '../guest/GuestRoomServicePortalPage';
 import type { PmsUserAccount, PmsChainProperty, BillFormatType, PmsCheckOutDetail, PmsGstReportTab, PmsRoom } from '../../types/pmsModels';
 import { PmsStore } from '../../services/pmsStore';
 import './pmsStyles.css';
@@ -232,6 +235,10 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
 
   // Module 2: End-of-Day (EOD) Expenditures & Detailed Revenue Analytics
   const [isEodAnalyticsOpen, setIsEodAnalyticsOpen] = useState(false);
+
+  // Modules 3 & 4: Tiered Amenities & 18-Room QR Standee Self-Service Portal
+  const [isRoomQrManagerOpen, setIsRoomQrManagerOpen] = useState(false);
+  const [activeGuestPortalRoom, setActiveGuestPortalRoom] = useState<string | null>(null);
 
   const handleLaunchReportAction = (actionKey: string) => {
     switch (actionKey) {
@@ -826,6 +833,29 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                 <span>📊</span>
                 <span>EOD &amp; Revenue</span>
               </button>
+
+              {/* Modules 3 & 4: 18-Room QR Standees & Room Service Manager */}
+              <button
+                type="button"
+                onClick={() => setIsRoomQrManagerOpen(true)}
+                title="18-Room QR Standee Generator, Download/Print Standees & Tiered Amenities Configuration"
+                className="pms-header-btn"
+                style={{
+                  background: 'linear-gradient(135deg, #d4af37 0%, #b89628 100%)',
+                  color: '#0d1b2a',
+                  border: '1px solid #fef08a',
+                  fontWeight: 800
+                }}
+              >
+                <span>📱</span>
+                <span>18-Room QR Standees</span>
+              </button>
+
+              {/* Modules 3 & 4: Receptionist Real-Time Order Alerts & Chime Banner */}
+              <ReceptionistNotificationBanner
+                onOpenQrManager={() => setIsRoomQrManagerOpen(true)}
+                onOpenOrderDetails={(ord) => setActiveGuestPortalRoom(ord.room_no)}
+              />
 
               {/* Video 30: Training & Support Suite Button */}
               <button
@@ -2199,6 +2229,29 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
         isOpen={isEodAnalyticsOpen}
         onClose={() => setIsEodAnalyticsOpen(false)}
       />
+
+      {/* Modules 3 & 4: 18-Room QR Standee Generator & Tiered Amenities Modal */}
+      <RoomQrCodeManagerModal
+        isOpen={isRoomQrManagerOpen}
+        onClose={() => setIsRoomQrManagerOpen(false)}
+        onOpenGuestPortal={(roomNo) => setActiveGuestPortalRoom(roomNo)}
+      />
+
+      {/* Modules 3 & 4: In-PMS Guest Room Service Portal Preview */}
+      {activeGuestPortalRoom && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 99999,
+          backgroundColor: '#0a0f1d',
+          overflowY: 'auto'
+        }}>
+          <GuestRoomServicePortalPage
+            initialRoomNo={activeGuestPortalRoom}
+            onClose={() => setActiveGuestPortalRoom(null)}
+          />
+        </div>
+      )}
     </>
   );
 };

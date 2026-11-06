@@ -2566,7 +2566,70 @@ export const hotelApi = {
     const res = await fetch(`${API_BASE_URL}/eod-analytics/eod-summary${qs}`);
     if (!res.ok) throw new Error('Failed to fetch EOD summary');
     return await res.json();
+  },
+
+  // =========================================================================
+  // MODULES 3 & 4: TIERED ROOM AMENITIES & 18-ROOM QR SELF-SERVICE PORTAL
+  // =========================================================================
+  async getAmenitiesConfig(): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/guest-portal/amenities-config`);
+    if (!res.ok) throw new Error('Failed to fetch amenities configuration');
+    return await res.json();
+  },
+
+  async getGuestPortalRooms(): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/guest-portal/rooms`);
+    if (!res.ok) throw new Error('Failed to fetch 18 rooms master list');
+    return await res.json();
+  },
+
+  async getGuestPortalMenu(): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/guest-portal/menu`);
+    if (!res.ok) throw new Error('Failed to fetch food menu');
+    return await res.json();
+  },
+
+  async createGuestRoomOrder(payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/guest-portal/orders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to submit room service order');
+    }
+    return await res.json();
+  },
+
+  async getGuestRoomOrders(params?: { room_no?: string; status?: string; order_type?: string }): Promise<any> {
+    const query = new URLSearchParams();
+    if (params?.room_no) query.append('room_no', params.room_no);
+    if (params?.status) query.append('status', params.status);
+    if (params?.order_type) query.append('order_type', params.order_type);
+    const qs = query.toString() ? `?${query.toString()}` : '';
+
+    const res = await fetch(`${API_BASE_URL}/guest-portal/orders${qs}`);
+    if (!res.ok) throw new Error('Failed to fetch guest room orders');
+    return await res.json();
+  },
+
+  async updateGuestRoomOrderStatus(orderId: number | string, payload: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/guest-portal/orders/${orderId}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to update room order status');
+    return await res.json();
+  },
+
+  async getReceptionistAlertSummary(): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/guest-portal/receptionist-alert-summary`);
+    if (!res.ok) throw new Error('Failed to fetch receptionist alert summary');
+    return await res.json();
   }
 };
+
 
 

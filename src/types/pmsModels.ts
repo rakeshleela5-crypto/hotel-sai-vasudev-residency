@@ -496,6 +496,7 @@ export interface MenuItem {
   code: string;
   rate: number;
   category: string;
+  description?: string;
   barcode?: string;
   company?: string;
   mrp?: number;
@@ -2180,6 +2181,87 @@ export interface EodExecutiveSummary {
     net_digital_balance: number;
   };
 }
+
+// =========================================================================
+// MODULES 3 & 4: TIERED ROOM AMENITIES & 18-ROOM QR SELF-SERVICE ORDERS
+// =========================================================================
+
+export type AmenityTierType = 'Standard' | 'Luxury' | 'Suite';
+
+export interface RoomTierAmenity {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  is_complimentary: boolean;
+  max_qty: number;
+}
+
+export interface AmenityTierConfig {
+  tier_name: string;
+  badge: string;
+  description: string;
+  amenities: RoomTierAmenity[];
+}
+
+export interface GuestOrderItem {
+  item_id?: string;
+  item_name: string;
+  rate: number;
+  qty: number;
+  amount: number;
+  notes?: string;
+}
+
+export interface GuestAmenityItem {
+  amenity_id: string;
+  amenity_name: string;
+  qty: number;
+  notes?: string;
+}
+
+export type GuestOrderType = 'Amenity Request' | 'Food Order' | 'Combined';
+export type GuestPaymentMethod = 'Transfer to Room Folio' | 'Immediate UPI' | 'Immediate Card' | 'Complimentary';
+export type GuestOrderStatus = 'New Order' | 'Acknowledged' | 'In Preparation' | 'Delivered' | 'Cancelled';
+export type GuestPaymentStatus = 'Pending' | 'Folio Accrued' | 'Paid' | 'Complimentary';
+
+export interface GuestRoomServiceOrder {
+  id: number | string;
+  order_number: string;
+  room_no: string;
+  room_category: string;
+  order_type: GuestOrderType;
+  amenities: GuestAmenityItem[];
+  items: GuestOrderItem[];
+  subtotal_amount: number;
+  tax_amount: number;
+  total_amount: number;
+  payment_method: GuestPaymentMethod;
+  payment_status: GuestPaymentStatus;
+  payment_reference?: string | null;
+  status: GuestOrderStatus;
+  guest_name?: string | null;
+  guest_phone?: string | null;
+  special_instructions?: string | null;
+  delivery_staff?: string | null;
+  acknowledged_at?: string | null;
+  delivered_at?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface RoomQrStandeeConfig {
+  room_no: string;
+  room_type: string;
+  floor: number;
+  tariff: number;
+  bed_type: string;
+  tier_badge: string;
+  tier_name: string;
+  qr_url: string;
+  svg_data?: string;
+}
+
 
 
 

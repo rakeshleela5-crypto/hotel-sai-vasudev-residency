@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useParams } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { RoomsSection } from './components/RoomsSection';
@@ -16,6 +16,7 @@ import { HousekeepingTrackerModal } from './components/pms/HousekeepingTrackerMo
 import { PettyExpenseModal } from './components/pms/PettyExpenseModal';
 import { KotEntryModal } from './components/pms/KotEntryModal';
 import { FoodBillModal } from './components/pms/FoodBillModal';
+import { GuestRoomServicePortalPage } from './components/guest/GuestRoomServicePortalPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { NotFound } from './components/NotFound';
 import { PrivacyPolicy } from './components/legal/PrivacyPolicy';
@@ -40,6 +41,8 @@ function HotelMainLanding({ defaultErpOpen = false }: HotelMainLandingProps) {
   const [isPettyCashOpen, setIsPettyCashOpen] = useState(false);
   const [isKotOpen, setIsKotOpen] = useState(false);
   const [isFoodBillOpen, setIsFoodBillOpen] = useState(false);
+  const [isRoomServicePortalOpen, setIsRoomServicePortalOpen] = useState(false);
+  const [portalRoomNo, setPortalRoomNo] = useState<string | undefined>(undefined);
 
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -65,6 +68,19 @@ function HotelMainLanding({ defaultErpOpen = false }: HotelMainLandingProps) {
       window.location.search.includes('booking')
     ) {
       setIsGuestEngineOpen(true);
+    }
+
+    // Automatically open 18-Room Guest QR Self-Service Portal if scanned via physical standee
+    const params = new URLSearchParams(window.location.search);
+    const qRoom = params.get('room') || params.get('roomNo');
+    const isRoomServiceUrl = qRoom || 
+                             window.location.pathname.startsWith('/room-service') || 
+                             window.location.hash.startsWith('#room-service') || 
+                             params.has('room-service') || 
+                             params.get('view') === 'room-service';
+    if (isRoomServiceUrl) {
+      if (qRoom) setPortalRoomNo(qRoom);
+      setIsRoomServicePortalOpen(true);
     }
 
     // Connect to FastAPI & PostgreSQL on Railway Cloud immediately
@@ -199,6 +215,7 @@ function HotelMainLanding({ defaultErpOpen = false }: HotelMainLandingProps) {
         onOpenHousekeeping={() => setIsHousekeepingOpen(true)}
         onOpenPettyCash={() => setIsPettyCashOpen(true)}
         onOpenPos={() => setIsFoodBillOpen(true)}
+        onOpenRoomService={() => setIsRoomServicePortalOpen(true)}
       />
 
       <main>
@@ -294,8 +311,36 @@ function HotelMainLanding({ defaultErpOpen = false }: HotelMainLandingProps) {
           />
         </ErrorBoundary>
       )}
+
+      {/* Modules 3 & 4: 18-Room QR Self-Service Mobile Guest Portal */}
+      {isRoomServicePortalOpen && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 99999,
+          backgroundColor: '#0a0f1d',
+          overflowY: 'auto'
+        }}>
+          <GuestRoomServicePortalPage
+            initialRoomNo={portalRoomNo}
+            onClose={() => {
+              setIsRoomServicePortalOpen(false);
+              if (window.location.search.includes('room') || window.location.search.includes('view=room-service')) {
+                try {
+                  window.history.pushState(null, '', '/');
+                } catch {}
+              }
+            }}
+          />
+        </div>
+      )}
     </div>
   );
+}
+
+function GuestRoomServicePortalWrapper() {
+  const { roomNo } = useParams<{ roomNo: string }>();
+  return <GuestRoomServicePortalPage initialRoomNo={roomNo} isStandalone={true} />;
 }
 
 export function App() {
@@ -305,6 +350,8 @@ export function App() {
         <Route path="/" element={<HotelMainLanding />} />
         <Route path="/erp" element={<HotelMainLanding defaultErpOpen={true} />} />
         <Route path="/pms" element={<HotelMainLanding defaultErpOpen={true} />} />
+        <Route path="/room-service" element={<GuestRoomServicePortalPage isStandalone={true} />} />
+        <Route path="/room-service/:roomNo" element={<GuestRoomServicePortalWrapper />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
         <Route path="*" element={<NotFound />} />

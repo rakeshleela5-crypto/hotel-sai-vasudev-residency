@@ -589,3 +589,4 @@ def get_eod_summary(
             "net_digital_balance": net_digital_inflow
         }
     }
+
