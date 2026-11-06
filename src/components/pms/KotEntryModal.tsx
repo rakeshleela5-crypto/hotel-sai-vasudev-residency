@@ -61,8 +61,16 @@ export const KotEntryModal: React.FC<KotEntryModalProps> = ({
   const [selectedRoomNo, setSelectedRoomNo] = useState<string>(initialRoom.roomNo);
   const [selectedTableNo, setSelectedTableNo] = useState<string>(defaultTableNo || 'Table T-1');
 
-  // Sequential KOT Number
-  const [kotNo] = useState<string>(() => `KOT/${Math.floor(360 + Math.random() * 40)}/26-27`);
+  // Sequential Collision-Free KOT Number
+  const [kotNo] = useState<string>(() => {
+    try {
+      const tickets = PmsStore.getKots ? PmsStore.getKots() : [];
+      const seq = 1000 + (tickets.length || 0) + 1;
+      return `KOT/${seq}-${Date.now().toString().slice(-4)}/26-27`;
+    } catch {
+      return `KOT/${Date.now().toString().slice(-6)}/26-27`;
+    }
+  });
   const [kotRemark, setKotRemark] = useState<string>('Standard Service');
 
   // Category Filtering & Search

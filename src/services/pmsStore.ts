@@ -110,6 +110,7 @@ import type {
 } from '../types/pmsModels';
 import { PMS_ALL_PERMISSIONS } from '../types/pmsModels';
 import { hotelApi } from './api';
+import { saveKycDocToIndexedDb } from './db';
 import * as XLSX from 'xlsx';
 
 export const DEFAULT_BUSINESS_SETTING: PmsBusinessSetting = {
@@ -3415,13 +3416,19 @@ export class PmsStore {
     } catch {
       allDiscounts = {};
     }
+    const room = this.getRooms().find(r => r.roomNo === roomNo);
+    const summary = this.getFolioSummary(roomNo);
+    const rawVal = Math.max(0, Number(discount.value) || 0);
+    const clampedVal = discount.type === 'percent'
+      ? Math.min(100, rawVal)
+      : Math.min(summary.baseRoomRent || 100000, rawVal);
+    discount.value = clampedVal;
+
     allDiscounts[roomNo] = discount;
     localStorage.setItem(STORAGE_KEYS.FOLIO_DISCOUNTS, JSON.stringify(allDiscounts));
 
     // Cloud sync: mirror folio discount to Railway PostgreSQL
     try {
-      const room = this.getRooms().find(r => r.roomNo === roomNo);
-      const summary = this.getFolioSummary(roomNo);
       const calculatedDiscount = discount.type === 'percent'
         ? Math.round(summary.baseRoomRent * (discount.value / 100))
         : discount.value;
@@ -4385,17 +4392,32 @@ export class PmsStore {
 
     const parseDateToObj = (dStr: string, tStr: string): Date => {
       const { hours, minutes } = parseTime(tStr);
-      let y = 2025, m = 5, d = 9;
-      if (dStr && dStr.includes('-')) {
-        const p = dStr.split('-');
-        if (p[0].length === 4) {
-          y = Number(p[0]);
-          m = Number(p[1]) - 1;
-          d = Number(p[2]);
+      const now = new Date();
+      let y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+      if (dStr) {
+        const normalized = dStr.trim().replace(/[\/\.]/g, '-');
+        if (normalized.includes('-')) {
+          const p = normalized.split('-');
+          if (p[0].length === 4) {
+            y = Number(p[0]);
+            m = Number(p[1]) - 1;
+            d = Number(p[2]);
+          } else if (p.length === 3 && p[2].length === 4) {
+            d = Number(p[0]);
+            m = Number(p[1]) - 1;
+            y = Number(p[2]);
+          } else if (p.length === 3) {
+            d = Number(p[0]);
+            m = Number(p[1]) - 1;
+            y = Number(p[2]);
+          }
         } else {
-          d = Number(p[0]);
-          m = Number(p[1]) - 1;
-          y = Number(p[2]);
+          const parsed = new Date(dStr);
+          if (!isNaN(parsed.getTime())) {
+            y = parsed.getFullYear();
+            m = parsed.getMonth();
+            d = parsed.getDate();
+          }
         }
       }
       return new Date(y, m, d, hours, minutes, 0);
@@ -4709,10 +4731,55 @@ export class PmsStore {
   }
 
   static saveCheckIn(checkIn: import('../types/pmsModels').PmsCheckIn): void {
+    // 1. Offload heavy base64 KYC documents to Dexie IndexedDB v2 to prevent localStorage 5MB quota errors
+    try {
+      if (checkIn.documentImage && checkIn.documentImage.startsWith('data:')) {
+        const docId = `kyc-doc-front-${checkIn.checkInNo || Date.now()}`;
+        saveKycDocToIndexedDb({
+          id: docId,
+          roomNo: checkIn.roomNo,
+          docType: checkIn.documentName || 'ID_FRONT',
+          docData: checkIn.documentImage,
+          createdAt: new Date().toISOString()
+        });
+        checkIn.documentKey = docId;
+        checkIn.documentImage = docId;
+      }
+      if (checkIn.guestImage && checkIn.guestImage.startsWith('data:')) {
+        const photoId = `kyc-photo-${checkIn.checkInNo || Date.now()}`;
+        saveKycDocToIndexedDb({
+          id: photoId,
+          roomNo: checkIn.roomNo,
+          docType: 'GUEST_PHOTO',
+          docData: checkIn.guestImage,
+          createdAt: new Date().toISOString()
+        });
+        checkIn.guestPhotoUrl = photoId;
+        checkIn.guestImage = photoId;
+      }
+      if (checkIn.idProofBackImage && checkIn.idProofBackImage.startsWith('data:')) {
+        const backId = `kyc-doc-back-${checkIn.checkInNo || Date.now()}`;
+        saveKycDocToIndexedDb({
+          id: backId,
+          roomNo: checkIn.roomNo,
+          docType: 'ID_BACK',
+          docData: checkIn.idProofBackImage,
+          createdAt: new Date().toISOString()
+        });
+        checkIn.idProofBackImage = backId;
+      }
+    } catch (e) {
+      console.warn('[PmsStore] KYC IndexedDB offload note:', e);
+    }
+
     const list = this.getCheckIns();
     list.unshift(checkIn);
-    localStorage.setItem(STORAGE_KEYS.CHECKINS, JSON.stringify(list));
-    localStorage.setItem('hotel_pms_checkins', JSON.stringify(list));
+    try {
+      localStorage.setItem(STORAGE_KEYS.CHECKINS, JSON.stringify(list));
+      localStorage.removeItem('hotel_pms_checkins');
+    } catch (quotaErr) {
+      console.warn('[PmsStore] LocalStorage write note:', quotaErr);
+    }
 
     // Update room status to occupied (Royal Blue / Emerald Green)
     this.updateRoomStatus(checkIn.roomNo, 'occupied', {
@@ -6351,8 +6418,9 @@ export class PmsStore {
     const checkouts = this.getCheckouts();
     const rows = checkouts.map((c, idx) => {
       const rent = Number(c.totalRoomRent || c.roomRentTotal || 0);
-      const cgst = Number((c.cgstAmount || rent * 0.025).toFixed(2));
-      const sgst = Number((c.sgstAmount || rent * 0.025).toFixed(2));
+      // Room accommodation under SAC 996311 is 12% GST (6% CGST + 6% SGST)
+      const cgst = Number((c.cgstAmount !== undefined && c.cgstAmount !== null ? c.cgstAmount : rent * 0.06).toFixed(2));
+      const sgst = Number((c.sgstAmount !== undefined && c.sgstAmount !== null ? c.sgstAmount : rent * 0.06).toFixed(2));
       const rs = Number(c.foodAmount || c.foodCharge || 0);
       const laundry = Number(c.addOthers || 0);
       const net = Number((rent + cgst + sgst + rs + laundry).toFixed(2));

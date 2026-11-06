@@ -107,6 +107,15 @@ class HardwareBridgeHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(res).encode("utf-8"))
 
         elif self.path == "/encode-keycard":
+            # Security verification for RFID keycard encoder
+            if not self._verify_hardware_auth():
+                self.send_response(401)
+                self._send_cors_headers()
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(b'{"status": "ERROR", "message": "Unauthorized hardware trigger: Missing or invalid X-Hardware-Token"}')
+                return
+
             room_no = data.get("room_no", "204")
             guest_name = data.get("guest_name", "Guest")
             check_out = data.get("check_out_date", "2026-11-01")

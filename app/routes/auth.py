@@ -96,9 +96,9 @@ def login(
     else:
         raise HTTPException(status_code=401, detail="Invalid username or password.")
 
-    # Validate password if hash exists
-    if stored_hash:
-        if not verify_password(clean_pass, stored_hash):
+    # Validate password against stored hash
+    if user_rec or staff_rec:
+        if not stored_hash or not verify_password(clean_pass, stored_hash):
             raise HTTPException(status_code=401, detail="Invalid username or password.")
 
     # 2. Issue 15-minute Access Token (#47)

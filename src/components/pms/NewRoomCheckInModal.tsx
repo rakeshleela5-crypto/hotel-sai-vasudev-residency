@@ -513,6 +513,12 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
       }
     }
 
+    // 6. Non-Negative Tariff Validation
+    if (Number(customTariff) < 0) {
+      alert('Invalid Tariff:\n\nRoom tariff cannot be a negative amount.');
+      return;
+    }
+
     isSubmittingCheckInRef.current = true;
     setIsProcessing(true);
 
