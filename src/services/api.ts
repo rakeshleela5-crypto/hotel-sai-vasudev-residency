@@ -1466,6 +1466,16 @@ export const hotelApi = {
     }
   },
 
+  async getShiftHandoverCurrentMetrics(): Promise<any> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/pms/shift-handovers/current-metrics`);
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
   async getCurrentShiftMetrics(): Promise<any> {
     try {
       const res = await fetch(`${API_BASE_URL}/pms/shift-handovers/current-metrics`);
@@ -2780,6 +2790,53 @@ export const hotelApi = {
       const nowP = new Date().toISOString().slice(0, 7);
       return { status: 'success', current_period: nowP, periods: [nowP] };
     }
+  },
+
+  // =========================================================================
+  // MODULE 7: CASH DRAWER MOVEMENTS & FLOAT AUDITING
+  // =========================================================================
+  async recordCashDrawerMovement(payload: {
+    movement_type: 'FLOAT_IN' | 'DROP_TO_SAFE' | 'PETTY_PAYOUT' | 'FLOAT_ADJUSTMENT';
+    amount: number;
+    cashier_name: string;
+    shift_id?: string;
+    manager_pin?: string;
+    reason: string;
+    destination_or_source?: string;
+  }): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/drawer/movements`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to record cash drawer movement');
+    }
+    return await res.json();
+  },
+
+  async getCashDrawerMovements(params?: {
+    date?: string;
+    shift_id?: string;
+    movement_type?: string;
+  }): Promise<any> {
+    const query = new URLSearchParams();
+    if (params?.date) query.append('date', params.date);
+    if (params?.shift_id) query.append('shift_id', params.shift_id);
+    if (params?.movement_type) query.append('movement_type', params.movement_type);
+    const qs = query.toString() ? `?${query.toString()}` : '';
+
+    const res = await fetch(`${API_BASE_URL}/pms/drawer/movements${qs}`);
+    if (!res.ok) throw new Error('Failed to retrieve cash drawer movements');
+    return await res.json();
+  },
+
+  async getCashDrawerSummary(shift_id?: string): Promise<any> {
+    const qs = shift_id ? `?shift_id=${encodeURIComponent(shift_id)}` : '';
+    const res = await fetch(`${API_BASE_URL}/pms/drawer/summary${qs}`);
+    if (!res.ok) throw new Error('Failed to fetch cash drawer summary');
+    return await res.json();
   }
 };
 

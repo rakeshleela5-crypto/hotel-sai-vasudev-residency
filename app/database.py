@@ -75,6 +75,110 @@ if is_sqlite:
             cursor.execute("ALTER TABLE hotel_settings ADD COLUMN manager_pin_salt VARCHAR(64)")
         except Exception:
             pass
+        try:
+            cursor.execute("ALTER TABLE checkout_records ADD COLUMN payment_splits_json TEXT DEFAULT '[]'")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE checkout_records ADD COLUMN company_name VARCHAR(150)")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE checkout_records ADD COLUMN customer_gstin VARCHAR(20)")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE checkout_records ADD COLUMN city VARCHAR(100)")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE checkout_records ADD COLUMN state VARCHAR(100)")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE checkout_records ADD COLUMN country VARCHAR(100) DEFAULT 'India'")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE checkout_records ADD COLUMN pin_code VARCHAR(20)")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE checkout_records ADD COLUMN sac_code VARCHAR(20) DEFAULT '996311'")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE checkout_records ADD COLUMN invoice_format VARCHAR(50) DEFAULT 'A4_Standard'")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE checkout_records ADD COLUMN payments_json TEXT DEFAULT '[]'")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE checkout_records ADD COLUMN round_off_amount REAL DEFAULT 0.0")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE checkout_records ADD COLUMN settled_by_user_id VARCHAR(100)")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE food_bills ADD COLUMN payment_splits_json TEXT DEFAULT '[]'")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE shift_handovers ADD COLUMN drawer_drops_to_safe REAL DEFAULT 0.0")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE shift_handovers ADD COLUMN paid_in_drawer_float REAL DEFAULT 0.0")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE shift_handovers ADD COLUMN cash_refunds_paid REAL DEFAULT 0.0")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE bookings ADD COLUMN guest_signature_url TEXT")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE bookings ADD COLUMN invoice_pdf_key VARCHAR(255)")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE bookings ADD COLUMN id_proof_document_key VARCHAR(255)")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE bookings ADD COLUMN guest_photo_url VARCHAR(255)")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE bookings ADD COLUMN coming_from VARCHAR(150)")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE bookings ADD COLUMN proceeding_to VARCHAR(150)")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE bookings ADD COLUMN vehicle_no VARCHAR(50)")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE bookings ADD COLUMN darshan_slot VARCHAR(100)")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE bookings ADD COLUMN guest_gender VARCHAR(20)")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE bookings ADD COLUMN guest_age INTEGER")
+        except Exception:
+            pass
         cursor.close()
 else:
     # Railway PostgreSQL async engine with asyncpg, pool tuning & 5s lock_timeout

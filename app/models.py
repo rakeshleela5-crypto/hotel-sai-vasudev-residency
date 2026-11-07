@@ -496,6 +496,7 @@ class FoodBill(Base):
     cgst_amount = Column(Float, default=0.0)
     sgst_amount = Column(Float, default=0.0)
     status = Column(String(50), default="Settled")
+    payment_splits_json = Column(Text, default="[]")
     is_deleted = Column(Boolean, default=False, nullable=False, index=True)
     void_reason = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=now_utc)
@@ -857,6 +858,9 @@ class ShiftHandover(Base):
     food_cash_collected = Column(Float, default=0.0)
     advance_cash_collected = Column(Float, default=0.0)
     expenses_paid_from_drawer = Column(Float, default=0.0)
+    drawer_drops_to_safe = Column(Float, default=0.0)
+    paid_in_drawer_float = Column(Float, default=0.0)
+    cash_refunds_paid = Column(Float, default=0.0)
     net_physical_cash_in_drawer = Column(Float, default=5000.0)
     online_upi_verified = Column(Float, default=0.0)
     card_swipe_verified = Column(Float, default=0.0)
@@ -865,6 +869,33 @@ class ShiftHandover(Base):
     handover_to_user = Column(String(150), nullable=True)
     handover_notes = Column(Text, nullable=True)
     status = Column(String(50), default="Verified & Closed")
+    created_at = Column(DateTime, default=now_utc)
+
+class CashDrawerMovement(Base):
+    """
+    Cash Drawer Petty Cash Drops (Skims), Float Top-Ups, and Payouts.
+    Follows Puter POS drawer.js pattern:
+    - DROP_TO_SAFE: Cashier moves excess drawer cash into property safe (> threshold requires Manager PIN).
+    - FLOAT_TOPUP: Additional cash added to drawer during shift.
+    - PETTY_PAYOUT: Immediate small cash payouts (e.g. ice, vegetables, local courier).
+    Posts double-entry GL journal entry and provides shift reconciliation integrity.
+    """
+    __tablename__ = "cash_drawer_movements"
+
+    id = Column(Integer, primary_key=True, index=True)
+    voucher_no = Column(String(100), unique=True, index=True, nullable=False) # e.g. DROP-20261107-0001
+    date = Column(String(50), nullable=False, index=True) # YYYY-MM-DD
+    time = Column(String(50), nullable=False) # HH:MM AM/PM
+    shift_id = Column(String(100), nullable=True, index=True)
+    movement_type = Column(String(50), nullable=False) # DROP_TO_SAFE, FLOAT_TOPUP, PETTY_PAYOUT
+    amount_paise = Column(Integer, default=0, nullable=False)
+    amount = Column(Float, default=0.0, nullable=False)
+    cashier_name = Column(String(150), nullable=False)
+    authorized_by = Column(String(100), nullable=True)
+    manager_pin_verified = Column(Boolean, default=False)
+    reason = Column(String(255), nullable=False)
+    destination_or_source = Column(String(150), default="Property Safe")
+    journal_entry_id = Column(String(100), nullable=True)
     created_at = Column(DateTime, default=now_utc)
 
 class BanquetVenue(Base):

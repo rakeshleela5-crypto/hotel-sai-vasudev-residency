@@ -19,6 +19,9 @@ export const fromPaise = (paise: number | null | undefined): number => {
   return Number((p / 100).toFixed(2));
 };
 
+export const rupeesToPaise = toPaise;
+export const paiseToRupees = fromPaise;
+
 /**
  * Splits `totalPaise` across `weights` proportionally using the Largest Remainder Method
  * (Hare-Niemeyer quota).
@@ -199,3 +202,4 @@ export function formatRupees(amount: number, isPaise: boolean = false): string {
     maximumFractionDigits: 2,
   }).format(rupees || 0);
 }
+

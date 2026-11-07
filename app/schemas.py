@@ -380,11 +380,18 @@ class WalkInCheckInRequest(BaseModel):
     guest_age: Optional[int] = None
     guestAge: Optional[int] = None
 
+class PaymentSplitItem(BaseModel):
+    mode: str  # Cash, UPI, Card, Direct_BTC, Cheque
+    amount: float
+    ref: Optional[str] = None
+    note: Optional[str] = None
+
 class CheckOutRequest(BaseModel):
     booking_ref: str
-    settlement_payment_mode: Optional[str] = "Cash" # Cash, Card, UPI, Direct_BTC
+    settlement_payment_mode: Optional[str] = "Cash" # Cash, Card, UPI, Direct_BTC, Split
     settlement_amount_paid: Optional[float] = None
     transaction_ref: Optional[str] = None
+    payment_splits: Optional[List[Dict[str, Any]]] = None
     processed_by: Optional[str] = "Front Desk Officer"
 
 class RoomMaintenanceRequest(BaseModel):
@@ -630,6 +637,9 @@ class FoodBillCreate(BaseModel):
     discountReason: Optional[str] = None
     payment_ref: Optional[str] = None
     paymentRef: Optional[str] = None
+    payment_splits: Optional[List[Dict[str, Any]]] = None
+    paymentSplits: Optional[List[Dict[str, Any]]] = None
+    payment_splits_json: Optional[str] = None
     billed_by: Optional[str] = "Cashier"
     billedBy: Optional[str] = None
     status: Optional[str] = "Settled"
@@ -653,6 +663,7 @@ class FoodBillResponse(BaseModel):
     gst_amount: float = 0.0
     net_bill_amount: float = 0.0
     settlement_type: str = "Cash"
+    payment_splits_json: Optional[str] = "[]"
     discount_reason: Optional[str] = None
     payment_ref: Optional[str] = None
     billed_by: Optional[str] = "Cashier"
@@ -1182,6 +1193,12 @@ class ShiftHandoverCreate(BaseModel):
     advanceCashCollected: Optional[float] = None
     expenses_paid_from_drawer: Optional[float] = 0.0
     expensesPaidFromDrawer: Optional[float] = None
+    drawer_drops_to_safe: Optional[float] = 0.0
+    drawerDropsToSafe: Optional[float] = None
+    paid_in_drawer_float: Optional[float] = 0.0
+    paidInDrawerFloat: Optional[float] = None
+    cash_refunds_paid: Optional[float] = 0.0
+    cashRefundsPaid: Optional[float] = None
     net_physical_cash_in_drawer: Optional[float] = 5000.0
     netPhysicalCashInDrawer: Optional[float] = None
     online_upi_verified: Optional[float] = 0.0
@@ -1197,6 +1214,37 @@ class ShiftHandoverCreate(BaseModel):
     handover_notes: Optional[str] = None
     handoverNotes: Optional[str] = None
     status: Optional[str] = "Verified & Closed"
+
+class CashDrawerMovementCreate(BaseModel):
+    date: Optional[str] = None
+    time: Optional[str] = None
+    shift_id: Optional[str] = None
+    movement_type: str  # DROP_TO_SAFE, FLOAT_TOPUP, PETTY_PAYOUT
+    amount: float
+    cashier_name: str
+    authorized_by: Optional[str] = None
+    manager_pin: Optional[str] = None
+    reason: str
+    destination_or_source: Optional[str] = "Property Safe"
+
+class CashDrawerMovementResponse(BaseModel):
+    id: int
+    voucher_no: str
+    date: str
+    time: str
+    shift_id: Optional[str] = None
+    movement_type: str
+    amount: float
+    amount_paise: int
+    cashier_name: str
+    authorized_by: Optional[str] = None
+    manager_pin_verified: bool
+    reason: str
+    destination_or_source: str
+    journal_entry_id: Optional[str] = None
+    created_at: Optional[datetime.datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 class BanquetVenueCreate(BaseModel):
     id: Optional[str] = None

@@ -1229,6 +1229,8 @@ def cancel_check_in(booking_ref: str, db: Session = Depends(get_db)):
 
 # --- 9. Check-Out Settlement & Transition to Dirty ---
 @router.post("/check-out", response_model=schemas.MasterFolioResponse)
+@router.post("/checkout", response_model=schemas.MasterFolioResponse)
+@router.post("/bookings/checkout", response_model=schemas.MasterFolioResponse)
 def execute_check_out(payload: schemas.CheckOutRequest, db: Session = Depends(get_db)):
     """
     Executes Check-Out with canonical locking (Booking -> Folio -> Room) (#15, #26):
@@ -1259,32 +1261,75 @@ def execute_check_out(payload: schemas.CheckOutRequest, db: Session = Depends(ge
 
             # Record final settlement payment if provided
             settlement_amt = float(payload.settlement_amount_paid or 0.0)
-            # Idempotency check on settlement transaction reference (#37)
-            if payload.transaction_ref and settlement_amt > 0:
-                existing_p = db.query(models.BookingPayment).filter(
-                    models.BookingPayment.booking_id == booking.id,
-                    models.BookingPayment.transaction_ref == payload.transaction_ref
-                ).first()
-                if existing_p:
-                    logger.info(f"[CheckOut Idempotency] Payment {payload.transaction_ref} already recorded. Skipping duplicate.")
-                    settlement_amt = 0.0
+            splits_json = "[]"
+            effective_payment_mode = payload.settlement_payment_mode or "Cash"
 
-            if settlement_amt > 0:
-                p = models.BookingPayment(
-                    booking_id=booking.id,
-                    payment_type="Settlement",
-                    payment_mode=payload.settlement_payment_mode or "Cash",
-                    amount=settlement_amt,
-                    transaction_ref=payload.transaction_ref,
-                    notes="Check-out bill settlement",
-                    collected_by=payload.processed_by or "Front Desk Officer"
-                )
-                db.add(p)
-                # Atomically record payment on Booking and Folio (eliminating lost updates)
+            # Multi-Tender Split Settlement Handling (#Phase4)
+            if payload.payment_splits and len(payload.payment_splits) > 0:
+                splits_total_p = sum(to_paise(float(s.get("amount", 0.0))) for s in payload.payment_splits)
+                if settlement_amt > 0:
+                    expected_p = to_paise(settlement_amt)
+                    if splits_total_p != expected_p:
+                        raise HTTPException(
+                            status_code=400,
+                            detail=f"Sum of payment splits (₹{from_paise(splits_total_p):.2f}) does not match settlement amount (₹{settlement_amt:.2f})"
+                        )
+                else:
+                    settlement_amt = from_paise(splits_total_p)
+
+                splits_json = json.dumps(payload.payment_splits)
+                if len(payload.payment_splits) > 1:
+                    effective_payment_mode = "Split"
+                elif len(payload.payment_splits) == 1:
+                    effective_payment_mode = payload.payment_splits[0].get("mode") or "Cash"
+
                 from app.utils.locking import atomic_record_folio_payment
-                booking, folio = atomic_record_folio_payment(
-                    db, booking.id, settlement_amt, payload.settlement_payment_mode or "Cash"
-                )
+                for s in payload.payment_splits:
+                    s_mode = s.get("mode") or "Cash"
+                    s_amt = float(s.get("amount", 0.0))
+                    s_ref = s.get("ref") or payload.transaction_ref
+                    if s_amt > 0:
+                        p = models.BookingPayment(
+                            booking_id=booking.id,
+                            payment_type="Settlement",
+                            payment_mode=s_mode,
+                            amount=s_amt,
+                            transaction_ref=s_ref,
+                            notes=f"Check-out split payment ({s_mode})",
+                            collected_by=payload.processed_by or "Front Desk Officer"
+                        )
+                        db.add(p)
+                        booking, folio = atomic_record_folio_payment(
+                            db, booking.id, s_amt, s_mode
+                        )
+            else:
+                # Idempotency check on settlement transaction reference (#37)
+                if payload.transaction_ref and settlement_amt > 0:
+                    existing_p = db.query(models.BookingPayment).filter(
+                        models.BookingPayment.booking_id == booking.id,
+                        models.BookingPayment.transaction_ref == payload.transaction_ref
+                    ).first()
+                    if existing_p:
+                        logger.info(f"[CheckOut Idempotency] Payment {payload.transaction_ref} already recorded. Skipping duplicate.")
+                        settlement_amt = 0.0
+
+                if settlement_amt > 0:
+                    p = models.BookingPayment(
+                        booking_id=booking.id,
+                        payment_type="Settlement",
+                        payment_mode=effective_payment_mode,
+                        amount=settlement_amt,
+                        transaction_ref=payload.transaction_ref,
+                        notes="Check-out bill settlement",
+                        collected_by=payload.processed_by or "Front Desk Officer"
+                    )
+                    db.add(p)
+                    # Atomically record payment on Booking and Folio (eliminating lost updates)
+                    from app.utils.locking import atomic_record_folio_payment
+                    booking, folio = atomic_record_folio_payment(
+                        db, booking.id, settlement_amt, effective_payment_mode
+                    )
+                    splits_json = json.dumps([{"mode": effective_payment_mode, "amount": settlement_amt, "ref": payload.transaction_ref}])
 
             if (booking.balance_due or 0.0) <= 0:
                 booking.payment_status = "Paid"
@@ -1362,10 +1407,14 @@ def execute_check_out(payload: schemas.CheckOutRequest, db: Session = Depends(ge
                     advance_deducted=(booking.total_paid or 0.0) - settlement_amt if booking.total_paid else 0.0,
                     bill_amount=booking.total_price,
                     net_payable=booking.balance_due,
-                    payment_mode=payload.settlement_payment_mode or "Cash",
+                    payment_mode=effective_payment_mode,
+                    payment_splits_json=splits_json,
                     checkout_remark="Departure processed via execute_check_out"
                 )
                 db.add(chk_rec)
+            else:
+                existing_chk.payment_mode = effective_payment_mode
+                existing_chk.payment_splits_json = splits_json
 
             log_audit(db, "CHECK_OUT", booking.booking_ref, payload.processed_by or "Front Desk Officer", {
                 "room_name": room.name if room else "Unknown",
@@ -2859,6 +2908,26 @@ def save_food_bill(payload: schemas.FoodBillCreate, db: Session = Depends(get_db
         t_no = payload.tableNo or payload.table_no
         g_name = payload.guestName or payload.guest_name
 
+        # Multi-Tender Splits for Food Bill (#Phase4)
+        splits = payload.payment_splits or payload.paymentSplits
+        if splits and len(splits) > 0:
+            splits_total_p = sum(to_paise(float(s.get("amount", 0.0))) for s in splits)
+            net_amt_p = to_paise(net_amt)
+            if splits_total_p != net_amt_p:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Sum of food bill payment splits (₹{from_paise(splits_total_p):.2f}) does not match net bill amount (₹{net_amt:.2f})"
+                )
+            fb_splits_json = json.dumps(splits)
+            if len(splits) > 1:
+                settle_type = "Split"
+            else:
+                settle_type = splits[0].get("mode") or settle_type
+        elif payload.payment_splits_json:
+            fb_splits_json = payload.payment_splits_json
+        else:
+            fb_splits_json = json.dumps([{"mode": settle_type, "amount": net_amt, "ref": payload.payment_ref}]) if net_amt > 0 else "[]"
+
         bill_dt = payload.date or today_ist_str()
         bill_tm = payload.time or now_ist().strftime("%I:%M %p")
         bill = models.FoodBill(
@@ -2879,6 +2948,7 @@ def save_food_bill(payload: schemas.FoodBillCreate, db: Session = Depends(get_db
             gst_amount=gst_amt,
             net_bill_amount=net_amt,
             settlement_type=settle_type,
+            payment_splits_json=fb_splits_json,
             discount_reason=payload.discount_reason or payload.discountReason,
             payment_ref=payload.payment_ref or payload.paymentRef,
             billed_by=payload.billed_by or payload.billedBy or "Cashier",
@@ -2942,6 +3012,9 @@ def save_food_bill(payload: schemas.FoodBillCreate, db: Session = Depends(get_db
         db.commit()
         db.refresh(bill)
         return bill
+    except HTTPException:
+        db.rollback()
+        raise
     except Exception as exc:
         db.rollback()
         logger.error(f"[save_food_bill] Transaction failed, rolled back: {exc}")
@@ -6647,9 +6720,12 @@ def save_shift_handover(payload: schemas.ShiftHandoverCreate, db: Session = Depe
     food_c = float(payload.food_cash_collected or payload.foodCashCollected or 0.0)
     adv_c = float(payload.advance_cash_collected or payload.advanceCashCollected or 0.0)
     exp_c = float(payload.expenses_paid_from_drawer or payload.expensesPaidFromDrawer or 0.0)
+    drops_safe = float(payload.drawer_drops_to_safe or payload.drawerDropsToSafe or 0.0)
+    float_paid_in = float(payload.paid_in_drawer_float or payload.paidInDrawerFloat or 0.0)
+    refunds_paid = float(payload.cash_refunds_paid or payload.cashRefundsPaid or 0.0)
     counted_c = float(payload.net_physical_cash_in_drawer or payload.netPhysicalCashInDrawer or opening)
 
-    expected_c = round(opening + room_c + food_c + adv_c - exp_c, 2)
+    expected_c = round(opening + room_c + food_c + adv_c + float_paid_in - drops_safe - exp_c - refunds_paid, 2)
     cash_variance = round(counted_c - expected_c, 2)
 
     existing = db.query(models.ShiftHandover).filter(models.ShiftHandover.shift_id == s_id).first()
@@ -6664,6 +6740,9 @@ def save_shift_handover(payload: schemas.ShiftHandoverCreate, db: Session = Depe
         existing.food_cash_collected = food_c
         existing.advance_cash_collected = adv_c
         existing.expenses_paid_from_drawer = exp_c
+        existing.drawer_drops_to_safe = drops_safe
+        existing.paid_in_drawer_float = float_paid_in
+        existing.cash_refunds_paid = refunds_paid
         existing.net_physical_cash_in_drawer = counted_c
         existing.online_upi_verified = float(payload.online_upi_verified or payload.onlineUpiVerified or 0.0)
         existing.card_swipe_verified = float(payload.card_swipe_verified or payload.cardSwipeVerified or 0.0)
@@ -6686,6 +6765,9 @@ def save_shift_handover(payload: schemas.ShiftHandoverCreate, db: Session = Depe
             food_cash_collected=food_c,
             advance_cash_collected=adv_c,
             expenses_paid_from_drawer=exp_c,
+            drawer_drops_to_safe=drops_safe,
+            paid_in_drawer_float=float_paid_in,
+            cash_refunds_paid=refunds_paid,
             net_physical_cash_in_drawer=counted_c,
             online_upi_verified=float(payload.online_upi_verified or payload.onlineUpiVerified or 0.0),
             card_swipe_verified=float(payload.card_swipe_verified or payload.cardSwipeVerified or 0.0),
@@ -6832,14 +6914,31 @@ def get_shift_handover_current_metrics(db: Session = Depends(get_db)):
     ).all()
     tx_count += len(food_bills)
     for fb in food_bills:
-        pm = str(getattr(fb, 'settlement_type', None) or getattr(fb, 'payment_mode', '') or "").upper()
-        amt = float(fb.net_bill_amount or 0.0)
-        if "CASH" in pm:
-            food_cash += amt
-        elif "UPI" in pm or "ONLINE" in pm:
-            upi_online += amt
-        elif "CARD" in pm:
-            card_swipes += amt
+        splits = []
+        if fb.payment_splits_json and fb.payment_splits_json != "[]":
+            try:
+                splits = json.loads(fb.payment_splits_json)
+            except Exception:
+                splits = []
+        if splits:
+            for s in splits:
+                sm = (s.get("mode") or "").upper()
+                s_amt = float(s.get("amount") or 0.0)
+                if "CASH" in sm:
+                    food_cash += s_amt
+                elif "UPI" in sm or "ONLINE" in sm:
+                    upi_online += s_amt
+                elif "CARD" in sm:
+                    card_swipes += s_amt
+        else:
+            pm = str(getattr(fb, 'settlement_type', None) or getattr(fb, 'payment_mode', '') or "").upper()
+            amt = float(fb.net_bill_amount or 0.0)
+            if "CASH" in pm:
+                food_cash += amt
+            elif "UPI" in pm or "ONLINE" in pm:
+                upi_online += amt
+            elif "CARD" in pm:
+                card_swipes += amt
 
     # Advance Receipts recorded during this shift
     advance_cash = 0.0
@@ -6865,7 +6964,36 @@ def get_shift_handover_current_metrics(db: Session = Depends(get_db)):
         if "CASH" in pm:
             expenses_cash += amt
 
-    expected_drawer_cash = max(0.0, round(opening_float + room_cash + food_cash + advance_cash - expenses_cash, 2))
+    # Cash Drawer Movements during this shift (Drops to safe, float top-ups, drawer petty payouts) (#Phase4)
+    drawer_movements = db.query(models.CashDrawerMovement).filter(
+        models.CashDrawerMovement.created_at >= cutoff_dt
+    ).all()
+    drawer_drops_to_safe = 0.0
+    paid_in_drawer_float = 0.0
+    drawer_petty_payouts = 0.0
+    tx_count += len(drawer_movements)
+    for dm in drawer_movements:
+        if dm.movement_type == "DROP_TO_SAFE":
+            drawer_drops_to_safe += float(dm.amount or 0.0)
+        elif dm.movement_type == "FLOAT_TOPUP":
+            paid_in_drawer_float += float(dm.amount or 0.0)
+        elif dm.movement_type == "PETTY_PAYOUT":
+            drawer_petty_payouts += float(dm.amount or 0.0)
+
+    # Cash refunds paid out during this shift via Credit Notes (#Phase4)
+    cash_refunds_paid = 0.0
+    credit_notes = db.query(models.CreditNote).filter(
+        models.CreditNote.created_at >= cutoff_dt,
+        models.CreditNote.status == "ISSUED"
+    ).all()
+    for cn in credit_notes:
+        if (cn.refund_payment_mode or "").upper() == "CASH":
+            cash_refunds_paid += float(cn.total_credit_amount or 0.0)
+
+    expected_drawer_cash = max(0.0, round(
+        opening_float + room_cash + food_cash + advance_cash + paid_in_drawer_float
+        - drawer_drops_to_safe - expenses_cash - drawer_petty_payouts - cash_refunds_paid, 2
+    ))
 
     current_hour = datetime.datetime.now().hour
     if 7 <= current_hour < 15:
@@ -6889,12 +7017,186 @@ def get_shift_handover_current_metrics(db: Session = Depends(get_db)):
         "foodCashCollected": round(food_cash, 2),
         "advanceCashCollected": round(advance_cash, 2),
         "expensesPaidFromDrawer": round(expenses_cash, 2),
+        "drawerDropsToSafe": round(drawer_drops_to_safe, 2),
+        "paidInDrawerFloat": round(paid_in_drawer_float, 2),
+        "drawerPettyPayouts": round(drawer_petty_payouts, 2),
+        "cashRefundsPaid": round(cash_refunds_paid, 2),
         "expectedDrawerCash": expected_drawer_cash,
         "netPhysicalCashInDrawer": expected_drawer_cash,
         "onlineUpiVerified": round(upi_online, 2),
         "cardSwipeVerified": round(card_swipes, 2),
         "creditAccountsAdded": 0.0,
         "totalTransactionsHandled": tx_count
+    }
+
+# --- Cash Drawer Movements: Skims (Drops to Safe), Float Top-Ups, Payouts (#Phase4) ---
+@router.post("/drawer/movements", response_model=schemas.CashDrawerMovementResponse)
+@router.post("/drawer/movement", response_model=schemas.CashDrawerMovementResponse)
+def record_cash_drawer_movement(
+    payload: schemas.CashDrawerMovementCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Record Cash Drawer Movement (Puter POS drawer.js pattern):
+    - DROP_TO_SAFE: Cashier moves excess drawer cash into property safe (> threshold requires Manager PIN).
+    - FLOAT_TOPUP: Additional cash added to drawer float during shift.
+    - PETTY_PAYOUT: Immediate small cash payouts (e.g. ice, vegetables, local courier).
+    Posts double-entry GL journal entry and provides shift reconciliation integrity.
+    """
+    amt = float(payload.amount or 0.0)
+    if amt <= 0.0:
+        raise HTTPException(status_code=400, detail="Drawer movement amount must be greater than zero")
+
+    m_type = payload.movement_type.strip().upper()
+    if m_type not in ["DROP_TO_SAFE", "FLOAT_TOPUP", "PETTY_PAYOUT"]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid movement type '{payload.movement_type}'. Allowed: DROP_TO_SAFE, FLOAT_TOPUP, PETTY_PAYOUT"
+        )
+
+    # High-value Safe Drop Manager Authorization Check (Threshold: ₹5,000)
+    manager_pin_verified = False
+    setting = db.query(models.HotelSetting).filter(models.HotelSetting.key == "default").first()
+    if m_type == "DROP_TO_SAFE" and amt >= 5000.0:
+        if not payload.manager_pin:
+            raise HTTPException(
+                status_code=401,
+                detail="Manager PIN authorization required for safe cash drops of ₹5,000 or more"
+            )
+        clean_pin = str(payload.manager_pin).strip()
+        if setting and setting.manager_pin_hash and setting.manager_pin_salt:
+            is_valid = verify_pin_pbkdf2(clean_pin, setting.manager_pin_hash, setting.manager_pin_salt)
+        else:
+            default_salt, default_hash, _ = hash_manager_pin("1234", salt="default_svr_salt")
+            is_valid = verify_pin_pbkdf2(clean_pin, default_hash, default_salt)
+        if not is_valid:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid manager PIN for safe drop authorization"
+            )
+        manager_pin_verified = True
+    elif payload.manager_pin:
+        clean_pin = str(payload.manager_pin).strip()
+        if setting and setting.manager_pin_hash and setting.manager_pin_salt:
+            manager_pin_verified = verify_pin_pbkdf2(clean_pin, setting.manager_pin_hash, setting.manager_pin_salt)
+        else:
+            default_salt, default_hash, _ = hash_manager_pin("1234", salt="default_svr_salt")
+            manager_pin_verified = verify_pin_pbkdf2(clean_pin, default_hash, default_salt)
+
+    # Generate atomic voucher number
+    voucher_no, _ = get_next_document_number(db, doc_type="DRAWER_VOUCHER", prefix="SVR")
+
+    amt_p = to_paise(amt)
+    date_str = payload.date or today_ist_str()
+    time_str = payload.time or now_ist().strftime("%I:%M %p")
+
+    # Double-entry General Ledger Posting
+    jv_id = f"JV-{voucher_no.replace('/', '-')}"
+    if m_type == "DROP_TO_SAFE":
+        debit_acc = "Property Safe / Main Vault Cash"
+        credit_acc = "Front Desk Cash Drawer"
+        narration = f"Safe Drop: {voucher_no} - {payload.reason}"
+    elif m_type == "FLOAT_TOPUP":
+        debit_acc = "Front Desk Cash Drawer"
+        credit_acc = "Property Safe / Float Reserve"
+        narration = f"Float Top-Up: {voucher_no} - {payload.reason}"
+    else:  # PETTY_PAYOUT
+        debit_acc = "Petty Cash Operational Expenses"
+        credit_acc = "Front Desk Cash Drawer"
+        narration = f"Drawer Payout: {voucher_no} - {payload.reason}"
+
+    try:
+        db.add(models.JournalEntry(
+            entry_id=jv_id,
+            date=date_str,
+            time=time_str,
+            reference_no=voucher_no,
+            voucher_type="Payment" if m_type != "FLOAT_TOPUP" else "Receipt",
+            debit_account=debit_acc,
+            credit_account=credit_acc,
+            amount_paise=amt_p,
+            amount_rupees=amt,
+            narration=narration,
+            posted_by=payload.cashier_name
+        ))
+
+        movement = models.CashDrawerMovement(
+            voucher_no=voucher_no,
+            date=date_str,
+            time=time_str,
+            shift_id=payload.shift_id,
+            movement_type=m_type,
+            amount_paise=amt_p,
+            amount=amt,
+            cashier_name=payload.cashier_name,
+            authorized_by=payload.authorized_by or ("Duty Manager" if manager_pin_verified else payload.cashier_name),
+            manager_pin_verified=manager_pin_verified,
+            reason=payload.reason,
+            destination_or_source=payload.destination_or_source or "Property Safe",
+            journal_entry_id=jv_id
+        )
+        db.add(movement)
+        db.commit()
+        db.refresh(movement)
+
+        record_audit_log(
+            db=db,
+            action="DRAWER_MOVEMENT",
+            entity_type="DRAWER",
+            entity_id=voucher_no,
+            new_data={
+                "voucher_no": voucher_no,
+                "movement_type": m_type,
+                "amount": amt,
+                "cashier_name": payload.cashier_name,
+                "manager_pin_verified": manager_pin_verified,
+                "reason": payload.reason
+            },
+            staff_id=payload.cashier_name,
+            role="Front Office"
+        )
+        return movement
+    except Exception as exc:
+        db.rollback()
+        logger.error(f"[record_cash_drawer_movement] Failed: {exc}")
+        raise HTTPException(status_code=500, detail=f"Failed to record drawer movement: {str(exc)}")
+
+@router.get("/drawer/movements", response_model=List[schemas.CashDrawerMovementResponse])
+def list_cash_drawer_movements(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    movement_type: Optional[str] = None,
+    shift_id: Optional[str] = None,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    """Retrieve cash drawer movements with optional date, type, and shift filtering."""
+    q = db.query(models.CashDrawerMovement)
+    if start_date:
+        q = q.filter(models.CashDrawerMovement.date >= start_date)
+    if end_date:
+        q = q.filter(models.CashDrawerMovement.date <= end_date)
+    if movement_type:
+        q = q.filter(models.CashDrawerMovement.movement_type == movement_type.strip().upper())
+    if shift_id:
+        q = q.filter(models.CashDrawerMovement.shift_id == shift_id)
+    return q.order_by(models.CashDrawerMovement.id.desc()).limit(limit).all()
+
+@router.get("/drawer/summary")
+def get_cash_drawer_summary(db: Session = Depends(get_db)):
+    """Summary of cash movements in current shift window."""
+    metrics = get_shift_handover_current_metrics(db=db)
+    return {
+        "openingDrawerCash": metrics["openingDrawerCash"],
+        "roomCashCollected": metrics["roomCashCollected"],
+        "foodCashCollected": metrics["foodCashCollected"],
+        "advanceCashCollected": metrics["advanceCashCollected"],
+        "paidInDrawerFloat": metrics["paidInDrawerFloat"],
+        "drawerDropsToSafe": metrics["drawerDropsToSafe"],
+        "expensesPaidFromDrawer": metrics["expensesPaidFromDrawer"],
+        "drawerPettyPayouts": metrics["drawerPettyPayouts"],
+        "cashRefundsPaid": metrics["cashRefundsPaid"],
+        "expectedDrawerCash": metrics["expectedDrawerCash"]
     }
 
 # --- 32. Banquet Venues & Event Bookings ---

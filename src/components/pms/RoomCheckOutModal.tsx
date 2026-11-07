@@ -5,6 +5,7 @@ import { hotelApi } from '../../services/api';
 import { HotelBillFormatModal } from './HotelBillFormatModal';
 import { DecentroUpiQrModal } from './DecentroUpiQrModal';
 import { DecentroVirtualAccountModal } from './DecentroVirtualAccountModal';
+import { SplitTenderModal } from './SplitTenderModal';
 import { decentroApi } from '../../services/decentroApi';
 
 interface RoomCheckOutModalProps {
@@ -359,6 +360,8 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
       { mode: paymentSplits[0]?.mode || 'Cash', amount: netPayable, referenceNo: paymentSplits[0]?.referenceNo || '', remark: 'Full Settlement' }
     ]);
   };
+
+  const [showSplitTenderModal, setShowSplitTenderModal] = useState<boolean>(false);
 
   // Decentro Circuit Breaker Fallback Handler (#13)
   const [circuitBreakerAlert, setCircuitBreakerAlert] = useState<string | null>(null);
@@ -1365,6 +1368,14 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
                               style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '1px 5px', borderRadius: 2, fontSize: 9, fontWeight: 700, cursor: 'pointer' }}
                             >
                               + Split Mode
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setShowSplitTenderModal(true)}
+                              style={{ background: '#d97706', color: '#fff', border: 'none', padding: '1px 5px', borderRadius: 2, fontSize: 9, fontWeight: 700, cursor: 'pointer' }}
+                              title="Launch Industrial Split Tender Wizard with zero-drift paise validation"
+                            >
+                              ⚡ Split Wizard
                             </button>
                           </div>
                         </div>
@@ -2732,6 +2743,18 @@ export const RoomCheckOutModal: React.FC<RoomCheckOutModalProps> = ({
         onAccountCreated={va => {
           alert(`Dedicated Virtual Account ${va.account_number} (IFSC: ${va.ifsc_code}, ${va.bank_name}) generated successfully! Direct NEFT/RTGS/IMPS deposits will auto-credit this room.`);
         }}
+      />
+
+      {/* Multi-Tender Split Payment Wizard Modal */}
+      <SplitTenderModal
+        isOpen={showSplitTenderModal}
+        onClose={() => setShowSplitTenderModal(false)}
+        totalDueRupees={netPayable}
+        onConfirmSplits={(newSplits) => {
+          setPaymentSplits(newSplits);
+          setShowSplitTenderModal(false);
+        }}
+        title={`Split Settlement • Room ${targetRoom.roomNo}`}
       />
     </div>
   );

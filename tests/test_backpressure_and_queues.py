@@ -140,6 +140,9 @@ def test_login_rate_limiting_exceeded_returns_429(db_session):
             # Transform via configured 429 exception handler
             rate_limit_response = rate_limit_exceeded_handler(req, rle)
             break
+        except HTTPException:
+            # Expected 401 credentials failure prior to exceeding rate limit
+            pass
 
     assert rate_limited_caught is True, "Rate limit threshold of 15/minute was not enforced!"
     assert rate_limit_response is not None

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PmsStore } from '../../services/pmsStore';
 import { hotelApi } from '../../services/api';
+import { CashDrawerMovementModal } from './CashDrawerMovementModal';
 import type { PmsShiftHandoverRecord } from '../../types/pmsModels';
 import './pmsStyles.css';
 
@@ -25,6 +26,7 @@ export const ShiftHandoverModal: React.FC<ShiftHandoverModalProps> = ({ isOpen, 
   );
   const [isSignedOff, setIsSignedOff] = useState<boolean>(false);
   const [isSigning, setIsSigning] = useState<boolean>(false);
+  const [showDrawerMovementModal, setShowDrawerMovementModal] = useState<boolean>(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -210,7 +212,17 @@ export const ShiftHandoverModal: React.FC<ShiftHandoverModalProps> = ({ isOpen, 
           <div className="bg-white border border-gray-300 rounded shadow-xs overflow-hidden">
             <div className="bg-slate-200 px-4 py-2 border-b border-gray-300 font-bold text-xs text-gray-800 uppercase tracking-wide flex items-center justify-between">
               <span>Physical Cash Drawer Reconciliation (Currency in Hand)</span>
-              <span className="text-[11px] text-gray-600 font-normal">Strict Denomination Cross-Check</span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowDrawerMovementModal(true)}
+                  className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-0.5 px-2.5 rounded text-[10px] shadow transition-colors flex items-center gap-1 cursor-pointer"
+                  title="Record safe skim drop, float top-up, or petty cash payout"
+                >
+                  <span>🏦</span> Safe Skim / Float Action
+                </button>
+                <span className="text-[11px] text-gray-600 font-normal">Strict Denomination Cross-Check</span>
+              </div>
             </div>
 
             <div className="p-4 space-y-2 text-xs">
@@ -364,6 +376,31 @@ export const ShiftHandoverModal: React.FC<ShiftHandoverModalProps> = ({ isOpen, 
           </button>
         </div>
       </div>
+
+      {/* Cash Drawer Movement Modal */}
+      <CashDrawerMovementModal
+        isOpen={showDrawerMovementModal}
+        onClose={() => setShowDrawerMovementModal(false)}
+        onSuccess={() => {
+          // Re-fetch shift handover metrics
+          hotelApi.getShiftHandoverCurrentMetrics()
+            .then((res: any) => {
+              if (res && res.status === 'success' && res.metrics) {
+                const metrics = res.metrics;
+                setHandoverRecord(prev => ({
+                  ...prev,
+                  roomCashCollected: metrics.roomCashCollected ?? prev.roomCashCollected,
+                  foodCashCollected: metrics.foodCashCollected ?? prev.foodCashCollected,
+                  advanceCashCollected: metrics.advanceCashCollected ?? prev.advanceCashCollected,
+                  openingDrawerCash: metrics.openingDrawerCash ?? prev.openingDrawerCash,
+                  expensesPaidFromDrawer: metrics.expensesPaidFromDrawer ?? prev.expensesPaidFromDrawer,
+                  netPhysicalCashInDrawer: metrics.netPhysicalCashInDrawer ?? prev.netPhysicalCashInDrawer
+                }));
+              }
+            })
+            .catch(() => {});
+        }}
+      />
     </div>
   );
 };

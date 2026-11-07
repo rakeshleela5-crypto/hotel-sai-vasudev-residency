@@ -32,7 +32,8 @@ DOC_TYPE_CODES = {
     "ADVANCE_RECEIPT": "RCP",
     "CREDIT_NOTE": "CN",
     "DEBIT_NOTE": "DN",
-    "PAYMENT_VOUCHER": "PAY"
+    "PAYMENT_VOUCHER": "PAY",
+    "DRAWER_VOUCHER": "DRW"
 }
 
 
@@ -72,6 +73,17 @@ def _get_max_existing_sequence(db: Session, doc_type: str, fy: str) -> int:
                 if not b_no:
                     continue
                 match = re.search(r'FB-(\d+)', b_no)
+                if match:
+                    try:
+                        max_seq = max(max_seq, int(match.group(1)))
+                    except ValueError:
+                        pass
+        elif doc_type == "DRAWER_VOUCHER":
+            movements = db.query(models.CashDrawerMovement.voucher_no).all()
+            for (v_no,) in movements:
+                if not v_no:
+                    continue
+                match = re.search(r'DRW-(\d+)', v_no)
                 if match:
                     try:
                         max_seq = max(max_seq, int(match.group(1)))

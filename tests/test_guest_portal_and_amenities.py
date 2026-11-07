@@ -95,7 +95,15 @@ def test_in_room_dining_folio_transfer(db):
         db.refresh(room)
 
     # 2. Seed or update an active checked-in booking for Room 101
-    booking = db.query(models.Booking).filter(models.Booking.room_id == room.id).first()
+    # Check-out any old bookings across all rooms matching '101' to prevent stale collision
+    matching_rooms = db.query(models.Room).filter(
+        models.Room.name.ilike("%101%") | models.Room.slug.ilike("%101%")
+    ).all()
+    room_ids = [r.id for r in matching_rooms]
+    db.query(models.Booking).filter(models.Booking.room_id.in_(room_ids)).update({"status": "Checked-Out"}, synchronize_session=False)
+    db.commit()
+
+    booking = db.query(models.Booking).filter(models.Booking.room_id.in_(room_ids)).order_by(models.Booking.id.desc()).first()
     if not booking:
         booking = models.Booking(
             booking_ref=f"BK-RSO-{uuid.uuid4().hex[:6].upper()}",
@@ -119,6 +127,7 @@ def test_in_room_dining_folio_transfer(db):
         booking.status = "Checked-In"
         booking.is_deleted = False
         db.commit()
+        db.refresh(booking)
 
     # 3. Guest places In-Room Dining food order with "Transfer to Room Folio"
     order_payload = CreateGuestOrderPayload(

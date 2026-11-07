@@ -518,7 +518,7 @@ def create_guest_order(payload: CreateGuestOrderPayload, db: Session = Depends(g
         ).filter(
             (Room.name.ilike(f"%{payload.room_no}%")) | (Room.slug.ilike(f"%{payload.room_no}%")),
             Booking.status.in_(["Checked-In", "Confirmed"]),
-            Booking.is_deleted == False
+            (Booking.is_deleted == False) | (Booking.is_deleted.is_(None))
         ).order_by(Booking.id.desc()).first()
 
         if active_booking:
