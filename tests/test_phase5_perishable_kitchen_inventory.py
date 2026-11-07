@@ -387,3 +387,4 @@ def test_list_waste_records_audit_trail(db_session: Session):
     assert "voucher_no" in first
     assert "total_loss_rupees" in first
     assert "waste_reason" in first
+

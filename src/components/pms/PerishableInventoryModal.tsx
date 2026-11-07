@@ -594,3 +594,4 @@ export const PerishableInventoryModal: React.FC<PerishableInventoryModalProps> =
     </div>
   );
 };
+
