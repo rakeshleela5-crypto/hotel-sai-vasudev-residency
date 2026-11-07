@@ -2565,6 +2565,105 @@ export interface ExpiryAlert {
   alert_level: 'CRITICAL_EXPIRED' | 'HIGH_EXPIRING_SOON' | 'WARNING';
 }
 
+export interface CorporateReceivable {
+  id: number;
+  invoice_no: string;
+  party_id?: string;
+  party_name: string;
+  booking_ref?: string;
+  guest_name?: string;
+  invoice_date: string;
+  due_date: string;
+  days_overdue: number;
+  aging_bucket: 'Current' | '1-30 Days' | '31-60 Days' | '61-90 Days' | '90+ Days';
+  invoice_amount: number;
+  invoice_amount_paise: number;
+  settled_amount: number;
+  settled_amount_paise: number;
+  outstanding_amount: number;
+  outstanding_amount_paise: number;
+  status: 'Unpaid' | 'Partially Paid' | 'Settled' | 'Disputed' | 'Written Off';
+  notes?: string;
+}
+
+export interface CorporateAgingRow {
+  party_name: string;
+  party_id?: string;
+  credit_limit: number;
+  payment_terms_days: number;
+  current_amount: number;
+  bucket_1_30_days: number;
+  bucket_31_60_days: number;
+  bucket_61_90_days: number;
+  bucket_90_plus_days: number;
+  total_outstanding: number;
+  is_credit_blocked: boolean;
+  unpaid_invoices_count: number;
+}
+
+export interface CorporateAgingReport {
+  as_of_date: string;
+  total_receivables: number;
+  total_receivables_paise: number;
+  summary_by_bucket: {
+    'Current': number;
+    '1-30 Days': number;
+    '31-60 Days': number;
+    '61-90 Days': number;
+    '90+ Days': number;
+  };
+  corporate_clients: CorporateAgingRow[];
+}
+
+export interface CorporateSettlementAllocationItem {
+  receivable_id: number;
+  invoice_no: string;
+  allocated_rupees: number;
+  remaining_outstanding: number;
+  status: string;
+}
+
+export interface CorporateSettlementResponse {
+  status: string;
+  receipt_voucher_no: string;
+  party_name: string;
+  payment_mode: string;
+  total_paid_rupees: number;
+  total_tds_rupees: number;
+  total_credited_rupees: number;
+  invoices_settled_count: number;
+  journal_entry_id?: number;
+  allocations: CorporateSettlementAllocationItem[];
+  settled_at: string;
+}
+
+export interface CorporateCreditCheckResponse {
+  party_name: string;
+  allowed: boolean;
+  is_blocked: boolean;
+  is_over_limit: boolean;
+  has_90_plus_overdue: boolean;
+  credit_limit: number;
+  current_outstanding: number;
+  available_credit: number;
+  requested_credit_amount: number;
+  override_applied: boolean;
+  message: string;
+}
+
+export interface BadDebtWriteOffResponse {
+  status: string;
+  receivable_id: number;
+  invoice_no: string;
+  party_name: string;
+  written_off_amount: number;
+  journal_entry_id: number;
+  reason: string;
+  authorized_by: string;
+  written_off_at: string;
+}
+
+
 
 
 

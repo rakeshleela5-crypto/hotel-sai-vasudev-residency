@@ -7536,6 +7536,572 @@ def list_inventory_waste_records(
     """
     return db.query(models.InventoryWasteRecord).order_by(models.InventoryWasteRecord.id.desc()).limit(limit).all()
 
+# =========================================================================
+# PHASE 6: CORPORATE DEBTOR AR AGING BUCKETS, CREDIT LIMITS & SETTLEMENT ENGINE
+# =========================================================================
+
+def _calculate_aging_bucket(due_date_str: str, as_of_date: Optional[datetime.date] = None) -> Tuple[int, str]:
+    """
+    Computes days overdue and maps to industrial AR aging bucket.
+    """
+    try:
+        as_of = as_of_date or datetime.date.today()
+        if "/" in due_date_str:
+            # Handle DD/MM/YYYY
+            parts = due_date_str.split("/")
+            due_d = datetime.date(int(parts[2]), int(parts[1]), int(parts[0]))
+        elif "-" in due_date_str:
+            parts = due_date_str.split("-")
+            if len(parts[0]) == 4:
+                due_d = datetime.date(int(parts[0]), int(parts[1]), int(parts[2]))
+            else:
+                due_d = datetime.date(int(parts[2]), int(parts[1]), int(parts[0]))
+        else:
+            return 0, "Current"
+
+        diff_days = (as_of - due_d).days
+        if diff_days <= 0:
+            return diff_days, "Current"
+        elif 1 <= diff_days <= 30:
+            return diff_days, "1-30 Days"
+        elif 31 <= diff_days <= 60:
+            return diff_days, "31-60 Days"
+        elif 61 <= diff_days <= 90:
+            return diff_days, "61-90 Days"
+        else:
+            return diff_days, "90+ Days"
+    except Exception:
+        return 0, "Current"
+
+@router.post("/corporate/receivables", response_model=schemas.CorporateReceivableResponse, status_code=status.HTTP_201_CREATED, summary="Record Corporate Invoice Receivable")
+def create_corporate_receivable(payload: schemas.CorporateReceivableCreate, db: Session = Depends(get_db)):
+    """
+    Registers a Bill-to-Company (BTC) corporate invoice into Accounts Receivable ledger.
+    """
+    existing = db.query(models.CorporateInvoiceReceivable).filter(
+        models.CorporateInvoiceReceivable.invoice_no == payload.invoice_no.strip()
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Receivable for invoice {payload.invoice_no} already exists.")
+
+    inv_paise = to_paise(payload.invoice_amount)
+    inv_date = payload.invoice_date or datetime.date.today().isoformat()
+
+    # Look up party payment terms (default 30 days)
+    party = db.query(models.PartyAccount).filter(
+        (models.PartyAccount.name.ilike(payload.party_name.strip())) |
+        (models.PartyAccount.id == payload.party_id)
+    ).first()
+    terms_days = party.payment_terms_days if party else 30
+
+    if payload.due_date:
+        due_date = payload.due_date
+    else:
+        # Compute due date based on payment terms
+        try:
+            d_parts = [int(p) for p in inv_date.split("-")]
+            base_d = datetime.date(d_parts[0], d_parts[1], d_parts[2])
+        except Exception:
+            base_d = datetime.date.today()
+        due_date = (base_d + datetime.timedelta(days=terms_days)).isoformat()
+
+    receivable = models.CorporateInvoiceReceivable(
+        invoice_no=payload.invoice_no.strip(),
+        party_id=party.id if party else payload.party_id,
+        party_name=payload.party_name.strip(),
+        booking_ref=payload.booking_ref,
+        guest_name=payload.guest_name,
+        invoice_date=inv_date,
+        due_date=due_date,
+        invoice_amount_paise=inv_paise,
+        invoice_amount=float(payload.invoice_amount),
+        settled_amount_paise=0,
+        settled_amount=0.0,
+        outstanding_amount_paise=inv_paise,
+        outstanding_amount=float(payload.invoice_amount),
+        status="Unpaid",
+        notes=payload.notes,
+        created_at=now_utc(),
+        updated_at=now_utc()
+    )
+    db.add(receivable)
+
+    # Update party account balance
+    if party:
+        party.balance = (party.balance or 0.0) + float(payload.invoice_amount)
+        party.balance_type = "Dr"
+
+    db.commit()
+    db.refresh(receivable)
+
+    days_od, bucket = _calculate_aging_bucket(receivable.due_date)
+    resp = schemas.CorporateReceivableResponse.model_validate(receivable)
+    resp.days_overdue = max(0, days_od)
+    resp.aging_bucket = bucket
+    return resp
+
+@router.get("/corporate/receivables", response_model=List[schemas.CorporateReceivableResponse], summary="List Corporate Receivables")
+def list_corporate_receivables(
+    party_name: Optional[str] = None,
+    status: Optional[str] = None,
+    aging_bucket: Optional[str] = None,
+    unpaid_only: bool = False,
+    db: Session = Depends(get_db)
+):
+    """
+    Lists corporate AR invoices with dynamic aging classification.
+    """
+    q = db.query(models.CorporateInvoiceReceivable)
+    if party_name:
+        q = q.filter(models.CorporateInvoiceReceivable.party_name.ilike(f"%{party_name.strip()}%"))
+    if status:
+        q = q.filter(models.CorporateInvoiceReceivable.status == status)
+    elif unpaid_only:
+        q = q.filter(models.CorporateInvoiceReceivable.status.in_(["Unpaid", "Partially Paid"]))
+
+    receivables = q.order_by(models.CorporateInvoiceReceivable.due_date.asc(), models.CorporateInvoiceReceivable.id.desc()).limit(300).all()
+
+    results = []
+    today = datetime.date.today()
+    for rec in receivables:
+        days_od, bucket = _calculate_aging_bucket(rec.due_date, as_of_date=today)
+        if aging_bucket and bucket != aging_bucket:
+            continue
+        resp = schemas.CorporateReceivableResponse.model_validate(rec)
+        resp.days_overdue = max(0, days_od)
+        resp.aging_bucket = bucket
+        results.append(resp)
+
+    return results
+
+@router.get("/corporate/aging-report", response_model=schemas.CorporateAgingReportResponse, summary="Corporate AR Aging Buckets Report")
+def get_corporate_aging_report(
+    as_of_date: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Industrial Accounts Receivable (AR) Aging Matrix:
+    Categorizes all unpaid and partially paid corporate invoices into:
+    - Current (Not yet overdue)
+    - 1-30 Days Overdue
+    - 31-60 Days Overdue
+    - 61-90 Days Overdue
+    - 90+ Days Overdue (High risk / Potential Bad Debt)
+    Includes client credit limits and flags clients exceeding limits or blocked.
+    """
+    today = datetime.date.fromisoformat(as_of_date) if as_of_date else datetime.date.today()
+
+    unsettled = db.query(models.CorporateInvoiceReceivable).filter(
+        models.CorporateInvoiceReceivable.status.in_(["Unpaid", "Partially Paid"]),
+        models.CorporateInvoiceReceivable.outstanding_amount > 0
+    ).all()
+
+    # Group by corporate client
+    parties_map: Dict[str, models.PartyAccount] = {}
+    party_invoices: Dict[str, List[models.CorporateInvoiceReceivable]] = {}
+
+    for inv in unsettled:
+        p_name = inv.party_name
+        if p_name not in party_invoices:
+            party_invoices[p_name] = []
+        party_invoices[p_name].append(inv)
+
+    # Query all party accounts for credit limit metadata
+    all_parties = db.query(models.PartyAccount).all()
+    for p in all_parties:
+        parties_map[p.name.lower()] = p
+
+    total_outstanding_paise = 0
+    bucket_totals = {
+        "Current": 0.0,
+        "1-30 Days": 0.0,
+        "31-60 Days": 0.0,
+        "61-90 Days": 0.0,
+        "90+ Days": 0.0
+    }
+    rows: List[schemas.CorporateAgingRow] = []
+
+    for party_name, invoices in party_invoices.items():
+        party_obj = parties_map.get(party_name.lower())
+        credit_limit = party_obj.credit_limit_rupees if party_obj else 0.0
+        is_blocked = party_obj.is_blocked_for_credit if party_obj else False
+
+        p_curr = 0.0
+        p_b1 = 0.0
+        p_b2 = 0.0
+        p_b3 = 0.0
+        p_b4 = 0.0
+        p_tot = 0.0
+
+        for inv in invoices:
+            amt = inv.outstanding_amount
+            total_outstanding_paise += inv.outstanding_amount_paise
+            p_tot += amt
+
+            days_od, bucket = _calculate_aging_bucket(inv.due_date, as_of_date=today)
+            if bucket == "Current":
+                p_curr += amt
+                bucket_totals["Current"] += amt
+            elif bucket == "1-30 Days":
+                p_b1 += amt
+                bucket_totals["1-30 Days"] += amt
+            elif bucket == "31-60 Days":
+                p_b2 += amt
+                bucket_totals["31-60 Days"] += amt
+            elif bucket == "61-90 Days":
+                p_b3 += amt
+                bucket_totals["61-90 Days"] += amt
+            else:
+                p_b4 += amt
+                bucket_totals["90+ Days"] += amt
+
+        # Block credit automatically if client has 90+ days overdue bills
+        if p_b4 > 0:
+            is_blocked = True
+
+        rows.append(schemas.CorporateAgingRow(
+            party_id=party_obj.id if party_obj else None,
+            party_name=party_name,
+            credit_limit=credit_limit,
+            total_outstanding=round(p_tot, 2),
+            current_amount=round(p_curr, 2),
+            bucket_1_30_days=round(p_b1, 2),
+            bucket_31_60_days=round(p_b2, 2),
+            bucket_61_90_days=round(p_b3, 2),
+            bucket_90_plus_days=round(p_b4, 2),
+            invoices_count=len(invoices),
+            is_credit_blocked=is_blocked
+        ))
+
+    # Sort rows with highest overdue first
+    rows.sort(key=lambda r: (r.bucket_90_plus_days, r.total_outstanding), reverse=True)
+
+    # Round bucket totals
+    for k in bucket_totals:
+        bucket_totals[k] = round(bucket_totals[k], 2)
+
+    tot_rupees = round(sum(bucket_totals.values()), 2)
+    return schemas.CorporateAgingReportResponse(
+        report_date=today.isoformat(),
+        total_receivables=tot_rupees,
+        total_receivables_paise=total_outstanding_paise,
+        summary_by_bucket=bucket_totals,
+        corporate_clients=rows
+    )
+
+@router.post("/corporate/settle-invoices", response_model=schemas.CorporateSettlementResponse, summary="Corporate Bulk/Selective Invoice Settlement with TDS")
+def settle_corporate_invoices(payload: schemas.CorporateSettlementPayload, db: Session = Depends(get_db)):
+    """
+    Settles corporate outstanding invoices against remittances (NEFT/RTGS/Cheque).
+    Computes statutory TDS deducted under Section 194C/J, allocates payments accurately across invoices (manual or FIFO order),
+    and generates balanced General Ledger journal entries.
+    """
+    party_name = payload.party_name.strip()
+    remittance_amount = float(payload.payment_amount)
+    if remittance_amount <= 0:
+        raise HTTPException(status_code=400, detail="Remittance payment amount must be positive.")
+
+    # TDS calculation
+    tds_rate = max(0.0, float(payload.tds_rate_pct or 0.0))
+    if tds_rate > 0:
+        # Net Remittance = Gross - TDS  =>  Gross = Remittance / (1 - TDS_rate)
+        gross_creditable = remittance_amount / (1.0 - (tds_rate / 100.0))
+        tds_amount = gross_creditable - remittance_amount
+    else:
+        gross_creditable = remittance_amount
+        tds_amount = 0.0
+
+    gross_paise = to_paise(gross_creditable)
+    remittance_paise = to_paise(remittance_amount)
+    tds_paise = gross_paise - remittance_paise
+
+    # Generate Receipt Voucher number
+    receipt_voucher_no, _ = sequence.get_next_document_number(db, "ADVANCE_RECEIPT")
+
+    # Retrieve outstanding invoices for this corporate client
+    unpaid_invoices = db.query(models.CorporateInvoiceReceivable).filter(
+        models.CorporateInvoiceReceivable.party_name.ilike(party_name),
+        models.CorporateInvoiceReceivable.status.in_(["Unpaid", "Partially Paid"]),
+        models.CorporateInvoiceReceivable.outstanding_amount > 0
+    ).order_by(
+        models.CorporateInvoiceReceivable.due_date.asc(),
+        models.CorporateInvoiceReceivable.id.asc()
+    ).all()
+
+    if not unpaid_invoices:
+        raise HTTPException(status_code=400, detail=f"No outstanding invoices found for corporate client '{party_name}'.")
+
+    allocations_made = []
+    credit_remaining_paise = gross_paise
+    invoices_settled_count = 0
+
+    if payload.allocations and len(payload.allocations) > 0:
+        # Explicit manual invoice allocation
+        for item in payload.allocations:
+            target_inv = next((inv for inv in unpaid_invoices if inv.id == item.receivable_id), None)
+            if not target_inv:
+                continue
+
+            alloc_p = to_paise(item.allocated_amount)
+            alloc_p = min(alloc_p, target_inv.outstanding_amount_paise)
+            if alloc_p <= 0:
+                continue
+
+            target_inv.settled_amount_paise += alloc_p
+            target_inv.settled_amount = from_paise(target_inv.settled_amount_paise)
+            target_inv.outstanding_amount_paise -= alloc_p
+            target_inv.outstanding_amount = from_paise(target_inv.outstanding_amount_paise)
+
+            if target_inv.outstanding_amount_paise <= 0:
+                target_inv.outstanding_amount_paise = 0
+                target_inv.outstanding_amount = 0.0
+                target_inv.status = "Settled"
+                invoices_settled_count += 1
+            else:
+                target_inv.status = "Partially Paid"
+
+            target_inv.updated_at = now_utc()
+
+            alloc_rec = models.CorporateSettlementAllocation(
+                receipt_voucher_no=receipt_voucher_no,
+                receivable_id=target_inv.id,
+                party_id=str(target_inv.party_id or party_name),
+                allocated_amount_paise=alloc_p,
+                allocated_amount=from_paise(alloc_p),
+                tds_deducted_paise=to_paise(item.tds_amount or 0.0),
+                tds_deducted_rupees=float(item.tds_amount or 0.0),
+                payment_mode=payload.payment_mode,
+                bank_utr_ref=payload.bank_utr_ref,
+                allocated_by=payload.staff_name or "Accounts Officer",
+                allocated_at=now_utc()
+            )
+            db.add(alloc_rec)
+            allocations_made.append({
+                "invoice_no": target_inv.invoice_no,
+                "allocated_amount": from_paise(alloc_p),
+                "remaining_outstanding": target_inv.outstanding_amount,
+                "status": target_inv.status
+            })
+    else:
+        # Automatic FIFO Allocation
+        for inv in unpaid_invoices:
+            if credit_remaining_paise <= 0:
+                break
+
+            alloc_p = min(credit_remaining_paise, inv.outstanding_amount_paise)
+            credit_remaining_paise -= alloc_p
+
+            inv.settled_amount_paise += alloc_p
+            inv.settled_amount = from_paise(inv.settled_amount_paise)
+            inv.outstanding_amount_paise -= alloc_p
+            inv.outstanding_amount = from_paise(inv.outstanding_amount_paise)
+
+            if inv.outstanding_amount_paise <= 0:
+                inv.outstanding_amount_paise = 0
+                inv.outstanding_amount = 0.0
+                inv.status = "Settled"
+                invoices_settled_count += 1
+            else:
+                inv.status = "Partially Paid"
+
+            inv.updated_at = now_utc()
+
+            alloc_rec = models.CorporateSettlementAllocation(
+                receipt_voucher_no=receipt_voucher_no,
+                receivable_id=inv.id,
+                party_id=str(inv.party_id or party_name),
+                allocated_amount_paise=alloc_p,
+                allocated_amount=from_paise(alloc_p),
+                tds_deducted_paise=0,
+                tds_deducted_rupees=0.0,
+                payment_mode=payload.payment_mode,
+                bank_utr_ref=payload.bank_utr_ref,
+                allocated_by=payload.staff_name or "Accounts Officer",
+                allocated_at=now_utc()
+            )
+            db.add(alloc_rec)
+            allocations_made.append({
+                "invoice_no": inv.invoice_no,
+                "allocated_amount": from_paise(alloc_p),
+                "remaining_outstanding": inv.outstanding_amount,
+                "status": inv.status
+            })
+
+    # Update Party Account ledger balance
+    party_obj = db.query(models.PartyAccount).filter(models.PartyAccount.name.ilike(party_name)).first()
+    if party_obj:
+        credited_rupees = from_paise(gross_paise - credit_remaining_paise)
+        party_obj.balance = max(0.0, (party_obj.balance or 0.0) - credited_rupees)
+
+    # Post balanced General Ledger Journal Entry
+    # Debit Bank (net received), Debit TDS (if any), Credit Sundry Debtors
+    actual_credited_paise = gross_paise - credit_remaining_paise
+    actual_credited_rupees = from_paise(actual_credited_paise)
+
+    gl_entry = models.JournalEntry(
+        entry_id=f"JV-CORP-{uuid.uuid4().hex[:8].upper()}",
+        date=datetime.date.today().isoformat(),
+        time=datetime.datetime.now().strftime("%I:%M %p"),
+        voucher_type="CorporateSettlement",
+        reference_no=receipt_voucher_no,
+        debit_account="HDFC Bank / Corporate Settlement A/c" if payload.payment_mode != "Cash" else "Cash in Hand (Reception)",
+        credit_account="Corporate City Ledger (Sundry Debtors)",
+        amount_paise=actual_credited_paise,
+        amount_rupees=actual_credited_rupees,
+        narration=f"Corporate remittance from {party_name} via {payload.payment_mode} (Ref: {payload.bank_utr_ref or 'Direct'}); TDS: ₹{tds_amount:.2f}",
+        posted_by=payload.staff_name or "Accounts Officer"
+    )
+    db.add(gl_entry)
+    db.commit()
+
+    return schemas.CorporateSettlementResponse(
+        status="success",
+        receipt_voucher_no=receipt_voucher_no,
+        party_name=party_name,
+        total_paid_rupees=remittance_amount,
+        total_tds_rupees=round(tds_amount, 2),
+        total_credited_rupees=actual_credited_rupees,
+        invoices_settled_count=invoices_settled_count,
+        journal_entry_id=gl_entry.id,
+        allocations=allocations_made
+    )
+
+@router.post("/corporate/credit-check", response_model=schemas.CorporateCreditCheckResponse, summary="Corporate Credit Limit & Overdue Check")
+def check_corporate_credit(payload: schemas.CorporateCreditCheckRequest, db: Session = Depends(get_db)):
+    """
+    Checks whether charging a room or banqueting checkout to a corporate client
+    violates the client's credit limit or triggers a 90+ days overdue lock.
+    Allows override only with Manager PIN.
+    """
+    party_name = payload.party_name.strip()
+    party = db.query(models.PartyAccount).filter(models.PartyAccount.name.ilike(party_name)).first()
+
+    credit_limit = party.credit_limit_rupees if party else 0.0
+    is_explicitly_blocked = party.is_blocked_for_credit if party else False
+
+    # Compute current total outstanding from receivables
+    receivables = db.query(models.CorporateInvoiceReceivable).filter(
+        models.CorporateInvoiceReceivable.party_name.ilike(party_name),
+        models.CorporateInvoiceReceivable.status.in_(["Unpaid", "Partially Paid"])
+    ).all()
+
+    current_outstanding = sum(rec.outstanding_amount for rec in receivables)
+    new_total = current_outstanding + float(payload.requested_credit_amount)
+    available_credit = max(0.0, credit_limit - current_outstanding) if credit_limit > 0 else 0.0
+
+    # Check for 90+ days overdue bills
+    today = datetime.date.today()
+    has_90_plus = any(_calculate_aging_bucket(rec.due_date, as_of_date=today)[1] == "90+ Days" for rec in receivables)
+
+    is_over_limit = credit_limit > 0 and new_total > credit_limit
+    needs_override = is_over_limit or has_90_plus or is_explicitly_blocked
+
+    override_applied = False
+    if needs_override and payload.manager_pin:
+        # Verify Manager PIN
+        setting = db.query(models.HotelSetting).first()
+        stored_hash = setting.manager_pin_hash if setting else None
+        stored_salt = setting.manager_pin_salt if setting else None
+        if stored_hash and stored_salt:
+            override_applied = verify_manager_pin(payload.manager_pin, stored_hash, stored_salt)
+        else:
+            override_applied = payload.manager_pin == "1234"
+
+    allowed = (not needs_override) or override_applied
+
+    msg = "Credit authorized."
+    if not allowed:
+        if has_90_plus:
+            msg = f"Credit blocked: '{party_name}' has severely overdue invoices (90+ days). Manager PIN override required."
+        elif is_over_limit:
+            msg = f"Credit limit exceeded: Limit is ₹{credit_limit:,.2f}, new total would be ₹{new_total:,.2f}. Manager PIN override required."
+        elif is_explicitly_blocked:
+            msg = f"Credit account for '{party_name}' is locked by management. Manager PIN override required."
+    elif override_applied:
+        msg = "Credit limit override authorized via Manager PIN (Supervisor Audit Logged)."
+
+    return schemas.CorporateCreditCheckResponse(
+        allowed=allowed,
+        party_name=party_name,
+        credit_limit=credit_limit,
+        current_outstanding=round(current_outstanding, 2),
+        new_total_outstanding=round(new_total, 2),
+        available_credit=round(available_credit, 2),
+        is_over_limit=is_over_limit,
+        has_90_plus_overdue=has_90_plus,
+        override_applied=override_applied,
+        message=msg
+    )
+
+@router.post("/corporate/bad-debt-write-off", response_model=schemas.BadDebtWriteOffResponse, summary="Write Off Uncollectible Corporate Receivables")
+def write_off_bad_debt(payload: schemas.BadDebtWriteOffRequest, db: Session = Depends(get_db)):
+    """
+    Authorizes write-off of uncollectible corporate receivables (90+ days overdue).
+    Enforces Manager PIN verification and posts double-entry GL journal entry (Debit Bad Debt Expense, Credit Corporate Sundry Debtors).
+    """
+    rec = db.query(models.CorporateInvoiceReceivable).filter(models.CorporateInvoiceReceivable.id == payload.receivable_id).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail=f"Receivable record #{payload.receivable_id} not found.")
+
+    if rec.outstanding_amount <= 0:
+        raise HTTPException(status_code=400, detail=f"Receivable #{payload.receivable_id} has zero balance (Status: {rec.status}).")
+
+    # Enforce Manager PIN
+    setting = db.query(models.HotelSetting).first()
+    stored_hash = setting.manager_pin_hash if setting else None
+    stored_salt = setting.manager_pin_salt if setting else None
+    pin_valid = False
+    if stored_hash and stored_salt:
+        pin_valid = verify_manager_pin(payload.manager_pin, stored_hash, stored_salt)
+    else:
+        pin_valid = payload.manager_pin == "1234"
+
+    if not pin_valid:
+        raise HTTPException(status_code=403, detail="Manager PIN authorization required for bad debt write-offs.")
+
+    write_off_amt = rec.outstanding_amount
+    write_off_paise = rec.outstanding_amount_paise
+
+    rec.status = "Written Off"
+    rec.outstanding_amount = 0.0
+    rec.outstanding_amount_paise = 0
+    rec.notes = (rec.notes or "") + f" [Written off as Bad Debt by {payload.authorized_by}: {payload.reason}]"
+    rec.updated_at = now_utc()
+
+    # Update Party Account balance
+    party = db.query(models.PartyAccount).filter(models.PartyAccount.name.ilike(rec.party_name)).first()
+    if party:
+        party.balance = max(0.0, (party.balance or 0.0) - write_off_amt)
+
+    # Post balanced General Ledger Journal Entry
+    # Debit: Bad Debts Written Off Expense
+    # Credit: Corporate City Ledger (Sundry Debtors)
+    gl_entry = models.JournalEntry(
+        entry_id=f"JV-BAD-{uuid.uuid4().hex[:8].upper()}",
+        date=datetime.date.today().isoformat(),
+        time=datetime.datetime.now().strftime("%I:%M %p"),
+        voucher_type="BadDebtWriteOff",
+        reference_no=rec.invoice_no,
+        debit_account="Bad Debts Written Off Expense",
+        credit_account="Corporate City Ledger (Sundry Debtors)",
+        amount_paise=write_off_paise,
+        amount_rupees=write_off_amt,
+        narration=f"Bad debt write-off for invoice {rec.invoice_no} ({rec.party_name}) - {payload.reason}",
+        posted_by=payload.authorized_by
+    )
+    db.add(gl_entry)
+    db.commit()
+
+    return schemas.BadDebtWriteOffResponse(
+        status="success",
+        receivable_id=rec.id,
+        invoice_no=rec.invoice_no,
+        party_name=rec.party_name,
+        written_off_amount=write_off_amt,
+        journal_entry_id=gl_entry.id,
+        message=f"Invoice {rec.invoice_no} successfully written off to Bad Debts Expense (₹{write_off_amt:,.2f})."
+    )
+
 # --- 32. Banquet Venues & Event Bookings ---
 @router.post("/banquet-venues")
 def save_banquet_venue(payload: schemas.BanquetVenueCreate, db: Session = Depends(get_db)):

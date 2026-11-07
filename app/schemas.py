@@ -2189,6 +2189,123 @@ class ExpiryAlert(BaseModel):
     hours_until_expiry: float
     alert_level: str # CRITICAL_EXPIRED, HIGH_EXPIRING_SOON, WARNING
 
+# =========================================================================
+# PHASE 6: CORPORATE DEBTOR AR AGING BUCKETS & SETTLEMENT ENGINE SCHEMAS
+# =========================================================================
+
+class CorporateReceivableCreate(BaseModel):
+    invoice_no: str
+    party_id: Optional[str] = None
+    party_name: str
+    booking_ref: Optional[str] = None
+    guest_name: Optional[str] = None
+    invoice_date: Optional[str] = None
+    due_date: Optional[str] = None
+    invoice_amount: float = Field(..., gt=0)
+    notes: Optional[str] = None
+
+class CorporateReceivableResponse(BaseModel):
+    id: int
+    invoice_no: str
+    party_id: Optional[str] = None
+    party_name: str
+    booking_ref: Optional[str] = None
+    guest_name: Optional[str] = None
+    invoice_date: str
+    due_date: str
+    invoice_amount_paise: int
+    invoice_amount: float
+    settled_amount_paise: int
+    settled_amount: float
+    outstanding_amount_paise: int
+    outstanding_amount: float
+    status: str
+    days_overdue: int = 0
+    aging_bucket: str = "Current"
+    notes: Optional[str] = None
+    created_at: Optional[datetime.datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+class CorporateAgingRow(BaseModel):
+    party_id: Optional[str] = None
+    party_name: str
+    credit_limit: float = 0.0
+    total_outstanding: float = 0.0
+    current_amount: float = 0.0 # Not yet due
+    bucket_1_30_days: float = 0.0 # 1-30 days overdue
+    bucket_31_60_days: float = 0.0 # 31-60 days overdue
+    bucket_61_90_days: float = 0.0 # 61-90 days overdue
+    bucket_90_plus_days: float = 0.0 # 90+ days overdue (Critical / Bad Debt)
+    invoices_count: int = 0
+    is_credit_blocked: bool = False
+
+class CorporateAgingReportResponse(BaseModel):
+    report_date: str
+    total_receivables: float
+    total_receivables_paise: int
+    summary_by_bucket: Dict[str, float]
+    corporate_clients: List[CorporateAgingRow]
+
+class CorporateSettlementInvoiceItem(BaseModel):
+    receivable_id: int
+    allocated_amount: float = Field(..., gt=0)
+    tds_amount: Optional[float] = 0.0
+
+class CorporateSettlementPayload(BaseModel):
+    party_id: Optional[str] = None
+    party_name: str
+    payment_amount: float = Field(..., gt=0)
+    payment_mode: str = "NEFT" # NEFT, RTGS, IMPS, Cheque, Bank Transfer
+    bank_utr_ref: Optional[str] = None
+    tds_rate_pct: Optional[float] = 0.0 # Section 194C (1% or 2%) corporate TDS deduction
+    allocations: Optional[List[CorporateSettlementInvoiceItem]] = None # If omitted, auto-FIFO allocates across oldest invoices
+    notes: Optional[str] = None
+    staff_name: Optional[str] = "Accounts Officer"
+
+class CorporateSettlementResponse(BaseModel):
+    status: str
+    receipt_voucher_no: str
+    party_name: str
+    total_paid_rupees: float
+    total_tds_rupees: float
+    total_credited_rupees: float
+    invoices_settled_count: int
+    journal_entry_id: Optional[int] = None
+    allocations: List[Dict[str, Any]]
+
+class CorporateCreditCheckRequest(BaseModel):
+    party_name: str
+    requested_credit_amount: float = Field(..., gt=0)
+    manager_pin: Optional[str] = None
+
+class CorporateCreditCheckResponse(BaseModel):
+    allowed: bool
+    party_name: str
+    credit_limit: float
+    current_outstanding: float
+    new_total_outstanding: float
+    available_credit: float
+    is_over_limit: bool
+    has_90_plus_overdue: bool
+    override_applied: bool
+    message: str
+
+class BadDebtWriteOffRequest(BaseModel):
+    receivable_id: int
+    reason: str = "Uncollectible after 90+ days"
+    manager_pin: str
+    authorized_by: str
+
+class BadDebtWriteOffResponse(BaseModel):
+    status: str
+    receivable_id: int
+    invoice_no: str
+    party_name: str
+    written_off_amount: float
+    journal_entry_id: int
+    message: str
+
 
 
 

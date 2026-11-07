@@ -707,7 +707,62 @@ class PartyAccount(Base):
     balance_type = Column(String(10), default="Dr") # Dr, Cr
     gstin = Column(String(50), nullable=True)
     address = Column(Text, nullable=True)
+    credit_limit_paise = Column(Integer, default=0, nullable=False)
+    credit_limit_rupees = Column(Float, default=0.0, nullable=False)
+    payment_terms_days = Column(Integer, default=30, nullable=False)
+    pan_number = Column(String(50), nullable=True)
+    contact_person = Column(String(150), nullable=True)
+    email = Column(String(150), nullable=True)
+    is_blocked_for_credit = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=now_utc)
+
+class CorporateInvoiceReceivable(Base):
+    """
+    Corporate Accounts Receivable (AR) Ledger.
+    Tracks individual Bill-To-Company (BTC) invoices, due dates, settlement status,
+    and dynamic aging buckets (0-30, 31-60, 61-90, 90+ days).
+    """
+    __tablename__ = "corporate_invoice_receivables"
+
+    id = Column(Integer, primary_key=True, index=True)
+    invoice_no = Column(String(100), unique=True, index=True, nullable=False) # SVR/2026-27/INV-XXXX
+    party_id = Column(String(100), ForeignKey("party_accounts.id"), index=True)
+    party_name = Column(String(200), nullable=False, index=True)
+    booking_ref = Column(String(100), nullable=True, index=True)
+    guest_name = Column(String(150), nullable=True)
+    invoice_date = Column(String(50), nullable=False, index=True) # YYYY-MM-DD
+    due_date = Column(String(50), nullable=False, index=True) # YYYY-MM-DD
+    invoice_amount_paise = Column(Integer, nullable=False, default=0)
+    invoice_amount = Column(Float, nullable=False, default=0.0)
+    settled_amount_paise = Column(Integer, nullable=False, default=0)
+    settled_amount = Column(Float, nullable=False, default=0.0)
+    outstanding_amount_paise = Column(Integer, nullable=False, default=0)
+    outstanding_amount = Column(Float, nullable=False, default=0.0)
+    status = Column(String(50), default="Unpaid", index=True) # Unpaid, Partially Paid, Settled, Written Off
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=now_utc)
+    updated_at = Column(DateTime, default=now_utc, onupdate=now_utc)
+
+class CorporateSettlementAllocation(Base):
+    """
+    Corporate Invoice Settlement Allocation with Section 194C/J TDS Accounting.
+    Matches bank remittances to specific corporate invoices and posts balanced GL entries.
+    """
+    __tablename__ = "corporate_settlement_allocations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    receipt_voucher_no = Column(String(100), index=True, nullable=False) # e.g. SVR/2026-27/RCP-XXXX
+    receivable_id = Column(Integer, ForeignKey("corporate_invoice_receivables.id"), nullable=False, index=True)
+    party_id = Column(String(100), nullable=False, index=True)
+    allocated_amount_paise = Column(Integer, nullable=False, default=0)
+    allocated_amount = Column(Float, nullable=False, default=0.0)
+    tds_deducted_paise = Column(Integer, nullable=False, default=0)
+    tds_deducted_rupees = Column(Float, nullable=False, default=0.0)
+    payment_mode = Column(String(50), default="NEFT") # NEFT, RTGS, IMPS, Cheque, Bank Transfer
+    bank_utr_ref = Column(String(100), nullable=True)
+    journal_entry_id = Column(Integer, ForeignKey("journal_entries.id"), nullable=True)
+    allocated_by = Column(String(100), default="Accounts Officer")
+    allocated_at = Column(DateTime, default=now_utc)
 
 class GeneralReceipt(Base):
     __tablename__ = "general_receipts"

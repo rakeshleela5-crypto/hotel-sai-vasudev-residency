@@ -192,6 +192,79 @@ if is_sqlite:
         except Exception:
             pass
         try:
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS corporate_invoice_receivables (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                invoice_no VARCHAR(100) UNIQUE NOT NULL,
+                party_id VARCHAR(100),
+                party_name VARCHAR(200) NOT NULL,
+                booking_ref VARCHAR(100),
+                guest_name VARCHAR(150),
+                invoice_date VARCHAR(50) NOT NULL,
+                due_date VARCHAR(50) NOT NULL,
+                invoice_amount_paise INTEGER NOT NULL DEFAULT 0,
+                invoice_amount REAL NOT NULL DEFAULT 0.0,
+                settled_amount_paise INTEGER NOT NULL DEFAULT 0,
+                settled_amount REAL NOT NULL DEFAULT 0.0,
+                outstanding_amount_paise INTEGER NOT NULL DEFAULT 0,
+                outstanding_amount REAL NOT NULL DEFAULT 0.0,
+                status VARCHAR(50) DEFAULT 'Unpaid',
+                notes TEXT,
+                created_at DATETIME,
+                updated_at DATETIME
+            )
+            """)
+        except Exception:
+            pass
+        try:
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS corporate_settlement_allocations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                receipt_voucher_no VARCHAR(100) NOT NULL,
+                receivable_id INTEGER NOT NULL,
+                party_id VARCHAR(100) NOT NULL,
+                allocated_amount_paise INTEGER NOT NULL DEFAULT 0,
+                allocated_amount REAL NOT NULL DEFAULT 0.0,
+                tds_deducted_paise INTEGER NOT NULL DEFAULT 0,
+                tds_deducted_rupees REAL NOT NULL DEFAULT 0.0,
+                payment_mode VARCHAR(50) DEFAULT 'NEFT',
+                bank_utr_ref VARCHAR(100),
+                journal_entry_id INTEGER,
+                allocated_by VARCHAR(100) DEFAULT 'Accounts Officer',
+                allocated_at DATETIME
+            )
+            """)
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE party_accounts ADD COLUMN credit_limit_paise INTEGER DEFAULT 0")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE party_accounts ADD COLUMN credit_limit_rupees REAL DEFAULT 0.0")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE party_accounts ADD COLUMN payment_terms_days INTEGER DEFAULT 30")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE party_accounts ADD COLUMN pan_number VARCHAR(50)")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE party_accounts ADD COLUMN contact_person VARCHAR(150)")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE party_accounts ADD COLUMN email VARCHAR(150)")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE party_accounts ADD COLUMN is_blocked_for_credit BOOLEAN DEFAULT 0")
+        except Exception:
+            pass
+        try:
             cursor.execute("ALTER TABLE bookings ADD COLUMN guest_signature_url TEXT")
         except Exception:
             pass

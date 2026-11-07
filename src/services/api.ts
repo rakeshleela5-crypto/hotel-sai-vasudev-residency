@@ -2940,6 +2940,104 @@ export const hotelApi = {
     const res = await fetch(`${API_BASE_URL}/pms/inventory/waste/records?limit=${limit}`);
     if (!res.ok) return [];
     return await res.json();
+  },
+
+  // -------------------------------------------------------------
+  // Phase 6: Corporate Debtor AR Aging Buckets & Settlement
+  // -------------------------------------------------------------
+  async createCorporateReceivable(payload: {
+    invoice_no: string;
+    party_name: string;
+    party_id?: string;
+    booking_ref?: string;
+    guest_name?: string;
+    invoice_date?: string;
+    due_date?: string;
+    invoice_amount: number;
+    notes?: string;
+  }): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/corporate/receivables`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to create corporate receivable');
+    }
+    return await res.json();
+  },
+
+  async getCorporateReceivables(params?: { party_name?: string; status?: string }): Promise<any[]> {
+    const query = new URLSearchParams();
+    if (params?.party_name) query.append('party_name', params.party_name);
+    if (params?.status) query.append('status', params.status);
+    const res = await fetch(`${API_BASE_URL}/pms/corporate/receivables?${query.toString()}`);
+    if (!res.ok) return [];
+    return await res.json();
+  },
+
+  async getCorporateAgingReport(asOfDate?: string): Promise<any> {
+    const query = asOfDate ? `?as_of_date=${encodeURIComponent(asOfDate)}` : '';
+    const res = await fetch(`${API_BASE_URL}/pms/corporate/aging-report${query}`);
+    if (!res.ok) throw new Error('Failed to load corporate AR aging report');
+    return await res.json();
+  },
+
+  async settleCorporateInvoices(payload: {
+    party_name: string;
+    payment_amount: number;
+    payment_mode?: string;
+    tds_rate_pct?: number;
+    bank_utr_ref?: string;
+    allocations?: { receivable_id: number; allocated_amount: number }[];
+    notes?: string;
+  }): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/corporate/settle-invoices`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to settle corporate invoices');
+    }
+    return await res.json();
+  },
+
+  async checkCorporateCredit(payload: {
+    party_name: string;
+    requested_credit_amount: number;
+    manager_pin?: string;
+  }): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/corporate/credit-check`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to verify corporate credit');
+    }
+    return await res.json();
+  },
+
+  async writeOffBadDebt(payload: {
+    receivable_id: number;
+    reason: string;
+    manager_pin: string;
+    authorized_by: string;
+  }): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/corporate/bad-debt-write-off`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to authorize bad debt write-off');
+    }
+    return await res.json();
   }
 };
 

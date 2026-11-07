@@ -70,6 +70,8 @@ import { ReceptionistNotificationBanner } from './ReceptionistNotificationBanner
 import { GuestRoomServicePortalPage } from '../guest/GuestRoomServicePortalPage';
 import { CharteredAccountantExportModal } from './CharteredAccountantExportModal';
 import { BookingReceiptModal } from './BookingReceiptModal';
+import { PerishableInventoryModal } from './PerishableInventoryModal';
+import { CorporateArAgingModal } from './CorporateArAgingModal';
 import type { PmsUserAccount, PmsChainProperty, BillFormatType, PmsCheckOutDetail, PmsGstReportTab, PmsRoom, PmsBooking } from '../../types/pmsModels';
 import type { PmsModalOpenDetail } from '../../services/pmsModalEvents';
 import { PmsStore } from '../../services/pmsStore';
@@ -248,8 +250,24 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
   // Module 6: End-of-Month Chartered Accountant (CA) JSON Export
   const [isCaExportOpen, setIsCaExportOpen] = useState(false);
 
+  // Phase 5: Perishable Kitchen Inventory (FIFO Lots & Food Spoilage)
+  const [isPerishableInventoryOpen, setIsPerishableInventoryOpen] = useState(false);
+
+  // Phase 6: Corporate Debtor AR Aging Buckets & Settlement Reconciliation
+  const [isCorporateArAgingOpen, setIsCorporateArAgingOpen] = useState(false);
+
   const handleLaunchReportAction = (actionKey: string) => {
     switch (actionKey) {
+      case 'corporate_ar_aging':
+      case 'city_ledger_aging':
+      case 'ar_aging':
+        setIsCorporateArAgingOpen(true);
+        break;
+      case 'perishable_inventory':
+      case 'kitchen_fifo':
+      case 'spoilage_lots':
+        setIsPerishableInventoryOpen(true);
+        break;
       case 'no_discount':
       case 'margin_protection':
       case 'discount_rules':
@@ -1712,6 +1730,16 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
                     <div className="pms-nav-item" onClick={() => setIsCaExportOpen(true)}>
                       <span style={{ color: '#10b981', fontWeight: 900 }}>⚖️ CA Monthly JSON Export (Module 6)</span>
                     </div>
+
+                    {/* Phase 5: Kitchen FIFO & Perishable Lots */}
+                    <div className="pms-nav-item" onClick={() => setIsPerishableInventoryOpen(true)}>
+                      <span style={{ color: '#22c55e', fontWeight: 900 }}>🥦 Kitchen FIFO &amp; Perishable Lots (Phase 5)</span>
+                    </div>
+
+                    {/* Phase 6: Corporate Debtor AR Aging Master */}
+                    <div className="pms-nav-item" onClick={() => setIsCorporateArAgingOpen(true)}>
+                      <span style={{ color: '#818cf8', fontWeight: 900 }}>🏛️ Corporate Debtor AR Aging Master (Phase 6)</span>
+                    </div>
                   </div>
                 )}
 
@@ -2546,6 +2574,16 @@ export const HotelPmsModal: React.FC<HotelPmsModalProps> = ({ isOpen, onClose })
       <CharteredAccountantExportModal
         isOpen={isCaExportOpen}
         onClose={() => setIsCaExportOpen(false)}
+      />
+      {/* Phase 5: Perishable Kitchen Inventory (FIFO Lots & Spoilage Condemnation) */}
+      <PerishableInventoryModal
+        isOpen={isPerishableInventoryOpen}
+        onClose={() => setIsPerishableInventoryOpen(false)}
+      />
+      {/* Phase 6: Corporate Debtor AR Aging Master & City Ledger Control */}
+      <CorporateArAgingModal
+        isOpen={isCorporateArAgingOpen}
+        onClose={() => setIsCorporateArAgingOpen(false)}
       />
     </>
   );
