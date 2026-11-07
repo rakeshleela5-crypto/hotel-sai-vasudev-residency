@@ -1,316 +1,392 @@
-import React, { useState } from 'react';
-import { hotelApi } from '../../services/api';
-import './pmsStyles.css';
+import React, { useState, useEffect } from 'react';
+import { pinService } from '../../services/pinService';
 
-interface ManagerPinModalProps {
+export interface ManagerPinModalProps {
   isOpen: boolean;
-  onClose: () => void;
   title?: string;
-  actionType?: 'void_kot' | 'discount_override' | 'rate_override';
+  actionTitle?: string;
   actionDescription?: string;
-  itemDescription?: string;
-  requestedValue?: string | number;
-  onAuthorized: (pin: string, reason: string) => void;
+  onClose?: () => void;
+  onCancel?: () => void;
+  onSuccess?: (token: string) => void;
+  onAuthorized?: (pin: string, reason: string) => void;
 }
-
-const VOID_REASONS = [
-  'Wrong item punched by steward',
-  'Guest changed mind / cancelled order',
-  'Kitchen out of stock / ingredient unavailable',
-  'Food preparation quality issue / burnt',
-  'Table shifted / duplicate KOT entry',
-  'Guest left table before service'
-];
-
-const DISCOUNT_REASONS = [
-  'Corporate tie-up contract (JK Paper / Corporate Guest)',
-  'Management courtesy / MD approved concession',
-  'Guest service recovery / inconvenience compensation',
-  'Long-stay pilgrim concession',
-  'Banquet / bulk party negotiated discount'
-];
 
 export const ManagerPinModal: React.FC<ManagerPinModalProps> = ({
   isOpen,
-  onClose,
   title,
-  actionType = 'void_kot',
-  actionDescription,
-  itemDescription,
-  requestedValue,
+  actionTitle = 'Supervisor Authorization Required',
+  actionDescription = 'Enter the 4-6 digit Manager PIN to authorize this sensitive action.',
+  onClose,
+  onCancel,
+  onSuccess,
   onAuthorized
 }) => {
   const [pin, setPin] = useState('');
-  const [selectedReason, setSelectedReason] = useState<string>(
-    actionType === 'void_kot' ? VOID_REASONS[0] : DISCOUNT_REASONS[0]
-  );
-  const [customNotes, setCustomNotes] = useState('');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isVerifying, setIsVerifying] = useState(false);
+  const [reason, setReason] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lockoutSec, setLockoutSec] = useState<number>(0);
 
-  const displayDesc = actionDescription || itemDescription;
+  const displayTitle = title || actionTitle;
+  const handleDismiss = onCancel || onClose || (() => {});
 
-  if (!isOpen) return null;
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage(null);
-
-    const trimmedPin = pin.trim();
-    if (!trimmedPin) {
-      setErrorMessage('❌ Please enter your Manager PIN.');
+  // Sync lockout state
+  useEffect(() => {
+    if (!isOpen) {
+      setPin('');
+      setReason('');
+      setError(null);
       return;
     }
 
-    setIsVerifying(true);
-    try {
-      const isValid = await hotelApi.verifyManagerPin(trimmedPin);
-      if (!isValid) {
-        setErrorMessage('❌ Invalid Manager PIN! Authorization rejected by database policy.');
-        setIsVerifying(false);
-        return;
-      }
+    const remaining = pinService.getLockoutRemainingSeconds();
+    setLockoutSec(remaining);
 
-      const fullReason = customNotes.trim()
-        ? `${selectedReason} - ${customNotes.trim()}`
-        : selectedReason;
+    if (remaining > 0) {
+      const timer = setInterval(() => {
+        setLockoutSec(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [isOpen]);
 
-      onAuthorized(trimmedPin, fullReason);
-      setPin('');
-      setCustomNotes('');
-      onClose();
-    } catch {
-      setErrorMessage('❌ Backend verification error. Please try again.');
-    } finally {
-      setIsVerifying(false);
+  if (!isOpen) return null;
+
+  const handleDigit = (digit: string) => {
+    if (lockoutSec > 0 || isSubmitting) return;
+    if (pin.length < 6) {
+      setPin(prev => prev + digit);
+      setError(null);
     }
   };
 
-  const isVoid = actionType === 'void_kot';
+  const handleBackspace = () => {
+    if (lockoutSec > 0 || isSubmitting) return;
+    setPin(prev => prev.slice(0, -1));
+    setError(null);
+  };
+
+  const handleClear = () => {
+    if (lockoutSec > 0 || isSubmitting) return;
+    setPin('');
+    setError(null);
+  };
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (pin.length < 4) {
+      setError('PIN must be at least 4 digits');
+      return;
+    }
+    if (lockoutSec > 0 || isSubmitting) return;
+
+    setIsSubmitting(true);
+    setError(null);
+
+    const result = await pinService.verifyPin(pin, displayTitle);
+    setIsSubmitting(false);
+
+    if (result.success && result.token) {
+      const verifiedPin = pin;
+      const customReason = reason.trim() || 'Manager Authorization Approved';
+      setPin('');
+      setReason('');
+      if (onSuccess) onSuccess(result.token);
+      if (onAuthorized) onAuthorized(verifiedPin, customReason);
+      if (!onSuccess && !onAuthorized) handleDismiss();
+    } else {
+      setError(result.message || 'Incorrect PIN.');
+      setPin('');
+      const rem = pinService.getLockoutRemainingSeconds();
+      if (rem > 0) {
+        setLockoutSec(rem);
+      }
+    }
+  };
 
   return (
-    <div className="pms-overlay" onClick={onClose} style={{ zIndex: 99999 }}>
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        backgroundColor: 'rgba(15, 23, 42, 0.75)',
+        backdropFilter: 'blur(4px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 99999,
+        padding: 16
+      }}
+      onClick={handleDismiss}
+    >
       <div
-        className="pms-window"
-        onClick={(e) => e.stopPropagation()}
         style={{
-          maxWidth: 480,
-          background: '#ffffff',
-          borderRadius: 8,
-          overflow: 'hidden',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-          border: '2px solid #b91c1c'
+          backgroundColor: '#0f172a',
+          color: '#f8fafc',
+          border: '1px solid #334155',
+          borderRadius: 16,
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px #475569',
+          width: '100%',
+          maxWidth: 380,
+          padding: 24,
+          position: 'relative',
+          userSelect: 'none'
         }}
+        onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <header
+        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 24,
+              backgroundColor: '#1e293b',
+              color: '#f59e0b',
+              border: '1px solid #d97706',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 24,
+              margin: '0 auto 12px'
+            }}
+          >
+            🔒
+          </div>
+          <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: '#f8fafc' }}>
+            {displayTitle}
+          </h3>
+          <p style={{ fontSize: 12, color: '#94a3b8', margin: '6px 0 0' }}>
+            {actionDescription}
+          </p>
+        </div>
+
+        {/* Lockout Warning */}
+        {lockoutSec > 0 ? (
+          <div
+            style={{
+              backgroundColor: '#450a0a',
+              border: '1px solid #dc2626',
+              borderRadius: 8,
+              padding: '10px 14px',
+              color: '#fecaca',
+              fontSize: 13,
+              textAlign: 'center',
+              marginBottom: 16
+            }}
+          >
+            ⚠️ Gate temporarily locked: Try again in <strong>{lockoutSec}s</strong>
+          </div>
+        ) : null}
+
+        {/* Optional Authorization Reason Input */}
+        {onAuthorized && (
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', display: 'block', marginBottom: 4 }}>
+              Mandatory Reason / Notes:
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Guest complaint / AC repair / Director discount"
+              value={reason}
+              onChange={e => setReason(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                backgroundColor: '#1e293b',
+                border: '1px solid #334155',
+                borderRadius: 8,
+                color: '#f8fafc',
+                fontSize: 13,
+                outline: 'none',
+                boxSizing: 'border-box'
+              }}
+            />
+          </div>
+        )}
+
+        {/* PIN Dots Display */}
+        <div
           style={{
-            background: '#991b1b',
-            color: '#ffffff',
-            padding: '12px 16px',
             display: 'flex',
+            justifyContent: 'center',
             alignItems: 'center',
-            justifyContent: 'space-between'
+            gap: 12,
+            marginBottom: 20,
+            padding: '14px',
+            backgroundColor: '#1e293b',
+            borderRadius: 12,
+            border: '1px solid #334155',
+            minHeight: 52
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 18 }}>🛡️</span>
-            <strong style={{ fontSize: 14, letterSpacing: 0.5 }}>
-              {title || (isVoid ? 'SECURITY LOCK: MANAGER VOID OVERRIDE' : 'SECURITY LOCK: DISCOUNT CAP OVERRIDE')}
-            </strong>
+          {[0, 1, 2, 3, 4, 5].map(idx => {
+            const hasDigit = idx < pin.length;
+            return (
+              <div
+                key={idx}
+                style={{
+                  width: 14,
+                  height: 14,
+                  borderRadius: 7,
+                  backgroundColor: hasDigit ? '#f59e0b' : '#334155',
+                  boxShadow: hasDigit ? '0 0 8px rgba(245, 158, 11, 0.6)' : 'none',
+                  transition: 'all 0.15s ease'
+                }}
+              />
+            );
+          })}
+        </div>
+
+        {/* Error message */}
+        {error && lockoutSec === 0 && (
+          <div
+            style={{
+              color: '#ef4444',
+              fontSize: 12,
+              textAlign: 'center',
+              marginBottom: 14,
+              fontWeight: 600
+            }}
+          >
+            {error}
           </div>
+        )}
+
+        {/* Numpad Grid */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 10,
+            marginBottom: 16
+          }}
+        >
+          {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(num => (
+            <button
+              key={num}
+              type="button"
+              disabled={lockoutSec > 0 || isSubmitting}
+              onClick={() => handleDigit(num)}
+              style={{
+                backgroundColor: '#1e293b',
+                color: '#f8fafc',
+                border: '1px solid #334155',
+                borderRadius: 10,
+                fontSize: 20,
+                fontWeight: 600,
+                height: 52,
+                cursor: lockoutSec > 0 || isSubmitting ? 'not-allowed' : 'pointer',
+                opacity: lockoutSec > 0 ? 0.5 : 1,
+                transition: 'all 0.1s'
+              }}
+            >
+              {num}
+            </button>
+          ))}
           <button
             type="button"
-            onClick={onClose}
+            disabled={lockoutSec > 0 || isSubmitting}
+            onClick={handleClear}
             style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#ffffff',
-              fontSize: 18,
+              backgroundColor: '#334155',
+              color: '#94a3b8',
+              border: '1px solid #475569',
+              borderRadius: 10,
+              fontSize: 14,
+              fontWeight: 600,
+              height: 52,
+              cursor: lockoutSec > 0 ? 'not-allowed' : 'pointer',
+              opacity: lockoutSec > 0 ? 0.5 : 1
+            }}
+          >
+            Clear
+          </button>
+          <button
+            type="button"
+            disabled={lockoutSec > 0 || isSubmitting}
+            onClick={() => handleDigit('0')}
+            style={{
+              backgroundColor: '#1e293b',
+              color: '#f8fafc',
+              border: '1px solid #334155',
+              borderRadius: 10,
+              fontSize: 20,
+              fontWeight: 600,
+              height: 52,
+              cursor: lockoutSec > 0 || isSubmitting ? 'not-allowed' : 'pointer',
+              opacity: lockoutSec > 0 ? 0.5 : 1
+            }}
+          >
+            0
+          </button>
+          <button
+            type="button"
+            disabled={lockoutSec > 0 || isSubmitting}
+            onClick={handleBackspace}
+            style={{
+              backgroundColor: '#334155',
+              color: '#f8fafc',
+              border: '1px solid #475569',
+              borderRadius: 10,
+              fontSize: 16,
+              fontWeight: 600,
+              height: 52,
+              cursor: lockoutSec > 0 ? 'not-allowed' : 'pointer',
+              opacity: lockoutSec > 0 ? 0.5 : 1
+            }}
+          >
+            ⌫
+          </button>
+        </div>
+
+        {/* Action Buttons */}
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button
+            type="button"
+            onClick={handleDismiss}
+            style={{
+              flex: 1,
+              backgroundColor: 'transparent',
+              color: '#94a3b8',
+              border: '1px solid #475569',
+              borderRadius: 10,
+              padding: '12px 16px',
+              fontSize: 14,
+              fontWeight: 600,
               cursor: 'pointer'
             }}
           >
-            ✕
+            Cancel
           </button>
-        </header>
-
-        {/* Warning Badge */}
-        <div
-          style={{
-            background: '#fef2f2',
-            borderBottom: '1px solid #fecaca',
-            padding: '10px 16px',
-            fontSize: 12,
-            color: '#991b1b',
-            lineHeight: 1.4
-          }}
-        >
-          <strong>⚠️ Anti-Fraud Enforcement:</strong>{' '}
-          {isVoid
-            ? 'Once punched, KOT items cannot be deleted or reduced freely. A verified Manager PIN and audit reason are mandatory.'
-            : 'Front Desk & POS Cashiers are capped at 5% max discount. Any higher deduction requires explicit Manager PIN override.'}
+          <button
+            type="button"
+            disabled={pin.length < 4 || lockoutSec > 0 || isSubmitting}
+            onClick={() => handleSubmit()}
+            style={{
+              flex: 2,
+              backgroundColor: pin.length >= 4 && lockoutSec === 0 ? '#d97706' : '#78350f',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: 10,
+              padding: '12px 16px',
+              fontSize: 14,
+              fontWeight: 700,
+              cursor: pin.length >= 4 && lockoutSec === 0 && !isSubmitting ? 'pointer' : 'not-allowed',
+              opacity: pin.length >= 4 && lockoutSec === 0 && !isSubmitting ? 1 : 0.6,
+              transition: 'background-color 0.2s'
+            }}
+          >
+            {isSubmitting ? 'Verifying...' : 'Authorize Action'}
+          </button>
         </div>
-
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} style={{ padding: 18 }}>
-          {displayDesc && (
-            <div
-              style={{
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                borderRadius: 6,
-                padding: '8px 12px',
-                marginBottom: 14,
-                fontSize: 12.5,
-                color: '#334155'
-              }}
-            >
-              <div>
-                <strong>Target Item / Bill:</strong> {displayDesc}
-              </div>
-              {requestedValue && (
-                <div style={{ marginTop: 2, color: '#b91c1c', fontWeight: 700 }}>
-                  {isVoid ? `Void Amount: ${requestedValue}` : `Requested Discount: ${requestedValue}`}
-                </div>
-              )}
-            </div>
-          )}
-
-          {errorMessage && (
-            <div
-              style={{
-                background: '#fee2e2',
-                border: '1px solid #f87171',
-                color: '#b91c1c',
-                padding: '8px 12px',
-                borderRadius: 6,
-                fontSize: 12,
-                fontWeight: 700,
-                marginBottom: 14
-              }}
-            >
-              {errorMessage}
-            </div>
-          )}
-
-          {/* Manager PIN */}
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>
-              Enter 4-Digit Manager PIN <span style={{ color: '#ef4444' }}>*</span>
-            </label>
-            <input
-              type="password"
-              maxLength={6}
-              autoFocus
-              value={pin}
-              onChange={(e) => setPin(e.target.value)}
-              placeholder="Enter PIN (e.g. 9999)"
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                fontSize: 18,
-                letterSpacing: 4,
-                textAlign: 'center',
-                fontWeight: 800,
-                borderRadius: 6,
-                border: '2px solid #cbd5e1',
-                boxSizing: 'border-box'
-              }}
-              required
-            />
-            <small style={{ color: '#64748b', fontSize: 11, display: 'block', marginTop: 3 }}>
-              Default Master PIN: <strong>9999</strong> (Logged in immutable audit logs)
-            </small>
-          </div>
-
-          {/* Mandatory Reason Dropdown */}
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>
-              Mandatory Audit Reason <span style={{ color: '#ef4444' }}>*</span>
-            </label>
-            <select
-              value={selectedReason}
-              onChange={(e) => setSelectedReason(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px 10px',
-                fontSize: 12.5,
-                borderRadius: 6,
-                border: '1px solid #cbd5e1',
-                background: '#ffffff',
-                boxSizing: 'border-box'
-              }}
-              required
-            >
-              {(isVoid ? VOID_REASONS : DISCOUNT_REASONS).map((r, idx) => (
-                <option key={idx} value={r}>
-                  {r}
-                </option>
-              ))}
-              <option value="Other / Special Executive Exception">Other / Special Executive Exception</option>
-            </select>
-          </div>
-
-          {/* Additional Notes */}
-          <div style={{ marginBottom: 18 }}>
-            <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
-              Additional Audit Notes / Guest Explanation (Optional)
-            </label>
-            <textarea
-              rows={2}
-              value={customNotes}
-              onChange={(e) => setCustomNotes(e.target.value)}
-              placeholder="Provide exact details for statutory auditor & owner review..."
-              style={{
-                width: '100%',
-                padding: '8px 10px',
-                fontSize: 12,
-                borderRadius: 6,
-                border: '1px solid #cbd5e1',
-                boxSizing: 'border-box'
-              }}
-            />
-          </div>
-
-          {/* Actions */}
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-            <button
-              type="button"
-              onClick={onClose}
-              style={{
-                padding: '8px 16px',
-                borderRadius: 6,
-                border: '1px solid #cbd5e1',
-                background: '#f1f5f9',
-                color: '#334155',
-                fontSize: 12.5,
-                fontWeight: 600,
-                cursor: 'pointer'
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isVerifying}
-              style={{
-                padding: '8px 20px',
-                borderRadius: 6,
-                border: 'none',
-                background: isVerifying ? '#94a3b8' : '#b91c1c',
-                color: '#ffffff',
-                fontSize: 12.5,
-                fontWeight: 700,
-                cursor: isVerifying ? 'wait' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6
-              }}
-            >
-              <span>{isVerifying ? '⏳ Verifying Database...' : '🔓 Authorize & Log'}</span>
-            </button>
-          </div>
-        </form>
       </div>
     </div>
   );

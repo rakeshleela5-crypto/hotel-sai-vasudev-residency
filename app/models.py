@@ -1003,6 +1003,8 @@ class HotelSetting(Base):
     logo_url = Column(Text, nullable=True)
     seal_url = Column(Text, nullable=True)
     signature_url = Column(Text, nullable=True)
+    manager_pin_hash = Column(String(255), nullable=True)
+    manager_pin_salt = Column(String(64), nullable=True)
     updated_at = Column(DateTime, default=now_utc, onupdate=now_utc)
 
 class RoomType(Base):

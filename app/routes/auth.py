@@ -21,6 +21,7 @@ from app.utils.auth import (
     rotate_refresh_token,
     revoke_user_refresh_tokens,
     get_current_user,
+    require_role,
     normalize_role,
     verify_password,
     get_password_hash,
@@ -29,12 +30,22 @@ from app.utils.auth import (
 from app.utils.rate_limit import limiter
 from app.utils.audit import record_audit_log
 from app.utils.sanitization import sanitize_text
+from app.utils.pin import (
+    hash_manager_pin,
+    verify_manager_pin,
+    is_valid_pin_format,
+    check_pin_lockout,
+    record_pin_failure,
+    reset_pin_failures,
+    create_manager_pin_token,
+    PIN_GRACE_SECONDS
+)
 
 router = APIRouter(prefix="/auth", tags=["Authentication & RBAC"])
 
 class LoginRequest(BaseModel):
     username: str
-    password: Optional[str] = "admin123"
+    password: str
     role: Optional[str] = None
 
 class RefreshRequest(BaseModel):
@@ -42,6 +53,13 @@ class RefreshRequest(BaseModel):
 
 class LogoutRequest(BaseModel):
     refresh_token: Optional[str] = None
+
+class SetManagerPinRequest(BaseModel):
+    pin: str
+
+class VerifyManagerPinRequest(BaseModel):
+    pin: str
+    action: Optional[str] = "SUPERVISOR_ACTION"
 
 @router.post("/login", summary="Staff Login & JWT Token Issuance (#47, #18)")
 @limiter.limit(settings.RATE_LIMIT_LOGIN)
@@ -183,4 +201,131 @@ def get_my_profile(current_user: Dict[str, Any] = Depends(get_current_user)):
     return {
         "authenticated": True,
         **current_user
+    }
+
+# =========================================================================
+# 5. MANAGER PIN GATE (Benchmarked from HeyPuter everything/src/pos/src/lib/pin.js)
+# =========================================================================
+
+@router.get("/manager-pin/status", summary="Check Manager PIN Status")
+def get_manager_pin_status(db: Session = Depends(get_db)):
+    """Returns whether a Manager/Supervisor PIN has been set for the property."""
+    setting = db.query(models.HotelSetting).filter(models.HotelSetting.key == "default").first()
+    is_configured = bool(setting and setting.manager_pin_hash and setting.manager_pin_salt)
+    return {
+        "status": "success",
+        "is_configured": is_configured,
+        "grace_period_seconds": PIN_GRACE_SECONDS
+    }
+
+@router.post("/manager-pin/set", summary="Set or Update Manager PIN")
+def set_manager_pin(
+    payload: SetManagerPinRequest,
+    current_user: Dict[str, Any] = Depends(require_role(["OWNER", "MANAGER"])),
+    db: Session = Depends(get_db)
+):
+    """
+    Sets or updates the 4-6 digit Manager PIN used for counter-height authorizations
+    (voids, high discounts, cash drawer resets, financial exports).
+    Requires OWNER or MANAGER JWT credentials.
+    """
+    clean_pin = payload.pin.strip()
+    if not is_valid_pin_format(clean_pin):
+        raise HTTPException(
+            status_code=400,
+            detail="Manager PIN must be between 4 and 6 numeric digits."
+        )
+
+    salt, pin_hash, iterations = hash_manager_pin(clean_pin)
+
+    setting = db.query(models.HotelSetting).filter(models.HotelSetting.key == "default").first()
+    if not setting:
+        setting = models.HotelSetting(key="default")
+        db.add(setting)
+
+    setting.manager_pin_hash = pin_hash
+    setting.manager_pin_salt = salt
+    db.commit()
+
+    record_audit_log(
+        db=db,
+        action="UPDATE_SETTING",
+        entity_type="SECURITY",
+        entity_id="MANAGER_PIN",
+        new_data={"action": "MANAGER_PIN_CONFIGURED", "updated_by": current_user.get("user_id")},
+        staff_id=current_user.get("user_id"),
+        role=current_user.get("role")
+    )
+
+    return {
+        "status": "success",
+        "message": "Manager PIN has been securely set with 600,000 PBKDF2 iterations."
+    }
+
+@router.post("/manager-pin/verify", summary="Verify Manager PIN & Issue Grace Token")
+def verify_manager_pin_endpoint(
+    request: Request,
+    payload: VerifyManagerPinRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Verifies a 4-6 digit Manager PIN with progressive rate-limiting and temporary lockout.
+    On success:
+      - Resets failed attempt counter
+      - Returns a signed 5-minute Manager PIN authorization token (X-Manager-PIN-Token)
+    """
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    
+    # 1. Check for active lockout
+    lockout_sec = check_pin_lockout(client_ip)
+    if lockout_sec:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many failed PIN attempts. Supervisor verification is temporarily locked. Try again in {lockout_sec} seconds."
+        )
+
+    clean_pin = payload.pin.strip() if payload.pin else ""
+    if not is_valid_pin_format(clean_pin):
+        failures, lock_dur = record_pin_failure(client_ip)
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid PIN format. Must be 4-6 digits. Attempt {failures}/3."
+        )
+
+    setting = db.query(models.HotelSetting).filter(models.HotelSetting.key == "default").first()
+    
+    is_valid = False
+    if setting and setting.manager_pin_hash and setting.manager_pin_salt:
+        is_valid = verify_manager_pin(clean_pin, setting.manager_pin_hash, setting.manager_pin_salt)
+    else:
+        # Default bootstrap PIN '1234' if not yet configured
+        default_salt, default_hash, _ = hash_manager_pin("1234", salt="default_svr_salt")
+        is_valid = verify_manager_pin(clean_pin, default_hash, default_salt)
+
+    if not is_valid:
+        failures, lock_dur = record_pin_failure(client_ip)
+        if lock_dur > 0:
+            raise HTTPException(
+                status_code=429,
+                detail=f"Invalid Manager PIN. 3 failed attempts exceeded. Supervisor gate locked for {lock_dur} seconds."
+            )
+        raise HTTPException(
+            status_code=401,
+            detail=f"Incorrect Manager PIN. Attempt {failures}/3. Please try again."
+        )
+
+    # Success: Reset failure count and issue 5-minute signed token
+    reset_pin_failures(client_ip)
+    pin_token = create_manager_pin_token(
+        user_id="supervisor",
+        action=payload.action or "SUPERVISOR_ACTION",
+        expires_seconds=PIN_GRACE_SECONDS
+    )
+
+    return {
+        "status": "success",
+        "verified": True,
+        "token": pin_token,
+        "expires_in": PIN_GRACE_SECONDS,
+        "message": "Supervisor PIN verified. 5-minute grace period active."
     }

@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 import json
 
 from app.database import get_db
+from app.utils.auth import require_role
 from app.models import (
     CheckoutRecord, 
     FoodBill, 
@@ -28,7 +29,7 @@ from app.models import (
     now_utc
 )
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_role(["OWNER", "MANAGER"]))])
 
 def get_hotel_meta(db: Session) -> Dict[str, Any]:
     """Retrieve or provide default hotel legal & tax credentials for Rayagada property."""
