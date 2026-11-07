@@ -597,6 +597,68 @@ class CheckoutRecord(Base):
     void_reason = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=now_utc)
 
+class CreditNote(Base):
+    """
+    Statutory GST Credit Note (Section 34 CGST Act, 2017).
+    Issued when a tax invoice has been issued and:
+    - 01-Sales Return (cancellation post billing, early checkout refund)
+    - 02-Post Sale Discount (promotional or negotiated discount applied after billing)
+    - 03-Deficiency in Services (guest complaint, amenity failure credit)
+    - 04-Correction in Invoice (billing overcharge, wrong tariff or room type)
+    - 07-Others
+    Mandatory reporting in GSTR-1 Table 9B (CDNR / CDNUR) and reversal of output tax liability.
+    """
+    __tablename__ = "credit_notes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    credit_note_no = Column(String(100), unique=True, index=True, nullable=False) # e.g. SVR/2026-27/CN-0001
+    credit_note_date = Column(String(50), nullable=False, index=True) # YYYY-MM-DD
+    financial_year = Column(String(20), default="2026-27", index=True)
+    
+    # Original Document Reference (Mandatory under Sec 34)
+    original_invoice_no = Column(String(100), index=True, nullable=False)
+    original_invoice_date = Column(String(50), nullable=False)
+    invoice_type = Column(String(50), default="ROOM_CHECKOUT") # ROOM_CHECKOUT, RESTAURANT_FOOD, BANQUET
+    checkout_record_id = Column(Integer, ForeignKey("checkout_records.id"), nullable=True, index=True)
+    food_bill_id = Column(Integer, ForeignKey("food_bills.id"), nullable=True, index=True)
+    booking_id = Column(Integer, ForeignKey("bookings.id"), nullable=True, index=True)
+
+    # Counterparty Details
+    guest_name = Column(String(150), nullable=False)
+    guest_phone = Column(String(50), nullable=True, index=True)
+    customer_gstin = Column(String(20), nullable=True, index=True)
+    pos_state_code = Column(String(10), default="37") # Andhra Pradesh
+    is_interstate = Column(Boolean, default=False)
+    sac_code = Column(String(20), default="996311") # 996311 for rooms, 996331 for restaurant
+
+    # Reason for Issuance (GSTN Statutory Reason Codes)
+    reason_code = Column(String(50), nullable=False, default="03-Deficiency in Services")
+    reason_description = Column(Text, nullable=True)
+
+    # Financial & Tax Values (Integer Paise & Rupee representation)
+    taxable_value_paise = Column(Integer, default=0, nullable=False)
+    taxable_value = Column(Float, default=0.0, nullable=False)
+    gst_rate = Column(Float, default=12.0, nullable=False) # 12% for rooms, 5% for food
+    cgst_amount_paise = Column(Integer, default=0, nullable=False)
+    cgst_amount = Column(Float, default=0.0, nullable=False)
+    sgst_amount_paise = Column(Integer, default=0, nullable=False)
+    sgst_amount = Column(Float, default=0.0, nullable=False)
+    igst_amount_paise = Column(Integer, default=0, nullable=False)
+    igst_amount = Column(Float, default=0.0, nullable=False)
+    total_credit_paise = Column(Integer, default=0, nullable=False)
+    total_credit_amount = Column(Float, default=0.0, nullable=False)
+
+    # Settlement / Refund Details
+    refund_payment_mode = Column(String(50), default="Cash") # Cash, UPI, Bank Transfer, Ledger Credit
+    refund_ref = Column(String(100), nullable=True)
+    status = Column(String(50), default="ISSUED", index=True) # ISSUED, CANCELLED
+
+    # Governance & Double-Entry Tracking
+    authorized_by = Column(String(100), default="Manager")
+    manager_pin_verified = Column(Boolean, default=True)
+    journal_entry_id = Column(String(50), nullable=True) # Reversal JV ID
+    created_at = Column(DateTime, default=now_utc)
+
 class AdvanceReceipt(Base):
     __tablename__ = "advance_receipts"
 

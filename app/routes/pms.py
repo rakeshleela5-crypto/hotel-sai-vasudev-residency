@@ -22,6 +22,8 @@ from app.utils.audit import record_audit_log, audit_tariff_change, audit_discoun
 from app.utils.encryption import encrypt_pii, decrypt_pii, mask_pii
 from app.utils.caching import get_cached_menu, set_cached_menu, invalidate_menu_cache, invalidate_rooms_cache
 from app.utils.sequence import get_next_document_number, peek_next_document_number, get_current_financial_year
+from app.utils.money import to_paise, from_paise, compute_gst_paise, allocate_paise, prorate_discount_paise, calculate_section170_roundoff
+from app.utils.pin import verify_manager_pin as verify_pin_pbkdf2, check_pin_lockout, record_pin_failure, reset_pin_failures, hash_manager_pin, require_manager_pin_or_role
 from app.core.cache import cache_response, invalidate_cache_prefix
 from app.websocket_manager import ws_manager
 
@@ -9758,6 +9760,290 @@ def get_pms_sync_state(db: Session = Depends(get_db)):
         "occupied_count": sum(1 for r in room_list if r["status"] == "occupied"),
         "vacant_count": sum(1 for r in room_list if r["status"] == "vacant")
     }
+
+# =========================================================================
+# STATUTORY GST CREDIT NOTES & INTEGER MATH ENGINE (CGST ACT SECTION 34)
+# =========================================================================
+
+@router.get("/credit-notes/next-number", summary="Preview Next Statutory Credit Note Number")
+def get_next_credit_note_number_preview(db: Session = Depends(get_db)):
+    """Previews the next sequential Credit Note number for the current Indian FY."""
+    fy = get_current_financial_year()
+    next_num = peek_next_document_number(db, doc_type="CREDIT_NOTE", prefix="SVR")
+    return {
+        "status": "success",
+        "docType": "CREDIT_NOTE",
+        "financialYear": fy,
+        "nextNumber": next_num,
+        "prefix": "SVR"
+    }
+
+@router.post("/credit-notes", response_model=schemas.CreditNoteResponse, status_code=201, summary="Issue Statutory GST Credit Note")
+def issue_credit_note_endpoint(
+    payload: schemas.CreditNoteCreate,
+    x_manager_pin_token: Optional[str] = Header(None, alias="X-Manager-PIN-Token"),
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
+):
+    """
+    Statutory GST Credit Note Issuance (Section 34 CGST Act, 2017).
+    - Requires supervisor PIN or MANAGER/OWNER role authorization.
+    - Validates referenced tax invoice (CheckoutRecord or FoodBill).
+    - Computes integer paise taxes (Largest Remainder Method) with zero penny drift.
+    - Allocates thread-safe atomic sequence (e.g. SVR/2026-27/CN-0001).
+    - Automatically posts balanced General Ledger double-entry reversal.
+    - Generates immutable audit trail.
+    """
+    # 1. Supervisor / Manager Authorization Gate
+    if payload.manager_pin:
+        clean_pin = str(payload.manager_pin).strip()
+        setting = db.query(models.HotelSetting).filter(models.HotelSetting.key == "default").first()
+        if setting and setting.manager_pin_hash and setting.manager_pin_salt:
+            is_valid = verify_pin_pbkdf2(clean_pin, setting.manager_pin_hash, setting.manager_pin_salt)
+        else:
+            default_salt, default_hash, _ = hash_manager_pin("1234", salt="default_svr_salt")
+            is_valid = verify_pin_pbkdf2(clean_pin, default_hash, default_salt)
+        
+        if not is_valid:
+            raise HTTPException(status_code=401, detail="Invalid Manager PIN for Credit Note issuance.")
+    else:
+        try:
+            require_manager_pin_or_role(x_manager_pin_token=x_manager_pin_token, authorization=authorization)
+        except HTTPException:
+            raise HTTPException(
+                status_code=403,
+                detail="Supervisor authorization required: Provide manager_pin, valid X-Manager-PIN-Token, or Bearer auth."
+            )
+
+    # 2. Resolve Original Invoice
+    orig_inv_no = payload.original_invoice_no.strip()
+    inv_type = payload.invoice_type or "ROOM_CHECKOUT"
+    orig_inv_date = payload.original_invoice_date
+    checkout_id = payload.checkout_record_id
+    food_bill_id = payload.food_bill_id
+    booking_id = payload.booking_id
+    guest_name = payload.guest_name
+    guest_phone = payload.guest_phone
+    customer_gstin = payload.customer_gstin
+    sac_code = payload.sac_code or "996311"
+    gst_rate = payload.gst_rate
+    is_interstate = bool(payload.is_interstate)
+
+    co = db.query(models.CheckoutRecord).filter(models.CheckoutRecord.invoice_no == orig_inv_no).first()
+    if co:
+        inv_type = "ROOM_CHECKOUT"
+        orig_inv_date = orig_inv_date or co.check_out_date
+        checkout_id = co.id
+        guest_name = guest_name or co.guest_name
+        guest_phone = guest_phone or co.guest_phone
+        customer_gstin = customer_gstin or getattr(co, 'gst_number', None) or co.customer_gstin
+        sac_code = payload.sac_code or co.sac_code or "996311"
+        gst_rate = payload.gst_rate or co.gst_percent or 12.0
+    else:
+        fb = db.query(models.FoodBill).filter(models.FoodBill.bill_no == orig_inv_no).first()
+        if fb:
+            inv_type = "RESTAURANT_FOOD"
+            orig_inv_date = orig_inv_date or fb.date
+            food_bill_id = fb.id
+            guest_name = guest_name or fb.guest_name or "Restaurant Guest"
+            sac_code = payload.sac_code or "996331"
+            gst_rate = payload.gst_rate or 5.0
+        elif not orig_inv_date:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Original invoice '{orig_inv_no}' not found in checkout records or food bills. Provide original_invoice_date to register external invoice credit."
+            )
+        else:
+            gst_rate = payload.gst_rate or 12.0
+
+    if not guest_name:
+        guest_name = "Hotel Guest"
+    if not orig_inv_date:
+        orig_inv_date = today_ist_str()
+
+    # 3. Integer Paise Tax & Monetary Calculations
+    taxable_paise = to_paise(payload.taxable_value)
+    if taxable_paise <= 0:
+        raise HTTPException(status_code=400, detail="Credit note taxable value must be greater than zero.")
+
+    gst_calc = compute_gst_paise(
+        taxable_paise=taxable_paise,
+        gst_rate_pct=gst_rate,
+        is_interstate=is_interstate,
+        is_inclusive=False
+    )
+
+    # 4. Atomic Document Sequence Generation (CGST Section 31/34)
+    fy = get_current_financial_year()
+    cn_number, _ = get_next_document_number(db, doc_type="CREDIT_NOTE", prefix="SVR")
+
+    # 5. General Ledger Double-Entry Reversal Posting
+    cn_date = today_ist_str()
+    tm = datetime.datetime.now(datetime.UTC).strftime("%I:%M %p")
+    refund_mode = payload.refund_payment_mode or "Cash"
+    refund_acc = "Cash in Hand" if "cash" in refund_mode.lower() else "Bank Current Account" if "bank" in refund_mode.lower() or "upi" in refund_mode.lower() else "Guest Ledger Account"
+
+    revenue_acc = "Restaurant Food Sales" if inv_type == "RESTAURANT_FOOD" else "Room Accommodation Revenue"
+    cgst_acc = f"Output CGST {gst_rate/2:.1f}%"
+    sgst_acc = f"Output SGST {gst_rate/2:.1f}%"
+    igst_acc = f"Output IGST {gst_rate:.1f}%"
+
+    base_jv_id = f"JV-CN-{cn_number.replace('/', '-')}"
+    narration = f"GST Credit Note {cn_number} reversal against invoice {orig_inv_no}: {payload.reason_code} - {payload.reason_description or 'Adjustment'}"
+
+    # Reversal Leg 1: Debit Revenue
+    db.add(models.JournalEntry(
+        entry_id=f"{base_jv_id}-1",
+        date=cn_date,
+        time=tm,
+        voucher_type="CreditNote",
+        reference_no=cn_number,
+        narration=f"{narration} (Revenue Reversal)",
+        debit_account=revenue_acc,
+        credit_account=refund_acc,
+        amount_paise=gst_calc["taxable_paise"],
+        amount_rupees=gst_calc["taxable_rupees"],
+        posted_by=payload.authorized_by or "Manager"
+    ))
+
+    # Reversal Leg 2 & 3: Debit Output Tax (reduces GST liability)
+    if is_interstate:
+        db.add(models.JournalEntry(
+            entry_id=f"{base_jv_id}-2",
+            date=cn_date,
+            time=tm,
+            voucher_type="CreditNote",
+            reference_no=cn_number,
+            narration=f"{narration} (IGST Reversal)",
+            debit_account=igst_acc,
+            credit_account=refund_acc,
+            amount_paise=gst_calc["igst_paise"],
+            amount_rupees=gst_calc["igst_rupees"],
+            posted_by=payload.authorized_by or "Manager"
+        ))
+    else:
+        if gst_calc["cgst_paise"] > 0:
+            db.add(models.JournalEntry(
+                entry_id=f"{base_jv_id}-2",
+                date=cn_date,
+                time=tm,
+                voucher_type="CreditNote",
+                reference_no=cn_number,
+                narration=f"{narration} (CGST Reversal)",
+                debit_account=cgst_acc,
+                credit_account=refund_acc,
+                amount_paise=gst_calc["cgst_paise"],
+                amount_rupees=gst_calc["cgst_rupees"],
+                posted_by=payload.authorized_by or "Manager"
+            ))
+        if gst_calc["sgst_paise"] > 0:
+            db.add(models.JournalEntry(
+                entry_id=f"{base_jv_id}-3",
+                date=cn_date,
+                time=tm,
+                voucher_type="CreditNote",
+                reference_no=cn_number,
+                narration=f"{narration} (SGST Reversal)",
+                debit_account=sgst_acc,
+                credit_account=refund_acc,
+                amount_paise=gst_calc["sgst_paise"],
+                amount_rupees=gst_calc["sgst_rupees"],
+                posted_by=payload.authorized_by or "Manager"
+            ))
+
+    # 6. Create Statutory Credit Note Record
+    credit_note = models.CreditNote(
+        credit_note_no=cn_number,
+        credit_note_date=cn_date,
+        financial_year=fy,
+        original_invoice_no=orig_inv_no,
+        original_invoice_date=orig_inv_date,
+        invoice_type=inv_type,
+        checkout_record_id=checkout_id,
+        food_bill_id=food_bill_id,
+        booking_id=booking_id,
+        guest_name=guest_name,
+        guest_phone=guest_phone,
+        customer_gstin=customer_gstin,
+        pos_state_code=payload.pos_state_code or "37",
+        is_interstate=is_interstate,
+        sac_code=sac_code,
+        reason_code=payload.reason_code,
+        reason_description=payload.reason_description,
+        taxable_value_paise=gst_calc["taxable_paise"],
+        taxable_value=gst_calc["taxable_rupees"],
+        gst_rate=gst_rate,
+        cgst_amount_paise=gst_calc["cgst_paise"],
+        cgst_amount=gst_calc["cgst_rupees"],
+        sgst_amount_paise=gst_calc["sgst_paise"],
+        sgst_amount=gst_calc["sgst_rupees"],
+        igst_amount_paise=gst_calc["igst_paise"],
+        igst_amount=gst_calc["igst_rupees"],
+        total_credit_paise=gst_calc["total_paise"],
+        total_credit_amount=gst_calc["total_rupees"],
+        refund_payment_mode=refund_mode,
+        refund_ref=payload.refund_ref,
+        status="ISSUED",
+        authorized_by=payload.authorized_by or "Manager",
+        manager_pin_verified=True,
+        journal_entry_id=base_jv_id
+    )
+    db.add(credit_note)
+    db.commit()
+    db.refresh(credit_note)
+
+    # 7. Audit Log
+    record_audit_log(
+        db=db,
+        action="CREDIT_NOTE_ISSUED",
+        entity_type="CREDIT_NOTE",
+        entity_id=credit_note.credit_note_no,
+        new_data={
+            "original_invoice_no": orig_inv_no,
+            "total_credit_amount": credit_note.total_credit_amount,
+            "taxable_value": credit_note.taxable_value,
+            "gst_rate": credit_note.gst_rate,
+            "reason_code": credit_note.reason_code,
+            "refund_mode": credit_note.refund_payment_mode,
+            "journal_entry_id": base_jv_id
+        },
+        staff_id=payload.authorized_by or "Manager",
+        role="MANAGER"
+    )
+
+    return credit_note
+
+@router.get("/credit-notes", response_model=List[schemas.CreditNoteResponse], summary="List Statutory GST Credit Notes")
+def list_credit_notes_endpoint(
+    original_invoice_no: Optional[str] = Query(None),
+    from_date: Optional[str] = Query(None),
+    to_date: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    """Retrieves credit notes with optional filtering by invoice, dates, or status."""
+    query = db.query(models.CreditNote)
+    if original_invoice_no:
+        query = query.filter(models.CreditNote.original_invoice_no == original_invoice_no.strip())
+    if from_date:
+        query = query.filter(models.CreditNote.credit_note_date >= from_date)
+    if to_date:
+        query = query.filter(models.CreditNote.credit_note_date <= to_date)
+    if status:
+        query = query.filter(models.CreditNote.status == status)
+
+    return query.order_by(models.CreditNote.id.desc()).offset(offset).limit(limit).all()
+
+@router.get("/credit-notes/{credit_note_no:path}", response_model=schemas.CreditNoteResponse, summary="Get Credit Note Details")
+def get_credit_note_detail_endpoint(credit_note_no: str, db: Session = Depends(get_db)):
+    """Fetches single credit note by its unique document sequence number."""
+    cn = db.query(models.CreditNote).filter(models.CreditNote.credit_note_no == credit_note_no).first()
+    if not cn:
+        raise HTTPException(status_code=404, detail=f"Credit note '{credit_note_no}' not found.")
+    return cn
+
 
 
 

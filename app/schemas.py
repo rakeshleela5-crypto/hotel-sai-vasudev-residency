@@ -1965,6 +1965,69 @@ class LiquorStockResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class CreditNoteCreate(BaseModel):
+    original_invoice_no: str
+    original_invoice_date: Optional[str] = None
+    invoice_type: Optional[str] = "ROOM_CHECKOUT"
+    checkout_record_id: Optional[int] = None
+    food_bill_id: Optional[int] = None
+    booking_id: Optional[int] = None
+    
+    guest_name: Optional[str] = None
+    guest_phone: Optional[str] = None
+    customer_gstin: Optional[str] = None
+    pos_state_code: Optional[str] = "37"
+    is_interstate: Optional[bool] = False
+    sac_code: Optional[str] = "996311"
+
+    reason_code: str = "03-Deficiency in Services"
+    reason_description: Optional[str] = None
+
+    taxable_value: float
+    gst_rate: Optional[float] = None
+    
+    refund_payment_mode: Optional[str] = "Cash"
+    refund_ref: Optional[str] = None
+    authorized_by: Optional[str] = "Manager"
+    manager_pin: Optional[str] = None
+
+class CreditNoteResponse(BaseModel):
+    id: int
+    credit_note_no: str
+    credit_note_date: str
+    financial_year: str
+    original_invoice_no: str
+    original_invoice_date: str
+    invoice_type: str
+    guest_name: str
+    guest_phone: Optional[str] = None
+    customer_gstin: Optional[str] = None
+    pos_state_code: str
+    is_interstate: bool
+    sac_code: str
+    reason_code: str
+    reason_description: Optional[str] = None
+    taxable_value_paise: int
+    taxable_value: float
+    gst_rate: float
+    cgst_amount_paise: int
+    cgst_amount: float
+    sgst_amount_paise: int
+    sgst_amount: float
+    igst_amount_paise: int
+    igst_amount: float
+    total_credit_paise: int
+    total_credit_amount: float
+    refund_payment_mode: str
+    refund_ref: Optional[str] = None
+    status: str
+    authorized_by: str
+    manager_pin_verified: bool
+    journal_entry_id: Optional[str] = None
+    created_at: Optional[datetime.datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
 
 
 

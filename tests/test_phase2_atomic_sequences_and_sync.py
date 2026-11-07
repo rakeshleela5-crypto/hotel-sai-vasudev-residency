@@ -214,3 +214,4 @@ def test_central_state_hydration_endpoint():
     assert "open_kots" in data
     assert "total_rooms" in data
     assert isinstance(data["rooms"], list)
+

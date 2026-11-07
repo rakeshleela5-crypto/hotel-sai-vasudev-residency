@@ -26,6 +26,7 @@ from app.models import (
     StaffMonthlyPayroll, 
     HotelCompanyInfo,
     PettyExpense,
+    CreditNote,
     now_utc
 )
 
@@ -127,10 +128,17 @@ def get_ca_monthly_export(
         StaffMonthlyPayroll.payroll_period == period_str
     ).order_by(StaffMonthlyPayroll.staff_id.asc()).all()
 
+    # 5. Fetch Statutory GST Credit Notes (Section 34 CGST Act)
+    credit_notes = db.query(CreditNote).filter(
+        CreditNote.credit_note_date.like(f"{period_str}%"),
+        CreditNote.status == "ISSUED"
+    ).order_by(CreditNote.credit_note_date.asc(), CreditNote.credit_note_no.asc()).all()
+
     # Data structures for compilation
     b2b_invoices: List[Dict[str, Any]] = []
     b2c_invoices: List[Dict[str, Any]] = []
     restaurant_bills: List[Dict[str, Any]] = []
+    credit_notes_list: List[Dict[str, Any]] = []
     expenditure_records: List[Dict[str, Any]] = []
     payroll_summary_list: List[Dict[str, Any]] = []
 
@@ -145,6 +153,12 @@ def get_ca_monthly_export(
     total_food_cgst = 0.0
     total_food_sgst = 0.0
     total_food_gross = 0.0
+
+    total_cn_taxable = 0.0
+    total_cn_cgst = 0.0
+    total_cn_sgst = 0.0
+    total_cn_igst = 0.0
+    total_cn_val = 0.0
 
     payment_modes_tally: Dict[str, float] = {
         "Cash": 0.0,
@@ -305,6 +319,48 @@ def get_ca_monthly_export(
             "payment_reference": pr.payment_reference
         })
 
+    # Process Statutory Credit Notes
+    for cn in credit_notes:
+        tx = float(cn.taxable_value or 0.0)
+        c = float(cn.cgst_amount or 0.0)
+        s = float(cn.sgst_amount or 0.0)
+        i = float(cn.igst_amount or 0.0)
+        tot = float(cn.total_credit_amount or 0.0)
+
+        total_cn_taxable += tx
+        total_cn_cgst += c
+        total_cn_sgst += s
+        total_cn_igst += i
+        total_cn_val += tot
+
+        credit_notes_list.append({
+            "credit_note_no": cn.credit_note_no,
+            "credit_note_date": cn.credit_note_date,
+            "financial_year": cn.financial_year,
+            "original_invoice_no": cn.original_invoice_no,
+            "original_invoice_date": cn.original_invoice_date,
+            "invoice_type": cn.invoice_type,
+            "guest_name": cn.guest_name,
+            "guest_phone": cn.guest_phone,
+            "customer_gstin": cn.customer_gstin,
+            "pos_state_code": cn.pos_state_code,
+            "is_interstate": bool(cn.is_interstate),
+            "sac_code": cn.sac_code,
+            "reason_code": cn.reason_code,
+            "reason_description": cn.reason_description,
+            "taxable_value": tx,
+            "gst_rate": float(cn.gst_rate or 0.0),
+            "cgst_amount": c,
+            "sgst_amount": s,
+            "igst_amount": i,
+            "total_credit_amount": tot,
+            "refund_payment_mode": cn.refund_payment_mode,
+            "refund_ref": cn.refund_ref,
+            "status": cn.status,
+            "authorized_by": cn.authorized_by,
+            "journal_entry_id": cn.journal_entry_id
+        })
+
     # Grand Totals
     grand_taxable = total_room_taxable + total_food_taxable
     grand_cgst = total_room_cgst + total_food_cgst
@@ -368,12 +424,21 @@ def get_ca_monthly_export(
             "restaurant_bills_count": len(food_bills),
             "b2b_invoices_count": len(b2b_invoices),
             "b2c_invoices_count": len(b2c_invoices),
+            "credit_notes_count": len(credit_notes),
+            "total_credit_notes_taxable": round(total_cn_taxable, 2),
+            "total_credit_notes_cgst": round(total_cn_cgst, 2),
+            "total_credit_notes_sgst": round(total_cn_sgst, 2),
+            "total_credit_notes_igst": round(total_cn_igst, 2),
+            "total_credit_notes_value": round(total_cn_val, 2),
             "total_taxable_value": round(grand_taxable, 2),
+            "net_taxable_turnover": round(grand_taxable - total_cn_taxable, 2),
             "total_cgst": round(grand_cgst, 2),
             "total_sgst": round(grand_sgst, 2),
             "total_igst": round(grand_igst, 2),
             "total_tax": round(grand_total_tax, 2),
+            "net_tax_liability": round(grand_total_tax - (total_cn_cgst + total_cn_sgst + total_cn_igst), 2),
             "total_invoice_value": round(grand_invoice_val, 2),
+            "net_turnover_value": round(grand_invoice_val - total_cn_val, 2),
             "total_operating_expenditures": round(total_expenditure_val, 2),
             "total_staff_payroll": round(total_payroll_net_payout, 2),
             "net_monthly_operating_profit": round(net_operating_profit, 2)
@@ -385,6 +450,7 @@ def get_ca_monthly_export(
         "b2b_invoices": b2b_invoices,
         "b2c_invoices": b2c_invoices,
         "restaurant_food_bills": restaurant_bills,
+        "credit_notes": credit_notes_list,
         "daily_expenditures": expenditure_records,
         "staff_payroll": payroll_summary_list
     }
@@ -585,7 +651,55 @@ def get_gstr1_json_return(
             "csamt": 0.0
         })
 
-    # 4. Document Issue Summary (Table 13)
+    # 4. Table 9B: Statutory Credit / Debit Notes (CDNR & CDNUR)
+    cdnr_by_ctin: Dict[str, Any] = {}
+    cdnur_list: List[Dict[str, Any]] = []
+
+    credit_notes_raw = ca_data.get("credit_notes", [])
+    for cn in credit_notes_raw:
+        cust_gst = (cn.get("customer_gstin") or "").strip()
+        is_reg = len(cust_gst) >= 15
+        nt_item = {
+            "ntty": "C",
+            "nt_num": cn["credit_note_no"],
+            "nt_dt": cn["credit_note_date"],
+            "p_gst": "N",
+            "inum": cn["original_invoice_no"],
+            "idt": cn["original_invoice_date"],
+            "val": round(cn["total_credit_amount"], 2),
+            "pos": cn.get("pos_state_code") or hotel["state_code"],
+            "rchrg": "N",
+            "itms": [
+                {
+                    "num": 1,
+                    "itm_det": {
+                        "rt": cn["gst_rate"],
+                        "txval": round(cn["taxable_value"], 2),
+                        "iamt": round(cn.get("igst_amount", 0.0), 2),
+                        "camt": round(cn["cgst_amount"], 2),
+                        "samt": round(cn["sgst_amount"], 2),
+                        "csamt": 0.0
+                    }
+                }
+            ]
+        }
+        if is_reg:
+            if cust_gst not in cdnr_by_ctin:
+                cdnr_by_ctin[cust_gst] = {
+                    "ctin": cust_gst,
+                    "cpty": "REGULAR",
+                    "nt": []
+                }
+            cdnr_by_ctin[cust_gst]["nt"].append(nt_item)
+        else:
+            cdnur_list.append({
+                "typ": "B2CS",
+                **nt_item
+            })
+
+    cdnr_list = list(cdnr_by_ctin.values())
+
+    # 5. Document Issue Summary (Table 13)
     doc_det = []
     tot_invoices = len(ca_data["b2b_invoices"]) + len(ca_data["b2c_invoices"])
     if tot_invoices > 0:
@@ -600,6 +714,20 @@ def get_gstr1_json_return(
             "net_issue": tot_invoices
         })
 
+    if credit_notes_raw:
+        all_cn_nos = sorted([c["credit_note_no"] for c in credit_notes_raw])
+        doc_det.append({
+            "doc_num": 2,
+            "doc_typ": "Credit Note",
+            "from": all_cn_nos[0],
+            "to": all_cn_nos[-1],
+            "totnum": len(credit_notes_raw),
+            "canc": 0,
+            "net_issue": len(credit_notes_raw)
+        })
+
+    tot_cn_val = sum(c["total_credit_amount"] for c in credit_notes_raw)
+
     return {
         "status": "success",
         "gstin": gstin,
@@ -607,8 +735,11 @@ def get_gstr1_json_return(
         "version": "GST_OFFLINE_TOOL_V1.1",
         "hash": f"SHA256-{abs(hash(f'{gstin}_{fp}')) & 0xffffffff:08x}",
         "gross_turnover": round(all_room_val + all_food_val, 2),
+        "net_turnover": round((all_room_val + all_food_val) - tot_cn_val, 2),
         "b2b": b2b_list,
         "b2cs": b2cs_list,
+        "cdnr": cdnr_list,
+        "cdnur": cdnur_list,
         "hsn": {"data": hsn_data},
         "doc_issue": {"doc_det": doc_det}
     }
@@ -635,6 +766,15 @@ def get_gstr3b_json_return(
     sgst = summary["total_sgst"]
     igst = summary["total_igst"]
     tot_tax = summary["total_tax"]
+
+    net_txval = summary.get("net_taxable_turnover", txval)
+    cn_cgst = summary.get("total_credit_notes_cgst", 0.0)
+    cn_sgst = summary.get("total_credit_notes_sgst", 0.0)
+    cn_igst = summary.get("total_credit_notes_igst", 0.0)
+    net_cgst = round(cgst - cn_cgst, 2)
+    net_sgst = round(sgst - cn_sgst, 2)
+    net_igst = round(igst - cn_igst, 2)
+    net_tax = round(tot_tax - (cn_cgst + cn_sgst + cn_igst), 2)
 
     return {
         "status": "success",
@@ -670,9 +810,24 @@ def get_gstr3b_json_return(
             "integrated_tax_igst": igst,
             "total_cash_liability": tot_tax
         },
+        "net_statutory_liability_after_credit_notes": {
+            "net_taxable_value": net_txval,
+            "net_cgst": net_cgst,
+            "net_sgst": net_sgst,
+            "net_igst": net_igst,
+            "net_total_cash_liability": net_tax
+        },
         "section_170_rounding_compliance": {
             "rounded_cgst": round(cgst),
             "rounded_sgst": round(sgst),
-            "rounded_total_tax": round(tot_tax)
+            "rounded_total_tax": round(tot_tax),
+            "net_rounded_cgst": round(net_cgst),
+            "net_rounded_sgst": round(net_sgst),
+            "net_rounded_total_tax": round(net_tax)
+        },
+        "credit_notes_offset": {
+            "credit_notes_count": summary.get("credit_notes_count", 0),
+            "total_credit_notes_taxable": summary.get("total_credit_notes_taxable", 0.0),
+            "total_credit_notes_tax": round(cn_cgst + cn_sgst + cn_igst, 2)
         }
     }
