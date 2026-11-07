@@ -926,6 +926,12 @@ class AdvanceReceiptCreate(BaseModel):
     is_settled_in_checkout: Optional[bool] = False
     remark: Optional[str] = None
 
+class JournalLeg(BaseModel):
+    account_name: str
+    entry_type: str = "Dr"  # Dr or Cr
+    amount: float = Field(..., gt=0)
+    narration: Optional[str] = None
+
 class JournalEntryCreate(BaseModel):
     entry_id: Optional[str] = None
     entryId: Optional[str] = None
@@ -946,6 +952,17 @@ class JournalEntryCreate(BaseModel):
     amountRupees: Optional[float] = None
     posted_by: Optional[str] = "Front Desk Mgr"
     postedBy: Optional[str] = None
+    legs: Optional[List[JournalLeg]] = None
+    entries: Optional[List[JournalLeg]] = None
+
+class PartySettlementRequest(BaseModel):
+    amount: float = Field(..., gt=0)
+    payment_mode: str = "Cash"  # Cash, UPI, Card, Bank Transfer, Cheque
+    reference_no: Optional[str] = None
+    discount_allowed: Optional[float] = 0.0
+    narration: Optional[str] = None
+    manager_pin: Optional[str] = None
+    staff_name: Optional[str] = "Accounts Officer"
 
 class PartyAccountCreate(BaseModel):
     id: Optional[str] = None
@@ -1047,6 +1064,16 @@ class StockTransferCreate(BaseModel):
     total_net_value: Optional[float] = 0.0
     totalNetValue: Optional[float] = None
     remark: Optional[str] = None
+    status: Optional[str] = "ISSUED"  # ISSUED, PENDING, REJECTED
+    allow_negative_override: Optional[bool] = False
+    override_reason: Optional[str] = None
+    manager_pin: Optional[str] = None
+
+class RequisitionActionRequest(BaseModel):
+    entry_no: str
+    action: str  # ISSUE, REJECT
+    reason: Optional[str] = None
+    manager_pin: Optional[str] = None
 
 class UserAccountCreate(BaseModel):
     id: Optional[int] = None
@@ -1758,6 +1785,7 @@ class RoomFolioItemCreate(BaseModel):
 
 class ResolveDiscrepancyRequest(BaseModel):
     notes: Optional[str] = "Inspection confirmed resolved by Duty Manager"
+    resolution_notes: Optional[str] = None
     resolved_by: Optional[str] = "Duty Manager"
     resolvedBy: Optional[str] = None
 
@@ -1785,6 +1813,18 @@ class MasterItemCreate(BaseModel):
     isActive: Optional[bool] = None
 
 # --- Cloudflare R2 Upload & KYC Document Schemas ---
+class BookingSignatureUpload(BaseModel):
+    signature_data_url: str = Field(..., description="Base64 Data URL (e.g. data:image/png;base64,...)")
+    signed_by: Optional[str] = "Guest"
+
+class BookingSignatureResponse(BaseModel):
+    success: bool
+    booking_id: int
+    has_signature: bool
+    guest_signature_url: Optional[str] = None
+    signed_by: Optional[str] = "Guest"
+    message: str = "Digital signature captured successfully"
+
 class BookingKycUploadResponse(BaseModel):
     status: str = "success"
     booking_id: int
@@ -1832,10 +1872,11 @@ class TableSessionCreate(BaseModel):
 class HousekeepingDiscrepancyCreate(BaseModel):
     discrepancy_id: Optional[str] = None
     room_no: str
-    front_desk_status: str
+    front_desk_status: Optional[str] = None
     housekeeping_status: str
     reported_by: Optional[str] = "System"
     remarks: Optional[str] = None
+    notes: Optional[str] = None
 
 class RfidKeyCardCreate(BaseModel):
     card_number: str

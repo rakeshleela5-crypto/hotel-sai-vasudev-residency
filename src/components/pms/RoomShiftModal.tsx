@@ -29,6 +29,7 @@ export const RoomShiftModal: React.FC<RoomShiftModalProps> = ({
   const [searchHistory, setSearchHistory] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [successMsg, setSuccessMsg] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -84,7 +85,7 @@ export const RoomShiftModal: React.FC<RoomShiftModalProps> = ({
     return customTariff || 0;
   };
 
-  const handleShiftSubmit = (e: React.FormEvent) => {
+  const handleShiftSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
@@ -105,25 +106,32 @@ export const RoomShiftModal: React.FC<RoomShiftModalProps> = ({
     const finalReason = reason === 'Other' ? (customReason.trim() || 'Other') : reason;
     const finalTariff = getEffectiveTariff();
 
-    const res = PmsStore.shiftRoom({
-      fromRoomNo,
-      toRoomNo,
-      newTariff: finalTariff,
-      reason: finalReason,
-      transferKots,
-      shiftedBy: 'Reception Desk (Admin)'
-    });
+    setIsSubmitting(true);
+    try {
+      const res = await PmsStore.shiftRoomAsync({
+        fromRoomNo,
+        toRoomNo,
+        newTariff: finalTariff,
+        reason: finalReason,
+        transferKots,
+        shiftedBy: 'Reception Desk (Admin)'
+      });
 
-    if (res.success && res.record) {
-      setSuccessMsg(res.message);
-      setShiftHistory(PmsStore.getRoomShifts());
-      setRooms(PmsStore.getRooms());
-      onShiftCompleted(res.record);
-      setTimeout(() => {
-        onClose();
-      }, 1400);
-    } else {
-      setErrorMsg(res.message || 'Failed to shift room.');
+      if (res.success && res.record) {
+        setSuccessMsg(res.message);
+        setShiftHistory(PmsStore.getRoomShifts());
+        setRooms(PmsStore.getRooms());
+        onShiftCompleted(res.record);
+        setTimeout(() => {
+          onClose();
+        }, 1400);
+      } else {
+        setErrorMsg(res.message || 'Failed to shift room.');
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'An unexpected error occurred during room shift.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -456,16 +464,17 @@ export const RoomShiftModal: React.FC<RoomShiftModalProps> = ({
               <button
                 type="submit"
                 className="btn-pms-save"
-                disabled={!fromRoomNo || !toRoomNo}
+                disabled={!fromRoomNo || !toRoomNo || isSubmitting}
                 style={{
                   padding: '8px 24px',
                   background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
                   fontWeight: 800,
                   fontSize: 13,
-                  cursor: (!fromRoomNo || !toRoomNo) ? 'not-allowed' : 'pointer'
+                  cursor: (!fromRoomNo || !toRoomNo || isSubmitting) ? 'not-allowed' : 'pointer',
+                  opacity: isSubmitting ? 0.7 : 1
                 }}
               >
-                Confirm Room Shift 🔄
+                {isSubmitting ? 'Shifting Room & Syncing Cloud... ⏳' : 'Confirm Room Shift 🔄'}
               </button>
             </div>
           </form>

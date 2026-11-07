@@ -10,7 +10,7 @@ os.environ.setdefault("DATABASE_URL", "sqlite:///./test_sai_vasudev.db")
 if "hotel_sai_vasudev.db" in os.environ.get("DATABASE_URL", ""):
     os.environ["DATABASE_URL"] = "sqlite:///./test_sai_vasudev.db"
 
-from app.database import engine, Base
+from app.database import engine, Base, SessionLocal
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_db():
@@ -23,3 +23,9 @@ def setup_test_db():
             pass  # Leave for inspection or remove if desired
     except Exception:
         pass
+
+@pytest.fixture
+def db():
+    session = SessionLocal()
+    yield session
+    session.close()

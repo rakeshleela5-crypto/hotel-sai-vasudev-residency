@@ -91,6 +91,57 @@ def mask_pii(val: Optional[str], visible_last: int = 4) -> Optional[str]:
     masked_part = "X" * (len(plain) - visible_last)
     return f"{masked_part}{plain[-visible_last:]}"
 
+# Official UIDAI Verhoeff Algorithm Tables for Indian Aadhaar Checksum Validation
+_VERHOEFF_D = [
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    [1, 2, 3, 4, 0, 6, 7, 8, 9, 5],
+    [2, 3, 4, 0, 1, 7, 8, 9, 5, 6],
+    [3, 4, 0, 1, 2, 8, 9, 5, 6, 7],
+    [4, 0, 1, 2, 3, 9, 5, 6, 7, 8],
+    [5, 9, 8, 7, 6, 0, 4, 3, 2, 1],
+    [6, 5, 9, 8, 7, 1, 0, 4, 3, 2],
+    [7, 6, 5, 9, 8, 2, 1, 0, 4, 3],
+    [8, 7, 6, 5, 9, 3, 2, 1, 0, 4],
+    [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+]
+
+_VERHOEFF_P = [
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    [1, 5, 7, 6, 2, 8, 3, 0, 9, 4],
+    [5, 8, 0, 3, 7, 9, 6, 1, 4, 2],
+    [8, 9, 1, 6, 0, 4, 3, 5, 2, 7],
+    [9, 4, 5, 3, 1, 2, 6, 8, 7, 0],
+    [4, 2, 8, 6, 5, 7, 3, 9, 0, 1],
+    [2, 7, 9, 3, 8, 0, 6, 4, 1, 5],
+    [7, 0, 4, 6, 9, 1, 3, 2, 5, 8]
+]
+
+def validate_verhoeff(num_str: str) -> bool:
+    """Validates 12-digit Indian Aadhaar number using official UIDAI Verhoeff checksum."""
+    if not num_str:
+        return False
+    digits = "".join(ch for ch in num_str if ch.isdigit())
+    if len(digits) != 12:
+        return False
+    c = 0
+    for i, item in enumerate(reversed(digits)):
+        c = _VERHOEFF_D[c][_VERHOEFF_P[i % 8][int(item)]]
+    return c == 0
+
+def mask_aadhaar(raw_val: Optional[str]) -> str:
+    """
+    Masks Indian Aadhaar number strictly adhering to UIDAI guidelines:
+    Input: '123456789012' or '1234 5678 9012' or '1234-5678-9012' -> Output: 'XXXX-XXXX-9012'
+    If already masked e.g. 'XXXXXXXX9012' -> Output: 'XXXX-XXXX-9012'
+    """
+    if not raw_val:
+        return ""
+    decrypted = decrypt_pii(raw_val)
+    digits = "".join(ch for ch in decrypted if ch.isdigit())
+    if len(digits) >= 4:
+        return f"XXXX-XXXX-{digits[-4:]}"
+    return "XXXX-XXXX-XXXX"
+
 class EncryptedString(TypeDecorator):
     """
     SQLAlchemy TypeDecorator that transparently encrypts strings on write

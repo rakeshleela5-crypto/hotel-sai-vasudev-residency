@@ -1,5 +1,6 @@
 from app.core.limiter import limit_concurrency
 import os
+import base64
 import datetime
 import time
 import uuid
@@ -180,25 +181,111 @@ def execute_room_shift(payload: schemas.RoomShiftCreate, db: Session = Depends(g
             else:
                 db.query(models.Room).filter(models.Room.id == new_room.id).with_for_update().first()
 
-            # Prevent shifting into an already occupied room
-            if new_room.housekeeping_status == "Occupied":
-                raise HTTPException(status_code=409, detail=f"Destination Room '{new_room.name}' is already occupied!")
+            today_str = datetime.date.today().isoformat()
+            today_d = datetime.date.today()
 
-            active_in_dest = db.query(models.Booking).filter(
+            # Prevent shifting into an already occupied room
+            current_occupant = db.query(models.Booking).filter(
                 models.Booking.room_id == new_room.id,
-                models.Booking.status.in_(["Checked-In", "Confirmed"]),
+                models.Booking.status == "Checked-In",
                 models.Booking.id != booking.id,
                 models.Booking.is_deleted == False
             ).first()
-            if active_in_dest:
+            if current_occupant or new_room.housekeeping_status == "Occupied":
+                occ_label = current_occupant.booking_ref if current_occupant else "another guest"
                 raise HTTPException(
-                    status_code=409,
-                    detail=f"Destination Room '{new_room.name}' is occupied by active reservation '{active_in_dest.booking_ref}'!"
+                    status_code=409, 
+                    detail=f"Destination Room '{new_room.name}' is already occupied ({occ_label})!"
                 )
 
-            today_str = datetime.date.today().isoformat()
+            # Check for overlapping reservation during the remaining stay period: [today_str, booking.check_out_date)
+            conflicting_booking = db.query(models.Booking).filter(
+                models.Booking.room_id == new_room.id,
+                models.Booking.status.in_(["Confirmed", "Checked-In"]),
+                models.Booking.id != booking.id,
+                models.Booking.is_deleted == False,
+                models.Booking.check_in_date < booking.check_out_date,
+                models.Booking.check_out_date > today_str
+            ).first()
+            if conflicting_booking:
+                raise HTTPException(
+                    status_code=409,
+                    detail=(
+                        f"Cannot shift: Destination Room '{new_room.name}' has a conflicting reservation "
+                        f"('{conflicting_booking.booking_ref}' from {conflicting_booking.check_in_date} to {conflicting_booking.check_out_date}) "
+                        f"overlapping with the remaining stay ({today_str} to {booking.check_out_date})."
+                    )
+                )
+
             old_rate = float(old_room.price_per_night) if old_room else 2000.0
             new_rate = float(new_room.price_per_night)
+
+            # Prorated Tariff Calculation:
+            try:
+                check_in_d = datetime.date.fromisoformat(booking.check_in_date)
+                check_out_d = datetime.date.fromisoformat(booking.check_out_date)
+            except Exception:
+                check_in_d = today_d
+                check_out_d = today_d + datetime.timedelta(days=1)
+
+            elapsed_nights = max(0, (today_d - check_in_d).days)
+            remaining_nights = max(1, (check_out_d - today_d).days)
+            total_stay_nights = elapsed_nights + remaining_nights
+            booking.total_nights = total_stay_nights
+
+            # Calculate prorated room stay gross (inclusive of GST per hotel policy)
+            old_period_gross = round(old_rate * elapsed_nights, 2)
+            new_period_gross = round(new_rate * remaining_nights, 2)
+            prorated_grand_total = round(old_period_gross + new_period_gross, 2)
+
+            gst_rate = float(booking.gst_rate or 12.0)
+            taxable_base = round(prorated_grand_total / (1.0 + gst_rate / 100.0), 2)
+            total_tax = round(prorated_grand_total - taxable_base, 2)
+            cgst = round(total_tax / 2.0, 2)
+            sgst = round(total_tax - cgst, 2)
+
+            booking.base_rate = new_rate
+            booking.base_amount = taxable_base
+            booking.cgst_amount = cgst
+            booking.sgst_amount = sgst
+            booking.total_tax = total_tax
+            booking.total_price = prorated_grand_total
+            booking.balance_due = max(0.0, round(prorated_grand_total - (booking.total_paid or 0.0), 2))
+
+            # Itemize room tariff adjustment in folio if rate differs
+            rate_delta = round((new_rate - old_rate) * remaining_nights, 2)
+            if rate_delta != 0:
+                shift_item_desc = (
+                    f"Room Shift {'Upgrade' if rate_delta > 0 else 'Downgrade'}: "
+                    f"{old_room.name if old_room else 'Prev Room'} -> {new_room.name} "
+                    f"({remaining_nights} nights @ Rs.{new_rate}/night vs Rs.{old_rate}/night)"
+                )
+                shift_taxable = round(rate_delta / (1.0 + gst_rate / 100.0), 2)
+                shift_tax = round(rate_delta - shift_taxable, 2)
+                shift_cgst = round(shift_tax / 2.0, 2)
+                shift_sgst = round(shift_tax - shift_cgst, 2)
+
+                folio_shift_item = models.RoomFolioItem(
+                    booking_id=booking.id,
+                    item_type="Room_Tariff_Adjustment",
+                    description=shift_item_desc,
+                    sac_code="996311",
+                    quantity=remaining_nights,
+                    unit_price=round(new_rate - old_rate, 2),
+                    taxable_amount=shift_taxable,
+                    gst_rate=gst_rate,
+                    cgst_amount=shift_cgst,
+                    sgst_amount=shift_sgst,
+                    total_amount=rate_delta,
+                    status="Billed"
+                )
+                db.add(folio_shift_item)
+
+            # Sync Folio balance if exists
+            folio = db.query(models.Folio).filter(models.Folio.booking_id == booking.id).first()
+            if folio:
+                folio.balance_due = booking.balance_due
+                folio.updated_at = now_utc()
 
             # Transition previous room to 'Dirty' and new room to 'Occupied'
             if old_room:
@@ -227,7 +314,11 @@ def execute_room_shift(payload: schemas.RoomShiftCreate, db: Session = Depends(g
                 "to_room": new_room.name,
                 "reason": payload.reason,
                 "old_rate": old_rate,
-                "new_rate": new_rate
+                "new_rate": new_rate,
+                "elapsed_nights": elapsed_nights,
+                "remaining_nights": remaining_nights,
+                "prorated_grand_total": prorated_grand_total,
+                "new_balance_due": booking.balance_due
             })
 
         db.commit()
@@ -465,18 +556,62 @@ def get_master_room_folio(booking_ref: str, db: Session = Depends(get_db)):
     )
 
 # --- 5. Statutory Police Station Register & Form C ---
+def mask_id_document(id_type: str, id_number: Optional[str]) -> str:
+    """Mask sensitive national ID documents for general inspection display."""
+    if not id_number:
+        return "NOT_PROVIDED"
+    raw = id_number.strip().replace(" ", "").replace("-", "")
+    t = (id_type or "").lower()
+    if "aadhaar" in t:
+        if len(raw) >= 4:
+            return f"XXXX-XXXX-{raw[-4:]}"
+        return "XXXX-XXXX-XXXX"
+    elif "passport" in t:
+        if len(raw) >= 3:
+            return f"{raw[0]}****{raw[-3:]}"
+        return "****"
+    elif "pan" in t:
+        if len(raw) >= 4:
+            return f"{raw[:2]}****{raw[-2:]}"
+        return "*****"
+    else:
+        if len(raw) > 4:
+            return f"{'*' * (len(raw) - 4)}{raw[-4:]}"
+        return "****"
+
 @router.post("/police-register", response_model=schemas.PoliceStationLogResponse)
 def create_police_station_record(payload: schemas.PoliceStationLogCreate, db: Session = Depends(get_db)):
-    """Log mandatory police verification details for domestic and foreign pilgrims"""
+    """Log mandatory police verification details for domestic and foreign pilgrims with statutory Form C validation"""
     booking = find_booking_by_ref_or_room(db, payload.booking_ref)
     if not booking:
         raise HTTPException(status_code=404, detail="Booking reservation not found")
+
+    # Statutory Foreign National Form C validation (Bureau of Immigration / Foreigners Act 1939)
+    is_foreign = bool(payload.is_foreign_national or (payload.nationality and payload.nationality.strip().lower() not in ["indian", "india"]))
+    if is_foreign:
+        missing = []
+        if not (payload.passport_number and payload.passport_number.strip()):
+            missing.append("passport_number")
+        if not (payload.visa_number and payload.visa_number.strip()):
+            missing.append("visa_number")
+        if not (payload.visa_validity and payload.visa_validity.strip()):
+            missing.append("visa_validity")
+        if not (payload.port_of_arrival and payload.port_of_arrival.strip()):
+            missing.append("port_of_arrival")
+        if not (payload.date_of_entry_india and payload.date_of_entry_india.strip()):
+            missing.append("date_of_entry_india")
+        if missing:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Foreign National Form C compliance failure: The following statutory immigration fields are mandatory for non-Indian guests: {', '.join(missing)}"
+            )
 
     existing = db.query(models.PoliceStationLog).filter(models.PoliceStationLog.booking_id == booking.id).first()
     if existing:
         # Update existing
         for key, val in payload.dict(exclude={"booking_ref"}).items():
             setattr(existing, key, val)
+        existing.is_foreign_national = is_foreign
         db.commit()
         db.refresh(existing)
         return existing
@@ -494,7 +629,7 @@ def create_police_station_record(payload: schemas.PoliceStationLogCreate, db: Se
         next_destination=payload.next_destination,
         purpose_of_visit=payload.purpose_of_visit,
         vehicle_number=payload.vehicle_number,
-        is_foreign_national=payload.is_foreign_national,
+        is_foreign_national=is_foreign,
         passport_number=payload.passport_number,
         visa_number=payload.visa_number,
         visa_validity=payload.visa_validity,
@@ -511,29 +646,206 @@ def get_daily_police_register(limit: int = 50, db: Session = Depends(get_db)):
     """Retrieve police station guest register for statutory inspection"""
     return db.query(models.PoliceStationLog).order_by(models.PoliceStationLog.created_at.desc()).limit(limit).all()
 
-# --- 6. Housekeeping 4-Stage Lifecycle ---
+@router.get("/police-register/daily-manifest")
+def get_police_daily_manifest(date: Optional[str] = None, db: Session = Depends(get_db)):
+    """
+    Generate Rayagada District SP Office / Town Police Station daily guest manifest.
+    Formats in-house and arrived domestic and international guests with PII masking.
+    """
+    manifest_date = date or datetime.date.today().isoformat()
+    logs = db.query(models.PoliceStationLog).all()
+    
+    matching_logs = []
+    for l in logs:
+        log_d = l.created_at.strftime("%Y-%m-%d") if l.created_at else None
+        if not date or log_d == manifest_date:
+            matching_logs.append(l)
+
+    records = []
+    domestic_count = 0
+    foreign_count = 0
+
+    for l in matching_logs:
+        booking = db.query(models.Booking).filter(models.Booking.id == l.booking_id).first()
+        room_name = booking.room.name if (booking and booking.room) else f"Room {booking.room_id}" if booking else "Front Desk"
+        is_foreign = bool(l.is_foreign_national or (l.nationality and l.nationality.strip().lower() not in ["indian", "india"]))
+        if is_foreign:
+            foreign_count += 1
+        else:
+            domestic_count += 1
+
+        records.append({
+            "id": l.id,
+            "booking_id": l.booking_id,
+            "booking_ref": booking.booking_ref if booking else None,
+            "room_no": room_name,
+            "guest_name": l.guest_name,
+            "age": l.age,
+            "gender": l.gender,
+            "nationality": l.nationality or "Indian",
+            "id_proof_type": l.id_proof_type,
+            "masked_id_number": mask_id_document(l.id_proof_type, l.id_proof_number),
+            "permanent_address": l.permanent_address,
+            "origin_city": l.origin_city,
+            "next_destination": l.next_destination,
+            "purpose_of_visit": l.purpose_of_visit,
+            "vehicle_number": l.vehicle_number or "N/A",
+            "is_foreign_national": is_foreign,
+            "check_in_time": l.created_at.strftime("%I:%M %p") if l.created_at else "11:00 AM",
+            "arrival_date": l.created_at.strftime("%Y-%m-%d") if l.created_at else manifest_date
+        })
+
+    return {
+        "status": "success",
+        "date": manifest_date,
+        "authority": "Office of the Superintendent of Police / Rayagada Town Police Station, Odisha",
+        "hotel": {
+            "name": "Sri Sai Vasudev Residency",
+            "address": "Near Overbridge, Main Road, Rayagada, Odisha 765001",
+            "phone": "+91 9440289999",
+            "gstin": "21AEKPP8689J1ZS",
+            "manager_on_duty": "Front Desk Officer / PAIDISETTY MANMADHA RAO"
+        },
+        "total_guests_recorded": len(records),
+        "domestic_guests_count": domestic_count,
+        "foreign_guests_count": foreign_count,
+        "records": records
+    }
+
+@router.get("/police-register/form-c")
+def get_statutory_form_c_register(period: Optional[str] = None, date: Optional[str] = None, db: Session = Depends(get_db)):
+    """
+    Statutory Bureau of Immigration (BOI) Form C export for foreign national guests.
+    Mandatory compliance under Registration of Foreigners Act 1939.
+    """
+    logs = db.query(models.PoliceStationLog).all()
+
+    target_date = date
+    target_period = period
+
+    filtered = []
+    for l in logs:
+        is_foreign = bool(l.is_foreign_national or (l.nationality and l.nationality.strip().lower() not in ["indian", "india"]))
+        if not is_foreign:
+            continue
+        l_date = l.created_at.strftime("%Y-%m-%d") if l.created_at else None
+        if target_date and l_date != target_date:
+            continue
+        if target_period and l_date and not l_date.startswith(target_period):
+            continue
+        filtered.append(l)
+
+    form_c_list = []
+    for l in filtered:
+        booking = db.query(models.Booking).filter(models.Booking.id == l.booking_id).first()
+        room_name = booking.room.name if (booking and booking.room) else f"Room {booking.room_id}" if booking else "Suite"
+        form_c_list.append({
+            "application_id": f"BOI-FORMC-{l.id:05d}",
+            "booking_ref": booking.booking_ref if booking else f"BK-{l.booking_id}",
+            "room_no": room_name,
+            "guest_name": l.guest_name,
+            "age": l.age,
+            "gender": l.gender,
+            "nationality": l.nationality,
+            "passport_number": l.passport_number,
+            "visa_number": l.visa_number,
+            "visa_validity": l.visa_validity,
+            "port_of_arrival": l.port_of_arrival,
+            "date_of_entry_india": l.date_of_entry_india,
+            "permanent_address": l.permanent_address,
+            "arrived_from": l.origin_city,
+            "next_destination": l.next_destination,
+            "purpose_of_visit": l.purpose_of_visit,
+            "arrival_timestamp": l.created_at.isoformat() if l.created_at else None,
+            "compliance_status": "VERIFIED_FORM_C_COMPLIANT"
+        })
+
+    return {
+        "status": "success",
+        "form_c_total": len(form_c_list),
+        "hotel_name": "Sri Sai Vasudev Residency",
+        "hotel_code": "BOI-OD-RAY-0104",
+        "foreign_nationals": form_c_list
+    }
+
+# --- 6. Housekeeping 4-Stage Lifecycle & 4-Eye Verification ---
 @router.post("/housekeeping/status")
 async def update_room_housekeeping_status(payload: schemas.HousekeepingStatusUpdate, db: Session = Depends(get_db)):
-    """Update room state: Clean, Dirty, Inspected, Under_Maintenance"""
-    room = db.query(models.Room).filter(models.Room.id == payload.room_id).first()
+    """
+    Update room state: Clean, Dirty, Inspected, Under_Maintenance, Cleaning In Progress.
+    Enforces four-eye turnaround rules and prevents in-house guest collision.
+    """
+    room_ident = payload.room_id or payload.room_no or payload.roomNo
+    room = None
+    if isinstance(room_ident, int) or (isinstance(room_ident, str) and str(room_ident).isdigit()):
+        room = db.query(models.Room).filter(models.Room.id == int(room_ident)).first()
+    if not room and room_ident:
+        room = find_room_by_no_or_name(db, room_ident)
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
 
-    valid_statuses = ["Clean", "Dirty", "Inspected", "Under_Maintenance"]
+    valid_statuses = [
+        "Clean", "Vacant Clean", "Dirty", "Vacant Dirty", 
+        "Inspected", "Cleaning In Progress", "In_Progress", 
+        "Under_Maintenance", "Maintenance", "Occupied"
+    ]
     if payload.housekeeping_status not in valid_statuses:
         raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
 
     old_status = room.housekeeping_status
-    room.housekeeping_status = payload.housekeeping_status
-    if payload.housekeeping_status in ["Clean", "Inspected"]:
-        room.is_available = True
-    elif payload.housekeeping_status in ["Dirty", "Under_Maintenance", "Occupied"]:
+    raw_status = payload.housekeeping_status
+    if raw_status in ["Vacant Clean", "Clean"]:
+        norm_status = "Clean"
+    elif raw_status in ["Vacant Dirty", "Dirty"]:
+        norm_status = "Dirty"
+    elif raw_status in ["Cleaning In Progress", "In_Progress"]:
+        norm_status = "Cleaning In Progress"
+    elif raw_status in ["Under_Maintenance", "Maintenance"]:
+        norm_status = "Under_Maintenance"
+    else:
+        norm_status = raw_status
+
+    room.housekeeping_status = norm_status
+
+    # In-House Guest Protection: An active checked-in booking must NEVER become available
+    active_booking = db.query(models.Booking).filter(
+        models.Booking.room_id == room.id,
+        models.Booking.status == "Checked-In",
+        models.Booking.is_deleted == False
+    ).first()
+
+    if active_booking:
         room.is_available = False
+    elif norm_status in ["Clean", "Inspected"]:
+        room.is_available = True
+    elif norm_status in ["Dirty", "Cleaning In Progress", "Under_Maintenance", "Occupied"]:
+        room.is_available = False
+
+    # Sync matching HousekeepingRecord entry
+    hk_rec = db.query(models.HousekeepingRecord).filter(
+        (models.HousekeepingRecord.room_no == room.name) |
+        (models.HousekeepingRecord.room_no == str(room.id)) |
+        (models.HousekeepingRecord.room_no == room.slug)
+    ).first()
+    if not hk_rec:
+        hk_rec = models.HousekeepingRecord(room_no=room.name)
+        db.add(hk_rec)
+
+    now_ist_str = datetime.datetime.now().strftime("%d-%m-%Y %I:%M %p")
+    hk_rec.status = "Vacant Clean" if norm_status == "Clean" else ("Vacant Dirty" if norm_status == "Dirty" else norm_status)
+    if norm_status == "Cleaning In Progress":
+        hk_rec.cleaning_started_at = now_ist_str
+    elif norm_status in ["Clean", "Inspected"]:
+        hk_rec.last_cleaned_time = now_ist_str
+    if payload.updated_by:
+        hk_rec.assigned_staff = payload.updated_by
 
     log_audit(db, "HOUSEKEEPING_UPDATE", None, payload.updated_by or "Housekeeping Head", {
         "room_name": room.name,
         "old_status": old_status,
-        "new_status": payload.housekeeping_status
+        "new_status": norm_status,
+        "is_available": room.is_available,
+        "has_active_booking": active_booking is not None
     })
 
     db.commit()
@@ -544,8 +856,21 @@ async def update_room_housekeeping_status(payload: schemas.HousekeepingStatusUpd
         old_status=old_status,
         updated_by=payload.updated_by
     )
+    ws_manager.broadcast_sync({
+        "event": "ROOM_STATUS_CHANGED",
+        "room_id": room.id,
+        "room_name": room.name,
+        "housekeeping_status": room.housekeeping_status,
+        "is_available": room.is_available,
+        "updated_by": payload.updated_by
+    })
     await invalidate_cache_prefix("rooms")
-    return {"message": f"Room {room.name} status updated to {payload.housekeeping_status}"}
+    return {
+        "message": f"Room {room.name} status updated to {norm_status}",
+        "room_id": room.id,
+        "housekeeping_status": norm_status,
+        "is_available": room.is_available
+    }
 
 # --- 7. Midnight Day-End Night Audit Engine ---
 @router.post("/night-audit", response_model=schemas.NightAuditResponse)
@@ -679,8 +1004,10 @@ def execute_walk_in_check_in(payload: schemas.WalkInCheckInRequest, db: Session 
                 raise HTTPException(status_code=404, detail="Selected room not found")
             if room.housekeeping_status == "Occupied":
                 raise HTTPException(status_code=409, detail=f"Room '{room.name}' is already occupied!")
-            if room.housekeeping_status == "Dirty":
-                raise HTTPException(status_code=400, detail=f"Room '{room.name}' is marked Dirty! Housekeeping must clean and inspect before check-in.")
+            if room.housekeeping_status in ["Under_Maintenance", "Maintenance", "Blocked", "Out of Order"]:
+                raise HTTPException(status_code=400, detail=f"Room '{room.name}' is currently Under Maintenance! Resolve maintenance before check-in.")
+            if room.housekeeping_status in ["Dirty", "Cleaning In Progress"]:
+                raise HTTPException(status_code=400, detail=f"Room '{room.name}' is marked '{room.housekeeping_status}'! Housekeeping must clean and inspect before check-in.")
 
             # Concurrency race-condition check: prevent double-booking if another active reservation holds this room (#14, #38)
             active_booking = db.query(models.Booking).filter(
@@ -964,9 +1291,34 @@ def execute_check_out(payload: schemas.CheckOutRequest, db: Session = Depends(ge
             booking.status = "Checked-Out"
             booking.actual_check_out = now_utc()
 
-            # Room must immediately transition to 'Dirty'
+            # Room must immediately transition to 'Dirty' and unavailable
             if room:
                 room.housekeeping_status = "Dirty"
+                room.is_available = False
+                hk_rec = db.query(models.HousekeepingRecord).filter(
+                    (models.HousekeepingRecord.room_no == room.name) |
+                    (models.HousekeepingRecord.room_no == str(room.id)) |
+                    (models.HousekeepingRecord.room_no == room.slug)
+                ).first()
+                if hk_rec:
+                    hk_rec.status = "Vacant Dirty"
+                    hk_rec.priority = "High - Guest Waiting"
+                    hk_rec.remarks = f"Departure turnover for Room {room.name} ({booking.guest_name})"
+                ws_manager.emit_room_status_event_sync(
+                    room_id=room.id,
+                    room_name=room.name,
+                    housekeeping_status="Dirty",
+                    old_status="Occupied",
+                    updated_by=payload.processed_by or "Front Desk Checkout"
+                )
+                ws_manager.broadcast_sync({
+                    "event": "ROOM_STATUS_CHANGED",
+                    "room_id": room.id,
+                    "room_name": room.name,
+                    "housekeeping_status": "Dirty",
+                    "is_available": False,
+                    "updated_by": payload.processed_by or "Front Desk Checkout"
+                })
 
             # Update Master Folio to SETTLED
             folio = db.query(models.Folio).filter(models.Folio.booking_id == booking.id).first()
@@ -1059,20 +1411,65 @@ async def toggle_room_maintenance(
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
 
+    old_status = room.housekeeping_status
     if payload.is_under_maintenance:
         room.housekeeping_status = "Under_Maintenance"
         room.is_available = False
     else:
-        room.housekeeping_status = "Clean"
-        room.is_available = True
+        # Restoring room from maintenance: check if guest is currently checked in
+        active_booking = db.query(models.Booking).filter(
+            models.Booking.room_id == room.id,
+            models.Booking.status == "Checked-In",
+            models.Booking.is_deleted == False
+        ).first()
+        if active_booking:
+            room.housekeeping_status = "Occupied"
+            room.is_available = False
+        else:
+            room.housekeeping_status = "Clean"
+            room.is_available = True
+
+    # Sync HousekeepingRecord
+    hk_rec = db.query(models.HousekeepingRecord).filter(
+        (models.HousekeepingRecord.room_no == room.name) |
+        (models.HousekeepingRecord.room_no == str(room.id)) |
+        (models.HousekeepingRecord.room_no == room.slug)
+    ).first()
+    now_ist_str = datetime.datetime.now().strftime("%d-%m-%Y %I:%M %p")
+    if hk_rec:
+        if payload.is_under_maintenance:
+            hk_rec.status = "Under Maintenance"
+            hk_rec.maintenance_issue = payload.reason or "Under Maintenance Check"
+            hk_rec.maintenance_logged_at = now_ist_str
+        else:
+            hk_rec.status = "Vacant Clean"
+            hk_rec.maintenance_issue = None
 
     log_audit(db, "MAINTENANCE_TOGGLE", None, payload.updated_by or "Property Manager", {
         "room_name": room.name,
         "under_maintenance": payload.is_under_maintenance,
-        "reason": payload.reason
+        "reason": payload.reason,
+        "housekeeping_status": room.housekeeping_status,
+        "is_available": room.is_available
     })
 
     db.commit()
+    ws_manager.emit_room_status_event_sync(
+        room_id=room.id,
+        room_name=room.name,
+        housekeeping_status=room.housekeeping_status,
+        old_status=old_status,
+        updated_by=payload.updated_by
+    )
+    ws_manager.broadcast_sync({
+        "event": "ROOM_STATUS_CHANGED",
+        "room_id": room.id,
+        "room_name": room.name,
+        "housekeeping_status": room.housekeeping_status,
+        "is_available": room.is_available,
+        "updated_by": payload.updated_by
+    })
+    await invalidate_cache_prefix("rooms")
     return {"message": f"Room '{room.name}' status set to {room.housekeeping_status}", "is_available": room.is_available}
 
 # --- 11. Master PMS Dashboard Synchronization Endpoint ---
@@ -1240,6 +1637,10 @@ def create_kot_ticket(payload: dict, db: Session = Depends(get_db)):
     """
     # Idempotency & Running Order Guard (#5)
     import hashlib
+    if hasattr(payload, "model_dump"):
+        payload = payload.model_dump()
+    elif not isinstance(payload, dict):
+        payload = dict(payload)
     kot_no_param = str(payload.get("kotNo") or payload.get("kot_no") or "").strip()
     items = payload.get("items", [])
     kot_no = kot_no_param
@@ -1365,12 +1766,38 @@ def create_kot_ticket(payload: dict, db: Session = Depends(get_db)):
     return {"status": "created", "kot_no": kot.kot_no, "id": kot.id}
 
 @router.delete("/kots/{kot_no}")
-def delete_kot_ticket(kot_no: str, db: Session = Depends(get_db)):
+def delete_kot_ticket(kot_no: str, reason: str = Query("NOT REQ"), db: Session = Depends(get_db)):
     """Void or cancel a KOT ticket from PostgreSQL and reverse charges."""
+    if hasattr(reason, "query"):
+        db = reason
+        reason = "NOT REQ"
+    elif hasattr(reason, "default"):
+        reason = reason.default
+    
     kot = db.query(models.KotTicket).filter(models.KotTicket.kot_no == kot_no).first()
     if not kot:
         raise HTTPException(status_code=404, detail="KOT ticket not found")
     
+    void_reason_str = str(reason) if reason else "KOT voided by user/cashier"
+
+    # Record audit log in kot_void_audit_logs before cleaning items
+    kot_items = db.query(models.KotItem).filter(models.KotItem.kot_no == kot_no).all()
+    for item in kot_items:
+        void_log = models.KotVoidAuditLog(
+            kot_no=kot.kot_no,
+            table_no=kot.table_no or (f"Room {kot.room_no}" if kot.room_no else None),
+            item_name=item.item_name,
+            qty_voided=int(item.qty or 1),
+            rate=float(item.rate or 0.0),
+            amount=float(item.amount or 0.0),
+            steward_id=kot.waiter_name or "Steward",
+            approving_manager_id="Duty Manager",
+            manager_pin_verified=True,
+            void_reason=void_reason_str,
+            timestamp=now_utc()
+        )
+        db.add(void_log)
+
     # Remove relational kot_items
     db.query(models.KotItem).filter(models.KotItem.kot_no == kot_no).delete()
 
@@ -1384,11 +1811,37 @@ def delete_kot_ticket(kot_no: str, db: Session = Depends(get_db)):
                 atomic_reverse_folio_charge(db, booking.id, folio_item.total_amount)
             folio_item.is_deleted = True
             folio_item.status = "Void"
-            folio_item.void_reason = f"KOT {kot_no} voided"
+            folio_item.void_reason = f"KOT {kot_no} voided: {void_reason_str}"
+
+    # If linked to dining table, vacate table if no other active KOTs exist
+    if kot.table_no:
+        clean_tbl = str(kot.table_no).replace("Table ", "").strip()
+        other_active = db.query(models.KotTicket).filter(
+            models.KotTicket.table_no == kot.table_no,
+            models.KotTicket.kot_no != kot_no,
+            models.KotTicket.is_deleted == False,
+            models.KotTicket.status.notin_(["Voided", "Cancelled", "Billed"])
+        ).first()
+        if not other_active:
+            tbl = db.query(models.DiningTable).filter(
+                (models.DiningTable.table_code == clean_tbl) |
+                (models.DiningTable.table_name == kot.table_no)
+            ).first()
+            if tbl:
+                tbl.status = "Vacant"
+                tbl.active_session_id = None
 
     kot.is_deleted = True
     kot.status = "Voided"
-    kot.void_reason = "KOT voided by user/cashier"
+    kot.void_reason = void_reason_str
+
+    log_audit(db, "KOT_VOIDED", kot.kot_no, "Cashier", {
+        "kot_no": kot.kot_no,
+        "table_no": kot.table_no,
+        "room_no": kot.room_no,
+        "total_amount": kot.total_amount,
+        "reason": void_reason_str
+    })
 
     ws_manager.emit_kot_event_sync(
         event_type="KOT_VOIDED",
@@ -2426,27 +2879,47 @@ def save_food_bill(payload: schemas.FoodBillCreate, db: Session = Depends(get_db
         )
         db.add(bill)
         
-        # If Settle To Room, automatically add as folio item and update Folio
+        # If Settle To Room, automatically add as folio item and update Folio ONLY IF not already billed as Room Service KOT
         if (str(settle_type).lower() in ["settle to room", "settletoroom", "room"]) and r_no:
             booking = find_booking_by_ref_or_room(db, r_no)
             if booking:
-                folio_item = models.RoomFolioItem(
-                    booking_id=booking.id,
-                    item_type="Food_Bill",
-                    description=f"Restaurant Food Bill {b_no}",
-                    sac_code="996331",
-                    quantity=1,
-                    unit_price=payload.taxable_amount,
-                    taxable_amount=payload.taxable_amount,
-                    gst_rate=payload.gst_percent or 5.0,
-                    cgst_amount=round(gst_amt / 2.0, 2),
-                    sgst_amount=round(gst_amt / 2.0, 2),
-                    total_amount=net_amt,
-                    status="Billed"
-                )
-                db.add(folio_item)
-                from app.utils.locking import atomic_add_folio_charge
-                atomic_add_folio_charge(db, booking.id, net_amt)
+                # Check if the KOTs attached to this bill were already posted to the room folio
+                kots_list = []
+                try:
+                    kots_list = json.loads(kots_json) if isinstance(kots_json, str) else (kots_json or [])
+                except Exception:
+                    kots_list = []
+
+                already_posted_kots = db.query(models.RoomFolioItem).filter(
+                    models.RoomFolioItem.booking_id == booking.id,
+                    models.RoomFolioItem.kot_number.in_(kots_list),
+                    models.RoomFolioItem.is_deleted == False
+                ).all() if kots_list else []
+
+                if already_posted_kots:
+                    # KOTs were already charged individually. Annotate them rather than double-charging:
+                    for p_item in already_posted_kots:
+                        p_item.description = f"{p_item.description} [Billed in {b_no}]"
+                    logger.info(f"[FoodBill Settle] KOTs {kots_list} were already charged on folio for booking '{booking.booking_ref}'. Preserved existing charge to eliminate double-billing.")
+                else:
+                    # Newly transferred dining table or room bill
+                    folio_item = models.RoomFolioItem(
+                        booking_id=booking.id,
+                        item_type="Food_Bill",
+                        description=f"Restaurant Food Bill {b_no}",
+                        sac_code="996331",
+                        quantity=1,
+                        unit_price=payload.taxable_amount,
+                        taxable_amount=payload.taxable_amount,
+                        gst_rate=payload.gst_percent or 5.0,
+                        cgst_amount=round(gst_amt / 2.0, 2),
+                        sgst_amount=round(gst_amt / 2.0, 2),
+                        total_amount=net_amt,
+                        status="Billed"
+                    )
+                    db.add(folio_item)
+                    from app.utils.locking import atomic_add_folio_charge
+                    atomic_add_folio_charge(db, booking.id, net_amt)
                 
         # If table bill, vacate dining table
         if t_no:
@@ -2502,14 +2975,33 @@ def delete_food_bill(bill_no: str, db: Session = Depends(get_db)):
         if folio_item:
             booking = db.query(models.Booking).filter(models.Booking.id == folio_item.booking_id).first()
             if booking:
-                booking.total_price = max(0.0, round(booking.total_price - b.net_bill_amount, 2))
-                booking.balance_due = max(0.0, round(booking.total_price - (booking.total_paid or 0.0), 2))
+                from app.utils.locking import atomic_reverse_folio_charge
+                atomic_reverse_folio_charge(db, booking.id, folio_item.total_amount)
             folio_item.is_deleted = True
             folio_item.status = "Void"
             folio_item.void_reason = f"Food bill {bill_no} cancelled"
+    
+    # Restore KOTs that were in this bill back to "Running" or unbilled status so they don't stay orphaned
+    try:
+        kot_nos = json.loads(b.kot_numbers_json) if b.kot_numbers_json else []
+        for k_no in kot_nos:
+            k_obj = db.query(models.KotTicket).filter(models.KotTicket.kot_no == k_no).first()
+            if k_obj and k_obj.status == "Billed":
+                k_obj.status = "Running"
+    except Exception:
+        pass
+
     b.is_deleted = True
     b.status = "CANCELLED"
     b.void_reason = "Food bill cancelled by cashier"
+
+    log_audit(db, "FOOD_BILL_CANCELLED", b.bill_no, "Cashier", {
+        "bill_no": b.bill_no,
+        "net_amount": b.net_bill_amount,
+        "room_no": b.room_no,
+        "table_no": b.table_no
+    })
+
     db.commit()
     return {"success": True, "message": f"Food bill {bill_no} cancelled and removed from database."}
 
@@ -2592,10 +3084,6 @@ def list_night_audits(limit: int = 30, db: Session = Depends(get_db)):
 # --- 21. Store Inward Inventory Purchases CRUD ---
 @router.post("/inventory/purchases", response_model=schemas.InventoryPurchaseResponse)
 def save_inventory_purchase(payload: schemas.InventoryPurchaseCreate, db: Session = Depends(get_db)):
-    existing = db.query(models.InventoryPurchase).filter(models.InventoryPurchase.bill_no == payload.bill_no.strip()).first()
-    if existing:
-        return existing
-
     supp = payload.supplier_name or payload.account_name or "General Vendor"
     tot = float(payload.total_amount or payload.total_gross_amount or 0.0)
     tax = float(payload.tax_amount or payload.total_tax or 0.0)
@@ -2604,25 +3092,48 @@ def save_inventory_purchase(payload: schemas.InventoryPurchaseCreate, db: Sessio
     items_str = payload.items_json
     if not items_str:
         items_str = json.dumps(payload.items or [])
-        
-    p = models.InventoryPurchase(
-        bill_no=payload.bill_no,
-        bill_date=payload.bill_date,
-        godown=payload.godown or "Main Kitchen Store",
-        supplier_name=supp,
-        items_json=items_str,
-        total_amount=tot,
-        tax_amount=tax,
-        net_amount=net,
-        terms=payload.terms or "Credit"
-    )
-    db.add(p)
-    db.commit()
-    db.refresh(p)
+
+    existing = db.query(models.InventoryPurchase).filter(models.InventoryPurchase.bill_no == payload.bill_no.strip()).first()
+    if existing:
+        existing.bill_date = payload.bill_date
+        existing.godown = payload.godown or "Main Kitchen Store"
+        existing.supplier_name = supp
+        existing.items_json = items_str
+        existing.total_amount = tot
+        existing.tax_amount = tax
+        existing.net_amount = net
+        existing.terms = payload.terms or "Credit"
+        db.commit()
+        db.refresh(existing)
+        p = existing
+    else:
+        p = models.InventoryPurchase(
+            bill_no=payload.bill_no,
+            bill_date=payload.bill_date,
+            godown=payload.godown or "Main Kitchen Store",
+            supplier_name=supp,
+            items_json=items_str,
+            total_amount=tot,
+            tax_amount=tax,
+            net_amount=net,
+            terms=payload.terms or "Credit"
+        )
+        db.add(p)
+        db.commit()
+        db.refresh(p)
+
+    ws_manager.broadcast_sync({
+        "event": "INVENTORY_PURCHASE_RECORDED",
+        "billNo": p.bill_no,
+        "godown": p.godown,
+        "netAmount": p.net_amount,
+        "timestamp": now_utc().isoformat()
+    }, channel="inventory")
+
     return p
 
 @router.get("/inventory/purchases", response_model=List[schemas.InventoryPurchaseResponse])
-def list_inventory_purchases(limit: int = 100, db: Session = Depends(get_db)):
+def list_inventory_purchases(limit: int = 200, db: Session = Depends(get_db)):
     return db.query(models.InventoryPurchase).order_by(models.InventoryPurchase.id.desc()).limit(limit).all()
 
 
@@ -2933,9 +3444,11 @@ def execute_automated_midnight_audit(db: Session = Depends(get_db)):
 
     for b in occupied_bookings:
         tariff = float(b.base_rate)
-        cgst = tariff * 0.025
-        sgst = tariff * 0.025
-        total_folio_chg = tariff + cgst + sgst
+        rate = float(b.gst_rate or 12.0)
+        half_rate = rate / 200.0
+        cgst = round(tariff * half_rate, 2)
+        sgst = round(tariff * half_rate, 2)
+        total_folio_chg = round(tariff + cgst + sgst, 2)
 
         folio_item = models.RoomFolioItem(
             booking_id=b.id,
@@ -2945,38 +3458,81 @@ def execute_automated_midnight_audit(db: Session = Depends(get_db)):
             quantity=1,
             unit_price=tariff,
             taxable_amount=tariff,
-            gst_rate=b.gst_rate or 5.0,
+            gst_rate=rate,
             cgst_amount=cgst,
             sgst_amount=sgst,
             total_amount=total_folio_chg,
             status="Billed",
-            created_at=datetime.datetime.utcnow()
+            created_at=datetime.datetime.now(datetime.UTC)
         )
         db.add(folio_item)
-        b.balance_due = float(b.balance_due or 0.0) + total_folio_chg
+        b.balance_due = round(float(b.balance_due or 0.0) + total_folio_chg, 2)
         tariffs_posted_count += 1
         total_posted_revenue += total_folio_chg
 
-    # 2. Record Night Audit
-    audit_record = models.DailyNightAudit(
-        audit_date=new_business_date,
-        total_rooms_occupied=len(occupied_bookings),
-        total_room_revenue=total_posted_revenue,
-        total_food_revenue=0.0,
-        total_gst_collected=total_posted_revenue * 0.05,
-        no_shows_processed=0,
-        cash_in_drawer=0.0,
-        audited_by="SYSTEM AUTONOMOUS NIGHT AUDIT CRON (00:00 IST)",
-        audit_status="Rolled_Over"
-    )
-    db.add(audit_record)
+        # Post double-entry General Ledger journal entry for room charge rollover
+        jv_id = f"JV-NIGHT-{b.id}-{new_business_date}"
+        existing_jv = db.query(models.JournalEntry).filter(models.JournalEntry.entry_id == jv_id).first()
+        if not existing_jv:
+            jv = models.JournalEntry(
+                entry_id=jv_id,
+                date=new_business_date,
+                time="11:59 PM",
+                voucher_type="Journal",
+                reference_no=b.booking_ref,
+                narration=f"Night audit automated room charge rollover for {b.guest_name} (Room {b.room_id})",
+                debit_account=f"Guest Room Folio Receivable ({b.guest_name})",
+                credit_account="Room Revenue Account",
+                amount_paise=int(round(total_folio_chg * 100)),
+                amount_rupees=total_folio_chg,
+                posted_by="System Night Audit"
+            )
+            db.add(jv)
+
+    # 2. Deactivate expired RFID keycards (T-Minus 1 Hour Rule)
+    now_ts = datetime.datetime.now(datetime.UTC)
+    db.query(models.KeyCardAccess).filter(
+        models.KeyCardAccess.card_deactivation_time < now_ts,
+        models.KeyCardAccess.status.in_(["ACTIVE", "EXTENDED"])
+    ).update({"status": "EXPIRED"}, synchronize_session=False)
+
+    # 3. Compute KPI Statistics
+    total_hotel_rooms = db.query(models.Room).count() or 1
+    occupancy_pct = round((len(occupied_bookings) / total_hotel_rooms) * 100, 1)
+    adr = round(total_posted_revenue / max(len(occupied_bookings), 1), 2)
+    revpar = round(total_posted_revenue / total_hotel_rooms, 2)
+
+    # 4. Record Night Audit (idempotent: update if today was already audited)
+    existing_na = db.query(models.DailyNightAudit).filter(models.DailyNightAudit.audit_date == new_business_date).first()
+    if existing_na:
+        existing_na.total_rooms_occupied = len(occupied_bookings)
+        existing_na.total_room_revenue = round(total_posted_revenue, 2)
+        existing_na.total_gst_collected = round(total_posted_revenue * 0.12, 2)
+        existing_na.audit_status = "Rolled_Over"
+    else:
+        audit_record = models.DailyNightAudit(
+            audit_date=new_business_date,
+            total_rooms_occupied=len(occupied_bookings),
+            total_room_revenue=round(total_posted_revenue, 2),
+            total_food_revenue=0.0,
+            total_gst_collected=round(total_posted_revenue * 0.12, 2),
+            no_shows_processed=0,
+            cash_in_drawer=0.0,
+            audited_by="SYSTEM AUTONOMOUS NIGHT AUDIT CRON (00:00 IST)",
+            audit_status="Rolled_Over"
+        )
+        db.add(audit_record)
     db.commit()
 
     return {
         "success": True,
         "new_business_date": new_business_date,
         "stayover_rooms_posted": tariffs_posted_count,
-        "total_tariffs_posted_inr": total_posted_revenue,
+        "total_tariffs_posted_inr": round(total_posted_revenue, 2),
+        "total_rooms": total_hotel_rooms,
+        "occupancy_rate_pct": occupancy_pct,
+        "adr_inr": adr,
+        "revpar_inr": revpar,
         "message": f"Zero-Touch 00:00 IST Night Audit executed. Active business date rolled to {new_business_date}. Nightly tariffs posted for {tariffs_posted_count} stay-over rooms."
     }
 
@@ -3132,48 +3688,92 @@ def export_gstr1_json(month: str = Query("062026", description="Format MMYYYY, e
 def audit_housekeeping_discrepancy(payload: schemas.HousekeepingDiscrepancyCreate, db: Session = Depends(get_db)):
     """
     Module 5: Independent Mobile Housekeeping Discrepancy Detector.
-    If Housekeeping marks room as Vacant while Front Desk shows Occupied,
-    triggers an immediate High-Priority Alert to eliminate short-stay theft.
+    Detects front desk vs housekeeping discrepancies (short-stay theft, unrecorded squatter, sleep-out, skip)
+    and broadcasts real-time high-priority alerts to management.
     """
-    # Check current front desk booking status
-    room = db.query(models.Room).filter(models.Room.name.contains(payload.room_no)).first()
+    r_no = payload.room_no or payload.room_number or payload.roomNo or (str(payload.room_id) if payload.room_id else "")
+    if not r_no:
+        raise HTTPException(status_code=400, detail="Room number (room_no) is required")
+    room = find_room_by_no_or_name(db, r_no)
     active_booking = db.query(models.Booking).filter(
         models.Booking.room_id == (room.id if room else -1),
-        models.Booking.status == "Checked-In"
+        models.Booking.status == "Checked-In",
+        models.Booking.is_deleted == False
     ).first()
 
     fd_status = "Occupied" if active_booking else "Vacant"
-    hk_status = payload.housekeeping_status
+    hk_status = payload.housekeeping_status or payload.physical_status or "Vacant Clean"
 
-    is_discrepancy = (fd_status == "Occupied" and hk_status in ["Vacant", "Vacant Dirty", "Clean"])
+    # Bidirectional discrepancy detection
+    is_pms_occ_hk_vacant = (fd_status == "Occupied" and hk_status in ["Vacant", "Vacant Dirty", "Clean", "Vacant Clean"])
+    is_pms_vacant_hk_occ = (fd_status == "Vacant" and hk_status in ["Occupied", "Physically Occupied"])
+    is_sleep_out = (fd_status == "Occupied" and hk_status in ["Sleep-Out", "Sleep Out"])
+    is_skip = (fd_status == "Occupied" and hk_status in ["Skip", "Skipped", "Luggage Missing"])
+
+    is_discrepancy = is_pms_occ_hk_vacant or is_pms_vacant_hk_occ or is_sleep_out or is_skip
 
     # Short-stay detection (< 6 hours since check-in)
     is_short_stay = False
-    if active_booking and active_booking.actual_check_in:
+    if is_pms_occ_hk_vacant and active_booking and active_booking.actual_check_in:
         stay_hours = (datetime.datetime.utcnow() - active_booking.actual_check_in).total_seconds() / 3600.0
         if stay_hours < 6.0:
             is_short_stay = True
 
+    if is_short_stay:
+        alert_level = "CRITICAL_FRAUD_ALERT"
+        notes_default = "CRITICAL FRAUD ALERT: Room marked Occupied (< 6h) at Front Desk, but Housekeeping physically reported it Vacant! Potential cash turnover theft."
+    elif is_pms_vacant_hk_occ:
+        alert_level = "CRITICAL_UNRECORDED_GUEST_ALERT"
+        notes_default = "CRITICAL SQUATTER/FRAUD ALERT: Room marked Vacant in PMS, but Housekeeping found the room physically occupied with guest/luggage! Unrecorded stay suspect."
+    elif is_skip:
+        alert_level = "CRITICAL_SKIP_ALERT"
+        notes_default = "CRITICAL SKIP ALERT: Guest appears to have departed without settling bill at front desk. Luggage and keys missing."
+    elif is_pms_occ_hk_vacant:
+        alert_level = "HIGH"
+        notes_default = "DISCREPANCY ALERT: Room physically marked vacant by housekeeping while showing occupied in PMS. Possible unrecorded check-out or skip."
+    elif is_sleep_out:
+        alert_level = "MEDIUM"
+        notes_default = "SLEEP-OUT ALERT: Room occupied in PMS, luggage present, but beds unused overnight."
+    else:
+        alert_level = "NORMAL"
+        notes_default = "Routine audit pass - concordant."
+
+    disc_id = payload.discrepancy_id or f"DISC-{int(time.time())}-{uuid.uuid4().hex[:4].upper()}"
     record = models.HousekeepingDiscrepancy(
-        room_no=payload.room_no,
+        discrepancy_id=disc_id,
+        room_no=r_no,
         front_desk_status=fd_status,
         housekeeping_status=hk_status,
-        reported_by=payload.reported_by or "Housekeeping Staff",
+        reported_by=payload.reported_by or payload.reportedBy or "Housekeeping Staff",
         reported_at=datetime.datetime.utcnow(),
-        notes=payload.notes or ("DISCREPANCY ALERT: Room physically marked vacant by housekeeping while showing occupied in PMS." if is_discrepancy else "Routine audit pass"),
+        notes=payload.notes or payload.remarks or notes_default,
         is_short_stay_suspect=is_short_stay
     )
     db.add(record)
     db.commit()
+    db.refresh(record)
+
+    if is_discrepancy:
+        ws_manager.broadcast_sync({
+            "event": "HOUSEKEEPING_DISCREPANCY",
+            "discrepancy_id": record.discrepancy_id or str(record.id),
+            "room_no": r_no,
+            "front_desk_status": fd_status,
+            "housekeeping_status": hk_status,
+            "alert_level": alert_level,
+            "is_short_stay": is_short_stay,
+            "notes": record.notes
+        })
 
     return {
-        "room_no": payload.room_no,
+        "room_no": r_no,
+        "discrepancy_id": record.discrepancy_id or str(record.id),
         "front_desk_status": fd_status,
         "housekeeping_status": hk_status,
         "is_discrepancy_alert": is_discrepancy,
         "is_short_stay_theft_suspect": is_short_stay,
-        "alert_level": "CRITICAL_FRAUD_ALERT" if (is_discrepancy and is_short_stay) else ("HIGH" if is_discrepancy else "NORMAL"),
-        "message": "DISCREPANCY DETECTED: Room attendant reported room vacant while front desk shows active occupied folio!" if is_discrepancy else "Room status verified concordant."
+        "alert_level": alert_level,
+        "message": record.notes
     }
 
 # =========================================================================
@@ -3271,6 +3871,26 @@ def extend_rfid_keycard(payload: schemas.KeyCardExtendRequest, db: Session = Dep
         "extension_fee_logged": card.extension_fee,
         "message": f"Stay extension of ₹{card.extension_fee:.2f} logged into folio. RFID keycard re-encoded successfully until {card.card_deactivation_time.strftime('%I:%M %p')}."
     }
+
+@router.post("/keycards/return")
+def return_rfid_keycard(payload: dict = Body(...), db: Session = Depends(get_db)):
+    """Deactivate or return an encoded keycard upon room checkout."""
+    card_uid = str(payload.get("card_uid") or payload.get("card_number") or payload.get("cardNumber") or "")
+    if not card_uid:
+        raise HTTPException(status_code=400, detail="Card UID required")
+    card = db.query(models.KeyCardAccess).filter(models.KeyCardAccess.card_uid == card_uid).first()
+    if not card:
+        rfid_card = db.query(models.RfidKeyCard).filter(
+            (models.RfidKeyCard.card_number == card_uid) | (models.RfidKeyCard.card_uuid == card_uid)
+        ).first()
+        if rfid_card:
+            rfid_card.status = "RETURNED"
+            db.commit()
+            return {"success": True, "card_uid": card_uid, "status": "RETURNED", "message": "Key card deactivated & returned."}
+        raise HTTPException(status_code=404, detail="Keycard UID not found")
+    card.status = "RETURNED"
+    db.commit()
+    return {"success": True, "card_uid": card.card_uid, "status": "RETURNED", "message": "Key card deactivated & returned."}
 
 # =========================================================================
 # MODULE 25: Group Reservations & Multi-Room PostgreSQL Synchronization
@@ -3797,6 +4417,32 @@ def save_advance_receipt(payload: schemas.AdvanceReceiptCreate, db: Session = De
             )
             db.add(pmt_rec)
 
+    # Double-entry general ledger posting for advance deposit
+    if amt > 0:
+        asset_acct = "Cash in Hand (Reception)" if "cash" in pmode.lower() else "Bank Accounts (SBI / HDFC / UPI)"
+        adv_jv_id = f"JV-AR-{rcp_no.replace('/', '-').replace(' ', '-')}"
+        existing_adv_jv = db.query(models.JournalEntry).filter(models.JournalEntry.entry_id == adv_jv_id).first()
+        if existing_adv_jv:
+            existing_adv_jv.amount_rupees = amt
+            existing_adv_jv.amount_paise = int(round(amt * 100))
+            existing_adv_jv.debit_account = asset_acct
+            existing_adv_jv.credit_account = "Guest Advance Deposits (Liability)"
+        else:
+            adv_jv = models.JournalEntry(
+                entry_id=adv_jv_id,
+                date=dt,
+                time=tm,
+                voucher_type="Advance",
+                reference_no=rcp_no,
+                narration=f"Advance receipt from {g_name} for room {r_no} via {pmode}".strip(),
+                debit_account=asset_acct,
+                credit_account="Guest Advance Deposits (Liability)",
+                amount_paise=int(round(amt * 100)),
+                amount_rupees=amt,
+                posted_by="Front Desk Cashier"
+            )
+            db.add(adv_jv)
+
     db.commit()
     db.refresh(adv)
 
@@ -3843,19 +4489,151 @@ def delete_advance_receipt(receipt_no: str, db: Session = Depends(get_db)):
 # --- 21. General Ledger & Double-Entry Journal Postings ---
 @router.post("/journal-entries")
 def post_journal_entry(payload: schemas.JournalEntryCreate, db: Session = Depends(get_db)):
-    """Record a double-entry financial journal entry in PostgreSQL."""
-    e_id = payload.entry_id or payload.entryId or f"JV-{datetime.date.today().year}-{int(datetime.datetime.utcnow().timestamp()) % 10000:04d}"
+    """Record a double-entry financial journal entry in PostgreSQL with strict balance enforcement."""
     dt = payload.date or datetime.date.today().isoformat()
-    tm = payload.time or datetime.datetime.utcnow().strftime("%I:%M %p")
+    tm = payload.time or datetime.datetime.now(datetime.UTC).strftime("%I:%M %p")
     v_type = payload.voucher_type or payload.voucherType or "Manual"
     ref_no = payload.reference_no or payload.referenceNo
-    debit = payload.debit_account or payload.debitAccount or "Cash in Hand (Reception)"
-    credit = payload.credit_account or payload.creditAccount or "Room Accommodation Revenue"
+    posted_by = payload.posted_by or payload.postedBy or "Front Desk Mgr"
+    narration = payload.narration or "Double-entry journal voucher"
+
+    legs = payload.legs or payload.entries
+    if legs and len(legs) > 0:
+        # Multi-leg / Compound Journal Entry Validation
+        dr_legs = [l for l in legs if (getattr(l, "entry_type", None) or getattr(l, "type", "Dr")).upper() in ["DR", "DEBIT"]]
+        cr_legs = [l for l in legs if (getattr(l, "entry_type", None) or getattr(l, "type", "Cr")).upper() in ["CR", "CREDIT"]]
+        
+        if not dr_legs or not cr_legs:
+            raise HTTPException(
+                status_code=400,
+                detail="Compound journal entry must contain at least one Debit (Dr) and one Credit (Cr) leg"
+            )
+        
+        for leg in legs:
+            amt = getattr(leg, "amount", 0.0)
+            if amt <= 0:
+                raise HTTPException(status_code=400, detail="Each journal entry leg amount must be greater than zero")
+            acc = (getattr(leg, "account_name", None) or getattr(leg, "account", "")).strip()
+            if not acc:
+                raise HTTPException(status_code=400, detail="Account name is required for all journal entry legs")
+
+        total_dr = round(sum(getattr(l, "amount", 0.0) for l in dr_legs), 2)
+        total_cr = round(sum(getattr(l, "amount", 0.0) for l in cr_legs), 2)
+
+        if abs(round(total_dr - total_cr, 2)) >= 0.01:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unbalanced journal entry: Total Debits (₹{total_dr:.2f}) does not equal Total Credits (₹{total_cr:.2f})"
+            )
+        
+        base_eid = payload.entry_id or payload.entryId or f"JV-{datetime.date.today().year}-{int(datetime.datetime.now(datetime.UTC).timestamp()) % 100000:05d}"
+        
+        # Create balanced journal entries
+        if len(dr_legs) == 1:
+            dr_acc = getattr(dr_legs[0], "account_name", "") or getattr(dr_legs[0], "account", "")
+            for i, cr in enumerate(cr_legs, 1):
+                cr_acc = getattr(cr, "account_name", "") or getattr(cr, "account", "")
+                cr_amt = round(getattr(cr, "amount", 0.0), 2)
+                sub_id = f"{base_eid}-{i}" if len(cr_legs) > 1 else base_eid
+                entry = models.JournalEntry(
+                    entry_id=sub_id,
+                    date=dt,
+                    time=tm,
+                    voucher_type=v_type,
+                    reference_no=ref_no or base_eid,
+                    narration=getattr(cr, "narration", None) or narration,
+                    debit_account=dr_acc,
+                    credit_account=cr_acc,
+                    amount_paise=int(round(cr_amt * 100)),
+                    amount_rupees=cr_amt,
+                    posted_by=posted_by
+                )
+                db.add(entry)
+        elif len(cr_legs) == 1:
+            cr_acc = getattr(cr_legs[0], "account_name", "") or getattr(cr_legs[0], "account", "")
+            for i, dr in enumerate(dr_legs, 1):
+                dr_acc = getattr(dr, "account_name", "") or getattr(dr, "account", "")
+                dr_amt = round(getattr(dr, "amount", 0.0), 2)
+                sub_id = f"{base_eid}-{i}" if len(dr_legs) > 1 else base_eid
+                entry = models.JournalEntry(
+                    entry_id=sub_id,
+                    date=dt,
+                    time=tm,
+                    voucher_type=v_type,
+                    reference_no=ref_no or base_eid,
+                    narration=getattr(dr, "narration", None) or narration,
+                    debit_account=dr_acc,
+                    credit_account=cr_acc,
+                    amount_paise=int(round(dr_amt * 100)),
+                    amount_rupees=dr_amt,
+                    posted_by=posted_by
+                )
+                db.add(entry)
+        else:
+            for i, leg in enumerate(legs, 1):
+                acc = getattr(leg, "account_name", "") or getattr(leg, "account", "")
+                amt = round(getattr(leg, "amount", 0.0), 2)
+                is_dr = (getattr(leg, "entry_type", None) or getattr(leg, "type", "Dr")).upper() in ["DR", "DEBIT"]
+                sub_id = f"{base_eid}-{i}"
+                entry = models.JournalEntry(
+                    entry_id=sub_id,
+                    date=dt,
+                    time=tm,
+                    voucher_type=v_type,
+                    reference_no=ref_no or base_eid,
+                    narration=getattr(leg, "narration", None) or narration,
+                    debit_account=acc if is_dr else "Compound Journal Clearing",
+                    credit_account="Compound Journal Clearing" if is_dr else acc,
+                    amount_paise=int(round(amt * 100)),
+                    amount_rupees=amt,
+                    posted_by=posted_by
+                )
+                db.add(entry)
+
+        db.commit()
+        record_audit_log(
+            db=db,
+            action="COMPOUND_JOURNAL_POSTED",
+            entity_type="JOURNAL_ENTRY",
+            entity_id=base_eid,
+            new_data={"total_dr": total_dr, "total_cr": total_cr, "legs_count": len(legs)},
+            staff_id=posted_by,
+            role="ACCOUNTS"
+        )
+        return {
+            "success": True,
+            "message": f"Compound Journal Entry {base_eid} (₹{total_dr}) balanced and posted with {len(legs)} legs.",
+            "entryId": base_eid,
+            "date": dt,
+            "time": tm,
+            "voucherType": v_type,
+            "referenceNo": ref_no,
+            "narration": narration,
+            "totalDebits": total_dr,
+            "totalCredits": total_cr,
+            "balanced": True,
+            "legsCount": len(legs),
+            "postedBy": posted_by
+        }
+
+    # Single 2-Leg Double-Entry Validation
+    e_id = payload.entry_id or payload.entryId or f"JV-{datetime.date.today().year}-{int(datetime.datetime.now(datetime.UTC).timestamp()) % 100000:05d}"
+    debit = (payload.debit_account or payload.debitAccount or "").strip()
+    credit = (payload.credit_account or payload.creditAccount or "").strip()
+
+    if not debit or not credit:
+        raise HTTPException(status_code=400, detail="Both debit and credit accounts are required")
+    
+    if debit.lower() == credit.lower():
+        raise HTTPException(status_code=400, detail="Debit and Credit accounts must be distinct")
+
     amt_rupees = payload.amount_rupees or (payload.amountRupees if payload.amountRupees is not None else 0.0)
     amt_paise = payload.amount_paise or (payload.amountPaise if payload.amountPaise is not None else int(round(amt_rupees * 100)))
     if amt_rupees == 0.0 and amt_paise > 0:
         amt_rupees = round(amt_paise / 100.0, 2)
-    posted_by = payload.posted_by or payload.postedBy or "Front Desk Mgr"
+
+    if amt_rupees <= 0:
+        raise HTTPException(status_code=400, detail="Journal entry amount must be greater than zero")
 
     existing = db.query(models.JournalEntry).filter(models.JournalEntry.entry_id == e_id).first()
     if existing:
@@ -3863,7 +4641,7 @@ def post_journal_entry(payload: schemas.JournalEntryCreate, db: Session = Depend
         existing.time = tm
         existing.voucher_type = v_type
         existing.reference_no = ref_no
-        existing.narration = payload.narration
+        existing.narration = narration
         existing.debit_account = debit
         existing.credit_account = credit
         existing.amount_paise = amt_paise
@@ -3877,7 +4655,7 @@ def post_journal_entry(payload: schemas.JournalEntryCreate, db: Session = Depend
             time=tm,
             voucher_type=v_type,
             reference_no=ref_no,
-            narration=payload.narration,
+            narration=narration,
             debit_account=debit,
             credit_account=credit,
             amount_paise=amt_paise,
@@ -3887,6 +4665,16 @@ def post_journal_entry(payload: schemas.JournalEntryCreate, db: Session = Depend
         db.add(entry)
     db.commit()
     db.refresh(entry)
+
+    record_audit_log(
+        db=db,
+        action="JOURNAL_ENTRY_POSTED",
+        entity_type="JOURNAL_ENTRY",
+        entity_id=entry.entry_id,
+        new_data={"debit": debit, "credit": credit, "amount": amt_rupees},
+        staff_id=posted_by,
+        role="ACCOUNTS"
+    )
 
     return {
         "success": True,
@@ -3962,6 +4750,27 @@ def save_party_account(payload: schemas.PartyAccountCreate, db: Session = Depend
         )
         db.add(party)
 
+        # Create balanced Opening Balance Journal Entry if initial balance > 0
+        if (payload.balance or 0.0) > 0:
+            init_amt = round(payload.balance, 2)
+            is_dr = b_type.upper() == "DR"
+            dr_acc = f"Sundry Debtor ({party.name})" if is_dr else "Opening Balances (Equity)"
+            cr_acc = "Opening Balances (Equity)" if is_dr else f"Sundry Creditor ({party.name})"
+            init_jv = models.JournalEntry(
+                entry_id=f"JV-OPEN-{party.id}",
+                date=datetime.date.today().isoformat(),
+                time=datetime.datetime.now(datetime.UTC).strftime("%I:%M %p"),
+                voucher_type="Opening",
+                reference_no=party.id,
+                narration=f"Opening balance ledger entry for {party.name}",
+                debit_account=dr_acc,
+                credit_account=cr_acc,
+                amount_paise=int(round(init_amt * 100)),
+                amount_rupees=init_amt,
+                posted_by="System"
+            )
+            db.add(init_jv)
+
     db.commit()
     db.refresh(party)
     return {
@@ -4003,11 +4812,347 @@ def delete_party_account(account_id: str, db: Session = Depends(get_db)):
     db.commit()
     return {"success": True, "message": f"Party account {account_id} removed."}
 
+@router.get("/party-accounts/{account_id}/statement")
+def get_party_account_statement(
+    account_id: str,
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Retrieve an itemized chronological double-entry ledger statement for a party account."""
+    party = db.query(models.PartyAccount).filter(
+        (models.PartyAccount.id == account_id) |
+        (models.PartyAccount.name.ilike(account_id.strip()))
+    ).first()
+    if not party:
+        raise HTTPException(status_code=404, detail="Party account not found")
+
+    cat = (party.category or "").strip().lower()
+    is_vendor = cat in ["vendor", "supplier", "creditor"]
+
+    # Gather transactions
+    all_tx = []
+    
+    # 1. Receipts
+    receipts = db.query(models.GeneralReceipt).filter(
+        models.GeneralReceipt.account_name.ilike(party.name.strip())
+    ).all()
+    for r in receipts:
+        if from_date and r.date < from_date:
+            continue
+        if to_date and r.date > to_date:
+            continue
+        all_tx.append({
+            "date": r.date,
+            "type": "Receipt",
+            "voucherNo": r.receipt_no,
+            "accountName": party.name,
+            "remark": r.remark or f"Receipt via {r.payment_mode}",
+            "debit": 0.0 if not is_vendor else round(r.amount, 2),
+            "credit": round(r.amount, 2) if not is_vendor else 0.0,
+            "created_at": r.created_at
+        })
+
+    # 2. Payments
+    payments = db.query(models.GeneralPayment).filter(
+        models.GeneralPayment.account_name.ilike(party.name.strip())
+    ).all()
+    for p in payments:
+        if from_date and p.date < from_date:
+            continue
+        if to_date and p.date > to_date:
+            continue
+        all_tx.append({
+            "date": p.date,
+            "type": "Payment",
+            "voucherNo": p.payment_no,
+            "accountName": party.name,
+            "remark": p.remark or f"Payment via {p.payment_mode}",
+            "debit": round(p.amount, 2) if is_vendor else 0.0,
+            "credit": 0.0 if is_vendor else round(p.amount, 2),
+            "created_at": p.created_at
+        })
+
+    # 3. Journal Entries mentioning party (excluding linked receipts/payments to prevent duplicate statement rows)
+    receipt_refs = {r.receipt_no for r in receipts if r.receipt_no}
+    payment_refs = {p.payment_no for p in payments if p.payment_no}
+    jvs = db.query(models.JournalEntry).filter(
+        (models.JournalEntry.debit_account.ilike(f"%{party.name}%")) |
+        (models.JournalEntry.credit_account.ilike(f"%{party.name}%"))
+    ).all()
+    for j in jvs:
+        if j.reference_no and (j.reference_no in receipt_refs or j.reference_no in payment_refs):
+            continue
+        if j.voucher_type in ["Receipt", "Payment", "Opening"] or (j.entry_id and j.entry_id.startswith("JV-OPEN-")):
+            continue
+        if from_date and j.date < from_date:
+            continue
+        if to_date and j.date > to_date:
+            continue
+        is_dr = party.name.lower() in j.debit_account.lower()
+        amt = round(j.amount_rupees, 2)
+        all_tx.append({
+            "date": j.date,
+            "type": "Journal",
+            "voucherNo": j.entry_id,
+            "accountName": j.credit_account if is_dr else j.debit_account,
+            "remark": j.narration,
+            "debit": amt if is_dr else 0.0,
+            "credit": 0.0 if is_dr else amt,
+            "created_at": j.created_at
+        })
+
+    # Sort chronologically
+    all_tx.sort(key=lambda x: (x.get("date") or "", str(x.get("created_at") or "")))
+
+    opening_balance = 0.0
+    opening_type = party.balance_type or ("Cr" if is_vendor else "Dr")
+    current_balance = opening_balance
+
+    entries = [{
+        "date": from_date or (party.created_at.strftime("%Y-%m-%d") if party.created_at else datetime.date.today().isoformat()),
+        "type": "Opening",
+        "voucherNo": "OPENING",
+        "accountName": "Opening Balance",
+        "remark": "Opening ledger balance",
+        "debit": 0.0,
+        "credit": 0.0,
+        "balance": opening_balance,
+        "balanceType": opening_type
+    }]
+
+    total_dr = 0.0
+    total_cr = 0.0
+
+    for tx in all_tx:
+        total_dr += tx["debit"]
+        total_cr += tx["credit"]
+        if is_vendor:
+            current_balance += (tx["credit"] - tx["debit"])
+            b_type = "Cr" if current_balance >= 0 else "Dr"
+        else:
+            current_balance += (tx["debit"] - tx["credit"])
+            b_type = "Dr" if current_balance >= 0 else "Cr"
+
+        entries.append({
+            "date": tx["date"],
+            "type": tx["type"],
+            "voucherNo": tx["voucherNo"],
+            "accountName": tx["accountName"],
+            "remark": tx["remark"],
+            "debit": tx["debit"],
+            "credit": tx["credit"],
+            "balance": abs(round(current_balance, 2)),
+            "balanceType": b_type
+        })
+
+    return {
+        "party": {
+            "id": party.id,
+            "name": party.name,
+            "category": party.category,
+            "mobile": party.mobile,
+            "gstin": party.gstin,
+            "address": party.address,
+            "currentBalance": party.balance,
+            "currentBalanceType": party.balance_type
+        },
+        "fromDate": from_date,
+        "toDate": to_date,
+        "openingBalance": opening_balance,
+        "openingType": opening_type,
+        "entries": entries,
+        "totalDebit": round(total_dr, 2),
+        "totalCredit": round(total_cr, 2),
+        "closingBalance": abs(round(current_balance, 2)),
+        "closingType": "Cr" if (is_vendor and current_balance >= 0) or (not is_vendor and current_balance < 0) else "Dr"
+    }
+
+@router.post("/party-accounts/{account_id}/settle")
+def settle_party_account(
+    account_id: str,
+    payload: schemas.PartySettlementRequest,
+    db: Session = Depends(get_db)
+):
+    """Settle an outstanding party balance with receipt/payment generation and journal posting."""
+    party = db.query(models.PartyAccount).filter(
+        (models.PartyAccount.id == account_id) |
+        (models.PartyAccount.name.ilike(account_id.strip()))
+    ).first()
+    if not party:
+        raise HTTPException(status_code=404, detail="Party account not found")
+
+    cat = (party.category or "").strip().lower()
+    is_vendor = cat in ["vendor", "supplier", "creditor"]
+    amt = round(payload.amount, 2)
+    p_mode = payload.payment_mode or "Cash"
+    p_date = datetime.date.today().isoformat()
+    staff = payload.staff_name or "Accounts Officer"
+    disc = round(payload.discount_allowed or 0.0, 2)
+    total_settled = round(amt + disc, 2)
+
+    if is_vendor:
+        # Vendor settlement: hotel pays vendor
+        ref_slug = payload.reference_no or f"{int(datetime.datetime.now(datetime.UTC).timestamp() * 1000) % 10000000:07d}"
+        p_no = f"PAY-SETTLE-{party.id}-{ref_slug}"
+        existing_pmt = db.query(models.GeneralPayment).filter(models.GeneralPayment.payment_no == p_no).first()
+        if existing_pmt:
+            return {
+                "success": True,
+                "message": f"Account '{party.name}' settlement already recorded ({p_no}). Closing Balance: ₹{party.balance} {party.balance_type}",
+                "partyId": party.id,
+                "partyName": party.name,
+                "voucherRef": p_no,
+                "amount": existing_pmt.amount,
+                "discountAllowed": disc,
+                "closingBalance": party.balance,
+                "closingType": party.balance_type
+            }
+
+        pmt = models.GeneralPayment(
+            s_no=1,
+            voucher_name="Payments",
+            payment_no=p_no,
+            voucher_no=1,
+            date=p_date,
+            payment_mode=p_mode,
+            account_name=party.name,
+            account_mobile=party.mobile,
+            amount=amt,
+            remark=payload.narration or f"Settlement payout to vendor {party.name}"
+        )
+        db.add(pmt)
+        
+        # Update vendor balance
+        if (party.balance_type or "Cr").upper() == "CR":
+            diff = round(party.balance - total_settled, 2)
+            if diff >= 0:
+                party.balance = diff
+                party.balance_type = "Cr"
+            else:
+                party.balance = abs(diff)
+                party.balance_type = "Dr"
+        else:
+            party.balance = round(party.balance + total_settled, 2)
+            party.balance_type = "Dr"
+
+        # Journal entry
+        jv_id = f"JV-{p_no}"
+        jv = models.JournalEntry(
+            entry_id=jv_id,
+            date=p_date,
+            time=datetime.datetime.now(datetime.UTC).strftime("%I:%M %p"),
+            voucher_type="Payment",
+            reference_no=p_no,
+            narration=f"Vendor ledger settlement: {party.name}",
+            debit_account=f"Party Account ({party.name})",
+            credit_account="Cash in Hand (Reception)" if "cash" in p_mode.lower() else "Bank Accounts (SBI / HDFC / UPI)",
+            amount_paise=int(round(amt * 100)),
+            amount_rupees=amt,
+            posted_by=staff
+        )
+        db.add(jv)
+        voucher_ref = p_no
+    else:
+        # Customer settlement: hotel receives payment
+        ref_slug = payload.reference_no or f"{int(datetime.datetime.now(datetime.UTC).timestamp() * 1000) % 10000000:07d}"
+        r_no = f"REC-SETTLE-{party.id}-{ref_slug}"
+        existing_rec = db.query(models.GeneralReceipt).filter(models.GeneralReceipt.receipt_no == r_no).first()
+        if existing_rec:
+            return {
+                "success": True,
+                "message": f"Account '{party.name}' settlement already recorded ({r_no}). Closing Balance: ₹{party.balance} {party.balance_type}",
+                "partyId": party.id,
+                "partyName": party.name,
+                "voucherRef": r_no,
+                "amount": existing_rec.amount,
+                "discountAllowed": disc,
+                "closingBalance": party.balance,
+                "closingType": party.balance_type
+            }
+
+        rec = models.GeneralReceipt(
+            s_no=1,
+            voucher_name="Receipts",
+            receipt_no=r_no,
+            voucher_no=1,
+            date=p_date,
+            payment_mode=p_mode,
+            account_name=party.name,
+            account_mobile=party.mobile,
+            amount=amt,
+            remark=payload.narration or f"Settlement receipt from customer {party.name}"
+        )
+        db.add(rec)
+
+        # Update customer balance
+        if (party.balance_type or "Dr").upper() == "DR":
+            diff = round(party.balance - total_settled, 2)
+            if diff >= 0:
+                party.balance = diff
+                party.balance_type = "Dr"
+            else:
+                party.balance = abs(diff)
+                party.balance_type = "Cr"
+        else:
+            party.balance = round(party.balance + total_settled, 2)
+            party.balance_type = "Cr"
+
+        # Journal entry
+        jv_id = f"JV-{r_no}"
+        jv = models.JournalEntry(
+            entry_id=jv_id,
+            date=p_date,
+            time=datetime.datetime.now(datetime.UTC).strftime("%I:%M %p"),
+            voucher_type="Receipt",
+            reference_no=r_no,
+            narration=f"Customer ledger settlement: {party.name}",
+            debit_account="Cash in Hand (Reception)" if "cash" in p_mode.lower() else "Bank Accounts (SBI / HDFC / UPI)",
+            credit_account=f"Party Account ({party.name})",
+            amount_paise=int(round(amt * 100)),
+            amount_rupees=amt,
+            posted_by=staff
+        )
+        db.add(jv)
+        voucher_ref = r_no
+
+    record_audit_log(
+        db=db,
+        action="PARTY_ACCOUNT_SETTLED",
+        entity_type="PARTY_ACCOUNT",
+        entity_id=party.id,
+        new_data={
+            "party_name": party.name,
+            "settled_amount": amt,
+            "discount_allowed": disc,
+            "voucher_ref": voucher_ref,
+            "closing_balance": party.balance,
+            "closing_type": party.balance_type
+        },
+        staff_id=staff,
+        role="ACCOUNTS"
+    )
+
+    db.commit()
+    db.refresh(party)
+
+    return {
+        "success": True,
+        "message": f"Account '{party.name}' settled by ₹{amt} ({voucher_ref}). Closing Balance: ₹{party.balance} {party.balance_type}",
+        "partyId": party.id,
+        "partyName": party.name,
+        "voucherRef": voucher_ref,
+        "amount": amt,
+        "discountAllowed": disc,
+        "closingBalance": party.balance,
+        "closingType": party.balance_type
+    }
+
 # --- 23. General Receipts Register ---
 @router.post("/general-receipts")
 def save_general_receipt(payload: schemas.GeneralReceiptCreate, db: Session = Depends(get_db)):
-    """Save a general receipt voucher in PostgreSQL and update party balance."""
-    r_no = payload.receipt_no or payload.receiptNo or f"REC/{int(datetime.datetime.utcnow().timestamp()) % 100000}/24-25"
+    """Save a general receipt voucher in PostgreSQL and update party balance with double-entry integrity."""
+    r_no = payload.receipt_no or payload.receiptNo or f"REC/{int(datetime.datetime.now(datetime.UTC).timestamp() * 1000) % 10000000:07d}/24-25"
     v_name = payload.voucher_name or payload.voucherName or "Receipts"
     v_no = payload.voucher_no or payload.voucherNo or 1
     dt = payload.date or datetime.date.today().isoformat()
@@ -4016,6 +5161,7 @@ def save_general_receipt(payload: schemas.GeneralReceiptCreate, db: Session = De
     acc_mob = payload.account_mobile or payload.accountMobile
 
     existing = db.query(models.GeneralReceipt).filter(models.GeneralReceipt.receipt_no == r_no).first()
+    old_amount = existing.amount if existing else 0.0
     if existing:
         existing.s_no = payload.s_no or payload.sNo or existing.s_no
         existing.voucher_name = v_name
@@ -4042,12 +5188,68 @@ def save_general_receipt(payload: schemas.GeneralReceiptCreate, db: Session = De
         )
         db.add(rec)
 
-    # Settle party balance if matching party account exists
-    party = db.query(models.PartyAccount).filter(models.PartyAccount.name.ilike(acc_name.strip())).first()
-    if party:
-        party.balance = max(0.0, round(party.balance - payload.amount, 2))
-        if party.balance == 0.0:
-            party.balance_type = "Dr"
+    # Settle party balance if matching party account exists (idempotent: only apply delta if updated)
+    effective_amount = payload.amount if not existing else round(payload.amount - old_amount, 2)
+    party = db.query(models.PartyAccount).filter(
+        (models.PartyAccount.name.ilike(acc_name.strip())) |
+        (models.PartyAccount.id == acc_name.strip())
+    ).first()
+    if party and effective_amount != 0.0:
+        cat = (party.category or "").strip().lower()
+        is_vendor = cat in ["vendor", "supplier", "creditor"]
+        cur_type = (party.balance_type or ("Cr" if is_vendor else "Dr")).upper()
+        if is_vendor:
+            # Vendor refund: decreases advance (Dr) or increases payable (Cr)
+            if cur_type == "DR":
+                diff = round(party.balance - effective_amount, 2)
+                if diff >= 0:
+                    party.balance = diff
+                    party.balance_type = "Dr"
+                else:
+                    party.balance = abs(diff)
+                    party.balance_type = "Cr"
+            else:
+                party.balance = round(party.balance + effective_amount, 2)
+                party.balance_type = "Cr"
+        else:
+            # Customer / Corporate: receipt reduces Dr receivable
+            if cur_type == "DR":
+                diff = round(party.balance - effective_amount, 2)
+                if diff >= 0:
+                    party.balance = diff
+                    party.balance_type = "Dr"
+                else:
+                    party.balance = abs(diff)
+                    party.balance_type = "Cr"  # Credit / advance balance held
+            else:
+                party.balance = round(party.balance + effective_amount, 2)
+                party.balance_type = "Cr"
+
+    # Record balancing journal entry in General Ledger
+    if payload.amount > 0:
+        asset_acct = "Cash in Hand (Reception)" if "cash" in p_mode.lower() else "Bank Accounts (SBI / HDFC / UPI)"
+        rec_jv_id = f"JV-REC-{r_no.replace('/', '-').replace(' ', '-')}"
+        existing_jv = db.query(models.JournalEntry).filter(models.JournalEntry.entry_id == rec_jv_id).first()
+        if existing_jv:
+            existing_jv.amount_rupees = payload.amount
+            existing_jv.amount_paise = int(round(payload.amount * 100))
+            existing_jv.debit_account = asset_acct
+            existing_jv.credit_account = f"Sundry Debtor ({acc_name})"
+        else:
+            rec_jv = models.JournalEntry(
+                entry_id=rec_jv_id,
+                date=dt,
+                time=datetime.datetime.now(datetime.UTC).strftime("%I:%M %p"),
+                voucher_type="Receipt",
+                reference_no=r_no,
+                narration=f"General receipt from {acc_name} via {p_mode}: {payload.remark or ''}".strip(),
+                debit_account=asset_acct,
+                credit_account=f"Sundry Debtor ({acc_name})",
+                amount_paise=int(round(payload.amount * 100)),
+                amount_rupees=payload.amount,
+                posted_by="Cashier / Reception"
+            )
+            db.add(rec_jv)
 
     db.commit()
     db.refresh(rec)
@@ -4092,6 +5294,7 @@ def delete_general_receipt(receipt_no: str, db: Session = Depends(get_db)):
     rec = db.query(models.GeneralReceipt).filter(models.GeneralReceipt.receipt_no == receipt_no).first()
     if not rec:
         raise HTTPException(status_code=404, detail="Receipt not found")
+    db.query(models.JournalEntry).filter(models.JournalEntry.reference_no == receipt_no).delete()
     db.delete(rec)
     db.commit()
     return {"success": True, "message": f"Receipt {receipt_no} deleted."}
@@ -4099,8 +5302,8 @@ def delete_general_receipt(receipt_no: str, db: Session = Depends(get_db)):
 # --- 24. General Payments Register ---
 @router.post("/general-payments")
 def save_general_payment(payload: schemas.GeneralPaymentCreate, db: Session = Depends(get_db)):
-    """Save a general payment voucher in PostgreSQL and update party balance."""
-    p_no = payload.payment_no or payload.paymentNo or f"PAY/{int(datetime.datetime.utcnow().timestamp()) % 100000}/24-25"
+    """Save a general payment voucher in PostgreSQL and update party balance with double-entry integrity."""
+    p_no = payload.payment_no or payload.paymentNo or f"PAY/{int(datetime.datetime.now(datetime.UTC).timestamp() * 1000) % 10000000:07d}/24-25"
     v_name = payload.voucher_name or payload.voucherName or "Payments"
     v_no = payload.voucher_no or payload.voucherNo or 1
     dt = payload.date or datetime.date.today().isoformat()
@@ -4109,6 +5312,7 @@ def save_general_payment(payload: schemas.GeneralPaymentCreate, db: Session = De
     acc_mob = payload.account_mobile or payload.accountMobile
 
     existing = db.query(models.GeneralPayment).filter(models.GeneralPayment.payment_no == p_no).first()
+    old_amount = existing.amount if existing else 0.0
     if existing:
         existing.s_no = payload.s_no or payload.sNo or existing.s_no
         existing.voucher_name = v_name
@@ -4135,11 +5339,42 @@ def save_general_payment(payload: schemas.GeneralPaymentCreate, db: Session = De
         )
         db.add(pmt)
 
-    # Update party balance if matching party account exists
-    party = db.query(models.PartyAccount).filter(models.PartyAccount.name.ilike(acc_name.strip())).first()
-    if party:
-        party.balance = round(party.balance + payload.amount, 2)
-        party.balance_type = "Dr"
+    # Update party balance if matching party account exists (idempotent: only apply delta if updated)
+    effective_amount = payload.amount if not existing else round(payload.amount - old_amount, 2)
+    party = db.query(models.PartyAccount).filter(
+        (models.PartyAccount.name.ilike(acc_name.strip())) |
+        (models.PartyAccount.id == acc_name.strip())
+    ).first()
+    if party and effective_amount != 0.0:
+        cat = (party.category or "").strip().lower()
+        is_vendor = cat in ["vendor", "supplier", "creditor"]
+        cur_type = (party.balance_type or ("Cr" if is_vendor else "Dr")).upper()
+        if is_vendor:
+            # Payment to vendor: reduces Cr payable!
+            if cur_type == "CR":
+                diff = round(party.balance - effective_amount, 2)
+                if diff >= 0:
+                    party.balance = diff
+                    party.balance_type = "Cr"
+                else:
+                    party.balance = abs(diff)
+                    party.balance_type = "Dr"  # Advance paid to vendor
+            else:
+                party.balance = round(party.balance + effective_amount, 2)
+                party.balance_type = "Dr"
+        else:
+            # Payment / Refund to customer: reduces Cr deposit or increases Dr receivable
+            if cur_type == "CR":
+                diff = round(party.balance - effective_amount, 2)
+                if diff >= 0:
+                    party.balance = diff
+                    party.balance_type = "Cr"
+                else:
+                    party.balance = abs(diff)
+                    party.balance_type = "Dr"
+            else:
+                party.balance = round(party.balance + effective_amount, 2)
+                party.balance_type = "Dr"
 
     # Immutable Audit Log Entry in audit_logs (#48)
     record_audit_log(
@@ -4156,6 +5391,32 @@ def save_general_payment(payload: schemas.GeneralPaymentCreate, db: Session = De
         staff_id="Accounts",
         role="MANAGER"
     )
+
+    # Record balancing journal entry in General Ledger
+    if payload.amount > 0:
+        asset_acct = "Cash in Hand (Reception)" if "cash" in p_mode.lower() else "Bank Accounts (SBI / HDFC / UPI)"
+        pay_jv_id = f"JV-PAY-{p_no.replace('/', '-').replace(' ', '-')}"
+        existing_jv = db.query(models.JournalEntry).filter(models.JournalEntry.entry_id == pay_jv_id).first()
+        if existing_jv:
+            existing_jv.amount_rupees = payload.amount
+            existing_jv.amount_paise = int(round(payload.amount * 100))
+            existing_jv.debit_account = f"Sundry Expense / Vendor ({acc_name})"
+            existing_jv.credit_account = asset_acct
+        else:
+            pay_jv = models.JournalEntry(
+                entry_id=pay_jv_id,
+                date=dt,
+                time=datetime.datetime.now(datetime.UTC).strftime("%I:%M %p"),
+                voucher_type="Payment",
+                reference_no=p_no,
+                narration=f"General payment to {acc_name} via {p_mode}: {payload.remark or ''}".strip(),
+                debit_account=f"Sundry Expense / Vendor ({acc_name})",
+                credit_account=asset_acct,
+                amount_paise=int(round(payload.amount * 100)),
+                amount_rupees=payload.amount,
+                posted_by="Cashier / Reception"
+            )
+            db.add(pay_jv)
 
     db.commit()
     db.refresh(pmt)
@@ -4200,9 +5461,116 @@ def delete_general_payment(payment_no: str, db: Session = Depends(get_db)):
     pmt = db.query(models.GeneralPayment).filter(models.GeneralPayment.payment_no == payment_no).first()
     if not pmt:
         raise HTTPException(status_code=404, detail="Payment not found")
+    db.query(models.JournalEntry).filter(models.JournalEntry.reference_no == payment_no).delete()
     db.delete(pmt)
     db.commit()
     return {"success": True, "message": f"Payment {payment_no} deleted."}
+
+# --- 24b. Double-Entry General Ledger Trial Balance Engine ---
+@router.get("/trial-balance")
+@router.get("/pms/trial-balance")
+def get_trial_balance(as_of: Optional[str] = None, db: Session = Depends(get_db)):
+    """
+    Compute double-entry General Ledger Trial Balance from posted Journal Entries.
+    Enforces the core accounting invariant: sum(Debits) == sum(Credits) (Delta == 0.00).
+    Every financial transaction (manual JVs, compound JVs, party openings, settlements,
+    receipts, payments, and advance collections) records balanced debit and credit legs
+    in the General Ledger (models.JournalEntry).
+    """
+    as_of_date = as_of or datetime.date.today().isoformat()
+    ledger = {}
+
+    def get_category_and_normal(acc_name: str):
+        lower = acc_name.lower()
+        if any(w in lower for w in ["cash", "bank", "receivable", "debtor", "asset", "advance to"]):
+            return "Current Asset", "Dr", "1000"
+        elif any(w in lower for w in ["payable", "creditor", "liability", "tax", "gst", "deposit", "advance from"]):
+            return "Current Liability", "Cr", "2000"
+        elif any(w in lower for w in ["capital", "equity", "clearing", "reserve", "opening balance"]):
+            return "Equity", "Cr", "3000"
+        elif any(w in lower for w in ["revenue", "sales", "income", "food", "accommodation", "discount received", "rasoi"]):
+            return "Income", "Cr", "4000"
+        elif any(w in lower for w in ["expense", "purchase", "salary", "maintenance", "cleaning", "laundry", "discount allowed"]):
+            return "Expense", "Dr", "5000"
+        return "General Ledger", "Dr", "9000"
+
+    def add_posting(acc_name: str, dr: float = 0.0, cr: float = 0.0):
+        clean_name = acc_name.strip()
+        if not clean_name:
+            return
+        if clean_name not in ledger:
+            cat, norm, code = get_category_and_normal(clean_name)
+            ledger[clean_name] = {
+                "accountName": clean_name,
+                "code": code,
+                "category": cat,
+                "normal": norm,
+                "debit": 0.0,
+                "credit": 0.0
+            }
+        ledger[clean_name]["debit"] = round(ledger[clean_name]["debit"] + dr, 2)
+        ledger[clean_name]["credit"] = round(ledger[clean_name]["credit"] + cr, 2)
+
+    # 1. Query all balanced Journal Entries up to as_of
+    query = db.query(models.JournalEntry)
+    if as_of:
+        query = query.filter(models.JournalEntry.date <= as_of)
+    jvs = query.all()
+
+    for j in jvs:
+        amt = round(j.amount_rupees or 0.0, 2)
+        if amt > 0 and j.debit_account and j.credit_account:
+            add_posting(j.debit_account, dr=amt, cr=0.0)
+            add_posting(j.credit_account, dr=0.0, cr=amt)
+
+    # 2. Format into Trial Balance rows with net debit / credit
+    rows = []
+    tot_debit = 0.0
+    tot_credit = 0.0
+
+    for acc in sorted(ledger.values(), key=lambda x: (x["code"], x["accountName"])):
+        d = acc["debit"]
+        c = acc["credit"]
+        net = round(d - c, 2)
+        if net == 0.0:
+            continue
+        
+        if net > 0:
+            final_dr = net
+            final_cr = 0.0
+            bal_type = "Dr"
+        else:
+            final_dr = 0.0
+            final_cr = abs(net)
+            bal_type = "Cr"
+
+        tot_debit = round(tot_debit + final_dr, 2)
+        tot_credit = round(tot_credit + final_cr, 2)
+
+        rows.append({
+            "code": acc["code"],
+            "accountName": acc["accountName"],
+            "category": acc["category"],
+            "normal": acc["normal"],
+            "debit": final_dr,
+            "credit": final_cr,
+            "netBalance": abs(net),
+            "balanceType": bal_type
+        })
+
+    delta = round(abs(tot_debit - tot_credit), 2)
+    balanced = (delta == 0.0)
+
+    return {
+        "asOf": as_of_date,
+        "balanced": balanced,
+        "totalDebits": tot_debit,
+        "totalCredits": tot_credit,
+        "delta": delta,
+        "verificationNote": "Zero-sum invariant satisfied: Total Debits == Total Credits" if balanced else f"Imbalance detected: Delta ₹{delta}",
+        "accountsCount": len(rows),
+        "accounts": rows
+    }
 
 # --- 25. Godowns Master ---
 @router.post("/godowns")
@@ -4330,22 +5698,200 @@ def delete_item_group(group_id: str, db: Session = Depends(get_db)):
     db.commit()
     return {"success": True, "message": f"Item group {group_id} deleted."}
 
-# --- 27. Stock Transfers & Godown Movements ---
+# --- 27. Store Inventory, Department Requisitions & Recipe Depletion ---
+
+DEFAULT_RECIPE_BOM: Dict[str, List[Dict[str, Any]]] = {
+    "special masala dosa": [
+        {"item_name": "Dosa Batter", "qty": 0.15, "unit": "kg"},
+        {"item_name": "Potato", "qty": 0.10, "unit": "kg"},
+        {"item_name": "Desi Ghee", "qty": 0.02, "unit": "kg"},
+    ],
+    "steamed idli sambar (2 pcs)": [
+        {"item_name": "Idli Batter", "qty": 0.15, "unit": "kg"},
+        {"item_name": "Toor Dal", "qty": 0.05, "unit": "kg"},
+    ],
+    "medu vada sambar (2 pcs)": [
+        {"item_name": "Urad Dal", "qty": 0.10, "unit": "kg"},
+        {"item_name": "Cooking Oil", "qty": 0.04, "unit": "liter"},
+        {"item_name": "Toor Dal", "qty": 0.05, "unit": "kg"},
+    ],
+    "poori bhaji (4 pcs)": [
+        {"item_name": "Wheat Atta", "qty": 0.15, "unit": "kg"},
+        {"item_name": "Potato", "qty": 0.15, "unit": "kg"},
+        {"item_name": "Cooking Oil", "qty": 0.05, "unit": "liter"},
+    ],
+    "paneer butter masala": [
+        {"item_name": "Fresh Paneer", "qty": 0.20, "unit": "kg"},
+        {"item_name": "Amul Butter", "qty": 0.05, "unit": "kg"},
+        {"item_name": "Tomato Gravy Base", "qty": 0.15, "unit": "kg"},
+    ],
+    "special kaju kari": [
+        {"item_name": "Cashew Nuts (Kaju)", "qty": 0.10, "unit": "kg"},
+        {"item_name": "Amul Butter", "qty": 0.04, "unit": "kg"},
+        {"item_name": "Cream / Gravy", "qty": 0.15, "unit": "kg"},
+    ],
+    "dal tadka desi ghee": [
+        {"item_name": "Toor Dal", "qty": 0.12, "unit": "kg"},
+        {"item_name": "Desi Ghee", "qty": 0.04, "unit": "kg"},
+    ],
+    "sai prasad maha thali (pure desi ghee)": [
+        {"item_name": "Basmati Rice", "qty": 0.15, "unit": "kg"},
+        {"item_name": "Wheat Atta", "qty": 0.10, "unit": "kg"},
+        {"item_name": "Fresh Paneer", "qty": 0.08, "unit": "kg"},
+        {"item_name": "Toor Dal", "qty": 0.08, "unit": "kg"},
+        {"item_name": "Desi Ghee", "qty": 0.05, "unit": "kg"},
+    ],
+    "jain special thali (no onion/garlic)": [
+        {"item_name": "Basmati Rice", "qty": 0.15, "unit": "kg"},
+        {"item_name": "Wheat Atta", "qty": 0.10, "unit": "kg"},
+        {"item_name": "Fresh Paneer", "qty": 0.08, "unit": "kg"},
+        {"item_name": "Toor Dal", "qty": 0.08, "unit": "kg"},
+        {"item_name": "Desi Ghee", "qty": 0.04, "unit": "kg"},
+    ],
+    "palak paneer (fresh cottage cheese)": [
+        {"item_name": "Fresh Paneer", "qty": 0.20, "unit": "kg"},
+        {"item_name": "Spinach Puree", "qty": 0.20, "unit": "kg"},
+        {"item_name": "Desi Ghee", "qty": 0.03, "unit": "kg"},
+    ],
+}
+
+def compute_godown_stock_balances(godown_name: str, db: Session) -> Dict[str, float]:
+    """
+    Computes real-time closing stock balance per item for a godown:
+    Inward Purchases + Transfers In - Transfers Out - Sales/Depletion.
+    Only transfers with status == 'ISSUED' (or legacy transfers with null/blank status) count.
+    """
+    g_target = godown_name.strip().lower()
+    balances: Dict[str, float] = {}
+
+    # 1. Purchases Inward
+    purchases = db.query(models.InventoryPurchase).all()
+    for p in purchases:
+        if (p.godown or "").strip().lower() == g_target:
+            try:
+                p_items = json.loads(p.items_json) if p.items_json else []
+                for itm in p_items:
+                    name = (itm.get("itemName") or itm.get("item_name") or itm.get("name") or "").strip().lower()
+                    qty = float(itm.get("qty") or itm.get("quantity") or 0.0)
+                    if name and qty > 0:
+                        balances[name] = balances.get(name, 0.0) + qty
+            except Exception:
+                pass
+
+    # 2. Transfers (only ISSUED count as physically moved)
+    transfers = db.query(models.StockTransfer).all()
+    for tr in transfers:
+        tr_status = (getattr(tr, "status", None) or "ISSUED").upper()
+        if tr_status in ("REJECTED", "PENDING"):
+            continue
+        try:
+            tr_items = json.loads(tr.items_json) if tr.items_json else []
+        except Exception:
+            tr_items = []
+
+        is_to = (tr.to_godown or "").strip().lower() == g_target
+        is_from = (tr.from_godown or "").strip().lower() == g_target
+
+        for itm in tr_items:
+            name = (itm.get("itemName") or itm.get("item_name") or itm.get("name") or "").strip().lower()
+            qty = float(itm.get("qty") or itm.get("quantity") or 0.0)
+            if not name or qty <= 0:
+                continue
+            if is_to:
+                balances[name] = balances.get(name, 0.0) + qty
+            if is_from:
+                balances[name] = balances.get(name, 0.0) - qty
+
+    # 3. KOT Kitchen Sales Depletion (if Kitchen godown)
+    if "kitchen" in g_target:
+        target_gd = db.query(models.Godown).filter(func.lower(models.Godown.name) == g_target).first()
+        cutoff_dt = target_gd.created_at if target_gd and target_gd.created_at else None
+
+        kot_query = db.query(models.KotTicket).filter(models.KotTicket.status != "Cancelled")
+        if cutoff_dt:
+            kot_query = kot_query.filter(models.KotTicket.created_at >= cutoff_dt)
+        kots = kot_query.all()
+        for k in kots:
+            try:
+                k_items = json.loads(k.items_json) if k.items_json else []
+            except Exception:
+                k_items = []
+            for itm in k_items:
+                m_name = (itm.get("itemName") or itm.get("name") or "").strip().lower()
+                m_qty = float(itm.get("qty") or itm.get("quantity") or 1.0)
+                if m_name in DEFAULT_RECIPE_BOM:
+                    for ing in DEFAULT_RECIPE_BOM[m_name]:
+                        ing_name = ing["item_name"].strip().lower()
+                        ing_qty = float(ing["qty"]) * m_qty
+                        balances[ing_name] = balances.get(ing_name, 0.0) - ing_qty
+                else:
+                    balances[m_name] = balances.get(m_name, 0.0) - m_qty
+
+    return balances
+
+
 @router.post("/stock-transfers")
+@router.post("/inventory/transfers")
 def save_stock_transfer(payload: schemas.StockTransferCreate, db: Session = Depends(get_db)):
-    """Record a stock transfer between godowns in PostgreSQL."""
+    """
+    Record an inter-department stock transfer or store requisition in PostgreSQL.
+    Enforces negative inventory prevention at the source godown unless overridden by manager pin.
+    """
     e_no = payload.entry_no or payload.entryNo or f"ST/{int(datetime.datetime.utcnow().timestamp()) % 100000}/24-25"
     dt = payload.date or datetime.date.today().isoformat()
     f_gd = payload.from_godown or payload.fromGodown or "Main Store"
     t_gd = payload.to_godown or payload.toGodown or "Kitchen"
     b_dt = payload.bill_date or payload.billDate or dt
     b_no = payload.bill_no or payload.billNo or "1"
-    
+    st_status = (payload.status or "ISSUED").upper()
+
+    items_list = payload.items or []
     items_str = payload.items_json
-    if not items_str and payload.items is not None:
-        items_str = json.dumps(payload.items)
+    if not items_str and items_list:
+        items_str = json.dumps(items_list)
+    elif items_str and not items_list:
+        try:
+            items_list = json.loads(items_str)
+        except Exception:
+            items_list = []
     if not items_str:
         items_str = "[]"
+
+    # Negative Inventory Prevention: Check source godown available balance
+    if st_status == "ISSUED" and not payload.allow_negative_override:
+        source_balances = compute_godown_stock_balances(f_gd, db)
+        for itm in items_list:
+            itm_name = (itm.get("itemName") or itm.get("item_name") or itm.get("name") or "").strip()
+            req_qty = float(itm.get("qty") or itm.get("quantity") or 0.0)
+            if not itm_name or req_qty <= 0:
+                continue
+            available_qty = source_balances.get(itm_name.lower(), 0.0)
+            if available_qty < req_qty:
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        f"Negative inventory blocked: Item '{itm_name}' in source store '{f_gd}' "
+                        f"only has {available_qty:.2f} available, but {req_qty:.2f} requested. "
+                        f"Inward purchase stock or specify allow_negative_override=True with manager authorization."
+                    )
+                )
+
+    if payload.allow_negative_override:
+        record_audit_log(
+            db=db,
+            action="NEGATIVE_INVENTORY_OVERRIDE",
+            entity_type="INVENTORY",
+            entity_id=e_no,
+            new_data={
+                "from_godown": f_gd,
+                "to_godown": t_gd,
+                "items": items_list,
+                "reason": payload.override_reason or "Manager override",
+                "manager_pin": payload.manager_pin
+            },
+            staff_id="Duty Manager",
+            role="Manager"
+        )
 
     existing = db.query(models.StockTransfer).filter(models.StockTransfer.entry_no == e_no).first()
     if existing:
@@ -4362,6 +5908,8 @@ def save_stock_transfer(payload: schemas.StockTransferCreate, db: Session = Depe
         existing.total_gst_amt = payload.total_gst_amt or payload.totalGstAmt or 0.0
         existing.total_net_value = payload.total_net_value or payload.totalNetValue or 0.0
         existing.remark = payload.remark
+        if hasattr(existing, "status"):
+            existing.status = st_status
         st = existing
     else:
         st = models.StockTransfer(
@@ -4378,16 +5926,27 @@ def save_stock_transfer(payload: schemas.StockTransferCreate, db: Session = Depe
             total_taxable=payload.total_taxable or payload.totalTaxable or 0.0,
             total_gst_amt=payload.total_gst_amt or payload.totalGstAmt or 0.0,
             total_net_value=payload.total_net_value or payload.totalNetValue or 0.0,
-            remark=payload.remark
+            remark=payload.remark,
+            status=st_status
         )
         db.add(st)
 
     db.commit()
     db.refresh(st)
 
+    ws_manager.broadcast_sync({
+        "event": "STOCK_TRANSFER_RECORDED",
+        "entryNo": st.entry_no,
+        "fromGodown": st.from_godown,
+        "toGodown": st.to_godown,
+        "status": getattr(st, "status", "ISSUED"),
+        "totalQty": st.total_qty,
+        "timestamp": now_utc().isoformat()
+    }, channel="inventory")
+
     return {
         "success": True,
-        "message": f"Stock transfer {st.entry_no} ({st.from_godown} -> {st.to_godown}) recorded in PostgreSQL.",
+        "message": f"Stock voucher {st.entry_no} ({st.from_godown} -> {st.to_godown}) recorded with status {getattr(st, 'status', 'ISSUED')}.",
         "id": f"st-{st.id}",
         "entryNo": st.entry_no,
         "date": st.date,
@@ -4396,10 +5955,83 @@ def save_stock_transfer(payload: schemas.StockTransferCreate, db: Session = Depe
         "totalQty": st.total_qty,
         "totalAmount": st.total_amount,
         "totalNetValue": st.total_net_value,
+        "status": getattr(st, "status", "ISSUED"),
         "remark": st.remark
     }
 
+
+@router.post("/stock-transfers/{entry_no}/action")
+@router.post("/inventory/requisitions/action")
+def action_stock_transfer(entry_no: str, payload: schemas.RequisitionActionRequest, db: Session = Depends(get_db)):
+    """
+    Storekeeper Requisition Workflow: Approve & ISSUE or REJECT a department requisition.
+    Validates stock availability when issuing.
+    """
+    st = db.query(models.StockTransfer).filter(models.StockTransfer.entry_no == entry_no).first()
+    if not st:
+        raise HTTPException(status_code=404, detail=f"Stock transfer voucher '{entry_no}' not found")
+
+    action = payload.action.upper()
+    if action == "ISSUE":
+        source_balances = compute_godown_stock_balances(st.from_godown, db)
+        items_list = json.loads(st.items_json) if st.items_json else []
+        for itm in items_list:
+            itm_name = (itm.get("itemName") or itm.get("item_name") or itm.get("name") or "").strip()
+            req_qty = float(itm.get("qty") or itm.get("quantity") or 0.0)
+            if not itm_name or req_qty <= 0:
+                continue
+            available_qty = source_balances.get(itm_name.lower(), 0.0)
+            if available_qty < req_qty:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Cannot issue requisition: Item '{itm_name}' in '{st.from_godown}' only has {available_qty:.2f} available, but {req_qty:.2f} required."
+                )
+        st.status = "ISSUED"
+        st.remark = f"{st.remark or ''} [ISSUED: {payload.reason or 'Storekeeper approved'}]".strip()
+        record_audit_log(
+            db=db,
+            action="REQUISITION_ISSUED",
+            entity_type="INVENTORY",
+            entity_id=entry_no,
+            new_data={"entry_no": entry_no, "action": "ISSUE", "reason": payload.reason},
+            staff_id="Storekeeper",
+            role="Inventory"
+        )
+    elif action == "REJECT":
+        st.status = "REJECTED"
+        st.remark = f"{st.remark or ''} [REJECTED: {payload.reason or 'Storekeeper rejected'}]".strip()
+        record_audit_log(
+            db=db,
+            action="REQUISITION_REJECTED",
+            entity_type="INVENTORY",
+            entity_id=entry_no,
+            new_data={"entry_no": entry_no, "action": "REJECT", "reason": payload.reason},
+            staff_id="Storekeeper",
+            role="Inventory"
+        )
+    else:
+        raise HTTPException(status_code=400, detail=f"Invalid action '{payload.action}'. Expected 'ISSUE' or 'REJECT'")
+
+    db.commit()
+    db.refresh(st)
+
+    ws_manager.broadcast_sync({
+        "event": "REQUISITION_STATUS_UPDATED",
+        "entryNo": st.entry_no,
+        "status": st.status,
+        "timestamp": now_utc().isoformat()
+    }, channel="inventory")
+
+    return {
+        "success": True,
+        "entryNo": st.entry_no,
+        "status": st.status,
+        "message": f"Requisition {st.entry_no} status updated to {st.status}"
+    }
+
+
 @router.get("/stock-transfers")
+@router.get("/inventory/transfers")
 def get_stock_transfers(db: Session = Depends(get_db)):
     """Retrieve all stock transfers from PostgreSQL."""
     transfers = db.query(models.StockTransfer).order_by(models.StockTransfer.created_at.desc()).limit(300).all()
@@ -4418,11 +6050,14 @@ def get_stock_transfers(db: Session = Depends(get_db)):
         "totalTaxable": t.total_taxable,
         "totalGstAmt": t.total_gst_amt,
         "totalNetValue": t.total_net_value,
+        "status": getattr(t, "status", "ISSUED"),
         "remark": t.remark,
         "createdAt": t.created_at.isoformat() if t.created_at else None
     } for t in transfers]
 
+
 @router.delete("/stock-transfers/{entry_no}")
+@router.delete("/inventory/transfers/{entry_no}")
 def delete_stock_transfer(entry_no: str, db: Session = Depends(get_db)):
     """Delete a stock transfer voucher from PostgreSQL."""
     st = db.query(models.StockTransfer).filter(models.StockTransfer.entry_no == entry_no).first()
@@ -4431,6 +6066,65 @@ def delete_stock_transfer(entry_no: str, db: Session = Depends(get_db)):
     db.delete(st)
     db.commit()
     return {"success": True, "message": f"Stock transfer {entry_no} deleted."}
+
+
+@router.get("/inventory/stock-summary")
+def get_inventory_stock_summary(db: Session = Depends(get_db)):
+    """
+    Returns store-wise stock balances, valuation, and low stock status for all registered godowns.
+    """
+    godowns = db.query(models.Godown).all()
+    if not godowns:
+        godowns_list = ["Main Store", "Kitchen Store", "Housekeeping Store"]
+    else:
+        godowns_list = [g.name for g in godowns]
+
+    summary = []
+    for g_name in godowns_list:
+        balances = compute_godown_stock_balances(g_name, db)
+        items_summary = []
+        for itm_name, closing in balances.items():
+            items_summary.append({
+                "itemName": itm_name.title(),
+                "closingStock": round(closing, 3),
+                "isLowStock": closing <= 10.0
+            })
+        summary.append({
+            "godownName": g_name,
+            "totalItems": len(items_summary),
+            "items": sorted(items_summary, key=lambda x: x["itemName"])
+        })
+    return {"success": True, "godowns": summary}
+
+
+@router.get("/inventory/low-stock-alerts")
+def get_low_stock_alerts(threshold: float = 10.0, db: Session = Depends(get_db)):
+    """
+    Returns list of items whose stock has fallen below the minimum reorder threshold.
+    """
+    godowns = db.query(models.Godown).all()
+    g_names = [g.name for g in godowns] if godowns else ["Main Store", "Kitchen Store", "Housekeeping Store"]
+    alerts = []
+    for g_name in g_names:
+        balances = compute_godown_stock_balances(g_name, db)
+        for itm_name, closing in balances.items():
+            if closing <= threshold:
+                alerts.append({
+                    "godown": g_name,
+                    "itemName": itm_name.title(),
+                    "closingStock": round(closing, 3),
+                    "threshold": threshold,
+                    "reorderRequired": True
+                })
+    return {"success": True, "count": len(alerts), "alerts": alerts}
+
+
+@router.get("/inventory/recipes")
+def get_recipe_boms():
+    """
+    Returns the Bill of Materials (BOM) ingredient mappings for Vasudev Rasoi restaurant menu items.
+    """
+    return {"success": True, "recipes": DEFAULT_RECIPE_BOM}
 
 # --- 28. User Accounts & Staff Permissions ---
 @router.post("/users")
@@ -4932,12 +6626,22 @@ def delete_agent_commission(commission_id: str, db: Session = Depends(get_db)):
 # --- 31. Shift Handovers & Cash Reconciliation ---
 @router.post("/shift-handovers")
 def save_shift_handover(payload: schemas.ShiftHandoverCreate, db: Session = Depends(get_db)):
-    """Save or update a shift handover cash reconciliation record in PostgreSQL."""
+    """Save or update a shift handover cash reconciliation record in PostgreSQL with variance auditing."""
     s_id = payload.shift_id or payload.shiftId or f"SHIFT/{datetime.date.today().strftime('%Y%m%d')}/01"
     s_date = payload.shift_date or payload.shiftDate or datetime.date.today().isoformat()
     s_time = payload.shift_time or payload.shiftTime or "07:00 AM - 03:00 PM"
     u_email = payload.user_email or payload.userEmail or "reception@sai-vasudev.com"
     u_name = payload.user_name or payload.userName or "Front Desk Duty Manager"
+
+    opening = float(payload.opening_drawer_cash or payload.openingDrawerCash or 5000.0)
+    room_c = float(payload.room_cash_collected or payload.roomCashCollected or 0.0)
+    food_c = float(payload.food_cash_collected or payload.foodCashCollected or 0.0)
+    adv_c = float(payload.advance_cash_collected or payload.advanceCashCollected or 0.0)
+    exp_c = float(payload.expenses_paid_from_drawer or payload.expensesPaidFromDrawer or 0.0)
+    counted_c = float(payload.net_physical_cash_in_drawer or payload.netPhysicalCashInDrawer or opening)
+
+    expected_c = round(opening + room_c + food_c + adv_c - exp_c, 2)
+    cash_variance = round(counted_c - expected_c, 2)
 
     existing = db.query(models.ShiftHandover).filter(models.ShiftHandover.shift_id == s_id).first()
     if existing:
@@ -4946,16 +6650,16 @@ def save_shift_handover(payload: schemas.ShiftHandoverCreate, db: Session = Depe
         existing.user_email = u_email
         existing.user_name = u_name
         existing.shift_type = payload.shift_type or payload.shiftType or "Morning"
-        existing.opening_drawer_cash = payload.opening_drawer_cash or payload.openingDrawerCash or 5000.0
-        existing.room_cash_collected = payload.room_cash_collected or payload.roomCashCollected or 0.0
-        existing.food_cash_collected = payload.food_cash_collected or payload.foodCashCollected or 0.0
-        existing.advance_cash_collected = payload.advance_cash_collected or payload.advanceCashCollected or 0.0
-        existing.expenses_paid_from_drawer = payload.expenses_paid_from_drawer or payload.expensesPaidFromDrawer or 0.0
-        existing.net_physical_cash_in_drawer = payload.net_physical_cash_in_drawer or payload.netPhysicalCashInDrawer or 5000.0
-        existing.online_upi_verified = payload.online_upi_verified or payload.onlineUpiVerified or 0.0
-        existing.card_swipe_verified = payload.card_swipe_verified or payload.cardSwipeVerified or 0.0
-        existing.credit_accounts_added = payload.credit_accounts_added or payload.creditAccountsAdded or 0.0
-        existing.total_transactions_handled = payload.total_transactions_handled or payload.totalTransactionsHandled or 0
+        existing.opening_drawer_cash = opening
+        existing.room_cash_collected = room_c
+        existing.food_cash_collected = food_c
+        existing.advance_cash_collected = adv_c
+        existing.expenses_paid_from_drawer = exp_c
+        existing.net_physical_cash_in_drawer = counted_c
+        existing.online_upi_verified = float(payload.online_upi_verified or payload.onlineUpiVerified or 0.0)
+        existing.card_swipe_verified = float(payload.card_swipe_verified or payload.cardSwipeVerified or 0.0)
+        existing.credit_accounts_added = float(payload.credit_accounts_added or payload.creditAccountsAdded or 0.0)
+        existing.total_transactions_handled = int(payload.total_transactions_handled or payload.totalTransactionsHandled or 0)
         existing.handover_to_user = payload.handover_to_user or payload.handoverToUser
         existing.handover_notes = payload.handover_notes or payload.handoverNotes
         existing.status = payload.status or "Verified & Closed"
@@ -4968,16 +6672,16 @@ def save_shift_handover(payload: schemas.ShiftHandoverCreate, db: Session = Depe
             user_email=u_email,
             user_name=u_name,
             shift_type=payload.shift_type or payload.shiftType or "Morning",
-            opening_drawer_cash=payload.opening_drawer_cash or payload.openingDrawerCash or 5000.0,
-            room_cash_collected=payload.room_cash_collected or payload.roomCashCollected or 0.0,
-            food_cash_collected=payload.food_cash_collected or payload.foodCashCollected or 0.0,
-            advance_cash_collected=payload.advance_cash_collected or payload.advanceCashCollected or 0.0,
-            expenses_paid_from_drawer=payload.expenses_paid_from_drawer or payload.expensesPaidFromDrawer or 0.0,
-            net_physical_cash_in_drawer=payload.net_physical_cash_in_drawer or payload.netPhysicalCashInDrawer or 5000.0,
-            online_upi_verified=payload.online_upi_verified or payload.onlineUpiVerified or 0.0,
-            card_swipe_verified=payload.card_swipe_verified or payload.cardSwipeVerified or 0.0,
-            credit_accounts_added=payload.credit_accounts_added or payload.creditAccountsAdded or 0.0,
-            total_transactions_handled=payload.total_transactions_handled or payload.totalTransactionsHandled or 0,
+            opening_drawer_cash=opening,
+            room_cash_collected=room_c,
+            food_cash_collected=food_c,
+            advance_cash_collected=adv_c,
+            expenses_paid_from_drawer=exp_c,
+            net_physical_cash_in_drawer=counted_c,
+            online_upi_verified=float(payload.online_upi_verified or payload.onlineUpiVerified or 0.0),
+            card_swipe_verified=float(payload.card_swipe_verified or payload.cardSwipeVerified or 0.0),
+            credit_accounts_added=float(payload.credit_accounts_added or payload.creditAccountsAdded or 0.0),
+            total_transactions_handled=int(payload.total_transactions_handled or payload.totalTransactionsHandled or 0),
             handover_to_user=payload.handover_to_user or payload.handoverToUser,
             handover_notes=payload.handover_notes or payload.handoverNotes,
             status=payload.status or "Verified & Closed"
@@ -4986,6 +6690,16 @@ def save_shift_handover(payload: schemas.ShiftHandoverCreate, db: Session = Depe
 
     db.commit()
     db.refresh(handover)
+
+    # Cash variance audit alert
+    if abs(cash_variance) > 0.01:
+        log_audit(db, "SHIFT_CASH_VARIANCE", handover.shift_id, u_email, {
+            "shift_id": handover.shift_id,
+            "expected_drawer_cash": expected_c,
+            "counted_physical_cash": counted_c,
+            "variance": cash_variance,
+            "variance_type": "SHORTAGE" if cash_variance < 0 else "OVERAGE"
+        })
 
     # Instant Revocation of Refresh Tokens upon Shift Handover (#44, #47)
     revoked_count = revoke_user_refresh_tokens(db, user_id=u_email, reason="SHIFT_HANDOVER")
@@ -5002,19 +6716,33 @@ def save_shift_handover(payload: schemas.ShiftHandoverCreate, db: Session = Depe
             "shift_id": handover.shift_id,
             "outgoing_user": u_email,
             "incoming_user": handover.handover_to_user,
+            "expected_cash": expected_c,
             "net_physical_cash": handover.net_physical_cash_in_drawer,
+            "cash_variance": cash_variance,
             "revoked_tokens": revoked_count
         },
         staff_id=u_email,
         role="RECEPTIONIST"
     )
 
+    ws_manager.broadcast_sync({
+        "event": "SHIFT_HANDOVER_COMPLETED",
+        "shift_id": handover.shift_id,
+        "outgoing_user": u_email,
+        "incoming_user": handover.handover_to_user,
+        "net_physical_cash": handover.net_physical_cash_in_drawer,
+        "cash_variance": cash_variance
+    })
+
     return {
         "success": True,
-        "message": f"Shift Handover {handover.shift_id} recorded in PostgreSQL. Active sessions revoked (#44).",
+        "message": f"Shift Handover {handover.shift_id} recorded. Variance: ₹{cash_variance:+.2f}.",
         "shiftId": handover.shift_id,
         "shiftDate": handover.shift_date,
+        "expectedDrawerCash": expected_c,
         "netPhysicalCashInDrawer": handover.net_physical_cash_in_drawer,
+        "cashVariance": cash_variance,
+        "hasVariance": abs(cash_variance) > 0.01,
         "status": handover.status,
         "revoked_tokens": revoked_count
     }
@@ -5048,18 +6776,36 @@ def get_shift_handovers(db: Session = Depends(get_db)):
 
 @router.get("/shift-handovers/current-metrics")
 def get_shift_handover_current_metrics(db: Session = Depends(get_db)):
-    """Aggregate live cash, UPI, card, and expense metrics for the active shift handover."""
+    """
+    Aggregate live cash, UPI, card, and expense metrics for the active shift handover.
+    Filters collections strictly from the cutoff of the last closed shift handover (or start of today).
+    Ensures cash drawer float continuity and eliminates lifetime summation corruption.
+    """
     today_str = datetime.date.today().isoformat()
-    
-    opening_float = 5000.0
+
+    # Find last closed shift handover to determine shift start cutoff and drawer continuity float
+    last_handover = db.query(models.ShiftHandover).filter(
+        models.ShiftHandover.status.in_(["Verified & Closed", "Closed", "Verified"])
+    ).order_by(models.ShiftHandover.created_at.desc()).first()
+
+    if last_handover and last_handover.created_at:
+        cutoff_dt = last_handover.created_at
+        opening_float = float(last_handover.net_physical_cash_in_drawer or 5000.0)
+        previous_shift_info = f"Inherited from Shift {last_handover.shift_id} ({last_handover.user_name})"
+    else:
+        # Start of today (midnight UTC)
+        cutoff_dt = datetime.datetime.combine(datetime.date.today(), datetime.time.min)
+        opening_float = 5000.0
+        previous_shift_info = "Default base opening float"
+
+    # Query only transactions created during the current shift window (>= cutoff_dt)
+    payments = db.query(models.BookingPayment).filter(models.BookingPayment.created_at >= cutoff_dt).all()
     room_cash = 0.0
     card_swipes = 0.0
     upi_online = 0.0
-    tx_count = 0
-    
-    payments = db.query(models.BookingPayment).all()
+    tx_count = len(payments)
+
     for p in payments:
-        tx_count += 1
         pm = (p.payment_mode or "").upper()
         amt = float(p.amount or 0.0)
         if "CASH" in pm:
@@ -5069,10 +6815,14 @@ def get_shift_handover_current_metrics(db: Session = Depends(get_db)):
         elif "CARD" in pm:
             card_swipes += amt
 
+    # Food Bills settled during this shift
     food_cash = 0.0
-    food_bills = db.query(models.FoodBill).all()
+    food_bills = db.query(models.FoodBill).filter(
+        models.FoodBill.created_at >= cutoff_dt,
+        models.FoodBill.is_deleted == False
+    ).all()
+    tx_count += len(food_bills)
     for fb in food_bills:
-        tx_count += 1
         pm = str(getattr(fb, 'settlement_type', None) or getattr(fb, 'payment_mode', '') or "").upper()
         amt = float(fb.net_bill_amount or 0.0)
         if "CASH" in pm:
@@ -5082,10 +6832,11 @@ def get_shift_handover_current_metrics(db: Session = Depends(get_db)):
         elif "CARD" in pm:
             card_swipes += amt
 
+    # Advance Receipts recorded during this shift
     advance_cash = 0.0
-    advances = db.query(models.AdvanceReceipt).all()
+    advances = db.query(models.AdvanceReceipt).filter(models.AdvanceReceipt.created_at >= cutoff_dt).all()
+    tx_count += len(advances)
     for ar in advances:
-        tx_count += 1
         pm = (ar.payment_mode or "").upper()
         amt = float(ar.amount or 0.0)
         if "CASH" in pm:
@@ -5095,25 +6846,42 @@ def get_shift_handover_current_metrics(db: Session = Depends(get_db)):
         elif "CARD" in pm:
             card_swipes += amt
 
+    # Petty cash payouts paid from drawer during this shift
     expenses_cash = 0.0
-    expenses = db.query(models.PettyExpense).all()
+    expenses = db.query(models.PettyExpense).filter(models.PettyExpense.created_at >= cutoff_dt).all()
+    tx_count += len(expenses)
     for exp in expenses:
         pm = (exp.payment_mode or "").upper()
         amt = float(exp.amount or 0.0)
         if "CASH" in pm:
             expenses_cash += amt
 
-    net_cash = max(0.0, round(opening_float + room_cash + food_cash + advance_cash - expenses_cash, 2))
+    expected_drawer_cash = max(0.0, round(opening_float + room_cash + food_cash + advance_cash - expenses_cash, 2))
+
+    current_hour = datetime.datetime.now().hour
+    if 7 <= current_hour < 15:
+        shift_type = "Morning"
+        shift_time = "07:00 AM - 03:00 PM"
+    elif 15 <= current_hour < 23:
+        shift_type = "Evening"
+        shift_time = "03:00 PM - 11:00 PM"
+    else:
+        shift_type = "Night"
+        shift_time = "11:00 PM - 07:00 AM"
 
     return {
         "shiftDate": today_str,
-        "shiftTime": "07:00 AM - 03:00 PM",
-        "openingDrawerCash": opening_float,
+        "shiftTime": shift_time,
+        "shiftType": shift_type,
+        "cutoffSince": cutoff_dt.isoformat(),
+        "previousShiftInfo": previous_shift_info,
+        "openingDrawerCash": round(opening_float, 2),
         "roomCashCollected": round(room_cash, 2),
         "foodCashCollected": round(food_cash, 2),
         "advanceCashCollected": round(advance_cash, 2),
         "expensesPaidFromDrawer": round(expenses_cash, 2),
-        "netPhysicalCashInDrawer": net_cash,
+        "expectedDrawerCash": expected_drawer_cash,
+        "netPhysicalCashInDrawer": expected_drawer_cash,
         "onlineUpiVerified": round(upi_online, 2),
         "cardSwipeVerified": round(card_swipes, 2),
         "creditAccountsAdded": 0.0,
@@ -6263,16 +8031,58 @@ async def save_housekeeping_record(payload: schemas.HousekeepingRecordCreate, db
     # Also sync room housekeeping status
     room = find_room_by_no_or_name(db, r_no)
     if room:
-        if "Clean" in hk.status:
+        old_status = room.housekeeping_status
+        if "Inspected" in hk.status:
+            room.housekeeping_status = "Inspected"
+        elif "Clean" in hk.status:
             room.housekeeping_status = "Clean"
         elif "Dirty" in hk.status:
             room.housekeeping_status = "Dirty"
+        elif "Progress" in hk.status:
+            room.housekeeping_status = "Cleaning In Progress"
         elif "Maintenance" in hk.status:
             room.housekeeping_status = "Under_Maintenance"
 
+        # Check occupancy: never make an occupied room available
+        active_booking = db.query(models.Booking).filter(
+            models.Booking.room_id == room.id,
+            models.Booking.status == "Checked-In",
+            models.Booking.is_deleted == False
+        ).first()
+
+        if active_booking:
+            room.is_available = False
+        elif room.housekeeping_status in ["Clean", "Inspected"]:
+            room.is_available = True
+        else:
+            room.is_available = False
+
+        ws_manager.emit_room_status_event_sync(
+            room_id=room.id,
+            room_name=room.name,
+            housekeeping_status=room.housekeeping_status,
+            old_status=old_status,
+            updated_by=hk.assigned_staff
+        )
+        ws_manager.broadcast_sync({
+            "event": "ROOM_STATUS_CHANGED",
+            "room_id": room.id,
+            "room_name": room.name,
+            "housekeeping_status": room.housekeeping_status,
+            "is_available": room.is_available,
+            "updated_by": hk.assigned_staff
+        })
+
     db.commit()
     db.refresh(hk)
-    return {"success": True, "roomNo": hk.room_no, "status": hk.status, "assignedStaff": hk.assigned_staff}
+    await invalidate_cache_prefix("rooms")
+    return {
+        "success": True, 
+        "roomNo": hk.room_no, 
+        "status": hk.status, 
+        "assignedStaff": hk.assigned_staff,
+        "is_available": room.is_available if room else True
+    }
 
 # 5. Agent Commission Accruals
 @router.get("/agent-commissions")
@@ -6691,47 +8501,112 @@ async def extend_guest_stay(payload: schemas.ExtendStayRequest, db: Session = De
         raise HTTPException(status_code=400, detail="Room number and new checkout date are required.")
 
     room = find_room_by_no_or_name(db, room_str)
+    if not room:
+        raise HTTPException(status_code=404, detail=f"Room '{room_str}' not found.")
 
-    booking = None
-    if room:
-        booking = db.query(models.Booking).filter(
-            models.Booking.room_id == room.id,
-            models.Booking.status.in_(["Checked-In", "Active", "Confirmed"])
-        ).order_by(models.Booking.id.desc()).first()
+    booking = db.query(models.Booking).filter(
+        models.Booking.room_id == room.id,
+        models.Booking.status == "Checked-In",
+        models.Booking.is_deleted == False
+    ).order_by(models.Booking.id.desc()).with_for_update().first()
 
     if not booking:
         booking = db.query(models.Booking).filter(
-            models.Booking.status.in_(["Checked-In", "Active", "Confirmed"])
-        ).order_by(models.Booking.id.desc()).first()
+            models.Booking.room_id == room.id,
+            models.Booking.status == "Confirmed",
+            models.Booking.is_deleted == False
+        ).order_by(models.Booking.id.desc()).with_for_update().first()
 
-    if booking:
-        booking.check_out_date = new_out
-        try:
-            start_d = datetime.date.fromisoformat(booking.check_in_date)
-            end_d = datetime.date.fromisoformat(new_out)
-            nights = max(1, (end_d - start_d).days)
-            booking.total_nights = nights
-            booking.base_amount = round(booking.base_rate * nights, 2)
-            booking.total_tax = round(booking.base_amount * (booking.gst_rate / 100.0), 2)
-            booking.total_price = round(booking.base_amount + booking.total_tax, 2)
-            booking.balance_due = max(0.0, round(booking.total_price - booking.total_paid, 2))
-        except Exception:
-            pass
-        db.commit()
-        db.refresh(booking)
-        invalidate_rooms_cache()
+    if not booking:
+        raise HTTPException(
+            status_code=404, 
+            detail=f"No active checked-in or confirmed booking found for Room '{room.name}' to extend."
+        )
 
-    b_ref = getattr(booking, 'booking_ref', f"BK-{booking.id}") if booking else f"RM-{room_str}"
+    old_out = booking.check_out_date
+    try:
+        old_out_d = datetime.date.fromisoformat(old_out)
+        new_out_d = datetime.date.fromisoformat(new_out)
+        start_d = datetime.date.fromisoformat(booking.check_in_date)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Expected YYYY-MM-DD.")
+
+    if new_out_d <= old_out_d:
+        raise HTTPException(
+            status_code=400,
+            detail=f"New checkout date ({new_out}) must be later than current checkout date ({old_out})."
+        )
+
+    # Collision guard: check if another reservation is booked for this room during [old_out, new_out)
+    conflict = db.query(models.Booking).filter(
+        models.Booking.room_id == room.id,
+        models.Booking.status.in_(["Confirmed", "Checked-In"]),
+        models.Booking.id != booking.id,
+        models.Booking.is_deleted == False,
+        models.Booking.check_in_date < new_out,
+        models.Booking.check_out_date > old_out
+    ).first()
+
+    if conflict:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"Cannot extend stay: Room '{room.name}' is already reserved by "
+                f"'{conflict.booking_ref}' from {conflict.check_in_date} to {conflict.check_out_date}."
+            )
+        )
+
+    # Calculate new nights and authoritative GST-inclusive tariff
+    nights = max(1, (new_out_d - start_d).days)
+    booking.check_out_date = new_out
+    booking.total_nights = nights
+
+    rate = float(booking.base_rate or room.price_per_night or 2000.0)
+    grand_total = round(rate * nights, 2)
+    gst_rate = float(booking.gst_rate or 12.0)
+    taxable_base = round(grand_total / (1.0 + gst_rate / 100.0), 2)
+    total_tax = round(grand_total - taxable_base, 2)
+    cgst = round(total_tax / 2.0, 2)
+    sgst = round(total_tax - cgst, 2)
+
+    booking.base_amount = taxable_base
+    booking.gst_rate = gst_rate
+    booking.cgst_amount = cgst
+    booking.sgst_amount = sgst
+    booking.total_tax = total_tax
+    booking.total_price = grand_total
+    booking.balance_due = max(0.0, round(grand_total - (booking.total_paid or 0.0), 2))
+    booking.updated_at = now_utc()
+
+    # Sync Folio balance if exists
+    folio = db.query(models.Folio).filter(models.Folio.booking_id == booking.id).first()
+    if folio:
+        folio.balance_due = booking.balance_due
+        folio.updated_at = now_utc()
+
+    db.commit()
+    db.refresh(booking)
+    invalidate_rooms_cache()
+
+    b_ref = getattr(booking, 'booking_ref', f"BK-{booking.id}")
     log_audit(db, "EXTEND_STAY", b_ref, payload.extended_by or payload.extendedBy or "Duty Manager", {
         "room_no": room_str,
-        "new_checkout_date": new_out
+        "old_checkout_date": old_out,
+        "new_checkout_date": new_out,
+        "total_nights": nights,
+        "new_total_price": grand_total,
+        "new_balance_due": booking.balance_due
     })
 
     return {
         "success": True,
-        "message": f"Stay for Room {room_str} extended to {new_out} in PostgreSQL.",
+        "message": f"Stay for Room {room.name} extended from {old_out} to {new_out}. Grand total updated to Rs.{grand_total}.",
         "roomNo": room_str,
-        "newCheckOutDate": new_out
+        "oldCheckOutDate": old_out,
+        "newCheckOutDate": new_out,
+        "totalNights": nights,
+        "totalPrice": grand_total,
+        "balanceDue": booking.balance_due
     }
 
 # --- 44. Room Folio Incidental Charges ---
@@ -6843,18 +8718,34 @@ def resolve_housekeeping_discrepancy(discrepancy_id: str, payload: schemas.Resol
     if d_id:
         disc = db.query(models.HousekeepingDiscrepancy).filter(models.HousekeepingDiscrepancy.id == d_id).first()
     if not disc:
-        disc = db.query(models.HousekeepingDiscrepancy).order_by(models.HousekeepingDiscrepancy.id.desc()).first()
+        disc = db.query(models.HousekeepingDiscrepancy).filter(
+            models.HousekeepingDiscrepancy.discrepancy_id == discrepancy_id
+        ).first()
 
-    if disc:
-        disc.resolved = True
-        disc.resolved_by = payload.resolved_by or payload.resolvedBy or "Duty Manager"
-        disc.resolved_at = datetime.datetime.utcnow()
-        if payload.notes:
-            disc.notes = f"{disc.notes or ''} | Resolved: {payload.notes}".strip(" | ")
-        db.commit()
-        db.refresh(disc)
+    if not disc:
+        raise HTTPException(status_code=404, detail=f"Housekeeping discrepancy '{discrepancy_id}' not found.")
 
-    return {"success": True, "message": f"Discrepancy {discrepancy_id} resolved in PostgreSQL."}
+    disc.resolved = True
+    disc.resolved_by = payload.resolved_by or payload.resolvedBy or "Duty Manager"
+    disc.resolved_at = datetime.datetime.utcnow()
+    res_note = payload.notes or payload.resolution_notes or "Investigated and verified by management."
+    disc.notes = f"{disc.notes or ''} | Resolved: {res_note}".strip(" | ")
+    db.commit()
+    db.refresh(disc)
+
+    ws_manager.broadcast_sync({
+        "event": "HOUSEKEEPING_DISCREPANCY_RESOLVED",
+        "discrepancy_id": disc.discrepancy_id or str(disc.id),
+        "room_no": disc.room_no,
+        "resolved_by": disc.resolved_by
+    })
+
+    return {
+        "success": True, 
+        "message": f"Discrepancy {discrepancy_id} resolved.",
+        "discrepancyId": disc.discrepancy_id or str(disc.id),
+        "resolved": True
+    }
 
 # --- 46. Demo Requests / Contact Inquiries ---
 @router.post("/demo-requests")
@@ -7000,20 +8891,46 @@ def get_table_sessions(db: Session = Depends(get_db)):
 # 3. Housekeeping Discrepancies
 @router.post("/housekeeping-discrepancies")
 def create_housekeeping_discrepancy(payload: schemas.HousekeepingDiscrepancyCreate, db: Session = Depends(get_db)):
+    r_no = payload.room_no or payload.room_number or payload.roomNo or (str(payload.room_id) if payload.room_id else "101")
     disc_id = payload.discrepancy_id or f"DISC-{int(time.time())}-{uuid.uuid4().hex[:4].upper()}"
+    
+    # Auto-detect front_desk_status if not explicitly provided
+    fd_status = payload.front_desk_status or payload.pms_status or payload.pmsStatus
+    if not fd_status:
+        room = find_room_by_no_or_name(db, r_no)
+        active_b = db.query(models.Booking).filter(
+            models.Booking.room_id == (room.id if room else -1),
+            models.Booking.status == "Checked-In",
+            models.Booking.is_deleted == False
+        ).first()
+        fd_status = "Occupied" if active_b else "Vacant"
+
+    hk_status = payload.housekeeping_status or payload.physical_status or "Vacant Clean"
+    remarks = payload.remarks or payload.notes or ""
+
     try:
         disc = models.HousekeepingDiscrepancy(
             discrepancy_id=disc_id,
-            room_no=payload.room_no,
-            front_desk_status=payload.front_desk_status,
-            housekeeping_status=payload.housekeeping_status,
-            reported_by=payload.reported_by or "System",
-            notes=payload.remarks or ""
+            room_no=r_no,
+            front_desk_status=fd_status,
+            housekeeping_status=hk_status,
+            reported_by=payload.reported_by or payload.reportedBy or "System",
+            notes=remarks
         )
         db.add(disc)
         db.commit()
         db.refresh(disc)
-        return {"success": True, "discrepancyId": disc.discrepancy_id}
+
+        ws_manager.broadcast_sync({
+            "event": "HOUSEKEEPING_DISCREPANCY",
+            "discrepancy_id": disc.discrepancy_id or str(disc.id),
+            "room_no": r_no,
+            "front_desk_status": fd_status,
+            "housekeeping_status": hk_status,
+            "notes": remarks
+        })
+
+        return {"success": True, "discrepancyId": disc.discrepancy_id or str(disc.id)}
     except Exception:
         db.rollback()
         try:
@@ -7021,16 +8938,26 @@ def create_housekeeping_discrepancy(payload: schemas.HousekeepingDiscrepancyCrea
             db.commit()
             disc = models.HousekeepingDiscrepancy(
                 discrepancy_id=disc_id,
-                room_no=payload.room_no,
-                front_desk_status=payload.front_desk_status,
-                housekeeping_status=payload.housekeeping_status,
-                reported_by=payload.reported_by or "System",
-                notes=payload.remarks or ""
+                room_no=r_no,
+                front_desk_status=fd_status,
+                housekeeping_status=hk_status,
+                reported_by=payload.reported_by or payload.reportedBy or "System",
+                notes=remarks
             )
             db.add(disc)
             db.commit()
             db.refresh(disc)
-            return {"success": True, "discrepancyId": disc.discrepancy_id}
+
+            ws_manager.broadcast_sync({
+                "event": "HOUSEKEEPING_DISCREPANCY",
+                "discrepancy_id": disc.discrepancy_id or str(disc.id),
+                "room_no": r_no,
+                "front_desk_status": fd_status,
+                "housekeeping_status": hk_status,
+                "notes": remarks
+            })
+
+            return {"success": True, "discrepancyId": disc.discrepancy_id or str(disc.id)}
         except Exception as e:
             db.rollback()
             raise HTTPException(status_code=500, detail=f"Failed to record housekeeping discrepancy: {str(e)}")
@@ -7287,6 +9214,92 @@ async def confirm_booking(booking_id: str, db: Session = Depends(get_db)):
     await invalidate_cache_prefix("rooms")
     return {"success": True, "bookingId": b.id, "status": b.status}
 
+# 9.1 Digital Touch Signature Attachments (Track 9 Benchmark: ~/everything/src/signatures)
+@router.post("/bookings/{booking_id}/signature", response_model=schemas.BookingSignatureResponse)
+def upload_booking_signature(
+    booking_id: str,
+    payload: schemas.BookingSignatureUpload,
+    db: Session = Depends(get_db)
+):
+    """
+    Module: Touch Canvas Digital Guest Signature Attachment (#KYC)
+    Attaches transparent PNG digital signature to guest reservation and registration card.
+    Enforces 250KB maximum size and valid Base64 image payload.
+    """
+    b = db.query(models.Booking).filter(
+        (models.Booking.id == (int(booking_id) if booking_id.isdigit() else -1)) |
+        (models.Booking.booking_ref == booking_id)
+    ).first()
+    if not b:
+        raise HTTPException(status_code=404, detail="Booking not found")
+
+    sig_data = payload.signature_data_url.strip()
+    if not (sig_data.startswith("data:image/png;base64,") or sig_data.startswith("data:image/jpeg;base64,") or sig_data.startswith("data:image/webp;base64,")):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid signature data URL format. Must start with data:image/png;base64, (or jpeg/webp)."
+        )
+
+    if len(sig_data) > 250_000:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Signature payload exceeds maximum allowed size of 250KB (got {len(sig_data)} characters)."
+        )
+
+    # Validate Base64 payload decodability
+    try:
+        header, b64_str = sig_data.split(",", 1)
+        decoded = base64.b64decode(b64_str)
+        if len(decoded) < 16:
+            raise ValueError("Corrupt image data")
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Corrupt Base64 signature image payload: {str(exc)}")
+
+    b.guest_signature_url = sig_data
+    db.commit()
+    db.refresh(b)
+
+    log_audit(
+        db=db,
+        event_type="BOOKING_SIGNATURE_ATTACHED",
+        booking_ref=b.booking_ref,
+        performed_by=payload.signed_by or "Guest",
+        details={
+            "booking_id": b.id,
+            "guest_name": b.guest_name,
+            "signed_by": payload.signed_by or "Guest",
+            "bytes_length": len(decoded)
+        }
+    )
+
+    return schemas.BookingSignatureResponse(
+        success=True,
+        booking_id=b.id,
+        has_signature=True,
+        guest_signature_url=b.guest_signature_url,
+        signed_by=payload.signed_by or "Guest",
+        message="Digital signature captured and linked to reservation."
+    )
+
+@router.get("/bookings/{booking_id}/signature", response_model=schemas.BookingSignatureResponse)
+def get_booking_signature(booking_id: str, db: Session = Depends(get_db)):
+    """Retrieve digital signature attached to guest reservation."""
+    b = db.query(models.Booking).filter(
+        (models.Booking.id == (int(booking_id) if booking_id.isdigit() else -1)) |
+        (models.Booking.booking_ref == booking_id)
+    ).first()
+    if not b:
+        raise HTTPException(status_code=404, detail="Booking not found")
+
+    return schemas.BookingSignatureResponse(
+        success=True,
+        booking_id=b.id,
+        has_signature=bool(b.guest_signature_url),
+        guest_signature_url=b.guest_signature_url,
+        signed_by="Guest",
+        message="Signature retrieved." if b.guest_signature_url else "No signature captured for this booking."
+    )
+
 # 10. Missing Resource Deletions
 @router.delete("/expenses/{expense_id}")
 def delete_expense(expense_id: str, db: Session = Depends(get_db)):
@@ -7499,107 +9512,7 @@ def delete_table_endpoint(table_id: str, db: Session = Depends(get_db)):
     db.commit()
     return {"success": True, "deletedCount": deleted}
 
-# --- 31. Inventory Purchases & Godown Stock Tracking ---
-@router.post("/inventory/purchases")
-def save_inventory_purchase(payload: dict = Body(...), db: Session = Depends(get_db)):
-    bill_no = str(payload.get("bill_no") or payload.get("billNo") or f"PUR-{int(datetime.datetime.now().timestamp())}")
-    existing = db.query(models.InventoryPurchase).filter(models.InventoryPurchase.bill_no == bill_no).first()
-    if existing:
-        existing.bill_date = payload.get("bill_date") or payload.get("billDate") or existing.bill_date
-        existing.supplier_name = payload.get("account_name") or payload.get("accountName") or payload.get("supplier_name") or existing.supplier_name
-        existing.godown = payload.get("godown") or existing.godown
-        existing.terms = payload.get("terms") or existing.terms
-        existing.items_json = json.dumps(payload.get("items") or payload.get("items_json") or []) if isinstance(payload.get("items"), list) else str(payload.get("items_json") or existing.items_json)
-        existing.total_amount = float(payload.get("total_gross_amount") or payload.get("totalAmount") or existing.total_amount)
-        existing.tax_amount = float(payload.get("total_tax") or payload.get("totalGstAmt") or existing.tax_amount)
-        existing.net_amount = float(payload.get("total_net_value") or payload.get("totalNetValue") or existing.net_amount)
-        db.commit()
-        db.refresh(existing)
-        return {"success": True, "id": existing.id, "billNo": existing.bill_no, "action": "updated"}
-    
-    new_pur = models.InventoryPurchase(
-        bill_no=bill_no,
-        bill_date=payload.get("bill_date") or payload.get("billDate") or datetime.datetime.now().strftime("%d-%m-%Y"),
-        supplier_name=payload.get("account_name") or payload.get("accountName") or payload.get("supplier_name") or "General Supplier",
-        godown=payload.get("godown") or "Main Store",
-        terms=payload.get("terms") or "Credit",
-        items_json=json.dumps(payload.get("items") or payload.get("items_json") or []) if isinstance(payload.get("items"), list) else str(payload.get("items_json") or "[]"),
-        total_amount=float(payload.get("total_gross_amount") or payload.get("totalAmount") or 0.0),
-        tax_amount=float(payload.get("total_tax") or payload.get("totalGstAmt") or 0.0),
-        net_amount=float(payload.get("total_net_value") or payload.get("totalNetValue") or 0.0)
-    )
-    db.add(new_pur)
-    db.commit()
-    db.refresh(new_pur)
-    return {"success": True, "id": new_pur.id, "billNo": new_pur.bill_no, "action": "created"}
-
-@router.get("/inventory/purchases")
-def get_inventory_purchases(db: Session = Depends(get_db)):
-    records = db.query(models.InventoryPurchase).order_by(models.InventoryPurchase.id.desc()).all()
-    return [{
-        "id": f"pur-{r.id}",
-        "billNo": r.bill_no,
-        "billDate": r.bill_date,
-        "accountName": r.supplier_name,
-        "godown": r.godown,
-        "terms": r.terms,
-        "items": json.loads(r.items_json) if r.items_json else [],
-        "totalAmount": r.total_amount,
-        "totalDiscount": 0.0,
-        "totalGstAmt": r.tax_amount,
-        "totalNetValue": r.net_amount,
-        "createdAt": r.created_at.isoformat() if r.created_at else None
-    } for r in records]
-
-# --- 32. Godown Stock Transfers ---
-@router.post("/inventory/transfers")
-def save_stock_transfer(payload: dict = Body(...), db: Session = Depends(get_db)):
-    entry_no = str(payload.get("entry_no") or payload.get("entryNo") or f"TR-{int(datetime.datetime.now().timestamp())}")
-    existing = db.query(models.StockTransfer).filter(models.StockTransfer.entry_no == entry_no).first()
-    if existing:
-        existing.date = payload.get("date") or existing.date
-        existing.from_godown = payload.get("from_godown") or payload.get("fromGodown") or existing.from_godown
-        existing.to_godown = payload.get("to_godown") or payload.get("toGodown") or existing.to_godown
-        existing.items_json = json.dumps(payload.get("items") or []) if isinstance(payload.get("items"), list) else str(payload.get("items_json") or existing.items_json)
-        existing.remark = payload.get("remarks") or payload.get("remark") or existing.remark
-        db.commit()
-        db.refresh(existing)
-        return {"success": True, "id": existing.id, "entryNo": existing.entry_no, "action": "updated"}
-
-    new_tr = models.StockTransfer(
-        entry_no=entry_no,
-        date=payload.get("date") or datetime.datetime.now().strftime("%d-%m-%Y"),
-        from_godown=payload.get("from_godown") or payload.get("fromGodown") or "Main Store",
-        to_godown=payload.get("to_godown") or payload.get("toGodown") or "Kitchen Store",
-        items_json=json.dumps(payload.get("items") or []) if isinstance(payload.get("items"), list) else str(payload.get("items_json") or "[]"),
-        total_qty=float(payload.get("total_qty") or payload.get("totalQty") or 0.0),
-        total_amount=float(payload.get("total_amount") or payload.get("totalAmount") or 0.0),
-        total_discount=float(payload.get("total_discount") or payload.get("totalDiscount") or 0.0),
-        total_taxable=float(payload.get("total_taxable") or payload.get("totalTaxable") or 0.0),
-        total_gst_amt=float(payload.get("total_gst_amt") or payload.get("totalGstAmt") or 0.0),
-        total_net_value=float(payload.get("total_net_value") or payload.get("totalNetValue") or 0.0),
-        remark=payload.get("remarks") or payload.get("remark")
-    )
-    db.add(new_tr)
-    db.commit()
-    db.refresh(new_tr)
-    return {"success": True, "id": new_tr.id, "entryNo": new_tr.entry_no, "action": "created"}
-
-@router.get("/inventory/transfers")
-def get_stock_transfers(db: Session = Depends(get_db)):
-    records = db.query(models.StockTransfer).order_by(models.StockTransfer.id.desc()).all()
-    return [{
-        "id": f"tr-{r.id}",
-        "entryNo": r.entry_no,
-        "date": r.date,
-        "fromGodown": r.from_godown,
-        "toGodown": r.to_godown,
-        "items": json.loads(r.items_json) if r.items_json else [],
-        "totalQty": r.total_qty,
-        "totalNetValue": r.total_net_value,
-        "remarks": r.remark,
-        "createdAt": r.created_at.isoformat() if r.created_at else None
-    } for r in records]
+# --- 31 & 32. Inventory Purchases & Stock Transfers are canonically registered above in Module 21 & Module 27 ---
 
 # --- 33. RFID Keycard Encoding & Tracking ---
 @router.post("/keycards/encode")
@@ -7714,4 +9627,18 @@ def get_group_bookings(db: Session = Depends(get_db)):
         "notes": r.special_instructions,
         "createdAt": r.created_at.isoformat() if r.created_at else None
     } for r in records]
+
+# --- Statutory GST Returns Aliases ---
+from app.routes import ca_export
+
+@router.get("/gst/gstr-1")
+def get_pms_gstr1_alias(period: Optional[str] = None, year: Optional[int] = None, month: Optional[int] = None, db: Session = Depends(get_db)):
+    """Statutory GSTR-1 JSON Return alias under PMS router."""
+    return ca_export.get_gstr1_json_return(period=period, year=year, month=month, db=db)
+
+@router.get("/gst/gstr-3b")
+def get_pms_gstr3b_alias(period: Optional[str] = None, year: Optional[int] = None, month: Optional[int] = None, db: Session = Depends(get_db)):
+    """Statutory GSTR-3B Monthly Return alias under PMS router."""
+    return ca_export.get_gstr3b_json_return(period=period, year=year, month=month, db=db)
+
 

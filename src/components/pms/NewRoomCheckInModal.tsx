@@ -6,6 +6,7 @@ import { CheckInSlipModal } from './CheckInSlipModal';
 import { decentroApi } from '../../services/decentroApi';
 import { DecentroUpiQrModal } from './DecentroUpiQrModal';
 import { parseAadhaarQrCodeAsync, type AadhaarParsedData } from '../../utils/aadhaarQrParser';
+import { DigitalSignaturePad } from './DigitalSignaturePad';
 
 interface NewRoomCheckInModalProps {
   isOpen: boolean;
@@ -216,6 +217,8 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
   const [companyName, setCompanyName] = useState('');
   const [companyAddress, setCompanyAddress] = useState('');
   const [gstNo, setGstNo] = useState('');
+  const [isSignatureModalOpen, setIsSignatureModalOpen] = useState<boolean>(false);
+  const [guestSignature, setGuestSignature] = useState<string | null>(null);
 
   // Decentro Banking & KYC State
   const [showDecentroAdvanceQr, setShowDecentroAdvanceQr] = useState<boolean>(false);
@@ -564,6 +567,7 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
         idProofDocumentKey: idProofKey || undefined,
         guestImage: guestPhoto || undefined,
         guestPhotoUrl: guestPhoto || undefined,
+        guestSignature: guestSignature || undefined,
         idProofBackImage: idPhotoBack || undefined,
         secondGuestName,
         secondGuestIdName,
@@ -1594,9 +1598,15 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                     <label className="form-label-pms"><span className="req">*</span> {documentName} Number</label>
                     <input
                       type="text"
-                      placeholder={documentName === 'Aadhaar Card' ? 'XXXX XXXX XXXX' : 'ID Number'}
+                      placeholder={documentName === 'Aadhaar Card' ? 'XXXX-XXXX-1234' : 'ID Number'}
                       value={documentNo}
                       onChange={e => setDocumentNo(e.target.value)}
+                      onBlur={e => {
+                        const val = e.target.value.trim().replace(/\D/g, '');
+                        if (documentName === 'Aadhaar Card' && val.length === 12) {
+                          setDocumentNo(`XXXX-XXXX-${val.slice(-4)}`);
+                        }
+                      }}
                       className="form-input-pms"
                       style={{ fontWeight: 800 }}
                       required
@@ -1727,6 +1737,55 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
                     <input type="text" placeholder="3rd Guest ID Type" value={thirdGuestIdName} onChange={e => setThirdGuestIdName(e.target.value)} className="form-input-pms" />
                     <input type="text" placeholder="3rd Guest ID No" value={thirdGuestIdNo} onChange={e => setThirdGuestIdNo(e.target.value)} className="form-input-pms" />
                   </div>
+                </div>
+
+                {/* Digital Touch Guest Signature Card (Track 9 Benchmark: ~/everything/src/signatures) */}
+                <div style={{ background: '#f0fdf4', padding: '10px 12px', borderRadius: '6px', border: '1px solid #86efac', marginTop: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: '#166534', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span>✍️</span> Digital Guest Signature (GRC &amp; Police Compliance):
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsSignatureModalOpen(true)}
+                      style={{
+                        background: guestSignature ? '#047857' : '#0284c7',
+                        color: '#ffffff',
+                        border: 'none',
+                        padding: '4px 10px',
+                        borderRadius: 4,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4
+                      }}
+                    >
+                      {guestSignature ? '✓ Change Signature' : '✍️ Capture Touch Signature'}
+                    </button>
+                  </div>
+                  {guestSignature ? (
+                    <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ background: '#ffffff', border: '1px solid #bbf7d0', borderRadius: 4, padding: '4px 8px' }}>
+                        <img src={guestSignature} alt="Captured Signature" style={{ maxHeight: 36, display: 'block' }} />
+                      </div>
+                      <span style={{ fontSize: 11, color: '#15803d' }}>
+                        ✓ Digital signature captured &amp; will be embedded in printed Check-In GRC Slip.
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setGuestSignature(null)}
+                        style={{ background: 'none', border: 'none', color: '#b91c1c', fontSize: 11, cursor: 'pointer', textDecoration: 'underline' }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 11, color: '#65a30d', marginTop: 4 }}>
+                      Capture guest&apos;s signature directly on front-desk screen/tablet for instant paperless GRC compliance.
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -2046,6 +2105,15 @@ export const NewRoomCheckInModal: React.FC<NewRoomCheckInModalProps> = ({
           setPaymentReference(txn.bank_reference_number || txn.reference_id);
           setShowDecentroAdvanceQr(false);
         }}
+      />
+
+      {/* Digital Touch Guest Signature Modal (Track 9 Benchmark: ~/everything/src/signatures) */}
+      <DigitalSignaturePad
+        isOpen={isSignatureModalOpen}
+        onClose={() => setIsSignatureModalOpen(false)}
+        onSave={dataUrl => setGuestSignature(dataUrl)}
+        guestName={guestName}
+        initialSignature={guestSignature}
       />
     </>
   );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PmsStore } from '../../services/pmsStore';
 
 interface PartyLedgerModalProps {
@@ -12,6 +12,7 @@ export const PartyLedgerModal: React.FC<PartyLedgerModalProps> = ({
   onClose,
   initialAccount = 'Cash'
 }) => {
+  const [activeTab, setActiveTab] = useState<'party' | 'trialBalance'>('party');
   const [selectedAccount, setSelectedAccount] = useState<string>(initialAccount);
   const [searchTerm, setSearchTerm] = useState<string>(initialAccount);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -19,6 +20,19 @@ export const PartyLedgerModal: React.FC<PartyLedgerModalProps> = ({
   const [toDate, setToDate] = useState('16-06-2025');
   const [activeAccount, setActiveAccount] = useState<string>(initialAccount);
   const [showPrintPreview, setShowPrintPreview] = useState(false);
+  const [trialBalanceData, setTrialBalanceData] = useState<{
+    accounts: Array<{ name: string; type: 'Asset' | 'Liability' | 'Income' | 'Expense'; debit: number; credit: number; balance: number }>;
+    totalDebit: number;
+    totalCredit: number;
+    isBalanced: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    if (activeTab === 'trialBalance') {
+      const tb = PmsStore.getTrialBalance();
+      setTrialBalanceData(tb);
+    }
+  }, [activeTab]);
 
   if (!isOpen) return null;
 
@@ -97,6 +111,50 @@ export const PartyLedgerModal: React.FC<PartyLedgerModalProps> = ({
             </button>
             <button type="button" className="pms-close-btn" onClick={onClose}>✕</button>
           </div>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div style={{ display: 'flex', gap: 8, padding: '8px 24px 0', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
+          <button
+            type="button"
+            onClick={() => setActiveTab('party')}
+            style={{
+              padding: '8px 16px',
+              border: 'none',
+              borderBottom: activeTab === 'party' ? '2px solid #0284c7' : '2px solid transparent',
+              background: 'transparent',
+              fontWeight: activeTab === 'party' ? 700 : 500,
+              color: activeTab === 'party' ? '#0284c7' : '#64748b',
+              cursor: 'pointer',
+              fontSize: 13
+            }}
+          >
+            📑 Party & Cash Ledger
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('trialBalance')}
+            style={{
+              padding: '8px 16px',
+              border: 'none',
+              borderBottom: activeTab === 'trialBalance' ? '2px solid #0284c7' : '2px solid transparent',
+              background: 'transparent',
+              fontWeight: activeTab === 'trialBalance' ? 700 : 500,
+              color: activeTab === 'trialBalance' ? '#0284c7' : '#64748b',
+              cursor: 'pointer',
+              fontSize: 13,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6
+            }}
+          >
+            ⚖️ Trial Balance Reconciliation
+            {trialBalanceData && (
+              <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 10, background: trialBalanceData.isBalanced ? '#dcfce7' : '#fee2e2', color: trialBalanceData.isBalanced ? '#15803d' : '#b91c1c', fontWeight: 700 }}>
+                {trialBalanceData.isBalanced ? 'BALANCED' : 'IMBALANCE'}
+              </span>
+            )}
+          </button>
         </div>
 
         {/* Content Body */}
@@ -283,6 +341,111 @@ export const PartyLedgerModal: React.FC<PartyLedgerModalProps> = ({
                 >
                   🖨️ Print Document
                 </button>
+              </div>
+            </div>
+          ) : activeTab === 'trialBalance' ? (
+            /* ======================================================== */
+            /* Double-Entry Trial Balance Reconciliation View           */
+            /* ======================================================== */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Header metrics card */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6, padding: '12px 16px' }}>
+                  <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>TRIAL BALANCE STATUS</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, color: trialBalanceData?.isBalanced ? '#15803d' : '#b91c1c' }}>
+                    {trialBalanceData?.isBalanced ? '✅ ZERO-SUM BALANCED' : '⚠️ IMBALANCE DETECTED'}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                    Delta: ₹{Math.abs((trialBalanceData?.totalDebit || 0) - (trialBalanceData?.totalCredit || 0)).toFixed(2)}
+                  </div>
+                </div>
+
+                <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 6, padding: '12px 16px' }}>
+                  <div style={{ fontSize: 11, color: '#1e40af', fontWeight: 600 }}>TOTAL DEBITS (DR)</div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: '#1e3a8a', marginTop: 4 }}>
+                    ₹{trialBalanceData?.totalDebit?.toLocaleString('en-IN', { minimumFractionDigits: 2 }) || '0.00'}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#60a5fa', marginTop: 2 }}>Assets & Expenses</div>
+                </div>
+
+                <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 6, padding: '12px 16px' }}>
+                  <div style={{ fontSize: 11, color: '#166534', fontWeight: 600 }}>TOTAL CREDITS (CR)</div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: '#14532d', marginTop: 4 }}>
+                    ₹{trialBalanceData?.totalCredit?.toLocaleString('en-IN', { minimumFractionDigits: 2 }) || '0.00'}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#4ade80', marginTop: 2 }}>Liabilities, Equity & Revenues</div>
+                </div>
+
+                <div style={{ background: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: 6, padding: '12px 16px' }}>
+                  <div style={{ fontSize: 11, color: '#6b21a8', fontWeight: 600 }}>CHART HEADS AUDITED</div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: '#581c87', marginTop: 4 }}>
+                    {trialBalanceData?.accounts?.length || 0} Accounts
+                  </div>
+                  <div style={{ fontSize: 11, color: '#a855f7', marginTop: 2 }}>Real-time Ledger Audit</div>
+                </div>
+              </div>
+
+              {/* Table */}
+              <div style={{ border: '1px solid #cbd5e1', borderRadius: 6, overflow: 'hidden' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                  <thead>
+                    <tr style={{ background: '#0f172a', color: '#ffffff', textAlign: 'left' }}>
+                      <th style={{ padding: '8px 12px' }}>Account Head</th>
+                      <th style={{ padding: '8px 12px', width: 140 }}>Classification</th>
+                      <th style={{ padding: '8px 12px', width: 110, textAlign: 'right' }}>Debit (₹)</th>
+                      <th style={{ padding: '8px 12px', width: 110, textAlign: 'right' }}>Credit (₹)</th>
+                      <th style={{ padding: '8px 12px', width: 120, textAlign: 'right' }}>Net Balance</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {trialBalanceData?.accounts?.length ? (
+                      trialBalanceData.accounts.map((acc, idx) => (
+                        <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0', background: idx % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
+                          <td style={{ padding: '6px 12px', fontWeight: 600, color: '#0f172a' }}>{acc.name}</td>
+                          <td style={{ padding: '6px 12px', color: '#475569' }}>
+                            <span style={{
+                              fontSize: 10,
+                              padding: '2px 6px',
+                              borderRadius: 4,
+                              background: acc.type === 'Asset' ? '#dbeafe' : acc.type === 'Liability' ? '#fef3c7' : acc.type === 'Income' ? '#dcfce7' : '#fee2e2',
+                              color: acc.type === 'Asset' ? '#1e40af' : acc.type === 'Liability' ? '#92400e' : acc.type === 'Income' ? '#15803d' : '#b91c1c',
+                              fontWeight: 700
+                            }}>
+                              {acc.type}
+                            </span>
+                          </td>
+                          <td style={{ padding: '6px 12px', textAlign: 'right', fontWeight: 600, color: acc.debit > 0 ? '#0f172a' : '#94a3b8' }}>
+                            {acc.debit > 0 ? acc.debit.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '-'}
+                          </td>
+                          <td style={{ padding: '6px 12px', textAlign: 'right', fontWeight: 600, color: acc.credit > 0 ? '#15803d' : '#94a3b8' }}>
+                            {acc.credit > 0 ? acc.credit.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '-'}
+                          </td>
+                          <td style={{ padding: '6px 12px', textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>
+                            ₹{Math.abs(acc.balance).toLocaleString('en-IN', { minimumFractionDigits: 2 })} {acc.balance >= 0 ? 'Dr' : 'Cr'}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} style={{ padding: 24, textAlign: 'center', color: '#64748b' }}>
+                          No account postings found.
+                        </td>
+                      </tr>
+                    )}
+                    <tr style={{ background: '#0f172a', color: '#ffffff', fontWeight: 700 }}>
+                      <td colSpan={2} style={{ padding: '8px 12px' }}>TRIAL BALANCE TOTALS</td>
+                      <td style={{ padding: '8px 12px', textAlign: 'right' }}>
+                        ₹{trialBalanceData?.totalDebit?.toLocaleString('en-IN', { minimumFractionDigits: 2 }) || '0.00'}
+                      </td>
+                      <td style={{ padding: '8px 12px', textAlign: 'right', color: '#4ade80' }}>
+                        ₹{trialBalanceData?.totalCredit?.toLocaleString('en-IN', { minimumFractionDigits: 2 }) || '0.00'}
+                      </td>
+                      <td style={{ padding: '8px 12px', textAlign: 'right', color: trialBalanceData?.isBalanced ? '#4ade80' : '#f87171' }}>
+                        Δ = ₹{Math.abs((trialBalanceData?.totalDebit || 0) - (trialBalanceData?.totalCredit || 0)).toFixed(2)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           ) : (

@@ -682,8 +682,8 @@ export const hotelApi = {
     }
   },
 
-  async deleteKotTicket(kotNo: string): Promise<any> {
-    const res = await fetch(`${API_BASE_URL}/pms/kots/${encodeURIComponent(kotNo)}`, {
+  async deleteKotTicket(kotNo: string, reason: string = 'NOT REQ'): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/kots/${encodeURIComponent(kotNo)}?reason=${encodeURIComponent(reason)}`, {
       method: 'DELETE'
     });
     if (!res.ok) throw new Error('Failed to delete KOT ticket');

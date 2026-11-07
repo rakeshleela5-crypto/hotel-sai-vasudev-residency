@@ -94,26 +94,31 @@ def test_in_room_dining_folio_transfer(db):
         db.commit()
         db.refresh(room)
 
-    # 2. Seed an active checked-in booking for Room 101
-    booking_ref = f"BK-RSO-{uuid.uuid4().hex[:6].upper()}"
-    booking = models.Booking(
-        booking_ref=booking_ref,
-        room_id=room.id,
-        guest_name="Sanjay Patnaik",
-        guest_phone="9876543210",
-        guest_email="sanjay@example.com",
-        check_in_date="2026-11-06",
-        check_out_date="2026-11-08",
-        status="Checked-In",
-        total_price=2000.0,
-        total_paid=1000.0,
-        balance_due=1000.0,
-        payment_status="Partial",
-        is_deleted=False
-    )
-    db.add(booking)
-    db.commit()
-    db.refresh(booking)
+    # 2. Seed or update an active checked-in booking for Room 101
+    booking = db.query(models.Booking).filter(models.Booking.room_id == room.id).first()
+    if not booking:
+        booking = models.Booking(
+            booking_ref=f"BK-RSO-{uuid.uuid4().hex[:6].upper()}",
+            room_id=room.id,
+            guest_name="Sanjay Patnaik",
+            guest_phone="9876543210",
+            guest_email="sanjay@example.com",
+            check_in_date="2026-11-06",
+            check_out_date="2026-11-08",
+            status="Checked-In",
+            total_price=2000.0,
+            total_paid=1000.0,
+            balance_due=1000.0,
+            payment_status="Partial",
+            is_deleted=False
+        )
+        db.add(booking)
+        db.commit()
+        db.refresh(booking)
+    else:
+        booking.status = "Checked-In"
+        booking.is_deleted = False
+        db.commit()
 
     # 3. Guest places In-Room Dining food order with "Transfer to Room Folio"
     order_payload = CreateGuestOrderPayload(

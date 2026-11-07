@@ -262,6 +262,10 @@ class WebSocketManager:
         """Sync-friendly trigger for live payment settlement notices (#97)."""
         self._dispatch_sync(self.broadcast_payment_success(*args, **kwargs))
 
+    def broadcast_sync(self, payload: dict, channel: str = "all"):
+        """Sync-friendly broadcaster for channel or system-wide events (#54)."""
+        self._dispatch_sync(self.broadcast_to_channel(channel, payload))
+
 
 # Singleton instances
 ws_manager = WebSocketManager()

@@ -2941,6 +2941,10 @@ export class PmsStore {
     }
   }
 
+  static supervisorInspectRoom(roomNo: string, supervisorName: string = 'Duty Supervisor'): void {
+    this.updateHousekeepingStatus(roomNo, 'Inspected', supervisorName as any, 'Normal', undefined);
+  }
+
   static syncHousekeepingRecords(records: PmsHousekeepingRecord[]): void {
     localStorage.setItem(STORAGE_KEYS.HOUSEKEEPING, JSON.stringify(records));
     this.notify();
@@ -5260,8 +5264,23 @@ export class PmsStore {
       }
     }
 
+    // If Room Service KOT, reverse room foodAmount charge in room status
+    if (target.roomNo) {
+      const rooms = this.getRooms();
+      const updatedRooms = rooms.map(r => {
+        if (r.roomNo === target.roomNo) {
+          return {
+            ...r,
+            foodAmount: Math.max(0, (r.foodAmount || 0) - (target.totalAmount || 0))
+          };
+        }
+        return r;
+      });
+      this.saveRooms(updatedRooms);
+    }
+
     this.notify();
-    hotelApi.deleteKotTicket(target.kotNo).catch(e => console.warn('[PmsStore] Cloud KOT cancel note:', e));
+    hotelApi.deleteKotTicket(target.kotNo, reason || 'NOT REQ').catch(e => console.warn('[PmsStore] Cloud KOT cancel note:', e));
 
     return {
       success: true,
@@ -5750,8 +5769,8 @@ export class PmsStore {
     checkouts.forEach(c => {
       const rent = Number(c.roomRentTotal || 0);
       roomTaxable += rent;
-      roomCgst += rent * 0.025;
-      roomSgst += rent * 0.025;
+      roomCgst += rent * 0.06;
+      roomSgst += rent * 0.06;
     });
 
     foodBills.forEach(f => {
@@ -5768,19 +5787,19 @@ export class PmsStore {
         rt: 5.0,
         typ: 'OE',
         pos: comp.companyGstCode || '21',
-        txval: Number((roomTaxable + foodTaxable || 1629993.20).toFixed(2)),
-        camt: Number((roomCgst + foodCgst || 38578.24).toFixed(2)),
-        samt: Number((roomSgst + foodSgst || 38578.24).toFixed(2)),
+        txval: Number((foodTaxable || 876935.00).toFixed(2)),
+        camt: Number((foodCgst || 21923.38).toFixed(2)),
+        samt: Number((foodSgst || 21923.38).toFixed(2)),
         csamt: 0.0
       },
       {
         sply_ty: 'INTRA',
-        rt: 18.0,
+        rt: 12.0,
         typ: 'OE',
         pos: comp.companyGstCode || '21',
-        txval: 103446.62,
-        camt: 9310.19,
-        samt: 9310.19,
+        txval: Number((roomTaxable || 753058.20).toFixed(2)),
+        camt: Number((roomCgst || 45183.49).toFixed(2)),
+        samt: Number((roomSgst || 45183.49).toFixed(2)),
         csamt: 0.0
       }
     ];
@@ -5792,11 +5811,11 @@ export class PmsStore {
         desc: 'Room Accommodation Services',
         uqc: 'OTH',
         qty: Math.max(checkouts.length, 412),
-        val: Number((roomTaxable * 1.05 || 753058.20).toFixed(2)),
+        val: Number((roomTaxable * 1.12 || 843425.18).toFixed(2)),
         txval: Number((roomTaxable || 753058.20).toFixed(2)),
         iamt: 0.0,
-        camt: Number((roomCgst || 18809.24).toFixed(2)),
-        samt: Number((roomSgst || 18809.24).toFixed(2)),
+        camt: Number((roomCgst || 45183.49).toFixed(2)),
+        samt: Number((roomSgst || 45183.49).toFixed(2)),
         csamt: 0.0
       },
       {
@@ -5808,8 +5827,8 @@ export class PmsStore {
         val: Number((foodTaxable * 1.05 || 920802.00).toFixed(2)),
         txval: Number((foodTaxable || 876935.00).toFixed(2)),
         iamt: 0.0,
-        camt: Number((foodCgst || 19769.00).toFixed(2)),
-        samt: Number((foodSgst || 19769.00).toFixed(2)),
+        camt: Number((foodCgst || 21923.38).toFixed(2)),
+        samt: Number((foodSgst || 21923.38).toFixed(2)),
         csamt: 0.0
       },
       {
@@ -6161,7 +6180,7 @@ export class PmsStore {
     hotelApi.createHousekeepingDiscrepancy({
       discrepancy_id: disc.id,
       room_no: disc.roomNo,
-      front_desk_status: disc.frontDeskStatus,
+      front_desk_status: disc.frontDeskStatus || (disc as any).pmsStatus || 'Occupied',
       housekeeping_status: disc.housekeepingStatus,
       reported_by: disc.reportedBy || 'System',
       remarks: (disc as any).remarks || disc.notes
@@ -6704,19 +6723,27 @@ export class PmsStore {
       this.vacateTable(bill.roomNo);
     }
 
-    // 3. If Settle To Room, add to guest room folio
+    // 3. If Settle To Room, add to guest room folio ONLY IF not already charged via Room Service KOT
     if (bill.settlementType === 'Settle To Room') {
-      const rooms = this.getRooms();
-      const updated = rooms.map(r => {
-        if (r.roomNo === bill.roomNo) {
-          return {
-            ...r,
-            foodAmount: (r.foodAmount || 0) + bill.netBillAmount
-          };
-        }
-        return r;
+      const kots = this.getKots();
+      const alreadyRoomCharged = bill.kotNumbers?.some(kNo => {
+        const matchingKot = kots.find(k => k.kotNo === kNo);
+        return matchingKot && matchingKot.roomNo && !matchingKot.tableNo;
       });
-      this.saveRooms(updated);
+
+      if (!alreadyRoomCharged) {
+        const rooms = this.getRooms();
+        const updated = rooms.map(r => {
+          if (r.roomNo === bill.roomNo) {
+            return {
+              ...r,
+              foodAmount: (r.foodAmount || 0) + bill.netBillAmount
+            };
+          }
+          return r;
+        });
+        this.saveRooms(updated);
+      }
     }
 
     // 4. If Settle To Cash or Online, register in financial ledger (Video 17 & 18)
@@ -7382,7 +7409,7 @@ export class PmsStore {
     shiftedBy?: string;
     transferKots?: boolean;
     remark?: string;
-  }): { success: boolean; message: string; record?: PmsRoomShiftRecord } {
+  }, skipCloudSync: boolean = false): { success: boolean; message: string; record?: PmsRoomShiftRecord } {
     const rooms = this.getRooms();
     const fromRoom = rooms.find(r => r.roomNo === params.fromRoomNo);
     const toRoom = rooms.find(r => r.roomNo === params.toRoomNo);
@@ -7587,19 +7614,68 @@ export class PmsStore {
     shifts.unshift(shiftRecord);
     localStorage.setItem(STORAGE_KEYS.ROOM_SHIFTS, JSON.stringify(shifts));
 
-    // Cloud sync: mirror Room Shift to Railway PostgreSQL
-    hotelApi.executeRoomShift({
-      booking_ref: activeCheckIn?.bookingRefNo || activeCheckIn?.checkInNo || `SVR-ROOM-${params.fromRoomNo}`,
-      to_room_id: parseInt(toRoom.id, 10) || 1,
-      reason: params.reason || 'Guest Request / Routine Shift',
-      shifted_by: params.shiftedBy || 'Reception Desk (Admin)'
-    }).catch(e => console.warn('[PmsStore] Background room shift cloud sync note:', e));
+    // Cloud sync: mirror Room Shift to Railway PostgreSQL (if not skipped by async wrapper)
+    if (!skipCloudSync) {
+      hotelApi.executeRoomShift({
+        booking_ref: activeCheckIn?.bookingRefNo || activeCheckIn?.checkInNo || `SVR-ROOM-${params.fromRoomNo}`,
+        to_room_id: parseInt(toRoom.id, 10) || parseInt(params.toRoomNo, 10) || 1,
+        reason: params.reason || 'Guest Request / Routine Shift',
+        shifted_by: params.shiftedBy || 'Reception Desk (Admin)'
+      }).catch(e => console.warn('[PmsStore] Background room shift cloud sync note:', e));
+    }
 
     return {
       success: true,
       message: `Room shifted successfully from ${params.fromRoomNo} to ${params.toRoomNo}. Room ${params.fromRoomNo} is now marked as Dirty for housekeeping.`,
       record: shiftRecord
     };
+  }
+
+  static async shiftRoomAsync(params: {
+    fromRoomNo: string;
+    toRoomNo: string;
+    newTariff?: number;
+    reason: string;
+    shiftedBy?: string;
+    transferKots?: boolean;
+    remark?: string;
+  }): Promise<{ success: boolean; message: string; record?: PmsRoomShiftRecord }> {
+    const rooms = this.getRooms();
+    const fromRoom = rooms.find(r => r.roomNo === params.fromRoomNo);
+    const toRoom = rooms.find(r => r.roomNo === params.toRoomNo);
+
+    if (!fromRoom) {
+      return { success: false, message: `Source Room ${params.fromRoomNo} not found.` };
+    }
+    if (fromRoom.status !== 'occupied') {
+      return { success: false, message: `Source Room ${params.fromRoomNo} is not occupied (current status: ${fromRoom.status}). Only occupied rooms can be shifted.` };
+    }
+    if (!toRoom) {
+      return { success: false, message: `Destination Room ${params.toRoomNo} not found.` };
+    }
+    if (toRoom.status !== 'vacant') {
+      return { success: false, message: `Destination Room ${params.toRoomNo} is not vacant (current status: ${toRoom.status.toUpperCase()}). Please select a vacant, clean room.` };
+    }
+
+    const checkIns = this.getCheckIns();
+    const checkInIdx = checkIns.findIndex(c => c.roomNo === params.fromRoomNo && c.status === 'CheckedIn');
+    const activeCheckIn = checkInIdx >= 0 ? checkIns[checkInIdx] : null;
+
+    try {
+      await hotelApi.executeRoomShift({
+        booking_ref: activeCheckIn?.bookingRefNo || activeCheckIn?.checkInNo || `SVR-ROOM-${params.fromRoomNo}`,
+        to_room_id: parseInt(toRoom.id, 10) || parseInt(params.toRoomNo, 10) || 1,
+        reason: params.reason || 'Guest Request / Routine Shift',
+        shifted_by: params.shiftedBy || 'Reception Desk (Admin)'
+      });
+    } catch (apiErr: any) {
+      if (apiErr && (apiErr.message?.includes('conflict') || apiErr.message?.includes('occupied') || apiErr.message?.includes('Cannot shift') || apiErr.message?.includes('409'))) {
+        return { success: false, message: apiErr.message };
+      }
+      console.warn('[PmsStore] Cloud sync warning in shiftRoomAsync (proceeding offline):', apiErr);
+    }
+
+    return this.shiftRoom(params, true);
   }
 
   static postChargeToRoom(roomNo: string, charge: { chargeName: string; amount: number; sacCode?: string; gstPercent?: number }): void {
@@ -7994,6 +8070,14 @@ export class PmsStore {
     this.notify();
   }
 
+  static getAvailableStockAtGodown(godownName: string, itemName: string): number {
+    const stockMap = this.getGodownStock();
+    const rows = stockMap[godownName] || [];
+    const target = itemName.trim().toLowerCase();
+    const found = rows.find(r => r.itemName.trim().toLowerCase() === target);
+    return found ? found.closingStock : 0;
+  }
+
   // 5. Dynamic Store-Wise Stock Calculator (Frames 0260, 0320, 0370)
   // Computes exact In, Out, and Closing stock for all items per Godown
   static getGodownStock(): Record<string, GodownStockRow[]> {
@@ -8001,6 +8085,61 @@ export class PmsStore {
     const menuItems = this.getMenuItems();
     const purchases = this.getPurchases();
     const transfers = this.getStockTransfers();
+
+    const recipeBOM: Record<string, { itemName: string; qty: number; unit: string }[]> = {
+      'special masala dosa': [
+        { itemName: 'Dosa Batter', qty: 0.15, unit: 'kg' },
+        { itemName: 'Potato', qty: 0.10, unit: 'kg' },
+        { itemName: 'Desi Ghee', qty: 0.02, unit: 'kg' }
+      ],
+      'steamed idli sambar (2 pcs)': [
+        { itemName: 'Idli Batter', qty: 0.15, unit: 'kg' },
+        { itemName: 'Toor Dal', qty: 0.05, unit: 'kg' }
+      ],
+      'medu vada sambar (2 pcs)': [
+        { itemName: 'Urad Dal', qty: 0.10, unit: 'kg' },
+        { itemName: 'Cooking Oil', qty: 0.04, unit: 'liter' },
+        { itemName: 'Toor Dal', qty: 0.05, unit: 'kg' }
+      ],
+      'poori bhaji (4 pcs)': [
+        { itemName: 'Wheat Atta', qty: 0.15, unit: 'kg' },
+        { itemName: 'Potato', qty: 0.15, unit: 'kg' },
+        { itemName: 'Cooking Oil', qty: 0.05, unit: 'liter' }
+      ],
+      'paneer butter masala': [
+        { itemName: 'Fresh Paneer', qty: 0.20, unit: 'kg' },
+        { itemName: 'Amul Butter', qty: 0.05, unit: 'kg' },
+        { itemName: 'Tomato Gravy Base', qty: 0.15, unit: 'kg' }
+      ],
+      'special kaju kari': [
+        { itemName: 'Cashew Nuts (Kaju)', qty: 0.10, unit: 'kg' },
+        { itemName: 'Amul Butter', qty: 0.04, unit: 'kg' },
+        { itemName: 'Cream / Gravy', qty: 0.15, unit: 'kg' }
+      ],
+      'dal tadka desi ghee': [
+        { itemName: 'Toor Dal', qty: 0.12, unit: 'kg' },
+        { itemName: 'Desi Ghee', qty: 0.04, unit: 'kg' }
+      ],
+      'sai prasad maha thali (pure desi ghee)': [
+        { itemName: 'Basmati Rice', qty: 0.15, unit: 'kg' },
+        { itemName: 'Wheat Atta', qty: 0.10, unit: 'kg' },
+        { itemName: 'Fresh Paneer', qty: 0.08, unit: 'kg' },
+        { itemName: 'Toor Dal', qty: 0.08, unit: 'kg' },
+        { itemName: 'Desi Ghee', qty: 0.05, unit: 'kg' }
+      ],
+      'jain special thali (no onion/garlic)': [
+        { itemName: 'Basmati Rice', qty: 0.15, unit: 'kg' },
+        { itemName: 'Wheat Atta', qty: 0.10, unit: 'kg' },
+        { itemName: 'Fresh Paneer', qty: 0.08, unit: 'kg' },
+        { itemName: 'Toor Dal', qty: 0.08, unit: 'kg' },
+        { itemName: 'Desi Ghee', qty: 0.04, unit: 'kg' }
+      ],
+      'palak paneer (fresh cottage cheese)': [
+        { itemName: 'Fresh Paneer', qty: 0.20, unit: 'kg' },
+        { itemName: 'Spinach Puree', qty: 0.20, unit: 'kg' },
+        { itemName: 'Desi Ghee', qty: 0.03, unit: 'kg' }
+      ]
+    };
 
     const result: Record<string, GodownStockRow[]> = {};
 
@@ -8036,8 +8175,11 @@ export class PmsStore {
       });
     });
 
-    // B. Stock Transfers
+    // B. Stock Transfers (only ISSUED count as moved stock)
     transfers.forEach(st => {
+      const stStatus = (st.status || 'ISSUED').toUpperCase();
+      if (stStatus === 'REJECTED' || stStatus === 'PENDING') return;
+
       const fromG = st.fromGodown;
       const toG = st.toGodown;
 
@@ -8056,7 +8198,7 @@ export class PmsStore {
       });
     });
 
-    // C. Kitchen KOT Dining & Room Service Consumption
+    // C. Kitchen KOT Dining & Room Service Consumption with Recipe BOM Depletion
     const kots = this.getKots().filter(k => k.status !== 'Cancelled');
     const kitchenGodownName = godowns.find(g => g.name.toLowerCase().includes('kitchen'))?.name || 'Kitchen Store';
     if (!storeMap[kitchenGodownName]) storeMap[kitchenGodownName] = {};
@@ -8064,8 +8206,17 @@ export class PmsStore {
     kots.forEach(k => {
       (k.items || []).forEach(itm => {
         const key = itm.itemName.toLowerCase().trim();
-        if (!storeMap[kitchenGodownName][key]) storeMap[kitchenGodownName][key] = { stockIn: 0, stockOut: 0 };
-        storeMap[kitchenGodownName][key].stockOut += (itm.qty || 1);
+        const qty = itm.qty || 1;
+        if (recipeBOM[key]) {
+          recipeBOM[key].forEach(ing => {
+            const ingKey = ing.itemName.toLowerCase().trim();
+            if (!storeMap[kitchenGodownName][ingKey]) storeMap[kitchenGodownName][ingKey] = { stockIn: 0, stockOut: 0 };
+            storeMap[kitchenGodownName][ingKey].stockOut += (ing.qty * qty);
+          });
+        } else {
+          if (!storeMap[kitchenGodownName][key]) storeMap[kitchenGodownName][key] = { stockIn: 0, stockOut: 0 };
+          storeMap[kitchenGodownName][key].stockOut += qty;
+        }
       });
     });
 

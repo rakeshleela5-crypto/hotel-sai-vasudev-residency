@@ -83,20 +83,26 @@ export const HousekeepingDiscrepancyModal: React.FC<HousekeepingDiscrepancyModal
     const room = rooms.find(r => r.roomNo === selectedRoomNo);
     const pmsStatus = room ? room.status : 'vacant';
 
-    // Anti-fraud check: Front Desk shows occupied, but attendant finds room vacant
-    const isDiscrepant = pmsStatus === 'occupied' && (attendantReportStatus === 'Vacant Dirty' || attendantReportStatus === 'Vacant Clean');
-    const guest = room?.currentGuest?.name || 'In-House Guest';
+    // Anti-fraud check: Front Desk shows occupied, but attendant finds room vacant OR Front desk shows vacant, attendant finds room occupied
+    const isPmsOccupiedHkVacant = pmsStatus === 'occupied' && (attendantReportStatus === 'Vacant Dirty' || attendantReportStatus === 'Vacant Clean');
+    const isPmsVacantHkOccupied = pmsStatus === 'vacant' && attendantReportStatus === 'Physically Occupied';
+    const isDiscrepant = isPmsOccupiedHkVacant || isPmsVacantHkOccupied;
+    const guest = room?.currentGuest?.name || (isPmsVacantHkOccupied ? 'Unregistered Occupant / Squatter' : 'In-House Guest');
+
+    const discrepancyType = isPmsOccupiedHkVacant ? 'PMS_OCCUPIED_HK_VACANT' : (isPmsVacantHkOccupied ? 'PMS_VACANT_HK_OCCUPIED' : 'NONE');
+    const severity = isPmsOccupiedHkVacant ? 'CRITICAL_FRAUD_ALERT' : (isPmsVacantHkOccupied ? 'CRITICAL_UNRECORDED_GUEST_ALERT' : 'NORMAL');
 
     const newDisc: HousekeepingDiscrepancy = {
       id: `HSA-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       roomNo: selectedRoomNo,
       pmsStatus,
+      frontDeskStatus: pmsStatus === 'occupied' ? 'Occupied' : 'Vacant',
       housekeepingStatus: attendantReportStatus,
       guestName: guest,
       reportedBy: attendantName,
       reportedAt: new Date().toISOString(),
-      discrepancyType: isDiscrepant ? 'PMS_OCCUPIED_HK_VACANT' : 'NONE',
-      severity: isDiscrepant ? 'CRITICAL_FRAUD_ALERT' : 'NORMAL',
+      discrepancyType,
+      severity,
       notes: auditNotes,
       status: isDiscrepant ? 'Pending' : 'Resolved'
     };
@@ -104,8 +110,11 @@ export const HousekeepingDiscrepancyModal: React.FC<HousekeepingDiscrepancyModal
     PmsStore.recordHousekeepingDiscrepancy(newDisc);
     refreshData();
 
-    if (isDiscrepant) {
+    if (isPmsOccupiedHkVacant) {
       alert(`🚨 HIGH-PRIORITY FRAUD ALERT TRIGGERED!\n\nRoom ${selectedRoomNo} is marked OCCUPIED at Front Desk, but Housekeeping Attendant independently found it VACANT!\n\nThis incident has been logged into the Owner Audit Register to prevent unrecorded short-stay room resales.`);
+      setActiveTab('discrepancies');
+    } else if (isPmsVacantHkOccupied) {
+      alert(`🚨 CRITICAL UNRECORDED GUEST ALERT TRIGGERED!\n\nRoom ${selectedRoomNo} is marked VACANT in PMS, but Housekeeping Attendant found it PHYSICALLY OCCUPIED!\n\nImmediate manager inspection required to prevent unrecorded cash occupancy.`);
       setActiveTab('discrepancies');
     } else {
       alert(`Housekeeping inspection for Room ${selectedRoomNo} saved successfully.`);

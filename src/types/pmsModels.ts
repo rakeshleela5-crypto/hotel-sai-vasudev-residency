@@ -335,6 +335,7 @@ export interface PmsCheckIn {
   idProofDocumentKey?: string;
   guestImage?: string;
   guestPhotoUrl?: string;
+  guestSignature?: string; // Digital Touch Canvas Signature Base64 Data URL or R2 Key
   idProofBackImage?: string;
   invoicePdfKey?: string;
   // Co-travelers KYC (Video 03 Frame 0260)
@@ -820,6 +821,10 @@ export interface PmsStockTransfer {
   totalGstAmt?: number;
   totalNetValue?: number;
   remark?: string;
+  status?: 'ISSUED' | 'PENDING' | 'REJECTED';
+  allowNegativeOverride?: boolean;
+  overrideReason?: string;
+  managerPin?: string;
   createdAt: string;
 }
 

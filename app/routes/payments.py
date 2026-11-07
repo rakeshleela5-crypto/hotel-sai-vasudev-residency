@@ -522,13 +522,14 @@ def create_kot_endpoint(request: Request, payload: Dict[str, Any], db: Session =
     Submits a Kitchen Order Ticket (KOT) with mandatory idempotency key (#1).
     Persists to kot_tickets and kot_orders tables.
     """
-    kot_num = payload.get("kot_no") or payload.get("kot_number") or f"KOT-{int(time.time()*1000)%1000000}"
-    room_num = payload.get("room_no") or payload.get("room_number")
-    table_num = payload.get("table_no") or payload.get("table_number") or "Table 1"
+    kot_num = payload.get("kot_no") or payload.get("kotNo") or payload.get("kot_number") or f"KOT-{int(time.time()*1000)%1000000}"
+    room_num = payload.get("room_no") or payload.get("roomNo") or payload.get("room_number")
+    table_num = payload.get("table_no") or payload.get("tableNo") or payload.get("table_number") or "Table 1"
     items = payload.get("items") or []
     items_json = json.dumps(items) if isinstance(items, list) else str(payload.get("items_json") or "[]")
-    amount = float(payload.get("total_amount") or payload.get("amount") or 0.0)
-    waiter = payload.get("waiter_name") or payload.get("waiter") or "Steward"
+    amount = float(payload.get("total_amount") or payload.get("totalAmount") or payload.get("amount") or 0.0)
+    waiter = payload.get("waiter_name") or payload.get("waiterName") or payload.get("waiter") or "Steward"
+    guest = payload.get("guest_name") or payload.get("guestName") or "Guest"
 
     room = None
     if room_num:

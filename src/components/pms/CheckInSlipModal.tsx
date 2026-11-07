@@ -212,6 +212,13 @@ export const CheckInSlipModal: React.FC<CheckInSlipModalProps> = ({
                 paddingTop: 40
               }}>
                 <div style={{ textAlign: 'center', borderTop: '1px solid #94a3b8', width: 140, paddingTop: 4 }}>
+                  {checkIn.guestSignature && (
+                    <img
+                      src={checkIn.guestSignature}
+                      alt="Guest Signature"
+                      style={{ maxHeight: 38, maxWidth: 130, display: 'block', margin: '0 auto 4px auto' }}
+                    />
+                  )}
                   <strong>Guest Signature</strong>
                 </div>
 

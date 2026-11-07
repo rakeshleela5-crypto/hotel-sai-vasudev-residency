@@ -82,6 +82,10 @@ export const HousekeepingTrackerModal: React.FC<HousekeepingTrackerModalProps> =
     PmsStore.updateHousekeepingStatus(roomNo, 'Vacant Clean');
   };
 
+  const handleSupervisorInspect = (roomNo: string) => {
+    PmsStore.supervisorInspectRoom(roomNo, 'Duty Supervisor');
+  };
+
   const handleOpenMaintenance = (roomNo: string) => {
     setMaintenanceModalRoom(roomNo);
     setMaintenanceIssueText('');
@@ -110,6 +114,7 @@ export const HousekeepingTrackerModal: React.FC<HousekeepingTrackerModalProps> =
   const dirtyRooms = filteredData.filter(d => d.hkStatus === 'Vacant Dirty');
   const cleaningRooms = filteredData.filter(d => d.hkStatus === 'Cleaning In Progress');
   const cleanRooms = filteredData.filter(d => d.hkStatus === 'Vacant Clean' || d.hkStatus === 'Inspected');
+  const inspectedRooms = filteredData.filter(d => d.hkStatus === 'Inspected');
   const maintenanceRooms = filteredData.filter(d => d.hkStatus === 'Under Maintenance' || d.roomStatus === 'blocked');
 
   return (
@@ -243,7 +248,10 @@ export const HousekeepingTrackerModal: React.FC<HousekeepingTrackerModalProps> =
               🟡 Cleaning ({cleaningRooms.length})
             </span>
             <span style={{ background: '#dcfce7', color: '#15803d', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700 }}>
-              🟢 Clean &amp; Inspected ({cleanRooms.length})
+              🟢 Attendant Clean ({cleanRooms.filter(r => r.hkStatus === 'Vacant Clean').length})
+            </span>
+            <span style={{ background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 800 }}>
+              ⭐ 4-Eye Inspected ({inspectedRooms.length})
             </span>
             <span style={{ background: '#f1f5f9', color: '#475569', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700 }}>
               ⚙️ OOO / Maintenance ({maintenanceRooms.length})
@@ -337,15 +345,27 @@ export const HousekeepingTrackerModal: React.FC<HousekeepingTrackerModalProps> =
               {/* Column 3: Vacant Clean & Inspected */}
               <div style={{ background: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0', padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #10b981', paddingBottom: '6px' }}>
-                  <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 800, color: '#15803d' }}>🟢 Clean &amp; Ready ({cleanRooms.length})</h4>
-                  <small style={{ fontSize: '11px', color: '#059669' }}>Unlocked for Check-In</small>
+                  <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 800, color: '#15803d' }}>
+                    🟢 Clean &amp; Inspected ({cleanRooms.length})
+                  </h4>
+                  <small style={{ fontSize: '11px', color: '#059669' }}>
+                    ⭐ {inspectedRooms.length} Inspected
+                  </small>
                 </div>
                 {cleanRooms.map(item => (
-                  <div key={item.roomNo} style={{ background: '#ffffff', border: '1px solid #86efac', borderRadius: '6px', padding: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                  <div key={item.roomNo} style={{ background: '#ffffff', border: item.hkStatus === 'Inspected' ? '2px solid #10b981' : '1px solid #86efac', borderRadius: '6px', padding: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <strong style={{ fontSize: '15px', color: '#1e293b' }}>Room {item.roomNo}</strong>
-                      <span style={{ fontSize: '11px', background: '#dcfce7', color: '#166534', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>
-                        {item.roomStatus === 'occupied' ? 'Occupied' : 'Vacant Clean'}
+                      <span style={{ 
+                        fontSize: '11px', 
+                        background: item.hkStatus === 'Inspected' ? '#ecfdf5' : '#dcfce7', 
+                        color: item.hkStatus === 'Inspected' ? '#065f46' : '#166534', 
+                        padding: '2px 6px', 
+                        borderRadius: '4px', 
+                        fontWeight: 800,
+                        border: item.hkStatus === 'Inspected' ? '1px solid #a7f3d0' : 'none'
+                      }}>
+                        {item.roomStatus === 'occupied' ? 'Occupied' : item.hkStatus === 'Inspected' ? '⭐ 4-Eye Inspected' : 'Attendant Clean'}
                       </span>
                     </div>
                     <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>{item.roomType}</div>
@@ -358,6 +378,16 @@ export const HousekeepingTrackerModal: React.FC<HousekeepingTrackerModalProps> =
                       </div>
                     )}
                     <div style={{ marginTop: '8px', display: 'flex', gap: '6px' }}>
+                      {item.hkStatus === 'Vacant Clean' && (
+                        <button
+                          type="button"
+                          onClick={() => handleSupervisorInspect(item.roomNo)}
+                          style={{ flex: 1.2, padding: '5px 8px', background: '#059669', color: '#ffffff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}
+                          title="Pass 4-Eye Supervisor Inspection"
+                        >
+                          🔍 4-Eye Inspect
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={() => PmsStore.updateHousekeepingStatus(item.roomNo, 'Vacant Dirty')}
@@ -497,8 +527,23 @@ export const HousekeepingTrackerModal: React.FC<HousekeepingTrackerModalProps> =
                               onClick={() => handleMarkClean(item.roomNo)}
                               style={{ padding: '3px 8px', background: '#059669', color: '#ffffff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
                             >
-                              Mark Clean &amp; Ready
+                              Mark Clean
                             </button>
+                          )}
+                          {item.hkStatus === 'Vacant Clean' && (
+                            <button
+                              type="button"
+                              onClick={() => handleSupervisorInspect(item.roomNo)}
+                              style={{ padding: '3px 8px', background: '#047857', color: '#ffffff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}
+                              title="Pass Supervisor 4-Eye Inspection"
+                            >
+                              🔍 4-Eye Inspect
+                            </button>
+                          )}
+                          {item.hkStatus === 'Inspected' && (
+                            <span style={{ padding: '3px 6px', background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0', borderRadius: '4px', fontSize: '10px', fontWeight: 800 }}>
+                              ⭐ Certified
+                            </span>
                           )}
                           {item.hkStatus !== 'Under Maintenance' ? (
                             <button

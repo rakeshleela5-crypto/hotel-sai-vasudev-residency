@@ -9,11 +9,19 @@ interface ShiftHandoverModalProps {
   onClose: () => void;
 }
 
+const getTodayBusinessDate = () => {
+  const now = new Date();
+  const d = String(now.getDate()).padStart(2, '0');
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const y = now.getFullYear();
+  return `${d}-${m}-${y}`;
+};
+
 export const ShiftHandoverModal: React.FC<ShiftHandoverModalProps> = ({ isOpen, onClose }) => {
-  const [shiftDate, setShiftDate] = useState<string>('19-07-2025');
+  const [shiftDate, setShiftDate] = useState<string>(getTodayBusinessDate);
   const [shiftType, setShiftType] = useState<'Morning' | 'Evening' | 'Night'>('Morning');
   const [handoverRecord, setHandoverRecord] = useState<PmsShiftHandoverRecord>(() => 
-    PmsStore.getShiftHandoverData('19-07-2025', 'Morning')
+    PmsStore.getShiftHandoverData(getTodayBusinessDate(), 'Morning')
   );
   const [isSignedOff, setIsSignedOff] = useState<boolean>(false);
   const [isSigning, setIsSigning] = useState<boolean>(false);
@@ -85,6 +93,16 @@ export const ShiftHandoverModal: React.FC<ShiftHandoverModalProps> = ({ isOpen, 
   const handlePrint = () => {
     window.print();
   };
+
+  const expectedCash = Number((
+    (handoverRecord.openingDrawerCash || 0) +
+    (handoverRecord.roomCashCollected || 0) +
+    (handoverRecord.foodCashCollected || 0) +
+    (handoverRecord.advanceCashCollected || 0) -
+    (handoverRecord.expensesPaidFromDrawer || 0)
+  ).toFixed(2));
+  const countedCash = Number((handoverRecord.netPhysicalCashInDrawer || 0).toFixed(2));
+  const cashVariance = Number((countedCash - expectedCash).toFixed(2));
 
   return (
     <div className="pms-reg-modal-backdrop" onClick={onClose}>
@@ -224,6 +242,32 @@ export const ShiftHandoverModal: React.FC<ShiftHandoverModalProps> = ({ isOpen, 
                 </span>
                 <span className="font-mono font-black text-emerald-900 text-base">
                   ₹{handoverRecord.netPhysicalCashInDrawer.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+
+              {/* Cash Variance Indicator */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '8px 12px',
+                borderRadius: '6px',
+                fontSize: '11px',
+                fontWeight: 700,
+                marginTop: '8px',
+                background: cashVariance === 0 ? '#ecfdf5' : cashVariance < 0 ? '#fef2f2' : '#eff6ff',
+                color: cashVariance === 0 ? '#065f46' : cashVariance < 0 ? '#b91c1c' : '#1e40af',
+                border: `1px solid ${cashVariance === 0 ? '#a7f3d0' : cashVariance < 0 ? '#fecaca' : '#bfdbfe'}`
+              }}>
+                <span>
+                  {cashVariance === 0
+                    ? '✅ Cash Drawer Perfectly Balanced with Book Ledgers'
+                    : cashVariance < 0
+                    ? `⚠️ Cash Shortage Detected: -₹${Math.abs(cashVariance).toFixed(2)} under ledger expected balance`
+                    : `ℹ️ Cash Overage Detected: +₹${cashVariance.toFixed(2)} surplus above ledger expected balance`}
+                </span>
+                <span style={{ fontFamily: 'monospace', fontWeight: 800 }}>
+                  Expected: ₹{expectedCash.toFixed(2)} | Variance: ₹{cashVariance > 0 ? `+${cashVariance.toFixed(2)}` : cashVariance.toFixed(2)}
                 </span>
               </div>
             </div>

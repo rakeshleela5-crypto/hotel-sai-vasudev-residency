@@ -54,6 +54,7 @@ class Booking(Base):
     id_proof_number = Column(String(255), nullable=True) # Widened to 255 for Base64 Fernet AES ciphertext
     id_proof_document_key = Column(String(255), nullable=True) # Cloudflare R2 object key (e.g. kyc/2026/10/guest_442.pdf)
     guest_photo_url = Column(String(255), nullable=True) # Public guest photo URL
+    guest_signature_url = Column(Text, nullable=True) # Base64 Data URL or Cloudflare R2 signature blob key
     invoice_pdf_key = Column(String(255), nullable=True) # Cloudflare R2 object key (e.g. invoices/2026/10/inv_101.pdf)
 
     # Walk-In & Pilgrimage KYC Metadata
@@ -570,6 +571,8 @@ class CheckoutRecord(Base):
     country = Column(String(100), default="India")
     pin_code = Column(String(20), nullable=True)
     sac_code = Column(String(20), default="996311")
+    company_name = Column(String(150), nullable=True)
+    customer_gstin = Column(String(20), nullable=True)
     invoice_format = Column(String(50), default="A4_Standard")
     is_deleted = Column(Boolean, default=False, nullable=False, index=True)
     void_reason = Column(String(255), nullable=True)
@@ -695,6 +698,7 @@ class StockTransfer(Base):
     total_gst_amt = Column(Float, default=0.0)
     total_net_value = Column(Float, default=0.0)
     remark = Column(Text, nullable=True)
+    status = Column(String(50), default="ISSUED")  # ISSUED, PENDING, REJECTED
     created_at = Column(DateTime, default=now_utc)
 
 class UserAccount(Base):

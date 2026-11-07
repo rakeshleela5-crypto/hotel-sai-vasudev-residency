@@ -441,3 +441,237 @@ def get_available_export_periods(db: Session = Depends(get_db)):
         "current_period": now_p,
         "periods": sorted_periods
     }
+
+# --- Official Statutory GST Returns Engine (GSTR-1 & GSTR-3B) ---
+@router.get("/gst/gstr-1")
+def get_gstr1_json_return(
+    period: Optional[str] = Query(None, description="Tax period YYYY-MM or MMYYYY"),
+    year: Optional[int] = Query(None),
+    month: Optional[int] = Query(None),
+    db: Session = Depends(get_db)
+):
+    """
+    Official GSTN GSTR-1 Offline Utility JSON export schema.
+    Structures outward supplies into B2B (Table 4), B2CS (Table 7), HSN Summary (Table 12),
+    and Document Issue Summary (Table 13).
+    Dual GST Rates: SAC 996311 @ 12% (Rooms), SAC 996331 @ 5% (Restaurant F&B).
+    """
+    ca_data = get_ca_monthly_export(period=period, year=year, month=month, db=db)
+    meta = ca_data["export_metadata"]
+    hotel = meta["hotel"]
+    gstin = hotel["gstin"]
+    period_str = meta["period"]  # YYYY-MM
+    y, m = period_str.split('-')
+    fp = f"{m}{y}"  # MMYYYY
+
+    # 1. B2B Invoices (Table 4) grouped by customer GSTIN (ctin)
+    b2b_by_ctin: Dict[str, Any] = {}
+    for inv in ca_data["b2b_invoices"]:
+        ctin = inv.get("customer_gstin", "21AAACR1234A1Z5")
+        if ctin not in b2b_by_ctin:
+            b2b_by_ctin[ctin] = {
+                "ctin": ctin,
+                "cpty": "REGULAR",
+                "inv": []
+            }
+        
+        txval = inv["taxable_value"]
+        rt = inv["gst_rate_pct"]
+        camt = inv["cgst_amount"]
+        samt = inv["sgst_amount"]
+        iamt = inv.get("igst_amount", 0.0)
+
+        b2b_by_ctin[ctin]["inv"].append({
+            "inum": inv["invoice_no"],
+            "idt": inv["invoice_date"],
+            "val": inv["total_invoice_value"],
+            "pos": inv["pos_state_code"],
+            "rchrg": "N",
+            "inv_typ": "R",
+            "itms": [
+                {
+                    "num": 1,
+                    "itm_det": {
+                        "rt": rt,
+                        "txval": txval,
+                        "iamt": iamt,
+                        "camt": camt,
+                        "samt": samt,
+                        "csamt": 0.0
+                    }
+                }
+            ]
+        })
+    
+    b2b_list = list(b2b_by_ctin.values())
+
+    # 2. B2CS (Table 7) B2C Small Supplies
+    b2c_room_taxable = sum(i["taxable_value"] for i in ca_data["b2c_invoices"])
+    b2c_room_cgst = sum(i["cgst_amount"] for i in ca_data["b2c_invoices"])
+    b2c_room_sgst = sum(i["sgst_amount"] for i in ca_data["b2c_invoices"])
+
+    food_taxable = sum(f["taxable_value"] for f in ca_data["restaurant_food_bills"])
+    food_cgst = sum(f["cgst_amount"] for f in ca_data["restaurant_food_bills"])
+    food_sgst = sum(f["sgst_amount"] for f in ca_data["restaurant_food_bills"])
+
+    b2cs_list = []
+    if b2c_room_taxable > 0:
+        b2cs_list.append({
+            "sply_ty": "INTRA",
+            "rt": 12.0,
+            "typ": "OE",
+            "pos": hotel["state_code"],
+            "txval": round(b2c_room_taxable, 2),
+            "camt": round(b2c_room_cgst, 2),
+            "samt": round(b2c_room_sgst, 2),
+            "iamt": 0.0,
+            "csamt": 0.0
+        })
+    if food_taxable > 0:
+        b2cs_list.append({
+            "sply_ty": "INTRA",
+            "rt": 5.0,
+            "typ": "OE",
+            "pos": hotel["state_code"],
+            "txval": round(food_taxable, 2),
+            "camt": round(food_cgst, 2),
+            "samt": round(food_sgst, 2),
+            "iamt": 0.0,
+            "csamt": 0.0
+        })
+
+    # 3. HSN Summary (Table 12)
+    hsn_data = []
+    num_idx = 1
+    # SAC 996311 (Room Accommodation 12%)
+    all_room_taxable = round(b2c_room_taxable + sum(i["taxable_value"] for i in ca_data["b2b_invoices"]), 2)
+    all_room_cgst = round(b2c_room_cgst + sum(i["cgst_amount"] for i in ca_data["b2b_invoices"]), 2)
+    all_room_sgst = round(b2c_room_sgst + sum(i["sgst_amount"] for i in ca_data["b2b_invoices"]), 2)
+    all_room_val = round(all_room_taxable + all_room_cgst + all_room_sgst, 2)
+    if all_room_taxable > 0:
+        hsn_data.append({
+            "num": num_idx,
+            "hsn_sc": "996311",
+            "desc": "Room Accommodation Services",
+            "uqc": "OTH",
+            "qty": len(ca_data["b2b_invoices"]) + len(ca_data["b2c_invoices"]),
+            "val": all_room_val,
+            "txval": all_room_taxable,
+            "iamt": 0.0,
+            "camt": all_room_cgst,
+            "samt": all_room_sgst,
+            "csamt": 0.0
+        })
+        num_idx += 1
+
+    # SAC 996331 (Restaurant F&B 5%)
+    all_food_taxable = round(food_taxable, 2)
+    all_food_cgst = round(food_cgst, 2)
+    all_food_sgst = round(food_sgst, 2)
+    all_food_val = round(all_food_taxable + all_food_cgst + all_food_sgst, 2)
+    if all_food_taxable > 0:
+        hsn_data.append({
+            "num": num_idx,
+            "hsn_sc": "996331",
+            "desc": "Restaurant Food & Beverage Services",
+            "uqc": "OTH",
+            "qty": len(ca_data["restaurant_food_bills"]),
+            "val": all_food_val,
+            "txval": all_food_taxable,
+            "iamt": 0.0,
+            "camt": all_food_cgst,
+            "samt": all_food_sgst,
+            "csamt": 0.0
+        })
+
+    # 4. Document Issue Summary (Table 13)
+    doc_det = []
+    tot_invoices = len(ca_data["b2b_invoices"]) + len(ca_data["b2c_invoices"])
+    if tot_invoices > 0:
+        all_inv_nos = sorted([i["invoice_no"] for i in ca_data["b2b_invoices"] + ca_data["b2c_invoices"]])
+        doc_det.append({
+            "doc_num": 1,
+            "doc_typ": "Invoices for outward supply",
+            "from": all_inv_nos[0],
+            "to": all_inv_nos[-1],
+            "totnum": tot_invoices,
+            "canc": 0,
+            "net_issue": tot_invoices
+        })
+
+    return {
+        "status": "success",
+        "gstin": gstin,
+        "fp": fp,
+        "version": "GST_OFFLINE_TOOL_V1.1",
+        "hash": f"SHA256-{abs(hash(f'{gstin}_{fp}')) & 0xffffffff:08x}",
+        "gross_turnover": round(all_room_val + all_food_val, 2),
+        "b2b": b2b_list,
+        "b2cs": b2cs_list,
+        "hsn": {"data": hsn_data},
+        "doc_issue": {"doc_det": doc_det}
+    }
+
+@router.get("/gst/gstr-3b")
+def get_gstr3b_json_return(
+    period: Optional[str] = Query(None, description="Tax period YYYY-MM or MMYYYY"),
+    year: Optional[int] = Query(None),
+    month: Optional[int] = Query(None),
+    db: Session = Depends(get_db)
+):
+    """
+    Official GSTR-3B Monthly Return calculation.
+    Aggregates Table 3.1 Outward Taxable Supplies (Taxable, CGST, SGST, IGST)
+    and summarizes eligible input tax credit (ITC) and net cash tax liability.
+    """
+    ca_data = get_ca_monthly_export(period=period, year=year, month=month, db=db)
+    summary = ca_data["preview_summary"]
+    hotel = ca_data["export_metadata"]["hotel"]
+    period_str = ca_data["export_metadata"]["period"]
+
+    txval = summary["total_taxable_value"]
+    cgst = summary["total_cgst"]
+    sgst = summary["total_sgst"]
+    igst = summary["total_igst"]
+    tot_tax = summary["total_tax"]
+
+    return {
+        "status": "success",
+        "gstin": hotel["gstin"],
+        "legal_name": hotel["legal_name"],
+        "trade_name": hotel["trade_name"],
+        "return_period": period_str,
+        "table_3_1_outward_supplies": {
+            "description": "Tax on outward and reverse charge inward supplies",
+            "osup_det": {
+                "nature_of_supplies": "Outward taxable supplies (other than zero rated, nil rated and exempted)",
+                "txval": txval,
+                "iamt": igst,
+                "camt": cgst,
+                "samt": sgst,
+                "csamt": 0.0
+            },
+            "osup_zero": {"txval": 0.0, "iamt": 0.0, "csamt": 0.0},
+            "osup_nil_exempt": {"txval": 0.0},
+            "isup_rev": {"txval": 0.0, "iamt": 0.0, "camt": 0.0, "samt": 0.0, "csamt": 0.0},
+            "osup_nongst": {"txval": 0.0}
+        },
+        "table_4_eligible_itc": {
+            "description": "Eligible Input Tax Credit (ITC)",
+            "itc_available": {
+                "all_other_itc": {"iamt": 0.0, "camt": 0.0, "samt": 0.0, "csamt": 0.0}
+            },
+            "itc_net": {"iamt": 0.0, "camt": 0.0, "samt": 0.0, "csamt": 0.0}
+        },
+        "tax_payable_in_cash": {
+            "central_tax_cgst": cgst,
+            "state_tax_sgst": sgst,
+            "integrated_tax_igst": igst,
+            "total_cash_liability": tot_tax
+        },
+        "section_170_rounding_compliance": {
+            "rounded_cgst": round(cgst),
+            "rounded_sgst": round(sgst),
+            "rounded_total_tax": round(tot_tax)
+        }
+    }

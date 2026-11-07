@@ -44,6 +44,9 @@ export const StockTransferModal: React.FC<StockTransferModalProps> = ({
   const [qty, setQty] = useState<number | ''>(1);
   const [rate, setRate] = useState<number | ''>(0);
   const [gstPercent, setGstPercent] = useState<number>(5);
+  const [transferStatus, setTransferStatus] = useState<'ISSUED' | 'PENDING'>('ISSUED');
+  const [allowNegativeOverride, setAllowNegativeOverride] = useState(false);
+  const [managerPin, setManagerPin] = useState('');
 
   // Items list
   const [items, setItems] = useState<PmsStockTransferItem[]>([]);
@@ -141,6 +144,25 @@ export const StockTransferModal: React.FC<StockTransferModalProps> = ({
     const matchedItem = menuItems.find(m => m.id === selectedItemId);
     const itmName = matchedItem ? matchedItem.name : itemSearchTerm.split('||')[0].trim();
     const barcode = matchedItem ? (matchedItem.barcode || matchedItem.code) : '';
+    const availableStock = PmsStore.getAvailableStockAtGodown(fromGodown, itmName);
+
+    if (transferStatus === 'ISSUED' && currentQty > availableStock && !allowNegativeOverride) {
+      const confirmOverride = window.confirm(
+        `Insufficient stock in [${fromGodown}]!\n` +
+        `Item: ${itmName}\n` +
+        `Available Balance: ${availableStock.toFixed(2)}\n` +
+        `Requested Transfer: ${currentQty}\n\n` +
+        `Do you have Manager Authorization to permit negative inventory override?`
+      );
+      if (!confirmOverride) return;
+      const pin = window.prompt('Enter Manager Authorization PIN:') || '';
+      if (!['9999', '1234', '8888'].includes(pin.trim())) {
+        alert('Invalid Manager PIN. Transfer aborted to prevent inventory distortion.');
+        return;
+      }
+      setAllowNegativeOverride(true);
+      setManagerPin(pin.trim());
+    }
 
     const newItem: PmsStockTransferItem = {
       sNo: items.length + 1,
@@ -205,6 +227,9 @@ export const StockTransferModal: React.FC<StockTransferModalProps> = ({
       totalTaxable: totalAmount,
       totalGstAmt,
       totalNetValue,
+      status: transferStatus,
+      allowNegativeOverride,
+      managerPin: managerPin || undefined,
       remark: remark.trim(),
       createdAt: new Date().toISOString()
     };
@@ -284,6 +309,43 @@ export const StockTransferModal: React.FC<StockTransferModalProps> = ({
             >
               📋 Transfer Register ({transfers.length})
             </button>
+
+            {activeTab === 'create' && (
+              <div style={{ display: 'inline-flex', border: '1px solid #cbd5e1', borderRadius: 4, overflow: 'hidden', marginLeft: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => setTransferStatus('ISSUED')}
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    border: 'none',
+                    cursor: 'pointer',
+                    background: transferStatus === 'ISSUED' ? '#2563eb' : '#fff',
+                    color: transferStatus === 'ISSUED' ? '#fff' : '#64748b'
+                  }}
+                  title="Direct inter-department stock movement (immediately decrements source godown)"
+                >
+                  🚀 Direct Issue
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTransferStatus('PENDING')}
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    border: 'none',
+                    cursor: 'pointer',
+                    background: transferStatus === 'PENDING' ? '#f59e0b' : '#fff',
+                    color: transferStatus === 'PENDING' ? '#fff' : '#64748b'
+                  }}
+                  title="Raise a departmental store requisition pending Storekeeper approval"
+                >
+                  📝 Store Requisition
+                </button>
+              </div>
+            )}
           </div>
 
           {activeTab === 'create' && (
@@ -472,9 +534,16 @@ export const StockTransferModal: React.FC<StockTransferModalProps> = ({
               <div style={{ display: 'grid', gridTemplateColumns: '2.5fr 1fr 1fr 1fr 1fr 1fr 1fr 44px', gap: 8, alignItems: 'end' }}>
                 {/* Select Item */}
                 <div style={{ position: 'relative' }}>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
-                    Select Item
-                  </label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: '#475569' }}>
+                      Select Item
+                    </label>
+                    {selectedItemId && (
+                      <span style={{ fontSize: 11, color: '#16a34a', fontWeight: 700 }}>
+                        📦 Avail in {fromGodown}: {PmsStore.getAvailableStockAtGodown(fromGodown, menuItems.find(m => m.id === selectedItemId)?.name || '')}
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="text"
                     placeholder="Type Item name or barcode..."

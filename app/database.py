@@ -63,6 +63,10 @@ if is_sqlite:
         cursor.execute("PRAGMA journal_mode=WAL")
         cursor.execute("PRAGMA busy_timeout=30000")
         cursor.execute("PRAGMA synchronous=NORMAL")
+        try:
+            cursor.execute("ALTER TABLE stock_transfers ADD COLUMN status VARCHAR(50) DEFAULT 'ISSUED'")
+        except Exception:
+            pass
         cursor.close()
 else:
     # Railway PostgreSQL async engine with asyncpg, pool tuning & 5s lock_timeout

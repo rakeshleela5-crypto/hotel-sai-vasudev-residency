@@ -121,6 +121,20 @@ export interface CachedEodReportRecord {
   createdAt: string;
 }
 
+export interface QueuedMutation {
+  id?: number;
+  clientRef: string;
+  endpoint: string;
+  method: 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  payload: any;
+  entityType: 'KOT' | 'HOUSEKEEPING' | 'CHECKIN' | 'RECEIPT' | 'PAYMENT' | 'EXPENSE' | 'GENERAL';
+  statusDescription?: string;
+  createdAt: string;
+  syncStatus: 'pending' | 'syncing' | 'synced' | 'failed' | 'conflict';
+  retryCount: number;
+  lastError?: string;
+}
+
 // =========================================================================
 // SRI SAI VASUDEV RESIDENCY IndexedDB Database Class
 // =========================================================================
@@ -136,6 +150,7 @@ export class HotelSaiVasudevDB extends Dexie {
   staff!: Table<CachedStaffRecord, string>;
   advances!: Table<CachedAdvanceRecord, string>;
   eodReports!: Table<CachedEodReportRecord, string>;
+  offlineMutations!: Table<QueuedMutation, number>;
 
   constructor() {
     super('HotelSaiVasudev_ERP_Offline_DB');
@@ -155,6 +170,19 @@ export class HotelSaiVasudevDB extends Dexie {
       staff: 'id, staffId, userName, role',
       advances: 'id, staffId, date',
       eodReports: 'reportDate, createdAt'
+    });
+    this.version(3).stores({
+      rooms: 'id, roomNo, status, roomType, floor',
+      menuItems: 'id, itemCode, category, isAvailable',
+      kotQueue: '++id, clientRef, syncStatus, serviceType, createdAt',
+      bookings: 'id, bookingNo, roomNo, status, checkInDate, checkOutDate',
+      checkouts: 'invoiceNo, roomNo, checkOutDate',
+      kycDocuments: 'id, guestId, roomNo, docType, createdAt',
+      expenses: 'id, date, category',
+      staff: 'id, staffId, userName, role',
+      advances: 'id, staffId, date',
+      eodReports: 'reportDate, createdAt',
+      offlineMutations: '++id, clientRef, endpoint, syncStatus, entityType, createdAt'
     });
   }
 }
@@ -424,19 +452,156 @@ export async function flushKotQueue(): Promise<{ synced: number; failed: number;
 // Automated Online Reconnection & Periodic Heartbeat Sync Listener (#33)
 // =========================================================================
 
+// Generic Offline Mutation Queue
+export async function queueOfflineMutation(
+  mutation: Omit<QueuedMutation, 'id' | 'createdAt' | 'syncStatus' | 'retryCount'>
+): Promise<QueuedMutation> {
+  const clientRef = mutation.clientRef || generateUUIDv4();
+  const queued: QueuedMutation = {
+    ...mutation,
+    clientRef,
+    createdAt: new Date().toISOString(),
+    syncStatus: 'pending',
+    retryCount: 0
+  };
+
+  try {
+    const id = await offlineDb.offlineMutations.add(queued);
+    queued.id = id;
+    console.info(`[Offline Sync] Queued ${queued.entityType} mutation for ${queued.endpoint} (ID: ${id})`);
+  } catch (err) {
+    console.warn('[Offline Sync] Failed to store mutation in IndexedDB:', err);
+  }
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('svr:mutation_queued', { detail: queued }));
+    window.dispatchEvent(new CustomEvent('svr:sync_status_changed'));
+  }
+
+  if (typeof window !== 'undefined' && window.navigator.onLine) {
+    setTimeout(() => {
+      flushMutationQueue().catch(err => console.debug('[Offline Sync] Auto-flush error:', err));
+    }, 150);
+  }
+
+  return queued;
+}
+
+export async function getPendingMutationCount(): Promise<number> {
+  try {
+    const mutCount = await offlineDb.offlineMutations
+      .where('syncStatus')
+      .anyOf('pending', 'failed')
+      .count();
+    const kotCount = await getPendingKotCount();
+    return mutCount + kotCount;
+  } catch {
+    return 0;
+  }
+}
+
+export async function getPendingMutations(): Promise<QueuedMutation[]> {
+  try {
+    return await offlineDb.offlineMutations
+      .where('syncStatus')
+      .anyOf('pending', 'failed', 'syncing')
+      .sortBy('createdAt');
+  } catch {
+    return [];
+  }
+}
+
+let isFlushingMutations = false;
+
+export async function flushMutationQueue(): Promise<{ synced: number; failed: number; totalPending: number }> {
+  // 1. Flush KOT orders first
+  await flushKotQueue();
+
+  if (typeof window === 'undefined' || !window.navigator.onLine) {
+    const total = await getPendingMutationCount();
+    return { synced: 0, failed: 0, totalPending: total };
+  }
+
+  if (isFlushingMutations) {
+    return { synced: 0, failed: 0, totalPending: await getPendingMutationCount() };
+  }
+
+  isFlushingMutations = true;
+  let synced = 0;
+  let failed = 0;
+
+  try {
+    const pending = await offlineDb.offlineMutations
+      .where('syncStatus')
+      .anyOf('pending', 'failed')
+      .sortBy('createdAt');
+
+    for (const m of pending) {
+      if (!m.id) continue;
+      try {
+        await offlineDb.offlineMutations.update(m.id, { syncStatus: 'syncing' });
+
+        const method = (m.method || 'POST').toUpperCase();
+        let res: any;
+        if (method === 'POST') {
+          res = await apiClient.post(m.endpoint, m.payload, { idempotencyKey: m.clientRef });
+        } else if (method === 'PUT') {
+          res = await apiClient.put(m.endpoint, m.payload, { idempotencyKey: m.clientRef });
+        } else if (method === 'PATCH') {
+          res = await apiClient.patch(m.endpoint, m.payload, { idempotencyKey: m.clientRef });
+        } else if (method === 'DELETE') {
+          res = await apiClient.delete(m.endpoint, { idempotencyKey: m.clientRef });
+        }
+
+        await offlineDb.offlineMutations.update(m.id, {
+          syncStatus: 'synced',
+          retryCount: m.retryCount + 1
+        });
+        synced++;
+
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('svr:mutation_synced', { detail: { mutation: m, response: res } }));
+        }
+      } catch (err: any) {
+        failed++;
+        const isConflict = err.status === 409;
+        await offlineDb.offlineMutations.update(m.id, {
+          syncStatus: isConflict ? 'conflict' : 'failed',
+          retryCount: m.retryCount + 1,
+          lastError: err.message || String(err)
+        });
+      }
+    }
+
+    if (synced > 0 && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('svr:mutation_queue_flushed', {
+        detail: { synced, failed, totalRemaining: await getPendingMutationCount() }
+      }));
+      window.dispatchEvent(new CustomEvent('svr:sync_status_changed'));
+    }
+  } catch (err) {
+    console.warn('[Offline Sync] Flush error:', err);
+  } finally {
+    isFlushingMutations = false;
+  }
+
+  const remaining = await getPendingMutationCount();
+  return { synced, failed, totalPending: remaining };
+}
+
 if (typeof window !== 'undefined') {
   // Listen for Wi-Fi / Network restoration
   window.addEventListener('online', () => {
-    console.info('[Network] Hotel Wi-Fi restored! Automatically flushing offline KOT queue...');
-    flushKotQueue().catch(err => console.warn('[Network] Auto-flush error on online event:', err));
+    console.info('[Network] Hotel Wi-Fi restored! Automatically flushing offline mutations & KOT queue...');
+    flushMutationQueue().catch(err => console.warn('[Network] Auto-flush error on online event:', err));
   });
 
   // Periodic safety check every 25 seconds
   setInterval(() => {
     if (window.navigator.onLine) {
-      getPendingKotCount().then(count => {
+      getPendingMutationCount().then(count => {
         if (count > 0) {
-          flushKotQueue();
+          flushMutationQueue();
         }
       });
     }
