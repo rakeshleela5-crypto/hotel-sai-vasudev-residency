@@ -21,6 +21,7 @@ from app.utils.auth import require_role, HospitalityRole, revoke_user_refresh_to
 from app.utils.audit import record_audit_log, audit_tariff_change, audit_discount, audit_kot_void, audit_payout
 from app.utils.encryption import encrypt_pii, decrypt_pii, mask_pii
 from app.utils.caching import get_cached_menu, set_cached_menu, invalidate_menu_cache, invalidate_rooms_cache
+from app.utils.sequence import get_next_document_number, peek_next_document_number, get_current_financial_year
 from app.core.cache import cache_response, invalidate_cache_prefix
 from app.websocket_manager import ws_manager
 
@@ -1327,8 +1328,12 @@ def execute_check_out(payload: schemas.CheckOutRequest, db: Session = Depends(ge
                     folio.status = "SETTLED"
                 folio.updated_at = now_utc()
 
-            # Ensure CheckoutRecord is present
-            inv_no = booking.invoice_number or f"GSR/{uuid.uuid4().hex[:4].upper()}/26-27"
+            # Ensure CheckoutRecord is present with canonical atomic invoice sequence (CGST Sec 31)
+            inv_no = booking.invoice_number
+            if not inv_no or inv_no.startswith("GSR/") or "INV" not in inv_no:
+                inv_no, _ = get_next_document_number(db, doc_type="TAX_INVOICE", prefix="SVR")
+                booking.invoice_number = inv_no
+
             existing_chk = db.query(models.CheckoutRecord).filter(models.CheckoutRecord.invoice_no == inv_no).first()
             if not existing_chk:
                 chk_rec = models.CheckoutRecord(
@@ -4088,7 +4093,9 @@ def cancel_group_booking(group_id: str, db: Session = Depends(get_db)):
 async def save_checkout(payload: schemas.CheckoutRecordCreate, db: Session = Depends(get_db)):
     """Persist completed guest departure, checkout bill, and ledger settlement into PostgreSQL with atomic rollback and Folio settlement."""
     try:
-        inv = payload.invoice_no or payload.invoiceNo or f"GSR/{uuid.uuid4().hex[:4].upper()}/26-27"
+        inv = payload.invoice_no or payload.invoiceNo
+        if not inv or inv.startswith("GSR/") or "INV" not in inv:
+            inv, _ = get_next_document_number(db, doc_type="TAX_INVOICE", prefix="SVR")
         r_no = str(payload.room_no or payload.roomNo or "101").strip()
         g_name = payload.guest_name or payload.guestName or "Guest"
         g_phone = payload.guest_phone or payload.guestPhone or ""
@@ -9640,5 +9647,117 @@ def get_pms_gstr1_alias(period: Optional[str] = None, year: Optional[int] = None
 def get_pms_gstr3b_alias(period: Optional[str] = None, year: Optional[int] = None, month: Optional[int] = None, db: Session = Depends(get_db)):
     """Statutory GSTR-3B Monthly Return alias under PMS router."""
     return ca_export.get_gstr3b_json_return(period=period, year=year, month=month, db=db)
+
+# =========================================================================
+# 20. ATOMIC INVOICE SEQUENCE & CENTRAL STATE HYDRATION (PHASE 2)
+# =========================================================================
+
+@router.get("/invoices/next-number", summary="Preview Next Sequential Document Number (CGST Sec 31)")
+def preview_next_document_number(
+    doc_type: str = Query("TAX_INVOICE", description="TAX_INVOICE, FOOD_BILL, ADVANCE_RECEIPT, CREDIT_NOTE"),
+    prefix: str = Query("SVR"),
+    db: Session = Depends(get_db)
+):
+    """
+    Previews the upcoming consecutive document number without incrementing the counter.
+    Format: SVR/{FY}/{CODE}-{SEQ:04d} (e.g. SVR/2026-27/INV-0042).
+    """
+    next_num = peek_next_document_number(db, doc_type=doc_type, prefix=prefix)
+    return {
+        "status": "success",
+        "doc_type": doc_type.upper(),
+        "next_number": next_num,
+        "financial_year": get_current_financial_year()
+    }
+
+@router.post("/invoices/generate-number", summary="Atomically Allocate Next Sequential Document Number")
+def allocate_next_document_number(
+    doc_type: str = Query("TAX_INVOICE", description="TAX_INVOICE, FOOD_BILL, ADVANCE_RECEIPT, CREDIT_NOTE"),
+    prefix: str = Query("SVR"),
+    db: Session = Depends(get_db)
+):
+    """
+    Atomically generates and persists the next consecutive document number
+    with database-level concurrency locking (zero collision).
+    """
+    num, seq = get_next_document_number(db, doc_type=doc_type, prefix=prefix)
+    return {
+        "status": "success",
+        "doc_type": doc_type.upper(),
+        "invoice_number": num,
+        "sequence_number": seq,
+        "financial_year": get_current_financial_year()
+    }
+
+@router.get("/sync-state", summary="Full Multi-Device Central State Hydration")
+def get_pms_sync_state(db: Session = Depends(get_db)):
+    """
+    Single-call state hydration endpoint for multi-device front-desk and POS sync.
+    Provides canonical state of rooms, active bookings, open KOTs, and business date,
+    eliminating the localStorage split-brain problem.
+    """
+    # 1. Rooms
+    rooms = db.query(models.Room).order_by(models.Room.name).all()
+    room_list = []
+    for r in rooms:
+        active_b = next((b for b in r.bookings if b.status in ("CheckedIn", "Confirmed") and not b.is_deleted), None)
+        is_occ = bool(active_b or r.housekeeping_status == "Occupied" or not r.is_available)
+        room_list.append({
+            "id": r.id,
+            "roomNo": r.name,
+            "roomType": r.room_type,
+            "status": "occupied" if is_occ else (
+                "cleaning" if r.housekeeping_status in ("Dirty", "Cleaning") else "vacant"
+            ),
+            "housekeepingStatus": r.housekeeping_status or "Clean",
+            "pricePerNight": r.price_per_night,
+            "activeBookingId": active_b.id if active_b else None,
+            "guestName": active_b.guest_name if active_b else None
+        })
+
+    # 2. Active Bookings / Checkins
+    active_bookings = db.query(models.Booking).filter(
+        models.Booking.status.in_(["CheckedIn", "Confirmed"]),
+        models.Booking.is_deleted == False
+    ).all()
+    booking_list = [{
+        "id": b.id,
+        "bookingRef": b.booking_ref,
+        "guestName": b.guest_name,
+        "guestPhone": b.guest_phone,
+        "roomNo": b.room.name if b.room else "",
+        "checkInDate": b.check_in_date,
+        "checkOutDate": b.check_out_date,
+        "totalAmount": b.total_price,
+        "totalPaid": b.total_paid,
+        "balanceDue": b.balance_due if b.balance_due is not None else ((b.total_price or 0.0) - (b.total_paid or 0.0)),
+        "status": b.status
+    } for b in active_bookings]
+
+    # 3. Open KOTs in Kitchen
+    open_kots = db.query(models.KotTicket).filter(
+        models.KotTicket.status.in_(["OPEN", "PREPARING", "READY"])
+    ).all()
+    kot_list = [{
+        "kotNo": k.kot_no,
+        "tableNo": k.table_no,
+        "roomNo": k.room_no,
+        "status": k.status,
+        "totalAmount": k.total_amount,
+        "itemCount": len(k.items) if k.items else 0
+    } for k in open_kots]
+
+    return {
+        "status": "success",
+        "server_time": now_utc().isoformat(),
+        "financial_year": get_current_financial_year(),
+        "rooms": room_list,
+        "active_checkins": booking_list,
+        "open_kots": kot_list,
+        "total_rooms": len(room_list),
+        "occupied_count": sum(1 for r in room_list if r["status"] == "occupied"),
+        "vacant_count": sum(1 for r in room_list if r["status"] == "vacant")
+    }
+
 
 

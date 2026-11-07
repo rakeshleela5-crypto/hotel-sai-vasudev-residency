@@ -1,6 +1,6 @@
 import datetime
 import uuid
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, Index, event, DDL, text
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, Index, event, DDL, text, UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.database import Base
 from app.utils.timezone import now_utc, TimezoneAwareDateTime
@@ -12,6 +12,25 @@ def generate_invoice_num():
     now_ts = int(now_utc().timestamp() * 1000)
     rand_seq = uuid.uuid4().hex[:6].upper()
     return f"INV-SVR-{now_ts}-{rand_seq}"
+
+class DocumentSequence(Base):
+    """
+    Centralized, Lock-Safe Atomic Document Sequence Generator.
+    Enforces unbroken consecutive numbering per Indian Financial Year (CGST Act Section 31).
+    Supported doc_types: TAX_INVOICE, B2C_INVOICE, FOOD_BILL, ADVANCE_RECEIPT, CREDIT_NOTE, PAYMENT_VOUCHER.
+    """
+    __tablename__ = "document_sequences"
+
+    id = Column(Integer, primary_key=True, index=True)
+    doc_type = Column(String(50), nullable=False, index=True)
+    financial_year = Column(String(20), nullable=False, index=True) # e.g. "2026-27"
+    prefix = Column(String(50), default="SVR", nullable=False)
+    last_sequence_number = Column(Integer, default=0, nullable=False)
+    updated_at = Column(DateTime, default=now_utc, onupdate=now_utc)
+
+    __table_args__ = (
+        UniqueConstraint('doc_type', 'financial_year', 'prefix', name='uix_doctype_fy_prefix'),
+    )
 
 class Room(Base):
     __tablename__ = "rooms"

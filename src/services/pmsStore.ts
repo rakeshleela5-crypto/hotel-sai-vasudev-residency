@@ -3762,7 +3762,7 @@ export class PmsStore {
 
   static completeCheckOut(
     roomNo: string,
-    settlement: { paymentMode: string; reference?: string; notes?: string }
+    settlement: { paymentMode: string; reference?: string; notes?: string; invoiceNo?: string }
   ): { success: boolean; invoiceNo: string; message: string } {
     const folio = this.getFolioSummary(roomNo);
     if (folio.balanceDue > 0 && settlement.paymentMode !== 'City Ledger') {
@@ -3774,9 +3774,20 @@ export class PmsStore {
       });
     }
 
+    // Dynamic Indian Financial Year Calculation (April 1 to March 31)
+    const now = new Date();
+    const curYear = now.getFullYear();
+    const curMonth = now.getMonth(); // 0 = Jan, 3 = April
+    const fy = curMonth >= 3 ? `${curYear}-${String(curYear + 1).slice(2)}` : `${curYear - 1}-${String(curYear).slice(2)}`;
+
+    // Maximum sequence calculation to prevent sequence collisions & duplicates
     const checkouts = this.getCheckouts();
-    const nextSeq = checkouts.length + 1;
-    const invoiceNo = `SVR/2025-26/INV-${String(nextSeq).padStart(4, '0')}`;
+    const maxExisting = checkouts.reduce((max, c) => {
+      const match = c.invoiceNo?.match(/INV-(\d+)/);
+      return match ? Math.max(max, parseInt(match[1], 10)) : max;
+    }, 0);
+    const nextSeq = maxExisting + 1;
+    const invoiceNo = settlement.invoiceNo || `SVR/${fy}/INV-${String(nextSeq).padStart(4, '0')}`;
 
     const updatedFolio = this.getFolioSummary(roomNo);
     const checkoutRecord: PmsCheckOutDetail = {

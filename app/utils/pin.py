@@ -203,3 +203,4 @@ def require_manager_pin_or_role(
         status_code=403,
         detail="Supervisor authorization required: Provide a valid Manager PIN or authenticate as MANAGER/OWNER."
     )
+
