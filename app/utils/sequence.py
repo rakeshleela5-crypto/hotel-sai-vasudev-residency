@@ -33,7 +33,9 @@ DOC_TYPE_CODES = {
     "CREDIT_NOTE": "CN",
     "DEBIT_NOTE": "DN",
     "PAYMENT_VOUCHER": "PAY",
-    "DRAWER_VOUCHER": "DRW"
+    "DRAWER_VOUCHER": "DRW",
+    "INVENTORY_LOT": "LOT",
+    "WASTE_VOUCHER": "WST"
 }
 
 
@@ -84,6 +86,28 @@ def _get_max_existing_sequence(db: Session, doc_type: str, fy: str) -> int:
                 if not v_no:
                     continue
                 match = re.search(r'DRW-(\d+)', v_no)
+                if match:
+                    try:
+                        max_seq = max(max_seq, int(match.group(1)))
+                    except ValueError:
+                        pass
+        elif doc_type == "INVENTORY_LOT":
+            lots = db.query(models.InventoryLot.lot_number).all()
+            for (l_no,) in lots:
+                if not l_no:
+                    continue
+                match = re.search(r'LOT-(\d+)', l_no)
+                if match:
+                    try:
+                        max_seq = max(max_seq, int(match.group(1)))
+                    except ValueError:
+                        pass
+        elif doc_type == "WASTE_VOUCHER":
+            wastes = db.query(models.InventoryWasteRecord.voucher_no).all()
+            for (w_no,) in wastes:
+                if not w_no:
+                    continue
+                match = re.search(r'WST-(\d+)', w_no)
                 if match:
                     try:
                         max_seq = max(max_seq, int(match.group(1)))

@@ -2487,6 +2487,84 @@ export interface CaExportData {
   staff_payroll: any[];
 }
 
+export interface InventoryLot {
+  id: number;
+  lot_number: string;
+  item_code?: string;
+  item_name: string;
+  category: string;
+  store_name: string;
+  purchase_date: string;
+  expiry_date?: string;
+  unit_of_measure: string;
+  initial_quantity: number;
+  remaining_quantity: number;
+  unit_cost: number;
+  unit_cost_paise: number;
+  supplier_name?: string;
+  invoice_ref?: string;
+  status: 'Active' | 'Exhausted' | 'Expired' | 'Disposed';
+  notes?: string;
+  days_until_expiry?: number;
+  is_expired: boolean;
+  created_at?: string;
+}
+
+export interface FifoDeductionSegment {
+  lot_id: number;
+  lot_number: string;
+  quantity_deducted: number;
+  unit_cost: number;
+  cost_paise: number;
+  expiry_date?: string;
+}
+
+export interface FifoRequisitionResult {
+  status: string;
+  item_name: string;
+  total_deducted: number;
+  total_cost: number;
+  total_cost_paise: number;
+  remaining_in_stock: number;
+  lots_consumed: FifoDeductionSegment[];
+  requisition_no?: string;
+}
+
+export interface InventoryWasteRecord {
+  id: number;
+  voucher_no: string;
+  lot_id: number;
+  item_name: string;
+  store_name: string;
+  quantity_wasted: number;
+  unit_of_measure: string;
+  unit_cost: number;
+  unit_cost_paise: number;
+  total_loss_rupees: number;
+  total_loss_paise: number;
+  waste_reason: string;
+  reported_by: string;
+  inspected_by?: string;
+  manager_pin_verified: boolean;
+  journal_entry_id?: number;
+  action_taken: string;
+  notes?: string;
+  recorded_at: string;
+}
+
+export interface ExpiryAlert {
+  lot_id: number;
+  lot_number: string;
+  item_name: string;
+  category: string;
+  store_name: string;
+  remaining_quantity: number;
+  unit_of_measure: string;
+  expiry_date: string;
+  hours_until_expiry: number;
+  alert_level: 'CRITICAL_EXPIRED' | 'HIGH_EXPIRING_SOON' | 'WARNING';
+}
+
 
 
 

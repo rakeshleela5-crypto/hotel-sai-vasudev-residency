@@ -24,6 +24,9 @@ def from_paise(paise: Union[int, float]) -> float:
         return 0.0
     return float((Decimal(int(paise)) / Decimal(100)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
 
+rupees_to_paise = to_paise
+paise_to_rupees = from_paise
+
 def allocate_paise(total_paise: int, weights: List[Union[int, float]]) -> List[int]:
     """
     Splits `total_paise` across `weights` proportionally using the Largest Remainder Method

@@ -2837,6 +2837,109 @@ export const hotelApi = {
     const res = await fetch(`${API_BASE_URL}/pms/drawer/summary${qs}`);
     if (!res.ok) throw new Error('Failed to fetch cash drawer summary');
     return await res.json();
+  },
+
+  // =========================================================================
+  // MODULE 8: PERISHABLE INVENTORY, FIFO LOTS & SPOILAGE WRITE-OFFS
+  // =========================================================================
+  async createInventoryLot(payload: {
+    item_name: string;
+    item_code?: string;
+    category?: string;
+    store_name?: string;
+    purchase_date?: string;
+    expiry_date?: string;
+    unit_of_measure?: string;
+    quantity: number;
+    unit_cost: number;
+    supplier_name?: string;
+    invoice_ref?: string;
+    notes?: string;
+  }): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/inventory/lots`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to create inventory lot');
+    }
+    return await res.json();
+  },
+
+  async getInventoryLots(params?: {
+    item_name?: string;
+    category?: string;
+    store_name?: string;
+    status?: string;
+    active_only?: boolean;
+  }): Promise<any[]> {
+    const query = new URLSearchParams();
+    if (params?.item_name) query.append('item_name', params.item_name);
+    if (params?.category) query.append('category', params.category);
+    if (params?.store_name) query.append('store_name', params.store_name);
+    if (params?.status) query.append('status', params.status);
+    if (params?.active_only !== undefined) query.append('active_only', String(params.active_only));
+    const qs = query.toString() ? `?${query.toString()}` : '';
+
+    const res = await fetch(`${API_BASE_URL}/pms/inventory/lots${qs}`);
+    if (!res.ok) throw new Error('Failed to fetch inventory lots');
+    return await res.json();
+  },
+
+  async fifoRequisitionDeduct(payload: {
+    item_name: string;
+    quantity_requested: number;
+    store_name?: string;
+    requested_by: string;
+    department?: string;
+    notes?: string;
+  }): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/inventory/requisitions/fifo-deduct`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to process FIFO stock requisition');
+    }
+    return await res.json();
+  },
+
+  async recordInventorySpoilage(payload: {
+    lot_id: number;
+    quantity_wasted: number;
+    waste_reason?: string;
+    reported_by: string;
+    inspected_by?: string;
+    manager_pin?: string;
+    action_taken?: string;
+    notes?: string;
+  }): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/pms/inventory/spoilage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to record food spoilage');
+    }
+    return await res.json();
+  },
+
+  async getInventoryExpiryAlerts(threshold_hours: number = 48): Promise<any[]> {
+    const res = await fetch(`${API_BASE_URL}/pms/inventory/expiry-alerts?threshold_hours=${threshold_hours}`);
+    if (!res.ok) return [];
+    return await res.json();
+  },
+
+  async getInventoryWasteRecords(limit: number = 100): Promise<any[]> {
+    const res = await fetch(`${API_BASE_URL}/pms/inventory/waste/records?limit=${limit}`);
+    if (!res.ok) return [];
+    return await res.json();
   }
 };
 

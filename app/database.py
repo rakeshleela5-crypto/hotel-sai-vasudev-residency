@@ -140,6 +140,58 @@ if is_sqlite:
         except Exception:
             pass
         try:
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS inventory_lots (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                lot_number VARCHAR(100) UNIQUE NOT NULL,
+                item_code VARCHAR(100),
+                item_name VARCHAR(150) NOT NULL,
+                category VARCHAR(100) DEFAULT 'Perishables',
+                store_name VARCHAR(100) DEFAULT 'Kitchen Store',
+                purchase_date DATETIME NOT NULL,
+                expiry_date DATETIME,
+                unit_of_measure VARCHAR(50) DEFAULT 'kg',
+                initial_quantity REAL NOT NULL DEFAULT 0.0,
+                remaining_quantity REAL NOT NULL DEFAULT 0.0,
+                unit_cost_paise INTEGER NOT NULL DEFAULT 0,
+                unit_cost REAL NOT NULL DEFAULT 0.0,
+                supplier_name VARCHAR(150),
+                invoice_ref VARCHAR(100),
+                status VARCHAR(50) DEFAULT 'Active',
+                notes TEXT,
+                created_at DATETIME,
+                updated_at DATETIME
+            )
+            """)
+        except Exception:
+            pass
+        try:
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS inventory_waste_records (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                voucher_no VARCHAR(100) UNIQUE NOT NULL,
+                lot_id INTEGER NOT NULL,
+                item_name VARCHAR(150) NOT NULL,
+                store_name VARCHAR(100) DEFAULT 'Kitchen Store',
+                quantity_wasted REAL NOT NULL,
+                unit_of_measure VARCHAR(50) DEFAULT 'kg',
+                unit_cost_paise INTEGER NOT NULL DEFAULT 0,
+                unit_cost REAL NOT NULL DEFAULT 0.0,
+                total_loss_paise INTEGER NOT NULL DEFAULT 0,
+                total_loss_rupees REAL NOT NULL DEFAULT 0.0,
+                waste_reason VARCHAR(100) NOT NULL,
+                reported_by VARCHAR(150) NOT NULL,
+                inspected_by VARCHAR(150),
+                manager_pin_verified BOOLEAN DEFAULT 0,
+                journal_entry_id INTEGER,
+                action_taken VARCHAR(150) DEFAULT 'Disposed',
+                notes TEXT,
+                recorded_at DATETIME
+            )
+            """)
+        except Exception:
+            pass
+        try:
             cursor.execute("ALTER TABLE bookings ADD COLUMN guest_signature_url TEXT")
         except Exception:
             pass

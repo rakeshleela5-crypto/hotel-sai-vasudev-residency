@@ -6,7 +6,7 @@ import time
 import uuid
 import json
 import logging
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, Header, Body, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, Header, Body, Request, status
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session, selectinload, joinedload
 from sqlalchemy import text, func, or_
@@ -22,8 +22,9 @@ from app.utils.audit import record_audit_log, audit_tariff_change, audit_discoun
 from app.utils.encryption import encrypt_pii, decrypt_pii, mask_pii
 from app.utils.caching import get_cached_menu, set_cached_menu, invalidate_menu_cache, invalidate_rooms_cache
 from app.utils.sequence import get_next_document_number, peek_next_document_number, get_current_financial_year
-from app.utils.money import to_paise, from_paise, compute_gst_paise, allocate_paise, prorate_discount_paise, calculate_section170_roundoff
-from app.utils.pin import verify_manager_pin as verify_pin_pbkdf2, check_pin_lockout, record_pin_failure, reset_pin_failures, hash_manager_pin, require_manager_pin_or_role
+from app.utils import sequence
+from app.utils.money import to_paise, from_paise, compute_gst_paise, allocate_paise, prorate_discount_paise, calculate_section170_roundoff, rupees_to_paise, paise_to_rupees
+from app.utils.pin import verify_manager_pin as verify_pin_pbkdf2, check_pin_lockout, record_pin_failure, reset_pin_failures, hash_manager_pin, require_manager_pin_or_role, verify_manager_pin
 from app.core.cache import cache_response, invalidate_cache_prefix
 from app.websocket_manager import ws_manager
 
@@ -7198,6 +7199,342 @@ def get_cash_drawer_summary(db: Session = Depends(get_db)):
         "cashRefundsPaid": metrics["cashRefundsPaid"],
         "expectedDrawerCash": metrics["expectedDrawerCash"]
     }
+
+# =========================================================================
+# PHASE 5: PERISHABLE KITCHEN INVENTORY, FIFO BATCHES & SPOILAGE ENGINE
+# =========================================================================
+
+@router.post("/inventory/lots", response_model=schemas.InventoryLotResponse, status_code=status.HTTP_201_CREATED, summary="Ingest Stock Batch / Lot with Expiry")
+def create_inventory_lot(payload: schemas.InventoryLotCreate, db: Session = Depends(get_db)):
+    """
+    Registers incoming stock as a discrete batch/lot with expiry tracking and unit cost in integer paise.
+    """
+    try:
+        lot_no, _ = sequence.get_next_document_number(db, "INVENTORY_LOT")
+        cost_paise = rupees_to_paise(payload.unit_cost)
+        purchase_dt = payload.purchase_date or now_utc()
+
+        lot = models.InventoryLot(
+            lot_number=lot_no,
+            item_code=payload.item_code,
+            item_name=payload.item_name.strip(),
+            category=payload.category or "Perishables",
+            store_name=payload.store_name or "Kitchen Store",
+            purchase_date=purchase_dt,
+            expiry_date=payload.expiry_date,
+            unit_of_measure=payload.unit_of_measure or "kg",
+            initial_quantity=float(payload.quantity),
+            remaining_quantity=float(payload.quantity),
+            unit_cost_paise=cost_paise,
+            unit_cost=float(payload.unit_cost),
+            supplier_name=payload.supplier_name,
+            invoice_ref=payload.invoice_ref,
+            status="Active",
+            notes=payload.notes,
+            created_at=now_utc(),
+            updated_at=now_utc()
+        )
+        db.add(lot)
+        db.commit()
+        db.refresh(lot)
+
+        # Calculate days until expiry
+        days_left = None
+        is_exp = False
+        if lot.expiry_date:
+            exp_dt = lot.expiry_date
+            if exp_dt.tzinfo is None:
+                exp_dt = exp_dt.replace(tzinfo=datetime.timezone.utc)
+            diff = (exp_dt - now_utc()).total_seconds() / 86400.0
+            days_left = round(diff, 1)
+            is_exp = diff < 0
+
+        res = schemas.InventoryLotResponse.model_validate(lot)
+        res.days_until_expiry = days_left
+        res.is_expired = is_exp
+        return res
+    except Exception as exc:
+        db.rollback()
+        logger.error(f"[create_inventory_lot] Error: {exc}")
+        raise HTTPException(status_code=500, detail=f"Failed to create inventory lot: {str(exc)}")
+
+@router.get("/inventory/lots", response_model=List[schemas.InventoryLotResponse], summary="Query Inventory Lots")
+def list_inventory_lots(
+    item_name: Optional[str] = None,
+    category: Optional[str] = None,
+    store_name: Optional[str] = None,
+    status: Optional[str] = None,
+    active_only: bool = False,
+    db: Session = Depends(get_db)
+):
+    """
+    Lists inventory lots with optional filtering and computed shelf-life metadata.
+    """
+    q = db.query(models.InventoryLot)
+    if item_name:
+        q = q.filter(models.InventoryLot.item_name.ilike(f"%{item_name.strip()}%"))
+    if category:
+        q = q.filter(models.InventoryLot.category == category)
+    if store_name:
+        q = q.filter(models.InventoryLot.store_name == store_name)
+    if status:
+        q = q.filter(models.InventoryLot.status == status)
+    elif active_only:
+        q = q.filter(models.InventoryLot.status == "Active", models.InventoryLot.remaining_quantity > 0)
+
+    lots = q.order_by(models.InventoryLot.expiry_date.asc().nullslast(), models.InventoryLot.purchase_date.asc()).limit(200).all()
+
+    results = []
+    current_time = now_utc()
+    for lot in lots:
+        days_left = None
+        is_exp = False
+        if lot.expiry_date:
+            exp_dt = lot.expiry_date
+            if exp_dt.tzinfo is None:
+                exp_dt = exp_dt.replace(tzinfo=datetime.timezone.utc)
+            diff = (exp_dt - current_time).total_seconds() / 86400.0
+            days_left = round(diff, 1)
+            is_exp = diff < 0
+
+        item_resp = schemas.InventoryLotResponse.model_validate(lot)
+        item_resp.days_until_expiry = days_left
+        item_resp.is_expired = is_exp
+        results.append(item_resp)
+
+    return results
+
+@router.post("/inventory/requisitions/fifo-deduct", response_model=schemas.FifoRequisitionResult, summary="FIFO Requisition Stock Deduction")
+def fifo_requisition_deduct(payload: schemas.FifoRequisitionPayload, db: Session = Depends(get_db)):
+    """
+    Kitchen store requisition with First-In First-Out (FIFO) batch depletion.
+    Consumes oldest lots (or earliest expiry) first, supporting multi-lot split deductions without negative inventory drift.
+    """
+    req_qty = float(payload.quantity_requested)
+    if req_qty <= 0:
+        raise HTTPException(status_code=400, detail="Requested quantity must be greater than zero.")
+
+    target_item = payload.item_name.strip()
+    store = payload.store_name or "Kitchen Store"
+
+    # Find available active lots ordered strictly by FIFO (earliest expiry first, then earliest purchase)
+    lots = db.query(models.InventoryLot).filter(
+        models.InventoryLot.item_name.ilike(target_item),
+        models.InventoryLot.store_name == store,
+        models.InventoryLot.status == "Active",
+        models.InventoryLot.remaining_quantity > 0
+    ).order_by(
+        models.InventoryLot.expiry_date.asc().nullslast(),
+        models.InventoryLot.purchase_date.asc(),
+        models.InventoryLot.id.asc()
+    ).all()
+
+    total_available = sum(lot.remaining_quantity for lot in lots)
+    if total_available < req_qty:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Insufficient inventory for '{target_item}' in '{store}'. Requested: {req_qty}, Available: {round(total_available, 2)}."
+        )
+
+    qty_to_consume = req_qty
+    total_cost_paise = 0
+    consumed_segments = []
+
+    for lot in lots:
+        if qty_to_consume <= 0:
+            break
+
+        qty_from_lot = min(lot.remaining_quantity, qty_to_consume)
+        lot.remaining_quantity -= qty_from_lot
+        qty_to_consume -= qty_from_lot
+
+        cost_this_lot_paise = round(qty_from_lot * lot.unit_cost_paise)
+        total_cost_paise += cost_this_lot_paise
+
+        if lot.remaining_quantity <= 0.0001:
+            lot.remaining_quantity = 0.0
+            lot.status = "Exhausted"
+
+        lot.updated_at = now_utc()
+
+        exp_str = lot.expiry_date.isoformat() if lot.expiry_date else None
+        consumed_segments.append(schemas.FifoDeductionSegment(
+            lot_id=lot.id,
+            lot_number=lot.lot_number,
+            quantity_deducted=round(qty_from_lot, 3),
+            unit_cost=lot.unit_cost,
+            cost_paise=cost_this_lot_paise,
+            expiry_date=exp_str
+        ))
+
+    db.commit()
+
+    remaining_after = total_available - req_qty
+    return schemas.FifoRequisitionResult(
+        status="success",
+        item_name=target_item,
+        total_deducted=round(req_qty, 3),
+        total_cost=round(total_cost_paise / 100.0, 2),
+        total_cost_paise=total_cost_paise,
+        remaining_in_stock=round(remaining_after, 3),
+        lots_consumed=consumed_segments,
+        requisition_no=f"REQ-{now_utc().strftime('%Y%m%d%H%M%S')}"
+    )
+
+@router.post("/inventory/spoilage", response_model=schemas.InventoryWasteResponse, status_code=status.HTTP_201_CREATED, summary="Record Food Waste / Spoilage with GL Write-Off")
+def record_inventory_spoilage(payload: schemas.InventoryWasteCreate, db: Session = Depends(get_db)):
+    """
+    Logs spoiled/expired food write-offs against specific inventory lots.
+    Enforces Manager PIN authorization if loss >= ₹1,000, updates remaining stock,
+    and posts balanced double-entry General Ledger journal entries.
+    """
+    lot = db.query(models.InventoryLot).filter(models.InventoryLot.id == payload.lot_id).first()
+    if not lot:
+        raise HTTPException(status_code=404, detail=f"Inventory lot #{payload.lot_id} not found.")
+
+    waste_qty = float(payload.quantity_wasted)
+    if waste_qty <= 0:
+        raise HTTPException(status_code=400, detail="Wasted quantity must be greater than zero.")
+
+    if waste_qty > lot.remaining_quantity:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot condemn {waste_qty} {lot.unit_of_measure}. Lot only has {round(lot.remaining_quantity, 2)} remaining."
+        )
+
+    total_loss_paise = round(waste_qty * lot.unit_cost_paise)
+    total_loss_rupees = round(total_loss_paise / 100.0, 2)
+
+    # Enforce Manager PIN for significant food wastage write-offs (>= ₹1,000)
+    pin_verified = False
+    if total_loss_rupees >= 1000.0:
+        if not payload.manager_pin:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Manager PIN authorization required to write off food waste >= ₹1,000 (Loss: ₹{total_loss_rupees:.2f})."
+            )
+        setting = db.query(models.HotelSetting).first()
+        stored_hash = setting.manager_pin_hash if setting else None
+        stored_salt = setting.manager_pin_salt if setting else None
+        if stored_hash and stored_salt:
+            if not verify_manager_pin(payload.manager_pin, stored_hash, stored_salt):
+                raise HTTPException(status_code=403, detail="Invalid Manager PIN.")
+            pin_verified = True
+        else:
+            if payload.manager_pin != "1234":
+                raise HTTPException(status_code=403, detail="Invalid Manager PIN.")
+            pin_verified = True
+    elif payload.manager_pin:
+        pin_verified = True
+
+    voucher_no, _ = sequence.get_next_document_number(db, "WASTE_VOUCHER")
+
+    # Deduct from lot
+    lot.remaining_quantity -= waste_qty
+    if lot.remaining_quantity <= 0.0001:
+        lot.remaining_quantity = 0.0
+        lot.status = "Expired" if payload.waste_reason == "Expired" else "Exhausted"
+    lot.updated_at = now_utc()
+
+    # Post balanced General Ledger Journal Entry
+    # Debit: Kitchen Spoilage & Wastage Loss A/c
+    # Credit: Kitchen Inventory & Raw Materials A/c
+    journal_rec = models.JournalEntry(
+        entry_id=f"JV-WST-{uuid.uuid4().hex[:8].upper()}",
+        date=datetime.date.today().isoformat(),
+        time=datetime.datetime.now().strftime("%I:%M %p"),
+        voucher_type="Wastage",
+        reference_no=voucher_no,
+        debit_account="Kitchen Spoilage & Wastage Loss A/c",
+        credit_account="Kitchen Inventory & Raw Materials A/c",
+        amount_paise=total_loss_paise,
+        amount_rupees=total_loss_rupees,
+        narration=f"Food write-off ({payload.waste_reason}): {waste_qty} {lot.unit_of_measure} of {lot.item_name} from lot {lot.lot_number}",
+        posted_by=payload.reported_by
+    )
+    db.add(journal_rec)
+    db.flush()
+
+    waste_record = models.InventoryWasteRecord(
+        voucher_no=voucher_no,
+        lot_id=lot.id,
+        item_name=lot.item_name,
+        store_name=lot.store_name,
+        quantity_wasted=waste_qty,
+        unit_of_measure=lot.unit_of_measure,
+        unit_cost_paise=lot.unit_cost_paise,
+        unit_cost=lot.unit_cost,
+        total_loss_paise=total_loss_paise,
+        total_loss_rupees=total_loss_rupees,
+        waste_reason=payload.waste_reason,
+        reported_by=payload.reported_by,
+        inspected_by=payload.inspected_by,
+        manager_pin_verified=pin_verified,
+        journal_entry_id=journal_rec.id,
+        action_taken=payload.action_taken or "Disposed",
+        notes=payload.notes,
+        recorded_at=now_utc()
+    )
+    db.add(waste_record)
+    db.commit()
+    db.refresh(waste_record)
+
+    return waste_record
+
+@router.get("/inventory/expiry-alerts", response_model=List[schemas.ExpiryAlert], summary="Perishable Expiry Early Warnings")
+def get_inventory_expiry_alerts(
+    threshold_hours: float = 48.0,
+    db: Session = Depends(get_db)
+):
+    """
+    Detects expired perishable items and items expiring within the threshold window (default 48 hours) for kitchen supervisors.
+    """
+    current_time = now_utc()
+    lots = db.query(models.InventoryLot).filter(
+        models.InventoryLot.expiry_date.isnot(None),
+        models.InventoryLot.status == "Active",
+        models.InventoryLot.remaining_quantity > 0
+    ).order_by(models.InventoryLot.expiry_date.asc()).all()
+
+    alerts = []
+    for lot in lots:
+        exp_dt = lot.expiry_date
+        if exp_dt.tzinfo is None:
+            exp_dt = exp_dt.replace(tzinfo=datetime.timezone.utc)
+
+        hours_left = (exp_dt - current_time).total_seconds() / 3600.0
+        if hours_left <= threshold_hours:
+            if hours_left <= 0:
+                level = "CRITICAL_EXPIRED"
+            elif hours_left <= 24:
+                level = "HIGH_EXPIRING_SOON"
+            else:
+                level = "WARNING"
+
+            alerts.append(schemas.ExpiryAlert(
+                lot_id=lot.id,
+                lot_number=lot.lot_number,
+                item_name=lot.item_name,
+                category=lot.category,
+                store_name=lot.store_name,
+                remaining_quantity=lot.remaining_quantity,
+                unit_of_measure=lot.unit_of_measure,
+                expiry_date=exp_dt.isoformat(),
+                hours_until_expiry=round(hours_left, 1),
+                alert_level=level
+            ))
+
+    return alerts
+
+@router.get("/inventory/waste/records", response_model=List[schemas.InventoryWasteResponse], summary="List Waste & Spoilage Records")
+def list_inventory_waste_records(
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    """
+    Returns audit register of food wastage and spoilage write-offs.
+    """
+    return db.query(models.InventoryWasteRecord).order_by(models.InventoryWasteRecord.id.desc()).limit(limit).all()
 
 # --- 32. Banquet Venues & Event Bookings ---
 @router.post("/banquet-venues")

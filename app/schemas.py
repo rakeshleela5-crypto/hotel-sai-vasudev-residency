@@ -2076,6 +2076,119 @@ class CreditNoteResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+# =========================================================================
+# PHASE 5: PERISHABLE KITCHEN INVENTORY & FIFO BATCH TRACKING SCHEMAS
+# =========================================================================
+
+class InventoryLotCreate(BaseModel):
+    item_code: Optional[str] = None
+    item_name: str = Field(..., min_length=1)
+    category: Optional[str] = "Perishables" # Dairy, Vegetables, Meat, Groceries, Supplies
+    store_name: Optional[str] = "Kitchen Store" # Kitchen Store, Central Store, Housekeeping Store
+    purchase_date: Optional[datetime.datetime] = None
+    expiry_date: Optional[datetime.datetime] = None # Critical for perishable shelf-life
+    unit_of_measure: Optional[str] = "kg" # kg, L, packets, pcs, crates
+    quantity: float = Field(..., gt=0)
+    unit_cost: float = Field(..., ge=0)
+    supplier_name: Optional[str] = None
+    invoice_ref: Optional[str] = None
+    notes: Optional[str] = None
+
+class InventoryLotResponse(BaseModel):
+    id: int
+    lot_number: str
+    item_code: Optional[str] = None
+    item_name: str
+    category: str
+    store_name: str
+    purchase_date: datetime.datetime
+    expiry_date: Optional[datetime.datetime] = None
+    unit_of_measure: str
+    initial_quantity: float
+    remaining_quantity: float
+    unit_cost: float
+    unit_cost_paise: int
+    supplier_name: Optional[str] = None
+    invoice_ref: Optional[str] = None
+    status: str
+    notes: Optional[str] = None
+    days_until_expiry: Optional[float] = None
+    is_expired: bool = False
+    created_at: Optional[datetime.datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+class FifoDeductionSegment(BaseModel):
+    lot_id: int
+    lot_number: str
+    quantity_deducted: float
+    unit_cost: float
+    cost_paise: int
+    expiry_date: Optional[str] = None
+
+class FifoRequisitionPayload(BaseModel):
+    item_name: str
+    quantity_requested: float = Field(..., gt=0)
+    store_name: Optional[str] = "Kitchen Store"
+    requested_by: str
+    department: Optional[str] = "Vasudev Rasoi (Kitchen)"
+    notes: Optional[str] = None
+
+class FifoRequisitionResult(BaseModel):
+    status: str
+    item_name: str
+    total_deducted: float
+    total_cost: float
+    total_cost_paise: int
+    remaining_in_stock: float
+    lots_consumed: List[FifoDeductionSegment]
+    requisition_no: Optional[str] = None
+
+class InventoryWasteCreate(BaseModel):
+    lot_id: int
+    quantity_wasted: float = Field(..., gt=0)
+    waste_reason: str = "Spoilage" # Spoilage, Expired, Damaged, Spillage, Quality Rejection
+    reported_by: str
+    inspected_by: Optional[str] = None
+    manager_pin: Optional[str] = None # Required if loss >= ₹1,000 for waste write-off
+    action_taken: Optional[str] = "Disposed" # Disposed, Composted, Returned to Supplier
+    notes: Optional[str] = None
+
+class InventoryWasteResponse(BaseModel):
+    id: int
+    voucher_no: str
+    lot_id: int
+    item_name: str
+    store_name: str
+    quantity_wasted: float
+    unit_of_measure: str
+    unit_cost: float
+    unit_cost_paise: int
+    total_loss_rupees: float
+    total_loss_paise: int
+    waste_reason: str
+    reported_by: str
+    inspected_by: Optional[str] = None
+    manager_pin_verified: bool
+    journal_entry_id: Optional[int] = None
+    action_taken: str
+    notes: Optional[str] = None
+    recorded_at: datetime.datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+class ExpiryAlert(BaseModel):
+    lot_id: int
+    lot_number: str
+    item_name: str
+    category: str
+    store_name: str
+    remaining_quantity: float
+    unit_of_measure: str
+    expiry_date: str
+    hours_until_expiry: float
+    alert_level: str # CRITICAL_EXPIRED, HIGH_EXPIRING_SOON, WARNING
+
 
 
 

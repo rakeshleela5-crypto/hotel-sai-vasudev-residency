@@ -898,6 +898,62 @@ class CashDrawerMovement(Base):
     journal_entry_id = Column(String(100), nullable=True)
     created_at = Column(DateTime, default=now_utc)
 
+class InventoryLot(Base):
+    """
+    Perishable & Kitchen Inventory FIFO Batch/Lot Tracking.
+    Tracks received shipments by batch, expiry dates, supplier, and remaining units.
+    Ensures strict FIFO consumption order and shelf-life monitoring for dairy, produce, meat, and dry goods.
+    """
+    __tablename__ = "inventory_lots"
+
+    id = Column(Integer, primary_key=True, index=True)
+    lot_number = Column(String(100), unique=True, index=True, nullable=False) # e.g. SVR/2026-27/LOT-0001
+    item_code = Column(String(100), index=True, nullable=True)
+    item_name = Column(String(150), nullable=False, index=True)
+    category = Column(String(100), nullable=False, default="Perishables") # Dairy, Vegetables, Meat, Groceries, Supplies
+    store_name = Column(String(100), nullable=False, default="Kitchen Store") # Kitchen Store, Central Store
+    purchase_date = Column(DateTime, default=now_utc, nullable=False)
+    expiry_date = Column(DateTime, nullable=True, index=True)
+    unit_of_measure = Column(String(50), default="kg") # kg, L, packets, pcs, crates
+    initial_quantity = Column(Float, nullable=False, default=0.0)
+    remaining_quantity = Column(Float, nullable=False, default=0.0)
+    unit_cost_paise = Column(Integer, default=0, nullable=False)
+    unit_cost = Column(Float, default=0.0, nullable=False)
+    supplier_name = Column(String(150), nullable=True)
+    invoice_ref = Column(String(100), nullable=True)
+    status = Column(String(50), default="Active", index=True) # Active, Exhausted, Expired, Disposed
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=now_utc)
+    updated_at = Column(DateTime, default=now_utc, onupdate=now_utc)
+
+class InventoryWasteRecord(Base):
+    """
+    Kitchen Wastage, Food Spoilage & Condemnation Register.
+    Logs condemned stock (curdled milk, rotted vegetables, expired items) against specific lots.
+    Posts balanced double-entry General Ledger journal entries (Debit Food Spoilage, Credit Inventory).
+    """
+    __tablename__ = "inventory_waste_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    voucher_no = Column(String(100), unique=True, index=True, nullable=False) # e.g. SVR/2026-27/WST-0001
+    lot_id = Column(Integer, ForeignKey("inventory_lots.id"), nullable=False, index=True)
+    item_name = Column(String(150), nullable=False)
+    store_name = Column(String(100), nullable=False, default="Kitchen Store")
+    quantity_wasted = Column(Float, nullable=False)
+    unit_of_measure = Column(String(50), default="kg")
+    unit_cost_paise = Column(Integer, default=0, nullable=False)
+    unit_cost = Column(Float, default=0.0, nullable=False)
+    total_loss_paise = Column(Integer, default=0, nullable=False)
+    total_loss_rupees = Column(Float, default=0.0, nullable=False)
+    waste_reason = Column(String(100), nullable=False) # Spoilage, Expired, Damaged, Spillage, Quality Rejection
+    reported_by = Column(String(150), nullable=False)
+    inspected_by = Column(String(150), nullable=True)
+    manager_pin_verified = Column(Boolean, default=False)
+    journal_entry_id = Column(Integer, ForeignKey("journal_entries.id"), nullable=True)
+    action_taken = Column(String(150), default="Disposed") # Disposed, Composted, Returned to Supplier
+    notes = Column(Text, nullable=True)
+    recorded_at = Column(DateTime, default=now_utc)
+
 class BanquetVenue(Base):
     __tablename__ = "banquet_venues"
 
