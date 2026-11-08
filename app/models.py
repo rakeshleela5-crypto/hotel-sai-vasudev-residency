@@ -680,7 +680,10 @@ class AdvanceReceipt(Base):
     amount = Column(Float, nullable=False)
     payment_mode = Column(String(50), default="Cash")
     transaction_ref = Column(String(100), nullable=True)
+    status = Column(String(50), default="Active")
     is_settled_in_checkout = Column(Boolean, default=False)
+    is_deleted = Column(Boolean, default=False, nullable=False, index=True)
+    void_reason = Column(String(255), nullable=True)
     remark = Column(Text, nullable=True)
     created_at = Column(DateTime, default=now_utc)
 

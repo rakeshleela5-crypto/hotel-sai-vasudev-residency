@@ -6992,9 +6992,14 @@ export class PmsStore {
     }).catch(e => console.warn('[PmsStore] Background checkout cloud sync note:', e));
 
     hotelApi.checkOutBooking({
-      booking_ref: checkout.invoiceNo || `SVR-ROOM-${checkout.roomNo}`,
+      booking_ref: (checkout as any).bookingRef || (checkout as any).bookingNo || (checkout as any).booking_ref || `ROOM-${checkout.roomNo}`,
+      room_no: String(checkout.roomNo || ''),
+      invoice_no: checkout.invoiceNo,
+      company_name: checkout.companyName,
+      customer_gstin: checkout.gstNumber,
       settlement_payment_mode: checkout.paymentMode || 'Cash',
       settlement_amount_paid: checkout.netPayable || 0,
+      payment_splits: checkout.payments && checkout.payments.length > 0 ? checkout.payments : undefined,
       processed_by: 'Reception Desk'
     }).catch(e => console.warn('[PmsStore] Background checkout booking status note:', e));
 

@@ -379,6 +379,14 @@ class WalkInCheckInRequest(BaseModel):
     guestGender: Optional[str] = None
     guest_age: Optional[int] = None
     guestAge: Optional[int] = None
+    is_foreign_national: bool = False
+    nationality: Optional[str] = "Indian"
+    passport_number: Optional[str] = None
+    passport_expiry_date: Optional[str] = None
+    visa_number: Optional[str] = None
+    visa_validity: Optional[str] = None
+    port_of_arrival: Optional[str] = None
+    date_of_entry_india: Optional[str] = None
 
 class ReservationCheckInRequest(BaseModel):
     booking_ref: str
@@ -411,7 +419,13 @@ class PaymentSplitItem(BaseModel):
     note: Optional[str] = None
 
 class CheckOutRequest(BaseModel):
-    booking_ref: str
+    booking_ref: Optional[str] = None
+    room_no: Optional[str] = None
+    room_number: Optional[str] = None
+    booking_id: Optional[int] = None
+    invoice_no: Optional[str] = None
+    company_name: Optional[str] = None
+    customer_gstin: Optional[str] = None
     settlement_payment_mode: Optional[str] = "Cash" # Cash, Card, UPI, Direct_BTC, Split
     settlement_amount_paid: Optional[float] = None
     transaction_ref: Optional[str] = None
@@ -744,6 +758,11 @@ class PettyExpenseResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class VoidRecordRequest(BaseModel):
+    reason: Optional[str] = "Voided by authorized manager"
+    manager_pin: Optional[str] = None
+    voided_by: Optional[str] = "Duty Manager"
+
 class FolioDiscountCreate(BaseModel):
     booking_ref: str
     room_no: Optional[str] = None
@@ -754,6 +773,7 @@ class FolioDiscountCreate(BaseModel):
     discount_reason: Optional[str] = None
     reason: Optional[str] = None
     approved_by: Optional[str] = "General Manager"
+    manager_pin: Optional[str] = None
 
 class FolioDiscountResponse(BaseModel):
     id: int

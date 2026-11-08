@@ -321,8 +321,8 @@ def test_soft_delete_kot_preserves_audit_trail_and_reverses_folio(db):
     b.balance_due = b.total_price
     db.commit()
 
-    # Void the KOT ticket
-    res = delete_kot_ticket(kot_no=kot_no, db=db)
+    # Void the KOT ticket with Manager PIN authorization
+    res = delete_kot_ticket(kot_no=kot_no, manager_pin="1234", db=db)
     assert res["success"] is True
 
     # 1. Standard ORM query returns None (filtered out automatically)

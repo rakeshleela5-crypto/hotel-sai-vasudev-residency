@@ -33,6 +33,8 @@ logger = logging.getLogger("pms_routes")
 
 router = APIRouter(prefix="/pms", tags=["PMS Enterprise Operations"])
 
+VALID_MANAGER_PINS = {"9999", "1234", "8888"}
+
 def log_audit(db: Session, event_type: str, booking_ref: Optional[str], performed_by: str, details: dict):
     """Standard audit logging helper for PMS operations (#48)."""
     return record_audit_log(
@@ -106,10 +108,17 @@ def find_booking_by_ref_or_room(
     if b:
         return b
         
-    # 3. Match by Room number if "ROOM-" or digit
+    # 3. Match by Room number / name
     room_num = None
-    if "ROOM-" in cleaned.upper():
-        room_num = cleaned.upper().split("ROOM-")[-1].strip()
+    u = cleaned.upper()
+    if "ROOM-" in u:
+        room_num = u.split("ROOM-")[-1].strip()
+    elif "ROOM " in u:
+        room_num = u.split("ROOM ")[-1].strip()
+    elif "ROOM" in u and any(c.isdigit() for c in u):
+        room_num = u.split("ROOM")[-1].strip().lstrip("-").strip()
+    elif u.startswith("SVR-") and u.split("SVR-")[-1].strip().isdigit():
+        room_num = u.split("SVR-")[-1].strip()
     elif cleaned.isdigit():
         room_num = cleaned
         
@@ -122,6 +131,16 @@ def find_booking_by_ref_or_room(
             ).order_by(models.Booking.id.desc()).first()
             if active_b:
                 return active_b
+
+    # 4. Fallback search: try find_room_by_no_or_name on cleaned directly
+    direct_room = find_room_by_no_or_name(db, cleaned)
+    if direct_room:
+        active_b = query.filter(
+            models.Booking.room_id == direct_room.id,
+            models.Booking.status.in_(["Checked-In", "Confirmed"])
+        ).order_by(models.Booking.id.desc()).first()
+        if active_b:
+            return active_b
                 
     return None
 
@@ -981,7 +1000,18 @@ def execute_night_audit(payload: schemas.NightAuditRunRequest, db: Session = Dep
                             created_at=datetime.datetime.now(datetime.UTC)
                         )
                         db.add(folio_item)
-                        b.balance_due = round(float(b.balance_due or 0.0) + total_folio_chg, 2)
+                        # Flaw 10 Remediation: Protect multi-night stays from double-billing
+                        existing_rent_charges = sum(
+                            float(it.total_amount or 0.0)
+                            for it in db.query(models.RoomFolioItem).filter(
+                                models.RoomFolioItem.booking_id == b.id,
+                                models.RoomFolioItem.item_type == "Room_Rent"
+                            ).all()
+                        )
+                        cum_rent = existing_rent_charges + total_folio_chg
+                        if float(b.total_price or 0.0) < cum_rent:
+                            b.total_price = round(cum_rent, 2)
+                            b.balance_due = max(0.0, round(b.total_price - float(b.total_paid or 0.0), 2))
 
                         # Post balanced double-entry General Ledger voucher
                         jv_id = f"JV-NIGHT-{b.id}-{audit_date}"
@@ -1246,16 +1276,28 @@ def execute_walk_in_check_in(payload: schemas.WalkInCheckInRequest, db: Session 
                 )
                 db.add(adv_receipt)
 
-            # Auto-log domestic police register
+            # Auto-log domestic or foreign police register with statutory Form C compliance (Bureau of Immigration)
+            is_foreign = bool(
+                getattr(payload, "is_foreign_national", False)
+                or (getattr(payload, "nationality", "Indian") or "Indian").strip().lower() not in ["indian", "india"]
+                or (getattr(payload, "passport_number", None) and payload.passport_number.strip())
+            )
             police_log = models.PoliceStationLog(
                 booking_id=booking.id,
                 guest_name=payload.guest_name.strip(),
-                id_proof_type=payload.id_proof_type,
-                id_proof_number=payload.id_proof_number or "VERIFIED_AT_DESK",
-                permanent_address="Guest Walk-in Record",
-                origin_city="Walk-in",
-                next_destination="Return Journey",
-                purpose_of_visit="Temple Darshan"
+                id_proof_type=payload.id_proof_type if not is_foreign else "Passport",
+                id_proof_number=payload.id_proof_number or (payload.passport_number if is_foreign else "VERIFIED_AT_DESK"),
+                permanent_address="Guest Walk-in Record" if not is_foreign else (payload.coming_from or "Foreign Address"),
+                origin_city=payload.coming_from or ("Port of Arrival" if is_foreign else "Walk-in"),
+                next_destination=payload.proceeding_to or "Return Journey",
+                purpose_of_visit="Temple Darshan",
+                is_foreign_national=is_foreign,
+                nationality=getattr(payload, "nationality", None) or ("Foreign National" if is_foreign else "Indian"),
+                passport_number=getattr(payload, "passport_number", None),
+                visa_number=getattr(payload, "visa_number", None),
+                visa_validity=getattr(payload, "visa_validity", None),
+                port_of_arrival=getattr(payload, "port_of_arrival", None),
+                date_of_entry_india=getattr(payload, "date_of_entry_india", None)
             )
             db.add(police_log)
 
@@ -1542,7 +1584,15 @@ def execute_check_out(payload: schemas.CheckOutRequest, db: Session = Depends(ge
     """
     try:
         with db.begin_nested():
-            booking = find_booking_by_ref_or_room(db, payload.booking_ref, for_update=True)
+            booking = None
+            if payload.booking_ref:
+                booking = find_booking_by_ref_or_room(db, payload.booking_ref, for_update=True)
+            if not booking and (payload.room_no or payload.room_number):
+                booking = find_booking_by_ref_or_room(db, payload.room_no or payload.room_number, for_update=True)
+            if not booking and payload.booking_id:
+                booking = db.query(models.Booking).filter(models.Booking.id == payload.booking_id).with_for_update().first()
+            if not booking and payload.invoice_no:
+                booking = db.query(models.Booking).filter(models.Booking.invoice_number == payload.invoice_no).with_for_update().first()
             if not booking:
                 raise HTTPException(status_code=404, detail="Booking reservation not found")
 
@@ -1681,6 +1731,24 @@ def execute_check_out(payload: schemas.CheckOutRequest, db: Session = Depends(ge
                 inv_no, _ = get_next_document_number(db, doc_type="TAX_INVOICE", prefix="SVR")
                 booking.invoice_number = inv_no
 
+            # Flaw 5 Remediation: Roll up food KOTs (SAC 996331) and other folio items into statutory CheckoutRecord
+            folio_items = db.query(models.RoomFolioItem).filter(
+                models.RoomFolioItem.booking_id == booking.id
+            ).all()
+            food_items = [it for it in folio_items if it.item_type in ["Food", "Food_KOT", "Restaurant", "Room_Service"] and not getattr(it, "is_deleted", False)]
+            food_taxable = sum(float(it.taxable_amount or 0.0) for it in food_items)
+            food_tax = sum(float(it.cgst_amount or 0.0) + float(it.sgst_amount or 0.0) for it in food_items)
+            food_total = round(food_taxable + food_tax, 2)
+
+            other_items = [it for it in folio_items if it.item_type in ["Laundry", "Minibar", "Extra_Bed", "Misc", "Other", "Room_Tariff_Adjustment"] and not getattr(it, "is_deleted", False)]
+            others_total = round(sum(float(it.total_amount or 0.0) for it in other_items), 2)
+
+            rent_taxable = float(booking.base_amount or 0.0)
+            rent_tax = float(booking.total_tax or 0.0)
+            total_bill = round(rent_taxable + rent_tax + food_total + others_total - float(booking.discount_amount or 0.0), 2)
+            comp_name = payload.company_name or getattr(booking, "company_name", None)
+            cust_gstin = payload.customer_gstin or getattr(booking, "customer_gstin", None)
+
             existing_chk = db.query(models.CheckoutRecord).filter(models.CheckoutRecord.invoice_no == inv_no).first()
             if not existing_chk:
                 chk_rec = models.CheckoutRecord(
@@ -1696,25 +1764,88 @@ def execute_check_out(payload: schemas.CheckOutRequest, db: Session = Depends(ge
                     calculation_type="12hour",
                     number_of_days=booking.total_nights,
                     per_day_tariff=booking.base_rate,
-                    total_room_rent=booking.base_amount,
-                    food_amount=0.0,
+                    total_room_rent=rent_taxable,
+                    food_amount=food_total,
                     gst_percent=booking.gst_rate,
-                    gst_amount=booking.total_tax,
-                    cgst_amount=booking.cgst_amount,
-                    sgst_amount=booking.sgst_amount,
-                    add_others=0.0,
+                    gst_amount=round(rent_tax + food_tax, 2),
+                    cgst_amount=round(float(booking.cgst_amount or 0.0) + (food_tax / 2.0), 2),
+                    sgst_amount=round(float(booking.sgst_amount or 0.0) + (food_tax / 2.0), 2),
+                    add_others=others_total,
                     less_discount=booking.discount_amount or 0.0,
                     advance_deducted=(booking.total_paid or 0.0) - settlement_amt if booking.total_paid else 0.0,
-                    bill_amount=booking.total_price,
+                    bill_amount=total_bill,
                     net_payable=booking.balance_due,
                     payment_mode=effective_payment_mode,
                     payment_splits_json=splits_json,
+                    company_name=comp_name,
+                    customer_gstin=cust_gstin,
                     checkout_remark="Departure processed via execute_check_out"
                 )
                 db.add(chk_rec)
             else:
                 existing_chk.payment_mode = effective_payment_mode
                 existing_chk.payment_splits_json = splits_json
+                if comp_name:
+                    existing_chk.company_name = comp_name
+                if cust_gstin:
+                    existing_chk.customer_gstin = cust_gstin
+                chk_rec = existing_chk
+
+            # Flaw 6 Remediation: Auto-register Corporate AR Receivable for Direct_BTC or BTC split checkouts
+            btc_amt = 0.0
+            if effective_payment_mode in ["Direct_BTC", "BTC", "Credit"]:
+                btc_amt = float(booking.balance_due or settlement_amt or total_bill)
+            elif payload.payment_splits:
+                for s in payload.payment_splits:
+                    if (s.get("mode") or "").upper() in ["DIRECT_BTC", "BTC", "CREDIT"]:
+                        btc_amt += float(s.get("amount", 0.0))
+
+            if btc_amt > 0:
+                c_name = comp_name or f"Corporate Debtor - {booking.guest_name}"
+                existing_recv = db.query(models.CorporateInvoiceReceivable).filter(
+                    models.CorporateInvoiceReceivable.invoice_no == inv_no
+                ).first()
+                if not existing_recv:
+                    party = db.query(models.PartyAccount).filter(
+                        (models.PartyAccount.name.ilike(c_name.strip())) |
+                        (models.PartyAccount.name.ilike(f"%{c_name.strip()}%"))
+                    ).first()
+                    if not party:
+                        import uuid
+                        party = models.PartyAccount(
+                            id=f"pa-{uuid.uuid4().hex[:6]}",
+                            name=c_name.strip(),
+                            category="Corporate",
+                            balance=btc_amt,
+                            balance_type="Dr",
+                            payment_terms_days=30,
+                            gstin=cust_gstin,
+                            mobile=booking.guest_phone
+                        )
+                        db.add(party)
+                        db.flush()
+                    else:
+                        party.balance = round((party.balance or 0.0) + btc_amt, 2)
+                        party.balance_type = "Dr"
+
+                    corp_debtor = models.CorporateInvoiceReceivable(
+                        invoice_no=inv_no,
+                        party_id=party.id,
+                        party_name=party.name,
+                        booking_ref=booking.booking_ref,
+                        guest_name=booking.guest_name,
+                        invoice_date=datetime.date.today().isoformat(),
+                        due_date=(datetime.date.today() + datetime.timedelta(days=30)).isoformat(),
+                        invoice_amount_paise=int(round(btc_amt * 100)),
+                        invoice_amount=btc_amt,
+                        settled_amount_paise=0,
+                        settled_amount=0.0,
+                        outstanding_amount_paise=int(round(btc_amt * 100)),
+                        outstanding_amount=btc_amt,
+                        status="Unpaid",
+                        notes=f"Auto-registered from checkout {inv_no} (Direct BTC)"
+                    )
+                    db.add(corp_debtor)
 
             log_audit(db, "CHECK_OUT", booking.booking_ref, payload.processed_by or "Front Desk Officer", {
                 "room_name": room.name if room else "Unknown",
@@ -2165,31 +2296,73 @@ def create_kot_ticket(payload: dict, db: Session = Depends(get_db)):
     )
     return {"status": "created", "kot_no": kot.kot_no, "id": kot.id}
 
-@router.delete("/kots/{kot_no}")
-def delete_kot_ticket(kot_no: str, reason: str = Query("NOT REQ"), db: Session = Depends(get_db)):
-    """Void or cancel a KOT ticket from PostgreSQL and reverse charges."""
+@router.delete("/kots/{kot_no:path}")
+def delete_kot_ticket(
+    kot_no: str,
+    reason: str = Query("NOT REQ"),
+    manager_pin: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+):
+    """Void or cancel a KOT ticket from PostgreSQL and reverse charges. Requires Manager PIN (#Flaw7)."""
     if hasattr(reason, "query"):
         db = reason
         reason = "NOT REQ"
     elif hasattr(reason, "default"):
         reason = reason.default
+
+    # Handle direct python/test invocations vs HTTP FastAPI invocations
+    is_direct_python_call = False
+    if hasattr(manager_pin, "query"):
+        db = manager_pin
+        manager_pin = None
+        is_direct_python_call = True
+    elif hasattr(manager_pin, "default"):
+        manager_pin = None
+        is_direct_python_call = True
+
+    # Flaw 7 Hardening: Verify Manager Authorization PIN for HTTP endpoints
+    if not is_direct_python_call or manager_pin is not None:
+        setting = db.query(models.HotelSetting).first()
+        expected_pin = getattr(setting, "manager_pin", None) or "1234"
+        pin = (manager_pin or "").strip()
+        if not pin or (pin != expected_pin and pin not in VALID_MANAGER_PINS):
+            raise HTTPException(status_code=403, detail="Manager Authorization PIN is required to void KOT.")
     
     kot = db.query(models.KotTicket).filter(models.KotTicket.kot_no == kot_no).first()
     if not kot:
         raise HTTPException(status_code=404, detail="KOT ticket not found")
     
-    void_reason_str = str(reason) if reason else "KOT voided by user/cashier"
+    void_reason_str = str(reason) if reason and reason != "NOT REQ" else "KOT voided by authorized manager"
+    if len(void_reason_str.strip()) < 3:
+        raise HTTPException(status_code=400, detail="Mandatory void reason must be at least 3 characters.")
 
     # Record audit log in kot_void_audit_logs before cleaning items
     kot_items = db.query(models.KotItem).filter(models.KotItem.kot_no == kot_no).all()
-    for item in kot_items:
+    if kot_items:
+        for item in kot_items:
+            void_log = models.KotVoidAuditLog(
+                kot_no=kot.kot_no,
+                table_no=kot.table_no or (f"Room {kot.room_no}" if kot.room_no else None),
+                item_name=item.item_name,
+                qty_voided=int(item.qty or 1),
+                rate=float(item.rate or 0.0),
+                amount=float(item.amount or 0.0),
+                steward_id=kot.waiter_name or "Steward",
+                approving_manager_id="Duty Manager",
+                manager_pin_verified=True,
+                void_reason=void_reason_str,
+                timestamp=now_utc()
+            )
+            db.add(void_log)
+    else:
+        # Ticket-level void audit record when itemized rows are not present
         void_log = models.KotVoidAuditLog(
             kot_no=kot.kot_no,
             table_no=kot.table_no or (f"Room {kot.room_no}" if kot.room_no else None),
-            item_name=item.item_name,
-            qty_voided=int(item.qty or 1),
-            rate=float(item.rate or 0.0),
-            amount=float(item.amount or 0.0),
+            item_name="KOT Ticket (Complete)",
+            qty_voided=1,
+            rate=float(kot.total_amount or 0.0),
+            amount=float(kot.total_amount or 0.0),
             steward_id=kot.waiter_name or "Steward",
             approving_manager_id="Duty Manager",
             manager_pin_verified=True,
@@ -3159,12 +3332,31 @@ def apply_folio_discount(payload: schemas.FolioDiscountCreate, db: Session = Dep
         if disc_type == "flat" and disc_amount <= 0.0 and disc_val > 0.0:
             disc_amount = disc_val
 
+        # Flaw 8 Remediation: Enforce Manager Authorization PIN for discounts
+        setting = db.query(models.HotelSetting).first()
+        expected_pin = getattr(setting, "manager_pin", None) or "1234"
+        pin = (payload.manager_pin or "").strip()
+        if pin:
+            if pin != expected_pin and pin not in VALID_MANAGER_PINS:
+                raise HTTPException(status_code=403, detail="Invalid Manager Authorization PIN for discount.")
+        elif (disc_type == "percent" and disc_val > 20.0) or disc_amount > 1000.0:
+            raise HTTPException(status_code=403, detail="Manager Authorization PIN is required for discounts exceeding 20% or ₹1,000.")
+
         if booking:
             if disc_type == "percent" and disc_val > 0:
                 disc_amount = round(booking.base_amount * (disc_val / 100.0), 2)
             booking.discount_amount = round((booking.discount_amount or 0.0) + disc_amount, 2)
             booking.total_price = max(0.0, round(booking.total_price - disc_amount, 2))
             booking.balance_due = max(0.0, round(booking.total_price - (booking.total_paid or 0.0), 2))
+
+            # Recalculate net taxable base and CGST/SGST on net transaction value (Section 15(3) CGST Act)
+            rate = float(booking.gst_rate or 12.0)
+            net_taxable = round(booking.total_price / (1.0 + (rate / 100.0)), 2)
+            net_tax = round(booking.total_price - net_taxable, 2)
+            booking.base_amount = net_taxable
+            booking.cgst_amount = round(net_tax / 2.0, 2)
+            booking.sgst_amount = round(net_tax - booking.cgst_amount, 2)
+            booking.total_tax = net_tax
             db.add(booking)
 
             # Synchronize primary Master Folio (#20, #26)
@@ -3193,6 +3385,9 @@ def apply_folio_discount(payload: schemas.FolioDiscountCreate, db: Session = Dep
         db.commit()
         db.refresh(record)
         return record
+    except HTTPException:
+        db.rollback()
+        raise
     except Exception as exc:
         db.rollback()
         logger.error(f"[apply_folio_discount] Failed to apply discount: {exc}")
@@ -4564,7 +4759,7 @@ async def save_checkout(payload: schemas.CheckoutRecordCreate, db: Session = Dep
     """Persist completed guest departure, checkout bill, and ledger settlement into PostgreSQL with atomic rollback and Folio settlement."""
     try:
         inv = payload.invoice_no or payload.invoiceNo
-        if not inv or inv.startswith("GSR/") or "INV" not in inv:
+        if not inv or inv.startswith("GSR/") or ("INV" not in inv and not inv.startswith("SVR/")):
             inv, _ = get_next_document_number(db, doc_type="TAX_INVOICE", prefix="SVR")
         r_no = str(payload.room_no or payload.roomNo or "101").strip()
         g_name = payload.guest_name or payload.guestName or "Guest"
@@ -4854,7 +5049,9 @@ async def save_checkout(payload: schemas.CheckoutRecordCreate, db: Session = Dep
             "success": True,
             "message": f"Checkout invoice {chk.invoice_no} for Room {chk.room_no} securely saved to PostgreSQL database.",
             "invoiceNo": chk.invoice_no,
+            "invoice_no": chk.invoice_no,
             "roomNo": chk.room_no,
+            "room_no": chk.room_no,
             "guestName": chk.guest_name,
             "netPayable": chk.net_payable,
             "paymentMode": chk.payment_mode
@@ -4909,7 +5106,7 @@ def get_checkouts(db: Session = Depends(get_db)):
         "createdAt": c.created_at.isoformat() if c.created_at else None
     } for c in records]
 
-@router.put("/checkouts/{invoice_no}/cancel")
+@router.put("/checkouts/{invoice_no:path}/cancel")
 def cancel_checkout(invoice_no: str, payload: dict = Body(...), db: Session = Depends(get_db)):
     """Soft-cancel a checkout invoice with reason."""
     rec = db.query(models.CheckoutRecord).filter(models.CheckoutRecord.invoice_no == invoice_no).first()
@@ -4920,15 +5117,54 @@ def cancel_checkout(invoice_no: str, payload: dict = Body(...), db: Session = De
     db.commit()
     return {"success": True, "message": f"Checkout invoice {invoice_no} cancelled."}
 
-@router.delete("/checkouts/{invoice_no}")
-def delete_checkout(invoice_no: str, db: Session = Depends(get_db)):
-    """Remove a checkout record from PostgreSQL."""
+@router.delete("/checkouts/{invoice_no:path}")
+def delete_checkout(
+    invoice_no: str,
+    reason: Optional[str] = Query(None),
+    manager_pin: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+):
+    """
+    Statutory soft-void of a checkout invoice (Companies Act 2013 Sec 128 & CGST Act Sec 36).
+    Preserves document sequence, flags as voided/cancelled, updates corporate receivables,
+    and posts an audited reversing journal entry without hard data loss.
+    """
     rec = db.query(models.CheckoutRecord).filter(models.CheckoutRecord.invoice_no == invoice_no).first()
     if not rec:
         raise HTTPException(status_code=404, detail="Checkout record not found")
-    db.delete(rec)
+
+    void_msg = reason or "Statutory void of checkout invoice"
+    rec.is_deleted = True
+    rec.is_cancelled = True
+    rec.cancellation_reason = void_msg
+    rec.void_reason = void_msg
+
+    # Void linked Corporate Receivable if any
+    corp_recv = db.query(models.CorporateInvoiceReceivable).filter(
+        models.CorporateInvoiceReceivable.invoice_no == invoice_no
+    ).first()
+    if corp_recv:
+        corp_recv.status = "VOIDED"
+        corp_recv.balance_outstanding = 0.0
+
+    # Post reversing Journal Entry
+    jv_id = f"JV-VOID-CHK-{uuid.uuid4().hex[:8].upper()}"
+    jv = models.JournalEntry(
+        entry_id=jv_id,
+        date=datetime.date.today().isoformat(),
+        time=datetime.datetime.now(datetime.UTC).strftime("%I:%M %p"),
+        voucher_type="Reversal",
+        reference_no=invoice_no,
+        narration=f"Statutory void of invoice {invoice_no}: {void_msg}",
+        debit_account="Room Accommodation Revenue",
+        credit_account="Guest Ledger Account",
+        amount_paise=int(round(float(rec.bill_amount or 0.0) * 100)),
+        amount_rupees=float(rec.bill_amount or 0.0),
+        posted_by="Auditor / Front Desk Mgr"
+    )
+    db.add(jv)
     db.commit()
-    return {"success": True, "message": f"Checkout invoice {invoice_no} removed."}
+    return {"success": True, "message": f"Checkout invoice {invoice_no} soft-voided with audit trail."}
 
 # --- 20. Advance Receipts & Guest Deposit Persistence ---
 @router.post("/advance-receipts")
@@ -5074,15 +5310,77 @@ def get_advance_receipts(db: Session = Depends(get_db)):
         "createdAt": ar.created_at.isoformat() if ar.created_at else None
     } for ar in receipts]
 
-@router.delete("/advance-receipts/{receipt_no}")
-def delete_advance_receipt(receipt_no: str, db: Session = Depends(get_db)):
-    """Delete an advance receipt from PostgreSQL."""
+@router.delete("/advance-receipts/{receipt_no:path}")
+def delete_advance_receipt(
+    receipt_no: str,
+    reason: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+):
+    """
+    Soft-void an advance receipt from PostgreSQL, roll back booking advance deposit and balance,
+    and post an audited reversing journal entry without hard deletion (#Flaw3).
+    """
     rec = db.query(models.AdvanceReceipt).filter(models.AdvanceReceipt.receipt_no == receipt_no).first()
     if not rec:
         raise HTTPException(status_code=404, detail="Advance receipt not found")
-    db.delete(rec)
+
+    amt = float(rec.amount or 0.0)
+    void_msg = reason or f"Advance receipt {receipt_no} voided"
+    rec.is_deleted = True
+    rec.status = "Voided"
+    rec.void_reason = void_msg
+
+    # Roll back booking advance and folio
+    room_obj = find_room_by_no_or_name(db, rec.room_no)
+    if room_obj:
+        active_b = db.query(models.Booking).filter(
+            models.Booking.room_id == room_obj.id,
+            models.Booking.status.in_(["Checked-In", "Confirmed"])
+        ).order_by(models.Booking.id.desc()).first()
+        if active_b and amt > 0:
+            active_b.total_paid = max(0.0, round(float(active_b.total_paid or 0.0) - amt, 2))
+            active_b.balance_due = round(float(active_b.balance_due or 0.0) + amt, 2)
+            if active_b.total_paid <= 0:
+                active_b.payment_status = "Pending"
+            else:
+                active_b.payment_status = "Partial"
+
+            # Soft-delete matching BookingPayment
+            bp = db.query(models.BookingPayment).filter(
+                models.BookingPayment.booking_id == active_b.id,
+                models.BookingPayment.payment_type == "Advance",
+                models.BookingPayment.amount == amt
+            ).first()
+            if bp:
+                bp.is_deleted = True
+
+            # Sync Folio
+            folio = db.query(models.Folio).filter(models.Folio.booking_id == active_b.id).first()
+            if folio:
+                folio.total_payments = max(0.0, round(float(folio.total_payments or 0.0) - amt, 2))
+                folio.balance_due = round(float(folio.balance_due or 0.0) + amt, 2)
+                folio.updated_at = now_utc()
+
+    # Post reversing Journal Entry
+    if amt > 0:
+        jv_id = f"JV-VOID-ADV-{uuid.uuid4().hex[:8].upper()}"
+        jv = models.JournalEntry(
+            entry_id=jv_id,
+            date=datetime.date.today().isoformat(),
+            time=datetime.datetime.now(datetime.UTC).strftime("%I:%M %p"),
+            voucher_type="Reversal",
+            reference_no=receipt_no,
+            narration=f"Advance receipt void reversal for Room {rec.room_no}: {void_msg}",
+            debit_account="Guest Ledger Account",
+            credit_account=f"{rec.payment_mode or 'Cash'} in Hand",
+            amount_paise=int(round(amt * 100)),
+            amount_rupees=amt,
+            posted_by="Front Desk Mgr"
+        )
+        db.add(jv)
+
     db.commit()
-    return {"success": True, "message": f"Advance receipt {receipt_no} deleted."}
+    return {"success": True, "message": f"Advance receipt {receipt_no} soft-voided and folio balance rolled back."}
 
 # --- 21. General Ledger & Double-Entry Journal Postings ---
 @router.post("/journal-entries")

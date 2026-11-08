@@ -555,7 +555,18 @@ export const hotelApi = {
     return await res.json();
   },
 
-  async checkOutBooking(payload: { booking_ref: string; settlement_payment_mode?: string; settlement_amount_paid?: number; transaction_ref?: string; processed_by?: string }) {
+  async checkOutBooking(payload: {
+    booking_ref?: string;
+    room_no?: string;
+    invoice_no?: string;
+    company_name?: string;
+    customer_gstin?: string;
+    settlement_payment_mode?: string;
+    settlement_amount_paid?: number;
+    transaction_ref?: string;
+    payment_splits?: any[];
+    processed_by?: string;
+  }) {
     const res = await fetch(`${API_BASE_URL}/pms/check-out`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

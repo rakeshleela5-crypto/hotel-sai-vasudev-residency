@@ -281,6 +281,18 @@ if is_sqlite:
         except Exception:
             pass
         try:
+            cursor.execute("ALTER TABLE advance_receipts ADD COLUMN status VARCHAR(50) DEFAULT 'Active'")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE advance_receipts ADD COLUMN is_deleted BOOLEAN DEFAULT 0")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE advance_receipts ADD COLUMN void_reason VARCHAR(255)")
+        except Exception:
+            pass
+        try:
             cursor.execute("ALTER TABLE party_accounts ADD COLUMN credit_limit_paise INTEGER DEFAULT 0")
         except Exception:
             pass
