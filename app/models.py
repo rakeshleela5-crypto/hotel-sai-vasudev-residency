@@ -1004,6 +1004,8 @@ class InventoryWasteRecord(Base):
     reported_by = Column(String(150), nullable=False)
     inspected_by = Column(String(150), nullable=True)
     manager_pin_verified = Column(Boolean, default=False)
+    itc_reversal_paise = Column(Integer, default=0, nullable=True) # CGST Sec 17(5)(h) ITC Reversal
+    itc_reversal_rupees = Column(Float, default=0.0, nullable=True)
     journal_entry_id = Column(Integer, ForeignKey("journal_entries.id"), nullable=True)
     action_taken = Column(String(150), default="Disposed") # Disposed, Composted, Returned to Supplier
     notes = Column(Text, nullable=True)

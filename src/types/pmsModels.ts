@@ -2542,6 +2542,8 @@ export interface InventoryWasteRecord {
   unit_cost_paise: number;
   total_loss_rupees: number;
   total_loss_paise: number;
+  itc_reversal_rupees?: number;
+  itc_reversal_paise?: number;
   waste_reason: string;
   reported_by: string;
   inspected_by?: string;

@@ -497,11 +497,23 @@ class HousekeepingDiscrepancyCreate(BaseModel):
 class KeyCardEncodeRequest(BaseModel):
     card_uid: Optional[str] = None
     card_number: Optional[str] = None
+    cardNumber: Optional[str] = None
+    card_uuid: Optional[str] = None
+    cardUuid: Optional[str] = None
     room_no: Optional[str] = None
+    roomNo: Optional[str] = None
     room_number: Optional[str] = None
     guest_name: Optional[str] = "Valued Guest"
+    guestName: Optional[str] = None
     scheduled_checkout_time: Optional[str] = None
     check_out_time: Optional[str] = None
+    valid_until: Optional[str] = None
+    validUntil: Optional[str] = None
+    check_in_time: Optional[str] = None
+    checkInTime: Optional[str] = None
+    status: Optional[str] = "Active"
+    issued_by: Optional[str] = None
+    issuedBy: Optional[str] = None
     encoded_by: Optional[str] = "Front Desk"
     operator_name: Optional[str] = None
 
@@ -2166,6 +2178,8 @@ class InventoryWasteResponse(BaseModel):
     unit_cost_paise: int
     total_loss_rupees: float
     total_loss_paise: int
+    itc_reversal_rupees: Optional[float] = 0.0
+    itc_reversal_paise: Optional[int] = 0
     waste_reason: str
     reported_by: str
     inspected_by: Optional[str] = None

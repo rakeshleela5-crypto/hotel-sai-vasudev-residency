@@ -2088,16 +2088,23 @@ export class PmsStore {
       let updatedCount = 0;
 
       // 1. Synchronize Room Housekeeping & Operational Status from Cloud DB
+      // CRITICAL INDUSTRIAL INVARIANT: Housekeeping 'Clean' must NEVER evict an in-house guest or force an occupied room to vacant.
       for (const r of (cloudData.rooms || [])) {
         const matchingLocal = localRooms.find(lr => lr.id === String(r.id) || lr.roomNo === String(r.id));
         if (matchingLocal) {
-          if (r.housekeeping_status === 'Clean' && matchingLocal.status !== 'vacant') {
-            matchingLocal.status = 'vacant';
-            matchingLocal.currentGuest = undefined;
-            updatedCount++;
-          } else if (r.housekeeping_status === 'Dirty' && matchingLocal.status !== 'dirty') {
-            matchingLocal.status = 'dirty';
-            updatedCount++;
+          const hasActiveInHouseGuest = matchingLocal.status === 'occupied' || matchingLocal.currentGuest !== undefined;
+          
+          if (r.housekeeping_status === 'Clean') {
+            if (!hasActiveInHouseGuest && matchingLocal.status !== 'vacant') {
+              matchingLocal.status = 'vacant';
+              matchingLocal.currentGuest = undefined;
+              updatedCount++;
+            }
+          } else if (r.housekeeping_status === 'Dirty') {
+            if (!hasActiveInHouseGuest && matchingLocal.status !== 'dirty') {
+              matchingLocal.status = 'dirty';
+              updatedCount++;
+            }
           } else if (r.housekeeping_status === 'Under_Maintenance' && matchingLocal.status !== 'blocked') {
             matchingLocal.status = 'blocked';
             updatedCount++;
@@ -2110,14 +2117,15 @@ export class PmsStore {
         const matchingLocal = localRooms.find(r => r.id === String(b.room_id) || r.roomNo === String(b.room_id));
         if (matchingLocal && b.status === 'Checked-In') {
           matchingLocal.status = 'occupied';
+          const existingCheckInTime = matchingLocal.currentGuest?.checkInTime;
           matchingLocal.currentGuest = {
             name: b.guest_name,
             phone: b.guest_phone,
             checkInDate: b.check_in_date,
-            checkInTime: '12:00 PM',
+            checkInTime: existingCheckInTime || b.check_in_time || '12:00 PM',
             bookingNo: b.booking_ref,
             advancePaid: b.total_paid || 0,
-            calculationType: '12hour'
+            calculationType: matchingLocal.currentGuest?.calculationType || '12hour'
           };
           updatedCount++;
         }

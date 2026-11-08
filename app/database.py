@@ -237,6 +237,14 @@ if is_sqlite:
         except Exception:
             pass
         try:
+            cursor.execute("ALTER TABLE inventory_waste_records ADD COLUMN itc_reversal_paise INTEGER DEFAULT 0")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE inventory_waste_records ADD COLUMN itc_reversal_rupees REAL DEFAULT 0.0")
+        except Exception:
+            pass
+        try:
             cursor.execute("ALTER TABLE party_accounts ADD COLUMN credit_limit_paise INTEGER DEFAULT 0")
         except Exception:
             pass
