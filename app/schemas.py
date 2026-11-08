@@ -235,7 +235,7 @@ class BookingResponse(BaseModel):
 # --- Master Folio Invoice Schema ---
 class MasterFolioResponse(BaseModel):
     hotel_name: str = "SRI SAI VASUDEV RESIDENCY"
-    hotel_gstin: str = "37AAACH7409R1ZZ"
+    hotel_gstin: str = "21AEKPP8689J1ZS"
     hotel_phone: str = "+91 94402 89999 / +91 98480 12345"
     invoice_number: str
     booking_ref: str
@@ -293,7 +293,7 @@ class TaxInvoiceVoucher(BaseModel):
     hotel_address: str = "Near Temple Road, Holy Pilgrimage Town, AP, India"
     hotel_phone: str = "+91 94402 89999 / +91 98480 12345"
     hotel_email: str = "reservations@hotelsai-vasudev.com"
-    hotel_gstin: str = "37AAACH7409R1ZZ"
+    hotel_gstin: str = "21AEKPP8689J1ZS"
     sac_code: str = "996311"
     
     invoice_number: str
@@ -380,6 +380,30 @@ class WalkInCheckInRequest(BaseModel):
     guest_age: Optional[int] = None
     guestAge: Optional[int] = None
 
+class ReservationCheckInRequest(BaseModel):
+    booking_ref: str
+    room_id_or_no: Optional[Any] = None
+    advance_amount: float = Field(default=0.0, ge=0)
+    advance_payment_mode: str = "Cash"
+    advance_ref: Optional[str] = None
+    key_deposit: float = Field(default=0.0, ge=0)
+    id_proof_type: Optional[str] = None
+    id_proof_number: Optional[str] = None
+    guest_signature_url: Optional[str] = None
+    is_foreign_national: bool = False
+    passport_number: Optional[str] = None
+    visa_number: Optional[str] = None
+    visa_validity: Optional[str] = None
+    port_of_arrival: Optional[str] = None
+    date_of_entry_india: Optional[str] = None
+    vehicle_no: Optional[str] = None
+    coming_from: Optional[str] = None
+    proceeding_to: Optional[str] = None
+    darshan_slot: Optional[str] = None
+    guest_gender: Optional[str] = None
+    guest_age: Optional[int] = None
+    checked_in_by: Optional[str] = "Front Desk Officer"
+
 class PaymentSplitItem(BaseModel):
     mode: str  # Cash, UPI, Card, Direct_BTC, Cheque
     amount: float
@@ -448,6 +472,13 @@ class KotCreate(BaseModel):
     status: Optional[str] = "Running"
     is_printed: Optional[bool] = True
     isPrinted: Optional[bool] = None
+    is_nc: Optional[bool] = False
+    isNc: Optional[bool] = None
+    nc_reason: Optional[str] = None
+    ncReason: Optional[str] = None
+    approved_by: Optional[str] = None
+    approvedBy: Optional[str] = None
+    manager_pin: Optional[str] = None
 
 class KotResponse(BaseModel):
     id: int
@@ -463,6 +494,9 @@ class KotResponse(BaseModel):
     total_amount: float = 0.0
     status: str = "Running"
     is_printed: bool = True
+    is_nc: bool = False
+    nc_reason: Optional[str] = None
+    approved_by: Optional[str] = None
     created_at: Optional[datetime.datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
@@ -924,6 +958,10 @@ class CheckoutRecordCreate(BaseModel):
     pinCode: Optional[str] = None
     sac_code: Optional[str] = "996311"
     sacCode: Optional[str] = None
+    company_name: Optional[str] = None
+    companyName: Optional[str] = None
+    customer_gstin: Optional[str] = None
+    customerGstin: Optional[str] = None
     invoice_format: Optional[str] = "A4_Standard"
     invoiceFormat: Optional[str] = None
 

@@ -9,9 +9,11 @@ def generate_booking_ref():
     return f"SVR-{uuid.uuid4().hex[:6].upper()}"
 
 def generate_invoice_num():
-    now_ts = int(now_utc().timestamp() * 1000)
+    # Statutory Rule 46(b) CGST Rules (Max 16 chars): SVR/26-27/0001 or SVR-2627-XXXXXX (14 chars)
+    now_d = datetime.date.today()
+    fy = f"{str(now_d.year)[2:]}{str(now_d.year + 1)[2:]}" if now_d.month >= 4 else f"{str(now_d.year - 1)[2:]}{str(now_d.year)[2:]}"
     rand_seq = uuid.uuid4().hex[:6].upper()
-    return f"INV-SVR-{now_ts}-{rand_seq}"
+    return f"SVR/{fy}/{rand_seq}"
 
 class DocumentSequence(Base):
     """
@@ -312,6 +314,9 @@ class KotTicket(Base):
     is_printed = Column(Boolean, default=True)
     is_delta = Column(Boolean, default=False)
     order_source = Column(String(50), default="Desktop")
+    is_nc = Column(Boolean, default=False, nullable=False, index=True) # Non-Commercial / Complimentary KOT (#Phase8C)
+    nc_reason = Column(String(255), nullable=True)
+    approved_by = Column(String(100), nullable=True)
     is_deleted = Column(Boolean, default=False, nullable=False, index=True)
     void_reason = Column(String(255), nullable=True)
     created_at = Column(TimezoneAwareDateTime, default=now_utc)
@@ -778,6 +783,9 @@ class GeneralReceipt(Base):
     account_mobile = Column(String(50), nullable=True, index=True)
     amount = Column(Float, nullable=False)
     remark = Column(Text, nullable=True)
+    status = Column(String(50), default="Active", index=True)
+    is_deleted = Column(Boolean, default=False, nullable=False, index=True)
+    void_reason = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=now_utc)
 
 class GeneralPayment(Base):
@@ -794,6 +802,9 @@ class GeneralPayment(Base):
     account_mobile = Column(String(50), nullable=True, index=True)
     amount = Column(Float, nullable=False)
     remark = Column(Text, nullable=True)
+    status = Column(String(50), default="Active", index=True)
+    is_deleted = Column(Boolean, default=False, nullable=False, index=True)
+    void_reason = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=now_utc)
 
 class Godown(Base):

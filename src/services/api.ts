@@ -524,6 +524,19 @@ export const hotelApi = {
     return await res.json();
   },
 
+  async checkInReservation(payload: Record<string, unknown>): Promise<BookingResponse> {
+    const res = await fetch(`${API_BASE_URL}/pms/reservations/check-in`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Reservation check-in failed');
+    }
+    return await res.json();
+  },
+
   async getCheckIns(): Promise<any[]> {
     try {
       const res = await fetch(`${API_BASE_URL}/pms/check-ins`);

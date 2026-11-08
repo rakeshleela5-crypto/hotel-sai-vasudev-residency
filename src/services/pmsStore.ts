@@ -4866,34 +4866,58 @@ export class PmsStore {
     }
 
     // Cloud sync: mirror to PostgreSQL on Railway
-    const roomId = parseInt(checkIn.roomNo, 10) || 1;
-    hotelApi.walkInCheckIn({
-      room_id: roomId,
-      guest_name: checkIn.guestName,
-      guest_phone: checkIn.mobile,
-      guest_email: checkIn.email,
-      id_proof_type: checkIn.documentName || 'Aadhaar Card',
-      id_proof_number: checkIn.documentNo || 'VERIFIED_AT_DESK',
-      check_in_date: checkIn.checkInDate || new Date().toISOString().split('T')[0],
-      check_out_date: checkIn.checkOutDate || new Date(Date.now() + 86400000).toISOString().split('T')[0],
-      adults: checkIn.numberOfGuests || 2,
-      children: 0,
-      advance_amount: checkIn.advancePaid || 0,
-      advance_payment_mode: checkIn.paymentMode || 'Cash',
-      registered_by: 'Reception Desk',
-      coming_from: checkIn.comingFrom,
-      comingFrom: checkIn.comingFrom,
-      proceeding_to: checkIn.goingTo,
-      proceedingTo: checkIn.goingTo,
-      vehicle_no: (checkIn as any).vehicleNo,
-      vehicleNo: (checkIn as any).vehicleNo,
-      darshan_slot: (checkIn as any).darshanSlot,
-      darshanSlot: (checkIn as any).darshanSlot,
-      guest_gender: (checkIn as any).guestGender,
-      guestGender: (checkIn as any).guestGender,
-      guest_age: (checkIn as any).guestAge,
-      guestAge: (checkIn as any).guestAge
-    }).catch(e => {
+    const matchedRoom = this.getRooms().find(r => r.roomNo === checkIn.roomNo || String(r.id) === checkIn.roomNo);
+    const roomId = matchedRoom?.id || parseInt(checkIn.roomNo, 10) || 1;
+
+    const checkInPromise = checkIn.bookingRefNo
+      ? hotelApi.checkInReservation({
+          booking_ref: checkIn.bookingRefNo,
+          room_id_or_no: checkIn.roomNo,
+          advance_amount: checkIn.advancePaid || 0,
+          advance_payment_mode: checkIn.paymentMode || 'Cash',
+          advance_ref: `CI-${checkIn.checkInNo}`,
+          id_proof_type: checkIn.documentName || 'Aadhaar Card',
+          id_proof_number: checkIn.documentNo || 'VERIFIED_AT_DESK',
+          guest_signature_url: checkIn.guestSignature,
+          is_foreign_national: checkIn.nationality?.toLowerCase() !== 'india' && checkIn.nationality?.toLowerCase() !== 'indian',
+          coming_from: checkIn.comingFrom,
+          proceeding_to: checkIn.goingTo,
+          vehicle_no: (checkIn as any).vehicleNo,
+          darshan_slot: (checkIn as any).darshanSlot,
+          guest_gender: (checkIn as any).guestGender,
+          guest_age: (checkIn as any).guestAge,
+          checked_in_by: 'Reception Desk'
+        })
+      : hotelApi.walkInCheckIn({
+          room_id: roomId,
+          room_id_or_no: checkIn.roomNo,
+          guest_name: checkIn.guestName,
+          guest_phone: checkIn.mobile,
+          guest_email: checkIn.email,
+          id_proof_type: checkIn.documentName || 'Aadhaar Card',
+          id_proof_number: checkIn.documentNo || 'VERIFIED_AT_DESK',
+          check_in_date: checkIn.checkInDate || new Date().toISOString().split('T')[0],
+          check_out_date: checkIn.checkOutDate || new Date(Date.now() + 86400000).toISOString().split('T')[0],
+          adults: checkIn.numberOfGuests || 2,
+          children: 0,
+          advance_amount: checkIn.advancePaid || 0,
+          advance_payment_mode: checkIn.paymentMode || 'Cash',
+          registered_by: 'Reception Desk',
+          coming_from: checkIn.comingFrom,
+          comingFrom: checkIn.comingFrom,
+          proceeding_to: checkIn.goingTo,
+          proceedingTo: checkIn.goingTo,
+          vehicle_no: (checkIn as any).vehicleNo,
+          vehicleNo: (checkIn as any).vehicleNo,
+          darshan_slot: (checkIn as any).darshanSlot,
+          darshanSlot: (checkIn as any).darshanSlot,
+          guest_gender: (checkIn as any).guestGender,
+          guestGender: (checkIn as any).guestGender,
+          guest_age: (checkIn as any).guestAge,
+          guestAge: (checkIn as any).guestAge
+        });
+
+    checkInPromise.catch(e => {
       console.warn('[PmsStore] Background cloud check-in sync note:', e);
       // Concurrency protection: If server rejected check-in due to room collision (409 Conflict), roll back local state
       if (e?.status === 409 || (e?.message && (e.message.includes('already Occupied') || e.message.includes('409') || e.message.includes('Conflict')))) {

@@ -240,6 +240,101 @@ def update_booking_status(
                             )
                     room.housekeeping_status = "Occupied"
 
+            if update.status == "Cancelled":
+                if booking.room_id:
+                    room = db.query(models.Room).filter(models.Room.id == booking.room_id).first()
+                    if room:
+                        active_occ = db.query(models.Booking).filter(
+                            models.Booking.room_id == room.id,
+                            models.Booking.id != booking.id,
+                            models.Booking.status == "Checked-In",
+                            models.Booking.is_deleted == False
+                        ).first()
+                        if not active_occ:
+                            room.is_available = True
+                            if room.housekeeping_status == "Occupied":
+                                room.housekeeping_status = "Available"
+
+                # Advance Refund & Statutory GST Credit Note on Cancellation (Section 34 CGST Act, 2017)
+                if booking.status != "Cancelled":
+                    adv_payments = db.query(models.BookingPayment).filter(
+                        models.BookingPayment.booking_id == booking.id,
+                        models.BookingPayment.payment_type.in_(["Advance", "Partial", "Settlement"]),
+                        models.BookingPayment.amount > 0
+                    ).all()
+                    total_paid = sum(p.amount for p in adv_payments)
+                    if total_paid > 0:
+                        refund_pmt = models.BookingPayment(
+                            booking_id=booking.id,
+                            payment_type="Refund",
+                            payment_mode=adv_payments[0].payment_mode if adv_payments else "Cash",
+                            amount=total_paid,
+                            transaction_ref=f"RFND-{booking.booking_ref}",
+                            notes=f"Statutory refund for cancelled reservation {booking.booking_ref}",
+                            collected_by="Front Desk Manager"
+                        )
+                        db.add(refund_pmt)
+                        booking.payment_status = "Refunded"
+                        booking.balance_due = 0.0
+
+                        import uuid
+                        cn_seq = f"SVR/26-27/CN-{uuid.uuid4().hex[:4].upper()}"
+                        today_iso = datetime.date.today().isoformat()
+                        taxable_v = round(total_paid / 1.12, 2)
+                        tax_amt = round(total_paid - taxable_v, 2)
+                        half_tax = round(tax_amt / 2.0, 2)
+
+                        cn = models.CreditNote(
+                            credit_note_no=cn_seq,
+                            credit_note_date=today_iso,
+                            financial_year="2026-27",
+                            original_invoice_no=booking.invoice_number or f"ADV-{booking.booking_ref}",
+                            original_invoice_date=booking.check_in_date or today_iso,
+                            invoice_type="ROOM_BOOKING",
+                            booking_id=booking.id,
+                            guest_name=booking.guest_name,
+                            guest_phone=booking.guest_phone,
+                            pos_state_code=settings.HOTEL_GSTIN[:2] if hasattr(settings, "HOTEL_GSTIN") else "21",
+                            is_interstate=False,
+                            sac_code="996311",
+                            reason_code="01-Sales Return",
+                            reason_description=f"Advance refund on booking cancellation: {update.cancellation_reason or booking.cancellation_reason or 'Guest cancellation'}",
+                            taxable_value_paise=int(round(taxable_v * 100)),
+                            taxable_value=taxable_v,
+                            gst_rate=12.0,
+                            cgst_amount_paise=int(round(half_tax * 100)),
+                            cgst_amount=half_tax,
+                            sgst_amount_paise=int(round(half_tax * 100)),
+                            sgst_amount=half_tax,
+                            igst_amount_paise=0,
+                            igst_amount=0.0,
+                            total_credit_paise=int(round(total_paid * 100)),
+                            total_credit_amount=total_paid,
+                            refund_payment_mode=adv_payments[0].payment_mode if adv_payments else "Cash",
+                            refund_ref=f"RFND-{booking.booking_ref}",
+                            status="ISSUED",
+                            authorized_by="Front Desk Manager",
+                            manager_pin_verified=True,
+                            journal_entry_id=f"JV-CN-{cn_seq.replace('/', '-')}"
+                        )
+                        db.add(cn)
+
+                        # Post reversing GL Journal Entry
+                        jv = models.JournalEntry(
+                            entry_id=f"JV-CN-{cn_seq.replace('/', '-')}",
+                            date=today_iso,
+                            time=datetime.datetime.now().strftime("%I:%M %p"),
+                            voucher_type="CreditNote",
+                            reference_no=cn_seq,
+                            narration=f"Reversal of advance revenue on cancellation of booking {booking.booking_ref}",
+                            debit_account="Room Revenue / Advance Bookings",
+                            credit_account=f"Refund Payable / Bank ({adv_payments[0].payment_mode if adv_payments else 'Cash'})",
+                            amount_paise=int(round(total_paid * 100)),
+                            amount_rupees=total_paid,
+                            posted_by="Front Desk Manager"
+                        )
+                        db.add(jv)
+
             booking.status = update.status
             if update.payment_status:
                 booking.payment_status = update.payment_status
