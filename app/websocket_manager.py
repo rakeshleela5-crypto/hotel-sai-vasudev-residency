@@ -148,7 +148,8 @@ class WebSocketManager:
         room_number: str = None,
         waiter_name: str = None,
         items: List[Dict[str, Any]] = None,
-        status: str = "Active"
+        status: str = "Active",
+        extra: Optional[Dict[str, Any]] = None
     ):
         """
         Emits live KOT dispatch, punch, or void events.
@@ -161,7 +162,8 @@ class WebSocketManager:
             "room_number": room_number,
             "waiter_name": waiter_name,
             "items": items or [],
-            "status": status
+            "status": status,
+            "extra": extra or {}
         }
         await self.broadcast_to_channel("kitchen_kds", payload)
         await self.broadcast_to_channel("front_desk", payload)

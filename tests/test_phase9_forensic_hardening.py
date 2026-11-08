@@ -489,3 +489,190 @@ def test_night_audit_multi_night_prevents_double_billing(db_session: Session):
     # Balance due should NOT be inflated beyond the original 2360
     assert b_updated.balance_due == 2360.0
     assert b_updated.total_price == 3360.0
+
+
+def test_room_shift_migrates_active_kitchen_kots(db_session: Session):
+    """
+    Forensic Hardening: Verify Room Shift automatically updates pending kitchen orders to the new room.
+    """
+    room_old = create_test_room(db_session, "411", is_available=False, hk_status="Occupied")
+    room_new = create_test_room(db_session, "412", is_available=True, hk_status="Available")
+
+    b_ref = f"BK-SHIFT-{uuid.uuid4().hex[:6]}"
+    today = datetime.date.today().isoformat()
+    tomorrow = (datetime.date.today() + datetime.timedelta(days=1)).isoformat()
+
+    b = models.Booking(
+        booking_ref=b_ref,
+        invoice_number=f"INV-{uuid.uuid4().hex[:6]}",
+        room_id=room_old.id,
+        guest_name="Virat Kohli",
+        guest_email="kohli@hotelsai-vasudev.com",
+        guest_phone="9988776655",
+        check_in_date=today,
+        check_out_date=tomorrow,
+        base_rate=2000.0,
+        base_amount=2000.0,
+        total_price=2240.0,
+        balance_due=2240.0,
+        status="Checked-In"
+    )
+    db_session.add(b)
+    db_session.commit()
+
+    kot_no = f"KOT-{uuid.uuid4().hex[:6].upper()}"
+    kot = models.KotTicket(
+        kot_no=kot_no,
+        date=today,
+        time="07:30 PM",
+        room_no=room_old.name,
+        waiter_name="Ravi",
+        items_json="[]",
+        total_amount=350.0,
+        status="In_Kitchen"
+    )
+    db_session.add(kot)
+    db_session.commit()
+
+    # Execute room shift
+    shift_res = client.post("/api/v1/pms/room-shift", json={
+        "booking_ref": b_ref,
+        "from_room_id": room_old.id,
+        "to_room_id": room_new.id,
+        "reason": "AC maintenance issue",
+        "shifted_by": "Duty Manager"
+    })
+    assert shift_res.status_code == 200, shift_res.text
+
+    db_session.expire_all()
+    kot_updated = db_session.query(models.KotTicket).filter(models.KotTicket.kot_no == kot_no).first()
+    assert kot_updated.room_no == room_new.name
+
+
+def test_booking_cancellation_soft_voids_advance_receipt(db_session: Session):
+    """
+    Forensic Hardening: Verify cancelling a booking soft-voids linked advance receipts.
+    """
+    room = create_test_room(db_session, "413", is_available=False, hk_status="Occupied")
+    b_ref = f"BK-CNCL-{uuid.uuid4().hex[:6]}"
+    rcp_no = f"AR-{uuid.uuid4().hex[:6].upper()}"
+    today = datetime.date.today().isoformat()
+
+    b = models.Booking(
+        booking_ref=b_ref,
+        invoice_number=f"INV-{uuid.uuid4().hex[:6]}",
+        room_id=room.id,
+        guest_name="Jasprit Bumrah",
+        guest_email="bumrah@hotelsai-vasudev.com",
+        guest_phone="9876543210",
+        check_in_date=today,
+        check_out_date=(datetime.date.today() + datetime.timedelta(days=2)).isoformat(),
+        base_rate=2000.0,
+        base_amount=4000.0,
+        total_price=4480.0,
+        total_paid=1000.0,
+        balance_due=3480.0,
+        status="Confirmed"
+    )
+    db_session.add(b)
+    db_session.commit()
+
+    arcpt = models.AdvanceReceipt(
+        receipt_no=rcp_no,
+        room_no=room.name,
+        guest_name=b.guest_name,
+        transaction_ref=b_ref,
+        date=today,
+        amount=1000.0,
+        payment_mode="UPI",
+        status="ACTIVE",
+        is_deleted=False
+    )
+    pmt = models.BookingPayment(
+        booking_id=b.id,
+        payment_type="Advance",
+        payment_mode="UPI",
+        amount=1000.0,
+        transaction_ref=rcp_no
+    )
+    db_session.add(arcpt)
+    db_session.add(pmt)
+    db_session.commit()
+
+    # Cancel booking
+    cncl_res = client.patch(f"/api/v1/bookings/{b_ref}/status", json={
+        "status": "Cancelled",
+        "cancellation_reason": "Flight cancelled"
+    })
+    assert cncl_res.status_code == 200, cncl_res.text
+
+    db_session.expire_all()
+    standard_arcpt = db_session.query(models.AdvanceReceipt).filter(models.AdvanceReceipt.receipt_no == rcp_no).first()
+    assert standard_arcpt is None
+
+    arcpt_updated = db_session.query(models.AdvanceReceipt).execution_options(include_deleted=True).filter(
+        models.AdvanceReceipt.receipt_no == rcp_no
+    ).first()
+    assert arcpt_updated is not None
+    assert arcpt_updated.is_deleted is True
+    assert arcpt_updated.status == "CANCELLED"
+
+
+def test_cancel_checkout_synchronizes_corporate_ar_and_posts_reversal(db_session: Session):
+    """
+    Forensic Hardening: Verify cancel_checkout marks CorporateInvoiceReceivable as CANCELLED and posts reversing JV.
+    """
+    inv_no = f"SVR/2627/{uuid.uuid4().hex[:6].upper()}"
+    today = datetime.date.today().isoformat()
+
+    chk = models.CheckoutRecord(
+        invoice_no=inv_no,
+        room_no="104",
+        room_type="DELUXE",
+        guest_name="Tata Steel Logistics",
+        check_in_date=today,
+        check_out_date=today,
+        total_room_rent=3000.0,
+        bill_amount=3360.0,
+        net_payable=3360.0,
+        payment_mode="Direct_BTC",
+        company_name="Tata Steel Ltd",
+        is_cancelled=False,
+        is_deleted=False
+    )
+    corp_recv = models.CorporateInvoiceReceivable(
+        invoice_no=inv_no,
+        party_name="Tata Steel Ltd",
+        guest_name="Tata Steel Logistics",
+        invoice_date=today,
+        due_date=today,
+        invoice_amount_paise=336000,
+        invoice_amount=3360.0,
+        settled_amount_paise=0,
+        settled_amount=0.0,
+        outstanding_amount_paise=336000,
+        outstanding_amount=3360.0,
+        status="Unpaid"
+    )
+    db_session.add(chk)
+    db_session.add(corp_recv)
+    db_session.commit()
+
+    # Cancel checkout
+    can_res = client.put(f"/api/v1/pms/checkouts/{inv_no}/cancel", json={
+        "reason": "Billing error corrected with revised corporate PO"
+    })
+    assert can_res.status_code == 200, can_res.text
+
+    db_session.expire_all()
+    corp_updated = db_session.query(models.CorporateInvoiceReceivable).filter(
+        models.CorporateInvoiceReceivable.invoice_no == inv_no
+    ).first()
+    assert corp_updated.status == "CANCELLED"
+
+    jv = db_session.query(models.JournalEntry).filter(
+        models.JournalEntry.reference_no == inv_no,
+        models.JournalEntry.voucher_type == "Reversal"
+    ).first()
+    assert jv is not None
+    assert jv.amount_rupees == 3360.0

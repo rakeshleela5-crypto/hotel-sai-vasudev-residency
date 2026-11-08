@@ -335,6 +335,17 @@ def update_booking_status(
                         )
                         db.add(jv)
 
+                # Soft-void active AdvanceReceipts for this booking to prevent double-counting
+                adv_rcpts = db.query(models.AdvanceReceipt).filter(
+                    (models.AdvanceReceipt.transaction_ref == booking.booking_ref) |
+                    (models.AdvanceReceipt.guest_name == booking.guest_name),
+                    models.AdvanceReceipt.is_deleted == False
+                ).all()
+                for arcpt in adv_rcpts:
+                    arcpt.is_deleted = True
+                    arcpt.status = "CANCELLED"
+                    arcpt.void_reason = f"Booking {booking.booking_ref} cancelled: statutory Credit Note issued"
+
             booking.status = update.status
             if update.payment_status:
                 booking.payment_status = update.payment_status

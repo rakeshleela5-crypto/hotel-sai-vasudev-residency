@@ -332,6 +332,24 @@ def execute_room_shift(payload: schemas.RoomShiftCreate, db: Session = Depends(g
                 for rc in old_rfid_cards:
                     rc.status = "REVOKED"
 
+                # Migrate any pending kitchen room-service orders to the new room
+                pending_kots = db.query(models.KotTicket).filter(
+                    models.KotTicket.room_no == old_room.name,
+                    models.KotTicket.status.in_(["Active", "Running", "In_Kitchen", "Ready", "Preparing"]),
+                    models.KotTicket.is_deleted == False
+                ).all()
+                for p_kot in pending_kots:
+                    p_kot.room_no = new_room.name
+                    ws_manager.emit_kot_event_sync(
+                        event_type="KOT_ROOM_TRANSFERRED",
+                        kot_number=p_kot.kot_no,
+                        table_number=None,
+                        room_number=new_room.name,
+                        waiter_name=p_kot.waiter_name,
+                        status=p_kot.status,
+                        extra={"previous_room": old_room.name, "new_room": new_room.name}
+                    )
+
             new_room.housekeeping_status = "Occupied"
             new_room.is_available = False
 
@@ -5112,8 +5130,39 @@ def cancel_checkout(invoice_no: str, payload: dict = Body(...), db: Session = De
     rec = db.query(models.CheckoutRecord).filter(models.CheckoutRecord.invoice_no == invoice_no).first()
     if not rec:
         raise HTTPException(status_code=404, detail="Checkout record not found")
+    reason_str = payload.get("reason") or payload.get("cancellationReason") or "Cancelled by Front Desk"
     rec.is_cancelled = True
-    rec.cancellation_reason = payload.get("reason") or payload.get("cancellationReason") or "Cancelled by Front Desk"
+    rec.cancellation_reason = reason_str
+
+    # Synchronize linked Corporate Receivable
+    corp_recv = db.query(models.CorporateInvoiceReceivable).filter(
+        models.CorporateInvoiceReceivable.invoice_no == invoice_no
+    ).first()
+    if corp_recv:
+        corp_recv.status = "CANCELLED"
+        corp_recv.notes = f"{corp_recv.notes or ''} | Cancelled: {reason_str}".strip(" |")
+
+    # Reversing Journal Entry
+    net_amt = float(rec.net_payable or rec.bill_amount or 0.0)
+    if net_amt > 0:
+        import uuid
+        today_iso = datetime.date.today().isoformat()
+        jv_id = f"JV-CAN-{int(datetime.datetime.utcnow().timestamp()) % 1000000}-{uuid.uuid4().hex[:4].upper()}"
+        jv = models.JournalEntry(
+            entry_id=jv_id,
+            date=today_iso,
+            time=datetime.datetime.utcnow().strftime("%I:%M %p"),
+            voucher_type="Reversal",
+            reference_no=invoice_no,
+            narration=f"Reversal of cancelled checkout invoice {invoice_no} ({reason_str})",
+            debit_account="Room Revenue / Sales",
+            credit_account=f"Accounts Receivable / Cash ({rec.payment_mode or 'Cash'})",
+            amount_paise=int(round(net_amt * 100)),
+            amount_rupees=net_amt,
+            posted_by="Front Desk Manager"
+        )
+        db.add(jv)
+
     db.commit()
     return {"success": True, "message": f"Checkout invoice {invoice_no} cancelled."}
 
